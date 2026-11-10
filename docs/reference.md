@@ -203,7 +203,7 @@ transition targets are unchanged.
 
 `symbols` prints JSON with `definitions` and `references`. Each reference's
 `to` is an index into `definitions`; locations include the original file,
-1-based line and byte column, and an exclusive `end_col`. Component interfaces,
+1-based line and UTF-8 byte column, and an exclusive `end_col`. Component interfaces,
 local bindings, parameters, typed shape fields, font families and literal IDs are navigable.
 Shared shape/function/style/font files can be queried directly. The query uses the
 compiler's import and type rules and writes no files. Repeated literal IDs have
