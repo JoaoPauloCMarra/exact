@@ -192,3 +192,125 @@ pub enum InputEvent {
         at_ms: f64,
     },
 }
+
+impl crate::Module {
+    /// Whether this canvas asks for raw device input.
+    pub fn wants_input(&self, id: u32) -> bool {
+        self.instances
+            .get(&id)
+            .is_some_and(|i| i.surface.wants_input())
+    }
+
+    /// Deliver one device event; the canvas is dirty after it unless the
+    /// surface says it changed nothing ([`crate::Surface::input_changed`]).
+    pub fn input(&mut self, id: u32, event: &InputEvent) -> bool {
+        self.settle(id);
+        self.check_device();
+        let Some(inst) = self.instances.get_mut(&id) else {
+            return self.fail::<()>("no such canvas").is_some();
+        };
+        inst.surface.input(event);
+        inst.drain();
+        if let Some(crate::SurfaceError(e)) = inst.surface.take_error() {
+            self.error = e;
+            return false;
+        }
+        inst.dirty |= inst.surface.input_changed();
+        true
+    }
+
+    /// Parse and deliver one ABI event; malformed input is refused by name.
+    pub fn input_json(&mut self, id: u32, text: &str) -> bool {
+        match crate::json::parse_input(text) {
+            Ok(event) => self.input(id, &event),
+            Err(error) => self.fail::<()>(error).is_some(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::*;
+
+    /// Changes what it shows only for a message reading "show".
+    struct Resting(bool);
+    impl Surface for Resting {
+        fn bind(&mut self, _: &[Value], _: Option<f64>) -> Result<(), SurfaceError> {
+            Ok(())
+        }
+        fn render(
+            &mut self,
+            _: &Frame,
+            _: &wgpu::Device,
+            _: &wgpu::Queue,
+            _: &mut wgpu::CommandEncoder,
+            _: &wgpu::TextureView,
+            _: wgpu::TextureFormat,
+        ) -> bool {
+            false
+        }
+        fn input(&mut self, event: &InputEvent) {
+            self.0 = matches!(event, InputEvent::Message { text, .. } if text == "show");
+        }
+        fn input_changed(&self) -> bool {
+            self.0
+        }
+    }
+    /// The trait's default.
+    struct Plain;
+    impl Surface for Plain {
+        fn bind(&mut self, _: &[Value], _: Option<f64>) -> Result<(), SurfaceError> {
+            Ok(())
+        }
+        fn render(
+            &mut self,
+            _: &Frame,
+            _: &wgpu::Device,
+            _: &wgpu::Queue,
+            _: &mut wgpu::CommandEncoder,
+            _: &wgpu::TextureView,
+            _: wgpu::TextureFormat,
+        ) -> bool {
+            false
+        }
+    }
+    static REGISTRY: Registry = Registry {
+        surfaces: &[
+            ("resting", 0, || Box::new(Resting(false))),
+            ("plain", 0, || Box::new(Plain)),
+        ],
+        shaders: &[],
+    };
+
+    #[test]
+    fn an_input_that_changed_nothing_leaves_the_canvas_as_it_was() {
+        let mut m = Module::new(&REGISTRY);
+        let message = |text: &str| InputEvent::Message {
+            text: text.into(),
+            at_ms: 0.,
+        };
+        let sample = InputEvent::Sensor {
+            sensor: SensorKind::Gravity,
+            values: [0., -9.8, 0., 0.],
+            dropped: 0,
+            at_ms: 0.,
+        };
+        let resting = m.create_headless("resting").unwrap();
+        let plain = m.create_headless("plain").unwrap();
+        for id in [resting, plain] {
+            assert!(m.bind(id, &[], None));
+            m.instances.get_mut(&id).unwrap().dirty = false;
+        }
+        let dirty = |m: &Module, id| m.instances[&id].dirty;
+
+        assert!(m.input(resting, &sample));
+        assert!(!dirty(&m, resting), "an ignored sample draws nothing");
+        assert!(m.input(resting, &message("show")));
+        assert!(dirty(&m, resting));
+        assert!(m.input(resting, &sample));
+        assert!(dirty(&m, resting), "a frame already owed stays owed");
+
+        assert!(m.input(plain, &sample));
+        assert!(dirty(&m, plain), "by default every input draws");
+    }
+}

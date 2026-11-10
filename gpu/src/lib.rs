@@ -323,6 +323,14 @@ pub trait Surface {
     }
     /// One device event in canvas points, stamped with the host's clock.
     fn input(&mut self, _event: &InputEvent) {}
+    /// Whether the event the last [`Surface::input`] took changed what the
+    /// canvas shows, as [`Surface::frame_ready`] answers for `render`. False
+    /// asks for no frame, so a resting scene can take a sensor's samples or a
+    /// touch that lands on nothing without the host drawing it again; a
+    /// frame already owed is still drawn. True by default: every input draws.
+    fn input_changed(&self) -> bool {
+        true
+    }
     /// Strings posted to the app, drained after render, input and agent calls (S2).
     fn messages(&mut self) -> Vec<String> {
         Vec::new()
@@ -1007,38 +1015,6 @@ impl Module {
         if let Some(inst) = self.instances.get_mut(&id) {
             inst.surface.lifecycle(event);
             inst.drain();
-        }
-    }
-
-    /// Whether this canvas asks for raw device input.
-    pub fn wants_input(&self, id: u32) -> bool {
-        self.instances
-            .get(&id)
-            .is_some_and(|i| i.surface.wants_input())
-    }
-
-    /// Deliver one device event and mark the canvas dirty.
-    pub fn input(&mut self, id: u32, event: &InputEvent) -> bool {
-        self.settle(id);
-        self.check_device();
-        let Some(inst) = self.instances.get_mut(&id) else {
-            return self.fail::<()>("no such canvas").is_some();
-        };
-        inst.surface.input(event);
-        inst.drain();
-        if let Some(SurfaceError(e)) = inst.surface.take_error() {
-            self.error = e;
-            return false;
-        }
-        inst.dirty = true;
-        true
-    }
-
-    /// Parse and deliver one ABI event; malformed input is refused by name.
-    pub fn input_json(&mut self, id: u32, text: &str) -> bool {
-        match json::parse_input(text) {
-            Ok(event) => self.input(id, &event),
-            Err(error) => self.fail::<()>(error).is_some(),
         }
     }
 
