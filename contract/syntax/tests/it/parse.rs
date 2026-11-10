@@ -1,6 +1,8 @@
 //! The parser on the constructs the v1 app uses, and its rejections by id.
 
-use contract_syntax::{parse, BinOp, Expr, Node, Stmt, TaskKind, TemplatePart, TypeExpr};
+use contract_syntax::{
+    parse, BinOp, Expr, Lexer, Node, Span, Stmt, TaskKind, TemplatePart, TypeExpr,
+};
 
 const APP: &str = r#"
 // A slice of the Caltrain app.
@@ -347,6 +349,19 @@ fn rejections_carry_stable_ids_and_spans() {
         let err = parse(src).unwrap_err();
         assert_eq!(err.id, id, "{src:?} → {err}");
         assert_eq!(err.span.line, line, "{src:?} → {err}");
+    }
+}
+
+#[test]
+fn an_unexpected_character_is_named_whole_and_spans_its_bytes() {
+    for (c, len) in [("@", 1), ("é", 2), ("—", 3), ("🙂", 4)] {
+        let src = format!("component A\n  view\n    text {c} x\n");
+        let errors = Lexer::tokenize_all(&src, Span::point(1, 1)).unwrap_err();
+        assert_eq!(errors.len(), 1, "{c}: {errors:?}");
+        let e = &errors[0];
+        assert_eq!(e.id, "syntax-unexpected-char", "{c}: {e:?}");
+        assert_eq!(e.message, format!("unexpected `{c}`"), "{c}: {e:?}");
+        assert_eq!((e.span.line, e.span.col, e.span.end_col), (3, 10, 10 + len));
     }
 }
 

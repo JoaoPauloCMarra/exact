@@ -405,10 +405,17 @@ impl Lexer {
                         break;
                     }
                 }
-                let p = matched.ok_or(LexError {
-                    id: "syntax-unexpected-char",
-                    message: format!("unexpected `{c}`"),
-                    span,
+                let p = matched.ok_or_else(|| {
+                    // `c` is one byte; the refusal names the whole character.
+                    let c = trimmed[pos..].chars().next().unwrap_or(c);
+                    LexError {
+                        id: "syntax-unexpected-char",
+                        message: format!("unexpected `{c}`"),
+                        span: Span {
+                            end_col: col_of(pos + c.len_utf8()).col,
+                            ..span
+                        },
+                    }
                 })?;
                 match p {
                     "(" | "[" | "{" => *depth += 1,
