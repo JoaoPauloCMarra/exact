@@ -5,9 +5,8 @@
 # JNI, which the reader (host/android) loads as libexactcanvas.so. Off Android
 # the library is empty: the Canvas host is Android's (`exact_linux::canvas`).
 #
-# The VM is the Android Hermes bundle `bun scripts/hermes-android.mjs build`
-# installs (LLP 1107 §4.1), which `agent-android.mjs build shelf --apk` hands
-# to Cargo.
+# The VM is the pinned Ibex release's Android Hermes bundle, which `exact setup`
+# installs (LLP 1107 §4.1).
 [package]
 name = "shelf-android"
 version.workspace = true

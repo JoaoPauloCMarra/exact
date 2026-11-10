@@ -694,8 +694,8 @@ else here was admitted because a real app needed it.
   on an emulator or a phone: `bun exact.mjs android` builds it, `bun exact.mjs test
   android` runs its tests, and `bun exact.mjs agent android …` drives it
   ([LLP 1107](llp/1107-driving-an-app-on-android.rfc.md)). It needs the Android SDK,
-  the Rust target `aarch64-linux-android`, and the Hermes Android bundle
-  (`bun scripts/hermes-android.mjs build`) until an Ibex release ships one. Delivery and
+  the Rust target `aarch64-linux-android`, and the Hermes Android bundle, which
+  `exact setup` installs with the target. Delivery and
   store packaging don't exist yet.
 - **No JSX or React tier.** Nothing runs JavaScript above the data seam. The door stays
   open, but no one is building it.

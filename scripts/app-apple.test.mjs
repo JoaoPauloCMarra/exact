@@ -7,7 +7,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync,
 import { homedir, tmpdir } from 'node:os';
 import { delimiter, resolve, toNamespacedPath } from 'node:path';
 import { HERMES_INSTALLER, PINNED_RUST, hermesBundle, hermesLeanSysRoots } from './app.mjs';
-import { checkHermesBundles, appleCrossTargets, appleSetupTargets, platformRowNames } from './exact.mjs';
+import { androidHermes, checkHermesBundles, appleCrossTargets, appleSetupTargets, platformRowNames } from './exact.mjs';
 import { iosAssets, iosTarget, entitlements, infoPlist, macInfoPlist, documentTypes, importedTypes, exportedTypes, writeUsageStrings, designCompatible, COMPATIBLE_SDK, moduleTripleFor } from '../host/apple/build.mjs';
 import { useXcode } from '../host/apple/devices.mjs';
 import { macReleaseEntitlements, launchImageInventory } from '../host/apple/assets.mjs';
@@ -130,6 +130,42 @@ test('each Apple destination checks its own Rust std and Hermes bundle, device i
   const install = checkHermesBundles({}, execute, 'darwin', 'arm64', ['aarch64-apple-ios']).fix;
   assert.match(install, /--locked/);
   assert.doesNotMatch(install, /--offline|--check/);
+});
+
+// The pinned Ibex release ships the Android bundle: setup's row asks the vendored resolver about it and names its
+// installer, unless a bundle `hermes-android.mjs` installed takes its place.
+test('the Android Hermes bundle is the pinned release\'s', () => {
+  const calls = [];
+  const execute = status => (command, args) => { calls.push(args); return { status, stdout: '', stderr: '' }; };
+  assert.equal(androidHermes({}, execute(0), null).ok, true);
+  assert.deepEqual(calls[0].slice(-3), ['--check', '--target', 'aarch64-linux-android']);
+  const missing = androidHermes({}, execute(1), null);
+  assert.equal(missing.ok, false);
+  assert.match(missing.fix, /hermes-lean-sys-installer\/Cargo\.toml -- --target aarch64-linux-android$/);
+  assert.equal(androidHermes({}, execute(1), '/built/from/ibex').ok, true);
+  assert.equal(calls.length, 2);
+});
+
+// HERMES_LEAN_SYS_DIR names a host bundle, which has what an Android one has: the Android build looks for the pinned
+// Android bundle without it, and names that bundle for the target only against such an override, since unnamed it is
+// the one hermes-lean-sys checks against the pin.
+test('a host Hermes override answers for no Android build', async () => {
+  const { androidHermesDir } = await import('./agent-android.mjs');
+  const home = mkdtempSync(resolve(tmpdir(), 'exact-hermes-android-')), host = resolve(home, 'host');
+  const bundle = (root) => {
+    mkdirSync(resolve(root, 'include'), { recursive: true }); mkdirSync(resolve(root, 'lib'), { recursive: true });
+    for (const file of ['lib/libhermesvmlean_a.a', 'hermes-input-receipt.json']) writeFileSync(resolve(root, file), '');
+  };
+  try {
+    bundle(host);
+    const env = { HOME: home, HERMES_LEAN_SYS_DIR: host };
+    assert.equal(androidHermesDir(env, null), null);
+    const pinned = hermesBundle('aarch64-linux-android', { HOME: home }).root;
+    bundle(pinned);
+    assert.equal(androidHermesDir(env, null), pinned);
+    assert.equal(androidHermesDir(env, '/built/from/ibex'), '/built/from/ibex');
+    assert.equal(androidHermesDir({ ...env, HERMES_LEAN_SYS_DIR_aarch64_linux_android: '/named' }, '/built/from/ibex'), '/named');
+  } finally { rmSync(home, { recursive: true, force: true }); }
 });
 
 test('bake receipts recognize the install-once Hermes cache and explicit installs', () => {

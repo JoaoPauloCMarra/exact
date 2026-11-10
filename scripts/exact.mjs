@@ -130,6 +130,14 @@ export function cargoProxyFault(pin, env = process.env, execute = spawnSync) {
   return `${cargo} is not rustup's cargo and refuses +${pin}: put ${dirname(rustup)} before ${dirname(cargo)} on PATH`;
 }
 
+/** The Android Hermes bundle a TypeScript app's library links: one `scripts/hermes-android.mjs` installed, which the
+ * Android build prefers, else the pinned release's, as the vendored resolver validates it. */
+export function androidHermes(env = process.env, execute = spawnSync, local = hermesAndroidBundle()) {
+  if (local) return { ok: true, have: 'installed by scripts/hermes-android.mjs', fix: '' };
+  const pinned = checkHermesBundles(env, execute, process.platform, process.arch, ['aarch64-linux-android']);
+  return { ok: pinned.ok, have: pinned.ok ? 'verified by hermes-lean-sys' : 'not installed or invalid', fix: pinned.fix };
+}
+
 /** Where a shim goes: `EXACT_BIN_DIR`, else the first of these already on PATH, else `~/.local/bin` (made, and named in the advice). */
 export function binDirectory() {
   if (process.env.EXACT_BIN_DIR) return resolve(process.env.EXACT_BIN_DIR);
@@ -439,9 +447,13 @@ export function setup({check = false} = {}) {
     }
     // The same Apple targets' Rust std: rust-toolchain.toml adds only the web's.
     if (apple.length) run('rustup', ['target', 'add', ...apple, '--toolchain', pin.channel]);
-    // Android, where its SDK is (LLP 1107): the Rust target the APK's library builds for. Its Hermes bundle has no
-    // release to fetch yet (`sdkReport`'s row says how to install one).
-    if (existsSync(androidSdk())) run('rustup', ['target', 'add', 'aarch64-linux-android', '--toolchain', pin.channel]);
+    // Android, where its SDK is (LLP 1107): the Rust target the APK's library builds for, and the Hermes bundle a
+    // TypeScript app's library links, which, like the simulators', may fail without failing setup.
+    if (existsSync(androidSdk())) {
+      run('rustup', ['target', 'add', 'aarch64-linux-android', '--toolchain', pin.channel]);
+      if (spawnSync('cargo', hermesInstallerArguments(false, ['aarch64-linux-android']), {cwd: ROOT, stdio: 'inherit', env: cargoEnvironment(process.env)}).status !== 0)
+        console.error('exact setup: the aarch64-linux-android Hermes bundle did not install; an Android TypeScript build will name the command');
+    }
     // The Chromium builds `chromium()` launches unless CHROME names another: the revision the pinned Playwright drives.
     // A no-op when both are here; a failed download leaves the Chrome row to fail the run.
     if (!process.env.CHROME) {
@@ -504,9 +516,8 @@ export async function platformReport(platform, rows, { device = false } = {}) {
   own.push(row('Rust target aarch64-linux-android', android, android ? 'installed' : 'missing', 'aarch64-linux-android', `rustup target add aarch64-linux-android --toolchain ${pin}`));
   try { (await import('./agent-android.mjs')).androidToolchainEnv(); own.push(row('Android NDK', true, 'found', 'an NDK', '')); }
   catch (error) { own.push(row('Android NDK', false, 'missing', 'an NDK with the aarch64-linux-android toolchain', String(error.message ?? error))); }
-  const bundle = hermesAndroidBundle();
-  own.push(row('Hermes bundle (aarch64-linux-android)', !!bundle, bundle ? 'installed' : 'missing', 'the Android Hermes bundle a TypeScript app links',
-    'no Ibex release ships one yet: bun scripts/hermes-android.mjs install <archive>, or copy ~/.cache/exact/hermes-android from a machine that has one'));
+  const bundle = androidHermes();
+  own.push(row('Hermes bundle (aarch64-linux-android)', bundle.ok, bundle.have, 'the Android Hermes bundle a TypeScript app links', bundle.fix));
   return own;
 }
 
@@ -602,9 +613,8 @@ export function sdkReport(env = process.env, { only = null, device = false } = {
     rows.push(row('Android NDK', ndk && basename(ndk), 'any (27.1 is tried)', !!ndk, 'the SDK manager: sdkmanager "ndk;27.1.12297006" (or set ANDROID_NDK_HOME)', 'Android'));
     const target = output('rustup', ['target', 'list', '--installed', '--toolchain', pin.channel]).split('\n').includes('aarch64-linux-android');
     rows.push(row('Rust aarch64-linux-android', target ? 'installed' : '', pin.channel, target, 'exact setup', 'Android'));
-    const bundle = hermesAndroidBundle();
-    rows.push(row('Hermes bundle (aarch64-linux-android)', bundle ? 'installed' : '', 'scripts/hermes-android.mjs', !!bundle,
-      'no Ibex release ships one yet: bun scripts/hermes-android.mjs install <archive>, or copy ~/.cache/exact/hermes-android from a machine that has one', 'Android TypeScript'));
+    const bundle = androidHermes(env);
+    rows.push(row('Hermes bundle (aarch64-linux-android)', bundle.have, 'the pinned Ibex release', bundle.ok, bundle.fix, 'Android TypeScript'));
   }
   return rows;
 }

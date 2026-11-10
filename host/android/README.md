@@ -104,15 +104,16 @@ It builds on a Mac as on the Linux build box (tried 2026-10-12 with an SDK under
 SDK lacks when its licences are accepted there: it installed build-tools 36.0.0 and platform 37.2 on that run. The
 library goes into that APK unstripped (Shelf's is 69 MB there against 20.5 MB from the build box), which changes
 nothing a person sees; a cold start is measured with the stripped one. Shelf also needs the Android Hermes bundle,
-which copies between machines as its directory under `~/.cache/exact/hermes-android/` with `current` naming it.
+which `exact setup` installs.
 
 ## A TypeScript data module (LLP 1115.001 §5.2)
 
 Shelf (`apps/shelf`) is the app that defines "Android works", and its data is `app.ts`. Its library
 (`apps/shelf/android`) is Caltrain's with two differences: the build script is the Linux host's JavaScript bake
 (`exact_js_bake::build(.., "linux")`: the plan, the module as Hermes bytecode, its identity and grants), and the
-library links `exact-js` and with it the lean Hermes VM, from the Android Hermes bundle
-`bun scripts/hermes-android.mjs build` installs (LLP 1107 §4.1; `agent-android.mjs` hands it to Cargo).
+library links `exact-js` and with it the lean Hermes VM, from the pinned Ibex release's Android Hermes bundle, which
+`exact setup` installs and verifies as it does the other targets' (LLP 1107 §4.1). One built from an Ibex checkout
+with `bun scripts/hermes-android.mjs build` takes its place (`agent-android.mjs` hands it to Cargo).
 
 **The Canvas host needed nothing for it.** It boots through the Linux host's own door
 (`app::boot_presenter_with_painter`), so the module is made, activated after the first frame is recorded

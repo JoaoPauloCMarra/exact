@@ -318,8 +318,8 @@ device: ANDROID_SERIAL, else the one adb lists (with several and none named, it 
 With no device it builds and says so. test android and agent android drive the installed
 APK and refuse one older than its sources, naming this command.
 Needs    the SDK (ANDROID_HOME) with platform 37.2 and an NDK, a JDK 17+ (JAVA_HOME), the
-         pinned toolchain's aarch64-linux-android target (exact setup adds it), and the Android Hermes
-         bundle (~/.cache/exact/hermes-android; bun <exact2>/scripts/hermes-android.mjs).
+         pinned toolchain's aarch64-linux-android target and the Android Hermes bundle (exact
+         setup installs both).
 Device   an emulator elsewhere: adb connect 127.0.0.1:<port> through an ssh tunnel to its
          adb port, then ANDROID_SERIAL=127.0.0.1:<port>.
 Ports    none. Runs to completion.`,

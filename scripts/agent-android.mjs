@@ -20,8 +20,8 @@
 // An `exact new` app's `bun exact.mjs android` is `build <app> --apk --install` (`--headless`: the Linux host), and its
 // `agent android` and `test android` drive the APK.
 //
-// An app with a TypeScript data module also needs the Android Hermes bundle:
-// `bun scripts/hermes-android.mjs build` once (scripts/hermes-android.mjs).
+// An app with a TypeScript data module also needs the Android Hermes bundle, which `exact setup` installs from the
+// pinned Ibex release (or one built from an Ibex checkout, scripts/hermes-android.mjs).
 //
 // The NDK comes from ANDROID_NDK_HOME, else the newest under the SDK's ndk/
 // (ANDROID_HOME, else ~/Library/Android/sdk or ~/Android/Sdk); ANDROID_SERIAL
@@ -36,7 +36,7 @@ import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync,
 import { createConnection } from 'node:net';
 import { homedir } from 'node:os';
 import { basename, dirname, resolve } from 'node:path';
-import { HOST_DEV, PINNED_RUST, bakeWatchEnv, buildBake, cargoEnvironment, copyShaders, injectedProfiles, linuxBuild, resolveApp, wholeProgram } from './app.mjs';
+import { HOST_DEV, PINNED_RUST, bakeWatchEnv, buildBake, hermesBundle, cargoEnvironment, copyShaders, injectedProfiles, linuxBuild, resolveApp, wholeProgram } from './app.mjs';
 import { hermesAndroidBundle } from './hermes-android.mjs';
 import { ANDROID_PAGE_SIZE, androidCargo } from './cargo-check.mjs';
 import { guardFlags } from './help.mjs';
@@ -72,15 +72,26 @@ export function androidToolchainEnv(env = process.env) {
   const bin = resolve(ndk, 'toolchains/llvm/prebuilt', process.platform === 'darwin' ? 'darwin-x86_64' : 'linux-x86_64', 'bin');
   const cc = resolve(bin, `aarch64-linux-android${API}-clang`);
   if (!existsSync(cc)) throw new Error(`the NDK at ${ndk} has no ${basename(cc)}`);
-  // A TypeScript data module's lean Hermes VM: the Android bundle
-  // `hermes-android.mjs build` made, for the target only (the host keeps its pinned one).
-  const hermes = env.HERMES_LEAN_SYS_DIR_aarch64_linux_android ?? hermesAndroidBundle();
+  // The pinned bundle is named only against a developer's HERMES_LEAN_SYS_DIR: hermes-lean-sys checks a bundle it finds
+  // itself against the pin's digest, and takes a named one as it is.
+  const hermes = env.HERMES_LEAN_SYS_DIR_aarch64_linux_android || hermesAndroidBundle() || (env.HERMES_LEAN_SYS_DIR === undefined ? null : androidHermesDir(env));
   return { ...cargoEnvironment(env), ANDROID_NDK_HOME: ndk, CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER: cc, CC_aarch64_linux_android: cc,
     CXX_aarch64_linux_android: `${cc}++`, AR_aarch64_linux_android: resolve(bin, 'llvm-ar'),
     // One C++ runtime, static, as the Hermes bundle links it (ANDROID_STL=c++_static):
     // the cc crate's Android default, c++_shared, needs libc++_shared.so beside the binary.
     CXXSTDLIB_aarch64_linux_android: 'c++_static',
     ...(hermes ? { HERMES_LEAN_SYS_DIR_aarch64_linux_android: hermes } : {}) };
+}
+
+/** A TypeScript data module's lean Hermes VM, for the target only (the host keeps its pinned one): the bundle
+ * HERMES_LEAN_SYS_DIR_aarch64_linux_android names, else the one `hermes-android.mjs` installed, else the pinned
+ * release's when it is installed (null when it is not). The pinned one is looked for without HERMES_LEAN_SYS_DIR, a
+ * host bundle a developer names, which would otherwise answer for Android too. */
+export function androidHermesDir(env = process.env, local = hermesAndroidBundle()) {
+  const named = env.HERMES_LEAN_SYS_DIR_aarch64_linux_android ?? local;
+  if (named) return named;
+  const { HERMES_LEAN_SYS_DIR, ...unhosted } = env, pinned = hermesBundle(ANDROID_TARGET, unhosted);
+  return pinned.installed ? pinned.root : null;
 }
 
 /** The device a drive uses: ANDROID_SERIAL, else the one adb lists as ready. With several and none named it refuses to
@@ -555,8 +566,8 @@ if (import.meta.main && process.argv[2] === 'relay') {
   const app = resolveApp(name), env = { ...androidToolchainEnv(), ...bakeWatchEnv(app), CARGO_TARGET_DIR: app.target };
   // A TypeScript app's library links the Android Hermes bundle: said before minutes of compiling, not at the link.
   const crateToml = crateManifest(app, apkWanted ? 'android' : 'linux');
-  if (!env.HERMES_LEAN_SYS_DIR_aarch64_linux_android && crateToml && /^exact-js\s*=/m.test(readFileSync(crateToml, 'utf8'))) {
-    console.error(`${app.name}'s TypeScript needs the Android Hermes bundle, which is not installed: bun scripts/hermes-android.mjs install <archive> (or copy ~/.cache/exact/hermes-android from a machine that has one; LLP 1107 §4.1)`);
+  if (!androidHermesDir() && crateToml && /^exact-js\s*=/m.test(readFileSync(crateToml, 'utf8'))) {
+    console.error(`${app.name}'s TypeScript needs the Android Hermes bundle, which is not installed: ${hermesBundle(ANDROID_TARGET).fix} (once; exact setup does it where the Android SDK is)`);
     process.exit(1);
   }
   if (apkWanted) {

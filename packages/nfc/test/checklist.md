@@ -35,7 +35,7 @@ nothing for NFC.
 ## Before Android
 
 ```
-bun scripts/hermes-android.mjs build        # once
+bun scripts/exact.mjs setup                 # once: the Android target and Hermes bundle
 bun scripts/agent-android.mjs build shelf --apk
 adb install -r host/android/app/build/shelf/outputs/apk/release/app-release.apk
 ```
