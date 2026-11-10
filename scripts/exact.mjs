@@ -73,22 +73,21 @@ export const commandOf = (app) => app.manifest.app?.command ?? app.name;
 /** Where `install` puts the app. */
 export const installedAt = (app) => resolve(APPLICATIONS, `${executableName(app)}.app`);
 
-/** The cross bundles a Mac's TypeScript builds use, each needed only for its
- * destination (and only with Xcode). The host bundle is the one required row. */
-export function hermesCrossTargets(os = process.platform, cpu = process.arch) {
+/** The targets a Mac cross-compiles its Apple destinations for, each needing the pinned toolchain's Rust std and, for
+ * TypeScript, a Hermes bundle; each is needed only for its destination (and only with Xcode). */
+export function appleCrossTargets(os = process.platform, cpu = process.arch) {
   if (os !== 'darwin') return [];
   return [
-    { target: cpu === 'x64' ? 'x86_64-apple-ios' : 'aarch64-apple-ios-sim', need: 'iOS Simulator TypeScript' },
-    { target: 'aarch64-apple-ios', need: 'iOS device TypeScript' },
-    { target: 'aarch64-apple-tvos-sim', need: 'tvOS Simulator TypeScript' },
+    { target: cpu === 'x64' ? 'x86_64-apple-ios' : 'aarch64-apple-ios-sim', destination: 'iOS Simulator' },
+    { target: 'aarch64-apple-ios', destination: 'iOS device' },
+    { target: 'aarch64-apple-tvos-sim', destination: 'tvOS Simulator' },
   ];
 }
 
-/** The cross bundles `setup` installs after the host's: the simulators', and
- * the iOS device's wherever a device build can run (Xcode with the iphoneos
- * SDK), so a device IPA's TypeScript finds it without a second command. */
-export const hermesSetupTargets = (os = process.platform, cpu = process.arch, device = iphoneosSdk(os)) =>
-  hermesCrossTargets(os, cpu).map(entry => entry.target).filter(target => device || target !== 'aarch64-apple-ios');
+/** The cross targets `setup` installs: the simulators', and the iOS device's wherever a device build can run (Xcode
+ * with the iphoneos SDK), so a first device build finds them without a second command. */
+export const appleSetupTargets = (os = process.platform, cpu = process.arch, device = iphoneosSdk(os)) =>
+  appleCrossTargets(os, cpu).map(entry => entry.target).filter(target => device || target !== 'aarch64-apple-ios');
 
 /** Whether Xcode's iphoneos SDK is here: an iOS device build can run. The
  * Xcode the Apple build selects (host/apple/devices.mjs `useXcode`: Xcode.app
@@ -432,11 +431,14 @@ export function setup({check = false} = {}) {
     // host install every build needs; `setup --check` reports it on its own row.
     // Each its own run: the installer stops at its first failed target, so a
     // device download that fails must not take the simulators' with it.
-    for (const target of hermesSetupTargets()) {
+    const apple = appleSetupTargets();
+    for (const target of apple) {
       if (spawnSync('cargo', hermesInstallerArguments(false, [target]), {cwd: ROOT, stdio: 'inherit', env: cargoEnvironment(process.env)}).status !== 0) {
         console.error(`exact setup: the ${target} Hermes bundle did not install; Apple TypeScript builds for it will name the command`);
       }
     }
+    // The same Apple targets' Rust std: rust-toolchain.toml adds only the web's.
+    if (apple.length) run('rustup', ['target', 'add', ...apple, '--toolchain', pin.channel]);
     // Android, where its SDK is (LLP 1107): the Rust target the APK's library builds for. Its Hermes bundle has no
     // release to fetch yet (`sdkReport`'s row says how to install one).
     if (existsSync(androidSdk())) run('rustup', ['target', 'add', 'aarch64-linux-android', '--toolchain', pin.channel]);
@@ -466,12 +468,13 @@ export function setup({check = false} = {}) {
  * pins, and, for what only some apps need, which ones. A row is `required`
  * when no app here builds without it. */
 /** The report's rows a platform's build reads (LLP 1153 D1.2, D1.6): the web's are the toolchain exact2's own tools
- * build with, Bun, node_modules and Chrome; a native platform's add Xcode and the Hermes bundle its TypeScript runs on. */
+ * build with, Bun, node_modules and Chrome; a native platform's add Xcode and the Hermes bundle its TypeScript runs on, and
+ * iOS its target's Rust std. */
 export function platformRowNames(platform, { os = process.platform, cpu = process.arch, device = false } = {}) {
-  const host = `Hermes bundle (${hermesTarget(os, cpu)})`, simulator = `Hermes bundle (${hermesCrossTargets(os, cpu)[0]?.target})`;
+  const host = `Hermes bundle (${hermesTarget(os, cpu)})`, ios = device ? 'aarch64-apple-ios' : appleCrossTargets(os, cpu)[0]?.target;
   return ['rustup', 'Rust', ...({
     web: ['Bun', 'node_modules', 'Chrome'],
-    ios: ['Xcode', device ? 'Hermes bundle (aarch64-apple-ios)' : simulator],
+    ios: ['Xcode', `Hermes bundle (${ios})`, `Rust ${ios}`],
     macos: ['Xcode', host],
     linux: [host],
   }[platform] ?? [])];
@@ -568,11 +571,17 @@ export function sdkReport(env = process.env, { only = null, device = false } = {
       'TypeScript data sources on native hosts (macOS, iOS, Linux); not the web',
     ));
   }
-  for (const {target, need} of hermesCrossTargets()) {
+  let installed;
+  for (const {target, destination} of appleCrossTargets()) {
+    if (want(`Rust ${target}`)) {
+      installed ??= output('rustup', ['target', 'list', '--installed', '--toolchain', pin.channel]).split('\n');
+      const std = installed.includes(target);
+      rows.push(row(`Rust ${target}`, std ? 'installed' : '', pin.channel, std, `rustup target add ${target} --toolchain ${pin.channel}`, destination));
+    }
     if (!want(`Hermes bundle (${target})`)) continue;
     const cross = checkHermesBundles(env, spawnSync, process.platform, process.arch, [target]);
     rows.push(row(`Hermes bundle (${target})`, cross.ok ? 'verified by hermes-lean-sys' : 'not installed or invalid',
-      'the pinned Ibex release', cross.ok, cross.fix, need));
+      'the pinned Ibex release', cross.ok, cross.fix, `${destination} TypeScript`));
   }
   // Android, where its SDK is (LLP 1107), in the whole report: what `bun exact.mjs android` needs besides it
   // (`platformReport` checks the same for a first Android build).

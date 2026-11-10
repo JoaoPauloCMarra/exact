@@ -46,7 +46,7 @@ import { closeSync, copyFileSync, cpSync, existsSync, linkSync, mkdirSync, mkdte
 import { evictArms, keepRoster, keptRoster, snapshotSources } from './arms.mjs';
 import { HOST_MACOS } from '../../scripts/filesystem.mjs';
 import { documentTypes, exportedTypes, importedTypes, openingLinks, webPageTypes, browserEntitlements } from './documents.mjs';
-import { executableName, HOST_DEV, checkModuleRoster, copyShaders, appleCargoClaims, awaitBuildOutput, cargoLibraryTarget, claimBuildOutput, appSourceKey, bakeOutput, buildBake, contractLast, bakeTarget, developmentBuildEnv, developmentURLScheme, gpuModules, hermesBundle, injectedProfiles, resolveApp, verifyBakeFiles } from '../../scripts/app.mjs';
+import { executableName, HOST_DEV, PINNED_RUST, checkModuleRoster, copyShaders, appleCargoClaims, awaitBuildOutput, cargoLibraryTarget, claimBuildOutput, appSourceKey, bakeOutput, buildBake, contractLast, bakeTarget, developmentBuildEnv, developmentURLScheme, gpuModules, hermesBundle, injectedProfiles, resolveApp, verifyBakeFiles } from '../../scripts/app.mjs';
 import { copyStaticTreeIfPresent, listAssets } from '../web/serve.mjs';
 import { startSweep } from '../../scripts/sweep.mjs';
 import { guardFlags } from '../../scripts/help.mjs';
@@ -75,6 +75,8 @@ const run = (cmd, args, opts = {}) => {
   return r;
 };
 const read = (cmd, args, opts = {}) => spawnSync(...appleCargo(cmd, args, { cwd: root, encoding: 'utf8', ...opts }));
+/** Whether the pinned toolchain, which a build uses whatever RUSTUP_TOOLCHAIN says, has `target`'s std; if not, says so for `flag`. */
+const hasStd = (flag, target) => read('rustup', ['target', 'list', '--installed', '--toolchain', PINNED_RUST]).stdout?.split('\n').includes(target) || (console.error(`${flag} needs Rust's ${target} std, which the pinned toolchain lacks. Install it with \`rustup target add ${target} --toolchain ${PINNED_RUST}\``), process.exitCode = 1, false);
 // Fail on deployment-target and sysroot warnings because Apple tools can still link incompatible inputs
 // @ref LLP 1008
 const runApple = (cmd, args, opts = {}) => {
@@ -623,11 +625,8 @@ async function main(args, lockHeld = false) {
     console.error('--tvos takes neither --host nor --embed');
     process.exitCode = 1; return;
   }
-  const tvTarget = device ? tvosDeviceTarget : tvosTarget, rustTarget = tv ? tvTarget : 'aarch64-apple-ios';
-  if ((tv || device) && !read('rustup', ['target', 'list', '--installed'], { cwd: root }).stdout?.split('\n').includes(rustTarget)) {
-    console.error(`${tv ? '--tvos' : '--device'} needs Rust's ${rustTarget} std, which this toolchain lacks. Install it with \`rustup target add ${rustTarget}\` (once, in the app's directory so its pinned toolchain gets it)`);
-    process.exitCode = 1; return;
-  }
+  const tvTarget = device ? tvosDeviceTarget : tvosTarget, rustTarget = tv ? tvTarget : device ? 'aarch64-apple-ios' : iosTarget;
+  if (ios && !hasStd(tv ? '--tvos' : device ? '--device' : '--ios', rustTarget)) return;
   const ipa = args.includes('--archive') ? resolve(process.cwd(), args[args.indexOf('--archive') + 1] ?? '') : null;
   const unsigned = args.includes('--unsigned');
   // What leaves this machine: an .ipa, or the Mac bundle `exact release` signs and notarises.
@@ -1398,6 +1397,7 @@ async function main(args, lockHeld = false) {
  *  runs the test classes it names (`onlyClasses`). */
 async function test(args) {
   const ios = args.includes('--ios');
+  if (ios && !hasStd('--ios', iosTarget)) return;
   const app = resolveApp(args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--sim' && args[i - 1] !== '--only'));
   const only = args.includes('--only') ? onlyClasses(args, resolve(root, 'host/apple/tests/ExactKitTests'), ios ? 'iOS' : 'macOS') : null;
   app.prepare?.();

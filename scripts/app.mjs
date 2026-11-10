@@ -761,7 +761,7 @@ export function validate(value, node, at, root) {
 // rust-toolchain.toml pins the toolchain; an ambient RUSTUP_TOOLCHAIN (`mise exec`
 // exports `stable`) would override it with one that lacks the wasm target, and
 // Cargo's error names neither. Partial fixture copies carry no toolchain file.
-const PINNED_RUST = existsSync(resolve(ROOT, 'rust-toolchain.toml'))
+export const PINNED_RUST = existsSync(resolve(ROOT, 'rust-toolchain.toml'))
   ? /^channel\s*=\s*"([^"]+)"/m.exec(readFileSync(resolve(ROOT, 'rust-toolchain.toml'), 'utf8'))?.[1] : null;
 let ignoredToolchain = null;
 

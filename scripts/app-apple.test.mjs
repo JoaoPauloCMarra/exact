@@ -6,9 +6,9 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { delimiter, resolve, toNamespacedPath } from 'node:path';
-import { HERMES_INSTALLER, hermesBundle, hermesLeanSysRoots } from './app.mjs';
-import { checkHermesBundles, hermesCrossTargets, hermesSetupTargets } from './exact.mjs';
-import { iosAssets, entitlements, infoPlist, macInfoPlist, documentTypes, importedTypes, exportedTypes, writeUsageStrings, designCompatible, COMPATIBLE_SDK, moduleTripleFor } from '../host/apple/build.mjs';
+import { HERMES_INSTALLER, PINNED_RUST, hermesBundle, hermesLeanSysRoots } from './app.mjs';
+import { checkHermesBundles, appleCrossTargets, appleSetupTargets, platformRowNames } from './exact.mjs';
+import { iosAssets, iosTarget, entitlements, infoPlist, macInfoPlist, documentTypes, importedTypes, exportedTypes, writeUsageStrings, designCompatible, COMPATIBLE_SDK, moduleTripleFor } from '../host/apple/build.mjs';
 import { useXcode } from '../host/apple/devices.mjs';
 import { macReleaseEntitlements, launchImageInventory } from '../host/apple/assets.mjs';
 
@@ -18,18 +18,26 @@ test('the Apple build rejects --phone before selecting a simulator or resolving 
   assert.match(result.stderr, /--phone needs --device; for a simulator use --sim/);
 });
 
-test.skipIf(process.platform === 'win32')('a phone or Apple TV build checks its Rust target before resolving an app', () => {
+test.skipIf(process.platform === 'win32')('an iOS, phone, Apple TV or iOS test build checks its Rust target before resolving an app', () => {
   const bin = mkdtempSync(resolve(tmpdir(), 'exact-rustup-'));
   try {
     const build = (installed, ...args) => {
-      writeFileSync(resolve(bin, 'rustup'), `#!/bin/sh\nprintf '${installed}\\n'\n`, { mode: 0o755 });
-      return spawnSync(process.execPath, ['host/apple/build.mjs', ...args, 'no-such-app'], { encoding: 'utf8', env: { ...process.env, PATH: bin + delimiter + process.env.PATH } });
+      // The pinned toolchain has `installed`; an ambient RUSTUP_TOOLCHAIN's has every target, which the build does not use.
+      writeFileSync(resolve(bin, 'rustup'), `#!/bin/sh\ncase " $* " in *" --toolchain ${PINNED_RUST} "*) printf '${installed}\\n';; *) printf '${[iosTarget, 'aarch64-apple-ios', 'aarch64-apple-tvos', 'aarch64-apple-tvos-sim'].join('\\n')}\\n';; esac\n`, { mode: 0o755 });
+      return spawnSync(process.execPath, ['host/apple/build.mjs', ...args, 'no-such-app'], { encoding: 'utf8', env: { ...process.env, RUSTUP_TOOLCHAIN: 'stable', PATH: bin + delimiter + process.env.PATH } });
     };
     const phone = build('aarch64-apple-ios-sim', '--device');
     assert.equal(phone.status, 1);
-    assert.match(phone.stderr, /--device needs Rust's aarch64-apple-ios std, which this toolchain lacks\. Install it with `rustup target add aarch64-apple-ios`/);
+    assert.match(phone.stderr, new RegExp(`--device needs Rust's aarch64-apple-ios std, which the pinned toolchain lacks\\. Install it with \`rustup target add aarch64-apple-ios --toolchain ${PINNED_RUST}\``));
+    assert.match(build('aarch64-apple-ios', '--ios').stderr, new RegExp(`--ios needs Rust's ${iosTarget} std`));
     assert.match(build('aarch64-apple-ios', '--tvos', '--device').stderr, /--tvos needs Rust's aarch64-apple-tvos std/);
     assert.match(build('aarch64-apple-ios', '--device').stderr, /no app at /);
+    assert.match(build(iosTarget, '--ios').stderr, /no app at /);
+    // The XCTest build (`--test --ios`) compiles for the simulator too.
+    const xctest = build('aarch64-apple-ios', '--test', '--ios');
+    assert.equal(xctest.status, 1);
+    assert.match(xctest.stderr, new RegExp(`--ios needs Rust's ${iosTarget} std, which the pinned toolchain lacks`));
+    assert.match(build(iosTarget, '--test', '--ios').stderr, /no app at /);
   } finally { rmSync(bin, { recursive: true, force: true }); }
 });
 
@@ -103,15 +111,18 @@ test('setup check uses the installer result and preserves its missing-bundle mes
   assert.match(installed.message, /Verified every installed bundle/);
 });
 
-test('each Apple TypeScript destination checks its own Hermes bundle, device included', () => {
-  assert.deepEqual(hermesCrossTargets('darwin', 'arm64'), [
-    { target: 'aarch64-apple-ios-sim', need: 'iOS Simulator TypeScript' },
-    { target: 'aarch64-apple-ios', need: 'iOS device TypeScript' },
-    { target: 'aarch64-apple-tvos-sim', need: 'tvOS Simulator TypeScript' },
+test('each Apple destination checks its own Rust std and Hermes bundle, device included', () => {
+  assert.deepEqual(appleCrossTargets('darwin', 'arm64'), [
+    { target: 'aarch64-apple-ios-sim', destination: 'iOS Simulator' },
+    { target: 'aarch64-apple-ios', destination: 'iOS device' },
+    { target: 'aarch64-apple-tvos-sim', destination: 'tvOS Simulator' },
   ]);
-  assert.equal(hermesCrossTargets('darwin', 'x64')[0].target, 'x86_64-apple-ios');
-  assert.deepEqual(hermesCrossTargets('linux', 'x64'), []);
-  assert.deepEqual([false, true].map(sdk => hermesSetupTargets('darwin', 'arm64', sdk)).concat([hermesSetupTargets('linux', 'x64', true)]), [['aarch64-apple-ios-sim', 'aarch64-apple-tvos-sim'], ['aarch64-apple-ios-sim', 'aarch64-apple-ios', 'aarch64-apple-tvos-sim'], []]); // the device's with the iphoneos SDK
+  assert.equal(appleCrossTargets('darwin', 'x64')[0].target, 'x86_64-apple-ios');
+  assert.deepEqual(appleCrossTargets('linux', 'x64'), []);
+  assert.deepEqual([false, true].map(sdk => appleSetupTargets('darwin', 'arm64', sdk)).concat([appleSetupTargets('linux', 'x64', true)]), [['aarch64-apple-ios-sim', 'aarch64-apple-tvos-sim'], ['aarch64-apple-ios-sim', 'aarch64-apple-ios', 'aarch64-apple-tvos-sim'], []]); // the device's with the iphoneos SDK
+  // A first iOS build refuses, naming the command, before Cargo fails on a target the pinned toolchain lacks.
+  assert.deepEqual(platformRowNames('ios', { os: 'darwin', cpu: 'arm64' }).slice(-2), ['Hermes bundle (aarch64-apple-ios-sim)', 'Rust aarch64-apple-ios-sim']);
+  assert.deepEqual(platformRowNames('ios', { os: 'darwin', cpu: 'x64', device: true }).slice(-2), ['Hermes bundle (aarch64-apple-ios)', 'Rust aarch64-apple-ios']);
   const calls = [];
   const execute = (command, args) => { calls.push(args); return {status: 0, stdout: 'Verified', stderr: ''}; };
   checkHermesBundles({}, execute, 'darwin', 'arm64', ['aarch64-apple-ios']);
