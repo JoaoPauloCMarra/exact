@@ -678,8 +678,10 @@ const HOSTS=['globalThis','self','window','frames','parent','top','opener'];
 // Code from a string: the bundle cannot capture it, and on the page it runs outside the module's bindings.
 const CODE=['Function','eval'];
 const NODE=['process','Buffer','global','__dirname','__filename','require'];
+// The names `globalThis` has on no executor: Hermes lacks them, and the web's module scope hides the page's (host/web-js/ts-fetch.js `ABSENT`).
+const ABSENT=[...DOM,'self','process','Buffer','global'];
 const SCOPES=['Program','BlockStatement','StaticBlock','SwitchStatement','ForStatement','ForInStatement','ForOfStatement','CatchClause','ClassExpression'];
-const NOT_REFERENCES={MemberExpression:'property',Property:'key',MethodDefinition:'key',PropertyDefinition:'key',LabeledStatement:'label',BreakStatement:'label',ContinueStatement:'label',ImportSpecifier:'imported',ExportSpecifier:'exported',MetaProperty:'property'};
+const NOT_REFERENCES={MemberExpression:'property',Property:'key',MethodDefinition:'key',PropertyDefinition:'key',LabeledStatement:'label',BreakStatement:'label',ContinueStatement:'label',ImportSpecifier:'imported',ExportSpecifier:'exported',ExportAllDeclaration:'exported',MetaProperty:'property'};
 const FUNCTIONS=['FunctionDeclaration','FunctionExpression','ArrowFunctionExpression'];
 // The names a scope node declares itself: a function's parameters and its
 // hoisted `var`s and functions, a block's lexical declarations, a catch
@@ -726,8 +728,9 @@ function declares(node) {
  * `…: why`: each use of a name no enclosing scope binds, not guarded by a
  * `typeof` test of it that dominates the use (`typeof x !== 'undefined' &&
  * x.y`, its `if` or `?:`, or an earlier `if (typeof x …) return`), and each
- * such member of `globalThis`, `self`, `window` or `global`. Static: a use
- * behind an alias still reaches an executor without the name. */
+ * such member of `globalThis`, `self`, `window` or `global`, but for a
+ * `globalThis.x` that `?.` follows or a variable takes. Static: a use behind
+ * an alias still reaches an executor without the name. */
 export function packageRefusals(code, label, parse) {
   const ast=parse(code,{lang:'js'}), found=[], at=lineColumn(code);
   // Whether `node` tests `typeof name` (or `typeof globalThis.name`).
@@ -772,14 +775,21 @@ export function packageRefusals(code, label, parse) {
       const constant=name==='process' && parent?.type==='MemberExpression' && key==='object' && propertyName(parent)==='env' && grand?.type==='MemberExpression' && propertyName(grand)==='NODE_ENV';
       const literal=name==='require' && parent?.type==='CallExpression' && key==='callee'
         && ['Literal','TemplateLiteral'].includes(parent.arguments[0]?.type) && !parent.arguments[0].expressions?.length;
+      // `Function`, and `eval` direct or not, however reached as a name. A method of
+      // `Function.prototype` makes no code; its `constructor` is `Function`.
+      const method=name==='Function' && parent?.type==='MemberExpression' && key==='object' && propertyName(parent)==='prototype' ? propertyName(grand) : null;
       if ((DOM.includes(name) || NODE.includes(name)) && !constant && !literal && !guarded(name,path)) refuse(name,node);
-      // `Function`, and `eval` direct or not, however reached as a name.
-      else if (CODE.includes(name)) refuse(name,node);
+      else if (CODE.includes(name) && !(method && method!=='constructor')) refuse(name,node);
     }
     if (node.type==='MemberExpression') {
       const object=bare(node.object), name=propertyName(node);
+      // `globalThis.name` of an absent name is `undefined` and does not throw: `?.` on it
+      // tests it as `typeof` does, and a variable of it is an alias.
+      const tested=object?.name==='globalThis' && ABSENT.includes(name)
+        && ((parent?.optional && ((parent.type==='MemberExpression' && key==='object') || (parent.type==='CallExpression' && key==='callee')))
+          || (parent?.type==='VariableDeclarator' && key==='init' && parent.id.type==='Identifier'));
       if (object?.type==='Identifier' && HOSTS.includes(object.name) && free(object.name)
-        && (DOM.includes(name) || NODE.includes(name) || HOSTS.includes(name) || CODE.includes(name)) && !guarded(name,path)) refuse(name,node);
+        && (DOM.includes(name) || NODE.includes(name) || HOSTS.includes(name) || CODE.includes(name)) && !tested && !guarded(name,path)) refuse(name,node);
     }
     // `import(x)` of a computed name, like a computed `require`.
     if (node.type==='ImportExpression' && !(['Literal','TemplateLiteral'].includes(node.source?.type) && !node.source.expressions?.length)) refuse('import()',node);

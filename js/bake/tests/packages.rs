@@ -385,6 +385,15 @@ fn package_code_no_executor_runs_is_refused_by_package_and_file() {
             "module.exports = () => globalThis.localStorage.getItem('k');\n",
             "bad@3.1.0 (index.js:2:24) uses the DOM's 'localStorage'",
         ),
+        // A `?.` further along tests nothing, and a pattern reads a member.
+        (
+            "module.exports = () => globalThis.process.env?.HOME;\n",
+            "bad@3.1.0 (index.js:2:24) uses Node's 'process'",
+        ),
+        (
+            "const { env } = globalThis.process;\nmodule.exports = env;\n",
+            "bad@3.1.0 (index.js:2:17) uses Node's 'process'",
+        ),
         // The page's other names for itself, and code from a string.
         (
             "module.exports = () => globalThis.top.document.cookie;\n",
@@ -392,6 +401,10 @@ fn package_code_no_executor_runs_is_refused_by_package_and_file() {
         ),
         (
             "module.exports = Function('return 1');\n",
+            "bad@3.1.0 (index.js:2:18) loads code from a string ('Function')",
+        ),
+        (
+            "module.exports = Function.prototype.constructor('return 1');\n",
             "bad@3.1.0 (index.js:2:18) loads code from a string ('Function')",
         ),
         (
@@ -501,6 +514,41 @@ fn an_aliased_dom_global_is_absent_where_the_module_runs() {
         result.unwrap();
     }
     assert_eq!(message(&app), Value::str("undefined0"));
+}
+
+/// A package that allows for an absent name is not refused: `?.` on a member
+/// of the global object, a variable of one, a re-export named `Function` and
+/// `Function.prototype` build in every producer, and find the name absent.
+#[test]
+fn package_code_that_allows_for_an_absent_global_is_not_refused() {
+    let app = App::new("allowed");
+    app.put(
+        "node_modules/wary/package.json",
+        r#"{"name":"wary","version":"1.0.0","type":"module"}"#,
+    );
+    app.put(
+        "node_modules/wary/function.js",
+        "export const bound = (f) => Function.prototype.bind.call(f, undefined);\n",
+    );
+    app.put(
+        "node_modules/wary/index.js",
+        "export * as Function from './function.js';\nconst process = globalThis.process;\nexport const where = () => (globalThis.process?.platform ?? 'none') + ':' + (globalThis.document?.title ?? 'none') + ':' + typeof process;\n",
+    );
+    app.put(
+        "packages.d.ts",
+        "declare module 'wary' { export const where: () => string; export const Function: { bound(f: () => string): () => string }; }\n",
+    );
+    app.answer(
+        "import * as wary from 'wary';",
+        "wary.Function.bound(wary.where)() + count",
+    );
+    for result in every(&app) {
+        result.unwrap();
+    }
+    if !exact_js::ENGINE_LINKED {
+        return;
+    }
+    assert_eq!(message(&app), Value::str("none:none:undefined0"));
 }
 
 /// No build runs app or package code to learn `appId` and `grants`: they are
