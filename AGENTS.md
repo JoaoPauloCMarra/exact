@@ -18,7 +18,7 @@ code, never output or code. It goes to Expo only as `bun exact.mjs feedback stat
 
 Working on exact2 itself: read `rules/RULES.md` and `rules/DEFERRED.md` first; they bind and this file does not.
 The design record, the LLP corpus, is private: clone `expo/exact-llp` into `llp/`, which this
-repository ignores; there `llp/1000-exact2-root.explainer.md` is the map. Code and docs cite LLPs by
+repository ignores (a worktree links its checkout's: `ln -s <checkout>/llp llp`); there `llp/1000-exact2-root.explainer.md` is the map. Code and docs cite LLPs by
 number (`LLP 1115 D7`), and a reader without the corpus learns only that the decision is recorded.
 Push an LLP before the code that cites it. `docs/agent-pitfalls.md` lists verified
 footguns in writing apps here; add to it when you hit one. Design documents under `llp/research/`
