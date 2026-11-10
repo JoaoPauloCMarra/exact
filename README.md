@@ -8,7 +8,7 @@ agent can build it, run it, see it, and test it on every one of them.**
 > give Claude Code this prompt:
 >
 > ```text
-> Clone https://github.com/ccheever/exact2 and follow its README to make a new Exact
+> Clone https://github.com/expo/exact and follow its README to make a new Exact
 > app with `exact new`. Run `bun scripts/exact.mjs setup` once first. Make a todo
 > list where I can add items, check them off, delete them,
 > and see how many are left. Put the view in Contract and keep the list in `app.ts`.
@@ -250,8 +250,8 @@ diagnostic are the check's result.
 ### 2. Run Caltrain in the browser
 
 ```sh
-git clone https://github.com/ccheever/exact2.git
-cd exact2
+git clone https://github.com/expo/exact.git
+cd exact
 bun scripts/exact.mjs setup
 bun host/web/dev.mjs            # Caltrain, at http://127.0.0.1:8765/
 ```
