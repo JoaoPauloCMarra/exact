@@ -59,7 +59,7 @@ class ExactView(context: Context, private val live: Boolean, private val onFirst
         return at + rowTall.get(row, height) > -margin && at < height + margin
     }
     private val unrowedSeen = HashSet<Int>()
-    private var started = false
+    internal var started = false
     private var ops: IntBuffer? = null
     private var first = true
     private val fonts = java.util.concurrent.ConcurrentHashMap<Int, Font>()
@@ -222,8 +222,9 @@ class ExactView(context: Context, private val live: Boolean, private val onFirst
         removeCallbacks(timer); removeCallbacks(refiner)
     }
 
-    /** A finger's scroll, its fling and its ends ([Scrolling], LLP 1115.001 D7). */
+    /** A finger's scroll, its fling and its ends ([Scrolling], LLP 1115.001 D7), and the fingers past a touch's first. */
     private val scrolling = Scrolling(this)
+    internal val fingers = Fingers(this)
 
     /** The touch that is down becomes a long press once it has been held still for the system's own time
      * ([android.view.ViewConfiguration.getLongPressTimeout], which follows the person's touch and hold delay):
@@ -248,7 +249,7 @@ class ExactView(context: Context, private val live: Boolean, private val onFirst
             }
         }
     }
-    private fun hold(e: MotionEvent?) {
+    internal fun hold(e: MotionEvent?) {
         removeCallbacks(held)
         if (e == null) return
         heldX = e.x; heldY = e.y; heldTool = e.getToolType(0)
@@ -299,6 +300,7 @@ class ExactView(context: Context, private val live: Boolean, private val onFirst
             // A new contact cannot borrow the previous contact's delayed hit answer.
             forgetModuleTap(replayRelease = true)
             moduleDownX = e.x; moduleDownY = e.y
+            fingers.began(e)
         }
         // A touch that scrolls is the reader's and exact2 hears no more of it; any other goes on to exact2.
         if (started && scrolling.touch(e)) { forgetModuleTap(); hold(null); return true }
@@ -324,16 +326,14 @@ class ExactView(context: Context, private val live: Boolean, private val onFirst
             if (down) { val touch = hosted.serial; under(e.x, e.y) { hosted.under(touch, it.getOrElse(2) { 0 }) } }
             return true
         }
-        val action = when (e.actionMasked) {
-            MotionEvent.ACTION_DOWN -> 0; MotionEvent.ACTION_UP -> 1; MotionEvent.ACTION_MOVE -> 2; else -> 3
-        }
+        val action = fingers.touch(e).takeIf { it >= 0 } ?: return true
         when (action) {
             0 -> if (started) hold(e)
             2 -> if (Math.abs(e.x - heldX) > slop || Math.abs(e.y - heldY) > slop) hold(null)
             else -> hold(null)
         }
         if (action == 1) Exact.touched = e.eventTime
-        forward(action, e.x, e.y, e.getToolType(0), -1L)
+        fingers.forward(e, action)
         if (down && started) {
             val serial = moduleSerial
             moduleAwaiting = 1
@@ -480,7 +480,7 @@ class ExactView(context: Context, private val live: Boolean, private val onFirst
     fun onPublished() { publish() }
 
     /** What the owner published, drawn; whether there was any. */
-    private fun publish(): Boolean {
+    internal fun publish(): Boolean {
         if (!started) return false
         if (!takeOwned()) return false
         if (moved || quiet) ticker?.invalidate() else invalidate()
@@ -505,7 +505,7 @@ class ExactView(context: Context, private val live: Boolean, private val onFirst
     private val HOLD_MS = 400L
     private val warmer = Warm()
     /** wait=N: a release waits N ms for exact2's answer (Exact.WAIT_MS by default), to compare. */
-    private val releaseWait = (context as Activity).intent.getStringExtra("wait")?.toLongOrNull() ?: Exact.WAIT_MS
+    internal val releaseWait = (context as Activity).intent.getStringExtra("wait")?.toLongOrNull() ?: Exact.WAIT_MS
     override fun onDetachedFromWindow() {
         forgetModuleTap()
         warmer.destroy()
@@ -1028,7 +1028,7 @@ class ExactView(context: Context, private val live: Boolean, private val onFirst
     }
 
     /** A wake (a reply, a picture, a timer): draw only when the stream changed. */
-    private fun pump() {
+    internal fun pump() {
         if (owner != null || !running) return // the owner publishes what a key or a reply changed
         if (take()) { if (moved) ticker?.invalidate() else { taken = true; invalidate() } } else schedule()
     }

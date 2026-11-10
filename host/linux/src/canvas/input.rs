@@ -67,4 +67,19 @@ impl<D: DataSource + Default> CanvasHost<D> {
         };
         self.touched(action, x, y, now, r);
     }
+
+    /// A finger past the touch's first (0 down, 1 up, 2 move, 3 cancel) at
+    /// pixels, by Android's pointer `id`: the canvas holding the touch takes
+    /// it ([`crate::presenter::Presenter::canvas_finger`]); where none holds
+    /// it, a second finger cancels the touch.
+    pub fn finger(&mut self, action: i32, id: i32, x: f32, y: f32) {
+        let _s = Section::begin(c"exact finger");
+        let now = self.now();
+        let taken = self
+            .p
+            .canvas_finger(id, action, x / self.scale, y / self.scale, now);
+        if !taken && action == 0 {
+            self.touch(3, x, y, 0);
+        }
+    }
 }

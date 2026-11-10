@@ -20,6 +20,8 @@ use std::{
 #[path = "surfaces/android.rs"]
 mod android;
 #[cfg(any(target_os = "android", test))]
+mod fingers;
+#[cfg(any(target_os = "android", test))]
 mod retry;
 #[cfg(target_os = "android")]
 pub(crate) use android::acquire_fd;
@@ -466,6 +468,8 @@ pub(crate) struct Surfaces {
     /// Windows readers gave canvases, by view (Android).
     #[cfg(target_os = "android")]
     windows: BTreeMap<u32, android::Window>,
+    #[cfg(any(target_os = "android", test))]
+    fingers: fingers::Fingers,
 }
 /// Posts held per surface name until a canvas of that name is live; past it a
 /// post is dropped and logged. The same bound and rule on every host.

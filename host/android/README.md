@@ -1232,8 +1232,12 @@ The cut was the smallest one. Left in the reader:
   - *A finger is a finger* (D7.4, D7.6). Each touch says what touched (`Native.touch`'s tool type), so a finger is a
     `touch` pointer to the app, hovers nothing, and leaves no focus ring on the button it presses (a text field keeps
     its own focus ring). The system's touch slop, told with the settings, is how far a touch moves before it is a
-    drag. One pointer still: a second finger cancels the touch, unless the touch is a scroll, which the second
-    finger then takes.
+    drag. A GPU canvas that holds the touch (its first finger landed on the canvas) takes every other finger that
+    lands on it (`Native.finger`, `Fingers.kt`, `surfaces/fingers.rs`): each is a pointer of its own there, numbered
+    from 2 and never reused, as on iOS, and stays the canvas's after the first finger lifts; a finger landing
+    anywhere else is nobody's. A cancelled touch, one a scroll took among them, cancels each finger the canvas took.
+    Unlike iOS, a finger on another canvas or on a control over the canvas is not that one's. Any other touch is
+    one pointer still: a second finger cancels it, unless it is a scroll, which the second finger then takes.
   - *The lifecycle's first two parts* (D15): the manifest declares the configuration changes the host takes in
     place, an activity made again adopts the host that runs (`Native.start` on a thread that has one), and the host
     does no frame work while the activity is stopped. Android discards a stopped window's display lists, the reader's

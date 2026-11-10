@@ -107,6 +107,10 @@ object Native {
      * has been held still for the system's long-press time ([android.view.ViewConfiguration.getLongPressTimeout]).
      * What names a context menu there opens it (D10), and that touch then presses nothing when it lifts. */
     @JvmStatic external fun touch(action: Int, x: Float, y: Float, tool: Int)
+    /** A finger past the touch's first ([Fingers]): 0 down, 1 up, 2 move, 3 cancel, at the view's pixels, by its pointer
+     * [id] ([android.view.MotionEvent.getPointerId]). The canvas holding the touch takes it where it lands on that
+     * canvas; where no canvas holds the touch, a second finger cancels it. */
+    @JvmStatic external fun finger(action: Int, id: Int, x: Float, y: Float)
     /** What happened in the window the reader made for surface [serial] of the top layer ([Surfaces], LLP 1115.001
      * D10), on the host's thread: a touch ([what] 0 down, 1 up, 2 move, 3 cancel) at ([x], [y]), pixels from the
      * window's own top left; the system dismissed the window (8: a tap outside a menu, Back, Escape); the reader

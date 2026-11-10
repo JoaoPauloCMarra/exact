@@ -703,12 +703,7 @@ internal class Fields(context: Context) : FrameLayout(context) {
         } else {
             state = NONE; target = null
             val v = view
-            if (v != null) for (e in events) {
-                val action = when (e.actionMasked) {
-                    MotionEvent.ACTION_DOWN -> 0; MotionEvent.ACTION_UP -> 1; MotionEvent.ACTION_MOVE -> 2; else -> 3
-                }
-                v.forward(action, e.x, e.y, e.getToolType(0), -1L)
-            }
+            if (v != null) for (e in events) v.fingers.relay(e)
         }
         for (e in events) e.recycle()
     }

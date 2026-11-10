@@ -765,6 +765,20 @@ macro_rules! canvas_jni {
                 with(|h| h.touch(action, x, y, tool));
             }
 
+            /// A finger past the touch's first (0 down, 1 up, 2 move, 3
+            /// cancel) at the view's pixels, by its pointer id (`finger`).
+            #[no_mangle]
+            pub unsafe extern "system" fn Java_dev_exact_canvas_Native_finger(
+                _env: *mut JNIEnv,
+                _class: jclass,
+                action: jint,
+                id: jint,
+                x: jfloat,
+                y: jfloat,
+            ) {
+                with(|h| h.finger(action, id, x, y));
+            }
+
             /// What happened in the window the reader made for surface
             /// `serial` of the top layer (LLP 1115.001 D10;
             /// `presenter::top::event`): a touch (0 down, 1 up, 2 move, 3

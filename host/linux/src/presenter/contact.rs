@@ -104,14 +104,16 @@ impl<D: DataSource> Presenter<D> {
         }
         true
     }
+    /// Whether a contact that went down on `hit` is still canvas `canvas`'s
+    /// input: the contact's own, and each other finger's on Android.
+    pub(crate) fn canvas_input_live(&self, hit: NodeKey, canvas: ViewId) -> bool {
+        self.input_live(hit)
+            && (self.host.kernel().node_by_key(hit))
+                .is_some_and(|n| self.input_surface(n.id) == Some(canvas))
+    }
     fn contact_live(&self, contact: &Contact) -> bool {
         if let Some(canvas) = contact.canvas {
-            return self.input_live(contact.hit)
-                && self
-                    .host
-                    .kernel()
-                    .node_by_key(contact.hit)
-                    .is_some_and(|n| self.input_surface(n.id) == Some(canvas));
+            return self.canvas_input_live(contact.hit, canvas);
         }
         if contact.group {
             return self.group_live();
@@ -191,6 +193,8 @@ impl<D: DataSource> Presenter<D> {
         if self.pointer_walking {
             return;
         }
+        #[cfg(any(target_os = "android", test))]
+        self.retire_fingers(self.pointer_now());
         if self.contact.as_ref().is_some_and(|c| !self.contact_live(c)) {
             if self.contact.as_ref().is_some_and(|c| c.retained.is_some()) {
                 // Cancel only our token, at the already accepted Host time. An
@@ -438,6 +442,9 @@ impl<D: DataSource> Presenter<D> {
     /// synthesis; then the node's `pointerdown` (LLP 1005 §3), which the
     /// contact never waits for.
     pub fn pointer_down(&mut self, x: f32, y: f32, now_ms: f64) -> Result<bool, String> {
+        // A finger of an earlier touch whose up never came.
+        #[cfg(any(target_os = "android", test))]
+        self.cancel_fingers(now_ms);
         self.touched();
         if self.overlay_pointer(0, x, y, now_ms) || self.scrollbar_pointer(0, x, y) {
             return Ok(true);
@@ -1233,6 +1240,8 @@ impl<D: DataSource> Presenter<D> {
         result
     }
     fn pointer_abandon(&mut self, now_ms: f64) -> Result<(), String> {
+        #[cfg(any(target_os = "android", test))]
+        self.cancel_fingers(now_ms);
         let contact = if self.contact.is_some() {
             self.pointer_sample(0., 0., now_ms)?;
             self.contact.take()
