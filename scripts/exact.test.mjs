@@ -1071,3 +1071,21 @@ test.skipIf(process.platform === 'win32' || !Bun.which('rustup'))("the setup rep
   });
 }, 60_000);
 
+test("without CHROME, the setup report's Chrome row wants both of Playwright's pinned builds and names the missing one", () => inDir((browsers) => {
+  const { CHROME, ...env } = process.env;
+  // With `shell`, a stand-in headless shell where the pinned Playwright looks for it; the full build is never there.
+  const row = (shell) => {
+    const script = `const { chromium } = await import('./scripts/agent-launch.mjs'), { mkdirSync, writeFileSync } = await import('node:fs'), { dirname } = await import('node:path');
+      if (${shell}) { const { executable } = chromium(); mkdirSync(dirname(executable), { recursive: true }); writeFileSync(executable, '', { mode: 0o755 }); }
+      const { sdkReport } = await import('./scripts/exact.mjs'); console.log(JSON.stringify(sdkReport(process.env, { only: 'web' }).find(row => row.name === 'Chrome')))`;
+    const result = spawnSync(process.execPath, ['-e', script], { cwd: resolve(import.meta.dir, '..'), encoding: 'utf8', env: { ...env, PLAYWRIGHT_BROWSERS_PATH: browsers } });
+    assert.equal(result.status, 0, result.stderr);
+    return JSON.parse(result.stdout.trim().split('\n').at(-1));
+  };
+  const none = row(false);
+  assert.equal(none.ok, false);
+  assert.match(none.fix, /^exact setup, or set CHROME to a browser \(docs\/testing\.md, Browsers\): Chromium headless shell is missing at .*; Chromium is missing at /);
+  const shellOnly = row(true);
+  assert.equal(shellOnly.ok, false, 'the full build a GPU drive or perf run launches is missing');
+  assert.match(shellOnly.fix, /: Chromium is missing at [^;]*$/);
+}), 60_000);

@@ -442,6 +442,13 @@ export function setup({check = false} = {}) {
     // Android, where its SDK is (LLP 1107): the Rust target the APK's library builds for. Its Hermes bundle has no
     // release to fetch yet (`sdkReport`'s row says how to install one).
     if (existsSync(androidSdk())) run('rustup', ['target', 'add', 'aarch64-linux-android', '--toolchain', pin.channel]);
+    // The Chromium builds `chromium()` launches unless CHROME names another: the revision the pinned Playwright drives.
+    // A no-op when both are here; a failed download leaves the Chrome row to fail the run.
+    if (!process.env.CHROME) {
+      const browsers = [process.execPath, resolve(ROOT, 'node_modules/playwright-core/cli.js'), 'install', 'chromium', 'chromium-headless-shell'];
+      console.log(browsers.join(' '));
+      if (spawnSync(browsers[0], browsers.slice(1), {cwd: ROOT, stdio: 'inherit'}).status !== 0) console.error("exact setup: Playwright's Chromium did not install");
+    }
     // Every bake resolves offline and locked: the checkout's crates, and the game SDK's for a game's shell.
     run('cargo', [`+${pin.channel}`, 'fetch', '--locked', '--manifest-path', resolve(ROOT, 'Cargo.toml')]);
     console.log('cargo fetch (the game SDK lock, game/app/shells.lock)');
@@ -551,8 +558,13 @@ export function sdkReport(env = process.env, { only = null, device = false } = {
   const modules = ['rolldown', 'rolldown.exe'].some(bin => existsSync(resolve(ROOT, 'node_modules/.bin', bin)));
   if (want('node_modules')) rows.push(row('node_modules', modules ? 'installed' : '', 'bun.lock', modules, `bun install --frozen-lockfile in ${ROOT}`));
   if (want('Chrome')) {
-    const browser = chromium({ environment: env });
-    rows.push(row('Chrome', browser.unavailable ? '' : browser.executable, 'any', !browser.unavailable, "install Playwright's Chromium (docs/testing.md, Browsers), or set CHROME"));
+    // Both pinned builds: the headless shell, and the full build a GPU app's drive or a `perf` need launches. Without
+    // node_modules there is no Playwright to name them: the row is missing, as node_modules' is.
+    const browsers = (() => { try { return (env.CHROME ? [[]] : [[], ['gpu']]).map(needs => chromium({ environment: env, needs })); }
+      catch { return [{ unavailable: 'no playwright-core in node_modules' }]; } })();
+    const missing = browsers.filter(browser => browser.unavailable).map(browser => browser.unavailable.split(';')[0]);
+    rows.push(row('Chrome', missing.length ? '' : browsers[0].executable, "Playwright's pinned Chromium and its headless shell, or CHROME", !missing.length,
+      `exact setup, or set CHROME to a browser (docs/testing.md, Browsers): ${missing.join('; ')}`));
   }
   if (process.platform === 'darwin' && want('Xcode')) {
     const developer = output('xcode-select', ['-p']);

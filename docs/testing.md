@@ -266,8 +266,8 @@ change the native state inside that pair, then wait for the runner to apply it
   pins in `package.json`: by default its headless shell, which on an M5 Pro
   launched in 74 ms against the full build's 185 ms and used 263 MB of memory
   against 939 MB (the medians of 7 launches, every process of the browser
-  counted). Install both builds with `bunx playwright@<version> install
-  chromium chromium-headless-shell`.
+  counted). `exact setup` installs both builds (`bunx playwright@<version>
+  install chromium chromium-headless-shell` does the same).
 - **Run the device runner's own tests alone.** `scripts/agent-test.test.mjs`
   drives a real app on the web, so it needs the pinned Chromium or `CHROME`
   pointing at an installed Chrome, and one of its tests builds the app's web
