@@ -55,7 +55,12 @@ pub fn module_rust(plan: &Plan) -> Result<String, String> {
             field_name(extension)
         )
         .unwrap();
-        out.push_str("    #![allow(clippy::all, dead_code)]\n    use exact_data::modules::{self as m, ModuleValue};\n");
+        // A record may be named `Option`, `String` or `ModuleValue` and then
+        // shadows that name in the module, so the binding imports nothing and
+        // spells every type and trait it does not generate by its path, as
+        // `crate::rust` does (which says why values, macros and methods stay
+        // bare).
+        out.push_str("    #![allow(clippy::all, dead_code)]\n");
         for (name, ty) in &records {
             let json = whole.get(name).map(Vec::as_slice).unwrap_or_default();
             record(plan, name, *ty, json, &mut out)?;
@@ -139,11 +144,11 @@ fn rust_type(plan: &Plan, ty: TypesId) -> Result<String, String> {
     let row = &plan.types[ty.0 as usize];
     let elem = || rust_type(plan, row.elem.ok_or("a type with no element")?);
     Ok(match row.kind {
-        TypeKind::Number => "f64".into(),
-        TypeKind::Bool => "bool".into(),
-        TypeKind::String => "String".into(),
-        TypeKind::Option => format!("Option<{}>", elem()?),
-        TypeKind::List => format!("Vec<{}>", elem()?),
+        TypeKind::Number => "::core::primitive::f64".into(),
+        TypeKind::Bool => "::core::primitive::bool".into(),
+        TypeKind::String => "::std::string::String".into(),
+        TypeKind::Option => format!("::core::option::Option<{}>", elem()?),
+        TypeKind::List => format!("::std::vec::Vec<{}>", elem()?),
         TypeKind::Record => record_name(plan.str(row.name)),
         // A signal answers nothing (LLP 1133.011 D1).
         TypeKind::Unit => "()".into(),
@@ -163,8 +168,8 @@ fn json_of(plan: &Plan, row: &ModulesRow) -> serde_json::Value {
 /// `option<json<T>>`, which the plan holds as `option<string>`.
 fn whole_type(plan: &Plan, ty: TypesId) -> &'static str {
     match plan.types[ty.0 as usize].kind {
-        TypeKind::Option => "Option<m::serde_json::Value>",
-        _ => "m::serde_json::Value",
+        TypeKind::Option => "::core::option::Option<::exact_data::modules::serde_json::Value>",
+        _ => "::exact_data::modules::serde_json::Value",
     }
 }
 
@@ -204,31 +209,37 @@ fn record(
             };
             writeln!(
                 checks,
-                "        if let Some(x) = {at} {{ m::member(x, &{members:?}).map_err(|e| format!(\"{key}: {{e}}\"))?; }}"
+                "        if let Some(x) = {at} {{ ::exact_data::modules::member(x, &{members:?}).map_err(|e| format!(\"{key}: {{e}}\"))?; }}"
             )
             .unwrap();
         }
     }
     out.push_str("    }\n");
     let v = if checks.is_empty() { "_" } else { "v" };
-    writeln!(out, "    impl {name} {{\n        fn check({v}: &Self) -> Result<(), String> {{\n{checks}        Ok(())\n        }}\n    }}").unwrap();
-    writeln!(out, "    impl ModuleValue for {name} {{").unwrap();
-    out.push_str("        fn encode(&self) -> Result<Option<m::serde_json::Value>, String> {\n            Self::check(self)?;\n            let mut o = m::serde_json::Map::new();\n");
+    writeln!(out, "    impl {name} {{\n        fn check({v}: &Self) -> ::core::result::Result<(), ::std::string::String> {{\n{checks}        Ok(())\n        }}\n    }}").unwrap();
+    writeln!(
+        out,
+        "    impl ::exact_data::modules::ModuleValue for {name} {{"
+    )
+    .unwrap();
+    out.push_str("        fn encode(&self) -> ::core::result::Result<::core::option::Option<::exact_data::modules::serde_json::Value>, ::std::string::String> {\n            Self::check(self)?;\n            let mut o = ::exact_data::modules::serde_json::Map::new();\n");
     for f in fields(plan, ty) {
         writeln!(
             out,
-            "            m::put(&mut o, {:?}, &self.{})?;",
+            "            ::exact_data::modules::put(&mut o, {:?}, &self.{})?;",
             plan.str(f.name),
             field_name(plan.str(f.name))
         )
         .unwrap();
     }
-    out.push_str("            Ok(Some(m::serde_json::Value::Object(o)))\n        }\n");
-    out.push_str("        fn decode(json: &m::serde_json::Value) -> Result<Self, String> {\n            if !json.is_object() { return Err(format!(\"{json} is not a record\")); }\n            let v = Self {\n");
+    out.push_str(
+        "            Ok(Some(::exact_data::modules::serde_json::Value::Object(o)))\n        }\n",
+    );
+    out.push_str("        fn decode(json: &::exact_data::modules::serde_json::Value) -> ::core::result::Result<Self, ::std::string::String> {\n            if !json.is_object() { return Err(format!(\"{json} is not a record\")); }\n            let v = Self {\n");
     for f in fields(plan, ty) {
         writeln!(
             out,
-            "                {}: m::take(json, {:?})?,",
+            "                {}: ::exact_data::modules::take(json, {:?})?,",
             field_name(plan.str(f.name)),
             plan.str(f.name)
         )
@@ -257,7 +268,7 @@ fn call(plan: &Plan, extension: &str, row: &ModulesRow, out: &mut String) -> Res
     let answer = if nothing {
         "()".to_owned()
     } else if json_of(plan, row)["answers"] == true {
-        "m::serde_json::Value".to_owned()
+        "::exact_data::modules::serde_json::Value".to_owned()
     } else {
         rust_type(plan, ty)?
     };
@@ -268,17 +279,17 @@ fn call(plan: &Plan, extension: &str, row: &ModulesRow, out: &mut String) -> Res
                 out,
                 "\n    /// `{declared}` ({kind}): its request, with the keyword arguments `options` writes; an omitted one\n    \
                  /// stays the platform's. `TypeError` for a value an option cannot take.\n    \
-                 pub fn {f}(options: &{options}) -> Result<exact_runner::Request, m::ModuleError> {{\n        \
-                 let args = options.encode().map_err(|e| m::ModuleError::new(\"TypeError\", format!(\"{at}: {{e}}\")))?;\n        \
-                 Ok(m::request({extension:?}, {verb:?}, {declared:?}, args.unwrap_or_default()))\n    }}"
+                 pub fn {f}(options: &{options}) -> ::core::result::Result<::exact_runner::Request, ::exact_data::modules::ModuleError> {{\n        \
+                 let args = ::exact_data::modules::ModuleValue::encode(options).map_err(|e| ::exact_data::modules::ModuleError::new(\"TypeError\", format!(\"{at}: {{e}}\")))?;\n        \
+                 Ok(::exact_data::modules::request({extension:?}, {verb:?}, {declared:?}, args.unwrap_or_default()))\n    }}"
             )
             .unwrap();
         }
         None => writeln!(
             out,
             "\n    /// `{declared}` ({kind}): its request.\n    \
-             pub fn {f}() -> exact_runner::Request {{\n        \
-             m::request({extension:?}, {verb:?}, {declared:?}, m::serde_json::json!({{}}))\n    }}"
+             pub fn {f}() -> ::exact_runner::Request {{\n        \
+             ::exact_data::modules::request({extension:?}, {verb:?}, {declared:?}, ::exact_data::modules::serde_json::json!({{}}))\n    }}"
         )
         .unwrap(),
     }
@@ -286,8 +297,8 @@ fn call(plan: &Plan, extension: &str, row: &ModulesRow, out: &mut String) -> Res
         writeln!(
             out,
             "    /// The reply to [`{f}`]'s request: done, or the module's error.\n    \
-             pub fn {f}_reply(outcome: &exact_runner::Outcome) -> Result<(), m::ModuleError> {{\n        \
-             m::reply({at:?}, outcome).map(|_| ())\n    }}"
+             pub fn {f}_reply(outcome: &::exact_runner::Outcome) -> ::core::result::Result<(), ::exact_data::modules::ModuleError> {{\n        \
+             ::exact_data::modules::reply({at:?}, outcome).map(|_| ())\n    }}"
         )
         .unwrap();
         return Ok(());
@@ -295,9 +306,9 @@ fn call(plan: &Plan, extension: &str, row: &ModulesRow, out: &mut String) -> Res
     writeln!(
         out,
         "    /// The reply to [`{f}`]'s request: its value, or the module's error.\n    \
-         pub fn {f}_reply(outcome: &exact_runner::Outcome) -> Result<{answer}, m::ModuleError> {{\n        \
-         let json = m::reply({at:?}, outcome)?;\n        \
-         <{answer} as ModuleValue>::decode(&json).map_err(|e| m::malformed({at:?}, e))\n    }}"
+         pub fn {f}_reply(outcome: &::exact_runner::Outcome) -> ::core::result::Result<{answer}, ::exact_data::modules::ModuleError> {{\n        \
+         let json = ::exact_data::modules::reply({at:?}, outcome)?;\n        \
+         <{answer} as ::exact_data::modules::ModuleValue>::decode(&json).map_err(|e| ::exact_data::modules::malformed({at:?}, e))\n    }}"
     )
     .unwrap();
     Ok(())

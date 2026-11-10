@@ -630,14 +630,14 @@ fn the_rust_binding_is_the_plans_modules_with_their_wire_names() {
         // A call's options and a platform's words, in Rust's names.
         "pub struct GetCurrentPositionOptions {",
         "pub struct GetCurrentPositionApple {",
-        "pub fn get_current_position(options: &GetCurrentPositionOptions) -> Result<exact_runner::Request, m::ModuleError>",
-        "pub fn get_current_position_reply(outcome: &exact_runner::Outcome) -> Result<GeolocationPosition, m::ModuleError>",
+        "pub fn get_current_position(options: &GetCurrentPositionOptions) -> ::core::result::Result<::exact_runner::Request, ::exact_data::modules::ModuleError>",
+        "pub fn get_current_position_reply(outcome: &::exact_runner::Outcome) -> ::core::result::Result<GeolocationPosition, ::exact_data::modules::ModuleError>",
         // A name that takes nothing; every name of a used module, read or not.
-        "pub fn geolocation_status() -> exact_runner::Request",
+        "pub fn geolocation_status() -> ::exact_runner::Request",
         "pub fn watch_position(",
         // The wire keeps the declared names; an enum is checked.
-        "m::put(&mut o, \"enableHighAccuracy\", &self.enable_high_accuracy)?;",
-        "m::member(x, &[\"bestForNavigation\"",
+        "::exact_data::modules::put(&mut o, \"enableHighAccuracy\", &self.enable_high_accuracy)?;",
+        "::exact_data::modules::member(x, &[\"bestForNavigation\"",
     ] {
         assert!(rust.contains(expected), "{expected}\n---\n{rust}");
     }
@@ -649,4 +649,75 @@ fn the_rust_binding_is_the_plans_modules_with_their_wire_names() {
         .compile("component App\n  view\n    text \"x\"\n")
         .unwrap_or_else(|e| panic!("{e:?}"));
     assert_eq!(contract::module_rust(&plan).unwrap().lines().count(), 1);
+}
+
+#[test]
+fn a_modules_shapes_may_take_names_rust_predefines() {
+    // Each record shadows the prelude's name in the generated module, so the
+    // binding spells Rust's own names, and its own crate's, by their paths.
+    let app = App::new("rust-prelude");
+    let package = app.0.join("node_modules/@scratch/prelude");
+    std::fs::create_dir_all(&package).unwrap();
+    std::fs::write(
+        package.join("package.json"),
+        r#"{"name": "@scratch/prelude", "version": "1.0.0", "exports": {".": "./exact.json"}}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        package.join("exact.json"),
+        r#"{
+  "kind": "interface",
+  "name": "@scratch/prelude",
+  "version": "1.0.0",
+  "shapes": {
+    "Option": {"values": "string[]", "result": "option<Result>"},
+    "Result": {"items": "Vec[]", "mode": "enum<a|b>"},
+    "Vec": {"first": "option<String>", "all": "String[]"},
+    "String": {"count": "number", "flag": "bool"},
+    "ModuleValue": {"inner": "option<Option>"}
+  },
+  "names": [{"send": "fetch", "request": true, "options": {"limit": "option<number>"}, "answers": "ModuleValue"}]
+}"#,
+    )
+    .unwrap();
+    let source = "use fetch, ModuleValue from \"@scratch/prelude\"\ncomponent App\n  mutation got as shape ModuleValue\n  action go\n    send got = fetch(limit=3)\n  view\n    text \"x\"\n";
+    std::fs::write(app.0.join("app.contract"), source).unwrap();
+    let (plan, _) = contract::compile_path_all(&app.0.join("app.contract"), false)
+        .unwrap_or_else(|e| panic!("{e:?}"));
+    let rust = contract::module_rust(&plan).unwrap();
+    for name in ["Option", "Result", "Vec", "String", "ModuleValue"] {
+        assert!(
+            rust.contains(&format!("pub struct {name} {{")),
+            "{name}\n{rust}"
+        );
+    }
+    assert!(
+        rust.contains("pub values: ::std::vec::Vec<::std::string::String>,"),
+        "{rust}"
+    );
+    assert!(
+        rust.contains("pub result: ::core::option::Option<Result>,"),
+        "{rust}"
+    );
+    assert!(
+        !rust.contains("\n    use "),
+        "an import would collide with a record: {rust}"
+    );
+    // No record is generic and none is a trait: a bare generic or trait use
+    // of these names would mean the record, and not compile.
+    for bare in [
+        "Option<",
+        "Result<",
+        "Vec<",
+        "ModuleValue>",
+        "ModuleValue for",
+        "m::",
+        "exact_runner::",
+    ] {
+        let unqualified = rust
+            .match_indices(bare)
+            .filter(|(at, _)| !rust[..*at].ends_with(|c: char| c == ':' || c.is_alphanumeric()))
+            .count();
+        assert_eq!(unqualified, 0, "bare `{bare}` in:\n{rust}");
+    }
 }
