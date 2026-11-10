@@ -552,7 +552,7 @@ export function resolveApp(nameOrCrate) {
   // verb reads `dir` and `target` and runs no Cargo (D2.1).
   let rusted = false;
   const rust = () => {
-    if (!rusted) { rusted = true; if (generated) { ensureShells(dir, manifest); checkOutsideLock(workspace); } else checkLock?.(); }
+    if (!rusted) { rusted = true; if (generated) { ensureShells(dir, manifest, name); checkOutsideLock(workspace); } else checkLock?.(); }
     return workspace;
   };
   startSweep(target);

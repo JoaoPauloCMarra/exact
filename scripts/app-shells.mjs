@@ -267,10 +267,13 @@ function writeChanged(path, text) {
 /** The generated workspace for the app at `dir`, current with its inputs: the manifest's platforms and name, the
  * checkout's path and the files the workspace copies from it, and this module. Returns the workspace directory and
  * whether anything was written. The lock is exact2's, re-resolved offline for these members; one this machine's cache
- * cannot resolve is left as the copy for the first build, which fetches (scripts/app.mjs `checkOutsideLock`). */
-export function ensureShells(dir, manifest = readManifest(dir)) {
+ * cannot resolve is left as the copy for the first build, which fetches (scripts/app.mjs `checkOutsideLock`).
+ * The crates are `<name>-<kind>`: `name` is the one the app's exact.mjs passes, which another checkout of the app in a
+ * folder of another name (a git worktree) shares; without one, the folder's. */
+export function ensureShells(dir, manifest = readManifest(dir), name = null) {
   dir = realpathSync(dir);
-  const shells = shellsDir(dir), name = basename(dir), title = manifest.app?.name ?? manifest.name ?? titleOf(name);
+  name ??= basename(dir);
+  const shells = shellsDir(dir), title = manifest.app?.name ?? manifest.name ?? titleOf(name);
   // The package that fills the native slot (LLP 1154 D3); the bake refuses two.
   const crates = shellCrates(manifest), native = nativePackages(dir).map(p => p.name);
   // The paths written are relative where the two trees share a directory (`pathFrom`), which reads real directories.
@@ -328,8 +331,8 @@ ${patches.join('\n')}
 /** What a native verb does before its build (LLP 1153 D1.2): when the manifest does not name `platform`, check that
  * platform's setup rows (`report`: the rows, or `{ error }` when they could not be read) and stop on a missing one,
  * nothing written; then name it, writing an app.json the app lacked. Then keep the generated workspace current unless
- * the app authored one. Returns the lines to say, or `{ refused }`. */
-export async function bringPlatform(dir, platform, { report = null, os = process.platform } = {}) {
+ * the app authored one, its crates named `name` (`ensureShells`). Returns the lines to say, or `{ refused }`. */
+export async function bringPlatform(dir, platform, { report = null, os = process.platform, name = null } = {}) {
   const lines = [], verb = `bun exact.mjs ${platform === 'macos' ? 'mac' : platform}`;
   const manifest = existsSync(resolve(dir, 'app.json')) ? readManifest(dir) : null;
   if (!namesPlatform(manifest ?? {}, platform)) {
@@ -340,15 +343,15 @@ export async function bringPlatform(dir, platform, { report = null, os = process
     if (missing.length) return { refused: `${verb}: this machine lacks what a ${platform} build needs; nothing was written:\n${missing.map(row => `  ${row.name}: ${row.have} (SDK ${row.want})\n    ${row.fix}`).join('\n')}` };
     if (!manifest) {
       // An app without app.json had the defaults scripts/app.mjs `readManifest` supplies; naming a platform writes them.
-      const name = basename(dir), title = titleOf(name);
-      writeManifest(dir, { name: title, app: { id: `com.exact.${name}`, name: title }, host: { web: {} }, deploy: { store: { web: '0' } } });
+      const app = name ?? basename(dir), title = titleOf(app);
+      writeManifest(dir, { name: title, app: { id: `com.exact.${app}`, name: title }, host: { web: {} }, deploy: { store: { web: '0' } } });
       lines.push('app.json: written with the defaults the app had without one');
     }
     const wrote = namePlatform(dir, platform);
     if (wrote.length) lines.push(`app.json: ${wrote.join(', ')} added: the app now ships ${platform} (bun exact.mjs update --without ${platform} stops it)`);
   }
   if (!authoredWorkspace(dir)) {
-    const { workspace, wrote, crates } = ensureShells(dir);
+    const { workspace, wrote, crates } = ensureShells(dir, undefined, name);
     if (wrote) lines.push(`${workspace}: the native workspace (${crates.join(', ')}), generated from app.json`);
   }
   return { lines };

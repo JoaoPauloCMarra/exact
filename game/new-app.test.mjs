@@ -823,6 +823,33 @@ test('update names an authored app by its crates, and a generated one by its fol
   }
 }, 60_000);
 
+// Another checkout of an app in a folder of another name (a git worktree) builds the crates its exact.mjs names: the
+// native verb's workspace (app-cli.mjs, bringPlatform) and the build's (resolveApp) both take the launcher's name.
+test('a generated workspace is named by the app\'s exact.mjs, not its folder', () => {
+  const parent = mkdtempSync(resolve(tmpdir(), 'exact-new-')), root = resolve(import.meta.dir, '..');
+  try {
+    const made = resolve(parent, 'note-list'), other = resolve(parent, 'note-list-feature'), sdk = resolve(parent, 'sdk');
+    createApp(made, { with: ['ios'] });
+    cpSync(made, other, { recursive: true });
+    withCli(sdk);
+    symlinkSync(resolve(root, 'scripts/app-shells.mjs'), resolve(sdk, 'scripts/app-shells.mjs'));
+    // The build reads the crate the native verb's hook generated, then the one resolveApp builds.
+    mkdirSync(resolve(sdk, 'host/apple'), { recursive: true });
+    writeFileSync(resolve(sdk, 'host/apple/build.mjs'), `import { readFileSync } from 'node:fs';
+import { resolveApp } from ${JSON.stringify(resolve(root, 'scripts/app.mjs'))};
+const crate = () => /^name = "(.+)"$/m.exec(readFileSync(process.env.EXACT_APP_DIR + '/.exact/shells/apple/Cargo.toml', 'utf8'))[1];
+const hooked = crate();
+resolveApp(process.argv.at(-1)).workspace;
+console.log(JSON.stringify({ args: process.argv.slice(2), crates: [hooked, crate()] }));
+`);
+    const built = spawnSync(process.execPath, [resolve(other, 'exact.mjs'), 'ios'], { cwd: other, env: { ...process.env, EXACT2: sdk }, encoding: 'utf8' });
+    assert.equal(built.status, 0, built.stderr);
+    assert.deepEqual(JSON.parse(built.stdout.trim().split('\n').at(-1)), { args: ['--ios', 'note-list-apple'], crates: ['note-list-apple', 'note-list-apple'] });
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+}, 60_000);
+
 // LLP 1116.004 D8: bake-off contacts, round 6, drove an earlier round's contacts.json: both rounds' apps were
 // `com.example.contacts-exact2`, and a store is named by the app's id. A new app's id is its own; an app made
 // before keeps the id it has, since its stores, bundle and update stream are named by it.

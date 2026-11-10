@@ -196,7 +196,7 @@ export async function run({ dir, name, game = false, exact2, args }) {
     const named = shells.namesPlatform(existsSync(manifest) ? JSON.parse(readFileSync(manifest, 'utf8')) : {}, platform);
     const device = rest.includes('--device') || verb === 'share';
     const report = named ? null : await import(resolve(exact2, 'scripts/exact.mjs')).then(({ sdkReport, platformReport }) => platformReport(platform, sdkReport(process.env, { only: platform, device }), { device })).catch((error) => ({ error: String(error?.message ?? error) }));
-    const brought = await shells.bringPlatform(dir, platform, { report });
+    const brought = await shells.bringPlatform(dir, platform, { report, name });
     if (brought.refused) { console.error(brought.refused); return log(1); }
     for (const line of brought.lines) console.error(line);
   }
