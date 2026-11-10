@@ -1,4 +1,4 @@
-// Wakes on the JS target, as the runner's `modules/wakes.rs`: a module's event declared
+// Wakes on the JS target (LLP 1133.017 D5, D6), as the runner's `modules/wakes.rs`: a module's event declared
 // `"raised": "wake"` is raised only by its implementation through the context's `wakes.raise` (the web's wake is the
 // page's own `online` event), or under the agent by `tap @ref` on a registration or `--wake '<entry>'`. Each is an
 // invocation of origin `wake`, delivered once, in order, one at a time, each as its own commit. The page cannot tell
@@ -9,8 +9,8 @@
 // what it started settles under the app's origin. A wake in a hidden page fires no timer (`clock.stopped`); under the
 // agent the wake hides the page (`exactPage().visibilityState`) and shows it again after, as the platform's background.
 //
-// Registrations: a keyed list declared with a `kind` keeps, beside each entry's options, its runs, attempts and
-// backoff, by the web's rules as `modules/declared/wake_list.rs` keeps them.
+// Registrations (§10): a keyed list declared with a `kind` keeps, beside each entry's options, its runs, attempts and
+// backoff, by the web's rules (D1) as `modules/declared/wake_list.rs` keeps them.
 import { clock, inflight, After, Clocked, Mutations, drive, data } from "./rt.js";
 import { Counting, heldTickets } from "./held.js";
 

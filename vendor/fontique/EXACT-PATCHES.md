@@ -3,7 +3,7 @@
 Complete crates.io archive, including upstream MIT/Apache licenses and
 `.cargo_vcs_info.json`. No feature or dependency change: exact2 builds it
 with default features off and `std` on (no `system`: no fontconfig, no
-DirectWrite or Core Text).
+DirectWrite or Core Text; LLP 1085.000 §3).
 
 - Upstream: https://github.com/linebender/parley (the `fontique` crate)
 - Exact release archive: https://static.crates.io/crates/fontique/fontique-0.11.1.crate
@@ -15,7 +15,7 @@ The numbered patches below are upstream status **to send**. Remove a patch
 when a pinned upstream release supplies the same behaviour and the tests named
 here pass.
 
-1. **Font admission.** `FontInfo::from_font_ref` refuses a face with no
+1. **Font admission (G2).** `FontInfo::from_font_ref` refuses a face with no
    `head` table (some bitmap-only faces have `bhed` instead) or with
    `unitsPerEm` 0, where it already refuses one with no usable cmap: glyph
    metrics are divided by it, and such a face laid out with infinite
@@ -44,14 +44,14 @@ here pass.
    families followed by one shared last resort (every installed family);
    the ~125 scripts with none of their own now share that list instead of
    each holding a copy (`fallback::configure` 0.42 to 0.25 ms of a Pixel 10
-   Pro XL's boot). Tests:
+   Pro XL's boot, LLP 1085.000 stage 3). Tests:
    `host/linux/src/text/fallback.rs`
    (`a_script_without_families_of_its_own_takes_the_last_resort`: every
    script's list is what a copy per script gave).
 
 5. **Declared weight and width ranges.** `FontInfo::with_declared_ranges`
    keeps a declaration's `wght` and `wdth` ranges (`@font-face`'s
-   `font-weight` and `font-stretch`), each clamped to the
+   `font-weight` and `font-stretch`, LLP 1019 §13), each clamped to the
    file's axis. `match_font` takes a range at its value nearest the request
    (`matching_weight`, `matching_width`; CSS Fonts 4 §5.2), and synthesis
    always emits the request clamped to the range, even when it equals the

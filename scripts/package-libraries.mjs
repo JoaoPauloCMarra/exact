@@ -1,4 +1,4 @@
-// A package's prebuilt dynamic library: the one the app's direct
+// A package's prebuilt dynamic library (LLP 1154 D3 "The library", LLP 1133.001 D9): the one the app's direct
 // dependencies declare in `exact.json` `native.library`, fetched for the target a native build compiles, by its
 // SHA-256, before Cargo runs, into `~/.cache/exact/package-libraries/<sha256>/`. Nothing fetches at compile time.
 //
@@ -87,7 +87,7 @@ export function xcframeworkSlice(fw, { platform, variant, arch }) {
 
 /** What the app's build for `target` links of its package's library: the declaration's `{url, sha256}` for the
  * target, with the package and its link name; null when no one direct dependency declares `native.library`. A target
- * the declaration does not name is refused by name, as is a declaration exact2 cannot use. */
+ * the declaration does not name is refused by name (LLP 1154 D6), as is a declaration exact2 cannot use. */
 export function libraryFor(appDir, target) {
   const declaring = nativePackages(appDir);
   // Two are the bake's refusal, which Cargo meets before it links.
@@ -97,13 +97,13 @@ export function libraryFor(appDir, target) {
   if (typeof library !== 'object' || Array.isArray(library)) throw new Error(`${at}: native.library is an object of {url, sha256} by Rust target`);
   if (typeof link !== 'string' || !/^[A-Za-z0-9_][A-Za-z0-9_.+-]*$/.test(link)) throw new Error(`${at}: native.link names the library (\`lib<link>.so\`, \`<link>.framework\`), not ${JSON.stringify(link)}`);
   const entry = library[target];
-  if (!entry) throw new Error(`${pkg.name} has no native library for ${target}: its exact.json native.library names ${Object.keys(library).join(', ') || 'no target'}. An app that builds for ${target} waits for the package to publish one`);
+  if (!entry) throw new Error(`${pkg.name} has no native library for ${target}: its exact.json native.library names ${Object.keys(library).join(', ') || 'no target'}. An app that builds for ${target} waits for the package to publish one (LLP 1154 D6)`);
   if (typeof entry.url !== 'string' || !/^[0-9a-f]{64}$/.test(entry.sha256 ?? '')) throw new Error(`${at}: native.library.${target} is {"url": …, "sha256": <64 lowercase hex digits>}`);
   let url;
   try { url = new URL(entry.url); } catch { throw new Error(`${at}: native.library.${target}.url is not a URL: ${entry.url}`); }
   if (!['file:', 'https:'].includes(url.protocol)) throw new Error(`${at}: native.library.${target}.url is a file: or https: URL, not ${url.protocol}`);
   const kind = target.includes('-android') ? null : target.includes('-apple-') ? 'apple' : target.includes('-linux-') ? 'linux' : null;
-  if (!kind) throw new Error(`${pkg.name} declares a native library for ${target}, and exact2 links a package's library only for Apple and Linux targets; Android's APK carries none yet`);
+  if (!kind) throw new Error(`${pkg.name} declares a native library for ${target}, and exact2 links a package's library only for Apple and Linux targets; Android's APK carries none yet (LLP 1154 D6)`);
   const file = basename(decodeURIComponent(url.pathname));
   if (kind === 'apple' && !file.endsWith('.zip')) throw new Error(`${at}: native.library.${target} is a zip holding the .xcframework, not ${file}`);
   return { package: pkg.name, root: pkg.root, target, link, url: url.href, sha256: entry.sha256, file, kind };

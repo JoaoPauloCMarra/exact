@@ -1,5 +1,5 @@
 //! The Canvas gallery on the web: its TypeScript data module draws every
-//! canvas, replayed into the browser's own 2D context.
+//! canvas (LLP 1056), replayed into the browser's own 2D context.
 
 include!(concat!(env!("OUT_DIR"), "/module.rs"));
 const PLAN: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/app.plan"));

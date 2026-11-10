@@ -1,5 +1,5 @@
 // SQLite authority is carried by module parameters and opaque database objects.
-// Handles stay inside bindings; handoff carries authority.
+// @ref LLP 0067#3-the-check — handles stay inside bindings; handoff carries authority
 (function (brand) {
 return function (field, retain) {
   "use strict";

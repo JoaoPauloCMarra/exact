@@ -72,7 +72,7 @@ def OutcomeOK : Outcome → Prop
 /-! ## Well-typed configurations -/
 
 /-- Every timer runs an action that exists and takes no parameters, and a
-gated one's gate and key are well typed. -/
+gated one's gate and key are well typed (LLP 1092 D9). -/
 def TimersOK (p : Program) (timers : List Timer) : Prop :=
   ∀ tm ∈ timers, (∃ a, p.actions.find? (·.name == tm.action) = .some a ∧ a.params = []) ∧
     ∀ e ∈ tm.gate.toList ++ tm.key.toList, ∃ u, HasTy p (compScope p) [] e u
@@ -203,7 +203,7 @@ theorem mapM_goodW {α β} {E : Err → Prop} {f : α → Result β} : ∀ {xs :
     exact GoodW.bind (h x (by simp)) fun _ _ =>
       GoodW.bind (mapM_goodW fun y hy => h y (by simp [hy])) fun _ _ => trivial
 
-/-! ## Gated tasks -/
+/-! ## Gated tasks (LLP 1092) -/
 
 theorem GoodW.map {α β} {E : Err → Prop} {P : α → Prop} {Q : β → Prop} {r : Result α} {f : α → β}
     (h : GoodW E P r) (hf : ∀ a, P a → Q (f a)) : GoodW E Q (f <$> r) := by
@@ -357,7 +357,7 @@ theorem runAction_sound {p : Program} (hp : WellTyped p) {o c name args rows c' 
 
 /-! ## A queued send's commit -/
 
-/-- **A queued send's commit is safe**: it asks its source
+/-- **A queued send's commit is safe** (LLP 1092 D3): it asks its source
 as an action's send does, and commits, or refuses or poisons legitimately. -/
 theorem nextCommit_sound {p : Program} (hp : WellTyped p) {o c m c' out}
     (hc : ConfigOK p c) (hlive : SlotsPresent p c.slots ∧ Complete p c.settled) (hq : isQueue p m = true)

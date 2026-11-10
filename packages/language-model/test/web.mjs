@@ -1,7 +1,7 @@
-// @exact/language-model's conformance suite on the web: the fixture app
-// (`test/fixture`) made with `exact new` outside the repo, depending on
-// this package by `file:`, built for the web and driven in each engine with
-// the web implementation bound.
+// @exact/language-model's conformance suite on the web (LLP 1133.016 §10,
+// §13 stages 0 and 1): the fixture app (`test/fixture`) made with
+// `exact new` outside the repo, depending on this package by `file:`, built
+// for the web and driven in each engine with the web implementation bound.
 //
 // No engine here has a model: Playwright's Chromium ships no Prompt API, and
 // Firefox and WebKit have none. So each engine is driven twice. As it is,
@@ -14,7 +14,7 @@
 // abort by signal. It proves nothing of a browser's own model: that is
 // drive 9, by a person in Chrome (`test/checklist.md`).
 //
-// `--agent` drives the fixture under the agent instead (drives 7 and
+// `--agent` drives the fixture under the agent instead (§10's drives 7 and
 // 8 on the web runtime): a constrained prompt's typed answer, a tool's round
 // trip, a handler that prompts its own session, a handler that would start a
 // download, and a superseded prompt cancelled at the implementation.

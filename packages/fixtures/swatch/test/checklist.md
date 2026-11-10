@@ -20,4 +20,4 @@ On each:
 6. Tap **Remove**. The box goes; a second `displayed N false app` is added.
 
 On Android a tap reaches a hosted view only as a click (`Natives.click`); a
-gesture does not yet.
+gesture does not until LLP 1133.008 D8 item 6.

@@ -1,4 +1,4 @@
-//! `lower-row-own-list`: a row whose binding walks the
+//! `lower-row-own-list` (LLP 1017.003 D3): a row whose binding walks the
 //! list its own `for` iterates (`tokens.slice(0, i)` in `for t, i in
 //! tokens`), directly or through a `fn` that walks its parameter. Each row's
 //! work grows with the list, so an update walks rows × items, and the list

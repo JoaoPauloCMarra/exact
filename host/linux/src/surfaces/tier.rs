@@ -1,4 +1,4 @@
-//! The GPU tier between this host and its GPU modules:
+//! The GPU tier (LLP 1139.003 D2) between this host and its GPU modules:
 //! the agent's told before a module makes any device, the module's answer
 //! read back for the page facts, and `prefer gpu-tier` told to every module.
 use super::*;
@@ -7,8 +7,8 @@ use super::*;
 static AGENT_TIER: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
 
 /// Under the agent the GPU tier is the drive's, told before the module makes
-/// any device, so a world's rung and look frames do not follow the machine;
-/// otherwise the module chooses from its adapter.
+/// any device, so a world's rung and look frames do not follow the machine
+/// (LLP 1139.003 D2); otherwise the module chooses from its adapter.
 pub(super) fn agent_tier(abi: &Abi) {
     if std::env::var("EXACT_AGENT").as_deref() == Ok("1") {
         abi.tier(AGENT_TIER.load(std::sync::atomic::Ordering::Relaxed));

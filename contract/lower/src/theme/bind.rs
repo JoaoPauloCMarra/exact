@@ -1,5 +1,5 @@
-//! Folding and binding a design for the styles that follow: the compiler's
-//! `declare_theme` and the design server's write
+//! Folding and binding a design for the styles that follow (LLP 1121 D3,
+//! D5, D7): the compiler's `declare_theme` and the design server's write
 //! check (`rows`) share these, so a row is judged under the same table.
 
 use super::*;
@@ -55,7 +55,7 @@ pub(crate) fn fold(
     }
 }
 
-/// Takes the profile colours out of the crate's fold: an
+/// Takes the profile colours (LLP 1100 D3) out of the crate's fold: an
 /// entry that is one, and an entry naming such an entry whole, are
 /// declared to it as `transparent` (so their names are still checked)
 /// and carried as written. Another use of one's name is refused, as the
@@ -71,7 +71,7 @@ pub(crate) fn profiles(
     let key = |n: &str| role_named(n).map(|(x, _)| x).ok_or_else(|| n.to_string());
     let mut out: Vec<Profiled> = Vec::new();
     // (one past the checker's bounds is left as written, for the check
-    // to refuse as the design server's does)
+    // to refuse as the design server's does: Astra's round 2)
     let bounded = |t: &tamber::Token| tamber::within_bounds(&t.value.value);
     // The tokens with no `when` naming a name whole, by its identity: each
     // is a profile's once the name is.
@@ -82,9 +82,9 @@ pub(crate) fn profiles(
         }
     }
     // A profile's colour is the default app tuple's, which is all the plan
-    // carries until it carries the axes. Taken first
+    // carries until it carries the axes (stage 2, commit 3). Taken first
     // in the design's order among those that are a profile's so far, a
-    // name taken once (each step linear in what it takes).
+    // name taken once (each step linear in what it takes: round 3).
     let mut ready: BTreeSet<usize> = design
         .tokens
         .iter()
@@ -199,7 +199,7 @@ pub(crate) fn bind(
             .name
             .strip_prefix('~')
             .and_then(|n| n.parse::<usize>().ok());
-        // A token's name as written (a bare `secondary-label`).
+        // A token's name as written (LLP 1095 D4's bare `secondary-label`).
         let name = match synthetic {
             Some(n) => exprs[n].clone(),
             None => folding.design.tokens[i].name.value.clone(),
@@ -229,18 +229,18 @@ pub(crate) fn bind(
         if slices.iter().all(|s| *s == value) {
             slices.clear();
         }
-        // A role crosses to the hosts once, for the surfaces they draw:
-        // it has one value, whatever the modes.
+        // A role crosses to the hosts once, for the surfaces they draw
+        // (LLP 1095 D4's reach): it has one value, whatever the modes.
         if role.is_some() && !slices.is_empty() {
             sink.push(LowerError {
                 id: "tamber-role-axis",
-                message: format!("`{name}` overrides a role and varies by an app axis: a role has one value, which the hosts' own surfaces read; vary a token the rows name instead"),
+                message: format!("`{name}` overrides a role and varies by an app axis: a role has one value, which the hosts' own surfaces read; vary a token the rows name instead (LLP 1121 D5)"),
                 span: sink.span(origin, at.line, at.col),
             });
             continue;
         }
-        // An expression over base names every host can fold, and a shadow
-        // over them every host can draw.
+        // An expression over base names every host can fold (stage 12
+        // B2), and a shadow over them every host can draw (B3).
         let refused = std::iter::once(&value)
             .chain(&slices)
             .find_map(|v| crate::scale::refusal(t.kind, &name, v));
@@ -265,7 +265,7 @@ pub(crate) fn bind(
             kind: t.kind,
         });
     }
-    // A motion token is written into its rows here: by name.
+    // A motion token is written into its rows here (D3): by name.
     MOTION.with(|m| {
         *m.borrow_mut() = entries
             .iter()
@@ -289,7 +289,7 @@ pub(crate) fn bind(
             })
             .collect()
     });
-    // The app's axes, which a pin and `setMode` name.
+    // The app's axes, which a pin and `setMode` name (D5).
     AXES.with(|axes| {
         *axes.borrow_mut() = folding
             .design
@@ -300,7 +300,8 @@ pub(crate) fn bind(
     });
     sink.plan(&entries, folding);
     // A type or family token's family is a stack the plan declares, as
-    // a literal `font-family`'s is, and a bound table holds its id.
+    // a literal `font-family`'s is, and a bound table holds its id
+    // (stage 6 C).
     let kernel_values = sink.stacks(&entries);
     let scope = exact_kernel::style::theme::bind(&exact_kernel::style::theme::kinded(
         entries
@@ -333,7 +334,7 @@ pub(crate) fn bind(
 }
 
 /// The refusals a design's token earns beyond the crate's: a name that
-/// shadows a value's words, and the tint rule.
+/// shadows a value's words, and the tint rule (LLP 1095 D1).
 fn admitted(
     sink: &mut dyn Sink,
     name: &str,
@@ -350,7 +351,7 @@ fn admitted(
             format!("`{name}` is a CSS keyword; name the token otherwise"),
         )),
         // The tint is the app's: `AccentColor` sets it; a role drawn in
-        // it follows (an authored accent over the design).
+        // it follows (LLP 1095 D1, an authored accent over the design).
         Some((id, _)) if roles::tint(*id) && *id != roles::accent() => Some(refuse(
             "lower-theme-tint",
             format!("`{name}` is drawn in the app's tint: a theme sets the tint with `AccentColor`"),
@@ -402,11 +403,11 @@ impl Sink for Lowering<'_, '_> {
             let values: Vec<&str> = axis.values.iter().map(String::as_str).collect();
             self.l.b.axis(&axis.name.value, &values);
         }
-        // The retention: what the view may name, every role override, and
+        // D7's retention: what the view may name, every role override, and
         // in an app that can name a token outside its views (generated
-        // bindings) every token, or those its `exports` block lists;
+        // bindings, D12) every token, or those its `exports` block lists;
         // and each synthetic token its rows write. The design server's
-        // `propose` asks the same `Retention`.
+        // `propose` asks the same `Retention` (LLP 1121 stage 5).
         for e in entries {
             let Some(code) = kind_code(e.kind) else {
                 continue;

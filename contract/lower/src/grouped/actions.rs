@@ -1,4 +1,4 @@
-//! A grouped row's actions and disclosures: what the
+//! A grouped row's actions and disclosures (LLP 1116.019 D6): what the
 //! platform's list draws in the tint, and in its disclosure's grey.
 
 use super::{accessory, hidden, over, s, symbol, with, LABEL, MARK, TERTIARY};
@@ -67,12 +67,12 @@ fn leading(node: &Node) -> bool {
     }
 }
 
-/// A forward chevron anywhere in a row is the
+/// @ref LLP 1116.019 D6 — a forward chevron anywhere in a row is the
 /// platform's disclosure ink, as a hand-built row draws its accessory
 /// (UIKit's is `tertiaryLabel`: measured `#c5c5c7` on a white cell, iOS 27),
 /// and a `link` that ends in one is a row that pushes, in the label's
 /// colour rather than a link's. The chevron's is its `color`, the ink a
-/// symbol is drawn in, so a colour its author wrote on
+/// symbol is drawn in (LLP 1081 stage 2), so a colour its author wrote on
 /// it wins, and one on the link does not reach it, as UIKit's disclosure
 /// stays grey in a row of any colour. Sheet rows, so the author's win.
 pub(super) fn disclosure(node: &Node) -> Node {

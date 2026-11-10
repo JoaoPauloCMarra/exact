@@ -1,9 +1,10 @@
-//! Filters: a `filter` reference or CSS filter
+//! Filters (LLP 1055.000 D14): a `filter` reference or CSS filter
 //! functions, resolved into a chain of primitives in the element's user
 //! space. The chain and its wire form are `exact-svg-filter`'s, re-exported
 //! here; the pixels are the hosts' and `exact-svg-raster`'s.
 //!
-//! Filter Effects 1 §7, §12 (the CSS functions and their equivalents).
+//! @ref LLP 1055.000 D14; Filter Effects 1 §7, §12 (the CSS functions and
+//! their equivalents)
 
 pub use exact_svg_filter::{
     CompositeOp, Convolve, Filter, Input, Light, Lighting, Op, Primitive, Transfer, BLEND_MODES,
@@ -24,7 +25,8 @@ pub enum FilterFn {
     /// `contrast()`.
     Contrast(f32),
     /// `drop-shadow(<length>{2,3} <color>?)`: dx, dy, blur (px), colour
-    /// (`currentcolor` when none is given), which may be a reference.
+    /// (`currentcolor` when none is given), which may be a reference (LLP
+    /// 1095 D1).
     DropShadow(f32, f32, f32, Option<crate::style::ColorValue>),
     /// `grayscale()`.
     Grayscale(f32),
@@ -176,7 +178,7 @@ impl FilterList {
         self.text(ColorText::Css)
     }
 
-    /// The wire form: [`Self::css`], with every reference kept.
+    /// The wire form: [`Self::css`], with every reference kept (LLP 1095 D1).
     pub fn wire(&self) -> String {
         self.text(ColorText::Wire)
     }

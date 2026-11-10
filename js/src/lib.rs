@@ -1,4 +1,8 @@
-//! The TypeScript data-source executor.
+//! The TypeScript data-source executor (LLP 1027).
+//!
+//! @ref LLP 1027 D1a (`fetch` over the host's ticket path) / D2 (marshaling
+//! by the plan's shapes) / D3 (the executor) / D4 (after first pixel) / D10
+//! (what the module can use)
 //!
 //! An app's `app.ts`, bundled and compiled to Hermes bytecode at bake, is a
 //! [`Module`]: a [`DataSource`] like any Rust data crate, behind the same
@@ -10,8 +14,8 @@
 //!
 //! The module's identity and grants are the bake's outputs beside the
 //! bytecode, so a host reads them at boot without an engine; the engine is
-//! created by [`Module::load`], which a host calls after its first pixel.
-//! Until then every answer is `Unavailable`, by name.
+//! created by [`Module::load`], which a host calls after its first pixel
+//! (D4). Until then every answer is `Unavailable`, by name.
 //!
 //! **The seam, from the module's side (ABI 1).** `exact.abi` is `1`;
 //! `exact.appId` and `exact.grants` are strings; `exact.answer(source, args,
@@ -20,31 +24,31 @@
 //! `UnknownSource`, `BadArguments`, or `Unavailable` and a `message`; any
 //! other throw is `Unavailable`). In a running session, an answer's own
 //! error becomes `Failed(Error, …)`: its resource fails or send ends unsent,
-//! while the asking commit stands. Bake and replacement
+//! while the asking commit stands (LLP 1027.000 D3). Bake and replacement
 //! validation still refuse it. `fetch(url, init)` is the web's, over the
 //! host's ticket path: the module describes, the host runs under the grants,
 //! the Promise resolves to a `Response` with `status`, `ok`, `headers`,
 //! `text()`, `json()`, `arrayBuffer()`. Liveness is the module's, as a
-//! browser's event loop has it: an answer that awaits a promise another
-//! answer started (a fetch
+//! browser's event loop has it (LLP 1027.003.000 §13, option 1; hn-reader
+//! F7): an answer that awaits a promise another answer started (a fetch
 //! memoized across answers, a queue behind another's storage) waits while
 //! the module has work outstanding and is asked again after each delivery;
 //! one that waits with nothing outstanding is refused as pending on nothing.
 //! A worker-placed source runs one turn to its end, so it still refuses one.
 //! `store` is `{get, set, forget}` over the runner's [`Store`]: reads
 //! counted, writes grant-checked, in Rust. `console` reaches the runner's
-//! logs. Time and random seeds are ordinary source arguments:
-//! ambient Date/Math.random reads and Intl.DateTimeFormat
+//! logs. Time and random seeds are ordinary source arguments (LLP
+//! 1027.000): ambient Date/Math.random reads and Intl.DateTimeFormat
 //! formatting without an explicit timestamp refuse, including at module
 //! initialization and after await. Explicit-value Date construction and UTC
 //! arithmetic remain available. An answer's own `setTimeout` (and
 //! `AbortSignal.timeout`) is due on the runner's clock: the runner keeps the
 //! answer's continuation back until then, and the timer runs in that turn;
-//! the other timers refuse. `scheduler.yield()`
+//! the other timers refuse (LLP 1027.000 D1). `scheduler.yield()`
 //! ends an answer's turn: the host asks it again at once, and it goes on in
-//! a new turn with a budget of its own.
+//! a new turn with a budget of its own (LLP 1141.001 D10).
 //!
-//! **Interrupts.** Another thread may stop a running call
+//! **Interrupts (LLP 1048.000 D10).** Another thread may stop a running call
 //! through [`DataSource::interrupt`]'s handle: the bake compiles with async
 //! break checks, so Hermes stops at the next loop iteration or call, and the
 //! call is refused as `Unavailable`. The per-call budget is still measured
@@ -103,7 +107,7 @@ use wire::outcome_to_json;
 type NativeFactory = fn(&str) -> Box<dyn NativeModule>;
 
 /// The seam ABI this executor speaks. ABI 2 adds Canvas 2D's `draw` and
-/// `surfaces`; a module without them still reports 1, and
+/// `surfaces` (LLP 1056 D1); a module without them still reports 1, and
 /// this executor runs both.
 pub const ABI: u32 = 2;
 
@@ -168,7 +172,7 @@ struct Parked {
     call: u64,
     ticket: u64,
     /// The fetch it awaits may change its server (`Request::has_effects`):
-    /// let go, it runs to its end.
+    /// let go, it runs to its end (LLP 1146 D2).
     effects: bool,
     work_taken: bool,
     /// The module's progress when it parked: an answer waiting on another
@@ -180,21 +184,21 @@ struct Parked {
 
 /// The ticket of an answer that awaits another answer's work (a fetch it
 /// shares, a queue behind another's storage): it waits while the module has
-/// work outstanding, and is asked again after each delivery (the
-/// module-wide rule).
+/// work outstanding, and is asked again after each delivery (LLP
+/// 1027.003.000 §13, the module-wide rule; hn-reader F7).
 const WAITING: u64 = u64::MAX - 1;
 
-/// The ticket of an answer that awaited `scheduler.yield()`:
-/// the host asks it again at once (`Dispatch::Again`), and its yields
+/// The ticket of an answer that awaited `scheduler.yield()` (LLP 1141.001
+/// D10): the host asks it again at once (`Dispatch::Again`), and its yields
 /// resolve in that new turn, which has a budget of its own.
 const YIELDED: u64 = u64::MAX - 2;
 
-/// The ticket of an answer that awaits only its own timers (`setTimeout`):
-/// the runner keeps its continuation back until the
+/// The ticket of an answer that awaits only its own timers (`setTimeout`,
+/// LLP 1027.000 D1): the runner keeps its continuation back until the
 /// earliest is due (`Request::due_ms`), and the timer runs in that turn.
 const TIMER: u64 = u64::MAX - 3;
 
-/// The prefix of a handler's name as the runner asks for it.
+/// The prefix of a handler's name as the runner asks for it (LLP 1133.016 D9).
 const TOOL: &str = "tool:";
 
 /// The continuation of a wait on `ticket`: one for the answer's own timer is
@@ -241,10 +245,10 @@ struct HostState {
     /// Door ops answered as an older host's door answers them (tests).
     refused_ops: Vec<u32>,
     /// The socket operations the answer or mapper call being made handed
-    /// over (op 14), by the prelude's ticket for each socket's stream.
+    /// over (op 14), by the prelude's ticket for each socket's stream (LLP 1016.000 D7).
     socket_ops: Vec<(u64, exact_runner::SocketOp)>,
     /// The socket operations a turn of an answer sent as it made them (op
-    /// 17), by the same ticket.
+    /// 17; the amendment of 2026-10-18), by the same ticket.
     answer_ops: Vec<(u64, exact_runner::SocketOp)>,
     /// Each open socket's buffered bytes at the start of this turn, by the
     /// prelude's ticket for its stream (op 15).
@@ -256,36 +260,36 @@ struct HostState {
     native: Option<Box<dyn NativeModule>>,
     /// The native module takes long calls off this thread (`native.later`).
     later: bool,
-    /// The host's app module answers this source's long calls:
-    /// `native` is available, and `later` goes to it.
+    /// The host's app module answers this source's long calls (LLP 1067.000
+    /// Q6): `native` is available, and `later` goes to it.
     hosted: bool,
-    /// The host's app module's `native.call`, when it answers one.
+    /// The host's app module's `native.call`, when it answers one (D9).
     hosted_call: Option<exact_runner::NativeCall>,
-    /// The canvas a draw in progress draws: its text engine and images,
-    /// for the recorder's `measureText` and `drawImage`.
+    /// The canvas a draw in progress draws: its text engine and images
+    /// (LLP 1056 D8, D9), for the recorder's `measureText` and `drawImage`.
     canvas: Option<exact_runner::exact_canvas::Env>,
     /// Under the agent, the repeatable stream `crypto` draws from instead
-    /// of the OS; this instance's, from its start.
+    /// of the OS (LLP 1069.005 D2b); this instance's, from its start.
     agent: Option<exact_data::crypto::AgentStream>,
-    /// `CryptoKey`s by handle, never on the heap.
+    /// `CryptoKey`s by handle, never on the heap (LLP 1069.005 D1b).
     keys: HashMap<u64, exact_data::crypto::EcKey>,
     next_key: u64,
-    /// `authCallback()`: this native build's, from the grants.
+    /// `authCallback()`: this native build's, from the grants (LLP 1069.006).
     auth_callback: Option<String>,
     /// The engine has app storage: the host configured directories.
     storage: bool,
     /// The engine reaches the documents the person chose (`doc:`), with or
-    /// without app storage: the grants name them.
+    /// without app storage: the grants name them (LLP 1069.010 D1).
     documents: bool,
-    /// The document owner, when the grants keep documents (`doc.keep`):
-    /// `storage.fs.recentDocuments()` reads its app's list.
+    /// The document owner, when the grants keep documents (`doc.keep`, LLP
+    /// 1069.010.000 D5): `storage.fs.recentDocuments()` reads its app's list.
     kept: Option<u64>,
     /// The bake's module ([`Module::inspect`]): storage refuses as `bake`.
     baking: bool,
     /// A replacement candidate must answer successfully before it can be installed.
     validating: bool,
     readonly_secrets: bool,
-    /// The runtime's own journal lines since the last take.
+    /// The runtime's own journal lines since the last take (LLP 1097 D8).
     journal: Vec<String>,
     /// Delivering between answers (a background round, a let-go call's
     /// steps): there is no store, and storage is not refused as at bake.
@@ -293,7 +297,7 @@ struct HostState {
     storage_changed: bool,
     /// How much of module work may yet settle a waiting answer: kept
     /// requests in flight and live answers' steps they left (op 21,
-    /// `module_work.rs`).
+    /// `module_work.rs`, LLP 1146 D2).
     module_outstanding: usize,
 }
 
@@ -324,13 +328,13 @@ pub struct Module {
     keeps_plan: bool,
     sigs: HashMap<String, Sig>,
     parked: Vec<(Key, Parked)>,
-    /// Module work's let-go calls (`module_work.rs`).
+    /// Module work's let-go calls (`module_work.rs`, LLP 1146 D2).
     work: module_work::Letting,
     /// Each dispatched waiter's flag, by its call: set when the call is let
     /// go, so a waiter whose outcome will be discarded takes no
-    /// compression's right to write.
+    /// compression's right to write (LLP 1069.002 A1.5).
     retired: std::collections::HashMap<u64, std::sync::Arc<std::sync::atomic::AtomicBool>>,
-    /// Stream answers: each message is mapped by the call's
+    /// Stream answers (LLP 1016.000): each message is mapped by the call's
     /// `exactStream`, never resumed; forgetting the ticket ends the call.
     streams: Vec<(Key, Parked)>,
     /// Answers waiting on another answer's work whose dispatch was held.
@@ -351,13 +355,13 @@ pub struct Module {
     document_owner: u64,
     logs: Vec<String>,
     overruns: u32,
-    /// The Canvas 2D roster the bake read, known before the
+    /// The Canvas 2D roster the bake read (LLP 1056 D1), known before the
     /// engine loads.
     canvas_surfaces: Vec<(String, usize)>,
-    /// The agent's launch seed, when the agent drives this process;
-    /// a built worker instance takes its template's.
+    /// The agent's launch seed, when the agent drives this process (LLP
+    /// 1069.005 D2b); a built worker instance takes its template's.
     agent_seed: Option<u64>,
-    /// Runs inline, on the runner's thread: storage an answer
+    /// Runs inline, on the runner's thread (LLP 1097 D6): storage an answer
     /// did not await moves to the background. An instance a worker owner
     /// builds runs one turn to its end, and keeps its answers waiting.
     main_thread: bool,
@@ -391,7 +395,7 @@ impl Module {
     /// A module, unloaded: `app_id` and `grants` are what the bake wrote
     /// beside the bytecode, cross-checked against the module's own exports
     /// at [`Module::load`]. Under the agent (`EXACT_AGENT=1`) its `crypto`
-    /// draws the agent's repeatable stream.
+    /// draws the agent's repeatable stream (LLP 1069.005 D2b).
     pub fn new(
         bytecode: impl Into<Bytecode>,
         app_id: impl Into<String>,
@@ -444,7 +448,7 @@ impl Module {
     }
 
     /// This module with `seed` as the agent's launch seed, or `None` for
-    /// OS entropy whatever the environment says: what
+    /// OS entropy whatever the environment says (LLP 1069.005 D2b): what
     /// [`Module::new`] reads from `EXACT_AGENT` and `EXACT_AGENT_SEED`,
     /// stated. The stream starts over.
     pub fn with_agent_seed(mut self, seed: Option<u64>) -> Module {
@@ -473,7 +477,7 @@ impl Module {
         self
     }
 
-    /// This module, placed: `Main` is this module as it
+    /// This module, placed (LLP 1027.002 D1): `Main` is this module as it
     /// is; `Worker` builds an instance of it on a host-owned thread at
     /// activation, from what this one knows, and this one stays as the
     /// template. The engine never crosses a thread.
@@ -485,8 +489,8 @@ impl Module {
         Placed::built(self, placement, Module::build)
     }
 
-    /// What an owner thread needs to build this module there:
-    /// its bytecode, identity, directories, plan and limits — all of it
+    /// What an owner thread needs to build this module there (LLP 1027.002
+    /// D2): its bytecode, identity, directories, plan and limits — all of it
     /// `Send`; the runtime is created, run and destroyed on the owner.
     fn build(template: &Module) -> exact_data::placed::Obtain<Module> {
         let bytecode = template.bytecode.clone();
@@ -506,7 +510,7 @@ impl Module {
         Box::new(move || {
             let mut module = Module::new(bytecode, app_id, grants).with_agent_seed(agent_seed);
             // Before `activate`, which loads: a worker's answers wait for
-            // their storage.
+            // their storage (LLP 1097 D6).
             module.main_thread = false;
             // The template's interrupt reaches the instance on its owner, and
             // its native handle finds the instance's long-call handler.
@@ -535,7 +539,7 @@ impl Module {
     }
 
     /// A module loaded at once — the bake's and a test's shape; a host loads
-    /// after its first pixel instead.
+    /// after its first pixel instead (LLP 1027 D4).
     pub fn loaded(
         bytecode: Vec<u8>,
         app_id: impl Into<String>,
@@ -584,13 +588,13 @@ impl Module {
     /// its identity/grants. Hosts must use `new`/`loaded` with admitted metadata
     /// instead; discovering a grant does not authorize it on a device.
     pub fn inspect(bytecode: Vec<u8>) -> Result<Module, String> {
-        // The bake's module never draws the agent's stream.
+        // The bake's module never draws the agent's stream (LLP 1069.005 D2b).
         let mut module = Self::new(bytecode, "", "").with_agent_seed(None);
         module.host.baking = true;
         let engine = module.load_engine()?;
         module.app_id = engine.string("appId")?;
         module.grants = engine.string("grants")?;
-        // The Canvas 2D roster: `{name: arity}`, read at build.
+        // The Canvas 2D roster (LLP 1056 D1): `{name: arity}`, read at build.
         let roster = engine.string("surfacesJson")?;
         if !roster.is_empty() {
             let json: Json = serde_json::from_str(&roster)
@@ -631,7 +635,7 @@ impl Module {
     fn load_engine_with_prelude(&mut self, prelude: &'static [u8]) -> Result<Watched, String> {
         self.host.readonly_secrets = self.snapshot;
         let io = exact_runner::io_grants(&self.grants);
-        // A snapshot permits file reads, not file/SQLite writes or document handles.
+        // Stage 1 permits file reads, not file/SQLite writes or document handles.
         // Identity still checks the full baked grants; only endowment narrows.
         let io = if self.snapshot {
             io.lines()
@@ -706,8 +710,8 @@ impl Module {
             engine.install_storage()?;
         }
         // The host's app module, when the app links no native module of its
-        // own: present in agent mode too, where it substitutes its input,
-        // so it needs no storage directories.
+        // own: present in agent mode too, where it substitutes its input
+        // (LLP 1067.000 Q7), so it needs no storage directories.
         if self.host.native.is_none() && self.native_slot.hosted() {
             self.host.hosted = true;
             self.host.later = true;
@@ -736,8 +740,8 @@ impl Module {
     /// own storage, a second at most.
     pub fn unload(&mut self) {
         // A dev restart or a reload replaces the module: what it started
-        // and did not await is finished first, within a second.
-        // A worker's answers waited for theirs.
+        // and did not await is finished first, within a second (LLP 1097
+        // D10). A worker's answers waited for theirs.
         if !self.snapshot {
             self.finish_background(std::time::Duration::from_secs(1));
         }
@@ -758,7 +762,7 @@ impl Module {
         // A fresh engine numbers its fetches from 1 again.
         self.host.aborted.clear();
         self.background = Default::default();
-        // Module work ends with the engine.
+        // Module work ends with the engine (LLP 1146 D2).
         self.host.module_outstanding = 0;
     }
 
@@ -780,7 +784,7 @@ impl Module {
 
     /// Native storage operations started and not yet returned: a test of
     /// giving up waits for the work it gave up on to end before reading
-    /// what that work did not write.
+    /// what that work did not write (LLP 1069.002 A1.5).
     #[doc(hidden)]
     pub fn storage_in_flight(&self) -> usize {
         self.storage.as_ref().map_or(0, |s| s.context.in_flight())
@@ -797,7 +801,7 @@ impl Module {
     }
 
     /// The module's `console` lines since the last take — for the runner's
-    /// `logs`.
+    /// `logs` (LLP 1012).
     pub fn take_logs(&mut self) -> Vec<String> {
         if let Some(engine) = self.engine.as_mut() {
             self.logs.extend(engine.take_log());
@@ -816,8 +820,8 @@ impl Module {
     }
 
     /// How many calls the prelude still tracks, parked or not: a diagnostic
-    /// (a call whose answer failed for good is unlinked from it). `None`
-    /// when the module is not loaded.
+    /// (a call whose answer failed for good is unlinked from it, LLP 1041
+    /// §8.4 Q5). `None` when the module is not loaded.
     pub fn calls_open(&mut self) -> Option<usize> {
         let engine = self.engine.as_mut()?;
         engine
@@ -855,7 +859,7 @@ impl Module {
         }
         let refuses = self.host.baking || self.host.validating;
         let session = store.is_some() && !refuses;
-        // No answer waits for another to begin: answers
+        // No answer waits for another to begin (LLP 1097 D4.5): answers
         // interleave at their awaits, as two async calls do on the web, and
         // storage keeps the order it was issued in (the prelude's queue).
         let Some(sig) = self.sigs.get(source) else {
@@ -885,9 +889,9 @@ impl Module {
         if let Some(store) = store.as_deref() {
             self.host.socket_buffered = socket::snapshot(&self.streams, store);
         }
-        // A mutation's synchronous source may send on a socket, and so
-        // may a resource's answer and a mutation's after its source;
-        // a call for no target sends nothing.
+        // A mutation's synchronous source may send on a socket (D7), and so
+        // may a resource's answer and a mutation's after its source (the
+        // amendment of 2026-10-18); a call for no target sends nothing.
         let mutation = match target {
             Some(Target::Mutation(_)) if session => "mutation",
             Some(Target::Resource(_)) if session => "answer",
@@ -935,9 +939,9 @@ impl Module {
             self.engine.as_mut().expect("checked above").clear_reply();
             self.prune_secret_calls();
         }
-        // What the turn sent as an answer goes whatever it answers;
-        // a mutation's staged socket operations
-        // ride only an answer given now.
+        // What the turn sent as an answer goes whatever it answers (the
+        // amendment of 2026-10-18); a mutation's staged socket operations
+        // ride only an answer given now (D7).
         let answer_ops = std::mem::take(&mut self.host.answer_ops);
         if let (Some(store), false) = (store.as_deref_mut(), answer_ops.is_empty()) {
             self.stage_answer(store, source, answer_ops);
@@ -958,7 +962,7 @@ impl Module {
         };
         if result.is_err() && self.watch.take() {
             // After the store is cleared, so a let-go step is not this
-            // answer's write (a934686a0).
+            // answer's write (LLP 1097; a934686a0).
             self.finish_let_go();
             return Err(DataError::Unavailable(format!(
                 "`{source}` was interrupted"
@@ -972,7 +976,7 @@ impl Module {
         let answer = match result {
             Err(e) => Err(e),
             // The web learns a rejection after the input commits. Native
-            // answers fail the same target.
+            // answers fail the same target (LLP 1027.000 D3).
             Ok(Step::Done(r)) => r.map(Answer::Now).map_err(|e| match e {
                 DataError::Unavailable(m) | DataError::BadArguments(m) if session => {
                     DataError::Failed(FailureCode::Error, m, String::new())
@@ -999,7 +1003,7 @@ impl Module {
                 // continuation's: the runner names which of two is in flight
                 // by its token (`forgotten`) or drops the new one (`discard`),
                 // and the call it would replace may be the one the runner
-                // keeps (a re-read dropped by a refused pass).
+                // keeps (files F18: a re-read dropped by a refused pass).
                 let replaced = if target.is_none() || request.continuation.is_none() {
                     self.replace_on(&key)
                 } else {
@@ -1007,7 +1011,7 @@ impl Module {
                 };
                 // Park first. The let-go delivery below bumps progress after
                 // that, so an answer waiting on the discarded call is asked
-                // again. Delivering first parks it at the new
+                // again (files F18). Delivering first parks it at the new
                 // progress, and nothing asks it again.
                 self.park(key, call, ticket, &request)?;
                 self.forget_calls(replaced);
@@ -1016,7 +1020,7 @@ impl Module {
         };
         // A let-go call's operation may now be the one in flight. Deliver it
         // with no store, so its file writes land and its Store writes do not
-        // (a934686a0). Not while this answer's store is installed.
+        // (LLP 1097; a934686a0). Not while this answer's store is installed.
         self.finish_let_go();
         answer
     }
@@ -1157,7 +1161,7 @@ impl Module {
             if let Outcome::Failed { message, .. } = &outcome {
                 // The answer ends here: its call is unlinked from the
                 // prelude's bookkeeping, so its pending fetches are dropped
-                // with it. A continuation the shared
+                // with it (LLP 1041 §8.4, Q5). A continuation the shared
                 // promise still runs is not cancelled by this.
                 let message = message.clone();
                 self.forget_calls(vec![call]);
@@ -1232,7 +1236,7 @@ impl Module {
             Ok(Module::step(sig, engine, source, reply, self.host.baking))
         })();
         self.host.store = None;
-        // What this turn of an answer sent on its sockets.
+        // What this turn of an answer sent (D7, the amendment of 2026-10-18).
         let answer_ops = std::mem::take(&mut self.host.answer_ops);
         if let (Some(store), false) = (store, answer_ops.is_empty()) {
             self.stage_answer(store, source, answer_ops);
@@ -1284,9 +1288,9 @@ impl Module {
             }
         };
         // After the park, so a waiter records this progress and the let-go
-        // delivery is a later one it is asked again for. No
+        // delivery is a later one it is asked again for (files F18). No
         // store: the let-go call's file writes land and its Store writes do
-        // not (a934686a0).
+        // not (LLP 1097; a934686a0).
         self.finish_let_go();
         answer
     }
@@ -1326,7 +1330,7 @@ impl Module {
     }
 
     /// One message of the stream answer `key` began, or its end: the
-    /// source's `exactStream` maps it to the answer, now.
+    /// source's `exactStream` maps it to the answer, now (LLP 1016.000 D1).
     fn message(
         &mut self,
         store: &mut Store,
@@ -1366,8 +1370,8 @@ impl Module {
         })();
         self.host.store = None;
         self.host.binary = Vec::new();
-        // The replies the mapper staged answering this frame,
-        // staged on the store however the call ended: the runner sends
+        // The replies the mapper staged answering this frame (LLP 1016.000
+        // D7), staged on the store however the call ended: the runner sends
         // them with this frame's commit, or journals them refused.
         // A socket no resource owns (a mutation's stream) takes none.
         let ops = std::mem::take(&mut self.host.socket_ops);

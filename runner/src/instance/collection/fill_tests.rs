@@ -1,4 +1,4 @@
-//! Limited reports: owed rows, lead order, retirement.
+//! Limited reports (@ref LLP 1050.000 §6): owed rows, lead order, retirement.
 use super::*;
 
 #[test]
@@ -258,7 +258,7 @@ fn a_glimpse_builds_its_limit_of_what_shows_nearest_the_middle() {
     );
 }
 
-/// A build-only report then a retire-only one leave the
+/// @ref LLP 1072 §5 — a build-only report then a retire-only one leave the
 /// rows one immediate report leaves, and the build-only one destroys none.
 #[test]
 fn a_build_only_report_then_a_retire_only_one_equal_one_immediate_report() {
@@ -382,8 +382,8 @@ fn a_window_that_leans_keeps_half_a_viewport_behind_its_travel() {
     assert_eq!(rows(true, 0.0), rows(false, 0.0));
 }
 
-/// A report's padding takes effect with it, and only if it is accepted: a
-/// stale report's, or a refused build-only one's, leaves
+/// A report's padding takes effect with it, and only if it is accepted (@ref
+/// LLP 1010 §6.9): a stale report's, or a refused build-only one's, leaves
 /// the padding as the last accepted report left it, and a request after them
 /// aligns within the scroll padding the list's style has.
 #[test]

@@ -349,7 +349,7 @@ fn font_sources_are_portable_local_relative_paths() {
 }
 
 /// A bool is 0 or 1. Any other byte is refused, not read as `true`: a
-/// binding's `written` is a claim about its author.
+/// binding's `written` is a claim about its author (LLP 1115.000 D2).
 #[test]
 fn a_bool_is_zero_or_one_and_nothing_else() {
     let written = sample();
@@ -707,7 +707,7 @@ fn region_topology_and_timer_progress_are_validated() {
     // A one-shot timer is refused the same way: `after(0, x)` would fire at boot.
     stuck.timers[0].once = true;
     assert_eq!(stuck.validate(), Err(PlanError::ZeroInterval { timer: 0 }));
-    // A frame timer carries no interval and repeats.
+    // A frame timer (LLP 1073) carries no interval and repeats.
     stuck.timers[0].once = false;
     stuck.timers[0].frame = true;
     assert!(stuck.validate().is_ok());
@@ -747,9 +747,10 @@ fn a_count_is_bounded_by_max_count_and_the_bytes_left() {
     );
 }
 
-// New rows, header link, cache key, and typed roster.
+// @ref LLP 1038 D2/D3/D5 — new rows, header link, cache key, and typed roster.
 #[test]
 fn a_placeholder_is_another_row_of_the_same_type_without_its_own() {
+    // @ref LLP 1048.003 D6
     let mut b = PlanBuilder::from_plan(sample());
     let nearby = exact_plan::ResourcesId(0);
     let ty = b.plan().resources[0].ty;
@@ -911,7 +912,7 @@ fn sites_nest_at_most_max_site_depth_and_types_never_contain_themselves() {
     assert!(matches!(plan.validate(), Err(PlanError::TypeCycle { .. })));
 }
 
-/// A `Map`/`Filter` callback body is a region no jump
+/// LLP 1017.003 D5: a `Map`/`Filter` callback body is a region no jump
 /// leaves or enters, though a branch around it may land on its end.
 #[test]
 fn a_callback_body_is_entered_and_left_only_at_its_ends() {
@@ -1005,17 +1006,17 @@ fn a_plan_without_compiled_values_keeps_every_other_data_range() {
     assert_eq!(same, plan);
 }
 
-/// The `module_events` table joins the plan: a native
-/// module's event the root hears, a wake event's budget,
+/// The `module_events` table joins the plan (LLP 1133.004 D6): a native
+/// module's event the root hears, a wake event's budget (LLP 1133.017 D5),
 /// and `currententrychange`, `navigatesuccess` and `navigateerror` the event
-/// kinds; `atompress` joins them, then
-/// `newwindow` and `download`, then `capture`, then `userpromptopened`, then an image's `enterpictureinpicture`, `leavepictureinpicture` and `pictureinpictureerror`, then `historyswipe`. The `tools` table joins it, and the roster's `sharedFiles`, then `fragment`; a resource row's `each`. Every host needs a new binary for this plan format. The format digest is pinned: a change to `tables/format.json`, a
+/// kinds (LLP 1020.002 D2); `atompress` joins them (LLP 1045.000 D7), then
+/// `newwindow` and `download` (LLP 1020.002 D5), then `capture` (D7), then `userpromptopened` (D9), then an image's `enterpictureinpicture`, `leavepictureinpicture` and `pictureinpictureerror` (LLP 1042 §9), then `historyswipe` (LLP 1115.000 D5.5). The `tools` table joins it (LLP 1133.023 D5, LLP 1111 D2), and the roster's `sharedFiles` (LLP 1133.024 D3), then `fragment` (LLP 1153 D5); a resource row's `each` (LLP 1017.000 P4c, a resource over a list). Every host needs a new binary for this plan format. The format digest is pinned: a change to `tables/format.json`, a
 /// comment included, moves it, and every host then needs a new binary (LLP
 /// 1030 D3a).
 #[test]
 fn the_format_digest_is_pinned() {
     assert_eq!(
-        FORMAT_DIGEST, 0x830296ddb388e86a,
+        FORMAT_DIGEST, 0xd0b413e4c11bf913,
         "the plan format digest moved: if intended, name the break and the hosts that move"
     );
 }

@@ -1,4 +1,4 @@
-//! The document projection over the Caltrain app and small
+//! The document projection (LLP 1048.000 D1) over the Caltrain app and small
 //! plans: the live host's DOM as HTML, before browser layout.
 
 use exact_runner::{DataError, DataSource, Value};
@@ -102,7 +102,7 @@ fn raw_symbols_prerender_as_nonfetching_decorative_images() {
         "{doc}"
     );
     assert!(doc.contains("data-symbol-source=\"symbol:sf/\""), "{doc}");
-    // An empty name, as an empty `sf/` one.
+    // An empty name, as an empty `sf/` one (stage 9 H).
     assert!(doc.contains("data-symbol-source=\"symbol:\""), "{doc}");
     assert_eq!(doc.matches("src=\"data:image/svg+xml,").count(), 3, "{doc}");
     assert!(!doc.contains("src=\"symbol:"), "{doc}");
@@ -255,7 +255,7 @@ component App
 
 #[test]
 fn a_data_frame_shows_only_in_an_opaque_sandbox() {
-    // `frameURL`'s rule: a `data:` document's origin is
+    // `frameURL`'s rule (LLP 1020 §10): a `data:` document's origin is
     // opaque in a sandbox without `allow-same-origin`; nowhere else does
     // the page show one. The browser folds the sandbox's case and the
     // scheme's, and strips what surrounds the URL.
@@ -341,7 +341,7 @@ component App
     assert!(doc[area..].contains(">\n\nfirst</textarea>"));
     assert!(tag("focusable").contains(" tabindex=\"0\""));
     assert!(!tag("button").contains("tabindex"));
-    // An authored `tabindex` is the attribute itself, it wins
+    // LLP 1088 D7.3: an authored `tabindex` is the attribute itself, it wins
     // over the synthesized one, and absent is never `0`.
     assert!(
         tag("plain-stop").contains(" tabindex=\"0\""),
@@ -369,7 +369,7 @@ component App
     column
       text "**b** [safe](https://e.dev/) [unsafe](javascript:alert(1))\nnext" markup="markdown" testId="md"
 "#;
-    // Markdown is linked by use: this binary links it, as an
+    // Markdown is linked by use (LLP 1047 D3): this binary links it, as an
     // app's generated entry does when its plan uses it.
     exact_web::link(exact_web_capabilities::ALL);
     let doc = document(src);
@@ -382,7 +382,7 @@ component App
     assert!(!doc.contains("javascript"), "{doc}");
     assert!(doc.contains("<br>"), "{doc}");
     // A list item is a block padded by its indent, its marker hung in the
-    // gutter, as `renderMarkup` builds it.
+    // gutter, as `renderMarkup` builds it (LLP 1045 D4).
     let list = document(
         "component App\n  view\n    text \"Top\\n\\n- one\\n  - two\" markup=\"markdown\"\n",
     );
@@ -427,7 +427,7 @@ component App
 }
 
 /// A `button` is a real `<button>` and holds only phrasing
-/// content: its containers, paragraphs and headings are
+/// content (LLP 1007 §1): its containers, paragraphs and headings are
 /// `<span>`s with the same style — a block unless a row says otherwise — in
 /// the live host's batch and in the document alike.
 #[test]
@@ -461,7 +461,7 @@ component App
     assert!(card.starts_with("<button "), "{card}");
     // Its native role isn't restated (ARIA in HTML).
     assert!(!card.contains(" role="), "{card}");
-    // Chrome's button: the reset's block, with the UA sheet's
+    // Chrome's button (LLP 1001 §1): the reset's block, with the UA sheet's
     // centred text; the browser centres its content in its height.
     for want in [" type=\"button\"", "text-align:center;"] {
         assert!(card.contains(want), "{want}: {card}");
@@ -541,7 +541,7 @@ component App
     );
 }
 
-// A route's header iOS makes its bar of is marked as
+// LLP 1115.000 D4.15 — a route's header iOS makes its bar of is marked as
 // navigation.js marks it (`appBarBack`), by the kernel's rule
 // (`exact_kernel::bars::header_bar`): its first child, holding one heading
 // text, on a route that does not say `navigationBar="none"`, unless its
@@ -590,7 +590,7 @@ component App
     }
 }
 
-// A route's header that holds a `nav`, a popover's too, or
+// LLP 1153 D8 — a route's header that holds a `nav`, a popover's too, or
 // more than one link, is a site's: marked `data-exact-site`, which the shell
 // draws as written, and no bar, though iOS would make one of its one heading.
 // The header iOS makes its bar of (one heading, its buttons) stays the bar,
@@ -664,7 +664,7 @@ component App
     }
 }
 
-// With tabs, each tab's panel holds its own
+// @ref LLP 1075.003 §3.3, §3.7 — with tabs, each tab's panel holds its own
 // stack, built when the tab is first selected: the unselected panel is
 // hidden and inert; an app's data-* words are attributes of their own. Both are linked
 // by use, and a host without them refuses the plan by name.
@@ -818,7 +818,7 @@ fn the_page_scroller_is_marked_in_the_document() {
     ));
 }
 
-/// `glassGroup="auto"` is written as `auto`, not its
+/// LLP 1053.000.000.000 D3: `glassGroup="auto"` is written as `auto`, not its
 /// reserved `-1`; a number as the number. Nothing draws it.
 #[test]
 fn an_auto_glass_group_is_written_as_auto() {

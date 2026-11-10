@@ -1,4 +1,4 @@
-//! Backend-method fixtures, held to the whole-app band on each crop.
+//! Backend-method fixtures for LLP 1149 D1.2, held to the whole-app band on each crop.
 use super::*;
 use exact_kernel::{gradient::Geometry, Color};
 use exact_linux::paint::{Backend, GradientPaint, Ink as Paint, Shape, SvgPaint};

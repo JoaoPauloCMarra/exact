@@ -1,7 +1,8 @@
-// @exact/background-transfer's conformance suite on Apple: the fixture
-// app (`test/fixture`) built for macOS or an iOS simulator and driven
-// by the agent. The interface is its own substitute, so the host's
-// carrier runs as in production against this suite's server.
+// @exact/background-transfer's conformance suite on Apple (LLP 1133.017 §14
+// stage 2, D3, D4, D10): the fixture app (`test/fixture`) built for macOS or
+// an iOS simulator and driven by the agent. The interface is its own
+// substitute, so the host's carrier runs as in production against this
+// suite's server.
 //
 // - The status: available and `granted`.
 // - An upload: its body read from an app file, its headers and query sent

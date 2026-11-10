@@ -1,9 +1,9 @@
-//! SVG islands on Linux: what vello and a clip
+//! SVG islands on Linux (LLP 1055.000 D2, D7, D10): what vello and a clip
 //! stack cannot express is painted by a child painter over tiny-skia into
 //! pixels, worked on by `exact-svg-raster`, and composited back through
 //! [`Backend::surface_image`]: the same path on the CPU and GPU painters.
 //! tiny-skia is already this host's; the module is linked in-process here
-//! (only the Apple core keeps it out).
+//! (§8 ruling 4 keeps it out of the Apple core only).
 
 use super::{Painter, Rect4, Shape};
 use exact_kernel::svg::filter::Filter;
@@ -69,7 +69,7 @@ impl Painter {
             .then(|| (x0 / s, y0 / s, (x1 - x0) / s, (y1 - y0) / s))
     }
 
-    /// A masked item: the element and the mask's content
+    /// A masked item (LLP 1055.000 D10): the element and the mask's content
     /// each rendered to an island over the mask region, the content turned
     /// into coverage by luminance or alpha, the element scaled by it.
     pub(super) fn svg_masked(
@@ -102,7 +102,7 @@ impl Painter {
         self.backend.surface_image(Arc::new(element), rect);
     }
 
-    /// A filtered item: what it draws, rendered into an
+    /// A filtered item (LLP 1055.000 D14): what it draws, rendered into an
     /// island over the filter region in its own user space at the scale it
     /// shows at, run through the chain, and drawn back in that space.
     pub(super) fn svg_filtered(
@@ -174,7 +174,7 @@ impl Painter {
         }
     }
 
-    /// A pattern paint as an ink: its tile rendered at the
+    /// A pattern paint as an ink (LLP 1055.000 D7): its tile rendered at the
     /// scale it shows at in `space` (points), repeated from the tile's
     /// origin in pattern space.
     pub(super) fn pattern_ink(

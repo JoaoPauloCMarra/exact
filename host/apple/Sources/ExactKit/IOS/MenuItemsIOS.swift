@@ -10,11 +10,11 @@ extension MenuHost {
     private func opensConfirmation(_ row: NodeView) -> Bool {
         presenter?.invocation(of: row).map { $0.opens && isConfirmation($0.target) } ?? false
     }
-    /// The menu grammar, extracted: button rows become
+    /// The menu grammar, extracted (LLP 1021 D3): button rows become
     /// actions, a row that opens another menu its submenu (§5,
     /// "Submenus"); any other row is a section boundary. A row's action
     /// presses it, then presents the confirmation or dialog it opens, or any other popover as
-    /// if by `opener`, the menu's own invoker (exact2's menu rule, The menu closing
+    /// if by `opener`, the menu's own invoker (exact2's menu rule, LLP 1021: the menu closing
     /// doesn't take it along). `path` holds the popovers above `pop`, whose rows opened it.
     func items(of pop: NodeView, path: [NodeView] = [], opener: NodeView? = nil) -> [UIMenuElement] {
         var sections: [[UIMenuElement]] = [[]]

@@ -1,4 +1,4 @@
-//! `tamber fmt`: one canonical layout, so an editor's
+//! `tamber fmt` (LLP 1121 §3, D13): one canonical layout, so an editor's
 //! edit is a one-line diff in a file a person can still edit. Blocks keep
 //! their order; a block's entries are indented two spaces under its name and
 //! a token's `when` lines two more; `name = value` takes one space each side,

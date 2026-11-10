@@ -1,4 +1,4 @@
-// An atom's picture from an image source while it is
+// LLP 1045.000 D2, §4: an atom's picture from an image source while it is
 // read, when it cannot be, and the room its pill takes in the text area's
 // measured text (`field-sizing: content` sizes the field by it).
 import XCTest

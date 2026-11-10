@@ -1,5 +1,7 @@
-//! The design server's write check of the rows a write reaches: a write
-//! that breaks a literal row that passed is refused in the compiler's own words, at the row, as
+//! The design server's write check of the rows a write reaches (LLP 1121
+//! D3 and D7; QUEUE's "the server's write check doesn't see a Contract
+//! row's kind", theme2's 14:19 ruling): a write that breaks a literal row
+//! that passed is refused in the compiler's own words, at the row, as
 //! `contract build` refuses the design it would write.
 #![cfg(unix)]
 
@@ -114,7 +116,7 @@ fn a_write_reaches_a_row_through_a_base_name() {
     );
 }
 
-/// Only the rows the build checks are the map's: a style
+/// Only the rows the build checks are the map's (Astra's round 1): a style
 /// no node applies, and an element's row a shorthand writes, are no row
 /// of it, so a write breaking them is the build's to judge (the build
 /// accepts the first).
@@ -189,7 +191,7 @@ fn rows_alike_are_each_refused_at_their_place() {
 }
 
 /// An arm of a choice is refused at its own literal, as the build refuses
-/// it.
+/// it (Astra's round 2).
 #[test]
 fn an_arm_of_a_choice_is_refused_at_its_literal() {
     let design = "tamber t\n\ntheme\n  ink = #111111\n  mute = #777777\n";
@@ -204,7 +206,7 @@ fn an_arm_of_a_choice_is_refused_at_its_literal() {
 }
 
 /// A row whose other arm already fails is the build's, though this arm
-/// breaks (the authored row passed or it didn't). Not refused.
+/// breaks (theme2's Q1: the authored row passed or it didn't). Not refused.
 #[test]
 fn rows_the_build_judges_otherwise_are_left_to_it() {
     let dir = reading("rows-left");
@@ -237,7 +239,7 @@ fn rows_the_build_judges_otherwise_are_left_to_it() {
 
 /// A plain row and an arm alike (one name, one literal) are each refused
 /// where the build refuses each: a shadow's at the attribute, the arm's at
-/// its literal (columns 14 and 25).
+/// its literal (Astra's round 3: columns 14 and 25).
 #[test]
 fn a_plain_row_and_an_arm_alike_keep_their_places() {
     let dir = reading("rows-plain-arm");
@@ -282,7 +284,7 @@ fn a_plain_row_and_an_arm_alike_keep_their_places() {
 
 /// A literal a `derive` binds is checked where it is bound, not as the
 /// row's: removing the token it names is the build's (which accepts it
-/// here), never a refusal.
+/// here), never a refusal (Astra's round 2).
 #[test]
 fn a_bound_literal_is_not_judged_as_the_rows() {
     let dir = reading("rows-bound");
@@ -306,7 +308,7 @@ fn a_bound_literal_is_not_judged_as_the_rows() {
 }
 
 /// A row that already fails is the build's: a write touching its token,
-/// turning one failure into another, isn't refused.
+/// turning one failure into another, isn't refused (theme2's Q1).
 #[test]
 fn a_row_already_failing_does_not_block_a_write() {
     let dir = reading("rows-already");
@@ -355,7 +357,7 @@ fn the_row_map_of_a_reused_build_is_a_fresh_ones() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The check's time budget, through the check's whole entry (the planned design's fold
+/// D2's budget, through the check's whole entry (the planned design's fold
 /// included): 102 distinct rows (six row names over seventeen tokens, each
 /// an alias of one base), every one reached by a write to the base, after
 /// the best of ten. The Bluesky clone's map is 833 distinct rows (73,151
@@ -397,9 +399,10 @@ fn a_worst_case_write_is_checked_within_the_budget() {
     let vocab = contract_lower::tamber_vocab();
     let parse = |t: &str| exact_tamber::parse(t).unwrap();
     let before = design("8px");
-    // This thread's CPU time, not the wall clock: a loaded machine (the suite's
-    // other tests and servers, other builds) takes the core away mid-run, which
-    // is no work the check did (one run at load 28 read 15.7 ms of wall clock).
+    // This thread's CPU time, not the wall clock: a loaded machine (the
+    // suite's other tests and servers, another agent's builds) takes the
+    // core away mid-run, which is no work the check did (x2-perf4's run at
+    // load 28 read 15.7 ms of wall clock).
     let cpu = || {
         let mut t = libc::timespec {
             tv_sec: 0,
@@ -458,7 +461,7 @@ fn with_fonts(tag: &str) -> std::path::PathBuf {
 
 const FONTS: &str = "use Card from \"@acme/reading\"\nfont \"Fixture Sans\"\n  400 = \"assets/DejaVuSans.ttf\"\n  700 = \"assets/DejaVuSans-Bold.ttf\"\nfont \"Regular Only\" = \"assets/DejaVuSans.ttf\"\n";
 
-/// A write to a family token that leaves `font-weight=700`
+/// Stage 13 D1: a write to a family token that leaves `font-weight=700`
 /// beside it on a family with no bold face is refused as the build
 /// refuses it (`lower-font-face`), through the node's `font-family`, which
 /// the weight's own row doesn't name.
@@ -545,7 +548,7 @@ fn a_font_write_the_build_accepts_is_accepted() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A computed string in a number row may name any number
+/// Stage 13 D2: a computed string in a number row may name any number
 /// token, so a write making one unfit for the row is refused as the build
 /// refuses it (`theme::measure_row`'s words): a state's name, a template
 /// with holes, and a choice of a literal and a name.
@@ -608,9 +611,10 @@ fn a_computed_row_the_build_accepts_is_accepted() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A `font` choice is judged whole, as `tokens_named` judges it: a
-/// write making one arm's token write other longhands than the other's is
-/// refused (`tamber-type-longhands`), though each arm alone passes.
+/// A `font` choice is judged whole, as `tokens_named` judges it (Astra's
+/// D1 round 1): a write making one arm's token write other longhands than
+/// the other's is refused (`tamber-type-longhands`), though each arm alone
+/// passes.
 #[test]
 fn a_font_choice_is_judged_whole() {
     let design =
@@ -627,7 +631,8 @@ fn a_font_choice_is_judged_whole() {
 
 /// A write that makes a type token vary by an app axis, written on a node
 /// with children, is refused as the build refuses it
-/// (`tamber-inherited-axis`); on a text with none it is accepted.
+/// (`tamber-inherited-axis`); on a text with none it is accepted (Grok's
+/// D1 round 1).
 #[test]
 fn a_type_token_made_to_vary_on_a_container_is_refused() {
     let design = "tamber t\n\naxes\n  density = regular | roomy\n\ntheme\n  ink = #111111\n  vary = 400 1rem Georgia\n    when density=roomy: 400 1.25rem Georgia\n  body = 400 1rem Georgia\n";
@@ -702,7 +707,7 @@ fn a_computed_row_the_check_cannot_type_is_the_builds() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// An `svg` subtree's rows are judged as lowering lowers
+/// Stage 13 D3: an `svg` subtree's rows are judged as lowering lowers
 /// them, renamed and coerced first (`svg::coerce_lengths`): a rect's `x`
 /// is a row, refused as a colour in the build's words.
 #[test]
@@ -720,7 +725,7 @@ fn an_svg_elements_row_is_judged() {
 
 /// A write removing the last number token, or making it a colour, leaves a
 /// computed string in a number row with none to name: refused as the build
-/// refuses it, though the write touches no number
+/// refuses it (Astra's D2 round 1), though the write touches no number
 /// token of the design after it.
 #[test]
 fn a_write_taking_the_last_number_token_is_judged() {
@@ -744,7 +749,7 @@ fn a_write_taking_the_last_number_token_is_judged() {
 
 /// A computed row whose form doesn't say its type (a call) is the build's:
 /// a user `fn` returning a number, under `font-weight` beside a family
-/// token, isn't judged with the builtin of its name.
+/// token, isn't judged with the builtin of its name (Astra's D2 round 1).
 #[test]
 fn a_computed_call_is_the_builds() {
     let dir = reading("rows-computed-call");
@@ -767,7 +772,7 @@ fn a_computed_call_is_the_builds() {
 
 /// A module tag's text row is refused by lowering before any check of it
 /// (`native::refused`), so it never passed: a write making its type token
-/// a family is not the write's.
+/// a family is not the write's (Astra's D1 round 2).
 #[test]
 fn a_module_tags_text_row_is_not_judged() {
     let dir = reading("rows-font-module");
@@ -819,7 +824,7 @@ fn a_module_tags_text_row_is_not_judged() {
 /// A grouped list's label folded from an `if` chain of texts is one text
 /// lowering builds at its first arm's place: the arms' rows are the
 /// build's, which refuses the write at the first arm; the check never
-/// refuses it at the second.
+/// refuses it at the second (Astra's D1 round 2).
 #[test]
 fn a_folded_labels_arms_are_the_builds() {
     let dir = reading("rows-folded-label");
@@ -851,7 +856,7 @@ fn a_folded_labels_arms_are_the_builds() {
 
 /// An svg element lowering refuses before its rows (`padding` on a `rect`)
 /// is the build's, its rows with it: a write breaking its `x` is not
-/// refused here in other words than the build's.
+/// refused here in other words than the build's (Astra's D3 round 1).
 #[test]
 fn an_element_lowering_refuses_first_is_the_builds() {
     let dir = reading("rows-svg-refused");
@@ -878,7 +883,8 @@ fn an_element_lowering_refuses_first_is_the_builds() {
 
 /// A look a marked row yields to a grouped list's (`-exact-row-look`) is
 /// dropped before lowering checks it (`row_look::yielded`): never judged,
-/// so a write breaking it is accepted, as the build accepts it.
+/// so a write breaking it is accepted, as the build accepts it (Astra's D3
+/// round 2).
 #[test]
 fn a_yielded_row_look_is_not_judged() {
     let dir = reading("rows-row-look");
@@ -906,7 +912,8 @@ fn a_yielded_row_look_is_not_judged() {
 /// A file whose whole build fails before the write, for a reason of its own
 /// (an `svg` with a positional argument, which lowering refuses before its
 /// rows and its children's), is refused in the build's own words: once the
-/// background build says so, no row of it is the write's.
+/// background build says so, no row of it is the write's (the reviews'
+/// round 3 of stage 13 D).
 #[test]
 fn a_file_whose_build_fails_leaves_its_rows_to_the_build() {
     let dir = reading("rows-build-fails");
@@ -943,7 +950,8 @@ fn a_file_whose_build_fails_leaves_its_rows_to_the_build() {
 
 /// An `audio` without controls shows nothing: lowering replaces its
 /// `display` (`media::audio_rows`), so the authored one is never judged,
-/// and a write breaking it is accepted, as the build accepts it.
+/// and a write breaking it is accepted, as the build accepts it (Astra's
+/// round of 700c41d3d0).
 #[test]
 fn an_audios_display_is_the_builds() {
     let dir = reading("rows-audio");
@@ -971,7 +979,7 @@ fn an_audios_display_is_the_builds() {
 /// A write that leaves an element's `font-family` one lowering can't read
 /// (a family token removed, its name now a literal list it refuses) stops
 /// that element and everything inside it before any row: a row inside it
-/// the same write breaks is the build's.
+/// the same write breaks is the build's (Astra's round of 700c41d3d0).
 #[test]
 fn a_family_lowering_cant_read_leaves_the_rows_inside_it() {
     let dir = reading("rows-family-list");
@@ -1000,7 +1008,7 @@ fn a_family_lowering_cant_read_leaves_the_rows_inside_it() {
 
 /// A marked box that is no grouped list's section row keeps its look, which
 /// the build judges first, in source order: the write is refused at it, as
-/// the build refuses it.
+/// the build refuses it (Grok's round of 700c41d3d0).
 #[test]
 fn a_marked_box_outside_a_section_keeps_its_look() {
     let design = "tamber t\n\ntheme\n  ink = #111111\n  gap = 8px\n";
@@ -1015,8 +1023,8 @@ fn a_marked_box_outside_a_section_keeps_its_look() {
 }
 
 /// A write that fixes the file's failing row is accepted, before the
-/// background whole build's verdict and after it, and the build passes after
-/// it.
+/// background whole build's verdict and after it (theme2's 17:46 condition
+/// on the failed-build gate), and the build passes after it.
 #[test]
 fn a_write_fixing_the_failing_row_is_accepted_before_and_after_the_verdict() {
     let design = "tamber t\n\ntheme\n  ink = #111111\n  gap = #222222\n";
@@ -1064,7 +1072,8 @@ fn a_write_fixing_the_failing_row_is_accepted_before_and_after_the_verdict() {
 }
 
 /// An `audio`'s `display` is lowering's to write from its class's rows and
-/// its own: never judged, whatever its class says.
+/// its own: never judged, whatever its class says (Astra's re-check of
+/// 27657b9615).
 #[test]
 fn an_audios_display_with_a_class_is_the_builds() {
     let dir = reading("rows-audio-class");
@@ -1090,7 +1099,8 @@ fn an_audios_display_with_a_class_is_the_builds() {
 }
 
 /// A marked box in a `section` outside a grouped list keeps its look: the
-/// build judges it first, and the write is refused there in its words.
+/// build judges it first, and the write is refused there in its words
+/// (Astra's re-check of 08e003cbc2).
 #[test]
 fn a_marked_box_in_a_plain_section_keeps_its_look() {
     let design = "tamber t\n\ntheme\n  ink = #111111\n  gap = 8px\n";
@@ -1107,7 +1117,7 @@ fn a_marked_box_in_a_plain_section_keeps_its_look() {
 /// A swipe written by hand in a grouped list's section (a `scroll` naming
 /// its row as `swipeContent`): the row it names yields its look as a
 /// section's row does, so a write breaking it is accepted, as the build
-/// accepts it.
+/// accepts it (Grok's re-check of af82d07cbf).
 #[test]
 fn a_hand_written_swipes_row_yields_its_look() {
     let dir = reading("rows-row-look-swipe");
@@ -1134,7 +1144,8 @@ fn a_hand_written_swipes_row_yields_its_look() {
 
 /// A wrapper in a hand-written swipe (a row holding the content and its
 /// action) is no grouped row: its look is judged, first in source order, in
-/// the build's words, while the content it holds yields its own.
+/// the build's words, while the content it holds yields its own (Astra's
+/// re-check of 53c45e6877).
 #[test]
 fn a_marked_wrapper_in_a_swipe_keeps_its_look() {
     let design = "tamber t\n\ntheme\n  ink = #111111\n  gap = 8px\n";
@@ -1150,7 +1161,8 @@ fn a_marked_wrapper_in_a_swipe_keeps_its_look() {
 
 /// A component used as a section's row with another use of it inside: the
 /// outer's look yields, the inner's (the same declaration, another
-/// instance) is judged, in the build's words.
+/// instance) is judged, in the build's words (Astra's re-check of
+/// 0c1dd8f1a3).
 #[test]
 fn a_nested_instance_of_a_yielding_row_keeps_its_look() {
     let design = "tamber t\n\ntheme\n  ink = #111111\n  gap = 8px\n";
@@ -1193,7 +1205,8 @@ fn a_deletable_rows_look_yields() {
 
 /// Two nested uses of one swipe component share their root's span: the
 /// outer swipe naming the inner as its content yields the inner's look, so
-/// a write breaking it is accepted, as the build accepts it.
+/// a write breaking it is accepted, as the build accepts it (Astra's
+/// re-check of df08adcb4a).
 #[test]
 fn a_nested_swipe_components_content_yields_its_look() {
     let dir = reading("rows-row-look-nested-swipe");

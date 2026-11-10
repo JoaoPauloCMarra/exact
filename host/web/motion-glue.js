@@ -1,11 +1,11 @@
-// Springs, holds and drags on the web: the motion and
+// Springs, holds and drags on the web (LLP 1002, LLP 1041 §8): the motion and
 // arrange controllers, an after-paint piece fetched when a batch first needs
-// one; navigation.js stands in until then.
+// one (LLP 1047 D5); navigation.js stands in until then.
 // Presentation ownership is a host projection. The shared Engine owns hold
 // validity and authored targets; this controller owns actual browser sampling.
 export function motionBytes(facts) {
   const {op,view=0,property='translate',token=0,x=0,y=0,now=0}=facts;
-  // 21 and 22 are a grouped list's `reorder-preview-into` and `reorder-step`.
+  // 21 and 22 are a grouped list's `reorder-preview-into` and `reorder-step` (LLP 1094 D5).
   const reorder=['reorder-begin','reorder-preview','reorder-terminal','reorder-cancel','reorder-rebase','reorder-finish','reorder-preview-into','reorder-step'].indexOf(op);
   if(reorder>=0) {
     const rows=facts.rows??(facts.targetView!=null?[{key:facts.targetView,hold:0,value:[0,0]}]:[]);if(rows.length>4096)throw Error('too many reorder samples');
@@ -44,7 +44,7 @@ export function motionBytes(facts) {
   d.setBigUint64(16,serial,true); d.setFloat64(24,x,true); d.setFloat64(32,y,true); d.setFloat64(40,now,true);
   return bytes;
 }
-// A consumer's animation while its timeline's source
+// @ref LLP 1057.003 D3 — a consumer's animation while its timeline's source
 // plays a release spring. `p` is the timeline's progress at each of the
 // spring's evenly spaced frames; the answer is a `linear()` easing of the
 // animation's directed progress (Web Animations 1 §4.8) over the spring's
@@ -101,17 +101,17 @@ export function motionController({views,now,generation,request,applyBatch,inert,
   // CSS height clamps negative interpolated lengths. Keep every spring sample
   // and its timing; only its displayed length changes, not the engine curve.
   // A translate frame is `[x,y]` lengths, or `[x,y,px,py]` with percentages
-  // of the box, which the browser resolves.
+  // of the box, which the browser resolves (chess diary #4).
   const axis=(l,p)=>p?(l?`calc(${l}px + ${p}%)`:`${p}%`):`${l}px`;
   const css=(property,value)=>property==='translate'?`${axis(value[0],value[2])} ${axis(value[1],value[3])}`:property==='rotate'?`${value[0]}deg`:property==='height'?`${Math.max(0,value[0])}px`:String(value[0]);
   const call=(op,h,value=[0,0],t=now())=>request({op,view:h.view,property:h.property,token:h.token??0,x:value[0],y:value[1],now:t});
   const local=h=>h && h.generation===generation() && views.get(h.view)===h.el && h.el.isConnected && held.get(key(h.view,h.property))===h;
   const eligible=el=>el?.isConnected&&!el.closest('[disabled]')&&!el.matches(':disabled')&&!inert(el)&&el.getClientRects().length>0&&getComputedStyle(el).visibility==='visible';
   const live=h=>local(h)&&call('live',h).accepted===true;
-  // The thresholds exact2 defines itself, from exact_motion::gesture.
+  // The thresholds exact2 defines itself, from exact_motion::gesture (LLP 1057.001 §3).
   let constants=null;
   const gesture=()=>constants??=request({op:'gesture'});
-  // Precedence rule 3: a recognizer that does not capture at
+  // Precedence rule 3 (LLP 1057.001 §1): a recognizer that does not capture at
   // down (swipe) marks its pointer 'pending' until it claims or refuses; an
   // ancestor's recognizer that would capture waits for that verdict.
   const contacts=()=>(globalThis.exact??={}).contacts??=new Map();
@@ -129,17 +129,17 @@ export function motionController({views,now,generation,request,applyBatch,inert,
   // A press handler or control between the contact and an ancestor's
   // recognizer keeps the contact (rule 3's boundary, as AppKit and Linux do).
   const pressable=(e,el)=>{const inner=e.target.closest('button,a[href],select,[data-exact-on~="press"]');return !!inner&&inner!==el&&el.contains(inner);};
-  // Drag timelines. A node's presented
+  // @ref LLP 1057.003 D2 — drag timelines. A node's presented
   // translate drives the `animation`s of nodes bound to its named timeline:
   // their CSS animations are paused (css.rs) and seeked here. A held value is
   // followed where the drag presents it (transform drag's `present`), in the
   // pointer event. A translate spring hands each consumer its frames
-  // (`follow`), so the browser plays both and nothing here runs per
+  // (`follow`, D3), so the browser plays both and nothing here runs per
   // frame; only a consumer that easing can't express is sought in each
   // animation frame while the spring runs (`kickTimelines`).
   const timelineSources='[style*="--exact-drag-timeline"]';
   const timelineName=el=>el.style.getPropertyValue('--exact-drag-timeline').trim().split(/\s+/);
-  // The source a consumer's name resolves to, as CSS
+  // @ref LLP 1057.003 D4 — the source a consumer's name resolves to, as CSS
   // scopes names and as the kernel's `lookup` does: walking up from the
   // consumer, the first element that declares the name or scopes it
   // (`--exact-timeline-scope`) decides. A scope's source is the one
@@ -228,7 +228,7 @@ export function motionController({views,now,generation,request,applyBatch,inert,
     }
     return moving;
   }
-  // A source's release spring, `op`, for its
+  // @ref LLP 1057.003 D3 — a source's release spring, `op`, for its
   // consumers: each CSS animation's keyframes, copied and played over the
   // spring's delay and duration with the easing its progress gives
   // (`timelineEasing`). They start with the spring, so the agent's clock
@@ -305,7 +305,7 @@ export function motionController({views,now,generation,request,applyBatch,inert,
     for(const view of holds().keys())if(!view.isConnected)holds().delete(view);
     authored.set(id,el.style.cssText);holds().set(el,()=>letGo(id,el));
   }
-  // A view that leaves is presence's, as on Apple, where the reorder hold lets go of a view that has
+  // A view that leaves is presence's (LLP 1063 D4), as on Apple, where the reorder hold lets go of a view that has
   // left: its lift ends, putting back the `z-index` and `position` the lift wrote over, and motion forgets it, so a
   // hold or lift that ends later writes nothing to the ghost. What a hold shows stays, such as a swiped row's offset.
   function letGo(id,el) {
@@ -564,7 +564,7 @@ export function motionController({views,now,generation,request,applyBatch,inert,
       return true;
     },
     // velocity 'measured': the engine's own estimate over the held values,
-    // where the platform gives none.
+    // where the platform gives none (LLP 1057.001 §3).
     end(h,velocity=[0,0],cancel=false) {
       if(!local(h)) return false;
       const reply=call(cancel?'cancel':velocity==='measured'?'release-measured':'release',h,velocity==='measured'?[0,0]:velocity);
@@ -589,7 +589,7 @@ export function motionController({views,now,generation,request,applyBatch,inert,
       // The action may delete the held node. That makes this a harmless no-op.
       api.end(h,velocity,cancel); return true;
     },
-    // A pan's pointer samples, at each event's own
+    // @ref LLP 1057 §10.6 — a pan's pointer samples, at each event's own
     // timestamp, and its release velocity from the engine's tracker.
     panSample(id,x,y,t,first) { request({op:'pan-sample',view:id,token:first?1:0,x,y,now:t}); },
     panVelocity(id,t) { const r=request({op:'pan-velocity',view:id,now:t}); return [r.vx??0,r.vy??0]; },
@@ -654,7 +654,7 @@ export function motionController({views,now,generation,request,applyBatch,inert,
       for(const record of followers.values())cancelFollowers(record); followers.clear();
       const ids=[...authored.keys()]; held.clear();raised.clear(); for(const id of ids) restore(id); authored.clear();
     },
-    // Pan and pinch on the photo pair: up to two pointers,
+    // Pan and pinch on the photo pair (LLP 1057.001 §4): up to two pointers,
     // a trackpad's ctrl+wheel, Safari's gesture events. Every sample is the
     // pair anchored at its focal point, re-anchored whenever the contact set
     // changes; one release while both tokens are live.
@@ -892,7 +892,7 @@ export function motionController({views,now,generation,request,applyBatch,inert,
         const shown=position(d);
         // Final constrained sample precedes the synchronous authored snap. The
         // host checks this handle/target/token again before dispatching it,
-        // at the engine's velocity over the heights shown.
+        // at the engine's velocity over the heights shown (LLP 1057.001 §3).
         if(bindingLive(d.binding)&&live(d.h)&&api.move(d.h,[shown,0])) {
           const reply=request({op:'height-action',view:id,property:'height',token:d.h.token,x:shown,y:0,now:now()});
           if(reply.batch) applyBatch(reply.batch);
@@ -910,7 +910,7 @@ export function motionController({views,now,generation,request,applyBatch,inert,
       const rubber=x=>Math.abs(x)<=knee?x:Math.sign(x)*(knee+(Math.abs(x)-knee)*resistance);
       const inverse=x=>Math.abs(x)<=knee?x:Math.sign(x)*(knee+(Math.abs(x)-knee)/resistance);
       const progressOf=x=>Math.max(0,Math.min(1,x/knee));
-      // A swiped card may drive a drag timeline:
+      // A swiped card may drive a drag timeline (LLP 1057.003 D4's list):
       // its consumers follow in this event, as the transform drag's `present`.
       const track=(h,value)=>{
         if(!api.move(h,value))return false;
@@ -986,7 +986,7 @@ export function motionController({views,now,generation,request,applyBatch,inert,
 }
 
 // One physical Arrange contact and its settling source; Common owns logical keys.
-// A grip whose list has a `reorderGroup` is `group-glue.js`'s: the
+// A grip whose list has a `reorderGroup` is `group-glue.js`'s (LLP 1094): the
 // ghost, the target lists, the hold and the keys; `grouped` is its controller.
 export function arrangeController({views,collections,motion,request,applyBatch,now,generation,inert,ready=()=>true,grouped=null,root=null,viewOf,log}) {
   const bindings=new Map(),groups=new Map();let current=null,edge=null,edgeTime=null,busy=false,pending=null;
@@ -1031,7 +1031,7 @@ export function arrangeController({views,collections,motion,request,applyBatch,n
     d.phase='terminalizing';clearContact(d);busy=true;
     try {
       const captured=motion.captureReorder(d.frame??[]);
-      // The release velocity is the engine's.
+      // The release velocity is the engine's (LLP 1057.001 §3).
       let r=call(d,cancel?'reorder-cancel':'reorder-terminal',{rows:captured});
       if(r.accepted!==true&&!cancel)r=call(d,'reorder-cancel',{rows:captured});
       if(!adoptReply(d,r,captured)){d.phase='active';return;}
@@ -1135,7 +1135,7 @@ export function arrangeController({views,collections,motion,request,applyBatch,n
     });
     // A touch is implicitly captured by the element it lands on, often the
     // grip's text child; taking capture to the grip bubbles that child's
-    // capture loss here, which is not the contact ending.
+    // capture loss here, which is not the contact ending (habits F10).
     const up=v=>{if(v.pointerId!==e.pointerId||v.type==='lostpointercapture'&&v.target!==b.el)return;cleanup();if(!drag)return;
       const cancel=v.type!=='pointerup';if(!cancel&&!sampleMove(drag,v.clientX,v.clientY)){terminal(drag,true);return;}
       terminal(drag,cancel);};
@@ -1159,7 +1159,7 @@ export function arrangeController({views,collections,motion,request,applyBatch,n
       bindings.set(op.id,b);b.el.addEventListener('pointerdown',b.down);
       if(groups.has(op.id))group?.bind(b,groups.get(op.id));
     },
-    // A grip's group and whether the keys may drive it.
+    // A grip's group and whether the keys may drive it (LLP 1094 D1, D9).
     group(op) {groups.set(op.id,op);const b=bindings.get(op.id);if(b)group?.bind(b,op);},
     destroy,
     state(op) {if(op.grouped){group?.state(op);return;}

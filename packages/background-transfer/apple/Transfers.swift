@@ -1,4 +1,4 @@
-// @exact/background-transfer on Apple: Background
+// @exact/background-transfer on Apple (LLP 1133.017 D3, D4, D10, D17): Background
 // Fetch's names over the host's transfer carrier (`context.transfers`,
 // ExactKit's Transfers.swift), whose background `URLSession`s finish a
 // transfer while the app is suspended or terminated and whose records
@@ -15,7 +15,7 @@
 // - An ending the host offers (a wake of kind `transfer`) raises
 //   `backgroundfetchsuccess`, `backgroundfetchfail` or `backgroundfetchabort`
 //   with the registration. The app retires it; until then the host offers it
-//   again.
+//   again (D10).
 // - Under the agent the carrier runs as in production, against whatever
 //   server the drive names: the interface is its own substitute.
 import ExactPackage

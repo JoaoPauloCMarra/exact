@@ -1,4 +1,4 @@
-//! A page sent in two parts (the early flush): the head of a
+//! A page sent in two parts (LLP 1071 D6, the early flush): the head of a
 //! JavaScript page as the request arrives, before any of its data is asked
 //! ([`crate::page::head_js`]), then the rest when the render is done
 //! ([`crate::page::body_js`]), as one chunked, compressed response.

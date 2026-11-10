@@ -118,7 +118,7 @@ pub struct TextStyle {
     /// CSS `font-variant-ligatures` as [`crate::FontVariantLigatures`]'
     /// bits: which OpenType ligature features are turned on or off.
     pub font_variant_ligatures: u8,
-    /// Bold Text weights this run's font: its weight is
+    /// Bold Text weights this run's font (LLP 1115.000 D12.3): its weight is
     /// stepped already, and a weight a host gives a piece of it itself (a
     /// Markdown piece's bold) takes the same step ([`crate::bolder`]).
     pub bold_text: bool,
@@ -157,7 +157,7 @@ impl TextStyle {
     }
 
     /// This style drawn at `scale` of its size: its font size, a resolved
-    /// line height and its letter spacing (a fitted text).
+    /// line height and its letter spacing (LLP 1116.001 D1.4, a fitted text).
     pub fn scaled(mut self, scale: f32) -> Self {
         self.font_size *= scale;
         self.line_height = self.line_height.map(|h| h * scale);
@@ -185,7 +185,7 @@ impl TextStyle {
 }
 
 /// What the node's string is: plain text, or a markup the host styles.
-/// The kernel carries the prop and the source as one
+/// @ref LLP 1045 D3 — the kernel carries the prop and the source as one
 /// run; a host that links `exact-markdown` expands it for measure and paint.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Markup {
@@ -331,12 +331,12 @@ impl crate::Hyphens {
 /// One styled run of text.
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextRun<'a> {
-    /// The text as measured and painted: `text-transform` already applied,
-    /// borrowed from the node when it changes nothing.
+    /// The text as measured and painted: `text-transform` already applied
+    /// (LLP 1064 D5), borrowed from the node when it changes nothing.
     pub text: Cow<'a, str>,
     /// Its style.
     pub style: TextStyle,
-    /// An image in the paragraph: the box a measurer reserves
+    /// An image in the paragraph (LLP 1011.002): the box a measurer reserves
     /// in place of this run's text, which is [`inline_box::INLINE_BOX_TEXT`].
     pub inline: Option<inline_box::InlineBox>,
 }
@@ -370,15 +370,15 @@ pub struct TextMeasureRequest<'a> {
     /// Vertical offer.
     pub height: AxisOffer,
     /// Resolved exclusions in content coordinates; empty during box layout.
-    /// Hosts answer from their flowed layout.
+    /// @ref LLP 1043.000 §3 D5 — hosts answer from their flowed layout.
     pub exclusions: &'a [exact_textflow::FlowShape],
-    /// A Markdown paragraph's inline atoms: its `atoms`
+    /// A Markdown paragraph's inline atoms (LLP 1045.000 D2): its `atoms`
     /// and `atomFaces`, which a label's width depends on; empty otherwise.
     pub atoms: MarkupAtoms<'a>,
 }
 
-/// A Markdown node's `atoms` and `atomFaces` JSON, as the kernel holds them:
-/// a host that draws atoms expands the source with them,
+/// A Markdown node's `atoms` and `atomFaces` JSON, as the kernel holds them
+/// (LLP 1045.000 D3): a host that draws atoms expands the source with them,
 /// for measure and paint alike. Empty strings are none.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct MarkupAtoms<'a> {
@@ -540,7 +540,7 @@ pub struct SymbolRequest<'a> {
 
 /// A host's text engine, injected per kernel.
 pub trait TextMeasurer {
-    /// The platform formats an instant on the runner clock.
+    /// The platform formats an instant on the runner clock (LLP 1126 D6).
     fn format_time(&mut self, request: &crate::time::TimeRequest<'_>) -> Option<String> {
         crate::time::english(request)
     }
@@ -552,14 +552,14 @@ pub trait TextMeasurer {
         0
     }
 
-    /// Native field chrome. Existing/painted measurers answer
+    /// Native field chrome (LLP 1104 D5). Existing/painted measurers answer
     /// no chrome until they implement their own control look.
     fn field_chrome(&mut self, _request: &crate::FieldChromeRequest) -> crate::FieldChrome {
         crate::FieldChrome::default()
     }
 
     /// A text control's own text, where the host's control sets it with a
-    /// text engine of its own (Android's `EditText`): its
+    /// text engine of its own (LLP 1115.001 D8: Android's `EditText`): its
     /// width, height and first baseline at the offer, asked during layout.
     /// `None`, the default, measures it as any paragraph.
     fn field_text(
@@ -571,7 +571,7 @@ pub trait TextMeasurer {
     }
 
     /// Native button border-box size, including its platform chrome and
-    /// authored content insets. None preserves the
+    /// authored content insets (LLP 1069.011.001 D11). None preserves the
     /// default size / set_intrinsic_size path for existing hosts.
     fn button_measure(
         &mut self,
@@ -631,7 +631,7 @@ pub trait TextMeasurer {
         None
     }
 
-    /// Each line box's bottom, in content coordinates, of
+    /// @ref LLP 1093 D6 — each line box's bottom, in content coordinates, of
     /// the paragraph the last measure of `request` built: where a column may
     /// end inside it. The kernel asks only for a paragraph that would cross a
     /// column's end. A measurer that answers nothing keeps every paragraph
@@ -644,7 +644,7 @@ pub trait TextMeasurer {
     ) {
     }
 
-    /// Where the paragraph the last measure of
+    /// @ref LLP 1011.002 D2 — where the paragraph the last measure of
     /// `request` built put each inline box (a run whose `inline` is set):
     /// its margin box's top left in content coordinates, one pair per box in
     /// run order, non-finite for a box on no line (one `line-clamp` cut).
@@ -704,6 +704,7 @@ enum Token {
 
 impl crate::WhiteSpace {
     /// The walker's and hosts' model of this row: collapse × wrap mode.
+    /// @ref LLP 1053 §0 G5
     pub fn model(self) -> exact_textflow::WhiteSpace {
         match self {
             crate::WhiteSpace::Normal => exact_textflow::WhiteSpace::Normal,
@@ -716,7 +717,7 @@ impl crate::WhiteSpace {
 }
 
 impl MonospaceMeasurer {
-    /// Flow around exclusions through the shared
+    /// @ref LLP 1043.000 §3 D5–D6 — flow around exclusions through the shared
     /// walker over this measurer's advances, as the hosts do over theirs.
     fn flow(&self, request: &TextMeasureRequest<'_>, width: f32) -> TextMetrics {
         let strut = &request.paragraph.strut;
@@ -896,7 +897,7 @@ impl MonospaceMeasurer {
         }
     }
 
-    /// The reference face's edges at `style`: its ascent and
+    /// The reference face's edges at `style` (LLP 1011.002): its ascent and
     /// descent split its line height at the baseline, its x-height half an em.
     fn edges(&self, style: &TextStyle) -> inline_box::FontEdges {
         let line = self.line_height(style);
@@ -909,7 +910,7 @@ impl MonospaceMeasurer {
 
     fn lay_out(&mut self, request: &TextMeasureRequest<'_>) -> Option<MonoLayout> {
         let white_space = request.paragraph.white_space.model();
-        // CSS collapsing first, as every native engine now does.
+        // CSS collapsing first, as every native engine now does (LLP 1053 G5).
         let collapsed = exact_textflow::collapse(request.runs, white_space);
         // Tokenize across runs. A word may span runs; its width accumulates.
         let mut tokens: Vec<Token> = Vec::new();
@@ -1246,8 +1247,8 @@ impl RunRows {
         self.mask
     }
 
-    /// `from`'s rows in `mask` taken, as a text style gives them, and marked
-    /// set for the runs inside.
+    /// `from`'s rows in `mask` taken, as a text style gives them (LLP
+    /// 1115.000 D12.2), and marked set for the runs inside.
     pub fn fill(mut self, from: &StyleProps, mask: StyleMask) -> Self {
         self.take(from, mask);
         self.mask = self.mask.union(mask);

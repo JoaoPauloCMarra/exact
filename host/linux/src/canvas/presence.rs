@@ -1,4 +1,4 @@
-//! The reader's Keystore for locked secrets: the host's
+//! The reader's Keystore for locked secrets (LLP 1133.010 D6): the host's
 //! presence vault adds an item through `dev.exact.canvas.Presence.keystore`,
 //! called synchronously on the thread the backend runs on. The reader
 //! answers `ok:<text>` or `err:<why>`.

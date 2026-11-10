@@ -1,4 +1,4 @@
-// The param rung on the server (tamber/1.11): the app's component
+// LLP 1122 T3's param rung on the server (tamber/1.11): the app's component
 // params read by describe, again when its files move, for a new plan and
 // after a failed read; a selection names a param row on the param rung, and
 // neither the `selection` nor the `selected` event carries an IR token.
@@ -30,7 +30,7 @@ async function ask(tamber, gate, { path, method = 'GET', headers = {}, peer = '1
   return { handled, status, body: text ? JSON.parse(text) : null };
 }
 
-test('the server reads the app\'s component params, again for a new plan or after a failed read, and a selection names a param row on the param rung; neither event carries an IR token', async () => {
+test('the server reads the app\'s component params, again for a new plan or after a failed read, and a selection names a param row on the param rung; neither event carries an IR token (LLP 1122 T3)', async () => {
   const IR = 'param.f1a2b3c4d.Card.fill';
   const components = [{ identity: 'app.contract#Card', name: 'Card', params: [{ name: 'app.contract#Card.fill', short: 'Card.fill', token: IR, default: 'ink', set: null }] }];
   let describes = 0;
@@ -89,7 +89,7 @@ test('the server reads the app\'s component params, again for a new plan or afte
   await tamber.close();
 });
 
-test('a describe of other files than the read was for is not kept: the param map stays empty and the row read-only', async () => {
+test('a describe of other files than the read was for is not kept: the param map stays empty and the row read-only (LLP 1122 T3)', async () => {
   const IR = 'param.f1a2b3c4d.Card.fill';
   const components = [{ identity: 'app.contract#Card', name: 'Card', params: [{ name: 'app.contract#Card.fill', short: 'Card.fill', token: IR, default: 'ink', set: null }] }];
   let describes = 0;

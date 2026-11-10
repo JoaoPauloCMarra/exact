@@ -1,5 +1,5 @@
 //! What a reader copies a picture from: a decoded image, or a canvas's
-//! rasterized drawing (Canvas 2D), both premultiplied RGBA.
+//! rasterized drawing (Canvas 2D, LLP 1056), both premultiplied RGBA.
 use crate::image::Bitmap;
 use std::sync::{Arc, Weak};
 use tiny_skia::Pixmap;

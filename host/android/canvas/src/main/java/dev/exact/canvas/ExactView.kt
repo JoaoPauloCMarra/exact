@@ -14,7 +14,7 @@ import java.io.File
 import java.nio.ByteOrder
 import java.nio.IntBuffer
 
-/** Canvas reader for exact2's op stream (host/linux/src/canvas.rs).
+/** Canvas reader for exact2's op stream (host/linux/src/canvas.rs; LLP 1076 §3.3).
  * Rows are RenderNodes recorded on a worker (async=0: main) and retained until freed.
  * A scroll frame translates the scroller's row group without repainting it.
  */
@@ -23,11 +23,11 @@ class ExactView(context: Context, private val live: Boolean, private val onFirst
     var keys: Keys? = null
     /** The stream's platform elements (op 28). */
     var natives: Natives? = null
-    /** The app's text fields, each the platform's own ([Fields]): op 28, kind 4, draws one. */
+    /** The app's text fields, each the platform's own ([Fields], LLP 1115.001 D8): op 28, kind 4, draws one. */
     internal var fields: Fields? = null
-    /** The app's bars, over this view ([Bars]): told with the stream they belong to. */
+    /** The app's bars, over this view ([Bars], LLP 1115.001 D11): told with the stream they belong to. */
     internal var bars: Bars? = null
-    /** Delivers the stream's accessibility tree ([Access]); owner=0 also checks service availability. */
+    /** Delivers the stream's accessibility tree ([Access], LLP 1115.001 D13); owner=0 also checks service availability. */
     internal var access: ((IntArray) -> Unit)? = null
     private var accessible = false
     private var accessAgain = false
@@ -123,7 +123,7 @@ class ExactView(context: Context, private val live: Boolean, private val onFirst
     var window = 0 to 0
     /** What the host says to draw around the page ([Native.chrome]), when exact2 runs here: told as it changes. */
     var chrome: (IntArray) -> Unit = {}
-    /** What exact2 asks of the platform ([Native.requests]), when it runs here: taken after each
+    /** What exact2 asks of the platform ([Native.requests], LLP 1115.001 D5), when it runs here: taken after each
      * turn and whenever it wakes this thread ([asking]). With an [owner], the owner takes them. */
     internal var asked: (IntArray) -> Unit = {}
     private fun asking() { Native.requests()?.let(asked) }
@@ -167,7 +167,7 @@ class ExactView(context: Context, private val live: Boolean, private val onFirst
     /** The last stream applied changed only nodes the view's drawing references: no need to draw the view again. */
     private var quiet = false
 
-    /** The view's size is never told to exact2: the activity tells it the window and its insets,
+    /** The view's size is never told to exact2 (LLP 1115.001 D3.3): the activity tells it the window and its insets,
      * the presenter places the page in it, and the view is laid out there ([ExactActivity.chrome]). */
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         main.width = w; main.height = h
@@ -198,7 +198,7 @@ class ExactView(context: Context, private val live: Boolean, private val onFirst
      * made after it (the activity made again) watches its own, and this one must not take that one's streams. */
     private var wakes: Wakes? = null
 
-    /** Whether the activity is started. Stopped, the view asks for no frame: no turn at a vsync,
+    /** Whether the activity is started. Stopped, the view asks for no frame (LLP 1115.001 D15.2): no turn at a vsync,
      * no timer, no layer sampled; the first frame after it starts again shows what changed meanwhile. */
     private var running = true
 
@@ -222,12 +222,12 @@ class ExactView(context: Context, private val live: Boolean, private val onFirst
         removeCallbacks(timer); removeCallbacks(refiner)
     }
 
-    /** A finger's scroll, its fling and its ends ([Scrolling]). */
+    /** A finger's scroll, its fling and its ends ([Scrolling], LLP 1115.001 D7). */
     private val scrolling = Scrolling(this)
 
     /** The touch that is down becomes a long press once it has been held still for the system's own time
      * ([android.view.ViewConfiguration.getLongPressTimeout], which follows the person's touch and hold delay):
-     * exact2 is told so (action 4), and what names a context menu under it opens it. A touch
+     * exact2 is told so (action 4), and what names a context menu under it opens it (LLP 1115.001 D10). A touch
      * that moves past the system's slop, scrolls, lifts or is a hosted field's is none. */
     private val slop = android.view.ViewConfiguration.get(context).scaledTouchSlop
     private var heldX = 0f
@@ -317,7 +317,7 @@ class ExactView(context: Context, private val live: Boolean, private val onFirst
         if (e.actionMasked == MotionEvent.ACTION_CANCEL || e.actionMasked == MotionEvent.ACTION_UP ||
             e.actionMasked == MotionEvent.ACTION_POINTER_DOWN || e.actionMasked == MotionEvent.ACTION_POINTER_UP) forgetModuleTap()
         // A touch in a hosted text field's box is held for the field, and is the field's own once exact2 says the
-        // field is what is under it ([Fields]): exact2 hears of the focus, not of the touch.
+        // field is what is under it ([Fields], LLP 1115.001 D8): exact2 hears of the focus, not of the touch.
         val hosted = fields
         if (started && hosted != null && hosted.touch(e)) {
             hold(null)
@@ -370,7 +370,7 @@ class ExactView(context: Context, private val live: Boolean, private val onFirst
     internal fun fieldKeeps() = fields?.keeps == true
 
     /** exact2 asks the software keyboard ([Requests], kind 6): hidden ([state] 0), or shown for an input (1) or a
-     * textarea (3). For a hosted field ([field]) the field takes the focus and shows its own; for
+     * textarea (3). For a hosted field ([field], LLP 1115.001 D8) the field takes the focus and shows its own; for
      * one exact2 paints, this view's ([Keys]). */
     internal fun keyboard(state: Int, field: Int) {
         val hosted = fields

@@ -5,7 +5,7 @@ import ExactCore
 @testable import ExactKit
 @testable import ExactGroupedLists
 
-/// On UIKit, an svg-only icon on a control's face
+/// Stage 9 A2 on UIKit (LLP 1121 D10): an svg-only icon on a control's face
 /// is drawn as the control draws an SF Symbol. Mounted: the native fixture's
 /// bar item and root tab with the icon's path written on their image (as the
 /// Rust side writes `symbolPath`), a tab bar and segments of native tabs, a
@@ -415,7 +415,7 @@ final class FaceSymbolGroupedTests: GroupedListFixture {
     /// A path in the accent (`AccentColor`, as GroupedListIOSTests' testASymbolInTheAccentTakesTheCellsTint has
     /// a symbol, its file at its cap): no colour of its own, so the cell's tint, not the label, as it changes.
     /// The same for an untinted path whose written `color` is `AccentColor`
-    /// (the colour it takes is the accent's).
+    /// (LLP 1121 stage 9 B: the colour it takes is the accent's).
     func testAPathInTheAccentTakesTheCellsTint() throws {
         let accent: [String: Any] = ["sys": "@tint", "c": [[0, 136, 255, 255], [0, 145, 255, 255]]]
         try assertTheCellsTint(props: [:], style: ["tint_color": accent])

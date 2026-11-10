@@ -1,11 +1,11 @@
-//! The faces text lays out with (G7): found in the system's
+//! The faces text lays out with (LLP 1085.000 §4, G7): found in the system's
 //! font directories and `EXACT_FONTS` without fontconfig, registered with
 //! fontique as faces described ahead of time, their files mapped only when a
 //! shape first reads them.
 //!
 //! Every face is a memory source over a lazily mapped file, never a path
 //! source: the face's blob then names its file (the Canvas host's `FONT` op
-//! needs it), and two catalogs or threads that share a blob
+//! needs it, LLP 1076 §3.3), and two catalogs or threads that share a blob
 //! share one mapping, so what was measured is what is drawn.
 use fontique::{
     Blob, Collection, CollectionOptions, FontInfo, FontStyle, FontWeight, FontWidth, GenericFamily,
@@ -83,7 +83,7 @@ impl Described {
 /// font directories and `EXACT_FONTS`. Read once; every catalog copies it.
 pub(super) struct Installed {
     pub collection: Collection,
-    /// Each file's blob id and path, for the Canvas host.
+    /// Each file's blob id and path, for the Canvas host (LLP 1076 §3.3).
     pub files: HashMap<u64, Arc<Path>>,
     /// What fontconfig's own files name for the generic families, else
     /// fontdb's defaults (the host's sans, serif and monospace choices

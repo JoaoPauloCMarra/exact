@@ -1,11 +1,11 @@
-// The agent's waits on real time with the clock frozen, `clock held` and `clock
-// until state`, over the session's own ops (scripts/agent.mjs), so one
+// The agent's waits on real time with the clock frozen, `clock held` (LLP 1016.000 D9, theme2 2026-10-22) and `clock
+// until state` (rules/DEFERRED.md, "Agent API", 2026-10-26), over the session's own ops (scripts/agent.mjs), so one
 // implementation serves every host.
 import { MalformedOperation } from './agent-keys.mjs';
 
 // `clock held [<target>…] [<n>s|<n>ms]`: real time passes, the clock frozen, until each held request in flight now
 // (state.pending's `held`, or those named) has had one reply, a server's own timeout answer included, then `clock
-// data`; past the bound (20 s) `settled: false, reason: 'held'`, naming the targets with none.
+// data`; past the bound (20 s) `settled: false, reason: 'held'`, naming the targets with none (LLP 1016.000 D9).
 // A reply is the host's count of replies landed for a target's held requests (`state.heldReplies`) rising: a
 // request let go, or no longer counted held for a while, is no reply; a reply followed at once by another held
 // ask is one.
@@ -46,9 +46,9 @@ const UNTIL = 'clock until state <path> == <literal> within <ms> (the literal is
 
 // `clock until state <path> == <literal> within <ms>`: real time passes, the clock frozen (no timer fires), until
 // `state <path>` reads the literal, for at most <ms>; a miss throws, naming the last value read. It is for state a
-// stream reaches after its first message, which no settlement waits for. Each look first lands
+// stream reaches after its first message, which no settlement waits for (LLP 1016.000 D5). Each look first lands
 // what has arrived, as an input's end does (`clock` with `land`: the `then`s of answers in, no timer fired), so a
-// protocol's later steps go on meanwhile: a chat client's IDENTIFY is sent from a write's `then`, and READY answers it.
+// protocol's later steps go on meanwhile: Excord's IDENTIFY is sent from a write's `then`, and READY answers it.
 export async function untilClock(s, spec) {
   // The path as an authored test writes it too: a space before a dot (`rows.0 .body`, `grid.0 .1`) is dropped.
   const m = /^until\s+state\s+(\S+(?:\s+\.\S+)*)\s*==\s*(\S.*?)\s+within\s+(\d+)$/s.exec(spec.trim());
@@ -95,14 +95,14 @@ export async function untilClock(s, spec) {
   const real = Math.round(performance.now() - t0);
   if (met(seen)) return { clock: s.now, real, until: 'met', value: seen.value };
   const last = seen == null ? 'no look answered within the bound' : 'value' in seen ? `${path} was ${JSON.stringify(seen.value)?.slice(0, 200)}` : seen.missing ?? `no state named "${name}"`;
-  // A task due a commit later (`after(1, …)`) is a step the frozen clock never takes (a chat client's `record`, which sends IDENTIFY).
+  // A task due a commit later (`after(1, …)`) is a step the frozen clock never takes (Excord's `record`, which sends IDENTIFY).
   const soon = Object.entries(seen?.tasks ?? {}).filter(([, at]) => Number.isFinite(at) && at > s.now && at <= s.now + 1).map(([task]) => `\`${task}\``);
   const hint = soon.length ? `; ${soon.join(', ')} ${soon.length > 1 ? 'are' : 'is'} due a commit later (an \`after(1, …)\`), which the frozen clock never reaches: \`clock settle\` or \`clock +1\` before this step runs ${soon.length > 1 ? 'them' : 'it'}` : '';
   throw new Error(`clock until state ${path} == ${literal} within ${bound}: ${last} after ${real} ms of real time, the clock frozen at ${s.now} ms${hint}`);
 }
 
 /** A missed target's note on what is still out (`state.pending`): requests `clock data` lands, and held asks, whose
- * replies `clock held` waits for. */
+ * replies `clock held` waits for (LLP 1016.000 D9). */
 export function inFlightNote(pending) {
   const named = (held) => [...new Set(pending.filter((p) => !!p.held === held).map((p) => p.name).filter(Boolean))];
   const waited = named(false), heldBy = named(true);

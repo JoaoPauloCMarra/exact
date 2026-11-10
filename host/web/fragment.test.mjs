@@ -1,4 +1,4 @@
-// fragment.js, the web's scroll to a fragment, over stand-in elements: a scroll by the person counted from
+// fragment.js, the web's scroll to a fragment (LLP 1153 D5), over stand-in elements: a scroll by the person counted from
 // the navigation cancels it though the module arms later; a hold while pictures load ends at the app's own scroll, a
 // newer navigation, or an entry that no longer shows the fragment; a fragment is all after the first `#`; and Back
 // puts back the scrollers above the route as well as those in it, again after the browser's own scroll to the id.

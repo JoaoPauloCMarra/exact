@@ -1,4 +1,4 @@
-//! Host facts must not enter kept storage.
+//! @ref LLP 1039 D3 / LLP 1030 D7 — host facts must not enter kept storage.
 use exact_kernel::{Kernel, NodeType};
 use exact_plan::{asm::Asm, builder::PlanBuilder, TypeKind, Value};
 use exact_runner::{DataError, DataSource, Runner, Viewport};
@@ -198,7 +198,7 @@ fn page_focus_reanswers_only_the_readers_of_it() {
     assert_eq!(online.resource("onLine").cloned(), one(false));
 }
 
-/// `exactViewport().gpuTier` is the page facts' tier,
+/// LLP 1139.003 D2: `exactViewport().gpuTier` is the page facts' tier,
 /// `high` until a host tells another, and a change re-answers its readers.
 #[test]
 fn gpu_tier_is_a_page_fact_read_through_the_viewport() {

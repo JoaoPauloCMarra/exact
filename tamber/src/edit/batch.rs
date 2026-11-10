@@ -1,5 +1,5 @@
 //! Many `SetToken` and `SetDial` operations applied with one parse of the
-//! design (re-import's transaction): the text each would
+//! design (re-import's transaction, LLP 1121 stage 10b): the text each would
 //! make stepped one at a time ([`super::step`] parses the whole design for
 //! each), for a fraction of the cost. Each such operation changes only its
 //! own token's lines or its dial's line, and reads nothing else, so the
@@ -110,9 +110,9 @@ pub(super) fn added(src: &str, ops: &[Op], vocab: &Vocab) -> Option<(String, usi
 }
 
 /// How many of `ops` (values and dials) lead with a target `src` has: the
-/// first that names none is the one stepping refuses (so a held import
-/// recomputed on a design that lost a token does not step every op before
-/// it, a parse each).
+/// first that names none is the one stepping refuses (round 3's re-check: a
+/// held import recomputed on a design that lost a token stepped every op
+/// before it, a parse each).
 pub(super) fn present(src: &str, ops: &[Op], vocab: &Vocab) -> usize {
     let Ok(design) = crate::parse(src) else {
         return 0;
@@ -169,8 +169,8 @@ pub(super) fn mixed(src: &str, ops: &[Op], vocab: &Vocab) -> Option<String> {
         return None;
     }
     // A value giving a token ahead of the first one with `when` lines its
-    // first can set the indent the new tokens' `when` lines take: stepped as
-    // written then, and only then.
+    // first can set the indent the new tokens' `when` lines take (Astra's
+    // re-checks): stepped as written then, and only then.
     let add_whens = adds
         .iter()
         .any(|op| matches!(op, Op::AddToken { whens, .. } if !whens.is_empty()));
@@ -520,8 +520,8 @@ mod tests {
     }
 
     /// A new token whose `when` line is the same text as the line it lands
-    /// after keeps it (a suffix match would put the next token between
-    /// them).
+    /// after keeps it (Astra's round 2: a suffix match put the next token
+    /// between them).
     #[test]
     fn a_new_tokens_when_line_like_the_last_one_stays_its_own() {
         let design = "tamber t\n\naxes\n  tone = a | b\n\ntheme\n  old = #111111\n    when tone=b: #222222\n";
@@ -557,14 +557,14 @@ mod tests {
     }
 
     /// Values and new tokens interleaved (an import's, in its tokens' order)
-    /// give stepping's text when the new tokens go first.
+    /// give stepping's text when the new tokens go first (Astra's round 3).
     #[test]
     fn interleaved_values_and_new_tokens_land_as_stepping_puts_them() {
         let designs = [
             "tamber t\n\ndials\n  d: number = 0.1  in 0..1\n\naxes\n  tone = a | b\n\ntheme\n  t0 = #111111\n  t1 = #111111\n    when tone=b: #222222\n  t2 = calc(d * 2)\n",
             "tamber t\n\naxes\n  tone = a | b\n\ntheme\n  t0 = #111111\n  t1 = #111111\n  t2 = #111111\n  // closing\n",
             "tamber t\n\naxes\n  tone = a | b\n\ntheme\n  t0 = #111111\n  t1 = #111111\n  t2 = #111111",
-            // (`t1`'s six-space `when`, which a new token's
+            // (Astra's re-check: `t1`'s six-space `when`, which a new token's
             // follows until `t0` gains one of four)
             "tamber t\n\naxes\n  tone = a | b\n\ntheme\n  t0 = #111111\n  t1 = #111111\n      when tone=b: #222222\n  t2 = #111111\n",
         ];

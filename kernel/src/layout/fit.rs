@@ -1,4 +1,4 @@
-//! `-exact-fit: shrink`: a text whose longest unbreakable
+//! `-exact-fit: shrink` (LLP 1116.001 D1.4): a text whose longest unbreakable
 //! run (its whole line under `white-space: nowrap`) is wider than its content
 //! box is measured at the scale that fits, down to a floor, as UIKit's
 //! `adjustsFontSizeToFitWidth` with a `minimumScaleFactor` draws it. The
@@ -9,8 +9,8 @@ use super::*;
 
 /// A leaf's request at its own size, flowed around `exclusions`. Direction
 /// and alignment inherit (a paragraph inside a centred column centres, as in
-/// CSS); the rest are its own, a Markdown leaf's atoms among them, which a
-/// label's width depends on.
+/// CSS); the rest are its own, a Markdown leaf's atoms among them (LLP
+/// 1045.000 D2), which a label's width depends on.
 pub(super) fn request<'a>(
     arena: &'a NodeArena,
     slot: u32,

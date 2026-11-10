@@ -1,4 +1,4 @@
-//! Layout transition on Linux, and its refusal of exit animation:
+//! Layout transition on Linux, and its refusal of exit animation (LLP 1063):
 //! a sibling that takes a removed node's place is painted from where it was;
 //! the removed node leaves at once and the journal says why.
 use exact_kernel::MonospaceMeasurer;
@@ -379,7 +379,7 @@ fn a_jump_stepping_for_a_layout_transition_still_stops_at_each_send() {
     };
     h.dispatch_at(go, Event::Press, 0.);
     // `clock +1800` as the agent runs it: each stop's request is answered
-    // before the jump goes on.
+    // before the jump goes on (LLP 1016 D5).
     let mut stops = Vec::new();
     while h.timer_due_ms().is_some_and(|d| d <= 1800.) {
         h.advance_until_request(1800.);

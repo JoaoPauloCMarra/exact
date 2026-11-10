@@ -1,5 +1,5 @@
 //! Optional app storage executor. The runner and portable Rust module own no I/O.
-//! Requests travel as values; native work stays on workers.
+//! @ref LLP 1027.001 D2 — requests travel as values; native work stays on workers.
 use exact_plan::{Plan, Value};
 use exact_runner::{
     Answer, DataError, DataSource, Dispatch, InFlight, Interrupt, Outcome, Placement, Store, Target,
@@ -47,7 +47,7 @@ pub struct Storage<D> {
     /// names, else none.
     agent: bool,
     /// Lines for the journal beside the source's own: the first write such a
-    /// drive refuses, as a TypeScript source's prelude says it.
+    /// drive refuses, as a TypeScript source's prelude says it (LLP 1102 §3.17).
     logs: Vec<String>,
     #[cfg(not(target_arch = "wasm32"))]
     told_agent: bool,
@@ -111,7 +111,7 @@ impl<D: DataSource> Storage<D> {
                 #[cfg(not(target_arch = "wasm32"))]
                 {
                     // A chosen document or a Windows disk path is not app
-                    // storage: it needs no app directories.
+                    // storage: it needs no app directories (LLP 1069.010 D1).
                     // A drive that names no scratch store has no directories
                     // either: its request is answered with the web's refusal,
                     // which the module can handle (`native::agent_refusal`).
@@ -339,7 +339,7 @@ impl<D: DataSource> DataSource for Storage<D> {
     }
 
     fn dispatch(&mut self, token: u64, store: &Store) -> Dispatch {
-        // The module's background round passes through.
+        // The module's background round passes through (LLP 1097 D5).
         if token == exact_runner::BACKGROUND {
             return self.source.dispatch(token, store);
         }
@@ -402,7 +402,7 @@ impl<D: DataSource> DataSource for Storage<D> {
         self.source.background_state()
     }
 
-    // Work that outlives its answer: its tokens are the
+    // Work that outlives its answer (LLP 1146 D2): its tokens are the
     // source's own, which the runner keeps beside its tickets, so nothing is
     // remapped.
     fn keeps_sent(&self, fetch: u64) -> bool {

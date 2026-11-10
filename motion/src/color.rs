@@ -1,6 +1,6 @@
 //! CSS colours as motion values: any colour a row admits, premultiplied.
 //!
-//! CSS Color 4 §12.2 (legacy colours interpolate in
+//! @ref LLP 1055.000 D6; CSS Color 4 §12.2 (legacy colours interpolate in
 //! premultiplied sRGB)
 //!
 //! [`css`] is the one CSS colour parser: the kernel's colour rows read with

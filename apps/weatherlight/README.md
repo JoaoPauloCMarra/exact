@@ -33,7 +33,7 @@ uses the host's document scroller; only the hourly strip scrolls independently,
 on its horizontal axis. No API key is needed.
 
 "Use my location" asks for approximate location through `@exact/geolocation`
-: the grant line `device.geolocation-approximate
+(LLP 1133.002 §7): the grant line `device.geolocation-approximate
 locationPurpose`, its purpose in `strings/en.json`. From the answer on, the
 forecast follows the person (`watchPosition` in `app.ts`, re-asked after a
 five-kilometre move); choosing a city stops following. While location is
@@ -49,8 +49,8 @@ non-commercial use; commercial distribution needs the provider's subscription.
 Times remain in the selected city's timezone. The landscape is illustrative.
 The UI remains usable with its solid sky background if WebGPU is unavailable.
 
-The app uses the shipped seams: the GPU module, canvas children, host requests
-and deferred TypeScript.
+The app uses the shipped seams described by LLP 1009 (GPU module), LLP 1014
+(canvas children), LLP 1016 (host requests), and LLP 1027 (deferred TypeScript).
 `gpu/shaders/weather.wgsl` is reflected and validated at build. No GPU code is
 linked into the app host, and no app JavaScript runs before first pixel.
 

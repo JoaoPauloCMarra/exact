@@ -1,10 +1,10 @@
-// @exact/motion on Android: the platform's SensorManager, answered in the interface's
+// @exact/motion on Android (LLP 1133.013 D2, D4, D5, D8): the platform's SensorManager, answered in the interface's
 // shapes. The build makes one per host when the app binds the extension, outside the agent; under the agent the
 // runner's substitute answers and none is made.
 //
-// - One registration per sensor serves every reader of the names it feeds, at the fastest frequency they ask
+// - One registration per sensor serves every reader of the names it feeds (D4), at the fastest frequency they ask
 //   (50 Hz, `SENSOR_DELAY_GAME`'s, when one names none; `deviceMotion` always at it). Each reader group (a name with one `frequency`, `referenceFrame` and `history`) keeps
-//   a ring of its own thinned samples, numbered, answered from the cursor the runner passes as `after`.
+//   a ring of its own thinned samples, numbered, answered from the cursor the runner passes as `after` (D5).
 // - Android's units, sign and Earth frame are the W3C's (m/s², rad/s, µT; x east, y north, z up), so readings pass
 //   through. A rotation vector is answered as the quaternion `SensorManager.getQuaternionFromVector` gives, reordered
 //   to x, y, z, w; `deviceOrientation`'s angles are Chromium's, from the rotation matrix.
@@ -12,15 +12,15 @@
 //   `screen.orientation.angle`).
 // - Above 200 Hz Android 12 needs `HIGH_SAMPLING_RATE_SENSORS`, which no grant line derives yet: without it a faster
 //   frequency is asked at 200 Hz. The status's `android` is null: neither the permission nor the microphone
-//   toggle's limit is reported yet.
+//   toggle's limit is reported yet (D9).
 // - Registrations are removed while the app is in the background and made again in the foreground; each reader's next
-//   answer reads `interrupted`.
-// - A canvas input is a consumer of its sensor like a reader, thinned to its own frequency (60 Hz by default), each
+//   answer reads `interrupted` (D8).
+// - A canvas input (D6) is a consumer of its sensor like a reader, thinned to its own frequency (60 Hz by default), each
 //   sample written into the surface's input (the context's `surfaces`), which the host drains into the canvas once a
 //   frame. It holds the lease while displayed: hidden, it pauses; shown by an `app` commit, it resumes; shown by a
 //   tool's or a wake's, it stays paused. The background pauses it too, and the return resumes one whose canvas stayed
 //   displayed. The first sample after a pause counts the samples the pause lost in its `dropped`.
-// - Tier 3: `MotionModule.hatch` is given the manager once, when the module is made.
+// - Tier 3 (D10): `MotionModule.hatch` is given the manager once, when the module is made.
 package exact.motion
 
 import android.content.Context
@@ -51,7 +51,7 @@ class MotionModule(context: ExtensionContext) : ExactExtension(context) {
         /** `SENSOR_DELAY_GAME`'s 20,000 µs (`SensorManager.getDelay`). */
         private const val GAME_HZ = 50.0
 
-        /** The app's access hatch: given the manager once, when the module is made. */
+        /** The app's access hatch (D10): given the manager once, when the module is made. */
         @JvmStatic var hatch: ((SensorManager) -> Unit)? = null
         /** Each name's sensor type. */
         private val TYPES = mapOf(
@@ -82,7 +82,7 @@ class MotionModule(context: ExtensionContext) : ExactExtension(context) {
 
     private class Sample(val sequence: Int, val fields: JSONObject)
 
-    /** A canvas input: [sensor]'s samples, read as source [name] reads them, written into [input]. */
+    /** A canvas input (D6): [sensor]'s samples, read as source [name] reads them, written into [input]. */
     private class Feed(val surface: String, val sensor: String, val name: String, val input: dev.exact.canvas.SurfaceInput,
                        val frequency: Double, val screen: Boolean) {
         val period = 1000 / frequency
@@ -136,7 +136,7 @@ class MotionModule(context: ExtensionContext) : ExactExtension(context) {
     private fun status(): JSONObject {
         val sensors = JSONObject()
         for ((n, t) in SENSORS) sensors.put(n, has(t))
-        // Motion sensors ask no runtime permission on Android.
+        // Motion sensors ask no runtime permission on Android (D9).
         return JSONObject().put("available", has(Sensor.TYPE_ACCELEROMETER)).put("state", "granted").put("sensors", sensors)
             .put("apple", JSONObject.NULL).put("android", JSONObject.NULL)
     }
@@ -166,7 +166,7 @@ class MotionModule(context: ExtensionContext) : ExactExtension(context) {
         reply(answer(group, args))
     }
 
-    /** A reader's answer from its group's ring after `after`. */
+    /** A reader's answer from its group's ring after `after` (D5). */
     private fun answer(group: Group, args: JSONObject): JSONObject {
         val newest = group.ring.last()
         val out = JSONObject(newest.fields.toString()).put("sequence", newest.sequence)
@@ -277,7 +277,7 @@ class MotionModule(context: ExtensionContext) : ExactExtension(context) {
     /** The session's clock at a sensor event's timestamp (ns of `elapsedRealtimeNanos`). */
     private fun stamp(ns: Long) = context.now() - (SystemClock.elapsedRealtimeNanos() - ns) / 1e6
 
-    /** A sample for each group of the names `type` feeds. No reader is asked again for it: the runner
+    /** A sample for each group of the names `type` feeds (D4's thinning). No reader is asked again for it: the runner
      * polls each at its `interval`, and the samples between are the next answer's batch. */
     private fun take(type: Int, event: SensorEvent) {
         latest[type] = event.values.clone()

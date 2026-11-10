@@ -8,7 +8,7 @@ writable interest on an empty output queue makes an outstanding receive spin.
 The idle-receive regression in `websocket_tests.rs` checks that the pump stays
 parked and still wakes on cancellation.
 
-## Mac widget Keychain
+## Mac widget Keychain (LLP 1126.001 WP16)
 
 `crates/ibex2/src/secrets/darwin_keychain.mm` selects the restricted
 `ExactKeychainAccessGroup` in the data-protection Keychain for a provisioned
@@ -132,7 +132,7 @@ listed below.
 | Windows chosen-document EISDIR | Same retained-handle native document executor | Source patch retired against upstream native Windows tests; native Windows Exact storage, document and ordinary TypeScript host requalification is recorded below |
 | Socket queued-message count | `MessageSender::buffered_messages`, implemented by the portable sender and the Darwin sender under its lock; the Darwin source test observes a paused native send complete | Exact's native executor checks a batch whole before the transport's 256-message limit; `executor_socket_tests::a_batch_is_refused_whole_past_the_buffer_or_after_a_close` is the direct consumer |
 | Scheme-wide network grants | Ibex `GrantSet` owns `http:`/`https:` fetch grants and `ws:`/`wss:` socket grants, with independent family admission tests | `exact-grants` compares Ibex and Exact against `host/web/tests/fixtures/grants.json`; the web matcher consumes that same corpus |
-| Presence policy on `secret.keep` | Ibex `GrantSet` reads `secret.keep <name> <policy> [optional] [platform words]` and refuses `exact.presence.` names; the grant stays the name's | `exact-grants` compares Ibex and Exact against `host/web/tests/fixtures/grants.json`'s presence cases |
+| Presence policy on `secret.keep` | Ibex `GrantSet` reads `secret.keep <name> <policy> [optional] [platform words]` (exact2 LLP 1133.010 D4) and refuses `exact.presence.` names; the grant stays the name's | `exact-grants` compares Ibex and Exact against `host/web/tests/fixtures/grants.json`'s presence cases |
 | Allocation-reduced descriptor reads | Ibex captures `hasOwnProperty` and reuses property identifiers while still walking captured own-property descriptors | The linked-lean `exact-js` bootstrap tests refuse Proxy-hidden abort hooks and prove every descriptor-reachable payload is frozen |
 | Collection after the hardening guard | Ibex collects only after a trusted bootstrap guard ran, before evaluating `harden.js` | The same linked-lean bootstrap tests exercise the guarded and unguarded paths with production bindings |
 
@@ -146,8 +146,8 @@ Patch 9's app interface stays Exact's and is replayed on a refresh:
 maxBytes, type})` resolving to `{path, type, size, width, height}`, as Exact's docs
 give it, and Exact's prelude (`js/src/prelude.js`) adapts that to upstream's
 positional binding (`compressImage(from, to, maxDimension, maxBytes)`, replying
-`width\theight\tsize`). Exact adds a fifth positional argument, the media type:
-`boundary_abi.rs` reads it into
+`width\theight\tsize`). Exact adds a fifth positional argument, the media type
+(exact2 LLP 1069.002 A1.11, 2026-10-20): `boundary_abi.rs` reads it into
 `fs_image::ImageRequest::format` (`ImageFormat::Jpeg` when absent, `Png`; any
 other value is an invalid argument), and the codec is Exact's. Replay both on a
 refresh. The October 13 refresh replaced the declaration with
@@ -159,7 +159,8 @@ patch; exact internal markers and typed deadline errors are matched upstream.
 The source pin also deallocates an upload's bytes before invoking its last-release
 callback, so the executor cannot refund memory while the allocation is retained.
 
-Patch 9a is Exact's alone and is replayed on a refresh. `bindings/install.cc` names a second fs method,
+Patch 9a (exact2 LLP 1133.019 D14, D15, D17, 2026-10-24) is Exact's alone and is
+replayed on a refresh. `bindings/install.cc` names a second fs method,
 `transformImage`, on op 121. Its native arguments are `(from, to, optionsJson)`;
 `compressImage` may add a sixth, its edit's JSON. `boundary_abi.rs` admits both
 shapes and passes the JSON unread in `fs_image::ImageRequest::options`, with
@@ -180,10 +181,10 @@ The standalone manifests, dependency graph and locks are unchanged by this refre
 
 ### Historical v4 Windows consumer qualification — 2026-10-13
 
-The Windows qualification started from Exact `dfa6a26344cf238f4b642805492806795e01ddfd`
+The Windows lane started from Exact `dfa6a26344cf238f4b642805492806795e01ddfd`
 and qualified its corrected codec-refusal assertions and native host at
 `b76971320c5c43c505b29b0e3195bf66020c27be`, with Ibex source pin
-`de11540`. That work is integrated in Exact `4fd19fb4e2`. It ran on x86_64
+`de11540`. That lane is integrated in Exact `4fd19fb4e2`. It ran on x86_64
 Windows with the authenticated
 `hermes-vanilla-d412d3bd8512-v4` bundle. Its receipt uses schema
 `ibex/hermes-upstream-pinned-receipt/2` and has SHA-256
@@ -208,7 +209,7 @@ owned process exited. The EXE SHA-256 is
 This does not qualify an actual HTTP exchange through `exact-render` on
 Windows. Its library still imports Unix-only `UnixStream`, `AsRawFd` and
 `libc::poll`, so the focused loopback executor test does not compile there.
-The render-host HTTP follow-up below closes that host boundary.
+`issues/20261013-exact-render-windows-http.md` records that host boundary.
 
 The already upstream pre-split Windows connect readiness, Windows filesystem
 backend, and lazy Rustls trust-store changes remain upstream.
@@ -270,7 +271,7 @@ leaves the others absent for that invocation. A read-only widget refresh can
 therefore run first-launch application logic without creating the app's data,
 cache or temporary directories. `exact-js` selects it only for a snapshot;
 `missing_snapshot_roots_do_not_prevent_activation_or_create_app_directories`
-is the direct consumer test. This is Exact's application policy and
+is the direct consumer test. This is LLP 1126 D8 application policy and
 remains local.
 
 The standalone locks above remain local. Application policy stays in Exact:
@@ -298,9 +299,9 @@ native storage adapter. No new Snapback media feature or qualification is claime
 
 `bindings/storage.d.ts` declares `fs.watch(path, {recursive})` and the
 `options` argument of `writeFile`, `atomicWriteFile` and `appendFile`
-(`{expect: {modifiedMs, size}}`), as Exact's docs give
+(`{expect: {modifiedMs, size}}`), as exact2 LLP 1069.010.000 D1 and D2a give
 them. Declarations only: no Ibex source runs either. Exact's prelude
-(`js/src/prelude.js`) records a watch as a topic and does an
+(`js/src/prelude.js`) records a watch as an LLP 1016.002 topic and does an
 expected write as a `stat`, a comparison and the write, queued together; the
 web glue and Exact's Rust storage do the same. Replay the declarations on a
 refresh.
@@ -311,7 +312,7 @@ refresh.
 leaf, name, guard)`: a selected file the guest path names `name` while its
 leaf in the retained parent is `leaf`. `selected_file` is that with the two
 equal. Exact keeps a chosen file across launches under the name it was
-chosen by, and a Mac bookmark follows the file
+chosen by (exact2 LLP 1069.010.000 D4), and a Mac bookmark follows the file
 when it is renamed, so the two differ after a rename. The provider still
 decides what the name admits; Ibex still opens only `leaf`, refuses every
 path beneath it, and refuses `rm`, `mkdir` and `readdir` on it. `bindings/storage.d.ts` declares
@@ -340,7 +341,8 @@ Replay on a refresh.
 ## Local patch 18, `copyFile` from a chosen document into an app file
 
 `stdlib/documents.rs` adds `copy_document`, which `fs::run_with_documents`
-runs for `copyFile` from a `doc:` path to an `app:` path; every other two-path document operation is still
+runs for `copyFile` from a `doc:` path to an `app:` path (exact2 LLP 1069.010
+D1, ruled 2026-10-26); every other two-path document operation is still
 refused. It admits `fs.read` on the document, then
 `AppDirectories::copy_in` admits `fs.write` on the destination, and only then
 is the provider asked. The source opens as `readFile` opens it
@@ -350,7 +352,7 @@ no result envelope bounds them. Replay on a refresh.
 ## Local patch 26, `realpath` of a chosen document on a desktop
 
 `stdlib/documents.rs` answers `realpath` of a `doc:` path on macOS, Linux and
-Windows: the item is opened as
+Windows (exact2 LLP 1069.010 D1, amended 2026-11-04): the item is opened as
 `stat` opens it, then the retained directory's current location
 (`fcntl(F_GETPATH)`, `/proc/self/fd/<n>`, `GetFinalPathNameByHandleW` without
 its `\\?\` prefix) is checked to hold that directory still (device and inode,
@@ -361,8 +363,8 @@ the provider is asked. Replay on a refresh.
 ## Local patch 19, an app file staged in pieces and published whole
 
 `stdlib/app_fs_unix.rs` and `app_fs_windows.rs` add `AppDirectories::stage(grants,
-path)` and `Staged` (`write_all`, `publish`), for `fetch(url, {exactBodyTo})`:
-the host writes a reply's body into an app file as it
+path)` and `Staged` (`write_all`, `publish`), for `fetch(url, {exactBodyTo})` (exact2
+LLP 1108 D6 R2, ruled 2026-10-26): the host writes a reply's body into an app file as it
 arrives. `stage` admits `fs.write` on the path, refuses a missing parent or a target that
 is not a regular file, and creates `.exact-<hex>.partial` beside the target through the
 pinned parent. `publish` syncs it and renames it over the target; a `Staged` dropped
@@ -370,8 +372,8 @@ unpublished removes it. The stub for other platforms refuses. Replay on a refres
 
 ## Local patch 20, the `local-network` grant source
 
-`grant.rs` adds `fetch.local-network` and `websocket.local-network`,
-written `net.fetch local-network` and
+`grant.rs` adds `fetch.local-network` and `websocket.local-network` (exact2 LLP
+1133.036 D5, ruled 2026-10-26), written `net.fetch local-network` and
 `net.websocket local-network`, with the word `development` for loopback too. It
 admits a host the URL writes as an RFC 1918, link-local or unique-local
 address (an IPv4-mapped IPv6 address by its IPv4), a link-local IPv6 address,
@@ -385,7 +387,7 @@ or a `.local` name; never a name that merely resolves to one. exact2's
 optional gate (`with_gate`); `stdlib/fetch.rs` (`fetch_stream_gated`,
 `admit_hop`), `fetch_async.rs` (`start_gated`) and `websocket.rs`
 (`open_gated`) ask it after the grants admit each hop, a redirect's included,
-and before anything is sent: exact2's Apple executor
+and before anything is sent (exact2 LLP 1133.036 D6): exact2's Apple executor
 refuses a tool's, a wake's or a package event's reach to the local network
 while the person has not decided. Without a gate nothing changes. Replay on a
 refresh.
@@ -394,7 +396,7 @@ refresh.
 
 `stdlib/fetch.rs` gives `Request` an optional `sent` hook (`Sent`), told
 `(loaded, total)` as the body goes out and `(total, total)` by the time the
-headers have arrived (XMLHttpRequest's upload
+headers have arrived (exact2 LLP 1016.000 D10, XMLHttpRequest's upload
 progress), and an optional start hook beside it. `fetch_stream_gated` tells
 the start hook once, when `admit_hop` has passed the first hop's grant check
 and local-network gate, so a request they refuse never started (the
@@ -431,7 +433,7 @@ and the portable transport in `exact-js`'s
 
 ## Local patch 24, Exact's desktop processes: the transport and file operations
 
-`process/` starts a child in a process group of
+For exact2 LLP 1133.007. `process/` starts a child in a process group of
 its own with default signals and only its three pipes (`posix_spawn` on
 macOS, `fork` and `execve` with `PR_SET_PDEATHSIG` on Linux), `argv[0]` as
 the caller names it, the parent's pipe ends raising no `SIGPIPE` on Apple
@@ -468,7 +470,7 @@ reach `grant.rs`. Bionic's `faccessat` refuses every flag, so on Android
 
 ## Local patch 25, a database file held by one SQLite library at a time
 
-An embedder may link a second SQLite library beside
+For exact2 LLP 1154 D3: an embedder may link a second SQLite library beside
 this one (a native module's), and two in one process are safe only while no
 file is open in both, since closing any descriptor of a file drops every
 POSIX lock the process holds on it (sqlite.org/howtocorrupt.html §2.2.1).
@@ -502,11 +504,11 @@ The ImageIO codec bounds source pixels and retained encoded output, and admits
 decoded/intermediate surfaces using component depth, aligned rows, decoder
 workspace and 25% native-workspace headroom within its 512 MiB scratch estimate.
 Large RGBA16 cases that previously exceeded the job reservation are now refused
-before pixel decode. The native image memory qualification of
-2026-10-13 measured an adversarial corpus, baseline/final RSS and
+before pixel decode. LLP 1069.002's **Native image memory qualification,
+2026-10-13** records the retained adversarial corpus, baseline/final RSS and
 four-job cancellation/teardown evidence at Exact
 `2dd657fd7d93176b6d8e924849ed85170beda67c`, from baseline `dfa6a26344cf`.
-That work is integrated as `1b797a773e80b579e55a33e19dade886bcc31c0a` and is
+That lane is integrated as `1b797a773e80b579e55a33e19dade886bcc31c0a` and is
 included in the `4fd19fb4e2` checks below. The decision keeps in-process ImageIO
 for this app-local API. The estimate is not a proven cap on ImageIO's allocator,
 peak process RSS or native-call duration; hard process containment would require
@@ -539,7 +541,7 @@ Exact `4fd19fb4e2d5bdad1311a18a694feff9b6f1efc3`, with vendored source
 `b20dded` and the v4 bundle, passed all six required checks: build, tests,
 clippy plus fmt, caps, boot, and the full workspace check. Its additional
 `exact-data-host` run passed 22/22 tests. The signed macOS Conduit fixture,
-using an isolated bundle identity and scratch
+using isolated identity `com.ccheever.ibexasyncqualification` and scratch
 storage, was built with `EXACT_HTTP_ASYNC=1` and driven through
 home → article → home → login. Four articles loaded, the article body was
 present, and every pending queue was empty. The app remained signed out and
@@ -569,7 +571,7 @@ cases and eight lowering cases: no divergence. The eight lowering cases covered
 The signed Conduit fixture was rebuilt with v5 and `EXACT_HTTP_ASYNC=1`.
 Its native Mac drive again loaded four articles, opened a nonempty article,
 returned home and reached login. It stayed signed out with no pending work or
-public writes. Four HTTP transactions used h2 on one observed endpoint pair;
+public writes. Four lane transactions used h2 on one observed endpoint pair;
 no timing or LTE qualification is inferred. The executable SHA-256 is
 `f7c169d57dd6a35c8ae25cc2d87987aba81d300e33790a1b948cb1be3c645ca6`.
 The native resolver outputs name the v5 cache, and the owned app process exited.
@@ -588,8 +590,8 @@ boundary recorded above remains open; these results do not qualify that host.
 
 The consumer-release run retains `exact-56f107fa4-six-gates.json`,
 `exact-56f107fa4-conduit-macos-receipt.json`, `windows-v5-ledger.json`, the
-Android receipt named in row 8, and their logs.
-Later evidence-only commits preserve Q's
+Android receipt named in row 8, and their logs. Codex and Grok independently
+cleared Q's code and pin adoption. Later evidence-only commits preserve Q's
 runtime and native proof attribution; their required gate receipts name their
 own clean revisions.
 
@@ -603,7 +605,7 @@ render-host boundary without changing Q's historical receipts. Windows now
 uses a private loopback TCP wake pair with WinSock `WSAPoll`; Unix keeps its
 existing `UnixStream` and `poll` path. Pending wake state clears only after a
 byte is consumed, and wake-channel failure releases queued and held sockets.
-Both platforms retain the render server's 2-second per-socket hold, 64 KiB read
+Both platforms retain LLP 1048.000 D10's 2-second per-socket hold, 64 KiB read
 cap, 256 held-connection cap, bounded inbox, and immediate half-close. The
 server's separate `Stopper` waits up to twice the render deadline plus
 10 seconds for render workers, then drains the closing thread's remaining
@@ -621,7 +623,10 @@ archive hashes recorded above.
 
 An independent native Linux run of the same corrected source passed 120 unit
 tests, 37 integration tests, and one look test, with nine ignored and no
-failures; all six linger tests and all-target, all-feature clippy passed.
+failures; all six linger tests and all-target, all-feature clippy passed. The
+source-attributed commands, hashes, superseded first implementation, retained
+failures, and app drive are recorded in the
+[closed Windows HTTP issue](../../issues/closed/20261013-exact-render-windows-http.md).
 
 ### Physical-device evidence and remaining rollout boundaries
 
@@ -631,7 +636,8 @@ iOS 27.0.1 (24A446), using production codec and vendored job code from Exact
 transforms, RGBA16 input, predecode refusal, cancellation, owner close, and
 cancellation after commit starts. The largest observed process resident peak
 was 195,837,952 bytes; sampled physical footprint peaked at 118,916,840 bytes.
-This finite workload does not prove
+[LLP 1069.002](../../llp/1069.002-media-picker.rfc.md) records the fixtures,
+source hashes, retained receipts and limits. This finite workload does not prove
 a whole-app memory limit or behavior under memory pressure.
 
 The async-enabled iPhone app launched, but its control connection could not be
@@ -647,6 +653,8 @@ it requires Android API 31 or newer. No physical Android device was
 reachable for installation and interaction in this follow-up, so this remains
 build evidence only.
 
-Async remains off by default until a measured device rollout qualifies it.
-Code review, controlled TLS setup-stall diagnostics, Mac smoke, and the
-bounded image tests do not replace that rollout.
+Charlie assigned the historical bsky4 rollout campaign to the agent on Tuft;
+LLP 1120 §5 records the original baseline and remaining measured gate. Async
+remains off by default. Independent stage-1 code review, controlled TLS
+setup-stall diagnostics, Mac smoke, and the bounded image tests do not replace
+that campaign.

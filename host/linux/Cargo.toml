@@ -3,8 +3,10 @@
 # tree itself (vello on the GPU, tiny-skia on the CPU) — the kernel is the display list — onto DRM/KMS
 # dumb buffers with evdev input, or into a buffer with no display at all.
 # Pure Rust end to end: no system library is linked, so it builds on any
-# Linux (and on macOS, headless, for the seconds-loop). Text measurement is
-# injected; every non-web host runs exact-motion.
+# Linux (and on macOS, headless, for the seconds-loop).
+#
+# @ref LLP 1015 (this host) / LLP 1001 §6 (injected text measurement) /
+# LLP 1002 D2, §4 (every non-web host runs exact-motion)
 [package]
 name = "exact-linux"
 version.workspace = true
@@ -28,23 +30,23 @@ exact-textflow = { path = "../../textflow" }
 exact-motion = { path = "../../motion" }
 exact-plan = { path = "../../plan" }
 exact-raster = { path = "../raster" }
-# SVG islands: a loaded module on Apple, linked
+# SVG islands (LLP 1055.000 §8 ruling 4): a loaded module on Apple, linked
 # here beside the tiny-skia this host already has.
 exact-svg-raster = { path = "../svg-raster" }
-# An SVG file as an image: parsed into the kernel's SVG
+# An SVG file as an image (LLP 1011.001 D2): parsed into the kernel's SVG
 # nodes and resolved to the scene the painter draws as an island.
 exact-svg-file = { path = "../svg-file" }
 exact-route = { path = "../../route" }
-# A `markup="markdown"` text's pieces: the painter links Rust,
+# A `markup="markdown"` text's pieces (LLP 1045 D4): the painter links Rust,
 # so the reader expands its source here, as Apple's archive does.
 exact-markdown = { path = "../../markdown" }
 exact-runner = { path = "../../runner" }
-# The executor for a request that leaves the process: ibex2's
-# standard library for a Rust consumer — rustls off Apple — from the vendored
-# checkout, as the Apple host takes it.
+# The executor for a request that leaves the process (LLP 1016 D2): ibex2's
+# standard library for a Rust consumer (ibex LLP 0068) — rustls off Apple
+# (its OQ2) — from the sibling checkout, as the Apple host takes it.
 # `websocket`: the transport for an app's WebSockets (exactStream sockets); the
-# vendored v4 crate gates it behind a default feature, which
-# default-features = false turns off.
+# vendored v4 crate gates it behind a default feature (27275f3d4), which
+# default-features = false had turned off.
 # `portable-http`: rustls and the portable sockets on a Mac too, which
 # conformance's network runs this host over (src/executor.rs).
 ibex2 = { path = "../../vendor/ibex/crates/ibex2", default-features = false, features = ["websocket", "portable-http"] }
@@ -60,7 +62,7 @@ libloading = "0.8"
 base64 = "0.22"
 tiny-skia = "0.12"
 unicode-segmentation = "1.13"
-# Text: Parley lays out, fontique finds and matches faces
+# Text (LLP 1085.000): Parley lays out, fontique finds and matches faces
 # (its `system` feature off: no fontconfig, no platform font API), swash
 # rasterizes the face Parley chose. Every one is Rust.
 parley = { version = "0.11.1", default-features = false, features = ["std"] }
@@ -96,7 +98,7 @@ drm = "0.15"
 evdev = "0.13"
 
 [target.'cfg(unix)'.dependencies]
-# The local listener, linked here as the SVG rasterizer is.
+# The local listener (LLP 1133.005), linked here as the SVG rasterizer is.
 exact-listen = { path = "../listen" }
 
 [target.'cfg(windows)'.dependencies]

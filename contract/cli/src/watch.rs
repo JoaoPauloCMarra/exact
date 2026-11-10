@@ -1,4 +1,4 @@
-//! Watch admission: what the watch's live driver draws and
+//! Watch admission (LLP 1126.002 D9): what the watch's live driver draws and
 //! takes as input. The schema's `watch` column admits a prop or style row,
 //! as `snapshot` does for a widget; absence refuses it at bake, with the edit
 //! to make, so the watch never meets a node it cannot place.
@@ -111,7 +111,7 @@ fn calculated(e: &Expr) -> bool {
 fn attrs<'a>(tag: &str, attrs: impl IntoIterator<Item = &'a Attr>, errors: &mut Vec<CompileError>) {
     for a in attrs {
         let fail = |id, edit: &str| refusal(id, format!("`{}` on `{tag}`: {edit}", a.name), a.span);
-        // A state part's row (`:disabled opacity`). The runner's states
+        // A state part's row (`:disabled opacity`, LLP 1121 D8). The runner's states
         // fold into ordinary rows, checked as they are; a host state (`:active`,
         // `:hover`, `:focus-visible`) is paint the driver does not draw.
         if let Some((state, row)) = contract_syntax::state::state_of(&a.name) {
@@ -225,7 +225,7 @@ fn classes(file: &File, own: &[Attr], errors: &mut Vec<CompileError>) {
 /// Every refusal in a watch entry's file, each with the edit that admits it.
 pub fn check(file: &File) -> Result<(), Vec<CompileError>> {
     let mut errors = Vec::new();
-    // The driver stacks one tab's routes; a second tab is refused.
+    // The driver stacks one tab's routes (LLP 1126.002 §4: tabs are stage 4's).
     if let Some(routes) = &file.routes {
         if routes.rows.iter().filter(|r| r.tab).count() > 1 {
             errors.push(refusal(

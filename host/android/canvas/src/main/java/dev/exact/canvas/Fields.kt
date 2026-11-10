@@ -34,7 +34,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**
- * The framework's own [EditText], as a hosted field uses it: nothing of it is replaced, and it
+ * The framework's own [EditText], as a hosted field uses it (LLP 1115.001 D8): nothing of it is replaced, and it
  * says when its selection moves, which no listener of the class tells.
  */
 internal class FieldText(context: Context) : EditText(unadjusted(context)) {
@@ -46,7 +46,7 @@ internal class FieldText(context: Context) : EditText(unadjusted(context)) {
      * change of text or selection (the keyboard marking a word the caret entered, or finishing what is marked as it
      * stands), which no listener of the class tells. */
     var asked: (() -> Unit)? = null
-    /** Where the field stands in the accessibility tree the reader answers with ([Access]), and
+    /** Where the field stands in the accessibility tree the reader answers with ([Access], LLP 1115.001 D13), and
      * what its author named it; null while that tree does not have it. The field reports itself, as any `EditText`
      * does: this only says where, and by what name. */
     var stand: Access.Stand? = null
@@ -83,7 +83,7 @@ internal class FieldText(context: Context) : EditText(unadjusted(context)) {
 }
 
 /**
- * The app's text fields. Each `input` of a text type and each `textarea` is the framework's own
+ * The app's text fields (LLP 1115.001 D8). Each `input` of a text type and each `textarea` is the framework's own
  * [EditText], with no background of its own, over the container exact2 paints for it. The IME and its composition,
  * autofill, the selection handles, the magnifier, the floating toolbar and the spell checker are the platform's,
  * because the field is. `host/linux/src/presenter/hosted.rs` is exact2's side and has the words that cross.
@@ -109,12 +109,12 @@ internal class FieldText(context: Context) : EditText(unadjusted(context)) {
  * taken only when it answers the newest edit and differs from what the field holds: then the text is replaced, in
  * place, and the keyboard starts over. A value that is the field's own changes nothing, so a composition stands.
  *
- * **The app's value never ends a composition.** The field
+ * **The app's value never ends a composition** (LLP 1115.000 §5, ruling 6; LLP 1115.001 D8 as corrected). The field
  * says when its text begins to compose and when that ends ([flush], [Native.fieldComposing]), before the edit that
  * began or ended it. While it composes exact2 holds a value the app writes and tells the field its own text, so
  * nothing here is replaced; when the composition ends, committed or cancelled, exact2 tells the value it held, the
  * last one, after the app has heard the text. The action key commits what is composing first, as a person means by
- * it. Not yet seen on a phone: the rule is held at exact2's side (`presenter/hosted_tests.rs`).
+ * it. Not seen on a phone (`QUEUE.md`): the rule is held at exact2's side (`presenter/hosted_tests.rs`).
  */
 internal class Fields(context: Context) : FrameLayout(context) {
     /** What a field shows through: its clip, in the reader's view. A drawing-less layout the size of the clip, so
@@ -216,7 +216,7 @@ internal class Fields(context: Context) : FrameLayout(context) {
     /** The node op 28 draws for field [id] (main thread). */
     fun node(id: Int): RenderNode? = fields[id]?.node
 
-    /** Field [id]'s own view, where the accessibility tree has the field ([Access]). */
+    /** Field [id]'s own view, where the accessibility tree has the field ([Access], LLP 1115.001 D13). */
     fun text(id: Int): FieldText? = fields[id]?.text
 
     /** A stream draws field [id] (op 28, seen while the stream is ingested, before anything of it is drawn). Android
@@ -269,7 +269,7 @@ internal class Fields(context: Context) : FrameLayout(context) {
             // A view made for a field exact2 already knows (the activity was made again) starts at exact2's count
             // of its edits, and so takes the value told with it.
             if (f == null) f = make(id, generation).also { it.edits = w[i + 12] }
-            // Its node is another row's item now: the view starts over, with nothing of the last one's.
+            // Its node is another row's item now (LLP 1078): the view starts over, with nothing of the last one's.
             else if (f.generation != generation) renew(f, generation)
             val placed = w[i + 2] and PLACED != 0
             val shown = placed && f.flags and PLACED == 0
@@ -334,7 +334,7 @@ internal class Fields(context: Context) : FrameLayout(context) {
         })
         text.selected = { _, _ -> if (!quiet) { f.moved = true; later() } }
         // Any IME call is real input (a backspace in an empty field included, which changes nothing it reports):
-        // a held state lets go.
+        // a held state lets go (LLP 1122 D8).
         text.asked = { Exact.fieldInput(f.id, f.generation); later() }
         text.setOnFocusChangeListener { _, has ->
             if (has) {
@@ -372,7 +372,7 @@ internal class Fields(context: Context) : FrameLayout(context) {
             true
         }
         text.setOnKeyListener { _, code, event ->
-            // Any key down is real input, which lets a held state go.
+            // Any key down is real input, which lets a held state go (LLP 1122 D8).
             if (event.action == KeyEvent.ACTION_DOWN) Exact.fieldInput(f.id, f.generation)
             if (code != KeyEvent.KEYCODE_TAB || event.isCtrlPressed || event.isAltPressed || event.isMetaPressed) return@setOnKeyListener false
             // Tab is the page's: exact2 moves the focus through its own order, which knows the painted controls.
@@ -626,7 +626,7 @@ internal class Fields(context: Context) : FrameLayout(context) {
 
     private fun hide() { imm.hideSoftInputFromWindow(windowToken, 0) }
 
-    /** A surface of the top layer is over the page ([on]), or no longer ([Surfaces]). Under one
+    /** A surface of the top layer is over the page ([on]), or no longer ([Surfaces], LLP 1115.001 D10). Under one
      * the page is inert, so no field can take the focus, whatever would hand it one: a hardware key ends touch mode,
      * and the platform then focuses the window's first focusable view, which is a field (seen on a Pixel: Tab in an
      * alert put a caret in the field under its scrim, and the keyboard rose when the alert closed). exact2 refuses
@@ -871,7 +871,7 @@ internal class Fields(context: Context) : FrameLayout(context) {
         }
 
         /**
-         * A field's text, measured by the class that draws it: exact2 calls this while it lays the
+         * A field's text, measured by the class that draws it (LLP 1115.001 D8): exact2 calls this while it lays the
          * page out, on the thread layout runs on, and has the answer when it returns. An [EditText] of this thread's
          * own, never attached, is set as the field is ([bare], [face]) and measured: its width, its height and its
          * first baseline in px, 21 bits each, or -1 when there is no reader to measure in. [flags]: bit 0 italic, bit
@@ -905,7 +905,7 @@ internal class Fields(context: Context) : FrameLayout(context) {
 }
 
 /** [context] with no font weight adjustment, for a field's [EditText]: Bold Text's step is in the weight the kernel
- * gives it (UIKit's step, which light weights take too), and a `TextView` would otherwise add the
+ * gives it (LLP 1115.000 D12.3, UIKit's step, which light weights take too), and a `TextView` would otherwise add the
  * device's adjustment to every typeface it is set in, the one it measures in included. */
 internal fun unadjusted(context: Context): Context = ContextThemeWrapper(context, context.theme).apply {
     if (android.os.Build.VERSION.SDK_INT >= 31) applyOverrideConfiguration(Configuration().apply { fontWeightAdjustment = 0 })

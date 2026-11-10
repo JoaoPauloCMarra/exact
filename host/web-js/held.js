@@ -1,4 +1,4 @@
-// Answers whose fetch the server holds (`exactHeld`): in flight, but no clock waits on them.
+// Answers whose fetch the server holds (`exactHeld`, LLP 1016.000 D9): in flight, but no clock waits on them.
 // A ticket (rt.js `send`) counts in `inflight` while it waits, unless its answer has only held fetches out
 // (`call.held`, none of its others, `call.plain`, ts-fetch.js) and no fetch tied to no answer is out (one made
 // in a plain `.then`, which the async context does not reach): then it is held, and counts again once that
@@ -33,7 +33,7 @@ export const heldTickets = () => [...HeldAsks].filter(current);
 /** Replies landed for held fetches, by target: `clock held`'s evidence (the runner's `held_replies`). */
 export const heldReplies = () => Object.fromEntries(Replies);
 export function heldReply(call) { if (current(call.ticket)) Replies.set(call.ticket.name, (Replies.get(call.ticket.name) ?? 0) + 1); }
-/** A long poll's reply: from its first the stream is held and named, and each is a reply. */
+/** A long poll's reply (LLP 1016.000 D8): from its first the stream is held and named, and each is a reply. */
 export function longPollReplied(t) { if (current(t)) { HeldAsks.add(t); Replies.set(t.name, (Replies.get(t.name) ?? 0) + 1); } }
 /** A long poll's end, or its letting go: no longer held. */
 export function longPollEnded(t) { HeldAsks.delete(t); }

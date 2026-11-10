@@ -71,7 +71,7 @@ mod video;
 mod wire;
 
 /// A shorthand then the `@keyframes name{…}` rules it names, resolved as a
-/// runner resolves a row against its plan's table.
+/// runner resolves a row against its plan's table (LLP 1055 D5).
 pub fn keyframed(text: &str) -> exact_motion::Animations {
     let (head, rules) = text.split_at(text.find("@keyframes").unwrap_or(text.len()));
     let table: Vec<(String, exact_motion::Keyframes)> = rules

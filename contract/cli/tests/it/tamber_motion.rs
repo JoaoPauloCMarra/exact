@@ -1,6 +1,6 @@
-//! Duration and easing tokens: written into a `transition` or `animation` value
-//! at build, so the plan holds the values, a `when` on one is refused, and an
-//! edit to one rebuilds.
+//! @ref LLP 1121 D3, D13 (stage 6 E) — duration and easing tokens: written
+//! into a `transition` or `animation` value at build, so the plan holds the
+//! values, a `when` on one is refused, and an edit to one rebuilds.
 
 use std::path::PathBuf;
 
@@ -105,7 +105,7 @@ fn a_motion_edit_proposes_a_rebuild() {
     assert_eq!(planned.class, exact_tamber::Class::Rebuild);
 }
 
-/// A motion token's name is dotted, so a row reads a
+/// Review rounds 1 and 2: a motion token's name is dotted, so a row reads a
 /// dotted word as the token wherever it stands in the shorthand, and a
 /// property, a keyframes name or a keyword never as one; written in before
 /// the keyframes' scoping and the longhands' composing read the value, and
@@ -133,7 +133,7 @@ fn a_motion_token_is_written_wherever_it_stands_before_anything_reads_it() {
     );
 }
 
-/// An undotted motion token is refused; a profile's colour
+/// Review round 2: an undotted motion token is refused; a profile's colour
 /// in the design leaves the motion tokens written in; an inline `theme`
 /// (undotted names) declares none.
 #[test]
@@ -203,7 +203,7 @@ fn uses_finds_a_motion_tokens_sites_from_the_loader() {
     );
 }
 
-/// A used file's animation naming its own keyframes and a
+/// Review round 1: a used file's animation naming its own keyframes and a
 /// motion token keeps its keyframes (scoping reads the value after the
 /// token is written in).
 #[test]
@@ -233,7 +233,7 @@ fn a_used_files_animation_keeps_its_own_keyframes() {
     );
 }
 
-/// The other copies of the grammars take tokens
+/// Review round 1 (Grok): the other copies of the grammars take tokens
 /// too: an exit animation, a layout transition, a keyframe's timing.
 #[test]
 fn an_exit_animation_a_layout_transition_and_a_keyframes_timing_take_tokens() {
@@ -249,14 +249,14 @@ fn an_exit_animation_a_layout_transition_and_a_keyframes_timing_take_tokens() {
     );
 }
 
-/// An easing token in a timing longhand (its function's commas are not a
-/// list's), a quoted name across a template's hole, a prop or a `?:` in a
-/// template's hole, a concatenation, a keyframe's timing a function returns;
-/// and `uses` says when the app does not load.
+/// Review round 3 (Astra, Grok): an easing token in a timing longhand (its
+/// function's commas are not a list's), a quoted name across a template's
+/// hole, a prop or a `?:` in a template's hole, a concatenation, a keyframe's timing a function
+/// returns; and `uses` says when the app does not load.
 #[test]
 fn an_easing_longhand_a_hole_and_a_folded_keyframe_take_tokens() {
     let view = "keyframes fade\n  from opacity=0 animation-timing-function=curve()\n  to opacity=1\n\nfn curve(): string = \"easing.standard\"\n\ncomponent App\n  state name = \"fade\"\n  state on = true\n  view\n    column animation=`'${name}' duration.fast`\n      text \"a\" animation-name=\"fade\" animation-timing-function=\"easing.standard\"\n      Card(d=\"duration.fast\")\n      text \"c\" transition=`opacity ${on ? \"duration.fast\" : \"1s\"}`\n      text \"d\" transition=\"opacity \" + \"duration.fast\"\n\ncomponent Card\n  props\n    d: string\n  view\n    text \"b\" transition=`opacity ${d}`\n";
-    let path = app("holes", &[("app.tamber", DESIGN), ("app.contract", view)]);
+    let path = app("round3", &[("app.tamber", DESIGN), ("app.contract", view)]);
     let plan = contract::compile_path(&path).unwrap_or_else(|e| panic!("{e:?}"));
     let strings: Vec<&str> = plan.strings.iter().collect();
     assert!(

@@ -8,8 +8,9 @@ use std::collections::BTreeSet;
 
 /// A form control HTML lets `disabled` take out of focus and input: a
 /// button, an input or a control. On any other box `disabled` means
-/// nothing to focus or keys, as Chrome's `<div disabled>`; a pressable with
-/// an `href` is the web's `<a>`, which `disabled` does not touch either.
+/// nothing to focus or keys, as Chrome's `<div disabled>` (LLP 1088 D7.3,
+/// amended 2026-10-04); a pressable with an `href` is the web's `<a>`,
+/// which `disabled` does not touch either (review b5-delta).
 pub(crate) fn disabled_control(n: &exact_kernel::NodeRef<'_>) -> bool {
     n.props.bool(PropId::Disabled) == Some(true)
         && match n.node_type {
@@ -292,7 +293,7 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    /// A gamepad's state goes to the canvas that has
+    /// A gamepad's state (LLP 1127.003 D2, D9) goes to the canvas that has
     /// the pads: the focus's canvas, or with no focus the first canvas that
     /// takes input; an editor's focus takes them from every canvas.
     /// `at` is when the device reported it, in the host's clock.
@@ -389,7 +390,7 @@ impl<D: DataSource> Presenter<D> {
         // button is gone delivers the down and swallows the up.
         if !down {
             self.shortcut_keys.remove(code);
-            // Its `keyup` handlers at the focus; every release below
+            // Its `keyup` handlers at the focus (#140); every release below
             // returns before `type_key`, which would hear it again.
             self.key_up(key, code, self.host.now());
         }
@@ -466,7 +467,7 @@ impl<D: DataSource> Presenter<D> {
         }
         // A TV remote's focus on a bar's target, a node out of the page, or
         // its arrow at a control a commit disabled: the key goes to the
-        // remote's keys, not to the page's.
+        // remote's keys, not to the page's (LLP 1115.001.003 D4).
         let focus = self.focus;
         let disabled = |p: &Self, f: ViewId| {
             crate::presenter::remote::Direction::of(key).is_some()
@@ -491,8 +492,9 @@ impl<D: DataSource> Presenter<D> {
             let _ = self.type_key(id, code, key, down, repeat);
         } else if down {
             // With nothing focused the root's handlers hear the key; then Tab
-            // takes the first stop, a remote's arrow moves
-            // toward one and a Back key goes back.
+            // takes the first stop (LLP 1088 D7.3), a remote's arrow moves
+            // toward one (LLP 1115.001.003 D4) and a Back key goes back
+            // (LLP 1115.000 D5.4).
             let name = match key {
                 "Space" => " ",
                 "NumpadEnter" => "Enter",
@@ -554,7 +556,7 @@ impl<D: DataSource> Presenter<D> {
             let named = q["id"].as_u64()? as u32;
             let id = self.control_target(named)?;
             let (x, y, w, h) = self.rect_of(id)?;
-            // `at`: a point in the named node's box, from its top left.
+            // `at`: a point in the named node's box, from its top left (LLP 1012 §1).
             match q["at"].as_array().map(|a| {
                 (
                     a.first().and_then(|v| v.as_f64()),
@@ -678,16 +680,16 @@ impl<D: DataSource> Presenter<D> {
     /// The web's focusable nodes: controls, inputs, buttons and links, a
     /// node with a `focus`, `blur` or `key` handler (the web gives it a
     /// `tabindex`), and any node with an explicit `tabindex`, a negative one
-    /// included, as the Apple hosts take the first
+    /// included (LLP 1088 D7.3), as the Apple hosts take the first
     /// responder. What tap, `autofocus` and `focus()` may focus; Tab takes
     /// only the `tabbable` ones.
     /// Windows also focuses overflowing scroll containers for keyboard navigation.
     ///
     /// `disabled` keeps only a form control out (a button, an input, a
     /// control), where HTML defines it; on a box it means nothing to focus,
-    /// as in Chrome.
+    /// as in Chrome (LLP 1088 D7.3, amended 2026-10-04).
     pub(crate) fn focusable(&self, id: ViewId) -> bool {
-        // A grouped list's grip takes the keys that move its row.
+        // A grouped list's grip takes the keys that move its row (LLP 1094 D9).
         if self.group_grip(id).is_some() {
             return true;
         }
@@ -701,10 +703,10 @@ impl<D: DataSource> Presenter<D> {
                     || self.focus == Some(id) && self.alert_message(id)
                     || n.props.str(PropId::Action).is_some()
                     || n.node_type == NodeType::TextInput
-                    // A native button is a button under any role.
+                    // A native button is a button under any role (LLP 1069.011.000 D1).
                     // A checkbox and a radio are HTML's focusable controls: a
                     // press focuses one, as Chrome's does, and a radio's arrows
-                    // move the focus.
+                    // move the focus (x2apps survey #2).
                     || matches!(
                         exact_kernel::ControlKind::of(n.node_type, n.props),
                         Some(
@@ -723,7 +725,7 @@ impl<D: DataSource> Presenter<D> {
                         .runner()
                         .handlers_of(id)
                         .iter()
-                        // A pressable is a tab stop, as on every host.
+                        // A pressable is a tab stop, as on every host (chat F14).
                         .any(|k| {
                             matches!(
                                 k,
@@ -836,7 +838,7 @@ impl<D: DataSource> Presenter<D> {
             return Some(hit);
         }
         // A link under the press is followed after the press's own handler,
-        // as a click's default action follows its listeners.
+        // as a click's default action follows its listeners (LLP 1038 §7).
         let link = self.link_at(hit, x, y);
         let target = if mouse_click {
             click
@@ -859,12 +861,12 @@ impl<D: DataSource> Presenter<D> {
 
     /// A press moves focus to the nearest focusable node at or above `hit`,
     /// except that a canvas press leaves an editor focused. The focus a press
-    /// gives shows no ring, as the web's `:focus-visible` has it (Fluent's
-    /// focus visual follows keyboard input only); a focus a key
+    /// gives shows no ring, as the web's `:focus-visible` has it (LLP 1115.004
+    /// D9.2: Fluent's focus visual follows keyboard input only); a focus a key
     /// moves there after shows it, and one the app moves shows it only where
     /// the focus it leaves did (`set_focus`). A mouse pressing the focus it
     /// does not move leaves its ring as it was, as Chrome's does; a finger
-    /// takes it away (no focus ring in touch mode, as on Android). A text
+    /// takes it away (LLP 1115.001 D7.6: no focus ring in touch mode). A text
     /// field keeps its ring and `:focus-visible` look, as in Chrome.
     pub(crate) fn focus_for_press(
         &mut self,
@@ -897,7 +899,7 @@ impl<D: DataSource> Presenter<D> {
             }
             self.queue_collections();
         }
-        // A press in a text field puts its caret there.
+        // A press in a text field puts its caret there (x2apps codeedit #2).
         if let Some(id) = focus.filter(|id| self.focus == Some(*id)) {
             self.press_field(id, point.0, point.1);
         }
@@ -961,7 +963,7 @@ impl<D: DataSource> Presenter<D> {
                 target
             }
         });
-        // With the modifiers held (a shift-click), as a click has them.
+        // With the modifiers held (gallery F20: shift-click), as a click has them.
         let press = self.press_event(pointer);
         if let Some(e) = self.host.dispatch_at(target, press, now_ms) {
             eprintln!("exact: {e}");

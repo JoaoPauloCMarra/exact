@@ -49,7 +49,7 @@ fn debug_from_name(w: &mut String, ty: &str, rows: &[(&str, &str)]) {
     .unwrap();
     writeln!(w, "}}").unwrap();
 }
-/// Every spelling a `symbol:` source answers to, with its role: a role,
+/// @ref LLP 1116.007 D3.1 — every spelling a `symbol:` source answers to, with its role: a role,
 /// Apple's name for it (dots read as dashes, as underscores do) and the table's aliases. A role and
 /// its Apple name may coincide (`heart`); every other spelling names one role and is new, except
 /// that two meanings may share one Apple glyph (`reorder` and `menu`, which Material draws apart):
@@ -89,7 +89,7 @@ fn symbol_spellings(schema: &Schema) -> std::collections::BTreeMap<String, &str>
     }
     spellings
 }
-/// `symbol_role`: a role by any of its spellings, as the lowering reads
+/// @ref LLP 1116.007 D3.1 — `symbol_role`: a role by any of its spellings, as the lowering reads
 /// a `symbol:` source.
 fn write_symbol_role(w: &mut String, schema: &Schema) {
     writeln!(
@@ -102,7 +102,7 @@ fn write_symbol_role(w: &mut String, schema: &Schema) {
     }
     writeln!(w, "_ => None, }} }}").unwrap();
 }
-/// `symbol_glyph`: a role's shape on a platform whose symbols draw it
+/// @ref LLP 1115.001 D14 — `symbol_glyph`: a role's shape on a platform whose symbols draw it
 /// in a shape of their own.
 fn write_symbol_glyphs(w: &mut String, schema: &Schema) {
     writeln!(

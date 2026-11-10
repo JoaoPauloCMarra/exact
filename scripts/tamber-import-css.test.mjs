@@ -1,4 +1,4 @@
-// `tamber import css`: a stylesheet's custom properties written into app.tamber between markers.
+// `tamber import css` (LLP 1153 D6.2): a stylesheet's custom properties written into app.tamber between markers.
 // The subset it translates, each thing it refuses by name, each scheme's value by CSS's cascade, an author's tokens
 // kept outside the markers, a second import rewriting only its block, and one that would leave the author's tokens
 // refused writing nothing. Runs the debug compiler the lane builds, as tamber-dtcg.test.mjs does.

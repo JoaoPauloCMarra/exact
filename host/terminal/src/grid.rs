@@ -1,6 +1,6 @@
 //! The cell grid: what the painter draws into and the writer diffs.
 //!
-//! Each cell holds a grapheme (or the continuation of a
+//! @ref LLP 1101 D7 — each cell holds a grapheme (or the continuation of a
 //! wide one), its colours and attributes. The writer emits only sequences it
 //! constructs itself; app text reaches it already stripped of controls.
 
@@ -28,7 +28,7 @@ pub struct Style {
     pub underline: bool,
     /// SGR 9.
     pub strike: bool,
-    /// SGR 7: the UA focus indicator.
+    /// SGR 7: the UA focus indicator (LLP 1101 D6).
     pub reverse: bool,
     /// A hyperlink, by its index in the grid's links (0: none): written as
     /// OSC 8, which a terminal opens on Cmd- or Ctrl-click with no mouse
@@ -187,7 +187,7 @@ impl Grid {
 
     /// Whether a cell shows the same as `other`'s at the same place: text,
     /// style and link target — links compared by URL, since each grid
-    /// numbers its links itself.
+    /// numbers its links itself (LLP 1101.002 §0).
     fn same(&self, x: usize, y: usize, other: &Grid) -> bool {
         let (a, b) = (self.cell(x, y), other.cell(x, y));
         a.text == b.text

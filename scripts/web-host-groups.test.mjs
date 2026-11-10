@@ -21,9 +21,9 @@ export function staticImports(source) {
 
 test('static imports: import, export and side-effect forms, with comments, not dynamic import()', () => {
   expect(staticImports(`import { a } from './a.js';\nimport './b.js';\nexport { c } from "./c.js";\nconst d = await import('./d.js');`)).toEqual(['a.js', 'b.js', 'c.js']);
-  // Comments and line breaks inside the statement.
+  // Comments and line breaks inside the statement (Astra's quick review).
   expect(staticImports(`export * /* public API */ from './e.js';\nimport {\n  f, // the f\n  g,\n} from './f.js';`)).toEqual(['e.js', 'f.js']);
-  // A function's own `require` parameter is no static import.
+  // A function's own `require` parameter is no static import (Astra's narrow re-check).
   expect(staticImports(`function h(require) { return require('./h.js'); }`)).toEqual([]);
 });
 

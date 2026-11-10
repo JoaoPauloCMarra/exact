@@ -1,14 +1,14 @@
-// Exact's tab container on iOS: a
+// @ref LLP 1075.003 §3.7 — Exact's tab container on iOS: a
 // `UITabBarController` with one navigation controller a tab, each tab's
-// stack kept as the router keeps it (one navigation owner per tab), so a
-// scroll offset, a draft or a pushed screen survives a switch.
+// stack kept as the router keeps it (LLP 1038 §7's "one navigation owner per
+// tab"), so a scroll offset, a draft or a pushed screen survives a switch.
 // The authored `tablist` supplies the items — a symbol over a label, its
 // `-fill` symbol when selected — and takes no room while the bar shows; a
 // tab the bar selects presses its authored tab, so selection, history and
-// reselect-pops-to-root stay the router's. Under the
+// reselect-pops-to-root stay the router's (LLP 1038 D4, D12). Under the
 // agent the authored tablist paints and the bar stays hidden. A tab not yet
 // selected has no routes: the runner builds a tab when it is first selected,
-// as UIKit loads a tab's view. Which tabs a root has is
+// as UIKit loads a tab's view (LLP 1075.003 §3.7). Which tabs a root has is
 // NavigationTabs.swift's; what a tab shows, TabFace.swift's. A tab whose
 // stack shows no bar and has pushed nothing has no navigation controller
 // until it needs one (HeldStackIOS.swift).
@@ -46,7 +46,7 @@ extension NavigationHost {
     }
 
     /// Whether Exact's tab bar shows: not under the agent's own chrome,
-    /// which sees the authored tablist.
+    /// which sees the authored tablist (LLP 1021 D4's one presentation).
     var tabBarShows: Bool { tabController != nil && tabOwner === tabController && !ExactEnv.authoredChrome && !tablistAppearanceNone }
 
     /// What a tab other than the selected one holds: its stack up to its
@@ -93,7 +93,7 @@ extension NavigationHost {
         mount(holder, in: parent, at: p.root)
         tint(tabs.tablist)
         // Kept under the agent too, where the authored tablist shows in the
-        // bar's place: a real touch refuses it.
+        // bar's place: a real touch refuses it (LLP 1080.000 D7).
         adoptedTablist = tabs.tablist.id
         if owned == nil, presenter.session?.natives.hatchesConnected == true, let container = tabController {
             presenter.session?.natives.tabsHatch(container, event: 0)
@@ -132,7 +132,7 @@ extension NavigationHost {
 
     /// At a cold launch the module connects after first pixel: Exact's tab
     /// controller hears `tabs`, then `tabContainer` may take its stacks into
-    /// the app's own container; the content moves once.
+    /// the app's own container; the content moves once (LLP 1075.003 Q3 (c)).
     /// A sheet presented over the tabs keeps the controller it was presented
     /// from: the app's container takes their place once nothing is presented
     /// (each batch asks again until then).
@@ -227,7 +227,7 @@ extension NavigationHost {
         }
         let navs = tabs.panels.compactMap { tabStack($0.id) }
         // A tab's stack is empty until the runner builds the tab, when it is
-        // first selected: its first routes arrive here,
+        // first selected (LLP 1075.003 §3.7): its first routes arrive here,
         // unanimated, and its bar shows as its first route says, as a stack
         // built with them would (`makeNavigation`).
         let fill = { (stack: UIViewController, routes: [RouteController]) in
@@ -254,7 +254,7 @@ extension NavigationHost {
         // projected before it is shown, where nothing animates in.
         fill(navs[p.at], base(p.wanted[p.at]))
         if routerTab != p.at, !(navs[p.at] is HeldStack && needsNavigation(base(p.wanted[p.at]))) { prepareRoutes(base(p.wanted[p.at]), in: navs[p.at]) }
-        // A tab change swaps immediately.
+        // @ref LLP 1038 D6 — a tab change swaps immediately.
         if let container = tabController, container.selectedIndex != p.at {
             container.selectedIndex = p.at
             refollowFloatingBar() // (no push or pop: the stack it shows keeps its wish on an iPad)
@@ -287,7 +287,7 @@ extension NavigationHost {
         for tab in tabs.tabs { tab.rejectNativeActiveProperties(on: "UITabBarItem") }
         let faces = tabs.tabs.map(TabFace.init)
         // A tab's test id is its item's identifier, which XCUITest and
-        // Maestro address it by; without one, its symbol or title.
+        // Maestro address it by (LLP 1116 D2); without one, its symbol or title.
         let ids = zip(tabs.tabs, faces).map { tab, face in tab.props["testId"] ?? face.base.flatMap { FaceSymbol.isPath($0) ? nil : $0 } ?? face.title }
         // The idiom and the size class size a path's glyph (`FaceSymbol.tabBarPoints`).
         // The bar's traits once it is in its window; before, the page's.
@@ -297,7 +297,7 @@ extension NavigationHost {
         let signature = zip(faces, ids).map { face, id in "\(points)|\(id)|\(face.base ?? "")|\(face.raster ?? "")|\(face.title)|\(face.disabled)|\(face.accessibilityDisabled)|\(face.badge ?? "")" }
         for (index, (nav, face)) in zip(navs, faces).enumerated() where !tabItems.indices.contains(index) || tabItems[index] != signature[index] {
             let item: UITabBarItem = nav.tabBarItem
-            // An svg-only icon's path at a tab bar's glyph size, one image for both states;
+            // An svg-only icon's path (stage 9 A2) at a tab bar's glyph size, one image for both states;
             // a bundled raster the same way, as a hand-built bar takes a custom image.
             let image = face.base.flatMap { FaceSymbol.image($0, points: FaceSymbol.tabBarPoints(traits)) }
                 ?? face.raster.flatMap { rasterURL($0) }.flatMap { TabFace.rasterImage(at: $0, points: FaceSymbol.tabBarPoints(traits)) }
@@ -355,9 +355,9 @@ extension NavigationHost {
 
     /// The screen a tap on the bar's item for tab `index` scrolls to its
     /// top: the selected tab's, tapped again at its stack's root with
-    /// nothing presented over it, as every tab bar app does. Above the root
-    /// the tap pops to it, which is the router's,
-    /// and another tab's tap selects it: nil for both. Read
+    /// nothing presented over it, as every tab bar app does (LLP 1115.000
+    /// D11.3). Above the root the tap pops to it, which is the router's
+    /// (LLP 1038 D12), and another tab's tap selects it: nil for both. Read
     /// before the tab's press, scrolled after it (`scrollToTop`).
     func reselectedRoot(_ index: Int) -> RouteController? {
         guard index == routerTab, tabPanels.indices.contains(index), let routes = tabStack(tabPanels[index])?.stackRoutes,
@@ -373,7 +373,7 @@ extension NavigationHost {
     /// reader's move of a list there (`CollectionHost.readerMoves`), and it
     /// gives way to a `scrollIntoView` the tab's press asked for there,
     /// landed, under way or already shown: the author's answer to the tap
-    /// wins over the platform's. `requests`: every
+    /// wins over the platform's (LLP 1070.000 §2.6). `requests`: every
     /// list's latest request before the press (`CollectionHost.lastRequests`),
     /// read for them all because the press may make the screen's list, or
     /// make another list the screen's.
@@ -424,7 +424,7 @@ extension NavigationHost {
     /// What holds the tabs goes: its stacks are retired, the authored
     /// tablist paints again.
     func retireTabs() {
-        // The tablist's hold on the bar goes with its container.
+        // The tablist's hold on the bar goes with its container (§3.7).
         tablistRoot = nil
         tablistHidBar = false
         for nav in tabPanels.compactMap({ tabNavigations[$0] }) {

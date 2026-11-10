@@ -1,4 +1,4 @@
-//! Kept answers: a store-reading
+//! Kept answers (LLP 1027 D4, as ruled 2026-09-03): a store-reading
 //! resource's last fresh answer, persisted beside the app's secrets under
 //! [`Store::KEPT`] so the next launch's first frame shows it before the
 //! data source is ready — a TypeScript module its host loads after first
@@ -16,8 +16,8 @@ use exact_plan::Value;
 
 /// The largest kept answer: its identifying arguments' and its value's
 /// canonical bytes together. Reading, decoding and shape-checking one this
-/// size at boot takes under a millisecond on an iPhone simulator: a library
-/// a first screen shows, never a feed.
+/// size at boot takes under a millisecond on an iPhone simulator (LLP 1027
+/// D4, 2026-10-16): a library a first screen shows, never a feed.
 const KEPT_DATA_BYTES: usize = 256 * 1024;
 /// The longest kept entry: the data, with the arguments' list header
 pub(super) const MAX_KEPT_BYTES: usize = KEPT_DATA_BYTES + 5;
@@ -26,7 +26,7 @@ pub(super) const MAX_KEPT_BYTES: usize = KEPT_DATA_BYTES + 5;
 /// loaded iPhone simulator), what a native host keeps on disk beside the
 /// app's own files, and, as base64, about 700 K of the characters a web
 /// page's `localStorage` shares with the app's secrets and persisted
-/// states.
+/// states (LLP 1027 D4, 2026-10-16).
 pub(crate) const KEPT_TOTAL_BYTES: usize = 2 * MAX_KEPT_BYTES;
 
 /// Whether answers are kept, and the resources an answer too big to keep was said of, once each
@@ -39,13 +39,13 @@ pub(super) struct Keeping {
     /// Kept answers this boot refused, by resource, with why: journaled
     /// with the ones it shows, so a refusal is never silent.
     pub(super) refused: Vec<(usize, String)>,
-    /// Whether a module source declared `kept` keeps its answers:
-    /// always, but in a private session.
+    /// Whether a module source declared `kept` keeps its answers (LLP
+    /// 1133.015 D4): always, but in a private session.
     pub(super) modules: bool,
 }
 
 /// Whether resource `i` reads a module's live source declared `"kept":
-/// true`: its implementation loads after first pixel
+/// true` (LLP 1133.015 D4): its implementation loads after first pixel
 /// whatever the data source, so its last answer is kept as a TypeScript
 /// source's is.
 pub(super) fn kept_module(plan: &exact_plan::Plan, i: usize) -> bool {
@@ -112,7 +112,7 @@ pub(super) fn obsolete(plan: &exact_plan::Plan, snapshot: &[(String, Vec<u8>)]) 
 }
 
 /// Every kept entry in `snapshot`: what an app that keeps no answers
-/// forgets.
+/// forgets (LLP 1069.008.000 D7).
 pub(super) fn all(snapshot: &[(String, Vec<u8>)]) -> Vec<String> {
     snapshot
         .iter()
@@ -192,7 +192,7 @@ impl<D: DataSource> Runner<D> {
     /// source is ready: its identity is not yet known, so its kept answer
     /// must wait. An account resource with no kept answer of its own shows
     /// its placeholder (`did: ""`), and that empty id would match whatever
-    /// another launch kept. Kept seeds,
+    /// another launch kept (LLP 1027.005 D3, 2026-10-10). Kept seeds,
     /// carried and checkpoint answers and non-store values are known.
     pub(super) fn identity_unknown(&self, i: usize, states: &[Option<ResourceState>]) -> bool {
         use crate::instance::Input;
@@ -229,9 +229,9 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// What the first frame shows from the bake until its source is ready
-    /// (said in the journal), and each store
+    /// (LLP 1048.003 D6; feed F24: say so in the journal), and each store
     /// reader whose build-time answer a store holding secrets passed over
-    /// for its placeholder.
+    /// for its placeholder (LLP 1027 D4, 2026-10-10).
     pub(super) fn journal_build_time(&mut self) {
         let secrets = self.store.opened_with_secrets();
         for i in 0..self.stale.len() {
@@ -300,12 +300,12 @@ impl<D: DataSource> Runner<D> {
     /// `data_ready`, and shows the answer kept from the last launch where it
     /// still fits (`seeded`: a document's answers already seeded it). A
     /// launch that begins with a presence secret locked or pending shows
-    /// none: a kept answer is the account's content, and
+    /// none (LLP 1133.010 D5): a kept answer is the account's content, and
     /// the person has not passed the check yet.
     pub(super) fn seed_kept(&mut self, seeded: &[bool], device_state: bool) {
         let locked = self.store.opened_locked();
         if locked {
-            self.log("kept answers not shown: the launch begins with a presence secret locked");
+            self.log("kept answers not shown: the launch begins with a presence secret locked (LLP 1133.010 D5)");
         }
         for (i, &taken) in seeded.iter().enumerate() {
             if !self.plan.resources[i].reader
@@ -352,7 +352,7 @@ impl<D: DataSource> Runner<D> {
         self.seed_kept_modules(ready, private);
     }
 
-    /// Each resource reading a kept module source shows
+    /// Each resource reading a kept module source (LLP 1133.015 D4) shows
     /// the answer kept from the last launch where it still fits, and is
     /// asked again: at `data_ready` when the data source is not ready yet,
     /// else at once. The seed is provisional, as any kept answer is. A
@@ -387,7 +387,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Keep a store-reading resource's fresh answer for the next boot's
-    /// first frame, when this source may not be ready then.
+    /// first frame (LLP 1027 D4), when this source may not be ready then.
     pub(super) fn keep_answer(&mut self, i: usize, args: &[Value], value: &Value) {
         // An element of a resource over a list is the launch's to ask.
         if self.member(i).is_some() {
@@ -397,12 +397,12 @@ impl<D: DataSource> Runner<D> {
         if !module && (!self.keeping.on || !self.store_readers[i]) {
             return;
         }
-        // Runner facts are never kept answers.
+        // @ref LLP 1039 D3 / LLP 1030 D7 — runner facts are never kept answers.
         let source = self.plan.str(self.plan.resources[i].source);
         if exact_plan::runner_owned_source(source) {
             return;
         }
-        // Context reaches the source but does not
+        // @ref LLP 1027.005 D6 — context reaches the source but does not
         // enter the kept entry or its budget.
         let row = &self.plan.resources[i];
         let args = &args[..row.args.len as usize - usize::from(row.context)];
@@ -414,7 +414,7 @@ impl<D: DataSource> Runner<D> {
             if !self.keeping.too_big.contains(&i) {
                 self.keeping.too_big.push(i);
                 let line = format!(
-                    "too big to keep: resource `{}` answered with more than {KEPT_DATA_BYTES} bytes ({kib} KiB) counting its identifying arguments, so the next launch cannot show this answer before the resource answers again. To show it at launch, keep the answer and its identifying arguments under {kib} KiB: move what the first screen does not need into another resource, and pass large inputs that do not identify the answer (a token, a time) after `with`, which are not counted; an input that identifies it stays in the call, or becomes a smaller key",
+                    "too big to keep: resource `{}` answered with more than {KEPT_DATA_BYTES} bytes ({kib} KiB) counting its identifying arguments, so the next launch cannot show this answer before the resource answers again. To show it at launch, keep the answer and its identifying arguments under {kib} KiB: move what the first screen does not need into another resource, and pass large inputs that do not identify the answer (a token, a time) after `with`, which are not counted; an input that identifies it stays in the call, or becomes a smaller key (LLP 1027 D4)",
                     self.plan.str(row.name),
                     kib = KEPT_DATA_BYTES / 1024,
                 );
@@ -447,7 +447,7 @@ impl<D: DataSource> Runner<D> {
             total -= n;
             self.store.forget_kept(&other);
             let line = format!(
-                "kept answers are at most {} KiB together: forgot `{}`'s ({n} bytes) to keep `{}`'s, so the next launch shows `{0}`'s placeholder until it answers",
+                "kept answers are at most {} KiB together: forgot `{}`'s ({n} bytes) to keep `{}`'s, so the next launch shows `{0}`'s placeholder until it answers (LLP 1027 D4)",
                 KEPT_TOTAL_BYTES / 1024,
                 &other[Store::KEPT.len()..],
                 &name[Store::KEPT.len()..],
@@ -457,8 +457,8 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Say once that resource `i` is kept under an identifying argument of
-    /// this launch's own, so the next launch never matches it:
-    /// one that reads an `exactTime()` resource and is its
+    /// this launch's own, so the next launch never matches it (LLP
+    /// 1027.005): one that reads an `exactTime()` resource and is its
     /// `epochAtZero` or `seed` as they are. The compiler names one written
     /// so; this finds one it could not follow. A time made from the clock
     /// (a record's creation, saved) may identify the answer: not said.
@@ -484,7 +484,7 @@ impl<D: DataSource> Runner<D> {
         self.keeping.of_launch.push(i);
         let row = &self.plan.resources[i];
         let line = format!(
-            "`{name}`'s kept answer is never shown at launch: its identifying argument {n} is this launch's {what}, which changes every launch. Pass it after `with` (`resource {name} = {source}(…) with …`), which still reaches the source but is not counted",
+            "`{name}`'s kept answer is never shown at launch: its identifying argument {n} is this launch's {what}, which changes every launch. Pass it after `with` (`resource {name} = {source}(…) with …`), which still reaches the source but is not counted (LLP 1027.005)",
             name = self.plan.str(row.name),
             source = self.plan.str(row.source),
             n = k + 1,
@@ -521,7 +521,7 @@ impl<D: DataSource> Runner<D> {
         false
     }
 
-    /// A peer committed to the app's store. The host
+    /// A peer committed to the app's store (LLP 1126.001 WP12). The host
     /// supplies a fresh snapshot; only store readers and persisted slots
     /// are refreshed. Ordinary window state and pure resources stay local.
     pub fn store_changed(
@@ -609,7 +609,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// The data source is ready — a host loaded its TypeScript module after
-    /// the first pixel: every deferred resource shown
+    /// the first pixel (LLP 1027 D4): every deferred resource shown
     /// from a placeholder is asked again, and every send made before now
     /// is sent, in one commit. `None` when nothing was waiting, or when the
     /// source is still not ready. Hosts call it once, so a stand-in's
@@ -629,8 +629,8 @@ impl<D: DataSource> Runner<D> {
             self.log("data_ready: the data source is not ready");
             return Ok(None);
         }
-        // A pending presence move runs once the source has loaded,
-        // so the store's readers see it from this commit on.
+        // A pending presence move runs once the source has loaded (LLP
+        // 1133.010 D4), so the store's readers see it from this commit on.
         self.presence_ready();
         let readers = if change.read {
             self.store_readers()
@@ -662,11 +662,11 @@ impl<D: DataSource> Runner<D> {
             Err(RunnerError::Poisoned)
         } else {
             let (by, later) = self.send_unsent();
-            // The gate step joins this settlement as every commit's: a gate
-            // the sent answers open arms its
+            // The gate step joins this settlement as every commit's (LLP
+            // 1092 D8; b6 review A2): a gate the sent answers open arms its
             // task, and a key that is no key refuses this commit. Each
             // resource asks under its waiting ask's origin, and each send
-            // under its own.
+            // under its own (LLP 1133.002 D12).
             match self
                 .router_change()
                 .and_then(|_| self.reasking(|r| r.settle(false)))
@@ -770,7 +770,8 @@ impl<D: DataSource> Runner<D> {
                 .answer_for(target, &mut self.store, &source, &args);
             self.refuse_locked(answer)
         };
-        // What its turn sent as an answer.
+        // What its turn sent as an answer (LLP 1016.000 D7, the amendment
+        // of 2026-10-18).
         self.stage_answer(target);
         let refused = match answer {
             Ok(super::Answer::Now(value)) if self.conforms(&value, self.plan.mutations[m].ty) => {

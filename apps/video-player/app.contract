@@ -1,5 +1,5 @@
-// A stable video leaf, resized by the keyboard's viewport.
-// The viewport's media features: its width chooses the
+// @ref LLP 1042 — a stable video leaf, resized by the keyboard's viewport.
+// @ref LLP 1039 — the viewport's media features: its width chooses the
 // layout; no pointer (a TV's remote) chooses the larger, across-a-room sizes.
 shape Viewport
   width: number

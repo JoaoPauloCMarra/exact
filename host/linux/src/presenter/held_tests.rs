@@ -1,5 +1,5 @@
-//! Held states on the Linux host (and so
-//! Android's, which paints through this presenter): a hold frame or the
+//! Held states on the Linux host (LLP 1122 D8, LLP 1121 stage 8 E3; and
+//! so Android's, which paints through this presenter): a hold frame or the
 //! agent's `holdState` shows the state as the real one (the press paint for
 //! `active`), real input on the node lets it go, a disabled node refuses
 //! one and disabling lets it go, so does going, and a new generation lets
@@ -149,7 +149,7 @@ fn a_held_active_is_the_press_paint_until_real_input_lets_it_go() {
         layout["node"]["held"]["rows"],
         json!([{"name": "press_background_color", "value": "#0000ff"}])
     );
-    // It names the node it is held on, the card, by its site and instance.
+    // It names the node it is held on, the card, by its site and instance (stage 9 E).
     assert_eq!(layout["node"]["held"]["node"], card);
     assert_eq!(layout["node"]["held"]["site"], layout["node"]["site"]);
     assert_eq!(

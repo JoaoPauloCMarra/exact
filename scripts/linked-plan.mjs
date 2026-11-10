@@ -43,7 +43,7 @@ export const APPLE_BUILD_SCRIPT = `fn main() {
 `;
 
 /** APPLE_BUILD_SCRIPT with the app at `app` from the crate: `..` for an authored crate beside app.json, `../../..` for
- * one generated under `.exact/shells/` (scripts/app-shells.mjs). */
+ * one generated under `.exact/shells/` (scripts/app-shells.mjs, LLP 1153 D1). */
 export const appleBuildScript = (app = '..') => APPLE_BUILD_SCRIPT.replace('std::path::Path::new("..")', `std::path::Path::new(${JSON.stringify(app)})`);
 
 /** The one `exact new` wrote before, which mapped iOS alone; `update`

@@ -1,4 +1,4 @@
-//! Package designs: a package the
+//! Package designs (LLP 1121 D11 "Packages", stage 11 A): a package the
 //! app's sources link may ship `<name>.tamber` beside its entry, its tokens
 //! named under its namespace (`reading.measure`). Each is checked alone for
 //! what only a package may not do, then its tokens (and its icons, stage
@@ -23,7 +23,7 @@ pub(crate) const LINE: u32 = 1 << 28;
 /// Each package's band of lines.
 const BAND: u32 = 1 << 20;
 
-/// The base scale's names, which a package
+/// The base scale's names (stage 11 B, the lead's ruling 2), which a package
 /// token may name as it names a role.
 pub(crate) const BASE: [&str; 9] = [
     "space.xs",
@@ -153,15 +153,15 @@ pub(crate) fn merge(
             )));
         }
         // What only the app may declare, and what packages don't carry yet.
-        // A component's params are a package's: named
+        // A component's params are a package's (LLP 1121 stage 12 B1): named
         // `<package>/<file>#Name` by its design's home (`params::design_tokens`).
         let blocks = design
             .axes
             .iter()
-            .map(|a| (&a.name, "an axis: axes are the app's alone; the app declares it and the package's `when` lines name it"))
-            .chain(design.dials.iter().map(|d| (&d.name, "a dial: dials are the app's alone")))
+            .map(|a| (&a.name, "an axis: axes are the app's alone (D11); the app declares it and the package's `when` lines name it"))
+            .chain(design.dials.iter().map(|d| (&d.name, "a dial: dials are the app's alone (D11)")))
             .chain(design.params.iter().map(|t| (&t.name, "a `params` line: a param's value is the app's to set, in the app's design; a package declares its components' params and their defaults (`component … params`)")))
-            .chain(design.exports.iter().flatten().map(|e| (e, "an `exports` line: what a build keeps of a package's tokens is the retention rule, as for the app's")));
+            .chain(design.exports.iter().flatten().map(|e| (e, "an `exports` line: what a build keeps of a package's tokens is D7's rule, as for the app's")));
         for (name, why) in blocks {
             ok = false;
             refused.push(refuse(
@@ -174,7 +174,7 @@ pub(crate) fn merge(
                 ),
             ));
         }
-        // Its icons are named under its namespace as its tokens are.
+        // Its icons are named under its namespace as its tokens are (stage 13).
         let named = design
             .tokens
             .iter()
@@ -212,7 +212,7 @@ pub(crate) fn merge(
             }
             token
         };
-        // The app's definition is the token, whole; and the icon.
+        // The app's definition is the token, whole; and the icon (stage 13).
         let tokens = design
             .tokens
             .into_iter()
@@ -250,8 +250,8 @@ pub(crate) fn unband(message: &str) -> String {
     out
 }
 
-/// What the folded package tokens name that is not theirs to: each names,
-/// as the fold resolved it (its values' names and
+/// What the folded package tokens name that is not theirs to (D11, theme2's
+/// ruling Q6): each names, as the fold resolved it (its values' names and
 /// its `pair=`), only its own package's tokens (as its design declares
 /// them: one the app sets is still its own to name, one the app adds under
 /// its namespace is not), roles (an app's override of one included) and
@@ -274,7 +274,7 @@ pub(crate) fn references(
         .map(|p| tamber::parse(&p.text).map_or_else(|_| Vec::new(), |d| d.tokens))
         .collect();
     let own = |band: usize, name: &str| declared[band].iter().any(|t| t.name.value == name);
-    // A package's icon names only its own package's icons, as
+    // A package's icon names only its own package's icons (stage 13), as
     // its tokens name only its tokens: one the app overrides is still its
     // own to name.
     let icons: Vec<Vec<tamber::Token>> = packages
@@ -290,7 +290,7 @@ pub(crate) fn references(
             }
             refused.push(LowerError {
                 id: "tamber-unknown-token",
-                message: format!("`{}` names `{whole}`, an icon that isn't the package `{package}`'s: a package's icon names its own icons only", t.name.value),
+                message: format!("`{}` names `{whole}`, an icon that isn't the package `{package}`'s: a package's icon names its own icons only (D11)", t.name.value),
                 span: at(source, t.name.line, t.name.col),
             });
         }
@@ -315,7 +315,7 @@ pub(crate) fn references(
         let mut wrong = |what: String| {
             refused.push(LowerError {
                 id: "tamber-unknown-token",
-                message: format!("`{}` names {what}: a package's token names its own tokens, roles and base names only, and no dial", token.name.value),
+                message: format!("`{}` names {what}: a package's token names its own tokens, roles and base names only, and no dial (D11)", token.name.value),
                 span,
             })
         };
@@ -349,11 +349,11 @@ pub(crate) fn references(
             }
         }
     }
-    // A package design's component params:
+    // A package design's component params (stage 12 B1 round 1, Grok 2):
     // a default names what the package's tokens may, and its own
     // component's params besides, said at the default in the package's file.
     // (the app's lines by token, resolved once: the checker's work in param
-    // counts)
+    // counts, Astra's round 2)
     let resolver = crate::params::Resolver::new(all, identities);
     let set_by_app = resolver.lines(&folding.design);
     for (band, source) in packages.iter().enumerate() {
@@ -361,7 +361,7 @@ pub(crate) fn references(
         let package = source.package.as_deref().unwrap_or_default();
         for p in &params {
             // One the app sets, by a name only it answers, is the app's
-            // value, which names the app's.
+            // value, which names the app's (round 2, Grok 3).
             let set = set_by_app.contains_key(p.token.as_str());
             if set {
                 continue;
@@ -374,11 +374,11 @@ pub(crate) fn references(
             let mut wrong = |what: String| {
                 refused.push(LowerError {
                     id: "tamber-unknown-token",
-                    message: format!("`{}`'s default names {what}: a package's param names its package's own tokens, roles, base names and its component's params only, and no dial", p.full),
+                    message: format!("`{}`'s default names {what}: a package's param names its package's own tokens, roles, base names and its component's params only, and no dial (D11)", p.full),
                     span: p.param.default_span,
                 })
             };
-            // Its own package's icons too: an icon param's default may name one.
+            // Its own package's icons too (stage 13): an icon param's default may name one.
             let own_icon = |name: &str| icons[band].iter().any(|t| t.name.value == name);
             let foreign =
                 |name: &str| !own(band, name) && !own_icon(name) && !shared(name) && !sibling(name);
@@ -399,7 +399,7 @@ pub(crate) fn references(
             for dial in checked.into_iter().flat_map(|c| &c.reads) {
                 wrong(format!("the dial `{dial}`"));
             }
-            // A whole alias as written: a
+            // A whole alias as written (round 2, Astra 2 and Grok 1, 2): a
             // profile colour's is folded as `transparent`, naming none, and
             // an icon param's names an icon; a literal (`icon(sf "…")`)
             // names nothing.
@@ -455,7 +455,7 @@ impl crate::Lowerer<'_> {
             None => (None, Origin::Inline(Vec::new())),
         };
         // A name under a library package's namespace that the package
-        // doesn't define: its names are its API. An app design
+        // doesn't define (LLP 1139 D8): its names are its API. An app design
         // line setting one, and a Contract row naming one.
         for source in file.package_designs.iter().filter(|s| {
             s.package
@@ -481,10 +481,10 @@ impl crate::Lowerer<'_> {
                     && !exact_kernel::style::scale::is_base(name)
             };
             let message = |name: &str| {
-                format!("`{name}` is under the library package `{package}`'s namespace, which defines no `{name}`: a library's names are its API, so a renamed or removed one fails the build")
+                format!("`{name}` is under the library package `{package}`'s namespace, which defines no `{name}`: a library's names are its API, so a renamed or removed one fails the build (LLP 1139 D8)")
             };
             if let Some(app) = &app {
-                // Its icons too: an icon override is a line of the app's.
+                // Its icons too (stage 13): an icon override is a line of the app's.
                 for t in app
                     .tokens
                     .iter()

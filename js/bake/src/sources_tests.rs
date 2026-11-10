@@ -50,9 +50,9 @@ fn captures_fonts_and_complete_static_trees_without_following_links() {
         std::fs::write(path, bytes).unwrap();
     }
     std::fs::write(app.0.join("private.bin"), b"not an app asset").unwrap();
-    // The driver's test file is no build's input.
+    // The driver's test file is no build's input (trivia F8).
     std::fs::write(app.0.join("app.test.contract"), b"test \"t\"\n").unwrap();
-    // Nor is the app's `.exact/`: an agent's evidence and runtime files.
+    // Nor is the app's `.exact/`: an agent's evidence and runtime files (Depot).
     std::fs::create_dir_all(app.0.join(".exact/evidence")).unwrap();
     std::fs::write(app.0.join(".exact/evidence/results.json"), b"{}").unwrap();
     // Nor a web build in `dist` and what it keeps beside it (`web-build --out dist`), each a tree of
@@ -372,7 +372,7 @@ fn a_linked_module_leaves_its_bytecode_to_the_link() {
     );
 }
 
-/// The one direct dependency whose `exact.json`, at its root,
+/// LLP 1154 D3: the one direct dependency whose `exact.json`, at its root,
 /// declares `native` fills the slot, whatever its `exports` "." names (here
 /// its TypeScript driver). On a native platform `module.rs` joins its shim
 /// by an absolute `#[path]` and writes the factory; the web gets neither; a

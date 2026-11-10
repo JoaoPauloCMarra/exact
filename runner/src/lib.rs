@@ -1,7 +1,8 @@
 //! The plan runner.
 //!
-//! Data comes from a Rust data source through one seam, and a dev reload is
-//! a restart.
+//! @ref LLP 1004 D4 (data comes from a Rust data source through one seam)
+//! @ref LLP 1004 D5 (a dev reload is a restart)
+//! @ref LLP 0485 §8 (the update loop; research)
 //!
 //! A [`Runner`] loads one validated plan against one [`DataSource`] and drives
 //! one kernel. Nothing here is app-specific: the plan is data, the data source
@@ -19,18 +20,18 @@
 //! - [`bridge`] — values to kernel props and style rows, through the kernel's
 //!   own `set_dynamic`.
 //! - [`delivery`] — what this binary and its update store know about
-//!   delivery: one resource the runner answers itself.
+//!   delivery (LLP 1030 D7): one resource the runner answers itself.
 //! - [`device`] — `device.*` grants and the one table every host's
-//!   permission spelling derives from.
+//!   permission spelling derives from (LLP 1069.008).
 //! - [`instance`] — the instance tree: nodes, `if`/`match` arms, keyed
 //!   `for` rows, and the ops that keep the kernel equal to it.
 //! - [`runner`] — boot, actions, events, resources, timers, the clock.
 //! - [`agent`] — the agent API's read operations (`tree`, `state`, `logs`),
 //!   answered from the runner and kernel for every host.
 //! - [`head`] — the document's head: the active `head` elements' fields,
-//!   for every host's page, window or scene title.
-//! - [`uses`] — what a plan uses beyond the core, from its bytes:
-//!   what a host must link to run it.
+//!   for every host's page, window or scene title (LLP 1048.003 D1).
+//! - [`uses`] — what a plan uses beyond the core, from its bytes (LLP 1047
+//!   D2): what a host must link to run it.
 //!
 //! Time is a number the host supplies (`Runner::advance`); timers fire from it,
 //! so an agent seeks instead of waiting — the same clock discipline as
@@ -72,10 +73,10 @@ pub mod process;
 pub mod request;
 pub mod runner;
 pub mod save_file;
-/// The picker's helpers a host shares: types by name,
+/// The picker's helpers a host shares (LLP 1069.002): types by name,
 /// `accept` matching, the HEIC rule, a `type @t` answer's paths.
 pub use runner::picker as picker_support;
-/// A received share's helpers a host shares.
+/// A received share's helpers a host shares (LLP 1133.024 D2, D3).
 pub use runner::picker::shared as share_in;
 pub mod machine;
 pub mod midi;
@@ -136,7 +137,7 @@ pub use runner::{
 pub use runner::{AppState, LiveApplied, LiveRefusal, Place, Tamber};
 pub use runner::{CallHow, WakeHow};
 pub use upload::{UPLOAD_PROGRESS, UPLOAD_SENDING};
-/// The binding core's names: what `contract tamber gen rust`
+/// The binding core's names (LLP 1121 D12): what `contract tamber gen rust`
 /// writes (`pub const SURFACE_CARD: Token<Color>`) and resolves.
 pub mod tamber {
     pub use crate::runner::{

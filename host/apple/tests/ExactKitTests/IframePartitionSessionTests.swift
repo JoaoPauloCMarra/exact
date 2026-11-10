@@ -8,7 +8,8 @@ import AppKit
 #if os(macOS)
 /// scripts/fixtures/iframe-partition.contract: a partitioned frame's
 /// `FrameNavigation` records reach its actions through the runner, its
-/// commands reach the frame, and `tree` shows what a person sees of it.
+/// commands reach the frame, and `tree` shows what a person sees of it
+/// (LLP 1020.002 D2, D3, §10).
 final class IframePartitionSessionTests: XCTestCase {
     nonisolated(unsafe) private static var server: FramePages?
 
@@ -73,7 +74,7 @@ final class IframePartitionSessionTests: XCTestCase {
 #if os(macOS)
 /// scripts/fixtures/iframe-windows.contract: a guest's `newwindow` reaches
 /// its frame's action with a `FrameNewWindow`, and a frame that handles it
-/// is told so before its web view is made.
+/// is told so before its web view is made (LLP 1020.002 D5).
 final class IframeWindowsSessionTests: XCTestCase {
     nonisolated(unsafe) private static var server: WindowPages?
 

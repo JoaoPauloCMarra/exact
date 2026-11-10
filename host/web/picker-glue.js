@@ -1,16 +1,16 @@
-// The file picker on the web, loaded on the first
-// `showPicker` or file input `change`. The element is the picker;
+// @ref LLP 1069.002 — the file picker on the web, loaded on the first
+// `showPicker` or file input `change`. The element is the picker (D8);
 // each chosen File becomes an `app:/tmp/picked/…` entry backed by the File
-// itself, described by the browser (pixel size from
+// itself (D5), described by the browser (D3: pixel size from
 // createImageBitmap, which applies EXIF orientation; a video's from its
 // metadata), and delivered as `change` (host kind 26). Under the agent the
-// driver's bytes arrive as Files and take the same path. Also loaded
-// by the first `app:/` source an `image` or `video` shows: `appURL`,
-// and by a `share` with `files=`: `share`.
+// driver's bytes arrive as Files and take the same path (D9). Also loaded
+// by the first `app:/` source an `image` or `video` shows (D7): `appURL`,
+// and by a `share` with `files=` (LLP 1125 D12): `share`.
 const picked = new Map(); // app:/tmp/picked/… → File
-const urls = new Map(); // app:/… → [its object URL, the version it was made from], for `image`/`video`
+const urls = new Map(); // app:/… → [its object URL, the version it was made from], for `image`/`video` (D7)
 let opened; // the app's file store, or null when it has none (a drive without --storage)
-let emptied; // the store once `app:/tmp/picked/` is emptied, at this page's first pick
+let emptied; // the store once `app:/tmp/picked/` is emptied, at this page's first pick (D4)
 
 // The store the app's own sources open (storage-environment.js `storageKey`,
 // the page's launch URL's), so what a pick puts there the data module reads.
@@ -29,7 +29,7 @@ function fileStore(appId) {
   })();
 }
 
-/** An `app:/` source for an `image` or `video`: an object URL for the
+/** An `app:/` source for an `image` or `video` (D7): an object URL for the
  * app's own file — one this page picked, or one in its store (a pick the
  * data module kept in `app:/data`, after a reload too) — or '' when there is
  * none. A file that changed gets a new URL; the last one is revoked. */
@@ -55,7 +55,7 @@ function made(path, blob, version) {
 }
 globalThis.exact.appURL = appURL;
 
-// A bundled page's given files: for a page of the app's origin
+// A bundled page's given files (LLP 1020.001 D7): for a page of the app's origin
 // under its `assets/` or `deck/` (an .html or .htm file), read as the URL parser
 // reads it, each query value that begins `app:/`, decoded as URLSearchParams
 // decodes it; null for any other source. WebModule.swift `givenPaths` reads a
@@ -105,7 +105,7 @@ async function framePage(el, state, appId, given, committed, admit) {
 }
 
 // An iframe owns its URL: changing its source or ending its node releases
-// it without revoking another element's view of the same file.
+// it without revoking another element's view of the same file (LLP 1020 §10).
 // `admit` writes a page's source through the host's own navigation policy
 // (rt.js `navigable`, glue.js `frameURL`), which an `app:/` file's object URL
 // does not need.
@@ -143,7 +143,7 @@ globalThis.exact.picker = function install(host) {
   // load after a restart); each takes its `since()` before its first await.
   let pinned;
   const since = () => { const g = pinned ?? host.generation?.(); return (id, kind, payload) => { if (host.generation?.() === g) host.dispatch(id, kind, payload); }; };
-  // What the last page picked is gone.
+  // What the last page picked is gone (D4).
   const pickStore = () => emptied ??= fileStore(host.appId).then(async s => {
     if (!s) return null;
     await s.rm('app:/tmp/picked').catch(() => {});
@@ -167,7 +167,7 @@ globalThis.exact.picker = function install(host) {
         if (Number.isFinite(video.duration)) size.duration = video.duration;
         URL.revokeObjectURL(url);
       }
-    } catch { /* delivered without the size fields */ }
+    } catch { /* delivered without the size fields (D3) */ }
     return size;
   }
   const clean = (s) => String(s).replace(/[\t\r\n]/g, ' ');
@@ -182,7 +182,7 @@ globalThis.exact.picker = function install(host) {
     }
     dispatch(id, 26, lines.join('\n'));
   }
-  // `saveFile`: the `app:/` file's bytes, from the store,
+  // `saveFile` (LLP 1069.010 D3): the `app:/` file's bytes, from the store,
   // or the `text=` itself, as UTF-8.
   async function appBytes(from, text) {
     if (text != null) return new TextEncoder().encode(text);
@@ -193,7 +193,7 @@ globalThis.exact.picker = function install(host) {
   const saved = (dispatch, view, name) => { host.log('saveFile: saved'); dispatch(view, 1, name); };
   const unsaved = (dispatch, view, line) => { host.log(line); dispatch(view, 27, ''); };
   const api = {
-    /** `saveFile`'s answer `r` from the runner (refused, or present) and, where the browser
+    /** `saveFile`'s ruling `r` (refused, or present) and, where the browser
      * has one, the save picker's pending handle: write the copy there, or
      * download it under the suggested name (Safari, Firefox). */
     async save(r, chosen) {
@@ -225,7 +225,7 @@ globalThis.exact.picker = function install(host) {
       saved(dispatch, r.node, String(path).trim().split(/[\\/]/).filter(Boolean).pop());
       return { bytes: btoa(raw) };
     },
-    /** `share(files=…)`: the share data `data` with each
+    /** `share(files=…)` (LLP 1125 D12): the share data `data` with each
      * `app:/` file the runner allowed (`{path}`) as a File named by its last
      * segment and typed by its extension, to the browser's sheet when
      * `navigator.canShare` takes them. Resolves to the journal line. The
@@ -251,7 +251,7 @@ globalThis.exact.picker = function install(host) {
     cancel: (id) => since()(id, 27, ''),
     appURL: (path) => appURL(path, host.appId),
     appFrame: (el, state, committed, admit) => appFrame(el, state, host.appId, committed, admit),
-    /** The agent's answer: `files` as the driver sent them, or null for `tap @t cancel`. */
+    /** The agent's answer (D9): `files` as the driver sent them, or null for `tap @t cancel`. */
     answer(id, files) {
       const dispatch = since();
       if (!files) { dispatch(id, 27, ''); return Promise.resolve(); }

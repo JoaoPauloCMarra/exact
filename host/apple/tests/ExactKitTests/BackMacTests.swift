@@ -1,6 +1,7 @@
-// Back on the Mac: Go ▸ Back ⌘[, the toolbar's chevron (kept, disabled,
-// at a stack's root) and the swipe, each going the way iOS's Back goes;
-// Forward, and the mouse's back and forward buttons.
+// @ref LLP 1115.000 D5.1 — Back on the Mac: Go ▸ Back ⌘[, the toolbar's
+// chevron (kept, disabled, at a stack's root) and the swipe, each going the
+// way iOS's Back goes; D5.5 — Forward, and the mouse's back and forward
+// buttons.
 #if os(macOS)
 import AppKit
 import XCTest
@@ -238,7 +239,7 @@ final class BackMacTests: XCTestCase {
     }
 
     /// A route that asks for a screen with no bar (`navigationBar="none"`,
-    /// the prop set by hand here) gets no chevron, and
+    /// LLP 1115.000 D5.2; the prop set by hand here) gets no chevron, and
     /// the toolbar the app's other routes have stays, empty, so the title bar
     /// keeps its height. The author hid the bar, not the way back: the
     /// menu's Back and the swipe still go.
@@ -313,7 +314,7 @@ final class BackMacTests: XCTestCase {
         p.apply(wireBatch([["op": "props", "id": 20, "set": [:], "clear": ["accessibilityKeyShortcuts"]]]))
         XCTAssertFalse(back.isHidden)
         XCTAssertEqual(back.keyEquivalent, "[")
-        // `-exact-menu-remove="back forward"` takes Back and Forward and their chords, and Go with them.
+        // `-exact-menu-remove="back forward"` takes Back and Forward and their chords (LLP 1021 §5.3.1), and Go with them.
         p.apply(wireBatch([["op": "props", "id": 1, "set": ["menuRemove": "back forward"]]]))
         XCTAssertTrue(p.navigation.canGoBack)
         XCTAssertTrue(back.isHidden)
@@ -390,7 +391,8 @@ final class BackMacTests: XCTestCase {
     }
 
     /// AppKit's button numbers as DOM's (UI Events): left, right, middle,
-    /// back, forward are `button` 0, 2, 1, 3, 4 and `buttons` 1, 2, 4, 8, 16.
+    /// back, forward are `button` 0, 2, 1, 3, 4 and `buttons` 1, 2, 4, 8, 16
+    /// (LLP 1115.000 D5.5).
     func testAppKitsButtonsAreDOMsNumbers() {
         XCTAssertEqual((0...4).map(NodeView.domButton), [0, 2, 1, 3, 4])
         XCTAssertEqual((0...4).map(NodeView.domButtons), [1, 2, 4, 8, 16])
@@ -441,7 +443,7 @@ final class BackMacTests: XCTestCase {
 
 /// The same ways back over a real session: a route of the router that
 /// declares no Back control goes back by the root's `navigate`, or by the
-/// runner's own `back` where the root has no handler.
+/// runner's own `back` where the root has no handler (LLP 1115 D5).
 final class BackSessionMacTests: XCTestCase {
     private func plan(_ source: String) throws -> Data {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -565,7 +567,7 @@ final class BackSessionMacTests: XCTestCase {
         }
     }
 
-    /// Forward goes where Back left, by Go ▸ Forward ⌘],
+    /// LLP 1115.000 D5.5: Forward goes where Back left, by Go ▸ Forward ⌘],
     /// the two-finger swipe the other way, and the mouse's forward button;
     /// the mouse's back button goes Back. Each button steps at its release,
     /// a turn after its `pointerup`, which hears DOM's numbers (button 3 and
@@ -664,7 +666,7 @@ final class BackSessionMacTests: XCTestCase {
         }
     }
 
-    /// A navigation root that shows no route of its own
+    /// LLP 1115.000 D5.5: a navigation root that shows no route of its own
     /// (one view that follows the router) and hears `navigate` steps the
     /// router's visits: Back while a visit is beneath the top, Forward while
     /// something is ahead, each delivered to `navigate`. Without `navigate`

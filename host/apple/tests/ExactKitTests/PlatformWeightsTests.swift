@@ -1,4 +1,4 @@
-// CSS `font-weight` on a platform face is UIKit's (AppKit's)
+// LLP 1019 §13 D11: CSS `font-weight` on a platform face is UIKit's (AppKit's)
 // named instance at each hundred and the `wght` axis between them.
 import XCTest
 import CoreText

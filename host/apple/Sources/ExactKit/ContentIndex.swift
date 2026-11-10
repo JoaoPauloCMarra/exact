@@ -1,4 +1,4 @@
-// The content index's mirror and Spotlight.
+// The content index's mirror and Spotlight (LLP 1133.023 D4, D9, D15 item 2).
 //
 // The mirror is what the app set, kept in its container: Spotlight's index
 // cannot be read back, and the system asks the app to index everything again
@@ -25,7 +25,7 @@ import UniformTypeIdentifiers
 #endif
 
 public enum ExactContentIndex {
-    /// The limits: past them a change refuses `QuotaExceededError`.
+    /// D4's limits: past them a change refuses `QuotaExceededError`.
     static let most = 5_000, textBytes = 1_024
     private struct Mirror: Codable {
         var entries: [[String: JSONValue]] = []
@@ -82,7 +82,7 @@ public enum ExactContentIndex {
         if let data = try? JSONEncoder().encode(m) { try? data.write(to: file, options: .atomic) }
     }
 
-    /// An entry's identity: its kind and its id.
+    /// An entry's identity: its kind and its id (D2).
     static func key(_ e: [String: JSONValue]) -> String { "\(e["kind"]?.string ?? ""):\(e["id"]?.string ?? "")" }
 
     private static func refusal(_ entries: [[String: JSONValue]]) -> String? {
@@ -132,7 +132,7 @@ public enum ExactContentIndex {
 
     /// The mirror's entries of `kind` by id, or matching `text` in the title
     /// or description (case- and diacritic-insensitive, in the person's
-    /// locale), or all of them in the app's order.
+    /// locale), or all of them in the app's order (D9).
     static func query(kind: String, ids: [String]?, matching text: String?) -> [[String: Any]] {
         let ofKind = load().entries.filter { $0["kind"]?.string == kind }
         var found = ofKind
@@ -154,7 +154,7 @@ public enum ExactContentIndex {
     }
 
     /// Open an entry's location in the app's session: a launch location
-    /// before its boot, a navigation after.
+    /// before its boot, a navigation after (LLP 1133.023 D1).
     public static func open(_ url: String) {
         guard let session = ExactApp.shared.sessions.first(where: { $0.state != .destroyed }) else { return }
         _ = session.openLocation(url)
@@ -163,7 +163,7 @@ public enum ExactContentIndex {
     // MARK: Spotlight
 
     #if canImport(CoreSpotlight) && !os(tvOS)
-    /// One index named for the app, readable after the first unlock as the app's files are.
+    /// One index named for the app, readable after the first unlock as the app's files are (D4).
     static let index = CSSearchableIndex(name: Bundle.main.bundleIdentifier ?? "app", protectionClass: .completeUntilFirstUserAuthentication)
 
     private static func item(_ e: [String: JSONValue]) -> CSSearchableItem {
@@ -175,7 +175,7 @@ public enum ExactContentIndex {
             if case .number(let rating)? = apple["rating"] { attributes.rating = NSNumber(value: rating) }
         }
         let item = CSSearchableItem(uniqueIdentifier: key(e), domainIdentifier: e["kind"]?.string, attributeSet: attributes)
-        // An entry ends when the app removes it, not when the system expires it.
+        // An entry ends when the app removes it, not when the system expires it (D4).
         item.expirationDate = .distantFuture
         return item
     }
@@ -218,7 +218,7 @@ public enum ExactContentIndex {
         tell(changed: m.pending.compactMap { byKey[$0] }, gone: m.pending.filter { byKey[$0] == nil })
     }
 
-    /// The system lost the index, or some items: the mirror again.
+    /// The system lost the index, or some items: the mirror again (D4).
     final class Reindexer: NSObject, CSSearchableIndexDelegate {
         static let shared = Reindexer()
         /// What the system asked, for a person checking it on a device (`packages/search-index/test/checklist.md`).
@@ -251,8 +251,8 @@ public enum ExactContentIndex {
     public static func location(of activity: NSUserActivity) -> String? { nil }
     #endif
 
-    /// App Shortcuts whose phrases name a parameter learn the index's values,
-    /// through the generated module's hooks when it has any.
+    /// App Shortcuts whose phrases name a parameter learn the index's values
+    /// (D9), through the generated module's hooks when it has any.
     private static func parametersChanged() {
         guard let hooks = NSClassFromString("ExactIntentsHooks") as? NSObject.Type else { return }
         _ = hooks.perform(NSSelectorFromString("parametersChanged"))

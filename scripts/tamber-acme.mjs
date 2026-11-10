@@ -1,11 +1,13 @@
-// A relay session's certificate by ACME: one wildcard a relay account
-// (`*.<acct>.<relay>`), by DNS-01, its key made here and never sent anywhere, kept with the account's key under
+// A relay session's certificate by ACME (LLP 1121 §5 stage 10c R2; rt1's
+// plan, ~/x2theme/rt1-s10c-plan.md, theme2's 20:45 approval): one wildcard
+// a relay account (`*.<acct>.<relay>`), by DNS-01, its key made here and
+// never sent anywhere, kept with the account's key under
 // `~/.exact/relay/<acct>/` (0600), got again 30 days before it ends (Let's
 // Encrypt's are 90: renewed at 60). The challenge's TXT record is
 // published by whoever answers for the name: the relay, only under the
-// connector's own account; or, with a domain of the
+// connector's own account (R3's rule); or, with a domain of the
 // developer's own, their DNS, by a command of theirs run here, so their
-// credentials never pass through the relay.
+// credentials never pass through the relay (theme2's condition 2).
 // RFC 8555, as much of it as one order needs.
 
 import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, randomBytes, sign, X509Certificate } from 'node:crypto';

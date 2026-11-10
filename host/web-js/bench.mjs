@@ -1,4 +1,4 @@
-// The RealWorld bench, for any build: headless
+// The RealWorld bench, LLP 1047.000 §1's method, for any build: headless
 // Chrome, a fresh profile per run (cold cache), the mobile profile (150 ms
 // RTT, 1.6 Mbps down, 750 kbps up, 4× CPU). Four measurements, medians:
 //   content   — content painted at `/` (the first preview on screen), with FCP;
@@ -8,7 +8,7 @@
 //               (RealWorld: the sign-in form's submit, on `/login`);
 // and the bytes the page's origin sent before each finished (and in all).
 //
-//   CHROME=<path to Chrome for Testing> bun host/web-js/bench.mjs <name>=<url> … [--runs 5] [--profile mobile|none] [--config targets.json] [--json out.json]
+//   bun host/web-js/bench.mjs <name>=<url> … [--runs 5] [--profile mobile|none] [--config targets.json] [--json out.json]
 //
 // A target's selectors default to RealWorld on exact (this repo's testIds);
 // a `--config` file overrides them per name, for the React builds:
@@ -23,10 +23,7 @@ const opt = (n, d) => { const i = args.indexOf(n); return i < 0 ? d : args[i + 1
 const runs = Number(opt('--runs', 5)), profile = opt('--profile', 'mobile');
 const config = opt('--config') ? JSON.parse(readFileSync(opt('--config'), 'utf8')) : {};
 const targets = args.filter((a, i) => a.includes('=') && !args[i - 1]?.startsWith('--')).map(a => { const [name, ...u] = a.split('='); return { name, url: u.join('=') }; });
-// The Chrome binary to drive: `CHROME`, e.g. a Chrome for Testing install's
-// `…/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing`.
-const CHROME = process.env.CHROME;
-if (!CHROME) { console.error('bench: set CHROME to the Chrome binary to drive'); process.exit(2); }
+const CHROME = process.env.CHROME ?? '/Users/admin/.cache/chrome-for-testing/chrome/mac_arm-154.0.8037.57/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
 const EXACT = {
   content: '[data-testid^="preview-"]',
   tag: '[data-testid="tags"] a[href^="/tag/"], a[data-testid^="tag-"]',

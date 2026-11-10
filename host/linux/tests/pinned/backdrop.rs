@@ -1,4 +1,4 @@
-//! CSS backdrop blur and saturation held to Chrome's pixels. The
+//! LLP 1053.000: CSS backdrop blur and saturation held to Chrome's pixels. The
 //! page is `scripts/fixtures/backdrop.contract`; Chrome's picture of it (the
 //! web host at 1×) is `backdrop.web.png`. Each glass box is compared within
 //! the border parity's band, on both painters.

@@ -1,4 +1,4 @@
-//! CSS colour values: CSS Color 4 and CSS Color HDR's
+//! CSS colour values (LLP 1100 D1, D2): CSS Color 4 and CSS Color HDR's
 //! forms, their arithmetic and serialisation. Legacy forms parse to
 //! [`Rgba8`]; the rest keep their space ([`Wide`]). No ICC conversion.
 //!
@@ -741,7 +741,7 @@ pub(crate) fn xyz65_to_d50(v: [f64; 3]) -> [f64; 3] {
     mul(&D65_TO_D50, v)
 }
 
-/// XYZ to an RGB space's linear components.
+/// XYZ (D65) to an RGB space's linear components.
 pub(crate) fn from_xyz65(space: Space, xyz: [f64; 3]) -> [f64; 3] {
     match space {
         Space::DisplayP3 | Space::DisplayP3Linear => mul(&inv3(&P3_TO_XYZ), xyz),
@@ -820,8 +820,8 @@ fn inv3(m: &M3) -> M3 {
     ]
 }
 
-/// Standard spaces the platforms ship but CSS doesn't predefine: the dashed
-/// name, Apple's `CGColorSpace` name, the component count.
+/// Standard spaces the platforms ship but CSS doesn't predefine (LLP 1100
+/// D1): the dashed name, Apple's `CGColorSpace` name, the component count.
 pub const PROFILES: [(&str, &str, usize); 12] = [
     ("--dci-p3", "kCGColorSpaceDCIP3", 3),
     ("--rec709", "kCGColorSpaceITUR_709", 3),

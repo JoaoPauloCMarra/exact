@@ -36,7 +36,7 @@ final class TextInputFormatter: Formatter {
     required init?(coder: NSCoder) { super.init(coder: coder) }
     override func string(for obj: Any?) -> String? { obj as? String }
     // The formatter otherwise turns attributedStringValue back into plain
-    // text, dropping the native field's authored kern.
+    // text, dropping the native field's authored kern (LLP 1104 D3).
     override func attributedString(for obj: Any, withDefaultAttributes attrs: [NSAttributedString.Key: Any]? = nil) -> NSAttributedString? {
         guard let owner, owner.isNativeTextControl, let value = string(for: obj) else { return nil }
         return NSAttributedString(string: value, attributes: (attrs ?? [:]).merging(owner.fieldTextAttributes) { _, authored in authored })

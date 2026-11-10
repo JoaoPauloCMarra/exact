@@ -1,4 +1,4 @@
-// `wakelock="screen"` on the web, wakelock-glue.js in a real
+// `wakelock="screen"` on the web (LLP 1125 D11), wakelock-glue.js in a real
 // browser over a stand-in `navigator.wakeLock` that counts what it is asked:
 // the holders are the displayed elements that say `screen` (not under a
 // route or tab the navigation hides, nor an exit animation's ghost); the

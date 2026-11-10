@@ -1,4 +1,4 @@
-//! Press paint on the Linux host (and so on Android's and Windows's, which
+//! LLP 1061 D7 on the Linux host (and so on Android's and Windows's, which
 //! paint through this presenter): a contact holding a node shows its
 //! pressed paint, eased on the press's curve, and lets it go when it leaves
 //! or lifts; the press colour reaches the text that takes the node's colour,
@@ -101,8 +101,8 @@ fn a_held_contact_shows_the_pressed_paint_and_lets_it_go() {
     assert!(!p.host.motion(), "the paint needs no more frames");
 }
 
-/// Under the agent's clock the paint lands at once both ways: a
-/// read between `tap X down` and `tap up` sees it held.
+/// Under the agent's clock the paint lands at once both ways (LLP 1061
+/// D2): a read between `tap X down` and `tap up` sees it held.
 #[test]
 fn the_agents_contact_shows_the_paint_at_once() {
     let mut p = boot();
@@ -126,7 +126,7 @@ fn the_agents_contact_shows_the_paint_at_once() {
     assert!(!p.host.motion());
 }
 
-/// A platform field's text is its own colour, else FieldText;
+/// LLP 1115 D4: a platform field's text is its own colour, else FieldText;
 /// a pressed ancestor's press colour does not reach it, as its `color`
 /// doesn't. A field of the author's own (`appearance="none"`) takes it.
 #[test]
@@ -170,7 +170,7 @@ fn a_pressed_ancestor_leaves_a_native_fields_ink() {
     assert!(!reddened(&mut p, native), "a native field keeps its ink");
 }
 
-/// An ancestor's moving colour stops at a
+/// LLP 1104 D4, LLP 1115 D4: an ancestor's moving colour stops at a
 /// platform field as its colour does; a field of the author's own takes it.
 #[test]
 fn an_ancestors_moving_colour_stops_at_a_native_field() {

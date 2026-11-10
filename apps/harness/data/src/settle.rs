@@ -1,4 +1,4 @@
-//! A streaming reply settled block by block. The reply's
+//! A streaming reply settled block by block (LLP 1101.001 P1). The reply's
 //! text grows by tokens; a top-level block is finished once a later block
 //! has begun and no fence or list is still open, and from then on it never
 //! changes. Only the unfinished tail is parsed again per token.

@@ -326,9 +326,9 @@ fn malformed_live_terminal_does_not_consume_contact_or_clock() {
     assert!(p.pointer_up(106., 86., 30.).unwrap());
     assert_eq!(text(&p, "count"), "1");
 }
-/// `translate` in percentages of the box paints, hits and
+/// Chess diary #4: `translate` in percentages of the box paints, hits and
 /// measures where CSS puts it — a dialog centred by `-50% -50%` — and
-/// `frame()` is that box, as `getBoundingClientRect`.
+/// `frame()` is that box, as `getBoundingClientRect` (LLP 1051.000 D1).
 #[test]
 fn a_box_centred_by_translate_percentages_is_hit_and_framed_where_it_paints() {
     let mut p = boot(

@@ -48,8 +48,8 @@ internal class Pane(
     /** When the touch that opened the surface lifted ([SystemClock.uptimeMillis]). */
     var since = 0L
     private var drawn = 0L
-    /** What this pane answers accessibility services with, where it is a surface's window ([Access]): the surface's own
-     * nodes. A bar's pane has none, and says nothing itself: the reader's root answers for
+    /** What this pane answers accessibility services with, where it is a surface's window ([Access], LLP 1115.001
+     * D13): the surface's own nodes. A bar's pane has none, and says nothing itself: the reader's root answers for
      * what is in it. */
     var access: Access? = null
 
@@ -116,7 +116,7 @@ internal class Pane(
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         val tell = key ?: return super.onKeyDown(keyCode, event)
         val key = when (keyCode) {
-            // A held Select or Enter chooses once.
+            // A held Select or Enter chooses once (LLP 1115.001.003 D3).
             KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER, KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_BUTTON_SELECT ->
                 if (event.repeatCount > 0) return true else Surfaces.ENTER
             KeyEvent.KEYCODE_TAB -> if (event.isShiftPressed) Surfaces.TAB_BACK else Surfaces.TAB
@@ -132,7 +132,7 @@ internal class Pane(
 }
 
 /**
- * The top layer's windows. A confirmation and a menu are windows of the platform's own, not a
+ * The top layer's windows (LLP 1115.001 D10). A confirmation and a menu are windows of the platform's own, not a
  * layer painted in the page: an alert is a [Dialog] and a menu a [PopupWindow], the framework's classes and no
  * library. What a window gives is the system's: it stacks above the page and every view the page hosts (a text
  * field, a web view) with nothing arranged here; a dialog's scrim is the window manager's dim, which covers the
@@ -170,7 +170,7 @@ internal class Surfaces(private val activity: ExactActivity, private val root: V
     }
 
     private var shown: Shown? = null
-    /** exact2's accessibility tree while it is a surface's ([Access.Told]): the one that is open,
+    /** exact2's accessibility tree while it is a surface's ([Access.Told], LLP 1115.001 D13): the one that is open,
      * or one whose window is about to be made (the tree comes with the stream, the window's request after it). */
     private var tree: Access.Told? = null
 
@@ -246,7 +246,7 @@ internal class Surfaces(private val activity: ExactActivity, private val root: V
                     // Material's scrim: 32% over everything behind the dialog, the system bars included.
                     window.setDimAmount(SCRIM)
                 }
-                // An alert has no outside unless its author wrote one (`closedby="any"`): exact2
+                // An alert has no outside unless its author wrote one (`closedby="any"`, LLP 1115.000 D13.4): exact2
                 // says which, as it does for a menu. Back and Escape cancel it where exact2 says they may.
                 dialog.setCancelable(flags and BACK_DISMISSES != 0)
                 dialog.setCanceledOnTouchOutside(flags and OUTSIDE_DISMISSES != 0)

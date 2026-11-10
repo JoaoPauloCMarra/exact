@@ -1,6 +1,6 @@
 //! A store reader that failed is asked again when a reply's turn writes the
-//! store, as a browser's continuation writes it outside every commit.
-//! A write an action makes in its commit leaves the failure
+//! store, as a browser's continuation writes it outside every commit (LLP
+//! 1146 §2.3). A write an action makes in its commit leaves the failure
 //! standing, on every host.
 use exact_kernel::Kernel;
 use exact_plan::Value;
@@ -156,8 +156,8 @@ fn row(n: f64) -> Value {
     Value::record(vec![Value::Number(n)])
 }
 
-/// A reply with effects whose commit is refused keeps what its turn wrote,
-/// and that write asks a failed store reader again too.
+/// A reply with effects whose commit is refused keeps what its turn wrote
+/// (LLP 1146 D2), and that write asks a failed store reader again too.
 #[test]
 fn a_refused_reply_s_kept_write_asks_a_failed_store_reader_again() {
     let source = Source {
@@ -249,7 +249,7 @@ impl DataSource for Picky {
 }
 
 /// A reconciling ask that reads the store and fails at once leaves a failed
-/// store reader, which a reply's write asks again.
+/// store reader, which a reply's write asks again (LLP 1146 §2.3).
 #[test]
 fn a_reconciling_ask_that_read_the_store_and_failed_is_asked_again() {
     let plan = contract::compile(RECONCILING).unwrap();

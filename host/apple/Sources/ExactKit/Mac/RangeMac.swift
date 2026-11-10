@@ -1,9 +1,9 @@
-// `input type="range"` is an `NSSlider`: HTML's
+// @ref LLP 1069.001 D5 — `input type="range"` is an `NSSlider`: HTML's
 // `input` as the knob moves, `change` as the mouse lifts, each value clamped
 // and snapped to `step` as HTML sanitizes it, and the knob with it. The bound
 // value is written into it when it changes, as the web build writes an
 // input's `value`: an action that has not written it leaves the knob where
-// the person put it.
+// the person put it (LLP 1069.001 D4, amended 2026-10-04).
 #if os(macOS)
 import AppKit
 
@@ -48,7 +48,7 @@ extension ControlHost {
         }
     }
 
-    /// The agent's `type <range> <n>`: the value a drag released
+    /// The agent's `type <range> <n>` (D9): the value a drag released
     /// there reports, `input` then `change`.
     func typeRange(_ slider: NSSlider, _ node: NodeView, _ text: String) -> [String: Any] {
         guard let n = Double(text.trimmingCharacters(in: .whitespaces)), n.isFinite else { return ["error": "\"\(text)\" is not a number"] }
@@ -62,7 +62,7 @@ extension ControlHost {
 }
 
 /// A range's slider, AppKit's own, but for a Control-click its node's
-/// `contextmenu` answers (`contextClicked`).
+/// `contextmenu` answers (X85, `contextClicked`).
 final class SliderMac: NSSlider {
     override class var cellClass: AnyClass? { get { SliderCellMac.self } set {} }
     override func accessibilityAttributeValue(_ attribute: NSAccessibility.Attribute) -> Any? {

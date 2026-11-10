@@ -1,4 +1,4 @@
-//! CSS `backdrop-filter` on the CPU painter: the
+//! CSS `backdrop-filter` on the CPU painter (LLP 1053.000 D2): the
 //! pixels already painted under the border box — in the current layer, so
 //! an opacity group is its own backdrop root, as CSS's is — filtered by the
 //! shared rasterizer's blur and saturation, then put back inside the box, under

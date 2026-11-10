@@ -1,14 +1,14 @@
-//! A component's anatomy: each part a node of its own view, named once and
-//! declared, its groups the table's, the rows a class brings it in its
-//! groups (every branch, every state layer), a native control's part the
-//! `control` group alone. Every
-//! component here is written through [`spell`], since the spelling may still
-//! change: a change of spelling changes that one function.
+//! @ref LLP 1139 D2, D6 (stage 12 C1) — a component's anatomy: each part a
+//! node of its own view, named once and declared, its groups the table's,
+//! the rows a class brings it in its groups (every branch, every state
+//! layer), a native control's part the `control` group alone. Every
+//! component here is written through [`spell`], r6's spelling (LLP 1139 §9
+//! Q7 is open): a change of spelling changes that one function.
 
 use contract::CompileError;
 use std::path::Path;
 
-/// A component in the anatomy spelling: a `parts` section of `name: groups` lines
+/// A component in r6's spelling: a `parts` section of `name: groups` lines
 /// before its view, and `part="name"` written by the view itself.
 fn spell(head: &str, parts: &[(&str, &str)], view: &str) -> String {
     let mut s = format!("component App\n{head}");
@@ -249,7 +249,7 @@ fn a_native_controls_part_is_the_control_group_alone() {
     assert!(with(&src, id).is_empty(), "{:?}", with(&src, id));
 }
 
-/// The Tamber IR file's `library` block, each component that
+/// LLP 1139 D5: the Tamber IR file's `library` block, each component that
 /// names parts with its parts (groups, and the slot's holder) and its
 /// variant props (an enum or bool a class condition or a row's `?:` reads).
 #[test]
@@ -281,7 +281,7 @@ fn the_ir_lists_parts_slot_and_variants() {
                 {"prop": "tone", "options": ["plain", "quiet"]},
                 {"prop": "dense", "options": ["false", "true"]},
             ],
-            // No library's: no slot chain recorded.
+            // No library's (C2, LLP 1139 D0): no slot chain recorded.
             "library": false,
             "chain": [],
         }]),
@@ -289,7 +289,7 @@ fn the_ir_lists_parts_slot_and_variants() {
     );
 }
 
-/// A native button's `control` part is refused
+/// Round 1 (Astra, Grok): a native button's `control` part is refused
 /// wherever lowering would demote the button to a bare box, by a row's
 /// value too; a class row the node sets itself never reaches it; a node is
 /// one part; and an anatomy refusal is said beside an unrelated type error.
@@ -350,7 +350,7 @@ fn round_1_edges() {
     assert_eq!(contract_syntax::fmt::format(&src).unwrap(), src);
 }
 
-/// A variant is an enum or bool prop a `class` or a
+/// Round 1 (Astra, Grok): a variant is an enum or bool prop a `class` or a
 /// style row's `?:` or `match` reads, anywhere in it (an arm too), not one
 /// another attribute reads, nor a name a `for` binds over a prop's.
 #[test]
@@ -377,7 +377,7 @@ fn variants_are_read_by_classes_and_rows() {
     assert_eq!(props, ["tone", "active"], "{ir}");
 }
 
-/// A `control` button is judged where lowering
+/// Round 2 (Astra, Grok): a `control` button is judged where lowering
 /// draws it, in its instance's context (inside a grouped `list` it is a
 /// row, a bare box), and after the keyframes its animation names exist; a
 /// name a `match` arm binds in a row is no variant.
@@ -428,7 +428,7 @@ fn a_match_arms_binding_is_no_variant() {
     assert!(!props.contains(&"dense"), "{ir}");
 }
 
-/// A node's shorthand overrides its class's longhands
+/// Round 3 (Astra): a node's shorthand overrides its class's longhands
 /// (and the reverse) in the same layer; a button no group names `control`
 /// and no `appearance="auto"` says native is the authored pressable, which
 /// takes the paint groups.
@@ -460,7 +460,7 @@ fn round_3_edges() {
     );
 }
 
-/// A default button the platform draws as
+/// Re-check after round 3 (Astra): a default button the platform draws as
 /// its own, named for the paint groups, is refused where lowering decides
 /// it; with `appearance="none"` it is the authored pressable.
 #[test]
@@ -488,8 +488,8 @@ fn a_native_buttons_part_is_control_where_lowering_draws_it() {
     );
 }
 
-/// For a selection report, the source map names the part each node is,
-/// since `part=` reaches no plan or host.
+/// LLP 1139 D5, for stage D's selection report (rt1): the source map names
+/// the part each node is, since `part=` reaches no plan or host.
 #[test]
 fn the_source_map_names_a_nodes_part() {
     let src = STYLES.to_string()

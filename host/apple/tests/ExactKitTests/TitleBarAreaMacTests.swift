@@ -142,7 +142,7 @@ final class TitleBarAreaMacTests: XCTestCase {
         NotificationCenter.default.post(name: NSWindow.didExitFullScreenNotification, object: window)
         XCTAssertEqual(session.presenter.titlebarArea, [x, 0, 900 - x, band.frame.height])
 
-        // A toolbar fills the title bar: zero too
+        // A toolbar fills the title bar (LLP 1115.002 D2): zero too
         window.toolbar = NSToolbar(identifier: "titlebar-area")
         view.syncInsets()
         XCTAssertEqual(session.presenter.titlebarArea, [0, 0, 0, 0])
@@ -150,7 +150,7 @@ final class TitleBarAreaMacTests: XCTestCase {
         view.syncInsets()
         XCTAssertEqual(session.presenter.titlebarArea, [x, 0, 900 - x, band.frame.height])
 
-        // `window-controls-overlay`'s empty unified toolbar: the
+        // `window-controls-overlay`'s empty unified toolbar (LLP 1039 D8): the
         // area is its taller band beside the traffic lights, and the display
         // mode is the overlay's
         let bare = band.frame.height

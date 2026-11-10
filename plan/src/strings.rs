@@ -1,4 +1,4 @@
-//! Localized texts: the tables `t(...)` reads, the chain that
+//! Localized texts (LLP 1060): the tables `t(...)` reads, the chain that
 //! picks a table for the viewer, and the one placeholder grammar the
 //! compiler checks and the runner fills.
 

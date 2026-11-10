@@ -65,7 +65,7 @@ test('a symbol is decorative unless its author named it', async () => {
   expect(named.getAttribute('alt')).toBe('Add a stop');
 });
 
-// Under `fill`, CSS's initial `object-fit`, a symbol keeps its
+// LLP 1011 §4: under `fill`, CSS's initial `object-fit`, a symbol keeps its
 // aspect in a box of another shape, as on the Apple hosts; `none` draws it at
 // its size.
 test('a symbol keeps its aspect under object-fit: fill', async () => {
@@ -182,9 +182,9 @@ test('symbol axes follow the current projected title and root font without anoth
 }, 30000);
 
 
-// Under a bound `color` the JS target decides after
+// LLP 1121 stage 9 B (D10): under a bound `color` the JS target decides after
 // each commit whether a symbol draws in its colour (style.rs `symbol_marks`,
-// symbols.js `inked`). Every page symbol
+// symbols.js `inked`). Since LLP 1081 stage 2 (317ddfea6a) every page symbol
 // draws in its `color`, as the Apple hosts do, written or not: a conditional
 // colour that goes leaves the colour past it, one that comes back takes it again.
 test('a symbol under a bound colour follows whether it has a value', async () => {
@@ -285,7 +285,7 @@ test('a symbol on a button follows its title across a colour scheme change', asy
 
 // The same with the app's modes on (modes.js): a mode boundary (`data-x-b`) under a
 // token colour writes it again as its implied row, no author's, and a symbol under it
-// draws in that colour, as does one under a boundary whose own bound
+// draws in that colour (LLP 1081 stage 2), as does one under a boundary whose own bound
 // colour clears (the implied row stands there, as the runner installs it). The parent's
 // own colour differs from the mode's row, so inheritance alone would show blue. A bound colour on a boundary
 // (`Sx`) otherwise keeps its binding's provenance (`$ink`, rows.rs), not what the
@@ -335,7 +335,7 @@ test('a symbol under a mode boundary follows its implied row and its binding', a
     // Each symbol's ink, and the colour it would take (its own `color`).
     const ink = () => page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(() => done(Object.fromEntries(['beside', 'under', 'cleared', 'alone']
       .map(id => { const s = getComputedStyle(document.getElementById(id)); return [id, s.backgroundColor === s.color ? 'colour' : s.backgroundColor]; })))))));
-    // Every symbol draws in its `color`: what the binding and the implied
+    // Every symbol draws in its `color` since LLP 1081 stage 2 (317ddfea6a): what the binding and the implied
     // row decide is that colour, read below.
     const all = { beside: 'colour', under: 'colour', cleared: 'colour', alone: 'colour' };
     const colour = id => page.evaluate(id => getComputedStyle(document.getElementById(id)).color, id);

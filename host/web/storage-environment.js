@@ -1,19 +1,19 @@
 // A module realm's environment, captured before a module Worker hardens its
 // globals: storage's synchronous namespace and host clock, and under the
 // agent its repeatable random stream. The I/O adapters load on first use.
-const AGENT_ADMITTED = true; // false in a production bake: host/web/build.mjs rewrites this line
+const AGENT_ADMITTED = true; // false in a production bake: host/web/build.mjs rewrites this line (LLP 1069.007 D2)
 export const directories = Object.freeze({ data: 'app:/data', cache: 'app:/cache', temporary: 'app:/tmp' });
 export const now = Date.now.bind(Date);
 // The URL the page was opened at, which names a drive and its scratch store:
 // an app's router rewrites `location` as it navigates (the drive's `?agent&…`
 // goes with it), the document's navigation entry keeps it. A page that opens
-// its store, or a picker its own, after a navigation opens the same one.
-// A worker has no entry and is handed its key.
+// its store, or a picker its own, after a navigation opens the same one
+// (recipes F9). A worker has no entry and is handed its key.
 export const launchHref = () => globalThis.performance?.getEntriesByType?.('navigation')[0]?.name ?? location.href;
 // A development build's app directory, as twelve hex digits (scripts/agent-launch.mjs
 // `appDigest`): host/web-js/build.mjs writes it; a release (`--production`) leaves it
 // null. Every app the dev server serves shares its origin (127.0.0.1:8765), so a
-// development store is the app's id's and its directory's.
+// development store is the app's id's and its directory's (LLP 1116.004 D8).
 const DEVELOPMENT_STORE = null;
 // Whose store a page opens: the app's, or for a scripted drive (`?agent`) only
 // a scratch store the drive names (`&storage=<name>`, `agent.mjs --storage`),
@@ -26,7 +26,7 @@ export function storageKey(appId, href = launchHref()) {
   return `${own}/agent/${name}`;
 }
 export const agentStorageRefusal = 'storage is unavailable in agent mode unless the drive names a scratch store (--storage <name>)';
-// A read in a drive with no scratch store answers as an empty store would: the roots, empty, and
+// A read in a drive with no scratch store answers as an empty store would (LLP 1102 §3.17): the roots, empty, and
 // nothing else, so a source that falls back on ENOENT (its first launch) does so; a write is refused (`agent`).
 // js/src/prelude.js answers the same on native.
 export const agentReads = ['readFile', 'readdir', 'stat', 'realpath'];
@@ -35,7 +35,7 @@ export function emptyRead(op, path) {
   throw Object.assign(new Error(`filesystem: no such file or directory: ${path} (a drive that names no scratch store reads an empty one; --storage <name> names one)`), { kind: 'Unavailable', code: 'ENOENT' });
 }
 
-// The launch seed a drive names (`&seed=`, default
+// @ref LLP 1069.005 D2b — the launch seed a drive names (`&seed=`, default
 // 1, as `exactTime().seed` reads it), or null outside the agent. Only a
 // loopback page: a link that adds `?agent` to a deployed page must not make
 // its PKCE verifiers predictable.
@@ -82,7 +82,7 @@ export function agentStream(seed, label) {
   };
 }
 
-// "Keep this key" on the web: the CryptoKeyPair
+// @ref LLP 1069.005 D1b — "keep this key" on the web: the CryptoKeyPair
 // itself (its private key non-extractable, so its bytes never reach script)
 // in the realm's IndexedDB, under a handle `secret.keep` holds. `name` is
 // storageKey's: the app's, a drive's scratch store, or null for a drive

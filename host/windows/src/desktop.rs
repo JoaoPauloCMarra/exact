@@ -1,12 +1,12 @@
-//! The desktop modules' host services on Windows
-//! (`exact_linux::desktop`): hot keys by `RegisterHotKey`, attention by
+//! The desktop modules' host services on Windows (LLP 1133.025 D11 item 2,
+//! `exact_linux::desktop`): hot keys by `RegisterHotKey`, attention by
 //! `FlashWindowEx`, and the login item as a development build's `Run` value.
 //!
 //! - **Hot keys** are registered with a null window, so `WM_HOTKEY` is
 //!   posted to the thread's queue, where the event loop's message hook
 //!   hears it ([RegisterHotKey](https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-registerhotkey)).
 //!   One registration per chord serves every reader of it; a press raises
-//!   each reader's event as an activation. `MOD_NOREPEAT`
+//!   each reader's event as an activation (D11 item 3). `MOD_NOREPEAT`
 //!   keeps a held chord to one press. A modifier pair needs a low-level
 //!   keyboard hook, which is not built: it answers `not-allowed`.
 //! - **Attention** flashes the taskbar button until the window comes to
@@ -405,8 +405,8 @@ mod tests {
 
     #[test]
     fn the_run_value_carries_the_login_launch() {
-        let value = run_value(r"C:\Apps\Shelf.exe", true);
-        assert_eq!(value, r#""C:\Apps\Shelf.exe" --login hidden"#);
+        let value = run_value(r"C:\Apps\Excord.exe", true);
+        assert_eq!(value, r#""C:\Apps\Excord.exe" --login hidden"#);
         let args: Vec<String> = value.split(' ').map(str::to_owned).collect();
         assert_eq!(login_launch(&args), Some(true));
         assert_eq!(login_launch(&["x".into(), "--login".into()]), Some(false));

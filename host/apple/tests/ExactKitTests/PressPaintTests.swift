@@ -7,7 +7,7 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// The author's pressed paint on UIKit and AppKit: while a
+/// The author's pressed paint (LLP 1061 D7) on UIKit and AppKit: while a
 /// node is pressed it shows its `press_opacity` as an additive fade, its
 /// `press_background_color` in place of its own, and its `press_color` as
 /// the text colour of its subtree (not of a text with a colour of its own);
@@ -177,7 +177,8 @@ final class PressPaintTests: XCTestCase {
     /// An ancestor's quick release (it waits out `PressFeedback.unseen`), with
     /// a descendant pressed inside that wait: the release gives back only the
     /// text colour it lent, not the descendant's own press, which holds while
-    /// it is down, nor a label the descendant's own press colours now.
+    /// it is down, nor a label the descendant's own press colours now (LLP
+    /// 1061 D7, stage 9 G4).
     private func pressedInsideTheWait(_ inner: [String: Any]) throws -> (Presenter, NodeView, NodeView, NodeView) {
         try XCTSkipIf(ExactEnv.agentFreezes, "the agent's frozen clock lets a press go at once")
         let (p, v) = try fixture(["press_background_color": navy, "press_color": yellow])
@@ -504,7 +505,7 @@ final class PressPaintTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(fade(v)?.toValue as? Float), -0.6, accuracy: 1e-6)
     }
 
-    /// A platform field's text is its own colour,
+    /// LLP 1115 D4, LLP 1121 D9: a platform field's text is its own colour,
     /// its own press's included, else FieldText: an inherited colour and an
     /// ancestor's press colour never tint it.
     func testAFieldsInkIsItsOwnOrItsOwnPressNeverAnAncestors() throws {

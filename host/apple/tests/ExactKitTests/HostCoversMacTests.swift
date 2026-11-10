@@ -1,7 +1,7 @@
-// Covers on the Mac: a box a native presentation stands for leaves layout
-// and comes back when the cover is withdrawn, and the kernel is told what
-// stands after the batch, never a projection that was taken back inside
-// it.
+// @ref LLP 1115.002 D8.1 — covers on the Mac: a box a native presentation
+// stands for leaves layout and comes back when the cover is withdrawn, and
+// the kernel is told what stands after the batch, never a projection that
+// was taken back inside it.
 #if os(macOS)
 import AppKit
 import XCTest

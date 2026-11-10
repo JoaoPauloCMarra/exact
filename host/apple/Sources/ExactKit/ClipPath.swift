@@ -75,7 +75,7 @@ extension NodeView {
     func syncEllipticalClip() { applyBoxMask() }
 }
 
-/// What a node's mask was built from and what it installed:
+/// What a node's mask was built from and what it installed (LLP 1077 D2):
 /// `applyBoxMask` builds again only when an input changed or something
 /// else (a material's radius, a surface, a filter) replaced what it put on.
 final class BoxMaskState {

@@ -1,28 +1,28 @@
-// @exact/camera on the web: the viewfinder
+// @exact/camera on the web (LLP 1133.008 D1-D3, D8, §9): the viewfinder
 // `exact-camera`, a `<video>` showing a video track of @exact/media-capture's,
 // and Image Capture's `takePhoto` from it, written to the app's files.
 //
 // - A viewfinder is a consumer of its track while it is displayed and its
-//   `srcObject` names the track. The runner says when either changes and
+//   `srcObject` names the track (D3). The runner says when either changes and
 //   by whose commit (`displayed`, `bound`); the viewfinder joins the track
 //   with that origin, so a lease is taken only for the person's input or the
-//   app's own code ("a visible consumer"), and a viewfinder a tool showed
+//   app's own code (§14, "a visible consumer"), and a viewfinder a tool showed
 //   shows nothing until the person shows it again.
 // - `takePhoto` needs a track that is live, enabled and unmuted, so shown
-//  : `ImageCapture.takePhoto` where the browser has it, else the
+//   (D1): `ImageCapture.takePhoto` where the browser has it, else the
 //   viewfinder's current frame encoded as JPEG (Firefox), with no fill light.
 //   The photo is written to `path` with its format's extension, or to
-//   `app:/tmp/camera/<n>.jpg`.
+//   `app:/tmp/camera/<n>.jpg` (D8 item 4).
 // - Under the agent no camera exists: the viewfinder shows the agent's
 //   picture, mirrored for a `user` camera, and `takePhoto` writes the
-//   picture's bytes unchanged. The picture is the package's test card,
+//   picture's bytes unchanged (§9). The picture is the package's test card,
 //   or the app asset `prefer extension camera.picture={"path":"…"}` names.
 //   The track's frame is that picture, unmirrored, for an observer such as a
-//   barcode scan to read.
+//   barcode scan to read (LLP 1133.027 D17 item 2).
 
 const MIME = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/heic': 'heic' };
 
-/** Image Capture's settings the call wrote, and only those. */
+/** Image Capture's settings the call wrote (D1), and only those. */
 function photoSettings(args) {
   const out = {};
   for (const k of ['fillLightMode', 'imageWidth', 'imageHeight', 'redEyeReduction']) if (args?.[k] != null) out[k] = args[k];
@@ -50,7 +50,7 @@ class Viewfinder {
     implementation.made(view, this);
   }
   setProps(props) {
-    // `contain` unsaid, as `<video>` renders.
+    // `contain` unsaid, as `<video>` renders (D2).
     const fit = props['object-fit'] || 'contain';
     this.video.style.objectFit = this.picture.style.objectFit = fit;
     this.implementation.propsOf(this.view, props);
@@ -67,7 +67,7 @@ class Viewfinder {
       return;
     }
     this.picture.style.display = 'none';
-    // A page mirrors a front camera's preview itself; the module does, as the platforms do.
+    // A page mirrors a front camera's preview itself (D2's web column: none); the module does, as the platforms do.
     this.video.style.transform = flip;
     this.video.style.display = 'block';
     if (this.video.srcObject?.getVideoTracks?.()[0] !== source) this.video.srcObject = source ? new MediaStream([source]) : null;
@@ -109,17 +109,17 @@ export function implementation({ changed, agent, log, tracks, files }) {
     return pictureBitmap ??= agentPicture().then(url => fetch(url)).then(r => r.blob()).then(b => createImageBitmap(b))
       .catch(e => { say(`the agent's picture did not decode: ${e.message}`); return null; });
   }
-  /** Track `id`'s frame is the picture drawn, unmirrored, as a sensor's is: set when the
+  /** Track `id`'s frame is the picture drawn, unmirrored, as a sensor's is (LLP 1133.027 D17 item 2): set when the
    *  picture is named, so the next analysed frame is the new one however long its decode takes. */
   const framed = id => tracks.lookup(id)?.owner?.picture?.(id, agentBitmap());
 
-  /** Viewfinder `id` consumes its track while it is made, displayed and bound to a video track. */
+  /** Viewfinder `id` consumes its track while it is made, displayed and bound to a video track (D3). */
   function reconcile(id) {
     const v = viewOf(id), entry = tracks.lookup(v.src);
     // A `srcObject` the runner has not yet reported is not yet the commit's: wait for its report and origin.
     const want = !!(v.el && v.shown && v.src && v.reports >= v.changes && entry?.kind === 'video');
     if (v.sub && (!want || v.sub.track !== v.src)) { v.sub.leave(); v.sub = null; v.el?.blank(); }
-    // Shown again by the person or the app, a viewfinder that took no lease takes one.
+    // Shown again by the person or the app, a viewfinder that took no lease takes one (§14).
     if (want && v.sub && !v.sub.live && v.madeBy === 'app' && v.sub.origin !== 'app') { v.sub.leave(); v.sub = null; }
     if (!want || v.sub) return;
     const sub = { track: v.src, origin: v.madeBy, live: false, leave: () => {} };
@@ -193,7 +193,7 @@ export function implementation({ changed, agent, log, tracks, files }) {
       if (!entry) return { error: 'NotFoundError' };
       if (entry.kind !== 'video') return { error: 'NotSupportedError' };
       const s = entry.state?.() ?? {};
-      // A track that is not shown takes no photo: ended, disabled, or muted (`idle` among them).
+      // A track that is not shown takes no photo (D1): ended, disabled, or muted (`idle` among them).
       if (s.readyState !== 'live' || !s.enabled || s.muted) return { error: 'InvalidStateError' };
       let blob;
       try { blob = await capture(args.track, args); }
@@ -205,7 +205,7 @@ export function implementation({ changed, agent, log, tracks, files }) {
       try { const b = await createImageBitmap(blob); width = b.width; height = b.height; b.close?.(); } catch { /* sized by nothing */ }
       try { await files.write(path, bytes); }
       catch (e) { say(`takePhoto: ${path} not written: ${e.message}`); return { error: 'UnknownError' }; }
-      // The journal names each photo's SHA-256, which a drive compares with the agent's picture.
+      // The journal names each photo's SHA-256, which a drive compares with the agent's picture (§9).
       const sha = [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(b => b.toString(16).padStart(2, '0')).join('');
       say(`took ${path} (${bytes.length} bytes, ${width}×${height}, sha256 ${sha})`);
       photos.push({ path, sha256: sha, track: args.track, origin: 'app' });
@@ -226,9 +226,9 @@ export function implementation({ changed, agent, log, tracks, files }) {
       } catch { return plain; }
     },
     picture: async () => ({ path: picture ?? '' }),
-    /** What `state.extensions` lists as this implementation's: each photo, by path and SHA-256. */
+    /** What `state.extensions` lists as this implementation's (D8 item 9): each photo, by path and SHA-256. */
     state: () => ({ photos }),
-    /** Under the agent: the picture `prefer extension camera.picture={"path":…}` names. */
+    /** Under the agent: the picture `prefer extension camera.picture={"path":…}` names (D8 item 9). */
     preferred(values) {
       const named = values?.picture?.path;
       const next = typeof named === 'string' && named ? named : null;

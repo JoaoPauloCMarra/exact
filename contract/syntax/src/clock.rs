@@ -1,5 +1,5 @@
-//! `animation-timeline=Name` naming a `timeline` declaration: the attribute
-//! becomes the row's text, `"-exact-clock(Name)"`, before types
+//! `animation-timeline=Name` naming a `timeline` declaration (LLP 1055.002
+//! D2): the attribute becomes the row's text, `"-exact-clock(Name)"`, before types
 //! and lowering see it, so neither knows clock timelines exist.
 
 use crate::ast::{Attr, Expr, File, Node};
@@ -26,7 +26,7 @@ pub fn resolve_clock_timelines(file: &mut File) -> Result<(), SyntaxError> {
     resolve_clock_timelines_in(file, &names)
 }
 
-/// [`resolve_clock_timelines`] through a file's scope: `names`
+/// [`resolve_clock_timelines`] through a file's scope (LLP 1091 D5): `names`
 /// maps each timeline name the file may write, its own or one its `use`
 /// lines bring, to the program-unique name of the declaration it means.
 pub fn resolve_clock_timelines_in(
@@ -63,7 +63,7 @@ pub fn resolve_clock_timelines_in(
             .chain(c.resources.iter().map(|r| &r.name))
             .chain(c.mutations.iter().map(|m| &m.name))
             .chain(c.actions.iter().map(|a| &a.name))
-            // Members its other files declare.
+            // Members its other files declare (LLP 1091.002 D5).
             .chain(c.members.outer.iter().map(|(n, _)| n))
             .filter(|n| names.contains_key(*n))
             .cloned()

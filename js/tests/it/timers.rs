@@ -1,4 +1,4 @@
-//! An answer's own timers through
+//! An answer's own timers (LLP 1027.000 D1 as amended 2026-10-28) through
 //! the Hermes executor and the runner: due on the runner's clock, kept back
 //! as no I/O until an advance reaches them, cleared with their answer, and
 //! fired on a clock that jumps at bake.
@@ -252,7 +252,7 @@ fn a_let_go_answer_never_runs_its_timer() {
     assert_eq!(result(&r, "result"), said("armed 1,armed 2,ran 2"));
 }
 
-/// A POST its answer let go runs to its end, and the
+/// A POST its answer let go runs to its end (LLP 1146 D2), and the
 /// `AbortSignal.timeout` it carries, dropped with that answer's other timers,
 /// still aborts at the deadline the host gave the request, as a browser's
 /// fires: carried as it is, through `AbortSignal.any`, or beside an

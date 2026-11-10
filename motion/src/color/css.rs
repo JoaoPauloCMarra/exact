@@ -1,4 +1,4 @@
-//! CSS colours, parsed once for every reader: CSS Color 4's
+//! CSS colours, parsed once for every reader (LLP 1056 D3): CSS Color 4's
 //! sRGB forms — hex, `rgb()`, `rgba()`, `hsl()`, `hsla()`, `hwb()`, the
 //! named colours, `transparent` and `currentColor` — and the canvas
 //! serialisation (`#rrggbb` when opaque, `rgba(r, g, b, a)` otherwise).
@@ -9,7 +9,7 @@
 //! `srgb`, `srgb-linear`, `display-p3`, `xyz`, `xyz-d50` and `xyz-d65`) are
 //! converted to sRGB and clipped, as an sRGB canvas draws them, and keep
 //! their own serialisation, as Chrome's getters return it. Parsing and
-//! arithmetic are `exact-color`'s.
+//! arithmetic are `exact-color`'s (LLP 1100).
 
 /// A colour: sRGB channels 0–255 and alpha 0–1, non-premultiplied.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -126,8 +126,8 @@ static WIDE: std::sync::OnceLock<fn(exact_color::Wide) -> Option<Parsed>> =
 /// Link the wide forms (`lab()`, `lch()`, `oklab()`, `oklch()`,
 /// `color()`): until a host calls this, they do not parse and their
 /// assignments are ignored. Native hosts link them at start; a web artifact
-/// links them when its data crate's source names one (linked by use, for
-/// the web core's budget).
+/// links them when its data crate's source names one (LLP 1047 D2: linked
+/// by use; the web core's budget).
 pub fn link_wide() {
     let _ = WIDE.set(wide);
 }

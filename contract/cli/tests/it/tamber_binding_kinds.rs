@@ -1,7 +1,8 @@
-//! The binding core's other kinds: a length, a number and a type token by name,
-//! each resolved for a place under the window's mode and a pin, a type token as
-//! the font a host draws (its text style's weight where it writes none, Bold
-//! Text's step on a system family).
+//! The binding core's other kinds (LLP 1121 D12, stage 6 G): a length, a
+//! number and a type token by name, each resolved for a place under the
+//! window's mode and a pin, a type token as the font a host draws (its text
+//! style's weight where it writes none, Bold Text's step on a system
+//! family).
 
 use exact_kernel::Kernel;
 use exact_plan::{Plan, Value};

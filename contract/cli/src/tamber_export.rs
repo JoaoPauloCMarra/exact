@@ -1,5 +1,5 @@
 //! `contract tamber export dtcg <app dir | app.contract | file.tamber> [-o
-//! <file>]`: the design as DTCG Format 2025.10 with
+//! <file>]` (LLP 1121 D14, stage 5): the design as DTCG Format 2025.10 with
 //! the Resolver Module (`exact_tamber::export`), printed or written to `-o`.
 //! Each export keeps what it wrote as the baseline a re-import compares with,
 //! by the design's digest, in `.exact/tamber-dtcg/` beside the design, whose
@@ -217,7 +217,7 @@ mod kept_tests {
     use super::{kept, KEPT};
 
     /// The import's read of the kept baselines: the newest [`KEPT`], none
-    /// through a linked directory.
+    /// through a linked directory (stage 10b E2+E3 round 9's leftover).
     #[cfg(unix)]
     #[test]
     fn kept_reads_the_newest_and_never_through_a_link() {

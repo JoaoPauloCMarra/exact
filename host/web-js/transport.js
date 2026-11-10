@@ -1,4 +1,4 @@
-// The transport on the JS target: the runner's
+// The transport on the JS target (LLP 1125 D2–D5): the runner's
 // (runner/src/transport.rs and runner/src/runner/transport.rs) with the same
 // rules, ids, order and journal lines; read it beside them. Imported by an
 // app's module only for a plan that declares a sequence or reads
@@ -12,9 +12,9 @@
 //   every task (`i: Infinity`), a hatch too when there is no `ended=`.
 // - `exactTransport` is answered again by a commit of its own, a `then` after
 //   every mutation's: a pseudo-mutation pushed last into `Mutations`.
-// - MIDI: a step's note and clock out go on midi.js's queue
+// - MIDI (LLP 1125 D7): a step's note and clock out go on midi.js's queue
 //   (`Midi`); a track's `offset` shifts its outputs, placed as `fill` says.
-// - Clock in (runner/src/transport/clock.rs): `clock=` follows an input
+// - Clock in (D9, runner/src/transport/clock.rs): `clock=` follows an input
 //   (clockin.js's follower); midi.js hands its clock messages to
 //   `Sounds.clockIn` before it dispatches a delivery.
 import { journal, clock, Sounds, Mutations, Resources, R, data, drive, untracked, Refusal } from './rt.js';
@@ -39,7 +39,7 @@ let Readers = {}, Owner = null, Last = null, Raw = [], Play = null, Segments = [
 // Issued: where the last fill stopped, by beat (a tempo edit moves its time): the hits before it, and the first [1] at it,
 // were issued.
 let IssuedTo = 0, Skip = 0, Issued = [-Infinity, 0], RefillDue = Infinity, PhaseDue = Infinity, EndedDue = Infinity, Pending = null, UnsentTold = false;
-// Clock in: the follower while the owner follows an input; the last arming followed one, so `exactTransport` answers
+// Clock in (D9): the follower while the owner follows an input; the last arming followed one, so `exactTransport` answers
 // `Pub`; where its hits are issued to, past the last delivery.
 let Follow = null, Clocked = false, Pub = { state: 'stopped', reason: '', bpm: 0, at: 0, beat: 0 }, ClockTo = 0;
 // Following, the hits issued and not taken back at or after HitsFloor, `[beat, track, step, step time]`: a refill issues none
@@ -90,7 +90,7 @@ function read(name, args) {
   const countIn = from < 0 ? items(args[3]).map((s, j) => step(s, -from, null, `sequence ${name}: count-in step ${j + 1}`)).filter(Boolean) : [];
   const clockIn = text(args[4]);
   let clockOut = text(args[5]);
-  if (clockIn && clockOut) { say(`sequence ${name}: clock out ignored: it follows ${clockIn}`); clockOut = ''; }
+  if (clockIn && clockOut) { say(`sequence ${name}: clock out ignored: it follows ${clockIn}`); clockOut = ''; } // rulings #4
   if (clockOut && bpm * 24 / 60 > TICKS_PER_SECOND) { say(`sequence ${name}: clock out dropped: bpm ${num(bpm)} is more than ${num(TICKS_PER_SECOND)} ticks a second`); clockOut = ''; }
   return { tracks, bpm, from, countIn, clockIn, clockOut };
 }
@@ -206,7 +206,7 @@ function arm(i, t, args) {
   if (p.why) { say(`sequence ${name} did not play: ${p.why}`); stop(t, 'bpm'); State = 'stopped'; Reason = 'bpm'; return; }
   Owner = i; Raw = args; IssuedTo = t; Skip = 0; UnsentTold = false;
   if (p.clockIn) {
-    // Clock in: waiting, no segment and no fill until Start.
+    // Clock in (D9): waiting, no segment and no fill until Start.
     say(`sequence ${name} waits for clock from ${p.clockIn}`);
     if (!Clocked) { const a = answer(); Pub = { state: a.state, reason: a.reason, bpm: a.bpm, at: a.anchorAt, beat: a.anchorBeat }; }
     Midi.clockTo('', 0, t);
@@ -246,7 +246,7 @@ function stop(t, reason) {
   silence(t, reason);
   Owner = null; Play = null; Raw = []; Follow = null; Clocked = false; // stopped, it answers as its own clock again
 }
-// `stop`'s sound: the sequence stays the owner (a clock's Stop leaves it waiting).
+// `stop`'s sound: the sequence stays the owner (a clock's Stop leaves it waiting, D9).
 function silence(t, reason) {
   const name = Seqs[Owner].name;
   say(`sequence ${name} stopped (${reason})`);
@@ -325,7 +325,7 @@ function anchor(t, next, early, name) {
   say(`sequence ${name} re-anchored: beat ${num(next.beat)} at ${num(next.at)}, bpm ${num(next.bpm)}`);
   let from = issued;
   if (issued > band) {
-    // Only hits after the hold's edge: one at it is handed. From the first beat taken back, which an older segment
+    // Only hits after the hold's edge: one at it is handed (D7). From the first beat taken back, which an older segment
     // may have timed before the band; what was kept is not issued again.
     const edge = t + HOLD + early;
     T().batch(() => T().retract(t, edge, 'clock', true)); Midi.retractSeq(t, edge, 'clock', true);
@@ -337,7 +337,7 @@ function anchor(t, next, early, name) {
   IssuedTo = time(next, from);
 }
 // `exactTransport`'s answer while following, published again only when the state or reason changes, the tempo (to 0.1)
-// moves by 0.5 or more, or the published line puts the latest anchor more than 1/48 beat off.
+// moves by 0.5 or more, or the published line puts the latest anchor more than 1/48 beat off (rulings #7).
 function publish() {
   if (!Clocked) return;
   const p = Pub, bpm = Follow ? Math.round(tempo(Follow) * 10) / 10 : p.bpm, seen = Follow ? Follow.seen : null;
@@ -350,7 +350,7 @@ function stood(seen, t = clock.now) {
   seen.forEach((s, i) => {
     const q = Seqs[i], wasOn = q.on, wasKey = q.kt;
     q.on = s.on; q.kt = s.key;
-    // The input followed changed: a restart, as a key's.
+    // The input followed changed (D9): a restart, as a key's (rulings #13).
     const rising = s.on && (!wasOn || s.key !== wasKey), refollow = !!Play && Play.clockIn !== text(s.args[4]);
     if (Owner === i) {
       if (!s.on) stop(t, 'gate');
@@ -373,13 +373,13 @@ Sounds.transportAnswer = Answer;
 Sounds.gate = () => { Pending = null; if (Seqs.length) Pending = untracked(() => Seqs.map(look)); };
 Sounds.stood = () => { const seen = Pending; Pending = null; if (seen) stood(seen); };
 // The beat at `t` while a sequence plays, by the segment that holds it; −1 while stopped or waiting (a MIDI input's `beat`).
-// Following a clock, by the one segment hits are issued under: its segments do not join.
+// Following a clock, by the one segment hits are issued under: its segments do not join (D9).
 Sounds.beatAt = t => Owner == null || State === 'waiting' || !Segments.length ? -1 : beatAt(Follow ? seg() : Segments.findLast(g => g.at <= t) ?? Segments[0], t);
-// Clock in: the followed input, its follower (for `tap midi`'s stamps), and one delivery's clock messages.
+// Clock in (D9): the followed input, its follower (for `tap midi`'s stamps), and one delivery's clock messages.
 Sounds.clockInput = () => Follow ? Follow.input : null;
 Sounds.follower = () => Follow;
 Sounds.clockIn = msgs => { const before = answerKey(); follow(msgs, clock.now); after(before); };
-/** Every `sequence name when gate key=key`, `[gate, key, args, ended, name]` each, `args` making `play`'s six
+/** Every `sequence name when gate key=key` (LLP 1125 D2), `[gate, key, args, ended, name]` each, `args` making `play`'s six
  * arguments: all read first, then armed at mount where a gate holds, as the runner's boot does, so a refusal arms none. */
 export function sequence(list) {
   for (const [gate, key, args, ended, name] of list) Seqs.push({ gate, key: key || null, args, ended, name, on: false, kt: undefined });

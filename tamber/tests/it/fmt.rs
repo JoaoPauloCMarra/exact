@@ -1,4 +1,4 @@
-//! `tamber fmt`: every design that parses
+//! `tamber fmt` (LLP 1121 stage 3, commit 1): every design that parses
 //! formats to a fixed point, in one step, with the same IR; comments stay.
 
 use common::vocab;

@@ -1,4 +1,4 @@
-// In a real browser, what the shell's stylesheet (index.html, both web
+// LLP 1115.000 D4.11, D4.12 and D4.14 in a real browser: what the shell's stylesheet (index.html, both web
 // targets) and the navigation glue do. A material the host
 // paints honours the person's settings: with Reduce Transparency the bar is opaque and does not blur, and
 // under forced colours each drawn control is the browser's own again; an effect the author wrote is not

@@ -1,4 +1,5 @@
-//! A resource's arguments and `with` context, and, over a list, its list and key: the arguments and the key read
+//! A resource's arguments and `with` context, and, over a list (LLP 1017.000
+//! P4c, amended 2026-11-04), its list and key: the arguments and the key read
 //! the element as their one parameter, which the runner passes each
 //! element's request.
 
@@ -41,7 +42,7 @@ impl Lowerer<'_> {
             }
             let range = self.b.args(&args);
             self.b.set_resource_args(self.resources[i], range);
-            // declare first, install the full argument
+            // @ref LLP 1027.005 D6 — declare first, install the full argument
             // list, then count its context tail. No `with` keeps the default 0.
             if let Some(identity) = r.identity {
                 let context = u16::try_from(r.args.len() - identity).map_err(|_| LowerError {

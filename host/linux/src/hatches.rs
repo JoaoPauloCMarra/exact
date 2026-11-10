@@ -1,4 +1,6 @@
-//! Access hatches on a painting host (Linux and Windows).
+//! Access hatches on a painting host.
+//!
+//! @ref LLP 1075.003.000.001 §2.1–§2.5, §3.2, §5 (Linux and Windows)
 //!
 //! An app's hatches are one type that implements [`Hatches`], in
 //! `modules/linux/*.rs`, named once (`pub type ExactHatches = App;`) and
@@ -28,7 +30,7 @@ pub(crate) mod session;
 #[cfg(test)]
 mod tests;
 
-/// The recorder an overlay is drawn with: Canvas 2D by web-sys's names.
+/// The recorder an overlay is drawn with: Canvas 2D by web-sys's names (LLP 1056).
 pub use exact_canvas::Context2d;
 pub(crate) use session::{ActKind, Module, Session, Shared};
 
@@ -79,8 +81,8 @@ pub fn install<H: Hatches>(words: &'static [&'static str]) -> Install {
 /// An app with no Rust hatches, whose hatches are all the reader's.
 impl Hatches for () {}
 
-/// `H`, with the Android reader's own hatches told every moment beside it;
-/// `words` are the ones `app.json` gives `android`.
+/// `H`, with the Android reader's own hatches told every moment beside it
+/// (LLP 1115.001.000 D4); `words` are the ones `app.json` gives `android`.
 pub fn install_with_reader<H: Hatches>(words: &'static [&'static str]) -> Install {
     Install {
         make: make_with_reader::<H>,
@@ -114,7 +116,7 @@ pub struct Rect {
     pub height: f32,
 }
 
-/// The app scope's handle: the facts, by the web's names.
+/// The app scope's handle: the facts, by the web's names (§2.1).
 #[derive(Clone, Debug, PartialEq)]
 pub struct App {
     /// `document.visibilityState`: `visible` or `hidden`.
@@ -129,8 +131,8 @@ pub struct App {
     pub prefers_reduced_motion: bool,
     /// `prefers-reduced-transparency: reduce`.
     pub prefers_reduced_transparency: bool,
-    /// The first root node's `data-*` words, by name without the prefix:
-    /// what Contract projects for this scope. A change is a call.
+    /// The first root node's `data-*` words, by name without the prefix
+    /// (§2.5): what Contract projects for this scope. A change is a call.
     pub data: BTreeMap<String, String>,
     /// This session may set process-wide state: the entry's one session does.
     pub process_owner: bool,
@@ -140,7 +142,7 @@ pub struct App {
     pub is_live: bool,
 }
 
-/// The window scope's handle: the surface the session paints.
+/// The window scope's handle: the surface the session paints (§2.1).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Window {
     /// The surface in its own coordinates, points.
@@ -168,7 +170,7 @@ pub(crate) struct Node {
     pub(crate) data: RefCell<BTreeMap<String, String>>,
 }
 
-/// A hatched node's handle. Cheap to clone and keep: a kept handle
+/// A hatched node's handle (§2.2). Cheap to clone and keep: a kept handle
 /// reads the node's current box and words, and after the node's end its last.
 #[derive(Clone)]
 pub struct Element {
@@ -209,7 +211,7 @@ impl Element {
     pub fn is_live(&self) -> bool {
         self.node.live.get()
     }
-    /// Press the node, as a person would: queued, run between turns.
+    /// Press the node, as a person would: queued, run between turns (§2.5).
     pub fn click(&self) {
         self.node.shared.ask(&self.node, ActKind::Click, None);
     }
@@ -242,7 +244,7 @@ impl Element {
     }
 }
 
-/// A node's overlay: a protocol, not a canvas. A recording replaces
+/// A node's overlay (§2.2.1): a protocol, not a canvas. A recording replaces
 /// the last one whole; nothing is carried from one to the next.
 pub struct Overlay<'a> {
     node: &'a Rc<Node>,
@@ -269,7 +271,7 @@ impl Overlay<'_> {
     }
 }
 
-/// What landed in a node's box, heard after Exact's own dispatch.
+/// What landed in a node's box, heard after Exact's own dispatch (§2.2.2).
 /// `handled` says whether an authored handler ran or a scroller moved for it.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Input {
@@ -315,7 +317,7 @@ pub enum Phase {
     Cancel,
 }
 
-/// A frame ticket's instant.
+/// A frame ticket's instant (§2.4).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Frame {
     /// The session clock at the instant, milliseconds.
@@ -337,7 +339,7 @@ impl Ticket {
     }
 }
 
-/// What hatch code says of itself: development only, bounded, on
+/// What hatch code says of itself (§3.2): development only, bounded, on
 /// the session clock. In a production build every call returns at once.
 #[derive(Clone)]
 pub struct Diagnostics {
@@ -373,7 +375,7 @@ impl Diagnostics {
     pub fn publish(&self, name: &str, json: &str) {
         self.shared.store().publish(&self.scope, name, json);
     }
-    /// Ask for Save Trace, at most once a second of wall
+    /// Ask for Save Trace (LLP 1079 D5), at most once a second of wall
     /// time: the display loop writes it; a headless run has none to save.
     pub fn save_trace(&self) {
         self.shared.store().ask_trace();
@@ -438,7 +440,7 @@ impl<H: Hatches> Context<'_, H> {
             node: 0,
         }
     }
-    /// A frame ticket: `tick` runs at each instant the frame
+    /// A frame ticket (§2.4): `tick` runs at each instant LLP 1073's frame
     /// tasks fire, after that frame's tasks and timers; each presented frame
     /// on the wall, the virtual display's under the agent.
     pub fn frames(
@@ -459,7 +461,7 @@ impl<H: Hatches> Context<'_, H> {
         self.callbacks.afters.insert(token, Box::new(fired));
         self.ticket(token)
     }
-    /// Observe the input that lands in `element`'s box: `heard`
+    /// Observe the input that lands in `element`'s box (§2.2.2): `heard`
     /// runs after Exact's own dispatch, and can claim nothing. It ends with
     /// the node.
     pub fn observe(

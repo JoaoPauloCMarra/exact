@@ -1,9 +1,9 @@
-//! The transport through a runner: the seek rule over
+//! The transport through a runner (LLP 1125 §5): the seek rule over
 //! polymeter, a count-in, a tempo edit, a key restart, a stop and a frame
 //! task; an edit's retraction; tempo without a jump in phase; a dropped
 //! step; the waiting cap and the voice bound; `ended=`; `exactTransport`'s
 //! answer; a refused commit; a second sequence; `stopSounds`; the wake; and
-//! the background stop. Then edge cases: a refused background
+//! the background stop. Then the review's cases: a refused background
 //! stop, a refused commit's derives, a `from` past exact counting, taps far
 //! ahead, an end already past, and haptics past the record's bound.
 
@@ -579,7 +579,7 @@ fn the_background_stops_it_until_its_gate_turns_true_again() {
     assert!(r.transport().playing());
 }
 
-/// A background stop whose commit is refused (a task key that is
+/// Review G1: a background stop whose commit is refused (a task key that is
 /// no key while the page is hidden) leaves the sequence playing, its
 /// voices, its answer and the output's ops as they were.
 #[test]
@@ -614,7 +614,7 @@ fn a_refused_background_stop_stops_nothing() {
     assert!(!r.page().suspended);
 }
 
-/// A refused commit with a keyed sequence and no gated task puts
+/// Review A1: a refused commit with a keyed sequence and no gated task puts
 /// back what its settlement published, the derives included.
 #[test]
 fn a_refused_commit_puts_its_derives_back() {
@@ -631,7 +631,7 @@ fn a_refused_commit_puts_its_derives_back() {
     assert_eq!(r.transport().answer().bpm, 120.0);
 }
 
-/// A `from` past 2^31 beats, where a loop's index would stop
+/// Review A2: a `from` past 2^31 beats, where a loop's index would stop
 /// counting exactly, does not play.
 #[test]
 fn a_from_past_exact_counting_does_not_play() {
@@ -650,7 +650,7 @@ fn a_from_past_exact_counting_does_not_play() {
     r.advance(5000.0).unwrap();
 }
 
-/// 256 taps waiting 100 s ahead do not starve the sequence: a
+/// Review A3: 256 taps waiting 100 s ahead do not starve the sequence: a
 /// blocked hit is issued at its own time, when it no longer waits.
 #[test]
 fn taps_far_ahead_do_not_starve_a_sequence() {
@@ -667,7 +667,7 @@ fn taps_far_ahead_do_not_starve_a_sequence() {
     assert!(at(&r, "assets/kick.wav").contains(&1500.0));
 }
 
-/// A last track already past at the arming (`from` beyond it)
+/// Review A6: a last track already past at the arming (`from` beyond it)
 /// ends at the arming's time, never back in time.
 #[test]
 fn an_end_already_past_ends_now() {
@@ -681,7 +681,7 @@ fn an_end_already_past_ends_now() {
     assert_eq!(r.now_ms(), 1000.0);
 }
 
-/// Haptics still to come are kept past the record's bound, so a
+/// Review A7: haptics still to come are kept past the record's bound, so a
 /// stop retracts every one of them.
 #[test]
 fn a_stop_retracts_every_haptic_still_to_come() {
@@ -695,7 +695,7 @@ fn a_stop_retracts_every_haptic_still_to_come() {
     assert!(r.sounds().haptics().all(|h| h.by == Some("cancelled")));
 }
 
-/// A beat kept across an edit (a long track at
+/// Review rounds 2 and 3, A2: a beat kept across an edit (a long track at
 /// a high tempo, then short ones) past exact loop counting drops the track
 /// that loops forever, journaled, rather than hang a fill; a finite sibling,
 /// never iterated there, plays on and its `ended=` runs.
@@ -727,7 +727,7 @@ fn a_beat_past_exact_counting_drops_only_the_endless_track() {
     assert_eq!(answered(&r)[1], Value::str("ended"));
 }
 
-/// On a live clock, a hit the waiting cap held is
+/// Review round 2, A3 on a live clock: a hit the waiting cap held is
 /// issued at its wake even when the wake runs just after its time; only a
 /// stall's hits, more than 500 ms past, are skipped.
 #[test]

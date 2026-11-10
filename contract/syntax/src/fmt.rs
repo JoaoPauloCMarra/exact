@@ -1,4 +1,4 @@
-//! Source-preserving formatting.
+//! Source-preserving formatting. @ref LLP 1035.005 D1.
 //!
 //! The parser identifies safe attribute/argument breaks. The lexer's exact
 //! ranges preserve literal spelling and comments;
@@ -42,7 +42,7 @@ pub fn format(src: &str) -> Result<String, SyntaxError> {
         });
     }
     // Nor may a break change what a line means: a moved line that does not
-    // begin `name=` would become a child. The tree, spans
+    // begin `name=` would become a child (habits F5). The tree, spans
     // aside, must be the one that was read.
     let (formatted_file, _) = parse_tokens(after)?;
     if erase_spans(file) != erase_spans(formatted_file) {
@@ -137,7 +137,7 @@ struct Layout<'a> {
     /// A token that stays against the one before it: a keyframe selector's
     /// `%` (`50%`), a test's viewport height (`1200x800`).
     attached: BTreeSet<Span>,
-    /// A conditional's `:`, spaced as its `?` is: `a ? b : c`.
+    /// A conditional's `:`, spaced as its `?` is: `a ? b : c` (habits F5).
     ternary_colons: BTreeSet<Span>,
     /// An element's tag, which keeps its space before a positional expression:
     /// `text (n > 0 ? a : b)`, not a call `text(…)`.
@@ -290,7 +290,7 @@ impl<'a> Layout<'a> {
             }
         }
         // A test step's numbers are signed literals, not arithmetic:
-        // `drag 10 -4`, and `size 1200x800` is one word.
+        // `drag 10 -4` (habits F5's sweep), and `size 1200x800` is one word.
         for step in file
             .launch
             .iter()
@@ -321,7 +321,7 @@ impl<'a> Layout<'a> {
         }
         for component in file.components.iter().chain(&file.members) {
             // A part's name, lifted from its node by the parser, keeps its
-            // `=` tight as any attribute's.
+            // `=` tight as any attribute's (LLP 1139 D2).
             self.attributes
                 .extend(component.anatomy.marks.iter().map(|m| m.span));
             for ty in component
@@ -497,7 +497,7 @@ impl<'a> Layout<'a> {
                     continue;
                 }
                 // A bare flag (`autofocus`) cannot begin a continued line:
-                // one that does not begin `name=` is a child.
+                // one that does not begin `name=` is a child (habits F5).
                 // It stays on the line of the attribute before it.
                 if !component
                     && self.position(a.span).is_some_and(|i| {

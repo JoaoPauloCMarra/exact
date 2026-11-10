@@ -1,15 +1,15 @@
-// @exact/calendar's production path on Android: the person's calendars through the Calendar
+// @exact/calendar's production path on Android (LLP 1133.018 stage 3): the person's calendars through the Calendar
 // Provider, and the calendar app's insert screen.
 //
 // - A read asks `READ_CALENDAR` while `prompt`; a write asks it with `WRITE_CALENDAR`, in one request, since an
-//   insert names a calendar row only a read finds. The status is `READ_CALENDAR`'s, `full` once granted.
-// - A read runs on the module's thread: `Instances` for the range ("a blocking function and should not be done
+//   insert names a calendar row only a read finds (D11). The status is `READ_CALENDAR`'s, `full` once granted.
+// - A read runs on the module's thread (D6): `Instances` for the range ("a blocking function and should not be done
 //   on the UI thread"), in the order of every target, with the same cursor as the agent's path. An all-day
-//   occurrence, which the provider keeps at UTC midnights, is read back as local dates in the device's zone.
-// - A floating timed event is written in the device's zone, which the answer names: the provider requires
+//   occurrence, which the provider keeps at UTC midnights, is read back as local dates in the device's zone (D2).
+// - A floating timed event is written in the device's zone, which the answer names (D2): the provider requires
 //   `EVENT_TIMEZONE` on every insert.
 // - The calendar `saveEvent` writes without `calendar=` is the first visible, writable calendar whose `IS_PRIMARY` is
-//   set, by the provider's order.
+//   set, by the provider's order (D3).
 // - The editor is `Intent.ACTION_INSERT` on `Events.CONTENT_URI`, which needs no permission: `saved` if the calendar
 //   app returns `RESULT_OK`, else `unknown`.
 // - A content observer on `Events` and `Calendars`, with descendants, is a change of the store.
@@ -84,11 +84,11 @@ internal class EventStore(private val context: ExtensionContext, private val say
         main.post { reply(out) }
     }
 
-    // Access
+    // Access (D11)
 
     fun status(): JSONObject {
         val granted = has(READ)
-        // Not granted: the state is the host's history of the request.
+        // Not granted: the state is the host's history of the request (LLP 1133.008 D8 item 7).
         val history = if (READ in declared) context.permission(READ) else null
         val out = JSONObject()
             .put("available", true)
@@ -156,7 +156,7 @@ internal class EventStore(private val context: ExtensionContext, private val say
         return out
     }
 
-    /** No single default on Android: the first visible, writable, primary calendar by the provider's order. */
+    /** No single default on Android (D3): the first visible, writable, primary calendar by the provider's order. */
     private fun fallback(rows: List<Calendar>) = rows.firstOrNull { it.visible && it.writable && it.primary }
 
     private fun calendars(): List<JSONObject> {
@@ -168,7 +168,7 @@ internal class EventStore(private val context: ExtensionContext, private val say
         }
     }
 
-    // Occurrences
+    // Occurrences (D2, D6)
 
     private val zone: ZoneId get() = ZoneId.systemDefault()
 
@@ -246,7 +246,7 @@ internal class EventStore(private val context: ExtensionContext, private val say
         val start = AgentCalendar.parts(event.optString("start")) ?: return null
         val (days, seconds) = AgentCalendar.duration(event.text("duration") ?: "PT0S") ?: return null
         val allDay = event.optBoolean("showWithoutTime")
-        // Floating time is written in the device's zone, and the answer says so.
+        // Floating time is written in the device's zone, and the answer says so (D2).
         val written = if (allDay) null else event.text("timeZone") ?: zone.id
         val placed = try {
             if (allDay) start.toLocalDate().atStartOfDay(ZoneOffset.UTC) else start.atZone(ZoneId.of(written))
@@ -318,7 +318,7 @@ internal class EventStore(private val context: ExtensionContext, private val say
         return JSONObject().put("id", id.toString())
     }
 
-    // The editor
+    // The editor (D15)
 
     private fun editor(args: JSONObject, reply: (JSONObject) -> Unit) {
         val event = args.optJSONObject("event") ?: return reply(CalendarModule.malformed)

@@ -3,7 +3,7 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// The presence ops on AppKit: `exit` keeps a leaving view where
+/// The presence ops on AppKit (LLP 1063): `exit` keeps a leaving view where
 /// it was, above its old siblings, inert and out of every lookup, while the
 /// engine's values still reach it, until the host's `destroy` ends it; a
 /// `layout` present places the box outermost, from its top-left corner.
@@ -82,7 +82,7 @@ final class PresenceMacTests: XCTestCase {
         let v = try XCTUnwrap(p.views[3])
         p.apply(wireBatch([["op": "style", "id": 3, "style": ["overflow_x": "hidden", "overflow_y": "hidden"]]]))
         // Laid out closed, 200 wide on screen: the difference carries what
-        // no ratio of a zero width could.
+        // no ratio of a zero width could (GitHub #940).
         p.apply(wireBatch([
             ["op": "frame", "id": 3, "x": 0.0, "y": 0.0, "w": 0.0, "h": 50.0],
             ["op": "present", "id": 3, "property": "layout", "x": 0.0, "y": 0.0, "w": 200.0, "h": 0.0],

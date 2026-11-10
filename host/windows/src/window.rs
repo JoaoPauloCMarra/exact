@@ -239,7 +239,7 @@ pub(super) fn run<D: DataSource + Default + 'static>(
         std::env::set_var("EXACT_GPU_RENDER", "1");
     }
     // Windows has no toolkit under this painter, so it shows the web's
-    // neutral look, in a window as in a headless run.
+    // neutral look (LLP 1115.000 D17), in a window as in a headless run.
     app::show_neutral_look();
     if std::env::var_os("EXACT_AGENT_WINDOW_READY").is_some()
         && std::env::var("EXACT_AGENT_INK_FAULT").as_deref() == Ok("slow-config")
@@ -537,7 +537,7 @@ impl<D: DataSource + Default + 'static> App<D> {
         let service_span = crate::probe::Span::new("draw service", counters::DRAW);
         p.pump(now);
         // A presented frame: its tasks, then the hatches' ticks and due
-        // `after`s.
+        // `after`s (LLP 1075.003.000.001 §2.4).
         p.animation_frame(now);
         p.run_commands(D::default);
         crate::orientation::apply(p);
@@ -1004,7 +1004,7 @@ impl<D: DataSource + Default + 'static> ApplicationHandler<crate::accessibility:
                 }
                 p.surface_lifecycle(self.minimized || self.occluded, !self.focused);
                 p.set_window_active(self.focused);
-                // The window's clock owns time.
+                // The window's clock owns time (the timers RFC, D1)
                 p.use_native_timers(true);
                 p.set_live_clock(Some(exact_linux::presenter::wall_since(self.started)));
                 if let Some(warning) = warning {
@@ -1257,7 +1257,7 @@ impl<D: DataSource + Default + 'static> ApplicationHandler<crate::accessibility:
                     }
                     MouseButton::Middle => p.pointer_aux(4, down, x, y, now),
                     // XBUTTON1 and XBUTTON2: Back and Forward at the release,
-                    // as Chrome's.
+                    // as Chrome's (LLP 1115.000 D5.5).
                     MouseButton::Back => p.pointer_aux(8, down, x, y, now),
                     MouseButton::Forward => p.pointer_aux(16, down, x, y, now),
                     _ => {}

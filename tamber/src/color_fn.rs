@@ -458,7 +458,7 @@ pub(crate) fn absolute(
 /// `rgb(from X r g b / alpha)`, `oklch(from X l c h)`, `color(from X
 /// display-p3 r g b)` … (CSS Color 5 §4): X's channels in the function's
 /// space (0–255 for `rgb()`), each component typed for its slot. The result
-/// is `Wide`.
+/// is `Wide` (LLP 1121 D7).
 pub(crate) fn relative(
     name: &str,
     args: &[Vec<Item>],
@@ -594,7 +594,7 @@ fn relative_hdr(
 /// scales down, a sum under it is an alpha multiplier, 0% throughout an
 /// equal mix at alpha 0), interpolated premultiplied in the mix's space
 /// from each colour's exact components, one after another; the result is
-/// `Wide` in that space even in sRGB.
+/// `Wide` in that space even in sRGB (LLP 1121 D7).
 pub(crate) fn mix(
     args: &[Vec<Item>],
     text: &str,

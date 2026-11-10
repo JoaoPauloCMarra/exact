@@ -1,4 +1,4 @@
-//! The accessibility tree a shell is told, against a
+//! The accessibility tree a shell is told (LLP 1115.001 D13), against a
 //! stand-in for Android's reader: what Shelf's screens are in the order a
 //! person reads, what a node's identity outlives, what an open surface
 //! leaves of the page, a hosted field's place, what a statement says
@@ -62,7 +62,7 @@ impl DataSource for Data {
 
 const SHELF: &str = include_str!("../../../../apps/shelf/app.contract");
 
-/// A heading, a level with no heading's role (text), a
+/// A heading, a level with no heading's role (text, LLP 1115.000 D12.5), a
 /// checkbox, a switch, a slider, a toggle, a status line the button changes,
 /// a link, a named image, words hidden from assistive technology, a
 /// disabled button, and a field.
@@ -361,7 +361,7 @@ fn shelfs_library_is_read_bar_then_page_then_navigation_bar() {
     );
     assert_eq!(nodes[2].value, "Search", "a hosted field's placeholder");
     // The page: the filter's tabs, which stand over the list and are no
-    // row of it, then the list, a scroller that can go
+    // row of it (LLP 1115.000 D16), then the list, a scroller that can go
     // on and holds each row that shows, a row one node named by its words,
     // which opens and has a menu.
     let filter = &nodes[3];
@@ -874,7 +874,7 @@ fn inline_controls_keep_their_labels_geometry_and_native_actions() {
         .any(|line| line.contains("openURL https://example.com/docs")));
 }
 
-/// A table is ARIA's table of a caption and rows of cells,
+/// LLP 1153 D7.3: a table is ARIA's table of a caption and rows of cells,
 /// a `th` its column's or its row's header by its `scope`, and a `dl` a
 /// description list of terms and definitions; each holds its words.
 #[test]

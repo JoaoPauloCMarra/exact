@@ -1,5 +1,5 @@
 //! A textarea's paint-only decorations on the shared Linux/Windows field
-//! presenter: each span's colour, background and
+//! presenter (LLP 1114.007): each span's colour, background and
 //! text-decoration line as its own run, with the field's font, so every
 //! advance, line break and caret position is the undecorated field's.
 //! `text-shadow` is not painted here.

@@ -1,8 +1,9 @@
-//! What an Apple archive links.
+//! What an Apple archive links (LLP 1047.001 D2, D3; LLP 1047 D8).
 //!
-//! On native the linked set is a compatibility input, and the manifest may
-//! link capabilities ahead of any plan that uses them. One composition
-//! drives Rust, Swift, admission and compatibility.
+//! @ref LLP 1047 D8 (on native the linked set is a compatibility input; the
+//! manifest may link capabilities ahead of any plan that uses them)
+//! @ref LLP 1047.001 D2 (one composition drives Rust, Swift, admission and
+//! compatibility)
 
 use crate::compat::{compatibility_digest, Compat};
 use exact_runner::{Capability, Uses};
@@ -14,7 +15,7 @@ use exact_runner::{Capability, Uses};
 /// A production build (`host/apple/build.mjs` says `EXACT_APPLE_LINK=plan`)
 /// links what the plan uses and what the manifest's `link` names ahead of
 /// use; every other build, and a build `build.mjs` does not drive, links
-/// every capability. A bundle whose plan uses a capability
+/// every capability (LLP 1047.001 D6). A bundle whose plan uses a capability
 /// this binary lacks is then another compatibility id: a binary change.
 pub(crate) fn name_into(
     compat: &mut Compat,
@@ -52,8 +53,8 @@ pub(crate) fn name_into(
     Ok(())
 }
 
-/// Whether a grant ceiling names `auth.session`: what
-/// links the sign-in sheet.
+/// Whether a grant ceiling names `auth.session` (LLP 1069.006 D2): what
+/// links the sign-in sheet (LLP 1047.001.000 E).
 pub fn auth_granted(ceiling: &str) -> bool {
     ceiling
         .lines()
@@ -74,7 +75,7 @@ pub fn apple_link(compat: &Compat, host: &str) -> String {
 }
 
 /// The manifest's `link`: capabilities by name, linked before any plan uses
-/// them, so a later bundle may.
+/// them, so a later bundle may (LLP 1047 D8).
 pub fn ahead(manifest: &contract::Manifest) -> Result<Vec<Capability>, String> {
     let Some(link) = manifest.json.get("link") else {
         return Ok(Vec::new());

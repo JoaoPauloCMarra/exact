@@ -1,10 +1,10 @@
-//! Snapshot refresh is separate from rendering.
+//! Snapshot refresh is separate from rendering (LLP 1126 D3/D8).
 use super::{DataSource, Runner};
 use crate::{Answer, Dispatch, Outcome, Request, Store, Value, Work};
 use std::time::Instant;
 
 impl<D: DataSource> Runner<D> {
-    /// A snapshot refresh never writes the store: it returns props only, so there is
+    /// Stage 1 never writes the store: refresh returns props only, so there is
     /// no second writer. Each awaited request uses the host's existing carrier.
     pub fn snapshot_timeline(
         &mut self,
@@ -45,7 +45,7 @@ impl<D: DataSource> Runner<D> {
                             self.data.discard(token);
                         }
                     }
-                    return Err("snapshot refresh cannot write the store".into());
+                    return Err("snapshot refresh cannot write the store in stage 1".into());
                 }
                 match step {
                     Answer::Now(value) => {

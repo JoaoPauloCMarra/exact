@@ -1,5 +1,5 @@
-//! `explain` of an icon and a param, and `describe`'s icon `draws` (*1.12*):
-//! one computation, two readers.
+//! `explain` of an icon and a param, and `describe`'s icon `draws` (LLP
+//! 1121 stage 9 C1, *1.12*): one computation, two readers (theme2 19:25).
 
 use crate::tamber_ops::files_json;
 use contract::tamber_params::AppParams;
@@ -8,9 +8,9 @@ use serde_json::{json, Value};
 use std::path::Path;
 
 /// `{target: source}`: which of an icon's sources each target the app at
-/// `dir` ships draws (`sf`, `svg`, or null for none), by
-/// `contract_lower::icons::draws`; its SVG read under the assets of the root
-/// whose file writes it (`app`'s package's), as the build reads it.
+/// `dir` ships draws (`sf`, `svg`, or null for none), by D10's rule; its
+/// SVG read under the assets of the root whose file writes it (`app`'s
+/// package's, stage 13), as the build reads it.
 pub(crate) fn draws(dir: &Path, app: &AppParams, icon: &exact_tamber::Icon) -> Value {
     let home = contract_lower::icons::Home::of(icon, Some(dir), &app.packages, &app.tokens);
     let by: serde_json::Map<String, Value> = contract_lower::icons::draws(icon, dir, home)
@@ -36,7 +36,7 @@ pub(crate) fn icon(
     let declared = param.map(|p| self::param(dir, design, p, app, snap));
     // An icon's value as its design writes it (the folded design has an
     // icon naming another replaced by that one's `icon(…)`); a package's
-    // icon the app doesn't set, as its package's design does.
+    // icon the app doesn't set, as its package's design does (stage 13).
     let line = |text: &str| {
         exact_tamber::parse(text).ok().and_then(|d| {
             d.icons
@@ -121,7 +121,7 @@ pub(crate) fn param(
         .iter()
         .find(|(f, ..)| *f == file)
         .map(|(_, t, _)| t.clone())
-        // A package's file read where it is: its name is no path.
+        // A package's file read where it is (round 2, Astra 3): its name is no path.
         .or_else(|| {
             let path = app.paths.get(span.source_id as usize).cloned();
             std::fs::read_to_string(path.unwrap_or_else(|| dir.join(&file))).ok()
@@ -151,7 +151,7 @@ pub(crate) fn param(
     json!({"component": component, "identity": p.identity, "kind": p.param.kind, "file": file, "line": span.line, "col": span.col, "default": default, "set": set})
 }
 
-/// `uses` of an icon (*1.12*), or of an icon param (`name`
+/// `uses` of an icon (stage 9 C2, *1.12*), or of an icon param (`name`
 /// its IR token): the plan nodes that draw it, directly, through a design
 /// icon naming it (`icon.alias = icon.base`), or through an icon param
 /// whose value (the design's line by its full name, or its short name

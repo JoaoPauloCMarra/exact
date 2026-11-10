@@ -1,6 +1,6 @@
 // One node: its box at the kernel's frame, its children at theirs (in
 // document order: the vocabulary's paint order), and the platform's
-// presentation where the author was silent.
+// presentation where the author was silent (D5).
 #if canImport(WidgetKit)
 import SwiftUI
 import WidgetKit
@@ -45,7 +45,7 @@ struct SnapshotNodeView: View {
         content
             .frame(width: node.frame.width, height: node.frame.height, alignment: .topLeading)
             .modifier(Clip(outline: style.clips ? paint.paddingOutline(in: bounds) : nil))
-            // The root's background is the container's, never drawn twice.
+            // The root's background is the container's (D5), never drawn twice.
             .background {
                 if !isRoot {
                     if redactPaint {
@@ -104,7 +104,7 @@ struct PathClip: ViewModifier {
 }
 
 /// `data-privacy` (the node's `dataset`), in a widget and in a Live Activity
-/// alike: `public` is not account content, so it stays while the Lock
+/// alike (D8): `public` is not account content, so it stays while the Lock
 /// Screen redacts the rest; `private` is redacted inside a public container.
 /// Apply it at leaves: an ancestor marked public must not remove the privacy
 /// redaction reason before a private descendant receives it. The placeholder
@@ -120,7 +120,7 @@ struct Privacy: ViewModifier {
     }
 }
 
-/// A nested link's content opens its URL in the families that take a
+/// A nested link's content opens its URL (D7) in the families that take a
 /// `Link`; the root's, or the one link of a small or accessory family, is
 /// the widget's URL (`SnapshotView`).
 private struct Linked: ViewModifier {
@@ -130,7 +130,7 @@ private struct Linked: ViewModifier {
     }
 }
 
-/// Accessibility carries over from the node: its label, hint and
+/// Accessibility carries over from the node (D5): its label, hint and
 /// value, a heading with its level, a paragraph as one element, a
 /// decorative image hidden, `aria-hidden` hiding the subtree.
 struct Semantics: ViewModifier {

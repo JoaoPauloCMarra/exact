@@ -1,11 +1,11 @@
-// The motion parity smoke: `apps/motion-gallery`
+// The motion parity smoke (LLP 1011.000, LLP 1055 D7): `apps/motion-gallery`
 // on each native host against Chrome's at fixed clock times. Chrome (the web
 // build, the JS target, in agent mode) is the reference: its animated images are its own
 // decoder's frames placed by Chrome's schedule (host/web/image-glue.js), and
 // its keyframes are the browser's own, seeked. Each `fx-*` box is cropped by
 // its host's layout at one pixel per point, registered within ±2 px, and
 // compared: mean |Δ| ≤ 4/255 and ≤ 6% of pixels off by more than 32. Linux
-// decodes no GIF or WebP: its image fixtures are declared
+// decodes no GIF or WebP (LLP 1011.000 §4): its image fixtures are declared
 // unsupported. Failing crops are written out in pairs.
 // Run: `bun scripts/smoke.mjs motion [--hosts linux,macos,ios]`.
 import { spawnSync } from 'node:child_process';
@@ -27,7 +27,7 @@ function webBuild() {
   const dist = resolve(ROOT, 'target/web-dist-js/motion-gallery');
   if (process.env.EXACT_MOTION_REBUILD === '1' || !existsSync(resolve(dist, '.exact-build.json'))) {
     mkdirSync(dirname(dist), { recursive: true });
-    // The web the app ships: the JS target, its animated images held by the web host's own image-glue.js.
+    // The web the app ships (LLP 1071): the JS target, its animated images held by the web host's own image-glue.js.
     const b = spawnSync('bun', [resolve(ROOT, 'host/web/build.mjs'), 'motion-gallery-web', '--js'], { cwd: ROOT, env: { ...process.env, EXACT_WEB_DIST: dist }, stdio: 'inherit' });
     if (b.status !== 0) throw new Error('the motion-gallery web build failed');
   }

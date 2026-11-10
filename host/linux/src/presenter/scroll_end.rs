@@ -1,4 +1,4 @@
-//! Linux's first scroll completion step (Scroll completion).
+//! Linux's first scroll completion step (LLP 1005, Scroll completion).
 //! The Host keeps time; this queue is serviced only after its ordinary work.
 use super::*;
 use exact_kernel::NodeKey;

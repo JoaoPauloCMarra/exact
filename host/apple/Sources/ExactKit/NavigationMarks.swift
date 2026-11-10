@@ -6,7 +6,7 @@
 // Only a cold navigation has a TTI: a screen already shown (back, a tab seen
 // before) was interactive before, as Observe's markInteractive on mount is
 // never called again for it. A warm one ends at its warm_ttr.
-// A change UIKit made itself (its Back button, a back swipe)
+// A change UIKit made itself (its Back button, a back swipe, LLP 1035.001.000)
 // reaches the app once its transition has ended, but the screen it shows was
 // drawn from the transition's first frame: render is that frame, the first vsync
 // after the turn in which UIKit began to show it (`willShow` comes before it).

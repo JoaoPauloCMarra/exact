@@ -1,4 +1,4 @@
-//! A page laid out for its reader's viewport: the client
+//! A page laid out for its reader's viewport (LLP 1048.006): the client
 //! hints, else the class the user agent names; a kept page kept per class.
 
 use super::serve::{dist, header, BOUND};

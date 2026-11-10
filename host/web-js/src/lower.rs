@@ -1,4 +1,5 @@
-//! Enumerated style bindings lowered to classes.
+//! @ref LLP 1071.001 part B, B5 — enumerated style bindings lowered to
+//! classes (~/x2theme/x2p4-b5-plan.md, theme2 07:30 and 07:33).
 //!
 //! A node whose dynamic style rows are all pure functions of one enum
 //! expression compared to literals gets one `Pc` (lower.js) in place of its
@@ -256,7 +257,7 @@ impl Em<'_> {
         };
         // The name is the arm set's content: its recipe, literals and every
         // module constant the recipe reads, so a build or a dev generation
-        // that changes any of them names new rules,
+        // that changes any of them names new rules (theme2 07:33 condition 7),
         // in two FNV-1a 64s (128 bits); lower.js also checks the content.
         let mut text = recipe.clone();
         text.push('\0');

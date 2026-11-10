@@ -1,4 +1,4 @@
-//! Structure projected into a shell's bars: where a
+//! Structure projected into a shell's bars (LLP 1115.001 D11): where a
 //! shell has bars of the platform's (Android's reader: Material's top app
 //! bar and its navigation bar, `presenter/bars.rs`), a route's `header` is
 //! the top bar and the navigation root's `tablist` the navigation bar, by
@@ -6,7 +6,7 @@
 //!
 //! This is the host's half: after each commit it reads the first navigation
 //! root's routes and tabs by that rule, and takes what a bar stands for out
-//! of the page, as iOS does (`HostCover`):
+//! of the page, as iOS does (`HostCover`, LLP 1075.003 §3.5):
 //!
 //! - the header a top bar replaces takes no room and is neither painted nor
 //!   hit ([`crate::navigation::Navigation::lifted`]). A header that holds a
@@ -119,7 +119,7 @@ impl<D: DataSource> Host<D> {
                     .next()
             });
         let mut wanted: BTreeMap<ViewId, HostCover> = BTreeMap::new();
-        // Where a shell shows the top layer in windows of its own, a
+        // Where a shell shows the top layer in windows of its own (D10), a
         // popover is never the page's: it takes no room there, as the web
         // gives a closed one none. In the page's flow it took its rows'
         // height, which Shelf's row menu took of the list above it.
@@ -144,7 +144,7 @@ impl<D: DataSource> Host<D> {
             let (found, all) = crate::navigation::stacks(kernel, root);
             // A tablist hidden as authored is no bar, as the web shows none;
             // nor is one whose author wrote `appearance: none`, which keeps
-            // its authored bar.
+            // its authored bar (LLP 1075.003 §9.10).
             let found = found.filter(|tabs| {
                 kernel.node(tabs.tablist).is_some_and(|n| {
                     n.style.display != Display::None
@@ -161,8 +161,9 @@ impl<D: DataSource> Host<D> {
                     let Some(node) = kernel.node(*route) else {
                         continue;
                     };
-                    // A presented route starts a stack of its own: it is not pushed, and
-                    // its Back control is an item of its bar.
+                    // A presented route starts a stack of its own (LLP
+                    // 1035.001 D4): it is not pushed, and its Back control
+                    // is an item of its bar.
                     let presented = matches!(
                         node.props.str(PropId::NavigationPresentation),
                         Some("modal" | "fullscreen")

@@ -1,4 +1,4 @@
-//! Style rows → CSS declarations.
+//! Style rows → CSS declarations (LLP 1115 §2, LLP 1002 D2).
 //! CSS names replace `_` with `-`; exceptions are mapped below. Spring timing
 //! is not emitted as CSS. Each set row is read through `StyleProps::get`, so
 //! new schema rows need no mapping unless their name or unit differs.
@@ -29,7 +29,7 @@ pub struct Skipped {
 }
 
 /// A hairline for a page without a kernel: the shell's custom property at
-/// one device pixel.
+/// one device pixel (LLP 1115.000 D10.3).
 pub const HAIRLINE: &str = "var(--exact-hairline, 1px)";
 
 /// The `cssText` for a node's set rows, plus what was skipped.
@@ -39,6 +39,7 @@ pub fn css_text(style: &StyleProps, font_names: &[String]) -> (String, Vec<Skipp
 
 /// [`css_text`] preserving authored `rem`/`em` for [`crate::host::template`].
 /// The JS target keeps no kernel; the browser follows root and parent font changes.
+/// @ref LLP 1069.000 D3
 pub fn css_text_relative(style: &StyleProps, font_names: &[String]) -> (String, Vec<Skipped>) {
     css_text_in(style, font_names, true)
 }
@@ -62,16 +63,16 @@ fn css_text_in(
                 num_into(out, n);
                 out.push_str("em");
             }
-            // A text style is the ramp's size at CSS's
+            // @ref LLP 1115 D3 — a text style is the ramp's size at CSS's
             // `medium`, in `rem`, so it follows the browser's root size.
-            // A length ramp likewise.
+            // @ref LLP 1137 — a length ramp likewise.
             Unit::TextStyle(_) | Unit::Ramp(_) => {
                 let medium = exact_kernel::style::relative::MEDIUM;
                 num_into(out, n * unit.basis(medium, medium, 1.0) / medium);
                 out.push_str("rem");
             }
             Unit::TextStyleAtMost(_) => out.push_str(&unit.capped_css(n)),
-            // One device pixel: the page's sheet
+            // @ref LLP 1115.000 D10.3 — one device pixel: the page's sheet
             // keeps `--exact-hairline` at it, whatever the display's scale.
             Unit::Hairline => out.push_str(HAIRLINE),
         }
@@ -79,7 +80,7 @@ fn css_text_in(
     };
     let mut out = String::from(exact_kernel::style::roles::scheme_color(style));
     let mut skipped = Vec::new();
-    // Row scale and host feedback multiply independently.
+    // @ref LLP 1061: row scale and host feedback multiply independently.
     let press = press_composes(style);
     for id in style.mask.union(style.written).iter() {
         if !style.mask.has(id) && clears::push(&mut out, id, press) {
@@ -117,14 +118,14 @@ fn css_text_in(
                     });
                 }
             }
-            // The browser runs it; the rule it names
+            // @ref LLP 1055 D5/D7 — the browser runs it; the rule it names
             // is in the page's stylesheet (`Batch::keyframes`).
             (StyleId::Animation, RowValue::Animations(a)) => {
                 if let Some(link) = crate::link::linked().animations.filter(|_| !a.0.is_empty()) {
                     push_text!(&mut out, "animation:{};", (link.list)(a, press));
                 }
             }
-            // Not CSS properties: custom properties the page's
+            // @ref LLP 1063 — not CSS properties: custom properties the page's
             // presence module reads (`presence-glue.js`), inherited by nothing
             // it reads, since it reads only the element's own declaration. The
             // exit's own list also rides its `exit` op (a virtualized row leaves
@@ -140,7 +141,7 @@ fn css_text_in(
                     );
                 }
             }
-            // A drag timeline is no timeline the
+            // @ref LLP 1057.003 D2 — a drag timeline is no timeline the
             // browser runs: custom properties the page's drag code
             // (motion-glue.js) reads. A bound consumer's animations are
             // paused (after `animation`, bit 114, so its shorthand cannot
@@ -150,7 +151,7 @@ fn css_text_in(
                     push_text!(&mut out, "--exact-drag-timeline:{};", d.css());
                 }
             }
-            // A clock is no CSS timeline either: the
+            // @ref LLP 1055.002 — a clock is no CSS timeline either: the
             // animations play on the page's, and the glue sets their start
             // (navigation.js `animationClocks`).
             (StyleId::AnimationTimeline, RowValue::AnimationTimeline(t)) => {
@@ -169,8 +170,8 @@ fn css_text_in(
                     push_text!(&mut out, "--exact-animation-range:{};", r.css());
                 }
             }
-            // CSS's own row, for the timelines the
-            // browser resolves (scroll timelines), and a custom property
+            // @ref LLP 1057.003 D4 — CSS's own row, for the timelines the
+            // browser resolves (scroll timelines, D5), and a custom property
             // the drag code's lookup reads (motion-glue.js `timelineSource`).
             (StyleId::TimelineScope, RowValue::TimelineScope(s)) => {
                 if **s != exact_kernel::timeline::TimelineScope::None {
@@ -188,7 +189,7 @@ fn css_text_in(
                     push_text!(&mut out, "--exact-layout-transition:{};", text);
                 }
             }
-            // CSS's `vertical-align` is one
+            // @ref LLP 1011.002 D3 — CSS's `vertical-align` is one
             // property: the keyword, or the length when one shifts the box.
             (StyleId::VerticalAlign, _) if shifted(style) => {}
             (StyleId::BaselineShift, RowValue::Dimension(d)) => {
@@ -200,10 +201,10 @@ fn css_text_in(
                     out.push(';');
                 }
             }
-            // Apple's continuous curve is no CSS keyword:
+            // @ref LLP 1077 D1 — Apple's continuous curve is no CSS keyword:
             // the web's stand-in is `superellipse(K)` over the radius scaled
-            // to the same reach (kernel `APPLE_ON_THE_WEB`). CSS's own
-            // keywords are the browser's.
+            // to the same reach (kernel `APPLE_ON_THE_WEB`, declared in LLP
+            // 1001). CSS's own keywords are the browser's.
             (StyleId::CornerShape, RowValue::CornerShape(c)) => {
                 let (k, _) = exact_kernel::corner::APPLE_ON_THE_WEB;
                 let web = exact_kernel::corner::CornerShape(c.0.map(|corner| match corner {
@@ -232,7 +233,7 @@ fn css_text_in(
                     exact_num::Shortest32(exact_kernel::corner::APPLE_ON_THE_WEB.1)
                 );
             }
-            // `rotate` is the angle and its axis, and
+            // @ref LLP 1077 D8 — `rotate` is the angle and its axis, and
             // `translate` x, y and z: one declaration each.
             (StyleId::Rotate, RowValue::Number(n)) if style.rotate_axis.0 != [0.0, 0.0, 1.0] => {
                 push_text!(&mut out, "rotate:{} ", style.rotate_axis.css());
@@ -240,7 +241,7 @@ fn css_text_in(
                 out.push_str("deg;");
             }
             // A percentage is of the box's own border box, which the browser
-            // resolves; an axis with both is a `calc()`.
+            // resolves (chess diary #4); an axis with both is a `calc()`.
             (StyleId::Translate, RowValue::Vec2(v))
                 if style.translate_z != 0.0
                     || style.translate_percent.x != 0.0
@@ -291,7 +292,7 @@ fn css_text_in(
                     });
                 }
             }
-            // An unset scheme follows the parent's, as
+            // @ref LLP 1034 §8: an unset scheme follows the parent's, as
             // Apple's trait inheritance does (CSS's `normal` would mean the
             // page's schemes); the compiler admits only `light` and `dark`.
             (StyleId::ColorScheme, RowValue::Enum("normal")) => {
@@ -299,7 +300,7 @@ fn css_text_in(
             }
             (StyleId::UserSelect, RowValue::Enum(v)) => selection::push(&mut out, v),
             (StyleId::ControlSize, RowValue::Enum(size)) => control_size::push(&mut out, size),
-            // browser-owned corners.
+            // LLP 1069.011.001 D9: browser-owned corners.
             // A capsule's ends are half-circles, so it takes no curve (index.html).
             (StyleId::ControlCornerStyle, RowValue::Enum(corner)) => {
                 out.push_str(if *corner == "capsule" {
@@ -311,7 +312,7 @@ fn css_text_in(
             (StyleId::TextBoxEdge, RowValue::Enum(edge)) => {
                 crate::text_box_css::push_edge(edge, &mut out)
             }
-            // Firefox's Mac spelling beside WebKit's, as
+            // @ref LLP 1019 D12 — Firefox's Mac spelling beside WebKit's, as
             // Tailwind's `antialiased` writes both.
             (StyleId::FontSmoothing, RowValue::Enum(v)) => {
                 let firefox = if *v == "antialiased" {
@@ -348,7 +349,7 @@ fn css_text_in(
                     }
                 }
             }
-            // The row's bits back to CSS keywords.
+            // @ref LLP 1053 §0 G4 — the row's bits back to CSS keywords.
             (StyleId::FontVariantNumeric, _) => push_text!(
                 &mut out,
                 "font-variant-numeric:{};",
@@ -364,7 +365,7 @@ fn css_text_in(
                 out.push_str(flow);
                 out.push(';');
             }
-            // Buttons read the custom property; `auto` is the browser's.
+            // @ref LLP 1069.011 D8 — buttons read the custom property; `auto` is the browser's.
             (StyleId::AccentColor, _) if lowered(id, &value) => {
                 out.push_str("accent-color:");
                 let start = out.len();
@@ -390,7 +391,7 @@ fn css_text_in(
                 }
                 out.push(';');
                 // An authored accent, apart from the page's own in
-                // --exact-accent: what a spinner reads. The
+                // --exact-accent: what a spinner reads (LLP 1121 D9). The
                 // page's sheet takes a bound or live one from the element
                 // that writes --exact-accent itself (neutral.css).
                 if !auto {
@@ -399,7 +400,7 @@ fn css_text_in(
                     out.push(';');
                 }
             }
-            // host-owned feedback, as `-exact-press-scale`: a
+            // @ref LLP 1077 D14 — host-owned feedback, as `-exact-press-scale`: a
             // custom property input-glue.js reads from the pressed element's
             // own style, and plays as `navigator.vibrate` where it exists.
             (StyleId::PressHaptic, RowValue::Enum(kind)) => {
@@ -407,15 +408,15 @@ fn css_text_in(
                     push_text!(&mut out, "--exact-press-haptic:{};", kind);
                 }
             }
-            // Not CSS: the browser lays the text out,
+            // @ref LLP 1116.001 D1.4 — not CSS: the browser lays the text out,
             // and navigation.js `fitText` scales it by the kernel's rule.
             (StyleId::Fit, RowValue::Enum(kind)) => {
                 if *kind != "none" {
                     push_text!(&mut out, "--exact-fit:{};", kind);
                 }
             }
-            // Written with `rotate` and `translate`, never alone, and a
-            // boundary's tuple: nothing to write, none skipped.
+            // Written with `rotate` and `translate` (LLP 1077 D8), never alone, and a
+            // boundary's tuple (LLP 1121 D7): nothing to write, none skipped (F30).
             (StyleId::RotateAxis | StyleId::TranslateZ | StyleId::TranslatePercent, _) => {}
             (StyleId::Mode, _) => {}
             // Where a grouped row's separator starts (index.html), and which
@@ -454,8 +455,8 @@ fn css_text_in(
     (out, skipped)
 }
 
-/// Whether a node's press feedback composes through `--exact-scale`:
-/// its `scale` is the important product of the row's number and
+/// Whether a node's press feedback composes through `--exact-scale`
+/// (LLP 1061): its `scale` is the important product of the row's number and
 /// the feedback's factor, so an animation of `scale` reaches it only through
 /// `--exact-scale`.
 pub(crate) fn press_composes(style: &StyleProps) -> bool {
@@ -505,7 +506,7 @@ pub fn keyframes_css(a: &exact_motion::animation::Animation, press: bool) -> Str
 }
 
 /// Send each `@keyframes` rule `style`'s animations name, and its exit's,
-/// that the page lacks (`sent`), once, by name.
+/// that the page lacks (`sent`), once, by name (LLP 1055 D7).
 pub(crate) fn send_keyframes(
     sent: &mut exact_kernel::SortedSet<String>,
     style: &StyleProps,
@@ -581,7 +582,7 @@ fn shifted(style: &StyleProps) -> bool {
     style.mask.has(StyleId::BaselineShift) && style.rare.baseline_shift != Dimension::Points(0.0)
 }
 
-/// Whether the corner a radius row sizes is `-exact-continuous`.
+/// Whether the corner a radius row sizes is `-exact-continuous` (LLP 1077 D1).
 fn apple_corner(style: &StyleProps, id: StyleId) -> bool {
     let i = match id {
         StyleId::BorderRadiusTopLeft => 0,
@@ -596,7 +597,7 @@ fn apple_corner(style: &StyleProps, id: StyleId) -> bool {
 fn lowered(id: StyleId, value: &RowValue<'_>) -> bool {
     match value {
         RowValue::Vec2(_) => id == StyleId::Translate,
-        // Apple's affordances: no CSS property.
+        // Apple's affordances: no CSS property (LLP 1077 §5).
         RowValue::SymbolPalette(_) => false,
         _ if matches!(
             id,
@@ -608,7 +609,7 @@ fn lowered(id: StyleId, value: &RowValue<'_>) -> bool {
                 | StyleId::ScrollEdgeEffect
                 | StyleId::HoverEffect
                 | StyleId::SmartInvert
-                // The kernel holds the animations: no declaration.
+                // The kernel holds the animations (LLP 1055 D13): no declaration.
                 | StyleId::AnimationTrigger
         ) =>
         {
@@ -695,22 +696,22 @@ fn spell_property(out: &mut String, id: StyleId) {
     let name = match id {
         StyleId::TextColor => return out.push_str("color"),
         StyleId::TintColor => return out.push_str("--exact-tint"),
-        // `::placeholder`'s colour, read by index.html.
+        // @ref LLP 1104 D3 — `::placeholder`'s colour, read by index.html.
         StyleId::PlaceholderColor => return out.push_str("--exact-placeholder-color"),
-        // The pressed paint: custom properties input-glue.js
+        // @ref LLP 1061 D7 — the pressed paint: custom properties input-glue.js
         // reads from the pressed element's own style, as `--exact-press`.
         StyleId::PressOpacity => return out.push_str("--exact-press-opacity"),
-        // `:active`'s opacity, lowered.
+        // `:active`'s opacity, lowered (LLP 1121 D8).
         StyleId::PressOpacityTo => return out.push_str("--exact-press-opacity-to"),
         StyleId::PressBackgroundColor => return out.push_str("--exact-press-background-color"),
         StyleId::PressColor => return out.push_str("--exact-press-color"),
         StyleId::PositionType => return out.push_str("position"),
         StyleId::BackdropFilter => return out.push_str("backdrop-filter"),
         StyleId::SvgMask => return out.push_str("mask"),
-        // The Compat Standard's prefixed names.
+        // @ref LLP 1077 D7 — the Compat Standard's prefixed names.
         StyleId::TextStrokeWidth => return out.push_str("-webkit-text-stroke-width"),
         StyleId::TextStrokeColor => return out.push_str("-webkit-text-stroke-color"),
-        // WebKit's and Chromium's name.
+        // @ref LLP 1019 D12 — WebKit's and Chromium's name.
         StyleId::FontSmoothing => return out.push_str("-webkit-font-smoothing"),
         id => id.name(),
     };
@@ -740,7 +741,7 @@ fn dashed(out: &mut String, name: &str) {
 
 fn declared(out: &mut String, id: StyleId, value: &RowValue<'_>) {
     match value {
-        // CSS's unbounded maximum is `none`; `max-width: auto` is no value.
+        // CSS's unbounded maximum is `none`; `max-width: auto` is no value (LLP 1102 §3.11).
         RowValue::Dimension(Dimension::Auto)
             if matches!(id, StyleId::MaxWidth | StyleId::MaxHeight) =>
         {
@@ -757,7 +758,7 @@ fn declared(out: &mut String, id: StyleId, value: &RowValue<'_>) {
         }
         RowValue::Dimension(d) => dimension(out, *d),
         RowValue::Color(c) => rgba_into(out, *c),
-        // The browser resolves this one: handed the function
+        // The browser resolves this one (LLP 1034 D2): handed the function
         // it does so per element against the inherited `color-scheme`, with
         // no work of ours and no repaint pass. This is the whole reason the
         // kernel keeps the pair instead of flattening it.
@@ -769,7 +770,7 @@ fn declared(out: &mut String, id: StyleId, value: &RowValue<'_>) {
             rgba_into(out, *d);
             out.push(')');
         }
-        // A CSS system colour as is, an Exact role as
+        // @ref LLP 1095 D2 — a CSS system colour as is, an Exact role as
         // `var(--exact-<role>, <fallback>)`, a `-exact-platform-color()` as its web colour.
         RowValue::ColorValue(c) => exact_kernel::gradient::color_css(out, *c),
         RowValue::LineHeight(v) => out.push_str(&v.css()),
@@ -791,8 +792,8 @@ fn declared(out: &mut String, id: StyleId, value: &RowValue<'_>) {
         RowValue::Filter(f) => out.push_str(&f.css()),
         RowValue::BackdropFilter(f) => out.push_str(&f.css()),
         // The kernel's canonical CSS: explicit stops, `#rrggbbaa` colours and
-        // `light-dark()` pairs the browser resolves per element;
-        // the browser mixes premultiplied, as CSS says.
+        // `light-dark()` pairs the browser resolves per element (LLP 1034
+        // D2); the browser mixes premultiplied, as CSS says (LLP 1066).
         RowValue::BackgroundImage(g) | RowValue::MaskImage(g) => out.push_str(&g.css()),
         RowValue::TextShadow(s) => out.push_str(&s.css()),
         RowValue::FontVariations(v) => out.push_str(&v.css()),
@@ -808,7 +809,7 @@ fn declared(out: &mut String, id: StyleId, value: &RowValue<'_>) {
             out.push_str("px");
         }
         RowValue::Number(n) => match id {
-            // The row's 0 is CSS's `auto`.
+            // @ref LLP 1093 §1 — the row's 0 is CSS's `auto`.
             StyleId::ColumnCount if *n == 0.0 => out.push_str("auto"),
             StyleId::ZIndex => {
                 let max = exact_kernel::paint_order::Z_MAX;
@@ -825,9 +826,9 @@ fn declared(out: &mut String, id: StyleId, value: &RowValue<'_>) {
             | StyleId::Orphans
             | StyleId::FontWeight
             | StyleId::Scale
-            // CSS `zoom`, an iframe's alone.
+            // CSS `zoom`, an iframe's alone (LLP 1020.002 D6).
             | StyleId::Zoom
-            // SVG's unitless numbers; `r`, `cx`, `cy` are lengths.
+            // SVG's unitless numbers (LLP 1055 D2); `r`, `cx`, `cy` are lengths.
             | StyleId::FillOpacity
             | StyleId::StrokeOpacity
             | StyleId::StrokeMiterlimit
@@ -855,7 +856,8 @@ fn declared(out: &mut String, id: StyleId, value: &RowValue<'_>) {
 /// A `transition` row as CSS; `true` when a spring was left out. A spring
 /// drives the compositor rows as physics, lowered to frames by the host; the
 /// properties it does not ([`Property::springs`]: paint, SVG geometry)
-/// play its curve from rest as `linear()`, as every native host does.
+/// play its curve from rest as `linear()`, as every native host does (LLP
+/// 1062 D3).
 pub fn transition_css(t: &Transitions) -> (String, bool) {
     let mut text = String::new();
     let mut spring = false;
@@ -916,7 +918,7 @@ fn transition_property(tr: &Transition) -> &'static str {
 }
 
 /// A `-exact-layout-transition` row as the presence module reads it: duration and
-/// delay in milliseconds, then a CSS easing. A spring is
+/// delay in milliseconds, then a CSS easing (LLP 1063). A spring is
 /// `spring(stiffness, damping, mass)`: the module lowers each move itself,
 /// from its displacement and velocity in points, to the grid and rest
 /// threshold the engine settles on natively. `None` when no declaration
@@ -967,7 +969,7 @@ pub(crate) fn dimension(out: &mut String, d: Dimension) {
             out.push_str("px)");
         }
         // The browser resolves the inset itself (under `viewport-fit=cover`, which the glue sets
-        // from the root's prop; zero otherwise); a layout region is its safe area.
+        // from the root's prop; zero otherwise); a layout region is its safe area (LLP 1123 D10).
         Dimension::Env(edge, plus) | Dimension::Region(_, edge, plus) => {
             let inset = if plus == 0.0 { "env(" } else { "calc(env(" };
             out.push_str(inset);
@@ -980,11 +982,11 @@ pub(crate) fn dimension(out: &mut String, d: Dimension) {
                 out.push_str("px)");
             }
         }
-        // The browser resolves the segment itself too: the
+        // The browser resolves the segment itself too (LLP 1078 D6): the
         // text is CSS-ENV-1's, untouched.
         Dimension::Segment(var, x, y, plus) => exact_kernel::style::env::css(var, x, y, plus, out),
         // CSS's own `min()`, `max()` and `clamp()`: the browser resolves
-        // them, the insets with the rest (2026-10-07).
+        // them, the insets with the rest (LLP 1001 §2, 2026-10-07).
         Dimension::Compare(c) => exact_kernel::style::env::browser_css(c, out),
     }
 }
@@ -1063,7 +1065,7 @@ mod writer_tests {
         }
     }
 
-    /// A spring on paint is its curve from rest as `linear()`,
+    /// LLP 1062 D3: a spring on paint is its curve from rest as `linear()`,
     /// the easing the native engine plays; the compositor rows stay the
     /// host's frames, and `all` names each property the spring does not drive.
     #[test]

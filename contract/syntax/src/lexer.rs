@@ -236,8 +236,8 @@ impl Lexer {
                 }
                 let span = col_of(pos);
                 // A vendor-prefixed CSS name, as the Compat Standard spells
-                // some (`-webkit-text-stroke`), or one Exact
-                // invents (`-exact-press-scale`): these prefixes
+                // some (`-webkit-text-stroke`, LLP 1077 D7), or one Exact
+                // invents (`-exact-press-scale`, LLP 1081 D7): these prefixes
                 // only, and only as an attribute's name (followed by `=`),
                 // so `-webkit-x` in an expression stays a negation.
                 let vendor = ["-webkit-", "-apple-", "-exact-"].iter().any(|p| {
@@ -260,7 +260,7 @@ impl Lexer {
                     // An identifier may contain hyphens — `font-size`,
                     // `aria-label` — as CSS's do; so, as in CSS `calc()`,
                     // subtraction between two names needs spaces (`a - b`),
-                    // while `x-1` still lexes as `x`, `-`, `1`.
+                    // while `x-1` still lexes as `x`, `-`, `1` (LLP 1017 §8.1).
                     let start = pos;
                     if vendor {
                         pos += 1;
@@ -291,7 +291,7 @@ impl Lexer {
                     }
                     // A dot is the decimal point only when a digit follows, so
                     // `rows.0.steps` is an index and then a field, not the
-                    // number `0.`.
+                    // number `0.` (drums R7).
                     if bytes.get(pos) == Some(&b'.')
                         && bytes
                             .get(pos + 1)
@@ -371,7 +371,7 @@ impl Lexer {
                 if c == '#' {
                     // A hex color is a string, bare as CSS writes it
                     // (`background-color=#1f9d6244`, in a keyframe as on a
-                    // node): `#` and 3, 4, 6 or 8 hex digits.
+                    // node; x2apps dash): `#` and 3, 4, 6 or 8 hex digits.
                     // Anything else names what `#` is not.
                     let digits = bytes[pos + 1..]
                         .iter()

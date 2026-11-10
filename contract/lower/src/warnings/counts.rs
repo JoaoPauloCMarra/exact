@@ -1,4 +1,4 @@
-//! `lower-count-plural`: a number written straight
+//! `lower-count-plural` (LLP 1116.004 D4): a number written straight
 //! before a plural noun, `${n} cards`, reads "1 cards" when the count is
 //! one. Round after round two or three graded apps showed one ("1 cards",
 //! "1 spots left", "1 people"), from builders who never looked the idiom

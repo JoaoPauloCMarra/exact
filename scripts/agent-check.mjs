@@ -1,8 +1,8 @@
-// `check`: what is wrong with the presented screen, in text, so a builder need not read a
+// `check` (LLP 1116.003 D8): what is wrong with the presented screen, in text, so a builder need not read a
 // screenshot back to find it — text clipped against its box, controls overlapping or covered by a bar, the keyboard
 // or a sheet, targets under the platform's minimum, horizontal overflow, text below a contrast floor, and a card
 // whose fill is what lies behind it. The host observes (host/web-js/check.js, AgentCheckIOS.swift: its presented
-// boxes, ink, fills, clips and hit tests, and the fill painted under each text); where no fill is
+// boxes, ink, fills, clips and hit tests, and the fill painted under each text, LLP 1116.006 D5); where no fill is
 // known, the background a text stands on is read from a capture's pixels; this file only judges. `check dark` (or `light`) runs it under that `prefers-color-scheme`, `check both` under each.
 import { MalformedOperation } from './agent-keys.mjs';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -14,7 +14,7 @@ import { decodePng, encodePng, shrink } from './png.mjs';
 const SHOWN = 12;
 const OFFSCREEN = 'a column taller than the screen runs past it: let it scroll (`overflow-y: auto`), or give it `flex: 1` and `min-height: 0` under a header instead of `height: 100%`';
 const COLORS = JSON.parse(readFileSync(fileURLToPath(new URL('../kernel/tables/schema.json', import.meta.url)), 'utf8')).colors ?? [];
-/** A platform colour's row name by every name a host may report (kernel/tables/schema.json `colors`). */
+/** A platform colour's row name by every name a host may report (kernel/tables/schema.json `colors`, LLP 1115.000 D3.2). */
 const ROLES = new Map();
 for (const [name, webkit, ios, mac] of COLORS) for (const n of [name, webkit, ios, mac, ios?.replace(/Color$/, '')]) if (n && !ROLES.has(n)) ROLES.set(n, name);
 /** Each role's colour by scheme, `[r, g, b, a]`: what the page says it draws (`palette`, the web's check), else Apple's
@@ -48,12 +48,12 @@ function backdrop(png, scale, it) {
   return count >= 2 ? best : null;
 }
 
-/** The contrast a text needs (WCAG 2.2 §1.4.3, and the platforms' own answers): 4.5:1; 3:1 for large text (24 px, or 18.66 px bold), for a
- *  control's label on its own fill (the ink rule), for ink the platform chose (a tab bar's item) and for text in a platform colour (the
- *  secondary label, system red: the platform's palette, as a hand-built app draws it), and for text on an accent fill (a sent
+/** The contrast a text needs (WCAG 1.4.3, and LLP 1115's platform answers): 4.5:1; 3:1 for large text (24 px, or 18.66 px bold), for a
+ *  control's label on its own fill (D3's ink rule), for ink the platform chose (a tab bar's item) and for text in a platform colour (the
+ *  secondary label, system red: the platform's palette, as a hand-built app draws it), and for text on an accent fill (LLP 1116.020 D7: a sent
  *  bubble's white is a filled button's label; a pale accent still fails). The platform's tertiary and quaternary labels and its placeholders are its own and not judged,
  *  nor is a disabled control's label (WCAG's inactive component), nor a tinted button's label in a system hue: UIKit draws the hue on
- *  a pale fill of itself (the Clock's green Start, 1.9:1 in light; `RoundButton`'s), and Increase Contrast darkens it. */
+ *  a pale fill of itself (the Clock's green Start, 1.9:1 in light; `RoundButton`'s, LLP 1116.019 D3), and Increase Contrast darkens it. */
 function floor(it, scheme, palette) {
   if (it.inactive) return null;
   const r = role(it.fgRole) ?? drawnRole(it.fg, scheme, palette);
@@ -76,7 +76,7 @@ function drawnRole(fg, scheme = 'light', palette = APPLE) {
 
 const inter = (a, b) => ({ w: Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x), h: Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y) });
 /** What is presented of an item's box: the host's `vis` (a clipping view, or a bar drawn over it, cuts it), less what the
- * keyboard (its top, `kb`) covers; and whether none is. */
+ * keyboard (its top, `kb`) covers; and whether none is (LLP 1116.007 D3). */
 const shown = (it, kb) => { const v = it.vis ? { ...it, ...it.vis } : it; return kb != null && v.y + v.h > kb ? { ...v, h: Math.max(0, kb - v.y) } : v; };
 const covers = (it, kb) => { const v = shown(it, kb); return v.w <= 0 || v.h <= 0; };
 const holds = (a, b) => a.x <= b.x + 0.5 && a.y <= b.y + 0.5 && a.x + a.w >= b.x + b.w - 0.5 && a.y + a.h >= b.y + b.h - 0.5;
@@ -97,12 +97,12 @@ export function judge(obs, png, { host = 'web' } = {}) {
     }
     // Text that does not fit its box, or an ancestor's clip cutting it. A clamp the author asked for answers the lines
     // past it, and only `text-overflow: ellipsis` (`ellipsis`) a line wider than the box (a word longer than its line:
-    // "January" into the next button at the largest text size).
+    // "January" into the next button at the largest text size, expense-tracker, round 22).
     const need = it.text && it.over ? (it.clamp ? [it.ellipsis ? 0 : it.over[0], 0] : it.over) : null;
     if (need && (need[0] >= 2 || need[1] >= 2)) {
       add('clipped', it, { need: need.map(r0), clips: !!it.clips, unit }, it.clips ? 'let it wrap, give its box room, or ask for an ellipsis (`text-overflow: ellipsis` or `line-clamp`)' : 'its box is smaller than its text, which spills over what follows: drop the fixed size, or ask for `line-clamp`');
     } else if (it.text && it.cut) add('clipped', it, { cut: [r0(it.cut.dx), r0(it.cut.dy)], by: it.cut.by, edge: it.cut.edge, unit }, it.cut.edge ? OFFSCREEN : 'the clipping box is smaller than its content: let it grow, or scroll');
-    // A written percentage width and the padding it does not include, past what its parent gives it: the cause, named.
+    // LLP 1116.009 D5: a written percentage width and the padding it does not include, past what its parent gives it: the cause, named.
     if (it.padded) add('overflow', it, { past: r0(it.padded.dx), of: it.padded.by, pad: r0(it.padded.pad), written: it.padded.width, unit }, 'drop the width (a block or a stretched flex item fills its parent) or say `box-sizing="border-box"`');
     else if (it.outX) add('overflow', it, { past: r0(it.outX), width: vp.w, unit }, 'let it wrap (`flex-wrap: wrap` with a `flex-basis` in rem, `min-width: 0`, `max-width: 100%`), or scroll it inside its own box');
     else if (it.spill) add('overflow', it, { past: r0(it.spill.dx), of: it.spill.by, unit }, 'a flex item\'s width stops at its content: let it shrink (`min-width: 0`, a smaller `padding`), or let the row wrap (`flex-wrap: wrap`) or scroll');
@@ -112,8 +112,8 @@ export function judge(obs, png, { host = 'web' } = {}) {
         Math.hypot((o.x + o.w / 2) - (it.x + it.w / 2), (o.y + o.h / 2) - (it.y + it.h / 2)) >= obs.target);
       if (!spaced) add('target', it, { min: obs.target, unit }, `make its box at least ${obs.target}×${obs.target} (padding, or \`min-height\`/\`min-width\`)`);
     }
-    // Contrast against what it stands on: the fill the host found painted under it, else what the
-    // pixels show behind it, read where it is presented (a bar's glass over it is not what it stands on).
+    // Contrast against what it stands on: the fill the host found painted under it (LLP 1116.006 D5), else what the
+    // pixels show behind it, read where it is presented (a bar's glass over it is not what it stands on, LLP 1116.007 D3.8).
     if (it.text && it.fg && (it.bg || png) && !covers(it, obs.keyboard)) {
       const need = floor(it, obs.scheme, palette), bg = need && (it.bg ?? backdrop(png, scale, shown(it, obs.keyboard)));
       if (bg) {
@@ -131,7 +131,7 @@ export function judge(obs, png, { host = 'web' } = {}) {
     // it), both pixels are something else's (mapapp's park under its panel, photos' hills). A card the host says is
     // `faded` is not judged: an ancestor's opacity mixes it with what lies behind that ancestor, so no colour can be
     // expected at its edge.
-    // Only where it is presented: under the keyboard the capture shows the keyboard, not the card's edge.
+    // Only where it is presented: under the keyboard the capture shows the keyboard, not the card's edge (unit-converter, round 9).
     if (it.fill && !it.edge && !it.faded && png && !covers(it, obs.keyboard)) {
       const v = shown(it, obs.keyboard), on = (x, y) => x >= v.x - 2.5 && x <= v.x + v.w + 2.5 && y >= v.y - 2.5 && y <= v.y + v.h + 2.5;
       const sides = [[it.x + 2, it.y + it.h / 2, it.x - 2, it.y + it.h / 2], [it.x + it.w - 2, it.y + it.h / 2, it.x + it.w + 2, it.y + it.h / 2],
@@ -153,7 +153,7 @@ export function judge(obs, png, { host = 'web' } = {}) {
   const drawn = (it) => { const k = it.ink ?? it, v = shown(it.vis ? it : { ...it, ...k }, obs.keyboard), x = Math.max(v.x, k.x), y = Math.max(v.y, k.y); return { x, y, w: Math.min(v.x + v.w, k.x + k.w) - x, h: Math.min(v.y + v.h, k.y + k.h) - y }; };
   // Controls overlapping each other, or a text where it is drawn (a word wider than its box runs into the button beside
   // it): neither holds the other and they share more than a sliver of what is presented of each (`vis`: a row its list
-  // or scroller cuts overlaps nothing past that edge).
+  // or scroller cuts overlaps nothing past that edge, LLP 1116.006 D5).
   const controls = items.filter((it) => it.control && !it.inline);
   // A list's section header (`pinned`) lies over the rows passing under it, as UIKit pins it: no overlap.
   for (const a of controls) for (const b of items) {
@@ -163,8 +163,8 @@ export function judge(obs, png, { host = 'web' } = {}) {
     if (i.w >= 2 && i.h >= 2 && !holds(a, b) && !holds(b, a)) add('overlap', a, { with: b.id, by: [r0(i.w), r0(i.h)] }, 'give them room (a gap, or let the row wrap)');
   }
   // Two texts running into each other: where their lines are drawn (`ink`, where the host says it is not the box) share
-  // any width at all. Glyphs a pixel or two into a neighbour's read as one word ("GoingMaybe" at the largest
-  // text size), and two texts set flush on purpose ("$" then "12") only touch.
+  // any width at all. Glyphs a pixel or two into a neighbour's read as one word ("GoingMaybe", event-rsvp at the largest
+  // text size, round 21), and two texts set flush on purpose ("$" then "12") only touch.
   const texts = items.filter((it) => it.text && !it.control && !it.squeezed);
   // A text drawn on the opaque fill of the view laid over another's middle (a bar over its list's row) hides that
   // one where they meet, if that view's box holds all of the meeting: they do not run together there (the host's
@@ -224,7 +224,7 @@ export function line(f, nodes) {
   return `  ${f.kind.padEnd(8)} ${who(f, nodes)} ${box}: ${what}${f.hint ? `; ${f.hint}` : ''}`;
 }
 
-/** An advisory line: a phone's layout at a desktop width, which a composed page may mean. Never a finding. */
+/** An advisory line (LLP 1116.004 D1.3): a phone's layout at a desktop width, which a composed page may mean. Never a finding. */
 function advise(a, width, nodes) {
   const who = named(a.id, nodes);
   return `  advice   ${who}: ${a.kind === 'tabbar'

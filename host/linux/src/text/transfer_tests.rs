@@ -43,7 +43,7 @@ fn request(catalog: u64, width: f32) -> (Kernel, RegionTextRequest) {
     ] {
         style.mask.set(id);
     }
-    // A region's owner is positioned: it contains its placeholder.
+    // A region's owner is positioned: it contains its placeholder (LLP 1074 T1).
     style.position_type = PositionType::Relative;
     style.width = Dimension::Percent(100.);
     style.height = Dimension::Points(180.);
@@ -742,7 +742,7 @@ fn file_engine(path: &Path) -> TextEngine {
 }
 
 /// Preparing a generation reads, copies and renumbers no font: the worker's
-/// catalog shares the UI's faces.
+/// catalog shares the UI's faces (LLP 1085.000 §4; the storage spike's Q2).
 #[test]
 fn capture_reads_and_copies_no_font_bytes() {
     let dir = FontDirectory::new();

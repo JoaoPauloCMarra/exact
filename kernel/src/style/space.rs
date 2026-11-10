@@ -1,4 +1,4 @@
-//! CSS's 3D transform properties: `rotate`'s axis forms,
+//! CSS's 3D transform properties (LLP 1077 D8): `rotate`'s axis forms,
 //! `translate`'s z, and `perspective`. `rotate` stays the angle row the
 //! engine animates; its axis is a row of its own, which the `rotate`
 //! attribute sets beside it, each row taking its part of one value.
@@ -120,7 +120,7 @@ fn axis_only(text: &str) -> Option<[f32; 3]> {
 /// percentage of the node's own border box, as `(lengths, percentages)` —
 /// an axis is one or the other, the other part zero. `none` is deliberately
 /// not zero: CSS gives the two different containing-block and stacking
-/// semantics. A third length is z, its own row; `calc()` is
+/// semantics. A third length is z, its own row (LLP 1077 D8); `calc()` is
 /// refused.
 pub fn translate(text: &str) -> Option<(Vec2, Vec2)> {
     // CSS whitespace is TAB, LF, FF, CR and SPACE; ASCII VT is not included.
@@ -188,10 +188,10 @@ pub fn font_stretch(text: &str) -> Option<f32> {
         .map(|(_, v)| *v)
 }
 
-/// The `f32` rows that take CSS text or a range of their own:
-/// `rotate`'s angle, `translate`'s z and `perspective`, a symbol's
-/// value, `-webkit-text-stroke`'s width and `font-stretch`
-///. `None` for any other row, which the plain number parse
+/// The `f32` rows that take CSS text or a range of their own (LLP 1077):
+/// `rotate`'s angle, `translate`'s z and `perspective` (D8), a symbol's
+/// value (D11), `-webkit-text-stroke`'s width (D7) and `font-stretch`
+/// (LLP 1019 D8). `None` for any other row, which the plain number parse
 /// takes.
 pub(crate) fn f32_row(
     value: &super::StyleValue,
@@ -242,7 +242,7 @@ pub(crate) fn f32_row(
             .map(|(w, _)| w)
             .map_err(|reason| StyleValueError::BadTextStroke { style, reason }),
         (StyleId::TextStrokeWidth, _) => wrong("a nonnegative width in px"),
-        // CSS Fonts 4 §2.4: a nonnegative percentage or a
+        // @ref LLP 1019 D8 — CSS Fonts 4 §2.4: a nonnegative percentage or a
         // keyword, never a bare number.
         (StyleId::FontStretch, StyleValue::Percent(p)) if (*p as f32).is_finite() && *p >= 0.0 => {
             Ok(*p as f32)

@@ -1,7 +1,9 @@
-//! The Material look's controls: a checkbox, a radio and a filled button take
-//! Material's size and colours, and what the author wrote wins; each takes a
-//! touch over 48 dp, apart from its layout. The look is the process's
-//! (`app::show_material_look`), so these run in a child process of their own.
+//! The Material look's controls (LLP 1115.001 D9, S2): a checkbox, a radio
+//! and a filled button take Material's size and colours, and what the
+//! author wrote wins; each takes a touch over 48 dp, apart from its layout
+//! (LLP 1115.001.001 §5 Q5). The
+//! look is the process's (`app::show_material_look`), so these run in a
+//! child process of their own.
 use super::*;
 
 const APP: &str = r##"component App

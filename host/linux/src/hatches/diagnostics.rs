@@ -1,8 +1,9 @@
-//! What Exact measures of each hatch call, and what hatch code says of itself:
-//! one store a session, owned by the host loop's thread. Development only, as
-//! `perf` is: a production build's store keeps nothing and each call returns on
-//! one flag. Its bounds are fixed: past one a record is refused and counted,
-//! never grown. Reads are cumulative and change nothing.
+//! What Exact measures of each hatch call, and what hatch code says of
+//! itself (@ref LLP 1075.003.000.001 §3.1–§3.3): one store a session, owned
+//! by the host loop's thread. Development only, as `perf` is (LLP 1079 D1):
+//! a production build's store keeps nothing and each call returns on one
+//! flag. Its bounds are §3.2's, fixed: past one a record is refused and
+//! counted, never grown. Reads are cumulative and change nothing.
 
 use serde_json::{json, Map, Value};
 use std::collections::{BTreeMap, BTreeSet};
@@ -123,7 +124,7 @@ impl Store {
         self.lines.push(line);
     }
 
-    // What Exact times.
+    // What Exact times (§3.1).
 
     /// A hatch call begins: its start, when measuring.
     pub(crate) fn begin_call(&mut self) -> Option<Instant> {
@@ -180,7 +181,7 @@ impl Store {
         (calls > 0).then_some((calls, ms))
     }
 
-    // What hatch code records.
+    // What hatch code records (§3.2).
 
     fn named(&mut self, scope: &str, name: &str) -> bool {
         if valid(name) {
@@ -356,7 +357,7 @@ impl Store {
         self.lines = lines;
     }
 
-    // Reads, which change nothing.
+    // Reads, which change nothing (§3.3).
 
     fn grouped<T>(map: &BTreeMap<Key, T>, value: impl Fn(&T) -> Value) -> Map<String, Value> {
         let mut out = Map::new();

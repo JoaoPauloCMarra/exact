@@ -22,7 +22,7 @@ pub(crate) struct BundlePin {
     pub sha256: &'static str,
 }
 
-// This table is the trust root for
+// @ref LLP 0057.000#l1--the-bindings-door — this table is the trust root for
 // the compiler/VM identity shared by the bindings and the owning runtime.
 // These are the authenticated immutable v5 release digests. Keep this tag and
 // complete table together until a successor release is published and every
@@ -139,7 +139,7 @@ pub(crate) struct LinkArchive {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct PreparedLinkArchive {
     pub library: String,
-    /// The receipt-authenticated bundle input. The link metadata names this
+    /// The receipt-authenticated bundle input. R-e continues to name this
     /// archive and its receipt digest even when rustc links a thin derivative.
     pub source: PathBuf,
     /// The path placed on rustc's native-library search path. Apple Simulator

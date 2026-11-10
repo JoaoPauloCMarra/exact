@@ -1,16 +1,16 @@
-// The context menu on UIKit: a node naming a popover
+// @ref LLP 1021 §5.1 — the context menu on UIKit: a node naming a popover
 // with `contextPopover` gets a UIContextMenuInteraction. UIKit owns the long
 // press, the lift of the node itself (its targeted preview), the menu's
-// placement and the morph. The popover's menu rows are the UIMenu
-// (extracted), and its `contextPreview` row, moved out of the hidden popover
+// placement and the morph. The popover's menu rows are the UIMenu (D3's
+// extraction), and its `contextPreview` row, moved out of the hidden popover
 // into the preview controller's view, is the preview, sized by its layout.
 // Tapping the preview presses that row (UIKit's commit): a press that
 // navigates is pushed without its own animation and committed with `.pop`,
 // so the preview grows into the destination; any other is `.dismiss`.
 // The node's own `contextmenu` action fires as the menu is about to show,
-// before its rows or preview are read (both fire), so a popover a
+// before its rows or preview are read (D1's "both fire"), so a popover a
 // list's rows share shows the row pressed. While the agent paints, this host
-// is off and the popover opens painted (`MenuHost.agentContext`).
+// is off and the popover opens painted (D4, `MenuHost.agentContext`).
 #if os(iOS)
 import AVFoundation
 import UIKit
@@ -22,7 +22,7 @@ final class ContextMenuHost: NSObject, UIContextMenuInteractionDelegate, UIEditM
     private var interactions: [UInt32: UIContextMenuInteraction] = [:]
     private lazy var keyboardInteraction = UIEditMenuInteraction(delegate: self)
     /// A sheet's mount's interaction, while a logical ancestor of its route
-    /// names a menu: UIKit gives a long press to the
+    /// names a menu (LLP 1123 D2): UIKit gives a long press to the
     /// interactions of the views it falls in, and the ancestor's own is on a
     /// view behind the sheet.
     private var mountInteractions: [ObjectIdentifier: UIContextMenuInteraction] = [:]
@@ -321,7 +321,7 @@ final class ContextMenuHost: NSObject, UIContextMenuInteractionDelegate, UIEditM
         guard live(source), let name = run?.props["contextPopover"] ?? (run == nil ? source.props["contextPopover"] : nil),
               menus.eligible(source, contextMenu: true) else { return nil }
         // UIKit's row menu wins over text selection. An authored menu
-        // nearer the hit still belongs to that node.
+        // nearer the hit still belongs to that node (LLP 1115.000 D11.6).
         if view is NodeView ? NodeView.nativeEditor(hit, below: view) : NodeView.nativeInputOwns(hit, below: view) { return nil }
         if let hit = hit as? NodeView,
            let nearest = hit.contextMenuSource(at: hit.convert(location, from: view)), nearest !== source { return nil }
@@ -399,7 +399,7 @@ final class ContextMenuHost: NSObject, UIContextMenuInteractionDelegate, UIEditM
     func menu(_ owner: Open) -> UIMenu? {
         fire(owner)
         guard let menus, let pop = current(owner) else { return nil }
-        let items = menus.items(of: pop, opener: owner.source) // a row's popover opens from the pressed node
+        let items = menus.items(of: pop, opener: owner.source) // a row's popover opens from the pressed node (LLP 1021)
         return items.isEmpty ? nil : UIMenu(title: pop.props["accessibilityLabel"] ?? "", children: items)
     }
 
@@ -456,7 +456,8 @@ final class ContextMenuHost: NSObject, UIContextMenuInteractionDelegate, UIEditM
         }
     }
 
-    /// UIKit lifts the node itself, live, clipped to its outline: it hides the node, lifts it and returns it. A run of text cannot
+    /// UIKit lifts the node itself, live, clipped to its outline (LLP 1021
+    /// §5.1): it hides the node, lifts it and returns it. A run of text cannot
     /// lift its paragraph, which UIKit would hide whole: it lifts a picture of
     /// what lies under the run's lines (`runPreview`), and the paragraph stays
     /// shown. Both rise over `container(of:)`.

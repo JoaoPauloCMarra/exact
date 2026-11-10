@@ -1,4 +1,4 @@
-# Variable Type on Apple: the Contract UI and its empty
+# Variable Type on Apple (LLP 1019 §13): the Contract UI and its empty
 # TypeScript data module.
 [package]
 name = "variable-type-apple"

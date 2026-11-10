@@ -1,4 +1,4 @@
-//! A gated task's gate and key are read at commits, not
+//! @ref LLP 1092 D9 — a gated task's gate and key are read at commits, not
 //! as the clock moves: one that reads `performanceNow()`, directly, through a derive
 //! or through a `fn` body, is refused (`analyze-task-gate-clock`).
 
@@ -31,7 +31,7 @@ pub(super) fn check(c: &Component, fns: &[FnDecl]) -> Vec<AnalyzeError> {
             }
         }
     }
-    // A sequence's gate and key are read as a task's; its `play`
+    // @ref LLP 1125 D2 — a sequence's gate and key as a task's; its `play`
     // arguments are re-read after every commit, not as the clock moves, so
     // one that reads the clock would change at commits only.
     for q in &c.sequences {

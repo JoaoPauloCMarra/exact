@@ -1,4 +1,4 @@
-//! Beacons' data: the motion grant, and `tiltAngles`,
+//! Beacons' data: the motion grant (LLP 1133.013 §10), and `tiltAngles`,
 //! the readout beside the tilt panel's level.
 
 use exact_runner::{DataError, DataSource, Value};
@@ -28,7 +28,7 @@ impl DataSource for BeaconsData {
 }
 
 /// Degrees of roll and pitch of gravity `g` from the level `n`, as the
-/// engine's tilt stick reads them: roll positive to the
+/// engine's tilt stick reads them (LLP 1133.013 D6): roll positive to the
 /// right, pitch positive forward, each rounded to a whole degree.
 pub fn angles(g: [f64; 3], n: [f64; 3]) -> (f64, f64) {
     let along = |v: [f64; 3], i: usize| {

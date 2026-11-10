@@ -1,4 +1,4 @@
-//! The executor without a thread per request: each lane has
+//! The executor without a thread per request (LLP 1120 D3–D5): each lane has
 //! a starter, the only place its work starts, and a finisher, the only place
 //! its outcomes are built and its releases applied; one timer keeps every
 //! deadline and one disposer destroys work let go. HTTP goes to an
@@ -42,12 +42,12 @@ pub(super) use file::ReaderPhase;
 mod workers;
 
 /// Resumed independent HTTP exchanges at once, the session's per-host
-/// connection limit too: HTTP/2 multiplexes them.
+/// connection limit too (LLP 1120 D2, D5): HTTP/2 multiplexes them.
 pub(super) const IN_FLIGHT: usize = super::build_number(option_env!("EXACT_HTTP_IN_FLIGHT"), 32);
 /// HTTP/1.1 exchanges the core resumes per origin per lane until one there
-/// reports `h2` or `h3`: URLSession's own limit, so it never queues.
+/// reports `h2` or `h3` (D3): URLSession's own limit, so it never queues.
 const PER_ORIGIN: usize = 6;
-/// The base set: two starters, two finishers, the timer, the disposer.
+/// The base set: two starters, two finishers, the timer, the disposer (D4).
 pub(super) const THREADS: usize = 6 + if cfg!(any(not(target_vendor = "apple"), test)) {
     1 + super::INDEPENDENT
 } else {
@@ -58,7 +58,7 @@ pub(super) const THREADS: usize = 6 + if cfg!(any(not(target_vendor = "apple"), 
 type Run = (u64, u64);
 
 /// Who claimed a run's terminal transition, under the state lock when it
-/// happened: only that outcome settles it, whatever else is queued.
+/// happened (D3): only that outcome settles it, whatever else is queued.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(super) enum Claim {
     #[default]
@@ -104,13 +104,13 @@ pub(super) struct Book {
     /// known.
     reserved: HashMap<Run, Option<String>>,
     /// Upload bytes charged per run, released once the lent buffer has
-    /// gone and the run has physically ended.
+    /// gone and the run has physically ended (D5).
     uploads: HashMap<Run, Charged>,
     /// A file job's request and what its fetch needs, while a reader sizes
     /// or reads its file.
     files: HashMap<Run, FileJob>,
     /// What a sized `exactBodyFrom` job learned: its file's size, kept
-    /// while it is parked at the head.
+    /// while it is parked at the head (D5).
     pub(super) sized: HashMap<u64, u64>,
     /// One sizing decision per lane: successors remain queued, so a park
     /// accounts for every request buffer that could otherwise crowd it out.
@@ -126,7 +126,7 @@ pub(super) struct Book {
 
 impl Book {
     /// The bytes the parked uploads in `jobs` still need, which admission
-    /// counts as taken (provisional), wherever in
+    /// counts as taken (LLP 1120 §6 question 8, provisional), wherever in
     /// the queue they wait.
     pub(super) fn parked(&self, lane: usize, jobs: &VecDeque<Job>) -> usize {
         jobs.iter()
@@ -436,7 +436,7 @@ impl Machine {
         }
     }
 
-    /// What `lane` starts now, decided under the lock. Every
+    /// What `lane` starts now, decided under the lock (D3, D5). Every
     /// exchange chosen holds its in-flight and origin places from here.
     fn select(&self, state: &mut State, lane: usize) -> Vec<(Run, Start)> {
         let mut starts: Vec<(Run, Start)> = Vec::new();
@@ -498,7 +498,7 @@ impl Machine {
             }
             if exchange && at_limit(state, lane, &origin(&job.request.url)) {
                 // The independent lane passes over a head at its origin's
-                // HTTP/1.1 limit; the ordered one waits for it.
+                // HTTP/1.1 limit; the ordered one waits for it (D3).
                 if lane == 0 {
                     break;
                 }
@@ -620,7 +620,7 @@ impl Machine {
             }
             Kind::Closure => {
                 // Run here (a driver fault's, a continuation, storage): the
-                // lane's starts wait for it (a declared change).
+                // lane's starts wait for it (a declared change, D3).
                 let work = match work {
                     Some(OwnedWork::Now(work)) => Some(work),
                     _ => None,
@@ -686,7 +686,7 @@ impl Machine {
             };
             return self.file(lane, run, file, sized);
         }
-        // The deadline arms when the task is resumed, in `Tracked`.
+        // The deadline arms when the task is resumed (D3), in `Tracked`.
         let deadline = request.timeout_ms.map(|ms| (ms, abort.clone()));
         self.fetch(
             lane, run, request, None, forced, abort, retiring, limit, transport, fetch, deadline,
@@ -756,7 +756,7 @@ impl Machine {
                 after(&self);
             }
             // What it settled or ended may have freed the independent lane
-            // room an upload waits for.
+            // room an upload waits for (LLP 1016.000 D10).
             if lane == 1 {
                 super::stream::start_uploads(&self.shared);
             }
@@ -919,9 +919,9 @@ impl Machine {
 }
 
 /// Whether `Core::start_switched` (Apple's executor) and a test core run
-/// the asynchronous machine: off by default;
+/// the asynchronous machine (LLP 1120): off until the gate (§5) decides;
 /// `EXACT_HTTP_ASYNC=1` at build or run turns it on. Linux and the render
-/// host keep their workers.
+/// host keep their workers until stage 2.
 pub(super) fn asynchronous() -> bool {
     option_env!("EXACT_HTTP_ASYNC") == Some("1")
         || std::env::var("EXACT_HTTP_ASYNC").is_ok_and(|v| v == "1")
@@ -984,7 +984,7 @@ fn origin(url: &str) -> String {
     )
 }
 
-/// `origin` is at its HTTP/1.1 limit on `lane`.
+/// `origin` is at its HTTP/1.1 limit on `lane` (D3).
 fn at_limit(state: &State, lane: usize, origin: &str) -> bool {
     !state.book.multiplexed[lane].contains(origin)
         && state.book.origins[lane].get(origin).copied().unwrap_or(0) >= PER_ORIGIN
@@ -992,7 +992,7 @@ fn at_limit(state: &State, lane: usize, origin: &str) -> bool {
 
 /// What starting `job` charges more: response bytes, and a sized upload's
 /// file. A handoff charges no response bytes, a job sizing its file only
-/// the request buffers it holds.
+/// the request buffers it holds (D5).
 fn charge(book: &Book, lane: usize, job: &Job, kind: Kind) -> (usize, usize) {
     let sized = book.sized.get(&job.ticket).map(|n| *n as usize);
     let more = match kind {
@@ -1076,7 +1076,7 @@ fn classify(result: Result<Collected, HostError>, limit: usize, retired: bool) -
             headers: r.headers.entries().to_vec(),
             body: r.body,
         }),
-        // Over its size limit is the host refusing it.
+        // @ref LLP 1109 D3 — over its size limit is the host refusing it.
         Err(e) if !retired && e == ibex2::stdlib::fetch::over_limit(limit) => {
             failed(FailureKind::Refused, "HTTP response exceeds limit")
         }
@@ -1090,9 +1090,9 @@ fn classify(result: Result<Collected, HostError>, limit: usize, retired: bool) -
     }
 }
 
-/// The terminal transition of `run`: its outcome is
+/// The terminal transition of `run` (LLP 1120 D3): its outcome is
 /// published, the ordered slot released; its charge stays until its
-/// physical end too, whichever is later.
+/// physical end too (D5's later-of rule).
 fn settle(state: &mut State, run: Run, outcome: Outcome) {
     let Some(r) = find(&mut state.running, run) else {
         state.book.trash.push(Box::new(outcome));
@@ -1137,7 +1137,7 @@ fn settle(state: &mut State, run: Run, outcome: Outcome) {
 
 /// If `run` is terminal and nothing physical runs, its charge moves to its
 /// undrained outcome (independent: the running charge, as `complete`;
-/// ordered: what it retains), or goes if the outcome is gone.
+/// ordered: what it retains), or goes if the outcome is gone (D5).
 fn physical(state: &mut State, run: Run) {
     let Some(at) = state
         .running
@@ -1197,7 +1197,7 @@ fn physical(state: &mut State, run: Run) {
 
 /// A run's upload charge goes once its buffer is gone and no exchange
 /// sending it is still on the wire: the later of its last release and the
-/// last sending hop's physical end. A buffer never made (a failed
+/// last sending hop's physical end (D5). A buffer never made (a failed
 /// read, a timeout first) goes with the run's physical end.
 fn release_upload(state: &mut State, run: Run) {
     if state.book.uploads.get(&run).is_some_and(|u| {
@@ -1213,7 +1213,7 @@ fn release_upload(state: &mut State, run: Run) {
 }
 
 /// The lane's transport, counting each hop it starts: the in-flight cap,
-/// the per-origin limit, the run's live count. Its first hop arms
+/// the per-origin limit, the run's live count (D3, D5). Its first hop arms
 /// the deadline, when the task is resumed.
 struct Tracked {
     inner: Arc<dyn AsyncTransport>,
@@ -1294,7 +1294,7 @@ impl Drop for Ended {
 /// A forget cancels `run` if it is an exchange still open (a safe read's,
 /// or any method's the app aborted, `by_app`; never a stream's, nor an
 /// upload's waiting for its start, which its queue ends): its terminal
-/// transition is claimed now.
+/// transition is claimed now (D3).
 pub(super) fn cancel(run: &mut Running, by_app: bool) -> bool {
     let open = !run.terminal && run.claim == Claim::None;
     let exchange = run.abort.is_some() || (by_app && run.exchange.is_some());

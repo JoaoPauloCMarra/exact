@@ -1,4 +1,4 @@
-//! A design's history read as edits: two versions of a
+//! A design's history read as edits (LLP 1122 D9, T1): two versions of a
 //! `.tamber` file compared by what they declare, so a commit reads as
 //! "`radius.md` 8px → 12px", and a past commit's inverse planned against the
 //! file as it is now.
@@ -145,7 +145,7 @@ pub fn edits(old: Option<&Design>, new: Option<&Design>) -> Result<Vec<Edit>, St
         })
     };
     other(&mut out, "exports".into(), exports(a), exports(b));
-    // An icon is no operation's to write: a change to one is reported.
+    // An icon is no operation's to write (D10): a change to one is reported.
     for (icon, x, y) in union(&a.icons, &b.icons, |t| &t.name.value) {
         let value = |t: &crate::Token| t.value.value.trim().to_string();
         other(&mut out, format!("icon {icon}"), x.map(value), y.map(value));
@@ -601,7 +601,7 @@ mod tests {
         parse(src).unwrap()
     }
 
-    /// An icon is no operation's to write: its change is reported.
+    /// An icon is no operation's to write: its change is reported (D10).
     #[test]
     fn an_icon_change_is_reported() {
         let v1 = format!("{V1}\nicons\n  icon.reply = icon(sf \"bubble.left\")\n");

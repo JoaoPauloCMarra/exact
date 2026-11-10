@@ -3,7 +3,7 @@ import XCTest
 @testable import ExactKit
 import UIKit
 
-/// A tap addressed by id presses what it names (the agent's `tap`): a row
+/// A tap addressed by id presses what it names (LLP 1012 §1 `tap`): a row
 /// with a press of its own is pressed itself, beside the link card its middle
 /// holds, never the card; a box without a press never presses a control
 /// inside it; `at` keeps a point's semantics (the Bluesky clone's likes and
@@ -524,8 +524,8 @@ final class AddressedTapIOSTests: XCTestCase {
     }
 
     /// What a press there would deliver counts, a text editor's focus too;
-    /// a 2-point strip around a child that covers the rest is found;
-    /// a point on an inline run presses the run.
+    /// a 2-point strip around a child that covers the rest is found (Astra,
+    /// round 1); a point on an inline run presses the run.
     func testAnEditorAThinStripAndAnInlineRunAtAPoint() throws {
         let (session, agent, presses) = rows()
         let p = session.presenter
@@ -629,7 +629,7 @@ final class AddressedTapIOSTests: XCTestCase {
     }
 
     /// Under `--touch platform` a menu's row is UIKit's, found by its
-    /// popover and place: UIKit puts no identifier on the
+    /// popover and place (LLP 1080.000 §13): UIKit puts no identifier on the
     /// element it shows, so the row's popover must be the menu UIKit was last
     /// given to present, and its rows must read as one run of the shown
     /// rows. A duplicate title or a label that is another's prefix picks

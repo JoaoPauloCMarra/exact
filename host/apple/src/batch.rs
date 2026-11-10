@@ -1,13 +1,14 @@
 //! The batch: what the presenter applies, as JSON built by hand (the shape
 //! is nine op kinds and a handful of strings).
 //!
+//! @ref LLP 1008 §1
 
 use std::fmt::Write as _;
 
 use crate::style::push_int;
 
 /// What `fieldContent` says, in the node's own space: a native text
-/// control's editor inside its chrome, or a box's CSS content
+/// control's editor inside its chrome (LLP 1104 D5), or a box's CSS content
 /// box with the padding layout resolved (top, right, bottom, left), which
 /// the presenter places content and insets by. A native button's side its
 /// author left unsaid is `None` (JSON `null`): UIKit's own inset stays there.
@@ -20,7 +21,7 @@ pub(crate) struct ContentBox {
 /// A JSON writer for one batch.
 #[derive(Debug, Default)]
 pub struct Batch {
-    /// Deferred store read and data activation still need a retry.
+    /// Deferred store read and data activation still need a retry (LLP 1126.001 WP12).
     pub store_status: Option<(bool, bool)>,
     ops: Vec<String>,
     /// The views this batch creates: each starts at its presentation's
@@ -30,35 +31,36 @@ pub struct Batch {
     /// presented away from identity is no longer at it.
     presented_new: std::collections::HashMap<u32, Vec<&'static str>>,
     /// What moves changes place or size (`Engine::spatial`): the display
-    /// link asks for the panel's full rate.
+    /// link asks for the panel's full rate (LLP 1061 D4).
     pub spatial: bool,
-    /// A frame task wants each display frame: the display
+    /// A frame task wants each display frame (LLP 1073 D5): the display
     /// link runs and each tick is `exact_frame`.
     pub frames: bool,
-    /// Pending timer observation deadlines and held kinds.
+    /// Pending timer observation deadlines and held kinds (LLP 1147).
     pub waits: Option<exact_runner::Waits>,
     /// Independent platform timer instances, including an empty cancellation list.
     pub native_timers: Option<Vec<exact_runner::NativeTimer>>,
     /// The kernel transactions this batch carries, `"seq":[first,last]`,
-    /// when the runner measures: the frame sampler's join.
+    /// when the runner measures (LLP 1079 D3): the frame sampler's join.
     pub seq: Option<(u64, u64)>,
     /// Failure lines for the platform's log, `"alerts":[…]`, each carried
-    /// once ([`exact_runner::Runner::take_alerts`]).
+    /// once (LLP 1142 D4: [`exact_runner::Runner::take_alerts`]).
     pub alerts: Vec<String>,
     /// The journal's other lines, `"journal":[…]`, for the platform's log at
-    /// a lower level ([`exact_runner::Runner::take_journal`]).
+    /// a lower level (LLP 1143 open question 1:
+    /// [`exact_runner::Runner::take_journal`]).
     pub journal: Vec<String>,
-    /// A 2D canvas asked for another frame.
+    /// A 2D canvas asked for another frame (LLP 1056 D5).
     canvas: bool,
-    /// A canvas draw is owed to a turn of its own.
+    /// A canvas draw is owed to a turn of its own (LLP 1072 §8.5).
     canvas_owed: bool,
     /// A control's viewless contents changed (a native button's face, a
     /// select's options), which put no op on any view: the presenter
-    /// configures its controls.
+    /// configures its controls (LLP 1069.011 §9).
     pub controls: bool,
     /// Whether the batch used provisional field chrome; presenters count these batches.
     pub layout_provisional: bool,
-    /// Image handles a 2D canvas asked for: the presenter
+    /// Image handles a 2D canvas asked for (LLP 1056 D9): the presenter
     /// decodes each and answers `exact_canvas_image`.
     images: Vec<String>,
     /// The root font size or the window's modes moved (`Host::facts_moved`).
@@ -67,10 +69,10 @@ pub struct Batch {
     /// (`Runner::data_timer_landing`): the agent's jump waits for its reply.
     pub landing: bool,
     /// Whether a displayed element holds the wake lock, when that changed
-    /// (`Host::wakelock_moved`).
+    /// (`Host::wakelock_moved`, LLP 1125 D11).
     pub wakelock: Option<bool>,
     /// The session's orientation lock, JSON, when it changed
-    /// (`Host::orientation_moved`).
+    /// (`Host::orientation_moved`, LLP 1133.029 D3).
     pub orientationlock: Option<String>,
     /// Whether the app must finish work an answer started, when that
     /// changed (`Host::finish_moved`).
@@ -115,7 +117,7 @@ fn id_list(ids: &[u32], out: &mut String) {
 }
 
 impl Batch {
-    /// The roles the app's theme replaces, by the
+    /// @ref LLP 1095 D4 — the roles the app's theme replaces, by the
     /// schema's name, each with the colour that replaces it as a style row
     /// sends one; sent at boot, an empty table clearing the last plan's. A
     /// surface the platform draws (a grouped list's ground, a bar's title)
@@ -146,7 +148,7 @@ impl Batch {
 
     /// A node's published box (`ContentBox`), or an explicit clear; `cell`
     /// when the field is a grouped list row's content, which iOS draws
-    /// borderless in its cell.
+    /// borderless in its cell (LLP 1116.005 D2).
     pub(crate) fn field_content(&mut self, id: u32, content: Option<ContentBox>, cell: bool) {
         let value = content.map_or_else(
             || "null".into(),
@@ -207,7 +209,7 @@ impl Batch {
         out.push('}');
     }
 
-    /// Empty geometry clears a former flow.
+    /// @ref LLP 1043.000 §3 D4 — empty geometry clears a former flow.
     pub fn flow(&mut self, id: u32, shapes: &[exact_kernel::FlowShape]) {
         let mut s = format!("{{\"op\":\"flow\",\"id\":{id},\"shapes\":[");
         for (i, shape) in shapes.iter().enumerate() {
@@ -279,7 +281,7 @@ impl Batch {
         ));
     }
 
-    /// One Arrange contact's state: its reorder serial as a
+    /// One Arrange contact's state (LLP 1041 §8.5): its reorder serial as a
     /// decimal string, the List and lifted wrapper views (0 once gone), and
     /// `active`, `settling`, `finished` or `refused`.
     /// A grouped session's `reorder` op, built whole (`arrange_group.rs`).
@@ -304,9 +306,9 @@ impl Batch {
         Batch::default()
     }
 
-    /// One coalesced router change beside commands; its
+    /// @ref LLP 1038 D7 — one coalesced router change beside commands; its
     /// `url` carries the visit's fragment, and `scroll` asks for the scroll
-    /// to it.
+    /// to it (LLP 1153 D5).
     pub fn router(&mut self, change: &exact_runner::RouterChange) {
         let mut s = format!("{{\"op\":\"router\",\"top\":{},\"url\":", change.top);
         quote(&change.location(), &mut s);
@@ -449,11 +451,11 @@ impl Batch {
         });
     }
 
-    /// A 2D canvas's stamped lists, in order, for the Core
+    /// A 2D canvas's stamped lists (LLP 1056 D4), in order, for the Core
     /// Graphics replayer: `[address, length]` pairs the reader copies out
     /// as it decodes the batch (the host keeps them alive until then). `fresh` starts a new bitmap at `w`×`h`;
     /// the presenter shows it at the view's content box;
-    /// `p3` and `float16` are its getContext settings.
+    /// `p3` and `float16` are its getContext settings (LLP 1100 D12a).
     pub fn canvas2d(&mut self, c: &exact_runner::CanvasList) {
         let mut s = String::new();
         let _ = write!(
@@ -471,17 +473,18 @@ impl Batch {
         self.ops.push(s);
     }
 
-    /// Whether a 2D canvas wants the next display frame.
+    /// Whether a 2D canvas wants the next display frame (LLP 1056 D5).
     pub fn canvas_frames(&mut self, wants: bool) {
         self.canvas = wants;
     }
 
-    /// Whether a deferred canvas draw is owed (`exact_canvas_draw`).
+    /// Whether a deferred canvas draw is owed (`exact_canvas_draw`, LLP
+    /// 1072 §8.5).
     pub fn canvas_owed(&mut self, owed: bool) {
         self.canvas_owed = owed;
     }
 
-    /// Image handles for the presenter to decode.
+    /// Image handles for the presenter to decode (LLP 1056 D9).
     pub fn canvas_images(&mut self, srcs: Vec<String>) {
         self.images.extend(srcs);
     }
@@ -498,14 +501,14 @@ impl Batch {
     }
 
     /// `{"op":"auth","ticket":N,"url":…,"callback":…,"ephemeral":…}`: open
-    /// an authentication session. The `state` stays in
+    /// an authentication session (LLP 1069.006 D3). The `state` stays in
     /// Rust, which checks the completion.
     pub fn auth(&mut self, ticket: u64, session: &exact_runner::auth::Session) {
         let mut s = format!("{{\"op\":\"auth\",\"ticket\":{ticket},\"url\":");
         quote(&session.url, &mut s);
         s.push_str(",\"callback\":");
         quote(&session.callback, &mut s);
-        // A loopback callback's receiver checks `state` itself.
+        // A loopback callback's receiver checks `state` itself (LLP 1133.005 D9).
         if let Some((host, port, path)) = exact_runner::auth::loopback_callback(&session.callback) {
             s.push_str(&format!(
                 ",\"loopback\":{{\"host\":\"{host}\",\"port\":{port},\"path\":"
@@ -523,8 +526,8 @@ impl Batch {
     }
 
     /// `{"op":"presence","call":N,"name":…,"account":…,"service":…,"policy":…,
-    /// "reason":…,"origin":…}`: the platform's check for a presence call,
-    /// and, with a `service`, the item the host reads
+    /// "reason":…,"origin":…}`: the platform's check for a presence call
+    /// (LLP 1133.010 D13), and, with a `service`, the item the host reads
     /// after it, one op per ask. Nothing secret: the value comes back by
     /// `exact_presence`.
     pub fn presences(&mut self, asks: Vec<exact_runner::presence::PresenceAsk>) {
@@ -592,7 +595,7 @@ impl Batch {
     }
 
     /// `{"op":"command","name":…,"args":[…]}` — a capability an action
-    /// called, for the presenter to execute after the commit.
+    /// called (LLP 1005 §3), for the presenter to execute after the commit.
     pub fn command(&mut self, name: &str, args: &[exact_plan::Value], source: Option<u32>) {
         let mut s = String::from("{\"op\":\"command\",\"name\":");
         quote(name, &mut s);
@@ -611,9 +614,9 @@ impl Batch {
         self.ops.push(s);
     }
 
-    /// `{"op":"sound","files":[…],"ops":[…]}`: the voice
-    /// table's `play` (with `playbackRate` and `pan` when not 1 and 0)
-    /// and `end` ops in runner milliseconds, and at a boot
+    /// `{"op":"sound","files":[…],"ops":[…]}` (LLP 1096 D8): the voice
+    /// table's `play` (with `playbackRate` and `pan` when not 1 and 0, LLP
+    /// 1125 D10) and `end` ops in runner milliseconds, and at a boot
     /// the files to decode, in declaration order (a new boot silences the
     /// last one's voices). Nothing is sent when there is nothing to say.
     pub fn sound(
@@ -674,7 +677,7 @@ impl Batch {
                     "{{\"op\":\"end\",\"id\":{id},\"at\":{}}}",
                     exact_runner::agent::num(*at)
                 ),
-                // A sequence step's haptic, at its time.
+                // A sequence step's haptic, at its time (LLP 1125 D3).
                 SoundOp::Haptic { id, kind, at } => {
                     let _ = write!(s, "{{\"op\":\"haptic\",\"id\":{id},\"kind\":");
                     quote(kind, &mut s);
@@ -692,8 +695,8 @@ impl Batch {
         self.ops
     }
 
-    /// The runner's timed outputs since the last take:
-    /// the voice table's `sound` op and the MIDI queue's `midi`
+    /// The runner's timed outputs since the last take (LLP 1096 D7, LLP
+    /// 1125 D7): the voice table's `sound` op and the MIDI queue's `midi`
     /// op; at a `boot`, the files to decode and whether MIDI's arm loads.
     pub fn timed<D: exact_runner::DataSource>(
         &mut self,
@@ -716,15 +719,15 @@ impl Batch {
         self.ops.push(format!("{{\"op\":\"destroy\",\"id\":{id}}}"));
     }
 
-    /// `{"op":"exit","id":…}` — the view leaves with its `-exact-exit-animation`:
-    /// the presenter keeps it and everything under it where they
+    /// `{"op":"exit","id":…}` — the view leaves with its `-exact-exit-animation`
+    /// (LLP 1063): the presenter keeps it and everything under it where they
     /// are, without input or accessibility, until a `destroy` names it.
     pub fn exit(&mut self, id: u32) {
         self.ops.push(format!("{{\"op\":\"exit\",\"id\":{id}}}"));
     }
 
     /// `{"op":"flight","id":…,"from":…}` — the view's shared-element name
-    /// arrives from `from`. Sent before the batch's
+    /// arrives from `from` (LLP 1013.000 D4). Sent before the batch's
     /// destroys: the presenter captures where `from` is shown, then, once
     /// the batch is applied, lifts `id` and flies it from there to its place
     /// by the `flight` progress it is presented.
@@ -748,8 +751,8 @@ impl Batch {
     }
 
     /// `{"op":"title","title":…,"edited":…}`: the active head's title,
-    /// `null` when no head sets one, and whether it says
-    /// the document is `edited`. The app owning the window
+    /// `null` when no head sets one (LLP 1048.003 D1), and whether it says
+    /// the document is `edited` (LLP 1069.010 D6). The app owning the window
     /// or scene shows them; an embedded view never claims that chrome.
     pub fn title(&mut self, title: Option<&str>, edited: bool) {
         let mut s = String::from("{\"op\":\"title\",\"title\":");
@@ -779,7 +782,7 @@ impl Batch {
         self.ops.push(s);
     }
 
-    /// Twice the sibling paint rank, losslessly encoded.
+    /// Twice the sibling paint rank, losslessly encoded (LLP 1083.000 D4).
     pub fn rank(&mut self, id: u32, rank: i64) {
         self.ops
             .push(format!("{{\"op\":\"rank\",\"id\":{id},\"rank\":{rank}}}"));
@@ -787,7 +790,7 @@ impl Batch {
 
     /// `{"op":"fragments","id":…,"fragments":[[x,y,w,h,first,end,dx,dy],…],
     /// "columns":[[x,y,w,h,holds],…]}` — a box's fragments in its own frame
-    /// and a container's columns in its border box, or
+    /// and a container's columns in its border box (LLP 1093 D7), or
     /// `{"op":"fragments","id":…}` when it has neither any more.
     pub fn fragments(&mut self, id: u32, record: &str) {
         self.ops
@@ -795,7 +798,7 @@ impl Batch {
     }
 
     /// `{"op":"sticky","id":…,"scroller":…,"natural":[…],"limit":[…],
-    /// "port":[…],"insets":[…]}` — a sticky box's constraint,
+    /// "port":[…],"insets":[…]}` — a sticky box's constraint (LLP 1083 D3),
     /// or `{"op":"sticky","id":…}` when it is no longer sticky.
     pub fn sticky(&mut self, id: u32, constraint: Option<&exact_kernel::StickyConstraint>) {
         let mut s = format!("{{\"op\":\"sticky\",\"id\":{id}");
@@ -828,7 +831,7 @@ impl Batch {
     }
 
     /// `{"op":"block","id":…,"w":…,"h":…,"x":…,"y":…}` — the used size of
-    /// the containing block a host gave this subtree,
+    /// the containing block a host gave this subtree (LLP 1115.002 D8.2),
     /// or the kernel did (a popover's, the viewport), and where the root
     /// sits in it: a top-layer box is reported by its block's rectangle.
     pub fn block(&mut self, id: u32, (w, h): (f32, f32), (x, y): (f32, f32)) {
@@ -869,7 +872,7 @@ impl Batch {
 
     /// `{"op":"present","id":…,"property":"layout","x":…,"y":…,"w":…,"h":…}`
     /// — a layout transition's offset from the laid-out box and its size's
-    /// difference from it.
+    /// difference from it (LLP 1063).
     pub fn present4(&mut self, id: u32, property: &'static str, [x, y, w, h]: [f64; 4]) {
         self.note_present(id, property);
         self.ops.push(format!(
@@ -877,21 +880,21 @@ impl Batch {
         ));
     }
 
-    /// `{"op":"svg","id":…,"scene":{…}}`: an `svg`'s whole scene.
+    /// `{"op":"svg","id":…,"scene":{…}}`: an `svg`'s whole scene (LLP 1055 D4).
     pub fn svg(&mut self, id: u32, scene: &str) {
         self.ops
             .push(format!("{{\"op\":\"svg\",\"id\":{id},\"scene\":{scene}}}"));
     }
 
     /// `{"op":"animations","id":…,"specs":[…]}`: a view's Core Animation
-    /// specs for its CSS animations; `[]` removes them.
+    /// specs for its CSS animations (LLP 1055 D7); `[]` removes them.
     pub fn animations(&mut self, id: u32, specs: &str) {
         self.ops.push(format!(
             "{{\"op\":\"animations\",\"id\":{id},\"specs\":{specs}}}"
         ));
     }
 
-    /// Carry the runner deadline, not a poll interval.
+    /// @ref LLP 1043.000 §3 D8 — carry the runner deadline, not a poll interval.
     /// The batch as one JSON document:
     /// `{"ops":[…],"timers":bool,"motion":bool,"error":null|"…"}`, with
     /// `"spatial":true` before `timers` when what moves changes place or size.

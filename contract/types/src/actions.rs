@@ -1,5 +1,5 @@
-//! Action bodies: statements through every branch, and the
-//! block-scoped, immutable `let` locals.
+//! Action bodies (LLP 1017 P2): statements through every branch, and the
+//! block-scoped, immutable `let` locals of LLP 1035.005.000 D2.
 
 use super::{calls, checks, err, infer, ComponentTypes, Ref, Scope, Shapes, Sink, Ty, TypeError};
 use contract_syntax::{Component, Expr, Span, Stmt, TemplatePart};
@@ -224,8 +224,8 @@ impl Cx<'_, '_> {
                 }
             }
             Stmt::Command { name, args, span } => {
-                // A native module's send that answers nothing: its one
-                // options record, as a `send`'s arguments are.
+                // A native module's send that answers nothing (LLP 1133.004
+                // D5): its one options record, as a `send`'s arguments are.
                 if shapes.effects.contains(name) {
                     let mut params = Vec::with_capacity(args.len());
                     for arg in args {
@@ -233,8 +233,8 @@ impl Cx<'_, '_> {
                     }
                     return crate::record_source(self.ct, name, params, Ty::Unit, *span);
                 }
-                // An action prop or injected action, called anywhere:
-                // its arguments here, against its declared
+                // An action prop or injected action, called anywhere (LLP
+                // 1089 D1, D7): its arguments here, against its declared
                 // type; the action it names is run, and checked, after
                 // lifting.
                 if !contract_syntax::HOST_COMMANDS.contains(&name.as_str()) {
@@ -242,7 +242,7 @@ impl Cx<'_, '_> {
                         return calls::prop_args(name, params, args, scope, shapes, *span);
                     }
                 }
-                // Refused as ambiguous: not a host command's too.
+                // Refused as ambiguous (LLP 1089 D1): not a host command's too.
                 if shapes.ambiguous.contains(span) {
                     return Ok(());
                 }

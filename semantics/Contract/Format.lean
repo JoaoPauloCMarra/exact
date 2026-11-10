@@ -108,7 +108,7 @@ def currencies : List (String × String × Nat) :=
    ("PLN", "PLN", 2), ("MXN", "MX$", 2), ("BRL", "R$", 2), ("KRW", "₩", 0), ("ZAR", "ZAR", 2),
    ("TWD", "NT$", 2), ("ILS", "₪", 2), ("PHP", "₱", 2), ("VND", "₫", 0)]
 
-/-- `formatNumber(n, "decimal" | "currency" | "percent")`:
+/-- `formatNumber(n, "decimal" | "currency" | "percent")` (LLP 1116 D8):
 `Intl.NumberFormat("en-US")`'s as `format.rs`'s `styled` computes it, from
 JavaScript's shortest digits `s × 10^q` of `|n|` (`Number.shortest`, the
 even of a tie, as ICU's are): the point moved `shift` places right (two for
@@ -212,7 +212,7 @@ def formatDate (epoch offset : F64) (monthYear : Bool) : String :=
     head ++ " " ++ toString year
 
 /-- `formatDate(epochMs, utcOffset, "iso")`: `YYYY-MM-DD`, the date part of
-`toISOString` at that wall time, `""` when invalid. Years
+`toISOString` at that wall time (LLP 1102 §3.4), `""` when invalid. Years
 are 1–9999 (`wallMs`), so four digits. -/
 def formatIsoDate (epoch offset : F64) : String :=
   match wallMs epoch offset with
@@ -225,7 +225,7 @@ def formatIsoDate (epoch offset : F64) : String :=
 def weekdays : List String :=
   ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
-/-- `formatDay(thenMs, nowMs, utcOffset, mode)`: `t`'s day
+/-- `formatDay(thenMs, nowMs, utcOffset, mode)` (LLP 1116.020 D8): `t`'s day
 counted from `n`'s in the offset's calendar days. `day` is `Today`,
 `Yesterday`, `Tomorrow` or the medium date; `day-time` adds ` at ` and the
 short time; `list` (any other mode: `Eval.formatting` passes only the three)
@@ -251,7 +251,7 @@ def formatDay (t n offset : F64) (mode : String) : String :=
       if mode == "day-time" then label ++ " at " ++ formatTime t offset else label
   | _, _ => ""
 
-/-! ## Fixed decimals (decided (c)) -/
+/-! ## Fixed decimals (LLP 1102 §3.2, decided (c)) -/
 
 /-- The digits of `n / 10^places`: one before the point at least, `places`
 after it, no point for none. -/
@@ -269,7 +269,7 @@ def digitsOf (d : F64) (max : Nat) : Option Nat :=
 /-- `toFixed(x, digits)`: JavaScript's `Number.prototype.toFixed` on the
 exact value `|x| = mag / 2^1074`: `n = ⌊|x| × 10^digits + 1/2⌋`, the larger
 of two equally near (a tie away from zero), signed for any `x < 0`; `|x| ≥
-10^21` as `toString` prints it; `""` for a non-finite `x`. -/
+10^21` as `toString` prints it; `""` for a non-finite `x` (D7). -/
 def toFixed (x : F64) (digits : Nat) : String :=
   if !isFinite x then ""
   else if x.mag ≥ 10 ^ 21 * 2 ^ 1074 then jsToString x

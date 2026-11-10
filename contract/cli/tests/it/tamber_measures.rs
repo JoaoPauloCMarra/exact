@@ -1,8 +1,8 @@
-//! Length and number tokens: a row names one as it names a colour, the kernel
-//! reads the node's slice as the row's value (a length through the relative
-//! side table), a row of another kind is refused, and an edit sets only the
-//! rows that read it, laying out for a length and not for a number in a paint
-//! row.
+//! @ref LLP 1121 D3, D7 (stage 6 B) — length and number tokens: a row names
+//! one as it names a colour, the kernel reads the node's slice as the row's
+//! value (a length through the relative side table), a row of another kind
+//! is refused, and an edit sets only the rows that read it, laying out for
+//! a length and not for a number in a paint row.
 
 use exact_kernel::{Kernel, StyleId};
 use exact_plan::{Plan, Value};
@@ -57,7 +57,7 @@ fn a_length_and_a_number_token_take_the_nodes_slice() {
         ],
     );
     let plan = contract::compile_path(&path).unwrap();
-    // The table keeps each kind.
+    // The table keeps each kind (LLP 1121 D7).
     let kinds: Vec<(String, u8)> = plan
         .theme
         .iter()
@@ -137,7 +137,7 @@ fn a_token_in_a_row_of_another_kind_is_refused_naming_the_row() {
     );
     assert_eq!(e.id, "tamber-kind", "{e:?}");
     assert!(e.message.contains("-exact-title1"), "{}", e.message);
-    // Only a colour is chosen again at a mode boundary.
+    // Only a colour is chosen again at a mode boundary (D7).
     let e = refused(
         "inherited-axis",
         "component App\n  view\n    column line-height=\"line.tight\"\n      text \"a\"\n",
@@ -145,7 +145,7 @@ fn a_token_in_a_row_of_another_kind_is_refused_naming_the_row() {
     assert_eq!(e.id, "tamber-inherited-axis", "{e:?}");
 }
 
-/// A live length edit lays out and keeps state; a live
+/// LLP 1121 stage 6 B: a live length edit lays out and keeps state; a live
 /// number edit in a paint row does not lay out. On a 1,000-row list.
 #[test]
 fn a_live_length_edit_lays_out_and_a_number_edit_in_a_paint_row_does_not() {
@@ -242,7 +242,7 @@ fn a_tokens_name_through_a_prop_is_checked_as_written() {
     assert_eq!(e.id, "tamber-kind", "{e:?}");
 }
 
-/// A tuple's value meets what the compiler adds to the
+/// Review round 2: a tuple's value meets what the compiler adds to the
 /// kernel's codec (a press scale is positive), as a literal does.
 #[test]
 fn a_tuples_value_meets_the_rows_own_rules() {
@@ -253,7 +253,7 @@ fn a_tuples_value_meets_the_rows_own_rules() {
     assert!(e.message.contains("positive scale"), "{}", e.message);
 }
 
-/// A computed string in a number row may name any number
+/// Review round 3: a computed string in a number row may name any number
 /// token, so each must suit the row in every app mode; an inherited row
 /// reads no varying token at run time, as a literal naming one is refused.
 #[test]

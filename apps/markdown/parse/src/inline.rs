@@ -1,7 +1,7 @@
 //! Inline parsing: one line of Markdown to the ordered styled runs the
 //! kernel measures.
 //!
-//! The runs are what an Exact paragraph is made of: a `text` node
+//! The runs are what an Exact paragraph is made of (LLP 1033): a `text` node
 //! whose children are `text` nodes, each with its own weight, slant, family
 //! and `href`. Nothing here knows about layout, and nothing here does I/O.
 
@@ -368,7 +368,7 @@ impl Parser<'_> {
         true
     }
 
-    /// An `<img>` or `<picture>`: the caller's run for each
+    /// An `<img>` or `<picture>` (LLP 1033 D9): the caller's run for each
     /// of its images, or each one's alt text.
     fn html_image(&mut self) -> bool {
         let rest = &self.text[self.at..self.frame.end];

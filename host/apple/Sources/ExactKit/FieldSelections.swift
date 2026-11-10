@@ -1,4 +1,4 @@
-// A text field's selection as the DOM reports it: what
+// A text field's selection as the DOM reports it (x2apps codeedit #2): what
 // an input's or a textarea's `input` and `change` carry (ABI kinds 40, 41),
 // its `select` (42), and `setSelectionRange`. Offsets are UTF-16, as
 // NSString's and UITextInput's are. `select` fires as Chrome fires it: when
@@ -7,7 +7,7 @@
 // unless it set that same one last with nothing between. A selection set on
 // a field that is not being edited waits for its focus, where AppKit's field
 // editor would otherwise select all. The Markdown editor's text storage is
-// its source, so the same selection is its source selection;
+// its source, so the same selection is its source selection (LLP 1045 D6);
 // only its `select` is its own (`MarkupEditor`, kind 21).
 import Foundation
 import ExactCore
@@ -259,9 +259,9 @@ final class FieldSelections {
 
     /// HTML's range replacement, after the command's commit. It is not the
     /// person's edit; the admitted extra input keeps the app's binding
-    /// synchronized. It is one undo step, on the
-    /// Markdown editor as a format is, and on the Mac on a
-    /// plain field with an editor.
+    /// synchronized (LLP 1069.001, issue #275). It is one undo step, on the
+    /// Markdown editor as a format is (LLP 1045 D1), and on the Mac on a
+    /// plain field with an editor (LLP 1069.001, amended 2026-11-04).
     func setRangeText(_ args: [Any]) {
         guard [2, 4, 5].contains(args.count), let name = args[0] as? String,
               let replacement = args[1] as? String else { return }
@@ -449,7 +449,8 @@ extension NodeView {
     /// typing, another call) has opened the event's group, which a group
     /// begun now would join. That group is closed, and this step's own is
     /// left open in its place for the close the manager has scheduled at
-    /// the end of the event, which raises where no group is open. With none open, its own is closed here. `edit` must register an
+    /// the end of the event, which raises where no group is open (LLP 1045
+    /// D5). With none open, its own is closed here. `edit` must register an
     /// action: the manager keeps an empty group as a step that undoes nothing.
     func oneUndoStep(_ manager: UndoManager?, _ edit: () -> Void) {
         let byEvent = manager?.groupsByEvent ?? false, open = byEvent && manager?.groupingLevel == 1

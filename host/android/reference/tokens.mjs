@@ -1,9 +1,9 @@
-// The Material column's sources: Compose Material 3's sources jar at the pinned version, fetched
+// The Material column's sources (LLP 1115.001.001 D2): Compose Material 3's sources jar at the pinned version, fetched
 // from Google Maven and checked against the SHA-256 it publishes, read for its generated tokens and the constants
 // `rows.json` names, and held against the schema's Material column.
 //
 //   bun host/android/reference/tokens.mjs                 check every Material row against the pinned source
-//   bun host/android/reference/tokens.mjs --diff <old>    what changed from version <old> to the pin
+//   bun host/android/reference/tokens.mjs --diff <old>    what changed from version <old> to the pin (D8)
 //
 // A `defaults` row is checked only where the reference has run (`InputsTest` writes `defaults.json`). The snapshot of
 // every token, resolved, is written to build/tokens/<version>.json. Exits 1 when a row disagrees with its source.
@@ -166,7 +166,7 @@ function evaluate(text, expr, depth = 0) {
   return Function(`return (${numbers})`)();
 }
 
-/** The diff report: every token whose value changed, appeared or went, and every other source file that changed. */
+/** D8's report: every token whose value changed, appeared or went, and every other source file that changed. */
 function diff(a, b, from) {
   const changed = [];
   const objects = new Set([...Object.keys(a.tokens), ...Object.keys(b.tokens)]);

@@ -1,12 +1,12 @@
-// The Tamber binding's sample module: `exact-swatch`
+// The Tamber binding's sample module (LLP 1121 D12, stage 5): `exact-swatch`
 // fills itself with the design's `swatch.fill` through `ExactTamber`, and
-// sets a label in `type.label` inset by `swatch.inset`, and
+// since stage 6 G sets a label in `type.label` inset by `swatch.inset`, and
 // says each colour, inset and font it applies as a `message` (`swatch
 // #rrggbbaa inset 16 font 17 <face>`), so a drive reads what it follows: a
 // mode, a pin above it, the root font size (Dynamic Type), Bold Text, a
 // live edit. It asks once it is in a window, where its place is known, and
-// again when its observation fires or its appearance changes. It
-// draws a ring in its own params (`component Swatch` in the design),
+// again when its observation fires or its appearance changes. Since stage 7
+// D it draws a ring in its own params (`component Swatch` in the design),
 // named by the generated bindings (`.swatchRing`, `.swatchRingWidth`), and
 // says it last (`ring #rrggbbaa 4`).
 import Foundation

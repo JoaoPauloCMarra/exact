@@ -1,5 +1,6 @@
 // scripts/wasm-check.mjs, which caps.mjs runs before every push: the crates a web app links, compiled for wasm32
-// when a change touches Rust. The compile itself is not run here; what is checked, when, and what a failure says.
+// when a change touches Rust. The compile itself is the lane's (its wasm builds); here, what is checked, when, and
+// what a failure says.
 import { test, expect } from 'bun:test';
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -14,7 +15,7 @@ test('the crates checked are the libraries the web apps link for wasm32, the app
   const { crates, bins, roots } = wasmCrates(ROOT);
   expect(bins).toEqual([['exact-textflow', 'textflow-web']]);
   expect(roots).toContain('apps/caltrain/web');
-  // contract: a cfg(unix)-only name (5540abbfc0) broke it there; exact-web: the host every web app links
+  // contract: G2's cfg(unix)-only name (5540abbfc0) broke it there; exact-web: the host every web app links
   for (const c of ['contract', 'exact-web', 'exact-runner', 'exact-kernel', 'exact-markdown-editor', 'exact-web-js-motion']) expect(crates).toContain(c);
   expect(crates.some((c) => c.endsWith('-web') && c !== 'exact-web' && c !== 'exact-js-web')).toBe(false);
   expect(crates).not.toContain('taffy');

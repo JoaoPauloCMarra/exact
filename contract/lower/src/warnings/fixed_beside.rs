@@ -3,14 +3,14 @@
 //! count, an image, a fill). On iOS 26 a hand-built screen's list runs under
 //! what is pinned over its edges and the scroll edge effect blurs it there;
 //! Exact draws a list under its neighbours only when they are bars of
-//! controls, so beside this box the rows stop in a hard line.
-//! A mail list's "320 messages" footer is one.
+//! controls (LLP 1131 D1), so beside this box the rows stop in a hard line.
+//! Inbox's "320 messages" footer did this in bake-off r24.
 //!
 //! An `if`, `match`, use or slot beside the list, and a computed attribute,
 //! are given the benefit of the doubt.
 //!
-//! The list in a row beside another box (a contacts list's own section
-//! index) is named too: the route's list is then no longer its own, so its
+//! The list in a row beside another box (contacts' own section index, bake-off
+//! r28) is named too: the route's list is then no longer its own, so its
 //! large title stays open and its rows stop over the bottom bar.
 
 use super::{computed, has, literal};
@@ -22,7 +22,7 @@ const BOXES: &[&str] = &[
     "view", "box", "column", "row", "nav", "section", "footer", "article", "aside", "main",
 ];
 
-/// The tags taken whole as controls.
+/// The tags taken whole as controls (LLP 1131 D1).
 const CONTROLS: &[&str] = &["button", "link", "input", "textarea", "select"];
 
 /// The route's scroller and the boxes above and below it on the way down,
@@ -200,8 +200,8 @@ fn fixed(node: &Node) -> Option<contract_syntax::Span> {
     }
 }
 
-/// Whether a node holds only controls and unfilled boxes of them; None
-/// where the compiler cannot tell.
+/// Whether a node holds only controls and unfilled boxes of them (LLP 1131
+/// D1); None where the compiler cannot tell.
 fn controls_only(node: &Node) -> Option<bool> {
     match node {
         Node::Element {

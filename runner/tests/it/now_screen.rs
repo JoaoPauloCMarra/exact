@@ -3,8 +3,8 @@
 //! text change → `if` flip, a timer under the seekable clock, `match` on an
 //! option, and the refusals that leave the kernel untouched.
 //!
-//! This plan is also the first expected output of the compiler corpus:
-//! compiling the equivalent `.contract` must yield these tables.
+//! This plan is also the first expected output of the compiler corpus
+//! (LLP 1004 D6): compiling the equivalent `.contract` must yield these tables.
 
 use exact_kernel::{Kernel, NodeType, PropId, StyleId};
 use exact_plan::asm::Asm;
@@ -197,7 +197,7 @@ impl DataSource for LaterWrites {
     }
 }
 
-/// What an agent's `clock` jump relies on: a timer's send
+/// What an agent's `clock` jump relies on (LLP 1016 D5): a timer's send
 /// replied to before the next tick commits; one the next tick fired over
 /// is superseded, and its reply has nowhere to land.
 #[test]
@@ -1109,7 +1109,7 @@ fn clock_seeks_have_an_exact_domain_and_a_bounded_catch_up() {
     assert!(resumed.error.is_none());
 }
 
-/// The identity gate: a named plan boots only against the
+/// The identity gate (LLP 1023 D5): a named plan boots only against the
 /// crate naming the same app; unnamed — either side — matches anything,
 /// so fixtures and stand-ins stay bootable.
 #[test]

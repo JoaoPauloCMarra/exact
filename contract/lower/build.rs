@@ -1,4 +1,4 @@
-//! The vocabulary's candidates: the string patterns of the
+//! The vocabulary's candidates (LLP 1086 D3): the string patterns of the
 //! `match name` arms in `src/tags.rs`'s four lookups — `tag`, `attr`,
 //! `renamed`, `html_tag` — and each style row's default from the kernel's
 //! schema, which the kernel's generated code does not carry.
@@ -162,7 +162,7 @@ fn scan(toks: &[(Tok, usize)], function: &str) -> Vec<String> {
         }) && pattern.len() % 2 == 1;
         if !wildcard && !literals {
             panic!(
-                "contract/lower/src/tags.rs:{line}: an arm of `{function}`'s `match {param}` has a pattern that is not string literals or `_` ({pattern:?}); `contract vocab` lists these arms by scanning their patterns, so keep them literal"
+                "contract/lower/src/tags.rs:{line}: an arm of `{function}`'s `match {param}` has a pattern that is not string literals or `_` ({pattern:?}); `contract vocab` lists these arms by scanning their patterns (LLP 1086 D3), so keep them literal"
             );
         }
         for t in pattern {

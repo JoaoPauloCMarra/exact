@@ -1,4 +1,4 @@
-// Re-import on the wire: a client at propose
+// Stage 10b on the wire (LLP 1121 D14; §5 10b's gate): a client at propose
 // scope pulls an export, edits it as a tool would (a Figma plugin), and
 // imports it with the baseline it pulled. A changed accent is proposed as the
 // dial's change, every token it moves listed; a changed folded value as a
@@ -164,7 +164,7 @@ test('some items accepted: the dials and pins kept are marked again on the desig
   expect(bad.status).toBe(400);
 }, 120_000);
 
-test('a re-import with no marks, recomputed after the design moved, is marked again on the design as it is', async () => {
+test('round 3: a re-import with no marks, recomputed after the design moved, is marked again on the design as it is', async () => {
   const token = await paired('propose');
   const pulled = (await post({ method: 'export', kind: 'dtcg' }, token)).ok.text;
   const got = await post({ method: 'import', client: 'figma', kind: 'dtcg', source: edited(pulled, (_, t) => { t.surface.sunk.$value = RED; }), baseline: pulled }, token);

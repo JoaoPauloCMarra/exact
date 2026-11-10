@@ -1,4 +1,4 @@
-// The runner decides which
+// @ref LLP 1133.029 D5. `orientationlock`: the runner decides which
 // elements hold the session's lock and intersects their types
 // (`exact_runner::orientation`); a batch says when that changes, and the
 // presenter resolves `natural` and `current` against its scene, bounds the
@@ -134,7 +134,7 @@ extension Presenter {
         reportOrientationLock()
     }
 
-    /// `state.orientationlock.applied`: the orientations
+    /// `state.orientationlock.applied` (LLP 1133.029 §8): the orientations
     /// asked for, whether `current` asked the system to lock, whether it
     /// holds (iOS 26 and later), the scene's orientation, and why not.
     func reportOrientationLock() {

@@ -1,7 +1,7 @@
-//! Canvas 2D on Apple, the Rust half: after each turn's
+//! Canvas 2D on Apple, the Rust half (LLP 1056 D4, D7): after each turn's
 //! layout, every 2D canvas's geometry from the kernel, its due draws, and
 //! their stamped lists onto the batch as `canvas2d` ops, which the Swift
-//! presenter replays into Core Graphics off the main thread.
+//! presenter replays into Core Graphics off the main thread (§8.3).
 
 use super::*;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -27,7 +27,7 @@ fn scale() -> f64 {
 
 impl<D: DataSource> Host<D> {
     /// The limits for this device: WebKit's iOS area on iOS, tvOS and watchOS, a quarter of
-    /// physical memory everywhere.
+    /// physical memory everywhere (LLP 1056 D4, r3).
     pub(crate) fn canvas_limits(&mut self) {
         let memory = MEMORY.load(Ordering::Relaxed);
         self.runner.set_canvas_limits(exact_runner::Limits::native(
@@ -41,7 +41,7 @@ impl<D: DataSource> Host<D> {
     }
 
     /// This turn's canvas work, after layout: geometry, then due draws and
-    /// their lists, unless draws are deferred: then the batch
+    /// their lists, unless draws are deferred (LLP 1072 §8.5): then the batch
     /// says whether a draw is owed, and `exact_canvas_draw` runs it.
     pub(crate) fn canvas_turn(&mut self, batch: &mut Batch) {
         if !self.canvas_deferred {
@@ -67,7 +67,7 @@ impl<D: DataSource> Host<D> {
     }
 
     /// Where draws are deferred, a turn of canvas work alone: geometry, due
-    /// draws, their lists (`exact_canvas_draw`). Main does not
+    /// draws, their lists (`exact_canvas_draw`, LLP 1072 §8.5). Main does not
     /// wait for it: the owner runs it after the turn that owed it.
     pub fn canvas_draw(&mut self) -> String {
         let mut batch = Batch::new();
@@ -76,7 +76,7 @@ impl<D: DataSource> Host<D> {
     }
 
     /// Draw canvases in the turns main waits on (false), or only in their
-    /// own turn and a frame's tick (true: iOS off the agent).
+    /// own turn and a frame's tick (true: LLP 1072 §8.5, iOS off the agent).
     pub fn set_canvas_deferred(&mut self, deferred: bool) {
         self.canvas_deferred = deferred;
     }
@@ -102,8 +102,8 @@ impl<D: DataSource> Host<D> {
         batch.canvas_images(self.runner.take_canvas_image_requests());
     }
 
-    /// The presenter's replay of `view` is (`held`) or is no longer behind:
-    /// while it is, the canvas's frame request waits,
+    /// The presenter's replay of `view` is (`held`) or is no longer behind
+    /// (LLP 1056 D5, §8.3): while it is, the canvas's frame request waits,
     /// as a browser's animation frame waits for the last one to present, so
     /// frames drop rather than queue. Every other cause still draws.
     pub fn canvas_held(&mut self, view: ViewId, held: bool) {
@@ -114,7 +114,7 @@ impl<D: DataSource> Host<D> {
         }
     }
 
-    /// The app's Core Text measurer for Canvas 2D.
+    /// The app's Core Text measurer for Canvas 2D (LLP 1056 D8).
     pub(crate) fn set_canvas_text(
         &mut self,
         f: crate::canvas_text::CanvasTextFn,
@@ -127,7 +127,7 @@ impl<D: DataSource> Host<D> {
     }
 
     /// The presenter decoded image handle `src` (`size` in pixels) or could
-    /// not (`None`): the canvases that asked for it draw again.
+    /// not (`None`): the canvases that asked for it draw again (LLP 1056 D9).
     pub fn canvas_image(&mut self, src: &str, size: Option<(u32, u32)>) -> String {
         self.runner.canvas_image(
             src,
@@ -140,7 +140,7 @@ impl<D: DataSource> Host<D> {
     }
 
     /// The display changed: canvases redraw at the new scale (a new
-    /// generation).
+    /// generation, LLP 1056 D4).
     pub fn canvas_display(&mut self) -> String {
         self.canvas_limits();
         let mut batch = Batch::new();

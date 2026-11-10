@@ -1,4 +1,4 @@
-//! An `svg` is a 300×150 replaced box whose SVG children never
+//! LLP 1055 D3: an `svg` is a 300×150 replaced box whose SVG children never
 //! enter box layout; the content model is enforced; motion hears animations.
 use exact_kernel::{
     ApplyError, Kernel, KernelError, NodeType, Offer, Op, PropId, PropValue, StyleId, StyleProps,
@@ -215,7 +215,7 @@ fn motion_hears_the_animation_row_and_svg_targets() {
     assert_eq!(r.animations().unwrap(), node.style.animation);
 }
 
-/// `display: none` on a node or an ancestor cancels its
+/// LLP 1055.000 D15: `display: none` on a node or an ancestor cancels its
 /// animations; showing it again restarts them (CSS Animations 1 §3).
 #[test]
 fn display_none_cancels_and_restarts_animations() {

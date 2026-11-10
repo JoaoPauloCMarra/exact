@@ -3,11 +3,11 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// A tab whose stack shows no bar and has pushed nothing holds its route
-/// with no navigation controller, as a hand-built UIKit app shows such a
-/// tab. The controller is built on the stack's first push, when its route
-/// first shows a bar, and when a hatch asks for it; the route moves into it
-/// unchanged and the push animates.
+/// LLP 1075.003 §3.7 (HeldStackIOS.swift): a tab whose stack shows no bar
+/// and has pushed nothing holds its route with no navigation controller, as
+/// a hand-built UIKit app shows such a tab. The controller is built on the
+/// stack's first push, when its route first shows a bar, and when a hatch
+/// asks for it; the route moves into it unchanged and the push animates.
 final class HeldStackIOSTests: XCTestCase {
     private var window: UIWindow?
     private var sessions: [ExactSession] = []

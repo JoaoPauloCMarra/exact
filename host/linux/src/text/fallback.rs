@@ -1,10 +1,11 @@
-//! Per-script font fallback: the lists cosmic-text kept
+//! Per-script font fallback (LLP 1085.000 G7): the lists cosmic-text kept
 //! for each platform (its `unix.rs`, `windows.rs` and `macos.rs`), given to
 //! fontique for every script. After a script's own families come the
 //! platform's common ones ([`common`]), then every other script's, then
 //! every installed family: cosmic-text's last resort was every face, and a
 //! character Parley resolves to Common or Latin text (an Arabic `،` after
-//! Latin words) must be able to reach any of them.
+//! Latin words) must be able to reach any of them (the parity spike's third
+//! surprise).
 use fontique::{Collection, FallbackKey, FamilyId, Script, ScriptExt};
 
 /// Set every script's fallback families on `collection` for `locale` (the

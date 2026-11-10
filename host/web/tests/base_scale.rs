@@ -1,4 +1,4 @@
-//! The base scale on the wasm web: a boot says the
+//! The base scale on the wasm web (LLP 1121 stage 11 B2): a boot says the
 //! neutral look (the role table's switch, which is the metrics' column too),
 //! and a base name reads the kernel's neutral column, as every other row of
 //! the look does. (The scale has no web column: `Column::Web` reads the
@@ -25,9 +25,9 @@ fn a_web_boot_reads_the_base_scale_in_the_neutral_column() {
     let batch = String::from_utf8_lossy(bridge.output_bytes(len as usize)).into_owned();
     assert_eq!(metrics::column(), metrics::Column::Neutral);
     let neutral = |n: &str| scale::css(scale::of(n, metrics::Column::Neutral).unwrap());
-    // The neutral column's, not iOS's: they differ here (4 and 5), so the
-    // batch tells them apart. (`Column::Web` reads the neutral cell too; the
-    // boot's switch is what this holds.)
+    // The neutral column's, not iOS's (which the old first look copied): they
+    // differ here (4 and 5), so the batch tells them apart. (`Column::Web`
+    // reads the neutral cell too, B1; the boot's switch is what this holds.)
     assert_ne!(
         neutral("space.xs"),
         scale::css(scale::of("space.xs", metrics::Column::Ios).unwrap())
@@ -48,7 +48,7 @@ fn a_web_boot_reads_the_base_scale_in_the_neutral_column() {
     );
 }
 
-/// A shadow token whose lengths are over base names reads
+/// Stage 12 B3: a shadow token whose lengths are over base names reads
 /// through the kernel (`theme::measure`) on the wasm web too, each length
 /// the neutral column's px, which the batch's `box-shadow` writes.
 #[test]

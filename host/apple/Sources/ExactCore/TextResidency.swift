@@ -17,9 +17,9 @@ package enum TextMetricKey {
     private static func fields(_ r: Run, _ h: inout Hasher) {
         fields(r.size, r.weight, r.family, r.italic, r.lineHeight, r.letterSpacing, r.numeric, r.ligatures, r.stretch, r.variations, &h)
         // Only an expanded Markdown run has these; a plain run hashes as
-        // its request's does.
+        // its request's does (LLP 1045 D4).
         if r.indent != 0 || r.hang { h.combine(r.indent); h.combine(r.hang) }
-        // An image's box, as its request's hashes.
+        // An image's box (LLP 1011.002), as its request's hashes.
         if let b = r.box { h.combine(b) }
     }
     private static func fields(_ r: ExactTextRun, _ h: inout Hasher) {
@@ -66,7 +66,7 @@ package enum TextMetricKey {
         // source run; a plain request hashes as its Spec does.
         if request.markup != 0 {
             h.combine(Int(request.markup))
-            // A label's width is its face's.
+            // A label's width is its face's (LLP 1045.000 D2).
             if request.atoms_len > 0, let a = request.atoms { h.combine(bytes: UnsafeRawBufferPointer(start: a, count: request.atoms_len)) }
             if request.faces_len > 0, let f = request.faces { h.combine(bytes: UnsafeRawBufferPointer(start: f, count: request.faces_len)) }
         }

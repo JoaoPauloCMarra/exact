@@ -1,4 +1,4 @@
-//! The base scale on the wire (`tamber/1.14`):
+//! The base scale on the wire (LLP 1121 stage 11 D, `tamber/1.14`):
 //! `describe`'s `base` and `targets`, `resolve` and `explain` of a base name
 //! (unset, and set by the app), and `explain`'s `bases` for a token that
 //! reaches one. Every cell is the kernel's table's.
@@ -32,7 +32,7 @@ theme
   body.face: family = \"space.md\", serif
 ";
 
-/// A cell's source as the base row's shape writes it.
+/// A cell's source as the shape writes it (theme2's base-row shape).
 fn source(s: scale::ScaleSource) -> Value {
     match s {
         scale::ScaleSource::Metric(m) => json!({"kind": "metric", "ref": m}),
@@ -89,7 +89,7 @@ fn base_names_are_rows_read_from_the_kernel_with_the_apps_override() {
         }
     }
     // The Mac's space.xl is a stretch, its metric and why on the wire as
-    // the tool reads them.
+    // the tool reads them (stage 13 D5).
     let xl = base.iter().find(|r| r["name"] == "space.xl").unwrap();
     assert_eq!(xl["columns"]["mac"]["source"]["kind"], "stretch");
     assert_eq!(xl["columns"]["mac"]["source"]["ref"], "grouped-label-inset");
@@ -165,7 +165,7 @@ fn base_names_are_rows_read_from_the_kernel_with_the_apps_override() {
         json!(["space.md", "space.sm"]),
         "{label}"
     );
-    // Per tuple: each tuple's own line and the lines
+    // Per tuple (stage 13 D4, *1.16*): each tuple's own line and the lines
     // of the tokens it names there, each side. label.gap reaches card.pad
     // only where density is roomy, where card.pad is space.md: space.sm,
     // card.pad's tight line, is in `bases` and in no tuple.
@@ -186,7 +186,7 @@ fn base_names_are_rows_read_from_the_kernel_with_the_apps_override() {
         "{pad}"
     );
     // gap.wide's default, space.md, is no tuple's (each has its `when`):
-    // in `bases`, in no tuple.
+    // in `bases`, in no tuple (Astra's D4 round 2).
     assert_eq!(
         wide["ok"]["bases_by_tuple"],
         json!([
@@ -216,7 +216,7 @@ fn base_names_are_rows_read_from_the_kernel_with_the_apps_override() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// `describe`'s target-to-column map agrees with
+/// theme2's 18:26 condition: `describe`'s target-to-column map agrees with
 /// the column each host's build says it reads, so the two can't drift. Read
 /// from the hosts' own sources: the Apple host sets the Mac's column on macOS
 /// and iOS's elsewhere; the web hosts and the Linux desktop show the neutral
@@ -255,7 +255,7 @@ fn each_targets_column_is_the_one_its_host_reads() {
     }
 }
 
-/// A length over unset base names answers each
+/// Stage 12 D1 (*1.15*): a length over unset base names answers each
 /// column's value beside its expression, in resolve's tuples and on
 /// explain's value and `when` lines; one over an app-set base name, or
 /// none, has no columns.
@@ -447,7 +447,7 @@ theme
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A shadow token's lengths over base names are
+/// Stage 12 B3 (*1.15*): a shadow token's lengths over base names are
 /// answered as written in `length_texts` (null among `lengths`), and its
 /// `bases` list them; a shadow over none has no `length_texts`.
 #[test]
@@ -460,7 +460,7 @@ fn a_shadow_over_base_names_answers_its_lengths_as_written() {
     let (resolved, _) = s.ask(json!({"method": "resolve", "token": "card.shadow"}));
     let tuple = &resolved["ok"]["tuples"][0];
     // The numbers' field keeps its type: null where a length is over base
-    // names, every length's text beside.
+    // names, every length's text beside (theme2's T1).
     assert_eq!(
         tuple["shadows"][0]["lengths"],
         json!([0.0, null, null]),
@@ -485,7 +485,8 @@ fn a_shadow_over_base_names_answers_its_lengths_as_written() {
     assert!(one.get("length_texts").is_none(), "{plain}");
 }
 
-/// `bases_by_tuple` is what the checker resolved in each tuple: a function's name, a shadow's `inset`, a type's style and
+/// `bases_by_tuple` is what the checker resolved in each tuple (stage 13
+/// D4, round 1): a function's name, a shadow's `inset`, a type's style and
 /// a quoted family are no references, though a token is named like each.
 #[test]
 fn bases_by_tuple_is_what_each_tuple_resolves() {
@@ -533,7 +534,7 @@ theme
     // A token first folded inside another's value is recorded as its own
     // (`second`, declared after `first`, which names it); one first folded
     // in a line no tuple selects (`other`, the default of `hidden`)
-    // too, and that line gives `hidden` nothing.
+    // too, and that line gives `hidden` nothing (Astra's D4 round 2).
     assert_eq!(by(&mut s, "first"), both(&["space.md"], &["space.sm"]));
     assert_eq!(by(&mut s, "second"), both(&["space.md"], &["space.sm"]));
     assert_eq!(by(&mut s, "hidden"), both(&["space.lg"], &[]));
@@ -542,7 +543,8 @@ theme
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// Why `bases_by_tuple`'s light and dark are always alike: a base name is a length's, and a length (or a token over a
+/// Why `bases_by_tuple`'s light and dark are always alike (theme2's 19:47
+/// and 20:31): a base name is a length's, and a length (or a token over a
 /// base, a shadow or a type) can't vary by an axis `under scheme=dark`,
 /// which the checker refuses (`tamber-under-kind`), so no tuple's dark side
 /// reads another line than its light one.

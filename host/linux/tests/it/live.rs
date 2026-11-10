@@ -1,4 +1,4 @@
-//! The live table on Linux: a batch or snapshot from
+//! The live table on Linux (LLP 1121 D13, stage 4): a batch or snapshot from
 //! the dev server sets a running build's rows in place and paints, with no
 //! restart (its state stays) and no layout for colours.
 
@@ -61,7 +61,7 @@ fn a_running_build_paints_a_batch_in_place() {
     assert_eq!(at(&mut p).0, [0x11, 0x11, 0x11]);
 }
 
-/// A role override's value edit reaches a
+/// LLP 1121 stage 5, commit 2: a role override's value edit reaches a
 /// running build as a batch, and what was painted from the role (the
 /// accent, which a row keeps as the role and paint resolves) is painted
 /// again from the session's new overrides.
@@ -105,7 +105,7 @@ fn a_running_build_repaints_a_role_override_edit_in_place() {
     assert_eq!(at(&mut p), [0xff, 0, 0]);
 }
 
-/// A reload under a role's transition: the candidate
+/// A reload under a role's transition (LLP 1121 stage 5): the candidate
 /// adopts its paint under its own roles while the running session still
 /// lives on the thread, so nothing resolves unbound beside it.
 #[test]

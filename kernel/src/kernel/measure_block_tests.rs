@@ -123,7 +123,7 @@ fn digest(k: &Kernel, engine: bool) -> String {
 }
 
 /// What `measure_block` answers is what giving the block and laying out
-/// reads, for each kind of axis and a percentage.
+/// reads (theme2's condition b), for each kind of axis and a percentage.
 #[test]
 fn a_measure_is_the_used_size_the_block_would_give() {
     let text = "one two three four five six seven eight nine ten";
@@ -202,7 +202,7 @@ fn a_region_is_fit_content_with_its_minimum_winning() {
     );
 }
 
-/// Nothing the kernel holds changes: frames, blocks
+/// Nothing the kernel holds changes (theme2's condition a): frames, blocks
 /// and the engine's state are the same by digest, its whole tree with its
 /// caches among it, with columns (fragmentation's records) and without, and
 /// the next layout changes nothing.
@@ -244,7 +244,7 @@ fn a_measure_changes_nothing() {
 }
 
 /// The margins come back as the layout resolved them: a percentage is the
-/// block's, so the border box is the used size less them.
+/// block's, so the border box is the used size less them (Astra round 1).
 #[test]
 fn a_measure_answers_its_resolved_margins() {
     let rows = [
@@ -261,7 +261,7 @@ fn a_measure_answers_its_resolved_margins() {
 
 /// Columns are balanced after the engine lays the box out (fragment
 /// settling): a trial measures the height the columns settle at, the
-/// height the block gives once told.
+/// height the block gives once told (Astra round 1).
 #[test]
 fn a_measure_settles_columns() {
     let rows = [
@@ -281,7 +281,7 @@ fn a_measure_settles_columns() {
 
 /// Whether the box shows is what the layout after would say, not the last
 /// one: hidden since the last layout it measures zero, shown again since
-/// then its size.
+/// then its size (Astra round 1).
 #[test]
 fn a_measure_reads_whether_it_shows_now() {
     let mut k = page(&[], "one two three");
@@ -323,7 +323,7 @@ impl TextMeasurer for Stamps {
 
 /// A trial asks with the stamps the kernel's own layout asks with: the same
 /// paragraphs, which a measurer holding them by stamp answers from what it
-/// holds, not new text that would replace them.
+/// holds, not new text that would replace them (Astra round 2).
 #[test]
 fn a_measure_asks_with_the_paragraphs_own_stamps() {
     let seen = std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
@@ -356,7 +356,7 @@ fn a_measure_waits_for_a_layout_that_must_prepare_first() {
     .unwrap();
     assert!(k.measure_block(3, region(200.0, 600.0)).is_err());
     k.compute_layout(1, OFFER).unwrap();
-    // A text edit under the root waits for its layout too.
+    // A text edit under the root waits for its layout too (Astra round 3).
     k.apply(
         0,
         3,
@@ -377,7 +377,7 @@ fn a_measure_waits_for_a_layout_that_must_prepare_first() {
 
 /// The layout stamp stands across measures and moves with a commit that
 /// changes something and with a layout, even one that moves no frame (a
-/// `max-width` past the box's size).
+/// `max-width` past the box's size: Astra on the host cache).
 #[test]
 fn the_layout_stamp_moves_whenever_a_measure_could() {
     let mut k = page(&[(StyleId::Width, t("100%"))], "a b");

@@ -1,7 +1,8 @@
 //! CSS `box-shadow` and `text-shadow`.
 //!
-//! `box-shadow` is one row holding CSS's list: outer and
-//! inset shadows with spread, each with its colour. Each row's parse is the kernel's
+//! @ref LLP 1077 D4 — `box-shadow` is one row holding CSS's list: outer and
+//! inset shadows with spread, each with its colour. It replaced LLP 1064's
+//! four rows, which held one outer shadow. Each row's parse is the kernel's
 //! one, so a literal, a style block and a computed string all set it alike,
 //! and a refusal is the same text at compile time and at run time.
 
@@ -40,7 +41,7 @@ impl BoxShadows {
     /// `none`, or up to [`MAX_SHADOWS`] shadows separated by commas, each
     /// `inset? <length>{2,4} <color>` in any order, lengths in `px`
     /// (unitless zero). Refused, by name: a missing colour (CSS's default is
-    /// `currentcolor`, which is refused).
+    /// `currentcolor`, which LLP 1064 D1 refused and this keeps refusing).
     pub fn check(css: &str) -> Result<Self, &'static str> {
         let css = css.trim();
         if css.eq_ignore_ascii_case("none") {
@@ -66,7 +67,7 @@ impl BoxShadows {
         self.text(ColorText::Css)
     }
 
-    /// The wire form: [`Self::css`], with every reference kept.
+    /// The wire form: [`Self::css`], with every reference kept (LLP 1095 D1).
     pub fn wire(&self) -> String {
         self.text(ColorText::Wire)
     }
@@ -165,7 +166,7 @@ fn split_commas(text: &str) -> Vec<&str> {
 }
 
 /// CSS `text-shadow`: `none`, or one shadow under the node's glyphs and
-/// decorations, inherited.
+/// decorations, inherited (LLP 1077 D3).
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct TextShadow(Option<GlyphShadow>);
 
@@ -246,7 +247,7 @@ impl TextShadow {
         self.text(ColorText::Css)
     }
 
-    /// The wire form: [`Self::css`], with every reference kept.
+    /// The wire form: [`Self::css`], with every reference kept (LLP 1095 D1).
     pub fn wire(&self) -> String {
         self.text(ColorText::Wire)
     }

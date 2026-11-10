@@ -1,6 +1,6 @@
 //! The instance tree, and the ops that keep the kernel equal to it.
 //!
-//! Instances are managed by key, never by reconciling trees.
+//! @ref LLP 0485 §8.2 (keyed instance management, never reconciliation of trees; research)
 //!
 //! The plan's nodes and regions are *sites*. An instance realizes a site as a
 //! kernel view, an active `if`/`match` arm, or a `for` row per key. Updates
@@ -43,23 +43,23 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
-/// List engine entries, reached only through
+/// List engine entries (LLP 1047 D3; LLP 1047.000 §9), reached only through
 /// [`LISTS`]. `RunnerLinks::ALL` and the web collections capability name it;
-/// artifacts without virtualized lists carry no engine. Admission
+/// artifacts without virtualized lists carry no engine. Admission (D6)
 /// refuses virtualized lists when this table is absent.
 pub struct ListLinks {
     create: CreateList,
     update: UpdateList,
     typography: ListTypography,
     pub(crate) collections_json: fn(&Tree) -> String,
-    /// `scrollIntoView`: a request begun on its list.
+    /// `scrollIntoView` (LLP 1070.000): a request begun on its list.
     pub(crate) into_view: IntoViewLink,
     /// A logical row needed for a host's keyboard focus traversal.
     pub(crate) reveal_index: RevealIndexLink,
     pub(crate) scroll_anchor: ScrollAnchorLink,
     /// `state.scrollIntoView`: each list's latest request.
     pub(crate) into_view_json: fn(&Tree) -> String,
-    /// `state.kept`: inner lists' kept positions.
+    /// `state.kept`: inner lists' kept positions (LLP 1070 §4.2).
     pub(crate) kept_json: fn(&Tree) -> String,
     /// What the platform covers of a list's port, where no row is aligned.
     pub(crate) covered: fn(&mut Tree, ViewId, [f64; 2]) -> bool,
@@ -109,7 +109,9 @@ pub static LISTS: ListLinks = ListLinks {
 /// A list engine's state where the plan has no way to reach it: admission
 /// refused the plan, so this is the runner's defect, named rather than trapped on.
 fn unlinked() -> InstanceError {
-    InstanceError::Collection("a list engine is in use but this artifact doesn't link lists".into())
+    InstanceError::Collection(
+        "a list engine is in use but this artifact doesn't link lists (LLP 1047 D6)".into(),
+    )
 }
 
 mod errors;
@@ -132,12 +134,12 @@ pub struct NodeInst {
     /// What few nodes keep, behind one pointer: `Child` is 112 bytes, a
     /// class of Apple's allocator, and most child vectors hold one.
     rare: Option<Box<rare::Rare>>,
-    /// The app tuple its rows and children are in.
+    /// The app tuple its rows and children are in (LLP 1121 D5).
     tuple: u32,
     /// Which of its bindings' text read a token.
     themed: theme::Themed,
     /// One of its inherited colour rows was set since its children last
-    /// took the text they inherit: they are visited again.
+    /// took the text they inherit (D7): they are visited again.
     colour_moved: bool,
     /// The tuple around it when its rows were last set.
     around: u32,
@@ -199,7 +201,7 @@ struct Row {
     dup: u32,
     frame: Frame,
     roots: Vec<Child>,
-    /// The row's own slots: the `state` a child component
+    /// The row's own slots (LLP 1017 P4c): the `state` a child component
     /// declared, one value per row, kept across reorders with the key,
     /// dropped with the row, initialized when the row is created.
     /// Ordinary stateless rows omit it unless nested state needs the identity.
@@ -208,8 +210,8 @@ struct Row {
 
 /// One step of the instance path from the plan's roots to a view: the
 /// region crossed and, for a `for` row, its key; for an `if`/`match`
-/// region, the active arm (what identifies *this* instance of a repeated
-/// site).
+/// region, the active arm (LLP 1035.002 D6 — what identifies *this*
+/// instance of a repeated site).
 #[derive(Debug, Clone, PartialEq)]
 pub enum InstanceStep {
     /// A keyed row of a `for`.
@@ -236,9 +238,9 @@ pub struct Ids {
     /// Every instance node's view and site, destroyed ones kept till [`Ids::retain`] drops them.
     sites: exact_kernel::id::IdMap<ViewId, NodesId>,
     /// Each plan site's work across its instances' lifetimes, by node
-    /// index; empty while nothing is measured.
+    /// index; empty while nothing is measured (LLP 1079 D1).
     pub(crate) work: crate::perf::Work,
-    /// Every row that read a theme token.
+    /// Every row that read a theme token (LLP 1121 D7).
     pub theme: theme::ThemeIndex,
     pub(crate) tabs: tabs::Tabs, // tab panels waiting for their first selection (tabs.rs)
 }
@@ -313,7 +315,7 @@ pub fn value_json(value: &Value, out: &mut String) {
 }
 
 /// A canvas node's surface inputs, evaluated against state: the runner's
-/// side-output for the host's GPU module. Published only
+/// side-output for the host's GPU module (LLP 1009 D2). Published only
 /// after the commit that produced it applied.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceUpdate {
@@ -371,7 +373,8 @@ pub struct InstanceWork {
     pub derives_evaluated: usize,
     /// Store bytes copied so a refusal could put the store back.
     pub store_bytes_copied: usize,
-    /// Retiring list rows rebound to another item instead of building one.
+    /// Retiring list rows rebound to another item instead of building one
+    /// (LLP 1078).
     pub rows_rebound: usize,
 }
 
@@ -415,7 +418,8 @@ pub struct Update<'a> {
     /// Journal lines for what the data got wrong and the tree absorbed: an
     /// invalid style or prop value, a repeated key. Written with the commit.
     pub notes: Vec<String>,
-    /// A nested `scrollIntoView`'s inner part a report refused, by the inner list's `id` and why: journaled and kept for
+    /// A nested `scrollIntoView`'s inner part a report refused (LLP 1070.000
+    /// §2.6), by the inner list's `id` and why: journaled and kept for
     /// `state` as the command's refusals are.
     pub refused: Vec<(String, String)>,
     /// No kernel mirrors the tree (a detached kernel's runner, LLP
@@ -426,32 +430,32 @@ pub struct Update<'a> {
     /// kept update would have written as a style op: what tells a list its
     /// rows' typography changed ([`Tree::update`]).
     text_styled: bool,
-    /// The views of list rows rebound to another item, every one
+    /// The views of list rows rebound to another item (LLP 1078), every one
     /// a fresh mount to motion and to the host: the commit's receipt names
     /// them `renewed`.
     pub renewed: Vec<ViewId>,
-    /// List rows mounted out of their port, and those that showed.
+    /// List rows mounted out of their port, and those that showed (LLP 1055 D13).
     pub shown: collection::shown::RowsShown,
-    /// Rebind retiring list rows to new items, as the runner was
+    /// Rebind retiring list rows to new items (LLP 1078), as the runner was
     /// told ([`crate::Runner::set_row_reuse`]).
     pub reuse: bool,
     /// Reuse operand and local storage while visiting this update's bindings.
     scratch: vm::Scratch,
     /// Empty lexical-frame buffers, reused within this update only.
     frame_buffers: Vec<Vec<Frame>>,
-    /// Resolved CSS alignment insets, top/right/bottom/left.
+    /// Resolved CSS alignment insets, top/right/bottom/left (LLP 1010 §6.9).
     pub scroll_padding: Option<&'a dyn Fn(ViewId) -> [f64; 4]>,
     /// Resolved CSS target outsets, top/right/bottom/left.
     pub scroll_margin: Option<&'a dyn Fn(ViewId) -> [f64; 4]>,
     /// Row margins as the kernel lays them out, under a terminal's rule.
     pub cell_margins: Option<&'a dyn Fn(ViewId) -> [f64; 4]>,
-    /// The app modes around the nodes being visited.
+    /// The app modes around the nodes being visited (LLP 1121 D5).
     pub theme: theme::Around,
 }
 impl<'a> Update<'a> {
     /// A context over `env` with no ops yet.
     pub fn new(env: Env<'a>, sites: &'a SiteIndex, ids: &'a mut Ids) -> Self {
-        // A visit starts in the window's modes.
+        // A visit starts in the window's modes (LLP 1121 D5).
         let theme = theme::Around {
             tuple: ids.theme.window,
             retheme: std::mem::take(&mut ids.theme.moved),
@@ -544,7 +548,7 @@ impl<'a> Update<'a> {
     /// [`Update::stale`] for reads made `shift` scopes further in (a key or
     /// a row body seen from its region), counting only enclosing frames.
     fn stale_outside(&self, reads: &Reads, shift: u32) -> bool {
-        // A changed tuple sets every themed row again.
+        // A changed tuple sets every themed row again (LLP 1121 D7).
         self.full || self.theme.retheme || self.changed_outside(reads, shift)
     }
 
@@ -559,7 +563,7 @@ impl<'a> Update<'a> {
         reads.opaque
             || reads.bits.intersects(changed)
             // Only the innermost frame, seen from inside it: only if a field
-            // read is a field that changed.
+            // read is a field that changed (LLP 1017.003 D6).
             || (frames == 1 && shift == 0 && reads.fields & self.dirty_fields != 0)
             || (frames != 0 && (frames != 1 || shift != 0))
             || (reads.row_slots
@@ -612,7 +616,7 @@ pub struct SiteIndex {
     sites: Vec<(u32, Site)>,
     /// What every binding and site reads.
     deps: Deps,
-    /// The plan's `@keyframes`, parsed once.
+    /// The plan's `@keyframes`, parsed once (LLP 1055 D5).
     keyframes: bridge::KeyframesTable,
     /// How an `animation` list's names resolve, when linked.
     resolve_keyframes: bridge::KeyframesLink,
@@ -713,7 +717,7 @@ impl Site {
 
 /// The indices `0..n` in the order a stable sort by `less` gives. A bottom-up
 /// merge sort written once, so each caller doesn't link its own
-/// instantiation of core's sort.
+/// instantiation of core's sort (LLP 1047 §6).
 fn stable_order(n: usize, less: &dyn Fn(usize, usize) -> bool) -> Vec<usize> {
     let mut a: Vec<usize> = (0..n).collect();
     let mut b = a.clone();
@@ -923,7 +927,7 @@ impl NodeInst {
         let mut patch: Option<Box<StyleProps>> = None;
         let deps = &u.sites.deps;
         // A pin is read first: the node's other rows are in the tuple it
-        // makes. Without a theme, nothing here runs.
+        // makes (LLP 1121 D5). Without a theme, nothing here runs.
         let themed_plan = !plan.theme.is_empty();
         let mode = themed_plan
             .then(|| theme::binding_of(plan, &row, exact_kernel::StyleId::Mode))
@@ -1105,14 +1109,14 @@ impl NodeInst {
                     };
                     match styled {
                         // Unlinked, the plan names no rule: it was refused at
-                        // boot.
+                        // boot (LLP 1047.001 D5).
                         Ok(exact_kernel::StyleId::Animation) => {
                             if let Some(resolve) = u.sites.resolve_keyframes {
                                 u.notes
                                     .extend(resolve(&u.sites.keyframes, &mut p.animation));
                             }
                         }
-                        // An exit names keyframes as `animation` does.
+                        // An exit names keyframes as `animation` does (LLP 1063).
                         Ok(exact_kernel::StyleId::ExitAnimation) => {
                             if let Some(resolve) = u.sites.resolve_keyframes {
                                 u.notes.extend(resolve(
@@ -1273,7 +1277,7 @@ fn invalid(view: ViewId, row: &str, value: &Value) -> String {
     format!("view {view}: invalid {row} value {shown}; unset")
 }
 
-/// A face's colour that is no colour, as written; `then`
+/// A face's colour that is no colour (LLP 1045.000 D2), as written; `then`
 /// says what is drawn instead.
 pub(crate) fn invalid_face(view: ViewId, text: String, then: &str) -> String {
     let shown = serde_json::Value::String(text);
@@ -1366,12 +1370,12 @@ impl Tree {
     }
 
     /// The site owning `view` and the instance path to it: the regions
-    /// crossed, with the row key or the active arm at each.
+    /// crossed, with the row key or the active arm at each (LLP 1035.002).
     pub fn site(&self, view: ViewId) -> Option<(NodesId, Vec<InstanceStep>)> {
         self.site_in(view).map(|(node, _, path)| (node, path))
     }
 
-    /// The app tuple `view`'s node is in: the window's,
+    /// The app tuple `view`'s node is in (LLP 1121 D5): the window's,
     /// overridden by the pins above it, for an inspected node's report.
     pub fn tuple_of(&self, view: ViewId) -> Option<u32> {
         self.site_in(view).map(|(_, tuple, _)| tuple)

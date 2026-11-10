@@ -1,7 +1,7 @@
-// @exact/reading — what a reader of parsed Markdown draws with: the block
-// shapes the data crates fill, a paragraph's styled runs, and the appearance
-// chooser. `apps/markdown` and `apps/llp` use it; each lays out its own
-// blocks.
+// @exact/reading — what a reader of parsed Markdown draws with (LLP 1091
+// stage 2's first package): the block shapes the data crates fill,
+// a paragraph's styled runs, and the appearance chooser. `apps/markdown` and
+// `apps/llp` use it; each lays out its own blocks.
 
 shape Run
   id: string

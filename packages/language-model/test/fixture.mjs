@@ -1,4 +1,4 @@
-// The conformance fixture, as every platform's suite makes
+// The conformance fixture (LLP 1133.001 D7), as every platform's suite makes
 // it: an app `exact new` made outside the repo, its files replaced by
 // `fixture/`'s, depending on this package by `file:` and installed.
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -29,7 +29,7 @@ export function makeFixture({ model = `file:${pkg}`, dependencies = {} } = {}) {
   return { app, id };
 }
 
-/** The fixture's drives under the agent, the same on every host (drives 7 and 8 on the device's runtime): each
+/** The fixture's drives under the agent, the same on every host (§10's drives 7 and 8 on the device's runtime): each
  * drive's name, operations and what its output must show. */
 export function agentDrives() {
   const script = v => `prefer extension language-model.responses=${JSON.stringify(v)}`;

@@ -1,4 +1,4 @@
-//! `class=`: a node names a `style`, or chooses between two
+//! `class=` (LLP 1017 P6): a node names a `style`, or chooses between two
 //! with `class=(cond ? A : B)`. Either way its rows come in ahead of the
 //! node's own attributes, which win for the same name.
 
@@ -65,7 +65,7 @@ pub(crate) fn rows<'s>(
                         .map_or(Expr::None(*span), |r| r.value.clone())
                 };
                 let (va, vb) = (side(sa), side(sb));
-                // A prop has no `none` to fall to.
+                // @ref LLP 1069.011 D12 — a prop has no `none` to fall to.
                 let styleable = matches!(crate::tags::attr(&s.name), Some(crate::tags::AttrTarget::Prop(p)) if p.styleable());
                 if styleable && (matches!(va, Expr::None(_)) || matches!(vb, Expr::None(_))) {
                     return err(
@@ -95,7 +95,7 @@ pub(crate) fn rows<'s>(
 
 impl Lowerer<'_> {
     /// Whether an absolutely positioned box can be among `nodes` or under
-    /// them: a `position` that is not a literal `static` or
+    /// them (LLP 1074 T1): a `position` that is not a literal `static` or
     /// `relative`, its own or its class's; a component, a slot or a native
     /// view, whose insides aren't seen here; a canvas; a row that exits or
     /// moves in its layout (the web host takes a leaving row out of flow). A

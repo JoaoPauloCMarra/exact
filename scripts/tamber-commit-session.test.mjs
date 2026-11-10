@@ -1,5 +1,5 @@
-// The design server's commit session (scripts/tamber-commit.mjs), a file whose text is HEAD's again (re-baselined,
-// with the refusal kept while tool edits are pending): committed by hand,
+// The design server's commit session (scripts/tamber-commit.mjs), a file whose text is HEAD's again (the third
+// hands-on pass's #3; theme2: re-baseline it, and keep the refusal while tool edits are pending): committed by hand,
 // the next write is a new baseline and commits; a commit asked then has nothing to say but that; a write in flight
 // keeps its record; an edit still pending when HEAD moves stays refused.
 import { afterEach, expect, test } from 'bun:test';

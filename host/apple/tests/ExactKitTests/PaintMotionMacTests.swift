@@ -3,7 +3,7 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// Paint motion on AppKit: an inline run paints the colour its
+/// Paint motion on AppKit (LLP 1062): an inline run paints the colour its
 /// paragraph is told it inherits; a view whose own appearance differs from
 /// the session's is noted for the host, once, until it agrees again.
 final class PaintMotionMacTests: XCTestCase {
@@ -158,7 +158,7 @@ final class PaintMotionMacTests: XCTestCase {
 
     /// An `svg`'s `light-dark()` paint is resolved into its scene's layers,
     /// so an appearance change applies the scene again, as Chrome repaints
-    /// it.
+    /// it (minesweeper F11, paint F10).
     func testAnSvgPaintFollowsItsViewsAppearance() throws {
         _ = NSApplication.shared
         let session = ExactApp.shared.makeSession(label: "paint-svg-scheme-mac")

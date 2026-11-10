@@ -1,5 +1,5 @@
-// What a Tamber answer may say of this machine's files (tamber/1.15):
-// path metadata named through one rule, the one
+// What a Tamber answer may say of this machine's files (tamber/1.15, a
+// fix; round 1's rework): path metadata named through one rule, the one
 // `contract/cli/src/tamber_uses.rs` `shown` keeps for the design server, and
 // machine-written messages scrubbed at path boundaries. Authored values and
 // file contents are never touched.
@@ -23,7 +23,7 @@ const inside = (p, d) => p === d || p.startsWith(d.endsWith(sep) ? d : d + sep);
 /** `file` as an answer names it, never with this machine's directories:
  * inside the app's directory `appDir` (as given or real), from it; else
  * inside a package (the nearest directory above the file whose
- * `package.json` has a name), `<name>/<path inside it>`, as the compiler names a
+ * `package.json` has a name), `<name>/<path inside it>`, as D15 names a
  * package's file; else `<outside>/<its name>`. A relative path is the app's
  * already, and a string that is no path is kept. */
 export function pathName(file, appDir) {

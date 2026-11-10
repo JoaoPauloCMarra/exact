@@ -229,7 +229,7 @@ final class BoxLayerIOSTests: XCTestCase {
     private let white: BatchValue = [255, 255, 255, 255]
     private let blue: BatchValue = [0, 136, 255, 255]
 
-    /// A padding that resolves at layout (`min(10%, 20px)`
+    /// LLP 1116: a padding that resolves at layout (`min(10%, 20px)`
     /// arrives as a calculation's handle) reads the content box the kernel published,
     /// for the box and for each side; without one, the box's bounds.
     func testAPaddingResolvedAtLayoutReadsTheKernelsContentBox() throws {
@@ -264,7 +264,7 @@ final class BoxLayerIOSTests: XCTestCase {
         return n
     }
 
-    /// CSS `filter` arriving in a later style, and
+    /// CSS `filter` (LLP 1055.000 D14) arriving in a later style, and
     /// leaving in one after: the box is masked while filtered and its
     /// picture is drawn with each batch; a node that never had one is
     /// neither.

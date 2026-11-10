@@ -1,4 +1,4 @@
-//! `scroll-start: end`: a virtualized list that opens at its
+//! `scroll-start: end` (LLP 1010 §6.5): a virtualized list that opens at its
 //! end — a transcript — builds its last rows first, tells the host to move
 //! there before it paints, and anchors the end through measurement until the
 //! window there is measured or the reader moves it.
@@ -7,7 +7,7 @@ use super::*;
 impl Collection {
     /// Whether the window anchors the end: the list follows it, or it is
     /// still opening there. Not while a `scrollIntoView` is under way: the
-    /// request overrides the list's kept position.
+    /// request overrides the list's kept position (LLP 1070.000 §2.5).
     pub(super) fn follows(&self) -> bool {
         (self.follow_end || self.at_end) && self.preview.is_none() && self.target.is_none()
     }
@@ -97,10 +97,10 @@ impl Collection {
 /// 3x; WebKit floors a fractional scroll range): a followed end already sent
 /// (`sent`) is reached within `END_SLACK`,
 /// else the same unreachable end went out with every commit and an opening
-/// never settled. An end that moved is sent once; a row
+/// never settled (LLP 1010 §6.8). An end that moved is sent once; a row
 /// anchor keeps 0.01, since its moves add up report on report. A port in
 /// the padding before the first row is at the rows' start, unless the
-/// target is in that padding too (a short list's end).
+/// target is in that padding too (a short list's end, LLP 1010 §6.9).
 pub(super) fn at_target(
     anchor: &super::index::Anchor,
     corrected: f64,

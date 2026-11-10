@@ -1,9 +1,9 @@
-//! Canvas text: the CSS `font` shorthand as the canvas parses
+//! Canvas text (LLP 1056 D8): the CSS `font` shorthand as the canvas parses
 //! and serialises it, the text engine each host supplies, and the metrics
 //! `measureText` returns.
 //!
-//! Text goes through each host's engine, measured where the module's code
-//! runs.
+//! @ref LLP 1056 D8 (text through each host's engine, measured where the
+//! module's code runs)
 //!
 //! The recorder resolves alignment and baselines itself from one
 //! measurement ([`RawMetrics`]: the run at `textAlign = "left"`,
@@ -83,7 +83,7 @@ pub const GENERIC: [&str; 13] = [
 
 /// The size relative units resolve against: a detached canvas's default
 /// font, which is what Chrome uses for `em`, `rem`, `%`, `larger` and
-/// `smaller` on a canvas outside a document.
+/// `smaller` on a canvas outside a document (LLP 1056 §8.2).
 pub const BASE_SIZE: f64 = 10.0;
 
 /// A canvas font: the `font` shorthand's result, with `fontStretch` and
@@ -478,8 +478,8 @@ impl RawMetrics {
     }
 }
 
-/// A host's text engine, callable from the executor's thread (never a
-/// synchronous call into the UI thread).
+/// A host's text engine, callable from the executor's thread (LLP 1056 D8:
+/// never a synchronous call into the UI thread).
 pub trait TextEngine: Send + Sync {
     /// Measure one run.
     fn measure(&self, run: &TextRun<'_>) -> RawMetrics;

@@ -1,4 +1,4 @@
-//! Exact's optional asynchronous HTTP connection log.
+//! Exact's optional asynchronous HTTP connection log (LLP 1120 §5).
 //! `IBEX2_HTTP_METRICS` selects the file once, at the first exchange.
 //! Blocking/native comparison is an explicit upstream diagnostic; Ibex
 //! itself installs no process-wide logging policy.

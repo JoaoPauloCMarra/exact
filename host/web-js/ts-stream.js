@@ -1,4 +1,4 @@
-// A TypeScript resource's stream on the JS target: the
+// A TypeScript resource's stream on the JS target (LLP 1016.000 D7): the
 // shared web reader owns admission and lifetime; the mapper produces a
 // snapshot for every protocol frame. Loaded only for a streaming source.
 import { streamed } from './http-body.js';
@@ -16,7 +16,7 @@ function request(input, init, redirect) {
   const independent = init.exactIndependentHttp?.maxResponseBytes;
   if (independent !== undefined && (!Number.isInteger(independent) || independent <= 0 || independent > 67108864))
     throw new TypeError('exactIndependentHttp.maxResponseBytes must be an integer from 1 to 67108864');
-  // `exactBodyFrom`: read as the stream opens (http-body.js).
+  // `exactBodyFrom` (LLP 1108 D6 R2): read as the stream opens (http-body.js).
   const bodyFrom = init.exactBodyFrom === undefined ? undefined : init.exactBodyFrom, refusal = bodyFrom === undefined ? null : bodyFromRefusal(input, init);
   if (refusal) throw new TypeError(refusal);
   // A BufferSource body goes as its bytes, copied now, as Hermes sends one (an upload's); anything else as its text.
@@ -35,7 +35,7 @@ function request(input, init, redirect) {
     throw new TypeError('exactTimeout must be an integer number of milliseconds from 1 to 3600000');
   return { method, url, signal, headers: [...new Headers(init.headers ?? request?.headers ?? [])], raw, bodyFrom, redirect, maxResponseBytes: independent ?? 1048576, longPoll: longPollOf(init.exactLongPoll, method, url), upload, timeoutMs };
 }
-// `exactUploadProgress`, as js/src/binary.js `uploadOf` checks it.
+// `exactUploadProgress` (LLP 1016.000 D10), as js/src/binary.js `uploadOf` checks it.
 function uploadOf(init, method, url, redirect) {
   const upload = init.exactUploadProgress;
   if (upload === undefined || upload === false) return undefined;
@@ -47,7 +47,7 @@ function uploadOf(init, method, url, redirect) {
   if (redirect !== undefined && redirect !== 'follow') throw new TypeError('exactUploadProgress: an upload follows its redirects');
   return true;
 }
-// `exactLongPoll`, as js/src/prelude.js `longPollOf` checks it.
+// `exactLongPoll` (LLP 1016.000 D8), as js/src/prelude.js `longPollOf` checks it.
 function longPollOf(poll, method, url) {
   if (poll === undefined) return undefined;
   if (/^wss?:/i.test(url)) throw new TypeError('exactLongPoll: a long poll is HTTP, not a WebSocket');
@@ -80,7 +80,7 @@ const publish = operations => () => {
 // The module never sees the browser socket. Operations belong to the current
 // mutation's answer, to the socket's own mapper while it answers `open` or a
 // `message` (`answering.mapper`), or to a resource's answer while its source
-// runs, the one turn of it this page can tie to it (the
+// runs, the one turn of it this page can tie to it (LLP 1016.000 D7, the
 // amendment of 2026-10-18). rt.js publishes them only after the commit that
 // settles that turn, or that ran that source, stands.
 function handle(transport, owner) {
@@ -129,7 +129,7 @@ function handle(transport, owner) {
     },
   });
 }
-// The stream timing gate, under the agent only: agent.js installs
+// LLP 1133.003 §9's gate, under the agent only: agent.js installs
 // `exact.streamGate`, which times each message from its receipt
 // (http-body.js `received`) through the mapper to the commit, and the stub
 // decode the mapper calls. A page with no agent has none of it.
@@ -152,7 +152,7 @@ export function open({ input, init, redirect }, conv, grantSet, deliver, control
   // A mapper call's replies are refused with the frame: the journal says so.
   const refused = why => journal.push(`t=${clock.now} mapper ${controller.streamName} failed: ${why}; socket frames were refused`);
   // `frame`: the socket's `open` or a `message`, which its mapper may answer
-  // with replies on it. They ride the frame's answer as effects
+  // with replies on it (D7). They ride the frame's answer as effects
   // (rt.js `reply`), sent once its commit stands.
   const value = (event, frame) => {
     if (controller.active?.() === false) return { error: 'the stream was let go', code: 'error' };
@@ -170,7 +170,7 @@ export function open({ input, init, redirect }, conv, grantSet, deliver, control
       return { error: String(e?.message ?? e), code: failureCode(e), reason: failureReason(e) };
     } finally { if (turn) answering.mapper = null; }
   };
-  // A long poll's reply that is no event (`exact:reply`) reaches no mapper, nor an upload's start
+  // A long poll's reply that is no event (`exact:reply`, LLP 1016.000 D8) reaches no mapper, nor an upload's start
   // (`exact:sending`), which, as any bytes sent, says it reached the network (rt.js); its bytes sent are a `progress`
   // event, as XMLHttpRequest's.
   const event = m => req.upload && m.event === 'exact:progress' ? { type: 'progress', ...JSON.parse(m.data), lengthComputable: true, data: '', lastEventId: '', coalesced: m.coalesced } : { type: m.event || 'message', data: m.data, lastEventId: m.id, coalesced: m.coalesced };

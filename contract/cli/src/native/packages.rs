@@ -1,16 +1,17 @@
-//! The Rust host builder (`rust-static`): the Linux or Windows implementation
-//! bound to each interface the plan's modules name, compiled as a module of the
-//! app's own host crate, and the table the host binds (`exact_linux::package`).
+//! The Rust host builder (LLP 1133.001 D5's `rust-static`, built by LLP
+//! 1133.022 D10 item 5): the Linux or Windows implementation bound to each
+//! interface the plan's modules name, compiled as a module of the app's own
+//! host crate, and the table the host binds (`exact_linux::package`).
 //!
-//! Each implementation is chosen as the other builders choose
-//! (`implementationFor` in `js/bake/src/typescript.mjs`): the one
+//! Each implementation is chosen as the other builders choose (LLP 1133.001
+//! D4, `implementationFor` in `js/bake/src/typescript.mjs`): the one
 //! `app.json` `implementations` names for the target, else the app's one
 //! direct dependency that implements the interface there, else the one the
 //! interface's package carries. It declares `"sources": {"rust": [root]}`
 //! and `"class"`, a type in that root implementing `Package`.
 //!
 //! The root joins the app's crate by a `#[path]` module, as an app's own
-//! hatches join it by `include!`: its submodules
+//! hatches join it by `include!` (LLP 1075.003.000.001 §5): its submodules
 //! resolve beside it, and it names exact2's crates the app's crate already
 //! depends on (`exact_linux::package`). No Cargo manifest is generated, so
 //! a package's Rust takes no crate of its own yet.
@@ -86,7 +87,7 @@ pub fn rust_packages(app_root: &Path, extensions: &[&str], target: &str) -> Resu
     };
     rerun_if_changed(app_root);
     let mut text = String::from(
-        "// The packages' Rust implementations, written by the build; never edited.\n",
+        "// The packages' Rust implementations (LLP 1133.022 D10 item 5), written by the build; never edited.\n",
     );
     let mut entries = String::new();
     for b in &bound {
@@ -190,7 +191,7 @@ fn interfaces(app_root: &Path) -> Vec<(String, PathBuf)> {
 }
 
 /// The implementation of interface `name` bound for `target`, with its
-/// directory, in the order every builder uses.
+/// directory: LLP 1133.001 D4's order.
 fn implementation_for(
     app_root: &Path,
     name: &str,
@@ -260,10 +261,10 @@ fn implementation_for(
     Ok(None)
 }
 
-/// Writes `packages.rs`, the Rust implementations a desktop host composes, into
-/// a baked Linux or Windows crate's `out` from its encoded plan (on another
-/// platform, nothing), leaving an unchanged file alone so Cargo does not
-/// rebuild for it.
+/// Writes `packages.rs`, the Rust implementations a desktop host composes
+/// (LLP 1133.022 D10 item 5), into a baked Linux or Windows crate's `out`
+/// from its encoded plan (on another platform, nothing), leaving an
+/// unchanged file alone so Cargo does not rebuild for it.
 pub fn write_desktop_packages(
     platform: &str,
     app_root: &Path,

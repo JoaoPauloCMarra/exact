@@ -3,7 +3,7 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// `layout agree` on AppKit: a content region's surface,
+/// `layout agree` on AppKit (LLP 1080.001 D3): a content region's surface,
 /// this session's by its controller, is accounted for and its interior is
 /// the region's; an unrelated view beside it is still a stray.
 final class AgreementMacTests: XCTestCase {

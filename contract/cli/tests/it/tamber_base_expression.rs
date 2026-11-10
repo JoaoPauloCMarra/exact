@@ -1,11 +1,11 @@
-//! A length over base names the design
+//! @ref LLP 1121 D11 (stage 12 B2) — a length over base names the design
 //! leaves unset: kept as one expression, token references inlined and its
 //! px parts folded, which each host evaluates in its column
 //! (`contract/cli/tests/base_expression.rs`). The compiler checks it in
 //! every column and names the one it fails in, a param's range included.
 //! What is no length's `calc()`, `min()`, `max()` or `clamp()` over px and
-//! numbers is refused. A shadow over a base name is tested in
-//! `tamber_base_shadow.rs`.
+//! numbers is refused. A shadow over a base name is stage 12 B3's
+//! (`tamber_base_shadow.rs`).
 
 use exact_kernel::style::scale;
 use std::path::PathBuf;
@@ -72,7 +72,7 @@ fn an_expression_is_kept_with_its_references_inlined_and_px_folded() {
     ] {
         assert_eq!(value(name), want, "{name}");
     }
-    // Each reads its base names, the inlined ones too (its `bases`).
+    // Each reads its base names, the inlined ones too (stage 11 D's `bases`).
     let folding = exact_tamber::check_design(
         exact_tamber::parse(design).unwrap(),
         &contract_lower::tamber_vocab(),
@@ -89,7 +89,7 @@ fn an_expression_is_kept_with_its_references_inlined_and_px_folded() {
     };
     assert_eq!(bases("pad.b"), ["space.md"]);
     assert_eq!(bases("pad.h"), ["space.lg", "space.xs"]);
-    // A read a later term cancels is still read.
+    // A read a later term cancels is still read (round 1, Astra 6).
     assert_eq!(bases("pad.g"), ["space.md"]);
 }
 
@@ -178,7 +178,7 @@ fn a_params_range_is_checked_in_each_column() {
         &[("app.contract", root), ("card.contract", &card("0..100"))],
     ))
     .unwrap_or_else(|e| panic!("{e:?}"));
-    // A bare base name: inside the range in every
+    // A bare base name (theme2's 01:13 ruling): inside the range in every
     // column, accepted; outside it in one, refused, naming that column.
     let bare = |range: &str| {
         format!("component Card\n  params\n    pad: length = \"space.lg\"  range=\"{range}\"\n  view\n    column padding=\"param.pad\"\n      text \"a\"\n")
@@ -268,7 +268,8 @@ fn what_is_no_lengths_function_over_px_is_refused() {
         assert_eq!((got.as_str(), name), (id, name), "{message}");
         assert!(message.contains(said), "{name}: {message}");
     }
-    // A shadow's lengths over one are kept (`tamber_base_shadow.rs`).
+    // A shadow's lengths over one are kept (stage 12 B3,
+    // `tamber_base_shadow.rs`).
 }
 
 /// Outside Exact (the DTCG export) an expression is the neutral column's
@@ -291,7 +292,7 @@ fn an_expression_exports_the_neutral_columns_px() {
     assert!(text.contains("calc(space.md * 2 + 1px)"), "{text}");
 }
 
-/// Arithmetic at its edges. A sum or a step that isn't
+/// Round 1 (Astra): arithmetic at its edges. A sum or a step that isn't
 /// finite is refused, as in px; a quotient divides each coefficient (no
 /// reciprocal to overflow); a term that underflows to 0 goes, so the text
 /// normalises again to itself; an expression past the kernel's `calc()`
@@ -352,7 +353,7 @@ fn arithmetic_at_its_edges() {
     );
 }
 
-/// A range's bounds are compared in the kernel's
+/// Round 1 (Astra 2): a range's bounds are compared in the kernel's
 /// precision, so a column's value at the bound is inside it.
 #[test]
 fn a_range_bound_is_compared_as_the_kernel_folds() {
@@ -371,7 +372,7 @@ fn a_range_bound_is_compared_as_the_kernel_folds() {
     .unwrap_or_else(|e| panic!("{e:?}"));
 }
 
-/// The text the plan carries parses back in the kernel to
+/// Round 1 (Grok): the text the plan carries parses back in the kernel to
 /// what the written expression is, in every column: a negative coefficient,
 /// a quotient, a sum inside `min()`, a `clamp()` whose low bound passes its
 /// high.
@@ -413,8 +414,8 @@ fn the_carried_text_folds_as_the_written_one() {
     }
 }
 
-/// A base name is no font size a row takes. Bare, tamber
-/// keeps it as a type's size (its `bases` names it) and the
+/// Round 2 (Grok): a base name is no font size a row takes. Bare, tamber
+/// keeps it as a type's size (stage 11 D: its `bases` names it) and the
 /// build refuses it where a `font` row reads it, as the kernel's longhands
 /// take no base; an expression over one tamber refuses itself.
 #[test]
@@ -438,7 +439,7 @@ fn a_base_name_is_no_font_size_a_row_takes() {
     }
 }
 
-/// A fold past f32's range (a host's `calc()` saturates)
+/// Round 2 (Astra): a fold past f32's range (a host's `calc()` saturates)
 /// is refused at build, so a computed row never meets it; and outside
 /// Exact an expression sums as a host's `calc()` does, the terms then px.
 #[test]
@@ -478,7 +479,7 @@ fn a_fold_past_f32_is_refused_and_exports_sum_as_hosts_do() {
     assert_eq!(r.fold(&neutral), Some(f64::from(want)));
 }
 
-/// A ranged param a column doesn't fold is refused by the
+/// Round 3 (Astra): a ranged param a column doesn't fold is refused by the
 /// params' own check too, which the design server runs without lowering
 /// the theme.
 #[test]
@@ -500,7 +501,7 @@ fn an_unfoldable_ranged_param_is_refused_by_the_params_check() {
                 && e.message.contains("doesn't fold to a length on")),
         "{errors:?}"
     );
-    // Said once: the theme's own refusal doesn't repeat it.
+    // Said once: the theme's own refusal doesn't repeat it (re-check, Astra).
     assert_eq!(
         errors
             .iter()

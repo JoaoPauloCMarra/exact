@@ -294,14 +294,38 @@ test('an audit makes every unit outside the inputs unreadable, Cargo manifests a
   } finally { done(); }
 });
 
+test("the lane's steps read the dists they are given by variable, and no other step does", async () => {
+  const { laneSelection } = await import('./async.mjs');
+  const names = "import { test } from 'bun:test';\ntest('d', () => open(process.env.EXACT_WEB_DIST));\n";
+  const { root, repo, done } = fixture({ 'scripts/agent.test.mjs': names, 'scripts/elsewhere.test.mjs': names, 'apps/caltrain/app.contract': '' }, []);
+  try {
+    const picked = laneSelection(['apps/caltrain/app.contract'], { root, repo });
+    expect(picked.glue).toEqual(['./scripts/agent.test.mjs']);
+    expect(picked.ids).not.toContain('bun:scripts/elsewhere.test.mjs');
+  } finally { done(); }
+});
+
+test("the lane runs the iOS classes a commit's test files reach, and every class before `--only`", async () => {
+  const { laneSelection } = await import('./async.mjs');
+  const test = 'host/apple/tests/ExactKitTests/A.swift';
+  for (const [build, only] of [["if (args.includes('--only')) {}\n", ['ATests']], ['// (no --only yet)\n', null]]) {
+    const { root, repo, done } = fixture({ [test]: 'import XCTest\n\nfinal class ATests: XCTestCase {}\n', 'host/apple/build.mjs': build }, []);
+    try {
+      const picked = laneSelection([test], { root, repo });
+      expect([picked.ios, picked.iosOnly, picked.touch]).toEqual([true, only, false]);
+    } finally { done(); }
+  }
+});
+
 // The checkout itself: a change to one app runs that app's suites, not another's, nor the hosts' own.
 test("this checkout's selection keeps an app's change to that app's suites", () => {
   const repo = new Repo(), graph = new Graph(repo);
-  const watched = ['app:caltrain:web', 'xctest:ios', 'xctest:macos', 'touch:ios', 'conform:caltrain', 'cargo:exact-kernel'];
+  const watched = ['app:excord:web', 'app:excord:ios', 'app:caltrain:web', 'xctest:ios', 'xctest:macos', 'touch:ios', 'conform:caltrain', 'cargo:exact-kernel'];
   const catalogue = suites(repo).filter(s => watched.includes(s.id));
   expect(catalogue.map(s => s.id).sort()).toEqual([...watched].sort());
   const picked = changed => select(graph, changed, catalogue).map(s => s.suite.id).sort();
-  expect(picked(['host/apple/Sources/ExactKit/Mac/CaptureMac.swift'])).toEqual(['touch:ios', 'xctest:ios', 'xctest:macos']);
+  expect(picked(['apps/excord/render.ts'])).toEqual(['app:excord:ios', 'app:excord:web']);
+  expect(picked(['host/apple/Sources/ExactKit/Mac/CaptureMac.swift'])).toEqual(['app:excord:ios', 'touch:ios', 'xctest:ios', 'xctest:macos']);
   // A change to an XCTest file runs the classes it reaches, each on its platform, and no Apple build
   // that does not run them
   const only = changed => Object.fromEntries(select(graph, changed, catalogue).map(s => [s.suite.id, s.only ?? 'every class']));

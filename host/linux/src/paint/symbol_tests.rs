@@ -1,4 +1,4 @@
-//! A symbol role in the platform's shape: `back` is
+//! A symbol role in the platform's shape (LLP 1115.001 D14): `back` is
 //! Windows' and Android's arrow and `more` their bare dots, where the Linux
 //! desktop draws the web's chevron and circled ellipsis.
 use crate::presenter::{PainterChoice, Presenter};

@@ -1,4 +1,4 @@
-//! CSS's 3D transforms: a box turned out of the screen's plane
+//! CSS's 3D transforms (LLP 1077 D8): a box turned out of the screen's plane
 //! or moved along z, under its parent's `perspective`, painted flat apart and
 //! warped into the frame through the plane's homography — the placement
 //! route canvas children take (`placed.rs`, `placement.rs`), so paint and hit
@@ -311,7 +311,7 @@ impl Painter {
         }
         for mut b in child_walk.boxes {
             // A box already in its own plane (a 3D child) maps through both:
-            // this island's inverse, then its own.
+            // this island's inverse, then its own (LLP 1077 D8).
             // A clip between the two planes (an overflow inside this
             // island) goes into the inner plane too, as its corners' bounds.
             let (local, local_clip, inv, planes) = match b.projective {

@@ -1,7 +1,7 @@
 // The JS target's shared-element curve (host/web-js/shared.js `curve`) reads the
 // `--exact-layout-transition` row the web host writes (css.rs
-// `layout_transition_css`): a spring there is the private `spring(k, c, m)`,
-// whose commas must not split it, lowered to `linear()`.
+// `layout_transition_css`): a spring there is the private `spring(k, c, m)`
+// (LLP 1081 D5 keeps it), whose commas must not split it, lowered to `linear()`.
 import { test, expect } from 'bun:test';
 import { copyFileSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

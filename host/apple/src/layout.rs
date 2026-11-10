@@ -54,7 +54,7 @@ impl<D: DataSource> Host<D> {
         batch.orientationlock = self.orientation_moved();
         batch.must_finish = self.finish_moved();
         // A package view's displayed state, by the same rule, now the
-        // presenter's covers are set.
+        // presenter's covers are set (LLP 1133.008 D8 item 2).
         self.runner.report_views();
         batch.finish(
             self.runner.timer_due_ms(),
@@ -205,7 +205,7 @@ impl<D: DataSource> Host<D> {
         self.emit_layout(batch)
     }
 
-    /// Each sticky node's constraint, when it changed.
+    /// @ref LLP 1083 D3 — each sticky node's constraint, when it changed.
     /// It follows its parent's and its scroller's boxes as well as its own,
     /// so every sticky node is read again after a layout; there are few.
     fn emit_sticky(&mut self, batch: &mut Batch) {
@@ -234,7 +234,7 @@ impl<D: DataSource> Host<D> {
         self.stickies = now;
     }
 
-    /// Each box's fragments and each container's columns,
+    /// @ref LLP 1093 D7 — each box's fragments and each container's columns,
     /// when they changed: the presenter's copy of the kernel's record.
     fn emit_fragments(&mut self, batch: &mut Batch) {
         let kernel = self.runner.kernel();
@@ -261,7 +261,7 @@ impl<D: DataSource> Host<D> {
         self.fragments = now;
     }
 
-    /// Publish ranks independently of geometry, including zero.
+    /// LLP 1083.000 D4: publish ranks independently of geometry, including zero.
     pub(super) fn emit_ranks(&mut self, batch: &mut Batch) {
         for (id, placed) in self.runner.kernel().paint_order() {
             if self.ranks.insert(id, placed.rank) != Some(placed.rank) {
@@ -310,15 +310,15 @@ impl<D: DataSource> Host<D> {
                 continue;
             }
             // A subtree a native container gave a containing block is laid
-            // out in that block's space, not its parent's:
-            // its root's frame as published, sent again when it
+            // out in that block's space, not its parent's (LLP 1115.002
+            // D8.2): its root's frame as published, sent again when it
             // takes or loses the block, with the block's used size.
             let block = kernel.host_block_size(id);
             let parent = node.parent.filter(|_| block.is_none());
             let parent = parent.and_then(|p| kernel.node(p)).map(|p| p.frame);
             let rel = relative(node.frame, parent);
-            // A sheet sized to its route's content reads that extent too.
-            // A route that scrolls itself keeps its
+            // A sheet sized to its route's content reads that extent too
+            // (LLP 1075.003 §9.11). A route that scrolls itself keeps its
             // scroll extent; any other (one that only clips too) is measured
             // laid out alone (`emit_fitted`) whenever its subtree changes.
             let overflow = style::effective_overflow(&node);
@@ -355,7 +355,7 @@ impl<D: DataSource> Host<D> {
                     }
                 }
             }
-            // A fitted paragraph's scale moves with its layout.
+            // A fitted paragraph's scale moves with its layout (LLP 1116.001 D1.4).
             let fit = fit_scale(&node);
             if m.props.get("fitScale") != fit.as_ref() {
                 match fit {
@@ -375,7 +375,7 @@ impl<D: DataSource> Host<D> {
                 continue;
             };
             let m = self.mirror.entry(id).or_default();
-            // A scroller, or a box holding one, takes what its
+            // LLP 1131 D2: a scroller, or a box holding one, takes what its
             // neighbours leave, which the iOS host asks before drawing the
             // scroller under them: an item of a column flex container
             // growing by 1 or more with no `max-height`, which takes every
@@ -453,7 +453,7 @@ impl<D: DataSource> Host<D> {
                     batch.content(id, c.0, c.1);
                 }
             }
-            // A moved box plays from where it was.
+            // @ref LLP 1063 — a moved box plays from where it was.
             if !self.presence.snap {
                 self.observe_layout(key, batch);
             }
@@ -564,7 +564,7 @@ impl<D: DataSource> Host<D> {
         }
     }
 
-    /// A `fit-content` route's extent: the height it
+    /// A `fit-content` route's extent (LLP 1075.003 §9.11): the height it
     /// asks for laid out alone at its width, its own height left to its
     /// content (`Kernel::fit_content_height`), so the sheet it sizes never
     /// feeds back into it. A bottom cover is the sheet's safe area, which
@@ -657,7 +657,7 @@ pub(super) fn published_content_box(
     let (left, top, right, bottom) = kernel.resolved_padding(node.key).unwrap_or_default();
     let button = exact_kernel::ControlKind::of(node.node_type, node.props)
         == Some(exact_kernel::ControlKind::Button);
-    // A list's row inset is a side the host places the title by too.
+    // A list's row inset is a side the host places the title by too (LLP 1138).
     let row = button && kernel.takes_row_inset(node.key);
     let side = |id: exact_kernel::StyleId, value: f32, inset: bool| {
         (!button || node.style.mask.has(id) || inset).then_some(value)
@@ -692,7 +692,7 @@ pub(super) fn content_size(node: &NodeRef<'_>, kernel: &Kernel) -> (f32, f32) {
     // last layout resolved it (a percentage is of the containing block).
     let (_, _, pad_right, pad_bottom) = kernel.layout_padding(node.key).unwrap_or_default();
     // A scroller UIKit insets: its end padding holds those insets, which
-    // UIKit adds back, as `node.content` leaves them out.
+    // UIKit adds back (LLP 1116.000 D1.2), as `node.content` leaves them out.
     let pad_bottom = match kernel.arena().cover(node.key.index) {
         Some(exact_kernel::HostCover::Inset([top, bottom])) => pad_bottom - top - bottom,
         _ => pad_bottom,
@@ -1044,7 +1044,7 @@ mod tests {
         );
     }
 
-    /// A padding that resolves only at layout reaches the
+    /// LLP 1116: a padding that resolves only at layout reaches the
     /// presenter as the kernel's content box, which a host reading the
     /// authored rows could not compute: on a bare field, which places its
     /// editor there, and on a box, whose paragraph or image goes there. A

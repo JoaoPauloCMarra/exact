@@ -132,10 +132,12 @@ pub trait Backend {
     fn needs_geometry_paint(&self) -> bool {
         true
     }
-    /// The page's own colour, told before each frame begins: what a frame is cleared to, so an
-    /// unset background is the platform's surface for the scheme and never white under a dark one.
-    /// A backend that draws over a shell's own surface (the Canvas recorder, whose reader paints it
-    /// behind the view) clears nothing and ignores it.
+    /// The page's own colour, told before each frame begins: what a frame
+    /// is cleared to, so an unset background is the platform's surface for
+    /// the scheme and never white under a dark one (LLP 1115 D2; LLP
+    /// 1115.001 D3.6). A backend that draws over a shell's own surface (the
+    /// Canvas recorder, whose reader paints it behind the view) clears
+    /// nothing and ignores it.
     fn page(&mut self, _color: [u8; 4]) {}
     /// A new frame of this size in points at this scale, cleared to the
     /// page's colour ([`Backend::page`]; white until one is told).
@@ -162,9 +164,9 @@ pub trait Backend {
     }
     /// Fill a shape.
     fn fill(&mut self, shape: &Shape, color: [u8; 4], ts: Transform);
-    /// Fill a shape with a gradient placed in its coordinates.
+    /// Fill a shape with a gradient placed in its coordinates (LLP 1066).
     fn fill_gradient(&mut self, shape: &Shape, gradient: &gradient::GradientPaint, ts: Transform);
-    /// CSS `backdrop-filter`: apply the ordered functions
+    /// CSS `backdrop-filter` (LLP 1053.000 D2): apply the ordered functions
     /// to what is painted under `shape`, then replace it under the current clip.
     fn backdrop_filter(&mut self, _shape: &Shape, _filter: &BackdropFilter, _ts: Transform) {}
     /// One outer `box-shadow` by the backend's own blur: `shape` blurred by
@@ -182,9 +184,9 @@ pub trait Backend {
     }
     /// Draw the glyphs `text` draws from here on through a Gaussian blur of
     /// `sigma` points, 0 none, where the backend blurs glyphs as it draws
-    /// them (a numeric roll's); the rest draw them sharp.
+    /// them (a numeric roll's, LLP 1077 D15); the rest draw them sharp.
     fn text_blur(&mut self, _sigma: f32) {}
-    /// Fill one colour's share of a border: region even-odd,
+    /// Fill one colour's share of a border (LLP 1053 G2): region even-odd,
     /// clipped by its side (non-zero) and optional ring (even-odd).
     fn fill_border(&mut self, part: &border::BorderFill, ts: Transform);
     /// Draw a picture scaled into `dst`, clipped to every shape in `clips`.
@@ -201,7 +203,7 @@ pub trait Backend {
     fn island_image(&mut self, _pixels: Arc<Pixmap>, _dst: Rect4, _ts: Transform, _mode: u8) {}
     /// Composite a rendered canvas child (not a decoded image asset).
     fn surface_image(&mut self, _pixels: Arc<Pixmap>, _dst: Rect4) {}
-    /// Composite a 2D canvas's bitmap into `dst`, clipped.
+    /// Composite a 2D canvas's bitmap into `dst`, clipped (LLP 1056 D7).
     fn canvas(&mut self, _pixels: &Arc<Pixmap>, _dst: Rect4, _clips: &[Shape], _ts: Transform) {}
     /// Split an untransformed full-window canvas from the UI, if supported.
     /// A refusal leaves the painter unchanged.
@@ -245,10 +247,10 @@ pub trait Backend {
         origin: (f32, f32),
         ts: Transform,
     );
-    /// Paint one SVG shape in `ts`'s space.
+    /// Paint one SVG shape in `ts`'s space (LLP 1055 D4).
     fn svg_path(&mut self, _shape: &SvgPaint<'_>, _ts: Transform) {}
     /// Clip to an SVG `clipPath` in `ts`'s space until as many pops as this
-    /// returns: the union of its shapes, intersected with
+    /// returns (LLP 1055.000 D10): the union of its shapes, intersected with
     /// its own clip and with whatever clip is in force.
     fn push_svg_clip(&mut self, _clip: &exact_kernel::svg::scene::Clip, _ts: Transform) -> usize {
         0
@@ -264,7 +266,7 @@ pub trait Backend {
     fn pop_clip(&mut self);
     /// Composite everything until the matching pop at an opacity.
     fn push_opacity(&mut self, alpha: f32);
-    /// CSS `mask-image`: what paints until [`Backend::pop_mask`]
+    /// CSS `mask-image` (LLP 1077 D2): what paints until [`Backend::pop_mask`]
     /// is one group, clipped to `shape`, the border box.
     fn push_mask(&mut self, _shape: &Shape, _ts: Transform) {
         self.push_opacity(1.0);

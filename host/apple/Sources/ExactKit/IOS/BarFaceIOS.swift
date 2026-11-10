@@ -1,13 +1,13 @@
-// A bar item's face as its author painted it (what the author writes
-// wins). A header button's text becomes UIKit's title in the system
+// A bar item's face as its author painted it (LLP 1115 §2: what the author
+// writes wins). A header button's text becomes UIKit's title in the system
 // font, which is the platform's answer when the author said nothing more. A
 // button whose face says more, a status dot beside its label or a label in a
 // font of the author's (a "● Clock" chip in 12-point monospace), keeps that
 // face: its parts drawn in a row, in their own fonts, sizes, gap and corners,
 // in the page's scheme, as the item's image (`.alwaysOriginal`), as a hand-built
 // bar's custom view would draw them. Ink its author did not write (a colour
-// only inherited from the page) is the bar's own, as a title's is. The
-// header a bar replaces is laid out as `display: none`, so the parts
+// only inherited from the page) is the bar's own, as a title's is (LLP 1115
+// D4). The header a bar replaces is laid out as `display: none`, so the parts
 // are read from their styles, not their frames: the host sends the authored
 // size of a childless box and an authored gap for this (`kept_geometry`,
 // host/apple/src/style.rs). A native button has no such face: its title's
@@ -45,7 +45,7 @@ struct ChipFace: Equatable {
     /// scheme the page is in and drawn again when that changes.
     let dark: Bool
     /// Bold Text, which weights the system font, an authored weight included,
-    /// as it does the titles beside it: the kernel's
+    /// as it does the titles beside it (LLP 1115.000 D12.3): the kernel's
     /// weights say it; kept so a change draws the face again.
     let bold: Bool
 
@@ -53,7 +53,7 @@ struct ChipFace: Equatable {
 
     /// The face of `button`, or nil when what it shows is one symbol or one
     /// line of text in the platform's type: the bar's own title or image.
-    /// `readout`: a header's `role="status"`, whose
+    /// `readout`: a header's `role="status"` (LLP 1075.003 §9.15), whose
     /// face it is however plain, the readout itself its first part (a dot
     /// alone, its opacity), its unwritten type the platform's body.
     /// `traits`: the text size and Bold Text to draw for, the button's own
@@ -117,7 +117,8 @@ struct ChipFace: Equatable {
                 guard !text.isEmpty else { return }
                 typed = typed || fonted
                 // Bold Text's step is in the weight already: the kernel
-                // weights the system font and leaves a shipped one alone.
+                // weights the system font and leaves a shipped one alone
+                // (LLP 1115.000 D12.3).
                 let family = Int(child.number("font_family"))
                 let weight = Int(child.number("font_weight", 400))
                 let font = readout && !fonted ? UIFont.preferredFont(forTextStyle: .body, compatibleWith: traits)

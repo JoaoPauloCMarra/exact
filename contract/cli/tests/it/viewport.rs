@@ -1,4 +1,4 @@
-//! Viewport facts: bake, first frame, resize, carry and invalid facts.
+//! @ref LLP 1039 §5 — bake, first frame, resize, carry and invalid facts.
 use exact_kernel::{Kernel, PropId};
 use exact_runner::{agent, DataError, DataSource, Runner, RunnerError, Value, Viewport};
 
@@ -178,7 +178,7 @@ component App
     assert!(agent::logs(&r, 0).contains("viewport (2 asked again)"));
 }
 
-/// The fold's three fields ride `exactViewport` — the bake
+/// LLP 1078 D2: the fold's three fields ride `exactViewport` — the bake
 /// answers `continuous`, 1, 1; a host's `set_fold` re-answers every reader
 /// in one commit; an unknown or mistyped field is refused at the bake.
 #[test]
@@ -235,7 +235,7 @@ component App
         Err(RunnerError::InvalidViewport)
     ));
     assert_eq!(r.viewport().fold, folded, "nothing changed");
-    // A resize re-answers the same resource (one source) and
+    // A resize re-answers the same resource (one source, LLP 1039 D2) and
     // keeps the fold.
     assert!(r.set_viewport(900.0, 600.0).unwrap().is_some());
     assert_eq!(r.viewport().fold, folded, "a resize keeps the fold");

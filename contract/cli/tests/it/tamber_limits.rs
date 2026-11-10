@@ -1,5 +1,6 @@
-//! The design checker's own bounds through the design server: a write
-//! crossing a length's 256 terms is refused in the build's id, words and place; a value
+//! The design checker's own bounds through the design server (theme2's
+//! approval of the checker bound; rt1's wire co-sign): a write crossing a
+//! length's 256 terms is refused in the build's id, words and place; a value
 //! past 4096 bytes is refused before anything reads it, quickly, without
 //! echoing it; and a design that is past a bound on disk (a hand edit, or a
 //! design read again) is folded in moments.
@@ -13,8 +14,8 @@ use std::time::{Duration, Instant};
 
 /// This thread's CPU time: what an in-process build's work takes, not the
 /// wall clock, which a loaded machine (the suite's other tests and servers,
-/// other builds) stretches with no work the build did (one run at load
-/// 72 read 9.3 s of wall clock for a 3.0 s build; the build
+/// another agent's builds) stretches with no work the build did (dtool2's
+/// run at load 72 read 9.3 s of wall clock for a 3.0 s build; the build
 /// runs on its caller's thread).
 fn cpu() -> Duration {
     let mut t = libc::timespec {
@@ -72,7 +73,7 @@ fn a_write_past_a_lengths_terms_is_refused_in_the_builds_words() {
 }
 
 /// A value of 1 MB through the wire is refused before it is read, in
-/// moments, in words that give its size and never echo it.
+/// moments, in words that give its size and never echo it (rt1's co-sign).
 #[test]
 fn a_megabyte_value_is_refused_before_it_is_read() {
     let dir = reading("limits-bytes");
@@ -147,7 +148,7 @@ fn a_design_past_a_bound_on_disk_is_folded_in_moments() {
 
 /// A profile's colour past the bound is left as written for the check, so
 /// the build refuses it with the bound's id, as the design server does,
-/// rather than rewriting it before the check.
+/// rather than rewriting it before the check (Astra's round 2).
 #[test]
 fn a_profile_colour_past_the_bound_is_refused_by_the_build_too() {
     let dir = reading("limits-profile");
@@ -163,7 +164,7 @@ fn a_profile_colour_past_the_bound_is_refused_by_the_build_too() {
 }
 
 /// A param's name past the bound is refused before the wire resolves it,
-/// never echoed, not even by `set-param`.
+/// never echoed (Astra's round 3: `set-param` quoted it whole).
 #[test]
 fn a_long_param_name_is_refused_before_it_is_resolved() {
     let dir = reading("limits-param");
@@ -186,8 +187,8 @@ fn a_long_param_name_is_refused_before_it_is_resolved() {
 }
 
 /// Profile colours are taken in one pass over the design: 3,000 written
-/// backwards, each naming the next, build in moments, not by a scan of the design per profile, each against
-/// every profile so far.
+/// backwards, each naming the next, build in moments (Astra's round 3: a
+/// scan of the design per profile, each against every profile so far).
 #[test]
 fn many_profile_colours_are_taken_in_moments() {
     let dir = reading("limits-profiles");
@@ -237,7 +238,7 @@ fn the_builds_scheme_and_retention_walks_are_linear() {
 }
 
 /// The axes and `when` caps are design limits: the build refuses past them
-/// with the same ids the design server's check does.
+/// with the same ids the design server's check does (theme2's 19:26).
 #[test]
 fn the_build_refuses_past_the_axes_and_when_caps() {
     let dir = reading("limits-caps");

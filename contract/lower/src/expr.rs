@@ -10,7 +10,7 @@ use exact_plan::asm::Asm;
 use exact_plan::{Opcode, Stdlib};
 
 /// A host command's arguments in the order its hosts read them. `share`'s
-/// are named and lower as `(title, text, url, files)`,
+/// are named (LLP 1069.003 D1) and lower as `(title, text, url, files)`,
 /// `None` for an absent one, so the plan's `Command` op stays positional.
 pub fn command_args<'e>(name: &str, args: &'e [Expr]) -> Vec<Option<&'e Expr>> {
     let named = |want: &str| {
@@ -19,9 +19,9 @@ pub fn command_args<'e>(name: &str, args: &'e [Expr]) -> Vec<Option<&'e Expr>> {
             _ => None,
         })
     };
-    // The list, the key, then the options in a fixed
+    // @ref LLP 1070.000 §1: the list, the key, then the options in a fixed
     // order, `none` where the author left the web's default: six, the
-    // runner's own. An element's is four, the id and the
+    // runner's own. An element's (minesweeper F3) is four, the id and the
     // options, which the runner leaves to its host.
     if name == "scrollIntoView" {
         let mut out: Vec<_> = args
@@ -37,18 +37,18 @@ pub fn command_args<'e>(name: &str, args: &'e [Expr]) -> Vec<Option<&'e Expr>> {
         }
         return out;
     }
-    // A frame's `reload(id, ignoreCache=)`: the id,
+    // @ref LLP 1020.002 D3 — a frame's `reload(id, ignoreCache=)`: the id,
     // then the flag (`none` for a plain reload). Bare `reload()` stays empty.
     if name == "reload" && !args.is_empty() {
         return vec![args.first(), named("ignoreCache")];
     }
-    // The id, the `app:/` path, then the clip (`none`
+    // @ref LLP 1020.002 D7 — the id, the `app:/` path, then the clip (`none`
     // for the whole viewport).
     if name == "captureScreenshot" {
         let mut positional = args.iter().filter(|a| !matches!(a, Expr::NamedArg(..)));
         return vec![positional.next(), positional.next(), named("clip")];
     }
-    // the image, then Exact's window and how it opens:
+    // @ref LLP 1042 §9.1 — the image, then Exact's window and how it opens:
     // `(id, presentation, title, width, height)`, `none` for an absent one.
     // A plain request stays `(id)`.
     if name == "requestPictureInPicture" && args.iter().any(|a| matches!(a, Expr::NamedArg(..))) {
@@ -65,7 +65,7 @@ pub fn command_args<'e>(name: &str, args: &'e [Expr]) -> Vec<Option<&'e Expr>> {
     if name == "saveFile" && args.iter().any(|a| matches!(a, Expr::NamedArg(..))) {
         return vec![args.first(), None, named("suggestedName"), named("text")];
     }
-    // The sound first, then `at`, `gain`,
+    // @ref LLP 1096 D2, LLP 1125 D10 — the sound first, then `at`, `gain`,
     // `group`, `playbackRate` and `pan`, `none` where the author left the
     // default (now, 1, no group, 1, centred).
     if name == "playSound" {
@@ -74,7 +74,7 @@ pub fn command_args<'e>(name: &str, args: &'e [Expr]) -> Vec<Option<&'e Expr>> {
             .chain(["at", "gain", "group", "playbackRate", "pan"].map(named))
             .collect();
     }
-    // The output and the data, then `at` (`none` for now).
+    // @ref LLP 1125 D7 — the output and the data, then `at` (`none` for now).
     if name == "sendMIDI" {
         let mut positional = args.iter().filter(|a| !matches!(a, Expr::NamedArg(..)));
         return vec![positional.next(), positional.next(), named("at")];
@@ -149,7 +149,7 @@ pub(crate) fn compile(
             asm.simple(Opcode::None);
             Ty::Option(Box::new(Ty::Unknown))
         }
-        // `[a, b]`: the items, then `List n`.
+        // `[a, b]` (LLP 1088 §9.1): the items, then `List n`.
         Expr::List(items, _) => {
             let mut item = Ty::Unknown;
             for x in items {
@@ -338,7 +338,7 @@ pub(crate) fn compile(
                 return record(l, asm, name, args, scope, locals);
             }
             if let Some((f, shared)) = l.fns.get(name.as_str()).copied() {
-                // A `fn`, expanded here: each argument bound
+                // A `fn` (LLP 1017 P5), expanded here: each argument bound
                 // as a local, the body compiled in a scope of the parameters
                 // only, the locals dropped after — no new opcode, no table,
                 // and (the type pass having refused a cycle) no recursion.
@@ -416,8 +416,8 @@ pub(crate) fn compile(
             for a in args {
                 given.push(compile(l, asm, a, scope, locals)?);
             }
-            // The defaults of trailing optional parameters the call omitted:
-            // the plan's call always carries the full arity.
+            // The defaults of trailing optional parameters the call omitted
+            // (LLP 1088 D2): the plan's call always carries the full arity.
             for &d in f.omitted(args.len()) {
                 match d {
                     exact_plan::StdlibDefault::Number(n) => {
@@ -431,9 +431,9 @@ pub(crate) fn compile(
             }
             asm.call(f);
             match (f, given.first(), given.get(1)) {
-                // `first(T[])` is `option<T>`.
+                // `first(T[])` is `option<T>` (LLP 1054.000 C4).
                 (Stdlib::First | Stdlib::At, Some(Ty::List(item)), _) => Ty::Option(item.clone()),
-                // A list's own type, or text's.
+                // A list's own type, or text's (LLP 1088 §9.1).
                 (Stdlib::Concat, Some(a), Some(b)) => a.unify(b).unwrap_or(Ty::Unknown),
                 (Stdlib::Slice, Some(Ty::Enum(_)), _) => Ty::String,
                 (Stdlib::Slice, Some(t @ (Ty::String | Ty::List(_))), _) => t.clone(),
@@ -593,8 +593,8 @@ pub(crate) fn compile(
     })
 }
 
-/// `Shape(field=expr, …)` or `Shape(base, field=expr, …)`, checked already:
-/// each field's value in declaration order, then
+/// `Shape(field=expr, …)` or `Shape(base, field=expr, …)` (LLP 1035.005.000
+/// D3), checked already: each field's value in declaration order, then
 /// `Record`. A copy binds its base once as a local and reads each field it
 /// keeps from there.
 fn record(
@@ -650,7 +650,7 @@ fn record(
     Ok(ty)
 }
 
-/// `sortBy(list, callback, direction?)`: the list
+/// `sortBy(list, callback, direction?)` (@ref LLP 1116.016 §5): the list
 /// bound as the next local, then the roster's `sortBy` on that list, its keys
 /// (a `Map` of the callback over it) and whether it is descending:
 ///
@@ -697,7 +697,7 @@ fn sort_by(
     Ok(listed)
 }
 
-/// `map(list, callback)` or `filter(list, callback)`:
+/// `map(list, callback)` or `filter(list, callback)` (LLP 1017.003 D5):
 /// the list, then `Map`/`Filter` with the callback's body inline, the item
 /// and its index the next two locals, which the VM binds for each run.
 fn callback_call(

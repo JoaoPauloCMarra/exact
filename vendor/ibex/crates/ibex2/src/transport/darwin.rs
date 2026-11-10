@@ -406,8 +406,8 @@ mod session_cost {
 
     /// What the first session in a process costs, which is why it is built on
     /// first use rather than at construction: on the runtime construction path
-    /// this would land on the boot floor of every program, against its ~4ms
-    /// budget. `constructing_a_transport_does_not_build_a_session` is the guard;
+    /// this would land on the boot floor of every program, against LLP 0063's
+    /// ~4ms. `constructing_a_transport_does_not_build_a_session` is the guard;
     /// this is the number behind it.
     #[test]
     #[ignore = "measurement, not an assertion"]

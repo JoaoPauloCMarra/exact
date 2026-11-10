@@ -52,7 +52,7 @@ impl<D: DataSource> Host<D> {
         self.arrange_finish(start.token)?;
         hold.map(|_| None)
     }
-    /// A grouped session: no hold, the runner hides the row
+    /// A grouped session (LLP 1094 D4): no hold, the runner hides the row
     /// when a ghost stands for it.
     pub(crate) fn group_begin(
         &mut self,
@@ -73,7 +73,7 @@ impl<D: DataSource> Host<D> {
         self.arrange_receipt(start.receipt)?;
         Ok(Some(start.token))
     }
-    /// The gap in `target` at content `y`.
+    /// The gap in `target` at content `y` (LLP 1094 D5).
     pub(crate) fn group_into(
         &mut self,
         token: ReorderToken,
@@ -93,7 +93,7 @@ impl<D: DataSource> Host<D> {
             ReorderProgress::Stale | ReorderProgress::NeedsMeasurement => Ok(false),
         }
     }
-    /// A key's step.
+    /// A key's step (LLP 1094 D9).
     pub(crate) fn group_step(
         &mut self,
         token: ReorderToken,
@@ -108,7 +108,7 @@ impl<D: DataSource> Host<D> {
         }
         Ok(())
     }
-    /// A grouped drop on its target, which may hold.
+    /// A grouped drop on its target, which may hold (LLP 1094 D8).
     pub(crate) fn group_drop(
         &mut self,
         token: ReorderToken,

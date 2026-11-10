@@ -1,4 +1,4 @@
-//! UIKit control fonts, chrome and the environment seam.
+//! UIKit control fonts, chrome and the environment seam. @ref LLP 1104 D4–D5.
 use exact_kernel::{
     ControlFont, ControlTextStyles, FieldChrome, FieldChromeRequest, FieldKind, FontStyle,
 };
@@ -28,8 +28,8 @@ pub type ControlTextFn = extern "C" fn(*mut c_void, u8) -> CControlFont;
 #[repr(C)]
 pub struct CFieldChromeRequest {
     /// 0 field, 1 secure, 2 search, 3 textarea; plus 4 for a field in a
-    /// grouped list's row, which iOS draws borderless in its cell.
-    /// AppKit's field is the same anywhere.
+    /// grouped list's row, which iOS draws borderless in its cell
+    /// (LLP 1116.005 D2). AppKit's field is the same anywhere.
     pub kind: u8,
     /// Host font registry id.
     pub family_id: u16,

@@ -1,4 +1,4 @@
-//! The viewport a served page is laid out for.
+//! The viewport a served page is laid out for (LLP 1048.006).
 //!
 //! A page whose plan reads `exactViewport()` is rendered at the reader's
 //! viewport: the browser's client hints when it sends them

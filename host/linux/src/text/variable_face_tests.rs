@@ -154,7 +154,7 @@ fn declared_variable_file_can_supply_two_weights_and_clamps_to_its_axis() {
     }
 }
 
-/// A face declared over a range draws each request in it on
+/// LLP 1019 D2: a face declared over a range draws each request in it on
 /// `wght`, and one outside it at the range's nearer end.
 #[test]
 fn a_declared_weight_range_draws_each_request_and_clamps_to_the_range() {
@@ -305,7 +305,7 @@ fn unordered_weight_bounds_leave_synthesis_unchanged() {
 
 const FLEX: &[u8] = include_bytes!("../../tests/fonts/RobotoFlex-subset.ttf");
 
-/// `font-stretch` on a face declared over its `wdth` range draws
+/// LLP 1019 D8: `font-stretch` on a face declared over its `wdth` range draws
 /// on that axis, clamped to the range, as the browser does.
 #[test]
 fn a_declared_width_range_draws_font_stretch_on_wdth() {
@@ -378,7 +378,7 @@ fn width_range_draws(assets: Assets) {
     );
 }
 
-/// `font-variation-settings` draws after the weight, the width
+/// LLP 1019 D9: `font-variation-settings` draws after the weight, the width
 /// and the size, each axis it names winning: `"wdth" 50` is `font-stretch:
 /// 50%`, `"wght" 300` beats `font-weight: 700`, and `"GRAD" 150` (a grade:
 /// heavier strokes on the same advances) changes ink, not width.

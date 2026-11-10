@@ -1,4 +1,4 @@
-//! An `svg`'s content in the paint walk: the
+//! An `svg`'s content in the paint walk (LLP 1055 D4, LLP 1055.000 D1): the
 //! kernel resolves the scene, and this paints it inside the content box,
 //! clipped to the box when the `svg`'s overflow is not visible, each shape
 //! through [`Backend::svg_path`]; group opacity is a group, as in CSS.
@@ -21,7 +21,7 @@ mod symbol_tests;
 pub enum Ink<'a> {
     /// One colour, straight RGBA.
     Solid([u8; 4]),
-    /// A gradient: its geometry and spread, the stops
+    /// A gradient (LLP 1055.000 D7): its geometry and spread, the stops
     /// with the paint's opacity folded in, and gradient space to the
     /// path's space.
     Gradient {
@@ -32,7 +32,7 @@ pub enum Ink<'a> {
         /// Gradient space to the path's space.
         transform: [f32; 6],
     },
-    /// A pattern: its tile rendered to pixels, repeated;
+    /// A pattern (LLP 1055.000 D7): its tile rendered to pixels, repeated;
     /// the transform maps the tile's pixels to the path's space.
     Pattern {
         /// The tile, premultiplied, at device scale.
@@ -72,7 +72,7 @@ pub struct SvgPaint<'a> {
 
 thread_local! {
     /// Each symbol's path, parsed once: a role's schema `d` or an icon
-    /// token's, by its text (a row of icons painted again
+    /// token's (LLP 1121 D10), by its text (a row of icons painted again
     /// parsed every one, 4% of the easy list's thread).
     static SYMBOL_PATHS: std::cell::RefCell<std::collections::HashMap<String, std::rc::Rc<Path>>> =
         std::cell::RefCell::new(std::collections::HashMap::new());
@@ -119,11 +119,14 @@ pub(crate) fn view_box(text: &str) -> [f32; 4] {
 }
 
 impl Painter {
-    /// A portable symbol role as the web draws it: the role's path in a 24-unit box at the image's
-    /// font size, placed by `object-fit`, stroked `1.1 + (weight − 100) / 400` units with round
-    /// caps and joins (a `-fill` role filled even-odd), in `ink` (its presented `color`, or a list
-    /// sheet's tint) or else its computed `color`. An icon token draws its path under its viewBox,
-    /// filled; an `sf/` name that is no role's Apple name stays an empty box.
+    /// A portable symbol role (LLP 1035.004 D1) as the web draws it: the
+    /// role's path in a 24-unit box at the image's font size, placed by
+    /// `object-fit`, stroked `1.1 + (weight − 100) / 400` units with round
+    /// caps and joins (a `-fill` role filled even-odd), in `ink` (its
+    /// presented `color`, or a list sheet's tint) or else its computed `color`
+    /// (LLP 1081 stage 2).
+    /// An icon token draws its path under its viewBox, filled (LLP 1121
+    /// D10); an `sf/` name that is no role's Apple name stays an empty box (LLP 1035.004.000 D4).
     pub(super) fn symbol(
         &mut self,
         node: &NodeRef<'_>,
@@ -166,7 +169,7 @@ impl Painter {
         ts: Transform,
     ) {
         // A role (in this platform's shape), an icon token's form, or `sf/` a
-        // role's Apple name.
+        // role's Apple name (LLP 1121 D10, LLP 1115.001 D14).
         let Some(path) = exact_kernel::symbol_path_in(role, self.symbols) else {
             return;
         };
@@ -219,7 +222,7 @@ impl Painter {
         }
     }
 
-    /// SVG text: each run shaped as a one-line paragraph
+    /// SVG text (LLP 1055.000 D11): each run shaped as a one-line paragraph
     /// by the text engine, its chunk anchored by the runs' total advance and
     /// set on the baseline `dominant-baseline` names. The fill is painted;
     /// a stroke or a gradient on text is owed on this host.
@@ -253,7 +256,7 @@ impl Painter {
             let mut x = chunk.x.unwrap_or(pen.0) - anchor;
             let mut y = chunk.y.unwrap_or(pen.1);
             // Chrome's baselines from the first run's font: integer ascent
-            // and descent, x-height about half an em.
+            // and descent, x-height about half an em (LLP 1055.000 D11).
             let (ascent, descent, size) = shaped.first().map_or((0.0, 0.0, 0.0), |(p, r)| {
                 let a = p.first_baseline.round();
                 (a, (p.height - p.first_baseline).round(), r.style.font_size)
@@ -330,7 +333,7 @@ impl Painter {
     ) {
         let scene = resolve_svg(walk.scene, node, content);
         if let Some(refusal) = scene.refused {
-            // Refused by name, once.
+            // @ref LLP 1055.000 D13 — refused by name, once.
             static SAID: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
             if !SAID.swap(true, std::sync::atomic::Ordering::Relaxed) {
                 eprintln!("exact svg: {refusal}");
@@ -354,7 +357,7 @@ impl Painter {
         self.svg_layers.clear();
     }
 
-    /// An SVG image's picture: `scene`, resolved at a
+    /// An SVG image's picture (LLP 1011.001 D3): `scene`, resolved at a
     /// content box of `css` points, painted by a painter of its own at
     /// `scale` device pixels per point into a transparent pixmap of
     /// `css × scale` pixels, as an island is, so the picture and the same
@@ -404,7 +407,7 @@ impl Painter {
 }
 
 /// The scene of the `svg` `node` whose content box is `content`, with the
-/// motion engine's presented values.
+/// motion engine's presented values (LLP 1055.000 D1).
 pub(super) fn resolve_svg(
     walk: &super::Scene<'_>,
     node: &NodeRef<'_>,
@@ -480,8 +483,8 @@ impl Painter {
         parts: (bool, bool),
     ) {
         let dark = self.dark;
-        // Drawn in the content box's space, the stroke unscaled:
-        // a gradient maps through the same ctm.
+        // Drawn in the content box's space, the stroke unscaled
+        // (LLP 1055.000 D5): a gradient maps through the same ctm.
         let to_path = if shape.non_scaling {
             item.ctm
         } else {
@@ -534,7 +537,7 @@ impl Painter {
             self.layer_close(layer);
             return;
         }
-        // A blended element is drawn alone into an
+        // @ref LLP 1055.000 D19 — a blended element is drawn alone into an
         // island over the frame, then blended onto what is below it.
         if item.blend != 0 {
             let (vw, vh) = self.viewport;
@@ -565,7 +568,7 @@ impl Painter {
             .as_ref()
             .map_or(0, |c| self.backend.push_svg_clip(c, own));
         match &item.mask {
-            // A mask is an island.
+            // @ref LLP 1055.000 D10 — a mask is an island.
             Some(mask) => self.svg_masked(item, mask, own, origin),
             None => self.svg_effects(item, own, origin),
         }
@@ -610,7 +613,7 @@ impl Painter {
             }
             Kind::Text(text) => self.svg_text(text, own),
             Kind::Shape(shape) => {
-                // Markers paint where `paint-order`
+                // @ref LLP 1055.000 D9 — markers paint where `paint-order`
                 // puts them: before, between, or after the fill and stroke.
                 let at = shape.order.iter().position(|&o| o == 2).unwrap_or(2);
                 let markers = |this: &mut Self| {

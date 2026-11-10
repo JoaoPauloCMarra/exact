@@ -1,5 +1,5 @@
 //! TypeScript's side of the data seam, derived from the plan's signatures.
-//! There are no separately maintained argument or result shapes.
+//! @ref LLP 1027 D2/D5 — no separately maintained argument or result shapes.
 
 use exact_plan::{Opcode, Plan, StrId, TypeKind, TypesId};
 use std::collections::BTreeSet;
@@ -10,14 +10,15 @@ use std::fmt::Write;
 /// `Sources` checks each provider independently; `Answer` checks the module's
 /// dispatcher. Types describe JSON values, not Rust's positional records.
 /// Runner-owned delivery, viewport and surface records are not app implementation duties.
+/// @ref LLP 1039 D1
 /// This is a build-time artifact, never a runtime import or committed file.
 pub fn typescript(plan: &Plan) -> Result<String, String> {
     typescript_exporting(plan, None)
 }
 
 /// [`typescript`], its `ColorToken` union bounded by the design's `exports`
-/// when it lists them ([`design_exports`]): what a binding may name, though a
-/// view may name more.
+/// when it lists them ([`design_exports`]): what a binding may name (LLP
+/// 1121 D7), though a view may name more.
 pub fn typescript_exporting(plan: &Plan, exports: Option<&[String]>) -> Result<String, String> {
     // Public callers may construct a Plan directly. Refuse malformed tables
     // before following any indices, just as the runtime decoder does.
@@ -104,7 +105,7 @@ pub fn typescript_exporting(plan: &Plan, exports: Option<&[String]>) -> Result<S
     for row in &plan.sources {
         let name = plan.str(row.name);
         // The runner's own sources and a native module's names are not the
-        // data module's to answer.
+        // data module's to answer (LLP 1133.002 D13).
         if exact_plan::runner_owned_source(name) || plan.module_named(name).is_some() {
             continue;
         }
@@ -131,7 +132,7 @@ pub fn typescript_exporting(plan: &Plan, exports: Option<&[String]>) -> Result<S
           * `type Recipe = Result<'recipe'>` (a list's element: `Result<'recipes'>[number]`). */\n\
          export type Result<S extends Source> = SourceMap[S]['result'];\n\
          export interface Store {\n\
-           /** The value kept under `name`; throws `InvalidAccessError` for a locked presence secret, read with `unlock`. */\n\
+           /** The value kept under `name`; throws `InvalidAccessError` for a locked presence secret, read with `unlock` (LLP 1133.010). */\n\
            get(name: string): string | null;\n\
            /** Throws `NotSupportedError` when the name would be kept locked and this device keeps no locked secret. */\n\
            set(name: string, value: string): void;\n\
@@ -146,26 +147,26 @@ pub fn typescript_exporting(plan: &Plan, exports: Option<&[String]>) -> Result<S
            protect(name: string): Promise<void>;\n\
            /** After the person's check, unlock an `optional` presence name for good. */\n\
            unprotect(name: string, options?: { reason?: string }): Promise<void>;\n\
-           /** Keep a P-256 pair under the `secret.keep <name>` grant. */\n\
+           /** Keep a P-256 pair under the `secret.keep <name>` grant (LLP 1069.005 D1b). */\n\
            keepKey(name: string, pair: CryptoKeyPair): Promise<void>;\n\
            /** The pair kept under `name`, its private key non-extractable. */\n\
            key(name: string): Promise<CryptoKeyPair | null>;\n\
          }\n\
          declare global {\n\
-           /** Sign in through the system browser: the callback URL, or a rejection whose `status` is 499 cancelled, 403, 409, 428, 501 or 502. `message` is the sentence a loopback callback's page shows in place of \"You can close this tab.\". */\n\
+           /** Sign in through the system browser (LLP 1069.006): the callback URL, or a rejection whose `status` is 499 cancelled, 403, 409, 428, 501 or 502. `message` is the sentence a loopback callback's page shows in place of \"You can close this tab.\" (LLP 1133.005 D9). */\n\
            function openAuthSession(url: string, options: { callback: string; state: string; ephemeral?: boolean; message?: string }): Promise<string>;\n\
-           /** This carrier's auth callback, known before PAR. */\n\
+           /** This carrier's auth callback, known before PAR (LLP 1069.006 D2). */\n\
            function authCallback(): string;\n\
          }\n\
          export interface NativeModule { readonly available: boolean; call(request: Record<string, unknown>): Record<string, unknown>; later(request: Record<string, unknown>): Promise<Record<string, unknown>>; watch(topic: string): void }\n\
-         /** A resource-owned WebSocket, for TypeScript on the web JS target and native hosts. Methods are synchronous-mutation-only; refresh or disposal invalidates it. */\n\
+         /** A resource-owned WebSocket, for TypeScript on the web JS target and native hosts (LLP 1016.000 D7). Methods are synchronous-mutation-only; refresh or disposal invalidates it. */\n\
          export interface StreamSocket { readonly readyState: number; readonly bufferedAmount: number; send(data: string | ArrayBuffer | ArrayBufferView): void; close(code?: number, reason?: string): void }\n\
-         /** A local listener's connection: `send` writes a line and a `\\n` (a line with a `\\n` throws `SyntaxError`); `end()` closes it once what was sent is written. `readyState` is 1 while open, 3 after its `end`. The same rules as `StreamSocket`'s, by connection: its listener's mapper sends on the connection it is handed. */\n\
+         /** A local listener's connection (LLP 1133.005 D1): `send` writes a line and a `\\n` (a line with a `\\n` throws `SyntaxError`); `end()` closes it once what was sent is written. `readyState` is 1 while open, 3 after its `end`. The same rules as `StreamSocket`'s, by connection: its listener's mapper sends on the connection it is handed. */\n\
          export interface ListenConnection { readonly readyState: number; send(line: string): void; end(): void }\n\
          /** A local listener's event: `listening` (`address`, `port`: 0 for `unix:`), then each `connection`, `message` (one line, without its terminator) and `end` (`reason` `peer`, `app`, `timeout` or `overflow`), by connection `id`; `error` ends it (`kind` `Refused`, `AddressInUse`, `Unsupported` or `Network`). */\n\
          export type ListenEvent = { readonly type: \"listening\"; readonly address: string; readonly port: number } | { readonly type: \"connection\"; readonly id: number } | { readonly type: \"message\"; readonly id: number; readonly data: string } | { readonly type: \"end\"; readonly id: number; readonly reason: \"peer\" | \"app\" | \"timeout\" | \"overflow\" } | { readonly type: \"error\"; readonly kind: string; readonly message: string };\n\
          declare global {\n\
-           /** A local listener, a resource's answer as `fetch(url, {exactStream})` is: listening while the resource holds it, on `unix:<absolute path>` under a `net.listen` grant. Defined on desktop hosts only: test `\"exactListen\" in globalThis`. A mutation that calls it throws `InvalidStateError`. */\n\
+           /** A local listener (LLP 1133.005), a resource's answer as `fetch(url, {exactStream})` is: listening while the resource holds it, on `unix:<absolute path>` under a `net.listen` grant. Defined on desktop hosts only: test `\"exactListen\" in globalThis`. A mutation that calls it throws `InvalidStateError`. */\n\
            function exactListen<T>(address: string, options: { exactStream: (event: ListenEvent, connection?: ListenConnection) => T; /** Newest wins: take the address over from a live listener. */ takeover?: boolean; /** ms, 1 to 600000: a connection whose first line has not arrived ends `timeout`. */ firstLineTimeout?: number; /** 1 to 1048576, 65536 by default. */ maxLineBytes?: number; /** 1 to 64, 16 by default. */ maxConnections?: number }): Promise<T>;\n\
          }\n\
          export interface StreamEvent { readonly type: string; readonly data: string | ArrayBuffer; readonly lastEventId: string; readonly coalesced: number; readonly kind?: string; readonly message?: string; readonly status?: number; readonly code?: number; readonly reason?: string; readonly wasClean?: boolean; /** An upload's `progress`: the body's bytes sent so far, of `total`. */ readonly loaded?: number; readonly total?: number; readonly lengthComputable?: boolean }\n\
@@ -188,19 +189,20 @@ pub fn typescript_exporting(plan: &Plan, exports: Option<&[String]>) -> Result<S
 }
 
 /// The `exports` lines of the design of the app whose `app.contract` is
-/// `contract`, when it has a design that lists them.
+/// `contract`, when it has a design that lists them (LLP 1121 D7).
 pub fn design_exports(contract: &std::path::Path) -> Option<Vec<String>> {
     let path = crate::design_path(contract)?;
     let design = exact_tamber::parse(&std::fs::read_to_string(path).ok()?).ok()?;
     Some(design.exports?.into_iter().map(|e| e.value).collect())
 }
 
-/// The design's tokens as a string-literal union per kind, so a data module
-/// returning a token's name is checked (`ColorToken`, `LengthToken`,
-/// `NumberToken`, `TypeToken`, `FamilyToken`, `BoxShadowToken`,
-/// `TextShadowToken`): those its `exports` lists, else every one the plan
-/// keeps; none without a design. A synthetic token (an expression a row writes)
-/// is no name a module returns.
+/// @ref LLP 1121 D12 — the design's tokens as a string-literal union per
+/// kind, so a data module returning a token's name is checked
+/// (`ColorToken`, and since stage 6 G `LengthToken`, `NumberToken`,
+/// `TypeToken`, `FamilyToken`, `BoxShadowToken`, `TextShadowToken`): those
+/// its `exports` lists, else every one the plan keeps; none without a
+/// design. A synthetic token (an expression a row writes) is no name a
+/// module returns.
 fn tokens(plan: &Plan, exports: Option<&[String]>, out: &mut String) {
     const KINDS: [(u8, &str, &str); 7] = [
         (0, "ColorToken", "A colour token"),
@@ -218,8 +220,8 @@ fn tokens(plan: &Plan, exports: Option<&[String]>, out: &mut String) {
             // A role override by the role's spelling, as a row writes it and
             // the generators name it (`CanvasText`, `-exact-secondary-label`).
             let name = role.unwrap_or(plan.str(row.name));
-            // A component's param is every binding's, as `tamber gen` names it: a
-            // data module may return one.
+            // A component's param is every binding's (D15), as `tamber gen` names it
+            // (stage 7 D, over A's leaving it out: a data module may return one).
             let exported = name.starts_with(contract_lower::params::PREFIX)
                 || exports.is_none_or(|lines| {
                     lines
@@ -239,13 +241,13 @@ fn tokens(plan: &Plan, exports: Option<&[String]>, out: &mut String) {
             .collect();
         let _ = writeln!(
             out,
-            "/** {what} of the app's design, by its name. */\nexport type {union} = {};",
+            "/** {what} of the app's design, by its name (LLP 1121 D12). */\nexport type {union} = {};",
             quoted.join(" | ")
         );
     }
 }
 
-/// The file's top: what `app.ts` writes, one line each, so a builder reads
+/// The file's top (LLP 1116.006 D7): what `app.ts` writes, one line each, so a builder reads
 /// these lines and not the declarations below. Each source the data module implements with its
 /// arguments and answer, then each named shape those carry, as TypeScript types; comments only.
 fn summary(plan: &Plan, out: &mut String) {

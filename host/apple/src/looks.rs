@@ -1,12 +1,12 @@
-//! A node's `:hover` and `:focus-visible` looks for the Swift presenter:
-//! carried in its style dictionary, which the
+//! A node's `:hover` and `:focus-visible` looks for the Swift presenter
+//! (LLP 1121 D8, stage 8 B2): carried in its style dictionary, which the
 //! presenter compares, and composes over the base on its own tracking.
 
 use crate::style::{num, style_json_rows};
 use exact_kernel::{ColorValue, Env, NodeRef, StyleId, StyleMask};
 
-/// The pressed paint's rows, `:active`'s absolute opacity
-/// among them: a cleared one is no pressed look.
+/// The pressed paint's rows (LLP 1061 D7), `:active`'s absolute opacity
+/// (LLP 1121 D8) among them: a cleared one is no pressed look.
 pub(crate) fn press_paint_rows() -> StyleMask {
     use StyleId::{PressBackgroundColor, PressColor, PressOpacity, PressOpacityTo};
     [

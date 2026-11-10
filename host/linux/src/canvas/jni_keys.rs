@@ -20,8 +20,8 @@ macro_rules! canvas_jni_keys {
             with(|h| h.key(ch, backspace == JNI_TRUE));
         }
 
-        /// A remote's key, down or up, by the web's `code` and `key`:
-        /// the D-pad's arrows and Select.
+        /// A remote's key, down or up, by the web's `code` and `key`
+        /// (LLP 1115.001.003 D3): the D-pad's arrows and Select.
         #[no_mangle]
         pub unsafe extern "system" fn Java_dev_exact_canvas_Native_namedKey(
             env: *mut JNIEnv,

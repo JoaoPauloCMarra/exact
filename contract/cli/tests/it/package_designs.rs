@@ -1,6 +1,6 @@
-//! A package's design, `<name>.tamber` beside its entry, its tokens under its
-//! namespace, set by the app's design by full name; what a package may not
-//! declare, refused.
+//! LLP 1121 D11 "Packages" (stage 11 A): a package's design, `<name>.tamber`
+//! beside its entry, its tokens under its namespace, set by the app's design
+//! by full name; what a package may not declare, refused.
 
 use std::path::{Path, PathBuf};
 
@@ -89,7 +89,7 @@ fn a_package_design_styles_its_views_and_the_app_sets_its_tokens_by_full_name() 
     let root = app(&dir, &["reading"], None);
     let built = plan(&root);
     assert!(built.contains("reading.card"), "{built}");
-    // Retention: a token no view names is not kept.
+    // D7's retention: a token no view names is not kept.
     assert!(!built.contains("reading.unused"), "{built}");
     // The app's design sets one by full name: its value is the token's.
     let overridden = app(
@@ -158,8 +158,9 @@ fn axes_dials_params_lines_and_exports_are_not_a_packages() {
         assert_eq!(e.id, "tamber-package-block", "{block}: {e}");
         assert!(e.message.contains(said), "{block}: {e}");
     }
-    // A component's params are a package's (`tamber_package_params.rs`),
-    // and so are its icons (`package_icons.rs`): `component … params` and `icons` build.
+    // A component's params are a package's (stage 12 B1;
+    // `tamber_package_params.rs`), and so are its icons (stage 13,
+    // `package_icons.rs`): `component … params` and `icons` build.
     package(
         &dir,
         "reading",
@@ -294,7 +295,7 @@ fn what_a_package_token_names_is_judged_as_the_fold_resolves_it() {
     ));
     assert_eq!(e.id, "tamber-unknown-token", "{e}");
     assert!(e.message.contains("names `appFace`"), "{e}");
-    // A base name the app sets is every package's to name.
+    // A base name the app sets is every package's to name (the lead's ruling 4).
     package(
         &dir,
         "reading",
@@ -362,7 +363,7 @@ fn an_app_with_no_design_of_its_own_still_reads_its_packages() {
 
 #[test]
 fn an_app_with_code_beside_it_keeps_every_package_token() {
-    // An app whose code can name a token outside its views keeps every
+    // D7: an app whose code can name a token outside its views keeps every
     // token, its packages' too, with or without a design of its own.
     let dir = Dir::new("bindable");
     package(&dir, "reading", Some(READING));

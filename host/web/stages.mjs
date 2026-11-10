@@ -1,4 +1,4 @@
-// Staged capabilities: the production web artifact is split
+// Staged capabilities (LLP 1047.000 §9): the production web artifact is split
 // into a core and one module per staged capability, which the glue loads
 // before the capability's first use.
 //
@@ -19,7 +19,7 @@ import { resolve } from 'node:path';
 
 /** The staged capabilities and their seam entries, demangled. */
 export const STAGES = [
-  // Inspection: the agent API's reads. Host::agent calls the hook
+  // Inspection (LLP 1012): the agent API's reads. Host::agent calls the hook
   // `HostLinks::of` installs; the glue's `ask` is its only caller.
   { name: 'inspection', seam: /^exact_runner::agent::handle::</ },
 ];
@@ -28,7 +28,7 @@ export const STAGES = [
  * builds unsplit rather than guess. */
 export const BINARYEN = 'version 132';
 /** Where the pinned binaryen comes from on a machine without a package
- * manager: the release tarball, unpacked, its `bin/` on PATH. */
+ * manager (LLP 1054 O2): the release tarball, unpacked, its `bin/` on PATH. */
 export const BINARYEN_DOWNLOAD = `https://github.com/WebAssembly/binaryen/releases/tag/${BINARYEN.replace(' ', '_')}`;
 const FEATURES = ['--enable-bulk-memory', '--enable-nontrapping-float-to-int', '--enable-sign-ext', '--enable-mutable-globals', '--enable-reference-types'];
 

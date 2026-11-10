@@ -1,7 +1,9 @@
 //! A role drawn in the accent (`AccentColor`, `LinkText`, `-exact-link`) reads
 //! the nearest `accent-color` its node or an ancestor authored, as Apple's
 //! tint and the web's `var(--exact-accent, AccentColor)` do; with none it is
-//! the app's tint; `accent-color="AccentColor"` keeps the one around.
+//! the app's tint; `accent-color="AccentColor"` keeps the one around. Before,
+//! the painter resolved it with no node, so it was always the tint (QUEUE,
+//! LLP 1121 stage 1's review).
 
 use exact_linux::presenter::{PainterChoice, Presenter};
 
@@ -70,7 +72,7 @@ fn a_role_drawn_in_the_accent_reads_the_nearest_authored_one() {
 
 /// A spinner whose `accent-color` is the `AccentColor` role under an authored
 /// accent paints in that accent, as the web's `var(--exact-accent,
-/// AccentColor)` keeps it; with none authored, the
+/// AccentColor)` keeps it (LLP 1121 D9, stage 9 F1); with none authored, the
 /// role's own (the design's, else the platform's).
 #[test]
 fn a_spinner_under_an_authored_accent_keeps_it_through_the_role() {

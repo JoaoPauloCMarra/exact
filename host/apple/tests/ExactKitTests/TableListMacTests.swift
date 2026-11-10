@@ -1,6 +1,7 @@
-// Which lists are tables on the Mac, and a list the runner does not window
-// as one: its children are the table's rows. The runner's windowed list is
-// `TableFeedMacTests`'; the keys and the clicks, `TableFeedKeyMacTests`'.
+// @ref LLP 1115.002 D5, LLP 1115.000 D16 — which lists are tables on the
+// Mac, and a list the runner does not window as one: its children are the
+// table's rows. The runner's windowed list is `TableFeedMacTests`'; the keys
+// and the clicks, `TableFeedKeyMacTests`'.
 #if os(macOS)
 import AppKit
 import XCTest
@@ -33,7 +34,7 @@ final class TableListMacTests: XCTestCase {
         let f = try TableFixture(count: 0, source: Self.plain)
         fixture = f
         // Three rows ranked before they leave, checked against the table, whose cells hold the live rows, and against
-        // the list's badge (item 4)
+        // the list's badge (LLP 1083.000 §4, item 4)
         let (plain, raised, lowered, badge) = try (f.node("row-0"), f.node("row-1"), f.node("row-2"), f.node("badge"))
         XCTAssertTrue([plain, raised, lowered].allSatisfy { $0.superview is TableRowCell })
         raised.setRank(10)
@@ -337,7 +338,7 @@ final class TableListMacTests: XCTestCase {
 }
 
 extension TableListMacTests {
-    /// Found on Shelf's library as a `list` (its test "a
+    /// A fix to stage 3b, found on Shelf's library as a `list` (its test "a
     /// swipe deletes" under the platform's chrome): a row is as wide as its
     /// list and an inset table's cell is narrower by the table's margin at
     /// each side, so what a row shows beside its cell was drawn and could

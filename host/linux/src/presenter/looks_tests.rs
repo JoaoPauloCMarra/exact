@@ -1,4 +1,4 @@
-//! Looks on the Linux host's CPU painter (Android's Canvas reader
+//! LLP 1121 D8 on the Linux host's CPU painter (Android's Canvas reader
 //! replays what it records; its layers are not exercised here): `:active` is
 //! the press paint, eased on the press's curve,
 //! its opacity an absolute target from what shows; a `:hover` look shows at

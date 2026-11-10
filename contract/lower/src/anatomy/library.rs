@@ -1,5 +1,5 @@
-//! The library rules on what a library component writes: its spacing,
-//! corners and colours are its knobs, never
+//! The library rules on what a library component writes (LLP 1139 D1, D6;
+//! stage 12 C3): its spacing, corners and colours are its knobs, never
 //! literals (`lower-library-literal`); a control's role is drawn by the
 //! native control, which says what its platform needs
 //! (`lower-library-control`); and nothing in a library package reads the
@@ -9,7 +9,7 @@ use crate::LowerError;
 use contract_syntax::{Attr, Component, Expr, File, Node, Span};
 use exact_kernel::StyleId;
 
-/// Whether a row is a knob's: spacing, a corner or a colour.
+/// Whether a row is a knob's (D1): spacing, a corner or a colour.
 fn knob(id: StyleId) -> bool {
     use StyleId::*;
     matches!(
@@ -39,7 +39,7 @@ fn knob(id: StyleId) -> bool {
     )
 }
 
-/// The keywords a library may write: no length or colour.
+/// The keywords D1 lets a library write (r6.2): no length or colour.
 const KEYWORDS: [&str; 7] = [
     "transparent",
     "currentcolor",
@@ -79,7 +79,7 @@ const MIX_WORDS: [&str; 21] = [
     "decreasing",
 ];
 
-/// Whether `text` names a knob: a token (a param's among them, which
+/// Whether `text` names a knob (D1): a token (a param's among them, which
 /// the rows name by its token), a role, a base name, the kernel's named
 /// length (`-exact-hairline`); a `color-mix`, `light-dark` or `calc`-family
 /// function whose every length and colour is one; or is the zero length or
@@ -207,11 +207,11 @@ pub(crate) fn literal(c: &Component, file: &File) -> Vec<LowerError> {
     let refuse = |what: String, span: Span| {
         LowerError {
         id: "lower-library-literal",
-        message: format!("{what} in library component `{comp}` is a literal: a library's spacing, corners and colours are its knobs, a param, a token, a role or a base name (`0` and `0px` excepted)"),
+        message: format!("{what} in library component `{comp}` is a literal: a library's spacing, corners and colours are its knobs, a param, a token, a role or a base name (`0` and `0px` excepted; LLP 1139 D1)"),
         span,
     }
     };
-    // Every kind's default names a token: a motion or shadow token is
+    // Every kind's default names a token (D1): a motion or shadow token is
     // the design's, which the theme table doesn't bind.
     let designed: Vec<String> = file
         .design
@@ -539,7 +539,7 @@ fn unquoted(text: &str, open: Option<char>) -> (String, Option<char>) {
     (out, open)
 }
 
-/// The roles a control is drawn for.
+/// The roles a control is drawn for (D6).
 const ROLES: [&str; 8] = [
     "switch",
     "checkbox",
@@ -595,7 +595,7 @@ pub(crate) struct Controls {
     pub buttons: Vec<LowerError>,
 }
 
-/// The controls of library component `c` (`lower-library-control`).
+/// The controls of library component `c` (`lower-library-control`, D6).
 pub(crate) fn control(c: &Component) -> Controls {
     let mut out = Controls::default();
     walk_controls(&c.view, &c.name, &mut out);
@@ -625,7 +625,7 @@ pub(crate) fn control(c: &Component) -> Controls {
 }
 
 /// The bool props a pressable's look may show as a state a person needs
-/// said: a button whose look reads one must say
+/// said (theme2 2026-10-22 04:40): a button whose look reads one must say
 /// it aloud (`walk_buttons`). Others (a size, an ink) are presentation.
 pub(crate) const STATES: [&str; 7] = [
     "selected", "current", "pressed", "checked", "on", "active", "expanded",
@@ -768,8 +768,8 @@ impl Buttons<'_> {
 /// a text of its own in every arm), and saying each state of `states` its
 /// look reads (a `?:` or `match` in a row, a class, or a used component's
 /// argument, itself or through a derive) through one of [`SAID`], a label
-/// or a text of its own that reads it. `bound`: the names a `for` or
-/// `match` around binds,
+/// or a text of its own that reads it (theme2 2026-10-22 04:40, LLP 1139
+/// D9's condition (b)). `bound`: the names a `for` or `match` around binds,
 /// which hide a prop of the same name.
 fn walk_buttons(nodes: &[Node], cx: &Buttons, bound: &mut Vec<String>, out: &mut Vec<LowerError>) {
     for n in nodes {
@@ -828,7 +828,7 @@ fn check_button(
     let comp = cx.comp;
     let error = |message: String| LowerError {
         id: "lower-library-control",
-        message: format!("{message} in library component `{comp}`"),
+        message: format!("{message} in library component `{comp}` (LLP 1139 D9)"),
         span,
     };
     let what = if tag == "button" {
@@ -1069,7 +1069,7 @@ fn check_control(
 ) {
     let error = |message: String| LowerError {
         id: "lower-library-control",
-        message: format!("{message} in library component `{comp}`"),
+        message: format!("{message} in library component `{comp}` (LLP 1139 D6)"),
         span,
     };
     let native = match tag {
@@ -1111,7 +1111,7 @@ fn check_control(
         "input" => {
             for kind in leaf_texts(attrs, "type").unwrap_or_else(|| vec!["text".into()]) {
                 match kind.to_ascii_lowercase().as_str() {
-                    // The platform's picker: nothing the control table asks of it.
+                    // The platform's picker: nothing D6's table asks of it.
                     "file" => {}
                     "checkbox" | "radio" => {
                         need("`checked`", has(attrs, "checked"));

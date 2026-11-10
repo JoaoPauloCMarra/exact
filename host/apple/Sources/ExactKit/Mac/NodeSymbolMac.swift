@@ -1,4 +1,4 @@
-// A symbol image on AppKit (`image "symbol:<role>"`):
+// A symbol image on AppKit (`image "symbol:<role>"`, LLP 1011, 1035.004.000):
 // the node stays an image leaf; an NSImageView in a clip draws the glyph and
 // its tint; a template path's own paths are filled instead (IconShapeMac.swift).
 // Moved out of NodeViewMac.swift (the 1,500-line cap).
@@ -23,15 +23,15 @@ extension NodeView {
         if symbolKey != key {
             symbolKey = key; loadGeneration += 1
             let generation = loadGeneration
-            // An icon with no SF Symbol draws its own path.
+            // An icon with no SF Symbol draws its own path (D10, stage 9 A).
             image = name.isEmpty ? iconPathImage(side: points) : symbolImage(name, SymbolMeasure.configuration(points: points, weight: weight))
             symbolFound = image != nil; if points <= 0 { image = nil }
             if name.isEmpty, props["symbolPath"] == nil, !source.hasPrefix("symbol:sf/"), source != "symbol:", symbolRefusal != source { symbolRefusal = source; presenter?.session?.log("image \(RasterRetry.withoutQuery(source)) refused: unknown symbol role") }
             if !name.isEmpty || source.hasPrefix("symbol:sf/") || source == "symbol:" { symbolRefusal = nil }
             let clip = symbolClip ?? SymbolClip()
             if symbolClip == nil { clip.wantsLayer = true; clip.layer?.masksToBounds = true; symbolClip = clip; addSubview(clip) }
-            // A template path is filled as its paths at the frame
-            // (IconShapeMac.swift); an SF Symbol or a bitmap is an image view's.
+            // A template path is filled as its paths at the frame (stage 14 C1,
+            // IconShapeMac.swift); an SF Symbol or a bitmap is an image view's.
             // One leaf in the clip: a source that changes kind swaps it.
             if let commands = props["symbolPath"], name.isEmpty {
                 symbolView?.removeFromSuperview(); symbolView = nil

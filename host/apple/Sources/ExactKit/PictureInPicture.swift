@@ -1,9 +1,9 @@
-// `requestPictureInPicture(id)`: an `image` floats in the platform's
+// @ref LLP 1042 §9. `requestPictureInPicture(id)`: an `image` floats in the platform's
 // picture-in-picture window, which shows each picture its `src` names next, until
 // `exitPictureInPicture()` or the window's own close; a failure is the image's
 // `pictureinpictureerror`. AVKit stays in the video arm
 // (`host/apple/videoarm/PictureInPicture.swift`); this side follows the node.
-// `presentation="window"` or `"panel"` floats it in Exact's own window on
+// `presentation="window"` or `"panel"` (LLP 1042 §9.1) floats it in Exact's own window on
 // macOS instead (`Mac/PictureInPictureWindowMac.swift`), which needs no arm.
 import Foundation
 
@@ -32,7 +32,7 @@ final class PictureInPictureHost {
     private(set) var window: PictureInPictureWindow?
     #endif
 
-    /// The request's options: `presentation=` and how Exact's window opens.
+    /// The request's options (LLP 1042 §9.1): `presentation=` and how Exact's window opens.
     struct Options: Equatable {
         /// `"window"` or `"panel"`, Exact's window; nil, the platform's.
         var presentation: String?

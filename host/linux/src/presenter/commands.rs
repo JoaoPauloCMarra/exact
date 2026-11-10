@@ -1,7 +1,7 @@
-//! The commands a commit issues, run after it: what this
+//! The commands a commit issues (LLP 1005 §3), run after it: what this
 //! host has, and the rest named as unsupported. What asks the platform for
 //! something (a haptic, the clipboard, a link out, the share sheet) is asked
-//! of the host's shell where it has one (`requests.rs`).
+//! of the host's shell where it has one (`requests.rs`, LLP 1115.001 D5).
 
 use super::Presenter;
 use crate::host::HostError;
@@ -9,9 +9,9 @@ use exact_plan::EventKind;
 use exact_runner::{DataSource, Event};
 
 impl<D: DataSource> Presenter<D> {
-    /// Run the last commits' commands: delivery belongs to the
-    /// store; `setScheme` chooses this painter's `light-dark()`
-    /// appearance; anything else is named.
+    /// Run the last commits' commands (LLP 1005 §3): delivery belongs to the
+    /// store (LLP 1030 D7); `setScheme` chooses this painter's `light-dark()`
+    /// appearance (LLP 1034 D2); anything else is named.
     pub fn run_commands(&mut self, mut data: impl FnMut() -> D) {
         // Every loop runs this each turn, and a reader's shell is served
         // before its first: whether a shell keeps the screen on is known.
@@ -38,13 +38,13 @@ impl<D: DataSource> Presenter<D> {
         for line in crate::pads::take_recorded() {
             self.host.log(line);
         }
-        // A hot key's press, the host's to raise.
+        // A hot key's press, the host's to raise (LLP 1133.025 D11 item 3).
         crate::desktop::raise(self.host.runner_mut());
         self.modules_in();
     }
 
     /// `postMessage(text, name)` into the named surface's canvas, stamped now
-    /// and held until one is live; the driver's `post` too.
+    /// and held until one is live; the driver's `post` too (LLP 1139.004 D1).
     pub(crate) fn post_message(&mut self, name: &str, text: &str) -> Result<(), String> {
         let event = serde_json::json!({"t":"message","text":text,"at":self.host.now()});
         if self.surfaces.post(name, event) {
@@ -75,23 +75,23 @@ impl<D: DataSource> Presenter<D> {
                     "relaunch refused: process relaunch is unsupported on Linux"
                 }),
                 // The app's chosen appearance is what a `light-dark()` colour
-                // resolves to here; `system` is no override.
+                // resolves to here (LLP 1034 D2); `system` is no override.
                 "setScheme" => self.app_scheme(match c.args.first() {
                     Some(v) if v.as_str() == Some("dark") => Some(true),
                     Some(v) if v.as_str() == Some("light") => Some(false),
                     _ => None,
                 }),
-                // The shell's haptic engine; desktop Linux has
+                // The shell's haptic engine (LLP 1077 D14); desktop Linux has
                 // none, and there is nothing to feel there.
                 "haptic" => {
                     let kind = c.args.first().and_then(exact_plan::Value::as_str);
                     self.haptic(kind.unwrap_or_default());
                 }
-                // The runner's own: its table is the record; no output here.
+                // The runner's own (LLP 1096 D9): its table is the record; no output here.
                 "playSound" | "playSounds" | "stopSounds" | "sendMIDI" => {}
-                // No MIDI here; under the agent the runner answered.
+                // No MIDI here (LLP 1125 D6); under the agent the runner answered.
                 "requestMIDIAccess" => self.midi_unavailable(),
-                // The runner's own too: it laid out at the app's root font size.
+                // The runner's own too: it laid out at the app's root font size (LLP 1069.000 D3).
                 "setRootFontSize" => {}
                 // Outside a bubbling event (a key's, focus's, the pointer's
                 // or a wheel's, which take theirs), nothing to prevent or stop.
@@ -101,7 +101,7 @@ impl<D: DataSource> Presenter<D> {
                     crate::journal::host_command(n, &c.args)
                 }
                 // The shell's share sheet; with no shell, refused into the
-                // journal. Held for the agent like every host.
+                // journal. Held for the agent like every host (LLP 1069.003 D6).
                 "share" => self.share(&c.args, c.source),
                 "blur" => self.blur_command(&c.args),
                 "focus" => {
@@ -109,12 +109,12 @@ impl<D: DataSource> Presenter<D> {
                 }
                 // The whole text, which the next key replaces (focus_command).
                 "selectText" => self.select_text(&c.args),
-                // A text field's selection, the focus unmoved.
+                // A text field's selection, the focus unmoved (x2apps codeedit #2).
                 "setSelectionRange" => self.set_selection_range(&c.args),
                 "setRangeText" => self.set_range_text(&c.args),
-                // An element's, by its id; a row's is the runner's.
+                // An element's, by its id (minesweeper F3); a row's is the runner's.
                 "scrollIntoView" => self.scroll_element_into_view(&c.args),
-                // The runner's own, once a fragment's route has its content.
+                // The runner's own, once a fragment's route has its content (LLP 1153 D5).
                 "scrollToFragment" => self.scroll_to_fragment(&c.args),
                 // `Element.scrollBy(x, y)`, by its id.
                 "scrollBy" => self.scroll_element_by(&c.args),
@@ -131,22 +131,24 @@ impl<D: DataSource> Presenter<D> {
                         self.host.log(refused);
                     }
                 }
-                // Refused with `cancel`; the agent's substitute answers.
+                // @ref LLP 1069.002 D8 — refused with `cancel`; the agent's
+                // substitute answers (D9).
                 "showPicker" => match c.args.first().and_then(exact_plan::Value::as_str) {
                     Some(id) => self.show_picker(id),
                     _ => eprintln!("exact: showPicker requires an element id"),
                 },
-                // No save panel here: refused with
+                // @ref LLP 1069.010 D3 — no save panel here: refused with
                 // `cancel`, or held for the agent like every host.
                 "saveFile" => self.save_file(&c.args),
-                // No picker here either: refused with
+                // @ref LLP 1069.010 D2 — no picker here either: refused with
                 // `cancel`, or held for the agent.
                 name @ ("showOpenFilePicker" | "showDirectoryPicker" | "showSaveFilePicker") => {
                     self.document_picker(name, &c.args)
                 }
-                // Answered here, as every native host does.
+                // @ref LLP 1069.010.000 D7 — answered here, as every native host does.
                 "requestPermission" => self.request_permission(&c.args),
-                // The top layer, where a shell presents one: a confirmation by its `id`, and its
+                // The top layer, where a shell presents one (LLP 1115 D6;
+                // LLP 1115.001 D10): a confirmation by its `id`, and its
                 // close. With no windows, the journal names the refusal.
                 name @ ("showPopover" | "hidePopover" | "togglePopover") => {
                     self.popover_command(name, &c.args)
@@ -164,7 +166,7 @@ impl<D: DataSource> Presenter<D> {
                 "openURL" if self.has_shell() || self.url_opener.is_some() => self.open_url(&c.args),
                 // With no shell there is no clipboard or browser; and no
                 // editor, dev menu or window to close on any Linux host, and
-                // no media player or floating window: known, and named so.
+                // no media player (LLP 1042 §8) or floating window (§9): known, and named so.
                 name @ ("copyText" | "openURL" | "format" | "reload" | "close" | "fastSeek"
                 | "load" | "exitPictureInPicture") => {
                     eprintln!("exact: {name} unsupported on the headless/DRM host");
@@ -172,16 +174,16 @@ impl<D: DataSource> Presenter<D> {
                         self.answer_open(&c.args, false);
                     }
                 }
-                // The image hears the refusal too, once the commands have run.
+                // The image hears the refusal too, once the commands have run (LLP 1042 §9).
                 "requestPictureInPicture" => {
                     eprintln!("exact: requestPictureInPicture unsupported on the headless/DRM host");
                     floats.extend(c.args.first().and_then(exact_plan::Value::as_str).map(str::to_owned));
                 }
-                // A window that fades or leaves full screen is the Mac's so far.
+                // A window that fades or leaves full screen is the Mac's so far (LLP 1069.010).
                 name @ ("exitFullscreen" | "setWindowOpacity") => self
                     .host
                     .log(format!("{name} refused: the window's full screen and opacity are on the Mac host only")),
-                // A page zoom is the Mac's so far.
+                // A page zoom is the Mac's so far (LLP 1021 §5.3.1).
                 "setPageZoom" => self
                     .host
                     .log("setPageZoom refused: page zoom is on the Mac host only"),

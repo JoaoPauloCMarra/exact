@@ -1,4 +1,4 @@
-//! Two refusals that bound a value by its type: an option
+//! Two refusals that bound a value by its type (LLP 1090 D2): an option
 //! directly inside an option, and a type nested deeper than a value may.
 //!
 //! The web's JS target erases `some`, so `some(none)` and `none` are one

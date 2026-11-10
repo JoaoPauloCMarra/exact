@@ -1,12 +1,12 @@
 //! What a plan uses beyond the core, derived from its bytes.
 //!
-//! Beyond the core, a capability is linked or loaded. The use-set is a pure
-//! function of the plan, and a host refuses a plan that uses what it doesn't
-//! link.
+//! @ref LLP 1047 D1 (the core, linked and loaded capabilities)
+//! @ref LLP 1047 D2 (the use-set is a pure function of the plan)
+//! @ref LLP 1047 D6 (a host refuses a plan that uses what it doesn't link)
 //!
 //! No author declares a capability: a plan's rows say which it needs. This
 //! lives in the runner, not the plan crate, because a use is a kernel prop or
-//! style row, and the plan crate declares no kernel vocabulary.
+//! style row, and the plan crate declares no kernel vocabulary (LLP 1004 D2).
 //! A binding whose value the plan computes counts as a use of whatever it
 //! might select, so the set is never smaller than what a run can reach.
 
@@ -15,7 +15,7 @@ use exact_plan::{BindingKind, EventKind, Opcode, Plan, Stdlib, StrId};
 use std::fmt;
 
 /// A capability beyond the core, linked into an artifact only when its plan
-/// uses it (each one as it moves behind its seam).
+/// uses it (LLP 1047 §4's roster, as each one moves behind its seam).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Capability {
     /// `markup="markdown"` text: its source styled as pieces.
@@ -33,93 +33,93 @@ pub enum Capability {
     /// GPU canvas surfaces: a canvas with a surface, or a resource reading a
     /// surface's record; the host answers both (the GPU module is loaded).
     Surfaces,
-    /// The router: a plan that declares `routes`.
+    /// The router (LLP 1038): a plan that declares `routes`.
     Router,
-    /// `formatDate` and `formatNumber`: a plan whose
+    /// `formatDate` and `formatNumber` (LLP 1054.000.003 D8): a plan whose
     /// code calls one.
     Format,
-    /// `backgroundMaterial`: the materials table, and on
+    /// `backgroundMaterial` (LLP 1053.000 D4): the materials table, and on
     /// the web its approximation's CSS.
     Materials,
-    /// `backdrop-filter`: its grammar and named refusals.
+    /// `backdrop-filter` (LLP 1053.000 D1): its grammar and named refusals.
     Backdrop,
-    /// `share(…)`: a plan whose code runs the command.
+    /// `share(…)` (LLP 1069.003): a plan whose code runs the command.
     Share,
-    /// `saveFile` and the three file pickers: a plan whose
-    /// code runs one, or that hears a `drop` of files.
+    /// `saveFile` and the three file pickers (LLP 1069.010): a plan whose
+    /// code runs one, or that hears a `drop` of files (studio diary R19).
     Documents,
-    /// `input type="file"` and `showPicker`: a plan with a
+    /// `input type="file"` and `showPicker` (LLP 1069.002): a plan with a
     /// file input, or whose code runs the command.
     Picker,
-    /// Drag timelines: `-exact-drag-timeline`, `animation-timeline`,
+    /// Drag timelines (LLP 1057.003): `-exact-drag-timeline`, `animation-timeline`,
     /// `animation-range` and `timeline-scope`, their grammar, lowering and
     /// name lookup. A timeline follows a held value, so it uses motion too.
     Timelines,
-    /// `text-transform`: its Unicode case mapping, for a plan
+    /// `text-transform` (LLP 1064 D5): its Unicode case mapping, for a plan
     /// that binds the row.
     TextTransform,
-    /// `filter` and `clip-path`: their grammars, for
+    /// `filter` and `clip-path` (LLP 1055.000 D10, D14): their grammars, for
     /// a plan that binds either row.
     Effects,
-    /// CSS animations: the `animation` shorthand's and
+    /// CSS animations (LLP 1055 D5): the `animation` shorthand's and
     /// `@keyframes`' grammars, for a plan that declares keyframes or binds
     /// `animation` or `-exact-exit-animation`.
     Animations,
-    /// `background-image`'s gradients: its grammar, for a plan
+    /// `background-image`'s gradients (LLP 1066): its grammar, for a plan
     /// that binds the row.
     Gradients,
     /// CSS grid's track, placement and keyword grammars, for a plan that
     /// binds any of the six grid rows.
     Grid,
-    /// `frame` and `measure`: a plan whose actions read
+    /// `frame` and `measure` (LLP 1051.000): a plan whose actions read
     /// geometry. Native hosts answer from the kernel; the web links a
     /// synchronous import the page answers.
     Geometry,
-    /// `env(viewport-segment-*)` lengths: the segment grammar,
+    /// `env(viewport-segment-*)` lengths (LLP 1078 D3): the segment grammar,
     /// resolution and wire decode, for a plan whose strings name a segment.
     /// The fold's `exactViewport` fields are the core's.
     Segments,
-    /// `data-*` words: a plan that binds `dataset`. The
+    /// `data-*` words (LLP 1075.003 §3.3): a plan that binds `dataset`. The
     /// web writes each word as its own attribute.
     Dataset,
-    /// A navigation root's tabs: a plan that binds
+    /// A navigation root's tabs (LLP 1075.003 §3.7): a plan that binds
     /// `aria-controls`. The web's document shows each tab's stack.
     Tabs,
     /// A native grouped list: a `list` whose appearance is `auto`, which
-    /// Contract marks with `listStyle`. A native host draws it
+    /// Contract marks with `listStyle` (LLP 1084 D2). A native host draws it
     /// with the platform's list; the web draws its authored nodes, so the web
-    /// links nothing for it.
+    /// links nothing for it (LLP 1047.001 D2).
     GroupedLists,
     /// The host's I/O: the requests a data source makes (fetch, sockets,
     /// files, SQLite) and the kept secrets and answers it stores. A plan
     /// uses it when a resource keeps its answer (a reader); an app's grants
-    /// link it too, which the bake reads. The browser does
+    /// link it too, which the bake reads (LLP 1047.001). The browser does
     /// its own, so the web links nothing for it.
     Io,
     /// What a native engine plays that CSS plays on the web: a `transition`,
     /// a `-exact-layout-transition` or a shared element's flight. A native
-    /// host's motion engine moves them; without them it only settles values.
-    /// The browser plays them, so the web links nothing for
+    /// host's motion engine moves them; without them it only settles values
+    /// (LLP 1047.001). The browser plays them, so the web links nothing for
     /// it.
     Transitions,
-    /// iOS's photo picker: a file input whose `accept`
+    /// iOS's photo picker (LLP 1047.001.000 E): a file input whose `accept`
     /// is only images and videos, or is computed. Linking it costs every
     /// launch PhotosUI's images, so a document input does not; the picker
     /// itself is [`Capability::Picker`].
     MediaPicker,
-    /// The sign-in sheet behind `openAuthSession`:
+    /// The sign-in sheet behind `openAuthSession` (LLP 1047.001.000 E):
     /// never set by a plan, since a data source's requests are the source's;
     /// the bake links it for an app whose grants name `auth.session`, and a
     /// manifest's `link` may name it.
     AuthSession,
     /// A text's numerals rolling as they change, per glyph
-    /// (`-exact-content-transition`): on Apple, SwiftUI's
-    /// numeric text, whose framework an app links only for this.
-    /// A plan uses it when it binds the row.
+    /// (`-exact-content-transition`, LLP 1077 D15): on Apple, SwiftUI's
+    /// numeric text, whose framework an app links only for this (LLP
+    /// 1115.003 D3). A plan uses it when it binds the row.
     Numerals,
     /// A date or time control (`input type="date"`, `"time"` or
     /// `"datetime-local"`): on Android its picker is Compose Material 3's,
-    /// which an app links only for it. Every other
+    /// which an app links only for it (LLP 1115.001.000 D2). Every other
     /// host shows its platform's own picker and links nothing for it.
     Dates,
 }
@@ -194,7 +194,7 @@ impl Capability {
     }
 
     /// The capability `name` names ([`Capability::name`]), as a manifest's
-    /// `link` list does.
+    /// `link` list does (LLP 1047 D8).
     pub fn from_name(name: &str) -> Option<Capability> {
         Capability::ALL.into_iter().find(|c| c.name() == name)
     }
@@ -251,7 +251,7 @@ impl fmt::Display for Uses {
     }
 }
 
-/// The capabilities `plan` uses.
+/// The capabilities `plan` uses (LLP 1047 D2).
 pub fn uses(plan: &Plan) -> Uses {
     let mut uses = Uses::NONE;
     if !plan.keyframes.is_empty() {
@@ -260,7 +260,7 @@ pub fn uses(plan: &Plan) -> Uses {
     if plan.router.is_some() {
         uses = uses.with(Capability::Router);
     }
-    // A reader's last answer is kept in the host's store.
+    // A reader's last answer is kept in the host's store (LLP 1027 D4).
     if plan.resources.iter().any(|r| r.reader) {
         uses = uses.with(Capability::Io);
     }
@@ -290,7 +290,7 @@ pub fn uses(plan: &Plan) -> Uses {
                 Some(PropId::HeightDragFor | PropId::TransformDragFor | PropId::ReorderFor) => {
                     uses = uses.with(Capability::Motion).with(Capability::Drag);
                 }
-                // A shared element flies between its two places.
+                // A shared element flies between its two places (LLP 1013.000).
                 Some(PropId::SharedElement) => uses = uses.with(Capability::Transitions),
                 Some(PropId::Virtualized)
                     if constant_bool(plan.code(binding.expr)).is_none_or(|on| on) =>
@@ -384,7 +384,7 @@ pub fn uses(plan: &Plan) -> Uses {
     for handler in &plan.handlers {
         match handler.event {
             // A pan's release velocity is the engine's tracker where the
-            // platform measures none.
+            // platform measures none (LLP 1057 §10.6; LLP 1047 stage 3).
             EventKind::Swiperight | EventKind::Panrelease => uses = uses.with(Capability::Motion),
             EventKind::Heightrelease
             | EventKind::Transformgeometry
@@ -392,8 +392,8 @@ pub fn uses(plan: &Plan) -> Uses {
             | EventKind::Reorderdrop => {
                 uses = uses.with(Capability::Motion).with(Capability::Drag);
             }
-            // Dropped and pasted files become `doc:` handles; the web's file
-            // drag is heard beside its drop (files.js).
+            // Dropped and pasted files become `doc:` handles (studio diary
+            // R19); the web's file drag is heard beside its drop (files.js).
             EventKind::Drop | EventKind::Dragenter | EventKind::Dragleave | EventKind::Paste => {
                 uses = uses.with(Capability::Documents)
             }
@@ -411,7 +411,7 @@ pub fn uses(plan: &Plan) -> Uses {
     if format {
         uses = uses.with(Capability::Format);
     }
-    // `toLowerCase` and `toUpperCase` map through the same case tables.
+    // `toLowerCase` and `toUpperCase` map through the same case tables (LLP 1088 D2).
     if lowercase {
         uses = uses.with(Capability::TextTransform);
     }
@@ -472,10 +472,10 @@ fn shows_media_picker(plan: &Plan) -> bool {
     })
 }
 
-/// Whether `plan` can show an SVG island: a `mask`
+/// Whether `plan` can show an SVG island (LLP 1055.000 D10, D14): a `mask`
 /// or `filter` element, or `filter` bound on an SVG element (its functions
-/// need no element). A host whose island module is loaded on demand (the
-/// loaded tier; Apple's `libexact_svg.dylib`) opens it off the
+/// need no element). A host whose island module is loaded on demand (LLP
+/// 1047 D1's loaded tier; Apple's `libexact_svg.dylib`) opens it off the
 /// main thread at boot when this holds, and never for a plan without one.
 pub fn svg_islands(plan: &Plan) -> bool {
     use exact_kernel::NodeType;
@@ -541,7 +541,7 @@ fn stdlib_calls(plan: &Plan) -> (bool, bool, bool) {
 
 /// Whether any code range runs a host command named one of `names`.
 /// Whether `plan` declares a sound or a sequence, or runs one of the voice
-/// table's commands: what links the JS target's
+/// table's commands (LLP 1096; LLP 1125 D3): what links the JS target's
 /// table and its output.
 pub fn runs_sounds(plan: &Plan) -> bool {
     !plan.sounds.is_empty()
@@ -549,10 +549,10 @@ pub fn runs_sounds(plan: &Plan) -> bool {
         || runs_command(plan, &["playSound", "playSounds", "stopSounds"])
 }
 
-/// Whether `plan` asks for MIDI ports or hears an input:
+/// Whether `plan` asks for MIDI ports or hears an input (LLP 1125 D6–D8):
 /// it reads `exactMIDI`, runs `sendMIDI` or `requestMIDIAccess`, declares a
 /// `midimessage` handler, or plays a sequence with `clockOut=`. What loads a
-/// host's MIDI arm; a sequence's notes alone do not, since
+/// host's MIDI arm (rulings #10); a sequence's notes alone do not, since
 /// without access no note is sent.
 pub fn uses_midi(plan: &Plan) -> bool {
     plan.resources
@@ -570,7 +570,7 @@ pub fn uses_midi(plan: &Plan) -> bool {
         })
 }
 
-/// Whether the plan floats an image in picture in picture,
+/// Whether the plan floats an image in picture in picture (LLP 1042 §9),
 /// which the video arm carries on Apple.
 pub fn uses_picture_in_picture(plan: &Plan) -> bool {
     runs_command(plan, &["requestPictureInPicture"])

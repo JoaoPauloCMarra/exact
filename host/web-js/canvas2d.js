@@ -1,8 +1,8 @@
-// Canvas 2D surfaces on the JS runtime: the
+// Canvas 2D surfaces on the JS runtime (LLP 1056; LLP 1071 §7): the
 // runner's half of the protocol (runner/src/runner/canvas2d.rs) over the
 // web host's own replayer. Fetched two frames after the first 2D canvas
 // mounts (rt.js `c2`), as the wasm host fetches its glue; an app without one
-// never loads it.
+// never loads it (LLP 1047).
 //
 // `canvas2d-glue.js` is the wasm host's file, unchanged: it watches each
 // canvas's content box with a ResizeObserver and replays stamped lists into
@@ -116,16 +116,16 @@ export function engine(rt) {
   wasm.exact_canvas_geometry = (id, width, height, scale) => {
     const r = records.get(id);
     if (!r) return 0;
-    // An explicit bitmap size (`bitmap-width`/`bitmap-height`; an unset
-    // one is the web's 300 or 150) is its own coordinate
+    // An explicit bitmap size (`bitmap-width`/`bitmap-height`, LLP 1056 D6
+    // r3; an unset one is the web's 300 or 150) is its own coordinate
     // space, stretched to the box: the runner's `Backing::of`.
     const { bitmapWidth: bw, bitmapHeight: bh, colorSpace, colorType } = r.c.e.dataset;
     const b = bw != null || bh != null ? { w: +(bw ?? 300), h: +(bh ?? 150), width: +(bw ?? 300), height: +(bh ?? 150), scale: 1, stretch: true }
       : { w: Math.max(0, Math.round(width * scale)), h: Math.max(0, Math.round(height * scale)), width, height, scale, stretch: false };
-    // Its getContext settings: the runner's `canvas_settings`.
+    // Its getContext settings (LLP 1100 D12a): the runner's `canvas_settings`.
     b.p3 = colorSpace === 'display-p3'; b.float16 = colorType === 'float16';
     if (r.backing && r.backing.w === b.w && r.backing.h === b.h && r.backing.stretch === b.stretch && (b.stretch || r.backing.scale === b.scale)) { r.backing = b; return 0; }
-    // A new size generation: a fresh bitmap and recorder.
+    // A new size generation: a fresh bitmap and recorder (D4).
     if (r.backing) { r.generation++; r.causes |= SIZE; }
     r.backing = b;
     glue.op({ id, lifetime: r.lifetime, generation: r.generation, seq: 0, fresh: true, w: b.w, h: b.h, scale: b.scale, stretch: b.stretch, p3: b.p3, float16: b.float16, lists: [] });
@@ -134,9 +134,9 @@ export function engine(rt) {
     return 0;
   };
   // A presented frame: the clock moves to the page's time (its timers fire),
-  // and canvases that asked draw once at it.
+  // and canvases that asked draw once at it (D5).
   wasm.exact_advance = () => { rt.advance(rt.wall(), true); frame(); return 0; };
-  // An image handle loaded or failed: the payload the glue
+  // An image handle loaded or failed (LLP 1056 D9): the payload the glue
   // wrote in (src, size, ok, the lifetimes that asked); those canvases draw
   // again, cause "image". Each pending image is counted in flight.
   let written = '';
@@ -164,7 +164,7 @@ export function engine(rt) {
     } };
   };
   wasm.exact_canvas_fonts = () => { for (const r of records.values()) if (r.text) r.causes |= FONT; drawAll(); return 0; };
-  // A canvas whose colour or direction changes draws again, cause "style": after a commit, in a microtask,
+  // A canvas whose colour or direction changes draws again, cause "style" (LLP 1056 D4): after a commit, in a microtask,
   // once its host commands (`setScheme`) and the modes it resolves have applied; and on the window's scheme, the root's
   // own style (a development page's held scheme), an app's mode tuple (`data-x-modes`) and a colour transition's end.
   const restyle = () => {
@@ -236,7 +236,7 @@ export function engine(rt) {
   };
 }
 
-// Whether a list draws text: a font that loads redraws it.
+// Whether a list draws text: a font that loads redraws it (D8).
 function hasText(l) {
   const v = new DataView(l.buffer, l.byteOffset, l.byteLength);
   for (let at = 8; at + 8 <= l.byteLength;) {

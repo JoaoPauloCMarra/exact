@@ -1,4 +1,4 @@
-// The variant gallery on the JS dev loop (the design
+// The variant gallery on the JS dev loop (LLP 1139 D5, §9 Q5; the design
 // tool's G3): `/__dev/gallery/` is a second app, `contract gallery`'s source
 // (each exported library component the app uses, once per variant value,
 // with the app's design), built by the JS target's builder into a dist of

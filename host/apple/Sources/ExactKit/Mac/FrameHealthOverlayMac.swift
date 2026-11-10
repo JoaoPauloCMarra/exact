@@ -2,7 +2,7 @@
 import AppKit
 
 /// Host UI over the window's content. The card takes the clicks within its bounds, and clicks
-/// outside it reach the app.
+/// outside it reach the app (LLP 1079.000 §7.2).
 final class FrameHealthOverlayMac: NSView {
     weak var health: FrameHealth?
     let card = FrameHealthCardViewMac()

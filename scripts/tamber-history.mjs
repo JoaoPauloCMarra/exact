@@ -1,11 +1,11 @@
-// What the design server reads of git for `history` and `revert`: the
-// commits that touched the design's files, and each commit's
+// What the design server reads of git for `history` and `revert` (LLP 1122
+// D9, T1): the commits that touched the design's files, and each commit's
 // versions of each such file as text, which `contract tamber serve` compares
 // as token-level edits (contract/cli/src/tamber_history.rs). Reads only.
 //
 // A design file is a `.tamber` file in the app's directory, or the design
 // app.json names wherever it is, or one of the app's own Contract sources
-// the server has now (their state parts are the
+// the server has now (LLP 1121 stage 8 D: their state parts are the
 // design's; the files `contract tamber serve` edits).
 // A merge is read against its first parent; renames are a removal and an
 // addition.
@@ -17,7 +17,7 @@ import { relative, resolve } from 'node:path';
 const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
 
 // Reading history never fetches: in a partial clone a missing object is an
-// error, not a `git fetch` with the repository's helpers (a
+// error, not a `git fetch` with the repository's helpers (stage 10 A1: a
 // read-scope client reaches this).
 function git(cwd, args, input) {
   const r = spawnSync('git', args, { cwd, input, maxBuffer: 1 << 30, env: { ...process.env, GIT_NO_LAZY_FETCH: '1' } });

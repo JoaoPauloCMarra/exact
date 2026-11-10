@@ -1,4 +1,4 @@
-# The recorder on Apple platforms: the host's C exports over
+# The recorder on Apple platforms (LLP 1067.000): the host's C exports over
 # its TypeScript source and baked plan. The recorder itself is the app's
 # module artifact (modules/apple), which the host loads per session.
 [package]

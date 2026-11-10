@@ -1,4 +1,4 @@
-//! A tint: a raster's alpha masking the
+//! A tint (LLP 1011 §3, LLP 1062 D6): a raster's alpha masking the
 //! registered `--exact-tint`, which the browser also transitions.
 
 use exact_runner::Event;
@@ -123,10 +123,10 @@ fn untinted_rasters_with_box_paint_stay_bare_in_batches_and_documents() {
     }
 }
 
-/// `AccentColor` (and `LinkText`) is the nearest authored
+/// LLP 1116.001 D2: `AccentColor` (and `LinkText`) is the nearest authored
 /// `accent-color`, as UIKit's inherited tint: the page reads the
 /// `--exact-accent` the accent writes, else the browser's own accent. A link
-/// is the accent with none authored too: one blue for
+/// is the accent with none authored too (LLP 1115.000 D3.5): one blue for
 /// links, where the browser's own `LinkText` was a second.
 #[test]
 fn the_accent_colour_role_is_the_nearest_accent_color() {
@@ -176,7 +176,7 @@ fn the_accent_colour_role_is_the_nearest_accent_color() {
     assert!(plain.contains("color:CanvasText;"), "{plain}");
 }
 
-/// A symbol nobody tinted whose `color` its
+/// LLP 1121 stage 9 B (D10): a symbol nobody tinted whose `color` its
 /// author wrote, on it or on the nearest ancestor that sets one, is marked
 /// (`data-symbol-color`) for the glue to draw it in that colour, in a live
 /// batch, a server document and a document written with no kernel alike.
@@ -257,9 +257,9 @@ fn a_symbol_under_a_written_colour_is_marked_to_draw_in_it() {
     }
 }
 
-/// After `lower-symbol-tint`, a symbol's own `-exact-tint-color` is no paint of it on the web
+/// theme2 2026-10-23 (after `lower-symbol-tint`): a symbol's own `-exact-tint-color` is no paint of it on the web
 /// either: lowering answers it with `currentcolor`, which the glue's mask paints in the symbol's `color`, as Apple
-/// draws it. A native button's face keeps its tint, as a raster does.
+/// draws it. A native button's face keeps its tint (LLP 1115 D4), as a raster does.
 #[test]
 fn a_symbols_own_tint_is_painted_in_its_colour_and_a_native_face_keeps_its_tint() {
     let plan = contract::compile(

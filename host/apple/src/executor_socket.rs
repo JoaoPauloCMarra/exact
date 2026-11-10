@@ -1,4 +1,4 @@
-//! A resource's two-way socket, natively, over ibex2's
+//! A resource's two-way socket, natively (LLP 1016.000 D7), over ibex2's
 //! WebSocket transport (URLSession on Apple, the portable one elsewhere).
 //! Its reader delivers `open`, then every frame in arrival order, text or
 //! binary, never coalesced, and ends with the closing handshake's code and
@@ -15,12 +15,12 @@ use ibex2::stdlib::{
 };
 use std::sync::Arc;
 
-/// Undelivered frames a socket may hold.
+/// Undelivered frames a socket may hold (D7).
 const RECEIVE_FRAMES: usize = 256;
-/// Bytes allowed beyond the stream's per-message ceiling.
+/// Bytes allowed beyond the stream's per-message ceiling (D7).
 const RECEIVE_BYTES: usize = 1 << 20;
 /// What one batch and the transport's buffer may hold together:
-/// bytes, and frames, the bound past which both ibex2 transports close
+/// bytes (D7), and frames, the bound past which both ibex2 transports close
 /// the connection rather than queue (WHATWG's "full").
 const SEND_BYTES: usize = 1 << 20;
 const SEND_FRAMES: usize = 256;
@@ -242,7 +242,7 @@ fn frame(shared: &Shared, ticket: u64, message: Message, limit: usize) -> Frame 
 
 impl Core {
     /// Each listener's address and open connections, by its stream ticket,
-    /// read live.
+    /// read live (LLP 1133.005 D12).
     pub(crate) fn listen_reader(&self) -> exact_runner::listen::ListenReader {
         super::listen::reader(self.shared.clone())
     }
@@ -255,7 +255,7 @@ impl Core {
             let sockets = shared.sockets.lock().unwrap();
             (sockets.get(&ticket))
                 .map(|socket| socket.sender.buffered_amount() as u64)
-                // A child's stdin queue.
+                // A child's stdin queue (LLP 1133.007 D2).
                 .or_else(|| super::super::process::queued(&shared, ticket))
         })
     }
@@ -266,7 +266,7 @@ impl Core {
     /// or nothing is sent. For each socket, the frames it accepted and the
     /// bytes it now buffers.
     pub(crate) fn socket(&self, batch: &SocketSend) -> Result<Vec<(u64, u64, u64)>, String> {
-        // A listener's, by connection.
+        // A listener's, by connection (LLP 1133.005 D6).
         if batch.ops.iter().any(|(_, _, op)| op.connection().is_some()) {
             return super::listen::send(&self.shared, batch);
         }
@@ -279,7 +279,7 @@ impl Core {
                 return Err(not_open());
             }
         }
-        // A child's operations are its supervisor's; the
+        // A child's operations are its supervisor's (LLP 1133.007 D2); the
         // batch is checked whole before any of either kind goes.
         let (children, ops): (Vec<_>, Vec<_>) = (batch.ops.iter())
             .map(|(ticket, _, op)| (*ticket, op))

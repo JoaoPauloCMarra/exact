@@ -287,8 +287,8 @@ final class RasterLoaderTests: XCTestCase {
         Thread.sleep(forTimeInterval: 1.1)
         XCTAssertGreaterThan(try open("swr-asctime"), 1.4, "a Date it cannot read is never young")
     }
-    /// A `data:` source opens as a page's `<img>` takes it, to its bound:
-    /// base64, forgiving whitespace and escapes, or percent-encoded.
+    /// A `data:` source opens as a page's `<img>` takes it, to its bound
+    /// (LLP 1011 §2): base64, forgiving whitespace and escapes, or percent-encoded.
     func testDataURLsOpenWithinTheirBound() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: false)
@@ -647,7 +647,7 @@ final class RasterLoaderTests: XCTestCase {
         loader.load(node, source: "same.png", resolver: replacement)
         settle { node.raster != nil && node.raster !== oldBacking }
         XCTAssertEqual(node.raster?.image.naturalSize, CGSize(width: 90, height: 45))
-        // The image layer takes the new pixels at once.
+        // The image layer takes the new pixels at once (LLP 1100 D9).
         if let layer = node.imageLayer { XCTAssertTrue((layer.contents as AnyObject?) === node.raster?.image.image) }
         XCTAssertEqual(oldBacking?.image.naturalSize, CGSize(width: 120, height: 60))
         expired = nil

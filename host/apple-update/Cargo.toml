@@ -1,4 +1,4 @@
-# Optional delivery adapter, above the Apple host.
+# Optional delivery adapter, above the Apple host (LLP 1030 D4).
 [package]
 name = "exact-apple-update"
 version.workspace = true

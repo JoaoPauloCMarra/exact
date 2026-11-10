@@ -28,7 +28,7 @@ export function apkChanges(a, apk) {
 /** One JSON-lines protocol over stdio on desktop hosts, or a phone's outbound socket. */
 export async function openStdio({ host, plan, world, size, app, env: extra = {}, session, documents = [], device = false, phone: pick, onProcess }) {
   const a = resolveApp(app);
-  const linux = host === 'linux', android = host === 'android'; // Android: the Linux host on a phone, under adb
+  const linux = host === 'linux', android = host === 'android'; // @ref LLP 1107 — Android: the Linux host on a phone, under adb
   const windows = host === 'windows', portable = linux || windows || android;
   const sample = host === 'host';
   const artifacts = portable ? null : appleArtifacts(a, { destination: device ? 'ios' : 'macos', host: sample });
@@ -65,12 +65,12 @@ export async function openStdio({ host, plan, world, size, app, env: extra = {},
   const env = { EXACT_ASSETS: windows ? dirname(bin) : linux || android ? a.dir : artifacts.capture, ...process.env, EXACT_AGENT: '1' };
   if (plan) env.EXACT_PLAN = plan;
   if (portable && size) env.EXACT_SIZE = `${size[0]}x${size[1]}`;
-  // Measure the requested Mac content viewport.
+  // @ref LLP 1039 §5 — measure the requested Mac content viewport.
   if (!portable && size) { env.EXACT_WINDOW_WIDTH = String(size[0]); env.EXACT_WINDOW_HEIGHT = String(size[1]); }
   if (portable) {
     // The pinned font: DejaVu Sans from scripts/fixtures/fonts shapes and
     // paints the host's text on every machine, so a pixel fixture recorded
-    // here matches on a builder. The environment still wins.
+    // here matches on a builder (LLP 1015 §5). The environment still wins.
     env.EXACT_PAINTER ??= 'cpu';
     if (windows) env.EXACT_GPU_RENDER ??= '1';
     env.EXACT_FONTS ??= android ? '/system/fonts' : resolve(ROOT, 'scripts/fixtures/fonts/assets'); // a phone draws with its own faces
@@ -111,7 +111,7 @@ export async function openStdio({ host, plan, world, size, app, env: extra = {},
     // `s.session = "b"` moves every later request to another.
     const state = { session: session ?? null };
     const heldButton = mouseContact();
-    const heldWheel = { open: null }; // a `wheel … hold` not yet released
+    const heldWheel = { open: null }; // a `wheel … hold` not yet released (LLP 1142 D3)
     const ask = (req, session = state.session) => waitAtMost(lines.ask(session ? { ...req, session } : req), req.op === 'perf' && req.live > 0 ? req.live + (device ? 45000 : REPLY_MS) : device ? 45000 : REPLY_MS, () => {
       const why = device ? `phone ${req.op} did not answer within 45 s; check app health, foreground state and network\n` + hostLines.slice(-20).join('\n')
         : hangup({ what: `${req.op} did not answer within ${REPLY_MS / 1000} s`, pid: child.pid, hostLines });
@@ -130,7 +130,7 @@ export async function openStdio({ host, plan, world, size, app, env: extra = {},
         const guest = { selector: opts.selector, x: opts.x, y: opts.y, entity: opts.entity, world: opts.world, under: opts.under, phase: opts.phase };
         const phase = ['down', 'move', 'hold', 'up', 'cancel'].includes(kind);
         // A contact that went down with `mouse` (a drag's) holds the left button through its phases (review A1).
-        // A button's point and the modifiers held, as the request says them.
+        // A button's point and the modifiers held, as the request says them (#107).
         const at = opts.at !== undefined ? { at: opts.at } : {}, held = opts.modifiers ? { modifiers: opts.modifiers } : {};
         const r = phase ? await heldButton.ask(kind, opts, (button) => ask({ op: 'tap', phase: kind, ...(id != null ? { id } : {}), x: opts.x, y: opts.y, dx: opts.dx, dy: opts.dy, ms: opts.ms, ...(opts.virtual ? { virtual: true } : {}), ...held, ...button })) : ['contextmenu', 'dblclick', 'mouse', 'auxclick'].includes(kind) ? await ask({ op: 'tap', id, [kind]: true, ...at, ...held }) : kind === 'clicks' ? await ask({ op: 'tap', id, clicks: opts.clicks, ...at, ...held }) : kind === 'pinch' ? await ask({ op: 'tap', id, pinch: opts.pinch, at: opts.at }) : kind === 'wheel' && (opts.fling || opts.hold || opts.release) ? await platformWheel(ask, id, opts, heldWheel) : kind === 'wheel' ? await ask({ op: 'tap', id, wheel: opts.wheel, ...(opts.gesture ? { gesture: true } : {}), ...at, ...held }) : kind === 'drop' ? await ask({ op: 'tap', id, drop: opts.drop }) : kind === 'dragenter' || kind === 'dragleave' ? await ask({ op: 'tap', id, [kind]: opts[kind] }) : kind === 'hover' ? await ask({ op: 'tap', id, hover: true }) : kind === 'press' ? await ask({ op: 'tap', id, ...guest, ...at, ...(opts.modifiers ? { modifiers: opts.modifiers } : {}) }) : kind === 'mediasession' ? await ask({ op: 'tap', id, mediaSession: opts.mediaSession, ...(opts.seconds != null ? { seconds: opts.seconds } : {}) }) : await ask({ op: 'type', id, text: opts.text, ...(opts.clipboard ? { clipboard: opts.clipboard } : {}), ...(opts.files ? { files: opts.files } : {}), ...(opts.image ? { image: opts.image } : {}), ...guest });
         if (r.error) throw new Error(r.error);

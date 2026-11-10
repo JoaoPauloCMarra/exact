@@ -1,4 +1,4 @@
-//! Entry plans beside the app plan, in one compatibility cohort.
+//! Entry plans beside the app plan, in one compatibility cohort (LLP 1126 D2).
 
 use serde_json::{json, Map, Value};
 use std::path::Path;
@@ -155,7 +155,7 @@ mod tests {
         assert!(!copied.join("typescript").exists());
 
         // Exercise the receipt's platform selection, not just emit's Boolean:
-        // the Mac extension needs the same module pair as iOS.
+        // the Mac extension needs the same module pair as iOS (LLP 1126.001 WP16).
         std::fs::write(dir.0.join("app.ts"), "").unwrap();
         let manifest = Manifest::read(&dir.0).unwrap();
         let plan = contract::compile_path(&dir.0.join("app.contract")).unwrap();
@@ -196,7 +196,7 @@ mod tests {
             }
             assert_eq!(compat.embedded["trust"], "development");
             // An updater-free production bake: no trust in its cohort, the
-            // build's beside it.
+            // build's beside it (LLP 1030 D4).
             compat.inputs = json!({"trust":null,"store":{"L":"0"}});
             let embed = (platform, target);
             crate::receipt::emit(
@@ -286,7 +286,7 @@ mod tests {
         }
     }
 
-    /// The watch entry is its own live plan in the plans map,
+    /// The watch entry (LLP 1126.002 D4) is its own live plan in the plans map,
     /// at `plans/watch.plan`, and no widget: `widgets.json` does not list it.
     #[test]
     fn the_watch_entry_bakes_its_plan_beside_no_widget() {

@@ -1,4 +1,4 @@
-// The uploads a resource has asked, as the runner keeps
+// The uploads a resource has asked (LLP 1016.000 D10), as the runner keeps
 // them (runner/src/runner/uploads.rs): for each, the identifying arguments
 // it was asked at (not its `with` context) and how it stands, `t` its
 // ticket while on its way, `v` the answer it ended with, `failed`, or
@@ -40,7 +40,7 @@ export function uploadEnded(r, t, how) {
   r.marks = marks.map(m => over > 0 && (m.v !== undefined || m.failed) && over-- ? { args: m.args, gone: true } : m);
 }
 /** What `r` answers at arguments `a` its upload `mark` was asked at, in place of asking its source: its ticket goes on for
- * them (the same request), or it answers as it ended, while that still fits, or with its failure, or
+ * them (the same request, LLP 1054.000.000 D3), or it answers as it ended, while that still fits, or with its failure, or
  * that it was sent already. */
 export function uploadAnswer(r, mark, a, { take, fails, release }) {
   if (mark.t && mark.t === r.ticket) { r.ticket.args = a; return r.value; }
@@ -63,11 +63,11 @@ export const ledger = {
   at: uploadAt,
   answer: uploadAnswer,
   ends,
-  /** The same request goes on for newer arguments `a`: an upload's mark covers them too. What `r` shows meanwhile. */
+  /** The same request goes on for newer arguments `a` (D3): an upload's mark covers them too. What `r` shows meanwhile. */
   kept: (r, a) => { if (r.ticket.upload) uploadSent(r, a, r.ticket); return r.value; },
 };
 /** The identity of an upload's request (`exactUploadProgress`) among `fetch`'s arguments, which the same request for newer
- * arguments shares: its URL, method, headers, body (by length and FNV-1a), file, deadline and redirect mode. */
+ * arguments shares (D3): its URL, method, headers, body (by length and FNV-1a), file, deadline and redirect mode. */
 export function requestKey({ input, init, redirect }) {
   if (init?.exactUploadProgress !== true) return undefined;
   const request = typeof Request === 'function' && input instanceof Request ? input : null, body = init.body;

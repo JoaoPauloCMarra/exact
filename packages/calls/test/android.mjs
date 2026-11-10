@@ -1,9 +1,9 @@
-// @exact/calls on Android: the fixture app (`test/fixture`) built as the Canvas reader's
+// @exact/calls on Android (LLP 1133.033 §12 stage 4): the fixture app (`test/fixture`) built as the Canvas reader's
 // APK, which compiles the package's Kotlin against Core-Telecom and merges its manifest fragment. Checked: Core-Telecom
 // joins the app's one locked, verified Gradle graph (`--write-locks`, then a strict build), the roster binds the
 // implementation, `device.calls` derives the `Call` service as `phoneCall|microphone` with `MANAGE_OWN_CALLS` and
 // `USE_FULL_SCREEN_INTENT`, and the notification's receiver is compiled in under its name. It drives nothing: no
-// emulator boots on the Mac that wrote it, so drives 4 to 9 with `--bind calls` and drive 13 are owed.
+// emulator boots on the Mac that wrote it, so drives 4 to 9 with `--bind calls` and drive 13 are owed (LLP 1133.020).
 //
 // usage: bun packages/calls/test/android.mjs
 //   (an NDK of clang 18 or newer in ANDROID_NDK_HOME, and a JDK 17 or newer in JAVA_HOME)

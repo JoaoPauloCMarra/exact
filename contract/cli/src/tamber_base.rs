@@ -1,8 +1,8 @@
-//! The base scale on the wire (`tamber/1.14`): `describe`'s `base` and
-//! `targets`, `resolve` and `explain` of a base name, and `explain`'s `bases`
-//! for a token whose values reach one. Every cell is read from the kernel's
-//! scale table (`style::scale`), never a copy; an app's own line for a base
-//! name is its `override`.
+//! The base scale on the wire (LLP 1121 stage 11 D, `tamber/1.14`; theme2's
+//! base-row shape): `describe`'s `base` and `targets`, `resolve` and `explain`
+//! of a base name, and `explain`'s `bases` for a token whose values reach one.
+//! Every cell is read from the kernel's scale table (`style::scale`), never a
+//! copy; an app's own line for a base name is its `override`.
 
 use super::*;
 use exact_kernel::style::scale::{self, ScaleSource, ScaleValue};
@@ -25,10 +25,11 @@ fn value(v: ScaleValue) -> String {
     }
 }
 
-/// A length over unset base names (an alias of one, or an expression) in
-/// each scale column, as the base rows write a column's value (*1.15*): each
-/// folded by the kernel's own per-column evaluator, never a copy; a column
-/// it doesn't fold in is left out. None when the text reads no base name.
+/// A length over unset base names (an alias of one, or an expression,
+/// stage 12 B2) in each scale column, as the base rows write a column's
+/// value (*1.15*, stage 12 D1): each folded by the kernel's own
+/// per-column evaluator, never a copy; a column it doesn't fold in is left
+/// out. None when the text reads no base name.
 fn columns_of(text: &str) -> Option<Value> {
     if scale::named_in(text).is_empty() {
         return None;
@@ -63,8 +64,8 @@ fn columns_of(text: &str) -> Option<Value> {
 }
 
 /// The scale columns a shadow is answered in: every one but the
-/// terminal's, which draws no shadow: the one column left out that the
-/// kernel does fold in.
+/// terminal's, which draws no shadow (theme2's 20:50 Q1, the one exception
+/// to D1's "left out only where it doesn't fold").
 fn shadow_columns() -> impl Iterator<Item = (&'static str, exact_kernel::style::metrics::Column)> {
     scale::COLUMNS
         .into_iter()
@@ -80,9 +81,9 @@ fn shadow_text(text: &str, column: exact_kernel::style::metrics::Column) -> Opti
 }
 
 /// A shadow token's value over unset base names in each column but the
-/// terminal's, in the base rows' form (*1.16*): `{value}`, the whole
-/// shadow's text as that column's host reads it ([`shadow_text`]); a column
-/// it doesn't fold in is left out. None for a shadow with no length over an
+/// terminal's, D1's form (*1.16*): `{value}`, the whole shadow's
+/// text as that column's host reads it ([`shadow_text`]); a column it
+/// doesn't fold in is left out. None for a shadow with no length over an
 /// unset base (px only, or over a base the app sets, folded to px).
 fn shadow_columns_of(s: &exact_tamber::Shadows) -> Option<Value> {
     use exact_tamber::ShadowLength;
@@ -248,7 +249,7 @@ fn bases_of(folding: &exact_tamber::Folding, name: &str) -> Vec<String> {
     out
 }
 
-/// The base names `name` reaches in each tuple (*1.16*), as
+/// The base names `name` reaches in each tuple (stage 13 D4, *1.16*), as
 /// the checker folded that tuple (`Checked::by_tuple`): the unset ones its
 /// value there reads bare, the set ones it names, and those of the tokens
 /// it names, in the same tuple, through any chain; a line no tuple selects
@@ -313,7 +314,7 @@ fn base_rows(
 
 impl Server {
     pub(super) fn describe(&self, request: &Value) -> Result<Value, Value> {
-        // The app's components' params fold with the design,
+        // The app's components' params (LLP 1121 D15) fold with the design,
         // so a dial only a param reads is read; listed by full name.
         let app = self.app_params();
         let all = app.tokens.as_slice();
@@ -365,7 +366,7 @@ impl Server {
             .map(|d| located(&file, d, &app))
             .collect();
         // Each icon's entry says which source each shipped target draws
-        // (*1.12*).
+        // (LLP 1121 stage 9 C, *1.12*).
         if let Some(icons) = ir["icons"].as_array_mut() {
             for entry in icons {
                 if let Some(icon) = folding.icons.iter().find(|i| entry["name"] == i.name) {
@@ -376,12 +377,12 @@ impl Server {
         // The base scale (*1.14*): every base name's row, this design's
         // overrides, and the targets the app ships with their columns.
         let (base, targets) = base_rows(self, request, &design)?;
-        // A package token's rows name its package and file; the package designs listed (*1.14*).
+        // A package token's rows name its package and file; the package designs listed (*1.14*, D11).
         let text = snap
             .iter()
             .find(|(f, _, _)| *f == file)
             .map_or("", |(_, t, _)| t.as_str());
-        // Its icons' too (*1.16*).
+        // Its icons' too (stage 13, *1.16*).
         for rows in ["tokens", "icons"] {
             crate::tamber_packages::mark(
                 ir[rows].as_array_mut().map_or(&mut [][..], |r| &mut r[..]),
@@ -395,7 +396,7 @@ impl Server {
         Ok(out)
     }
 
-    /// A param's additions (*1.15*) to `out`, from the
+    /// A param's additions (stage 12 B2-levels, *1.15*) to `out`, from the
     /// one walker over `file`'s `text`; nothing for a token that is no
     /// param's.
     fn levelled(
@@ -491,18 +492,18 @@ impl Server {
             .iter()
             .find(|(f, ..)| *f == file)
             .map(|(_, t, _)| t.to_string());
-        // A param's (*1.15*): each tuple's winning level
+        // A param's (stage 12 B2-levels, *1.15*): each tuple's winning level
         // and the name there, and its levels, from the one walker.
         let app = self.app_params();
         let levelled = |out: &mut Value| self.levelled(&app, &file, text.as_deref(), &name, out);
-        // An icon: its sources, the same in every tuple.
+        // An icon (D10): its sources, the same in every tuple.
         if let Some(icon) = folding.icons.iter().find(|i| i.name == name) {
             let tuples: Vec<Value> = (0..folding.tuples)
                 .map(|t| json!({"modes": modes_of(&folding.design.axes, t), "kind": "icon", "sf": icon.sf, "material": icon.material, "svg": icon.svg}))
                 .collect();
             let mut out = json!({"token": name, "tuples": tuples, "files": files_json(snap)});
             levelled(&mut out);
-            // A package's icon names its package and file, as a token does (*1.16*).
+            // A package's icon names its package and file, as a token does (stage 13, *1.16*).
             crate::tamber_packages::fields(&app, snap, &file, &name, &mut out, false);
             return Ok(out);
         }
@@ -528,7 +529,7 @@ impl Server {
                             exact_tamber::Length::Rem(n) => ("rem", json!(n)),
                             exact_tamber::Length::Em(n) => ("em", json!(n)),
                             // An expression over base names is each
-                            // host's, as a bare one is.
+                            // host's, as a bare one is (stage 12 B2).
                             exact_tamber::Length::Named(_) | exact_tamber::Length::Base(_) => {
                                 ("named", Value::Null)
                             }
@@ -545,7 +546,7 @@ impl Server {
                     }
                     // Each shadow: its lengths in px (null for one over base
                     // names, whose text `length_texts` gives with every
-                    // other's; *1.15*) and its colour's CSS
+                    // other's; stage 12 B3, *1.15*) and its colour's CSS
                     // (null for a text shadow's currentcolor).
                     exact_tamber::Value::Shadow(s) => {
                         use exact_tamber::ShadowLength;
@@ -589,7 +590,7 @@ impl Server {
                         return json!({"modes": modes, "value": v.css(), "kind": "easing"});
                     }
                     // A type token's longhands as written (null: unsaid), a
-                    // family's stack (optional fields under 1.9).
+                    // family's stack (stage 6 C, optional fields under 1.9).
                     exact_tamber::Value::Type(t) => {
                         return json!({"modes": modes, "value": v.css(), "kind": "type", "style": t.style, "weight": t.weight, "size": t.size.css(), "leading": t.leading, "family": t.family});
                     }
@@ -631,7 +632,7 @@ impl Server {
     pub(super) fn explain(&self, request: &Value) -> Result<Value, Value> {
         // Each token's per-tuple names recorded, for `bases_by_tuple`.
         let (snap, folding, name) = exact_tamber::traced(|| self.lookup(request))?;
-        // An icon, an icon param's too (*1.12*).
+        // An icon, an icon param's too (D10, *1.12*).
         let app = self.app_params();
         // The design asked about (`file`), whose lines set the app's values.
         let design = optional(request, "file")?.unwrap_or_else(|| self.design.clone());
@@ -643,7 +644,7 @@ impl Server {
             crate::tamber_explain::icon(&self.dir, &design, &app, &snap, &folding, &name)
         {
             self.levelled(&app, &design, text.as_deref(), &name, &mut icon);
-            // A package's icon names its package and file, as a token does (*1.16*).
+            // A package's icon names its package and file, as a token does (stage 13, *1.16*).
             crate::tamber_packages::fields(&app, &snap, &design, &name, &mut icon, true);
             return Ok(icon);
         }
@@ -704,12 +705,12 @@ impl Server {
         if let Some(c) = columns(None) {
             out["columns"] = c;
         }
-        // A param: where it is declared, its default as written, and
+        // A param (D15): where it is declared, its default as written, and
         // the design's line that sets the app's value, *1.12*.
         if let Some(p) = app.tokens.iter().find(|p| p.token == name) {
             out["param"] = crate::tamber_explain::param(&self.dir, &design, p, &app, &snap);
         }
-        // Its levels (*1.15*).
+        // Its levels (stage 12 B2-levels, *1.15*).
         self.levelled(&app, &design, text.as_deref(), &name, &mut out);
         crate::tamber_packages::fields(&app, &snap, &design, &name, &mut out, true);
         Ok(with(out))

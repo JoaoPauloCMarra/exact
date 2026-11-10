@@ -5,7 +5,7 @@
 use super::Event;
 use exact_plan::{EventKind, Value};
 
-/// The platform's history swipe as the host tracks it:
+/// The platform's history swipe as the host tracks it (LLP 1115.000 D5.5):
 /// AppKit's phase of the gesture, the way a lift would step, its
 /// `gestureAmount` along that way, which `ended` is about to take, and where
 /// the pointer was as it began.
@@ -68,8 +68,8 @@ impl HistorySwipe {
 impl Event {
     /// Decode ABI kind 6 (`key`), 43 (`keyup`) or 44 (`keycapture`),
     /// 10 (contextmenu, its point when it has one), 13
-    /// (scroll), 19 (media), 20 (pan), 21 (select), 28 (panrelease), 29 to
-    /// 31 (the pointer's down, up and move), 32 to 34
+    /// (scroll), 19 (media), 20 (pan), 21 (select), 28 (panrelease, LLP
+    /// 1057 §10.6), 29 to 31 (the pointer's down, up and move), 32 to 34
     /// (the clipboard's copy, cut and paste), 35 (`selectionchange`), 36
     /// (beforeunload), 37 (wheel), 38 (drop), 55 and 56 (a file drag's
     /// dragenter and dragleave), 57 (a paste with files), 59 (atompress),
@@ -96,20 +96,20 @@ impl Event {
                 .ok_or("invalid key event"),
             13 => Event::scroll_payload(payload).ok_or("invalid scroll coordinates"),
             19 => Event::media_payload(payload).ok_or("invalid media event"),
-            // 18 is reorder, 19 is media.
+            // @ref LLP 1043.000 §3 D8 — 18 is reorder, 19 is media.
             20 => Event::pan_payload(payload).ok_or("invalid pan deltas"),
             21 => Event::selection_payload(payload).ok_or("invalid Markdown selection"),
             28 => Event::pan_release_payload(payload).ok_or("invalid pan release velocity"),
-            // The pointer's record.
+            // LLP 1056 §3 stage 3: the pointer's record.
             29..=31 => Event::pointer_payload(kind, payload).ok_or("invalid pointer event"),
             // The clipboard's copy, cut and paste, with its plain text.
             32..=34 => Event::clipboard_payload(kind, payload).ok_or("invalid clipboard event"),
             // The reader's selection inside a `text`: its offsets, then its text.
             35 => Event::selection_change_payload(payload).ok_or("invalid text selection"),
             10 => Event::contextmenu_payload(payload).ok_or("invalid contextmenu event"),
-            // DOM's beforeunload, wheel and drop.
+            // Studio diary R17, R3, R19: DOM's beforeunload, wheel and drop.
             36 => Ok(Event::Beforeunload),
-            // DOM's `scrollend`: no payload.
+            // DOM's `scrollend`: no payload (LLP 1005, 2026-10-13).
             51 => Ok(Event::Scrollend),
             60 => HistorySwipe::parse(payload)
                 .map(Event::Historyswipe)
@@ -129,7 +129,7 @@ impl Event {
                 })
                 .ok_or("invalid drag event"),
             57 => Event::paste_files_payload(payload).ok_or("invalid clipboard event"),
-            // An iframe's guest: its event, then the record.
+            // @ref LLP 1020.002 D2, D5 — an iframe's guest: its event, then the record.
             58 => super::event::frame_navigation::FrameNavigation::parse(payload)
                 .map(|(kind, n)| Event::FrameNavigation(kind, Box::new(n)))
                 .or_else(|| {
@@ -137,7 +137,7 @@ impl Event {
                         .map(|(kind, v)| Event::FrameRecord(kind, Box::new(v)))
                 })
                 .ok_or("invalid frame event"),
-            // A press on an inline atom.
+            // A press on an inline atom (LLP 1045.000 D7).
             59 => super::AtomEvent::parse(payload)
                 .map(Event::Atompress)
                 .ok_or("invalid atom press"),
@@ -164,7 +164,7 @@ impl Event {
                 .map(Event::Resize)
                 .ok_or("invalid resize rect"),
             // A text field's `input`, `change` and `select` with its
-            // selection.
+            // selection (x2apps codeedit #2).
             40..=42 | 48 | 52 => {
                 Event::field_payload(kind, payload).ok_or("invalid field selection")
             }
@@ -187,7 +187,7 @@ impl Event {
     }
 
     /// Decode host kind 21: formats, mixed (0/1), unavailable, the selected
-    /// atom's source (never a line break), then the link
+    /// atom's source (LLP 1045.000 D3; never a line break), then the link
     /// remainder, separated by newlines. Token lists never contain newlines;
     /// a target may, so the final remainder is kept verbatim.
     pub fn selection_payload(payload: &str) -> Option<Self> {
@@ -218,13 +218,13 @@ impl Event {
     pub fn media_payload(payload: &str) -> Option<Self> {
         let (name, value) = payload.split_once('\n')?;
         let kind = EventKind::from_name(name)?;
-        // The media session's six sit after `drop`: listed,
+        // The media session's six sit after `drop` (LLP 1098 D11): listed,
         // so the `loadedmetadata`…`canplay` run never admits them. `resize`
         // sits between `drop` and the six; it is not a media event.
         let session = super::media_session::ACTIONS.contains(&kind);
-        // `fullscreenchange` is listed after them too: a boolean.
+        // `fullscreenchange` (LLP 1042) is listed after them too: a boolean.
         let fullscreen = kind == EventKind::Fullscreenchange;
-        // An image's picture in picture, later still: entering
+        // An image's picture in picture (LLP 1042 §9), later still: entering
         // and leaving carry nothing, a failure its reason.
         let floating = matches!(
             kind,

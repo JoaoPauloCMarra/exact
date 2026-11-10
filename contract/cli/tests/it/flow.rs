@@ -1,4 +1,4 @@
-//! Flow authoring and state-to-layout commits.
+//! @ref LLP 1043.000 §3 D1–D4 — authoring and state-to-layout commits.
 use exact_kernel::{FlowShape, Kernel, Offer, WrapFlow};
 use exact_plan::Value;
 use exact_runner::{DataError, DataSource, Runner};
@@ -14,7 +14,7 @@ fn source(attrs: &str) -> String {
 }
 #[test]
 fn auto_values_follow_each_rows_codec_and_vocabulary() {
-    // Enum keywords use the kernel's vocabulary.
+    // @ref LLP 1017.000 P1a — enum keywords use the kernel's vocabulary.
     for (property, reason) in [
         ("display", "one of \"block\", \"flex\", \"grid\", \"none\""),
         ("font-size", "number"),

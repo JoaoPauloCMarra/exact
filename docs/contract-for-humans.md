@@ -3,10 +3,10 @@
 Contract describes an application's interface, state, and interactions. Exact
 compiles it for the web and native hosts. You write the view once, in CSS's names
 and layout; what you leave unsaid (controls, colour, type, how a press or a scroll
-feels) is each platform's own. Network access, persistent
+feels) is each platform's own (LLP 1115). Network access, persistent
 storage, and substantial computation belong in a TypeScript or Rust data module.
 
-This guide describes the current implementation, including
+This guide describes the implementation on `main` on 2026-10-02, including
 immutable action locals, record construction, inferred action effects, and
 component-level providers. The compiler and its tests are the authority.
 Older Exact examples with `writes` clauses or component `contract` blocks no
@@ -128,7 +128,7 @@ use Card, Badge as StatusBadge from "./parts.contract"
 use Item, pulse from "./models.contract"
 ```
 
-Each file has its own names: its own declarations, and the names its
+Each file has its own names (LLP 1091): its own declarations, and the names its
 `use` lines list. Nothing comes along unnamed: if `parts.contract` uses `Icon`,
 `Card` still works, but this file writes `Icon()` only after naming it too,
 from `./icons.contract` or from `./parts.contract`, which passes on what it
@@ -670,7 +670,7 @@ with, until the reply before it has landed and its `then` has run. The source
 sees one request at a time, `then` runs once per reply, and `pending(saved)`
 stays true while anything waits. Assigning `saved = none` forgets nothing under
 `queue`: every reply still lands. Keep newest-wins for a sign-in or a draft whose
-late reply should be dropped.
+late reply should be dropped (LLP 1092).
 
 For a mutation without `queue`, the action that sends `saved` must not also
 assign `saved = none`. Assignments commit after sends, so that reset can discard
@@ -697,7 +697,8 @@ changed. During a live replacement request, the prior displayed value may remain
 visible even when call arguments changed, so private-data views must gate it by
 owner and authorization. Neither call arguments nor `with` make a resource wait
 for an upstream request to succeed. The default web JS target keeps no persisted
-resource answers.
+resource answers; see
+[the platform scope](../llp/1027.005-resource-identity-and-request-context.rfc.md#d5--where-it-applies-and-the-gap-it-leaves).
 The minute must already contain the current sample for the first ask; a timer
 can update it thereafter. Use `refresh` or `refreshes` for values whose only job
 is forcing another ask. Await true asynchronous prerequisites, such as a valid
@@ -928,8 +929,8 @@ call outside them fails. The capabilities are:
   `then`. A failed read should fail its resource so Exact retains its last valid
   answer.
 - *`app.ts` imports local files and pure-JavaScript packages.* The bake bundles
-  a package's code (ESM or CommonJS, its `browser` build first), as a chat
-  app's `fflate` is. One that needs Node (`fs`, `Buffer`), the DOM or a native addon
+  a package's code (ESM or CommonJS, its `browser` build first), as Excord's
+  `fflate` is. One that needs Node (`fs`, `Buffer`), the DOM or a native addon
   is refused by name. An `import type` (or a name used only as a type) may
   reach any package's declarations, such as the rows `snapback4 types` writes
   to `snapback/generated/api.ts`, and every build checks against them.
@@ -1066,7 +1067,7 @@ kernel lays a table out as a grid of `auto` columns as wide as its content.
 Where columns share width (a span wider than the columns it covers, a table
 narrower than its content), the grid shares it equally and the browser in
 proportion to the columns' widths, so unequal columns can differ by a few
-points. macOS, Linux and Windows expose a table's, a row's
+points (LLP 1153 D7.3). macOS, Linux and Windows expose a table's, a row's
 and a cell's roles, and a description list's; iOS announces a table as a
 data table and a `dl` as a list, its rows and cells with no role of their
 own. A drawn range —
@@ -1126,7 +1127,7 @@ validation and button enablement follow typing. A text field fires `change` on
 Enter or blur; its handler should normalize the draft. A textarea commits when
 editing ends. Use `submit` for explicit submission.
 
-A text field is the platform's own by default: `input` with no type
+A text field is the platform's own by default (LLP 1104): `input` with no type
 or `text`, `email`, `password`, `search`, `tel`, `url`, `number`, and `textarea`
 outside the Markdown editor. On the web it inherits the page's font and
 colour, as a CSS reset does. Disabled and placeholder appearances are the
@@ -1283,7 +1284,7 @@ title, an optional second `text` (a value) or a `column` of two texts (a
 subtitle), and an optional trailing accessory — a `forward-chevron` or
 `checkmark` image, a checkbox or switch `input`, or a `button` holding only
 `image "symbol:info"`. `destructive` draws a row red. Any other row is custom
-and keeps its own views. A section written `background-color="transparent"` has no card: its rows sit on the list's background with no separators or corners, as a profile header does. That literal is the only `background-color` a section takes, and not beside a `class`; a section that gains and loses its card is two sections under `if`.
+and keeps its own views. A section written `background-color="transparent"` has no card: its rows sit on the list's background with no separators or corners, as a profile header does (LLP 1084 §6.2). That literal is the only `background-color` a section takes, and not beside a `class`; a section that gains and loses its card is two sections under `if`.
 
 ```text
 list appearance="auto" listStyle="inset-grouped" flex=1
@@ -1305,7 +1306,7 @@ cell's title and action. Explicit `appearance="auto"` makes one a custom native 
 iOS draws UIKit's own list (`UICollectionView` with a list configuration); the
 other hosts draw a sheet measured from it, and your own attributes replace any
 of its rows. A section's own `margin-top` or `margin-bottom` is the space iOS
-leaves there too, collapsed with its neighbour's as on the web.
+leaves there too, collapsed with its neighbour's as on the web (LLP 1084 §6.4).
 The rest of a section's layout is the platform's, its rows one under another
 across the card: besides those margins a section takes only `display` `"block"`
 or `"none"` of its own layout, written or from its `class`, and the compiler
@@ -1314,9 +1315,10 @@ A row is as wide as its card, `border-box`, with the cell's insets as its
 padding, so `width="100%"` keeps it in the card. The separator under it is the
 platform's, in the platform's colour: `border-bottom-color` alone does not
 recolour it; a bottom border you write (or `border-bottom-style="none"`) takes
-its place under that row, except on iOS under a row UIKit draws as
+its place under that row (LLP 1084 D7), except on iOS under a row UIKit draws as
 a standard cell, which keeps UIKit's line and draws no border of yours.
-See [the grouped-list fixture](../scripts/fixtures/grouped-list.contract).
+See [the grouped-list fixture](../scripts/fixtures/grouped-list.contract)
+and LLP 1084.
 
 ## Navigation and documents
 
@@ -1388,7 +1390,8 @@ smaller and larger side), as CSS's `vh` is the viewport's and never a
 dialog's, so `height: 50vh` is half the screen at any sheet height
 and `min-height: 100vh` opens the sheet at its tallest. A route that scrolls itself is measured by what it scrolls,
 laid out in the sheet, so give its rows `flex-shrink: 0`. macOS, the web and
-Linux show a modal route as authored and ignore the detent.
+Linux show a modal route as authored and ignore the detent
+([LLP 1075.003](../llp/1075.003-native-platform-control-merged.plan.md) §9.11).
 
 `path("item", value)` checks the route and encodes its parameters. Always build
 locations with it: a template literal as a location is refused and a string
@@ -1410,9 +1413,11 @@ ordinary `scroll` for an inner scrollport; both need a bound. Route rows can
 declare `render`, `activate`, `paint` and `pages` policies; these interact with
 the site's build/render pipeline, not just its client-side view. Leave `activate`
 unsaid unless a page needs otherwise: a rendered page then loads no script until
-the reader acts, when nothing on it needs the runtime sooner. Follow
-[the document corpus](../contract/corpus/document.contract) and
-[the document tests](../contract/cli/tests/it/document.rs) for accepted policy
+the reader acts, when nothing on it needs the runtime sooner
+([LLP 1048.007](../llp/1048.007-pages-that-wait-for-the-reader.rfc.md)). Follow
+[the document corpus](../contract/corpus/document.contract),
+[the document tests](../contract/cli/tests/it/document.rs) and
+[LLP 1048.003](../llp/1048.003-documents-in-contract.spec.md) for accepted policy
 values and serving behavior. A compiled interface alone is not a deployed website.
 
 ## Time, motion, and geometry
@@ -1458,7 +1463,7 @@ The timer exists while `toast != ""` holds, as an `if` arm's nodes do, and a new
 gets its whole five seconds. Nothing runs when the gate changes, and an idle task
 keeps no host awake. The action runs at the deadline exactly, so it clears the
 toast without testing the time again. Gates and keys read state, never `performanceNow()`
-.
+(LLP 1092).
 
 `performanceNow()` reads milliseconds since this launch of the app on the runner's clock (it
 restarts at 0 on every launch; the driver's clock under the agent); it is not a date, and
@@ -1604,7 +1609,8 @@ for the app to honor, not automatic engine policy. `displayMode: string` reads
 CSS's current `display-mode`: the browser's media query on the web,
 `fullscreen` or `standalone` for the window on macOS, and `standalone` on
 other native hosts. `navigationType` is how the browser loaded the page
-(`navigate`, `reload` or `back_forward`), and empty in a native app. Available fields are documented beside their source validation; start with [the viewport corpus](../contract/corpus/viewport.contract).
+(`navigate`, `reload` or `back_forward`), and empty in a native app. Available fields are documented beside their source validation and
+[the viewport design](../llp/1039-viewport-facts.rfc.md); start with [the viewport corpus](../contract/corpus/viewport.contract).
 
 Localized strings live in the app's `strings/<locale>.json` files. Author calls
 such as `t("greeting", name=person.name)`, with `{name}` in the table value. The
@@ -1668,7 +1674,7 @@ payload type, current action binding, and whether the node exists.
 `app.json` also controls delivery policy. `bun scripts/deploy.mjs <app>` is a
 dry run, which expects a committed tree (or `--dirty`); publication uses `--yes`,
 an origin, a signing key, and the configured signed streams. Read
-[the deploy script](../scripts/deploy.mjs) and its signing module before changing
+[LLP 1030.000](../llp/1030.000-dev-server-as-deployer.rfc.md) before changing
 trust or publishing. Writing Contract does not require inventing a deployment
 service. To put an iOS app on someone's iPhone, run `bun exact.mjs share`: it
 builds the app and prints an AppDrop link that installs it with their own Apple ID.
@@ -1689,6 +1695,7 @@ builds the app and prints an AppDrop link that installs it with their own Apple 
 | Text flowing around shapes | [Text Flow](../apps/textflow/app.contract), [Reflow](../apps/reflow/app.contract) |
 | All language forms | [grammar reference](contract-grammar.md) |
 
-Read current source examples rather than older design notes: only the current
-compiler decides what it accepts. When the compiler refuses something, keep its diagnostic id and
+Read current source examples rather than predecessor design documents. A feature
+in `llp/research/` is historical evidence, not proof that the current compiler
+accepts it. When the compiler refuses something, keep its diagnostic id and
 source range: its suggested accepted form is often the quickest next step.

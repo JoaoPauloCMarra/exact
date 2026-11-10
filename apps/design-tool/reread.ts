@@ -1,4 +1,4 @@
-// A design read again after writes: describe, then a
+// A design read again after writes (the third pass's #5): describe, then a
 // `resolve` only for the tokens the writes since the last whole read moved,
 // the rest that read's answers, then hello. A full read is a resolve per
 // token, at the one design server behind each other (the clone's 267 took
@@ -32,7 +32,7 @@ const outlineOf = (ok: any) => JSON.stringify([ok.ir.axes, ok.ir.tuples, ok.ir.t
 /** The read `described` (describe's answer, sent after event `seq` of run
  * `epoch`) and its `answers` (a resolve's per token, in the IR's order),
  * kept for the next. An answer kept is one of describe's revision: a tuple
- * per column, each the IR's value for it (its `values` and `entries`). One
+ * per column, each the IR's value for it (D5's `values` and `entries`). One
  * that is not (a package's design moved and moved back between describe and
  * its resolve, which no `files` digest shows) keeps no entry, so the next
  * read resolves it again. */
@@ -71,8 +71,8 @@ export function again(kept: Kept | undefined, epoch: string, described: any, cha
 const BATCH_NAMES = 1024;
 
 /** Each of `names`' `resolve`, as one per name answers it (a refused one
- * `{error, reply: {error}}`): one `resolve` with `tokens` (tamber/1.17), one
- * snapshot and one fold at the server; else, from a
+ * `{error, reply: {error}}`): one `resolve` with `tokens` (tamber/1.17, the
+ * third pass's #5 B), one snapshot and one fold at the server; else, from a
  * server before it, one per name, four at a time (a browser keeps
  * connections for the long poll and the other reads), until `still` is
  * false: none once it is. */

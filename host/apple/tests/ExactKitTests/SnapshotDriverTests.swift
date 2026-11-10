@@ -1,8 +1,9 @@
-// The snapshot driver over real entry plans, rendered in-process with
-// `ImageRenderer` as a hand-built SwiftUI baseline renders itself: the same
-// family frames, content margins, container stand-in and mode emulation, so
-// the two sets of PNGs compare. The 3x PNGs go to `EXACT_WP4_OUT` for the
-// eye; the comparison is at 1x, cropped to the content region
+// The snapshot driver (LLP 1126.000 WP4) over real entry plans, rendered
+// in-process with `ImageRenderer` as the hand-built baseline
+// (`spike/1126-baseline`, `Host/Renderer.swift`) rendered itself: the same
+// family frames, content margins, container stand-in and mode emulation,
+// so the two sets of PNGs compare. The 3x PNGs go to `EXACT_WP4_OUT` for
+// the eye; the comparison is at 1x, cropped to the content region
 // (docs/testing.md), against `EXACT_WP4_BASELINE`'s `out/`, and bounded.
 import XCTest
 import SwiftUI
@@ -290,7 +291,7 @@ final class SnapshotDriverTests: XCTestCase {
         }
     }
 
-    /// The family's content size is the entry's viewport fact, given at
+    /// D3: the family's content size is the entry's viewport fact, given at
     /// boot and again at a resize, so one entry lays out per family by width
     /// and height as a page does.
     func testTheViewportFactChoosesTheLayoutByFamily() throws {
@@ -342,7 +343,7 @@ final class SnapshotDriverTests: XCTestCase {
         session.close()
     }
 
-    /// Each kernel line, drawn by the driver as one single-line `Text`
+    /// D4: each kernel line, drawn by the driver as one single-line `Text`
     /// in the font the kernel measured it in, is as wide in SwiftUI as the
     /// kernel said, at both text sizes, so the archive never re-breaks or
     /// truncates it: the ink of a line's view stays inside the kernel's
@@ -516,8 +517,8 @@ final class SnapshotDriverTests: XCTestCase {
         XCTAssertLessThan(abs(p1[0] - p2[0]) + abs(p1[2] - p2[2]), 24, "\(p1) \(p2)")
         let lowLeft = try sample(strips[3], x: 0.05, y: 0.9), highRight = try sample(strips[3], x: 0.95, y: 0.1)
         XCTAssertGreaterThan(lowLeft[0], highRight[0]); XCTAssertGreaterThan(highRight[2], lowLeft[2])
-        // A ramp interpolated in srgb-linear crosses as linear floats,
-        // read as such: the midpoint is brighter than an sRGB-space
+        // A ramp interpolated in srgb-linear crosses as linear floats (LLP
+        // 1100 D2), read as such: the midpoint is brighter than an sRGB-space
         // mix (128, 0, 128), and not the black a /255 reading would give.
         let mid = try sample(strips[4], x: 0.5, y: 0.5)
         XCTAssertGreaterThan(mid[0], 140, "\(mid)"); XCTAssertGreaterThan(mid[2], 140, "\(mid)")
@@ -668,7 +669,7 @@ final class SnapshotDriverTests: XCTestCase {
         XCTAssertEqual(SnapshotSemantics.traits(HeadlessSession.Node(id: 3, kind: "view", frame: .zero, props: ["accessibilityRole": "button"])), .isButton)
     }
 
-    /// A widget's even-odd icon (`symbolFillRule`) leaves its
+    /// Stage 14 C2: a widget's even-odd icon (`symbolFillRule`) leaves its
     /// same-wound hole clear; the same path nonzero fills it.
     func testAnEvenOddIconLeavesItsHoleClearInAWidget() throws {
         func centre(_ rule: String?, at o: CGPoint = .zero) throws -> Int {
@@ -690,7 +691,7 @@ final class SnapshotDriverTests: XCTestCase {
         }
     }
 
-    /// Raster decoding is bounded: a large image decodes to a
+    /// Raster decoding is bounded (D8): a large image decodes to a
     /// thumbnail no larger than the frame's pixels, its natural size kept.
     func testRastersDecodeAsBoundedThumbnails() throws {
         let dir = Self.out.appending(path: "assets")
@@ -706,7 +707,7 @@ final class SnapshotDriverTests: XCTestCase {
         XCTAssertNil(rasters.decode("big.png", roots: [dir.appending(path: "missing")], appGroup: nil, appID: nil, box: CGSize(width: 10, height: 10), fit: "fill", scale: 1))
     }
 
-    // MARK: The accented groups
+    // MARK: D5: the accented groups
 
     /// Text and symbols are the accented group, a raster the default one,
     /// desaturated unless the author asked for full colour: the decision,
@@ -746,10 +747,10 @@ final class SnapshotDriverTests: XCTestCase {
         }
     }
 
-    // MARK: Live time and progress views
+    // MARK: D6, against the shape WP3 is adding
 
     /// `time` and `progress` as the platform's live views, from synthetic
-    /// nodes (`datetime`, `format`; `start`, `end`): the
+    /// nodes in WP3's shape (`datetime`, `format`; `start`, `end`): the
     /// mapping (a countdown from the entry's date, fractional ISO 8601
     /// accepted, calendar formats as the kernel's text), and each leaf
     /// drawing inside its frame.

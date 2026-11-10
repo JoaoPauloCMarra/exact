@@ -94,19 +94,19 @@ pub struct ReorderFrame {
     pub terminal: bool,
     /// Surviving mounted wrappers only.
     pub wrappers: Vec<ReorderWrapper>,
-    /// Where the session stands.
+    /// Where the session stands (LLP 1094 D4, D8).
     pub phase: ReorderPhase,
-    /// How a drop's hold ended, once it has.
+    /// How a drop's hold ended, once it has (LLP 1094 D8).
     pub ending: Option<ReorderEnding>,
     /// The list a drop lands in: the source's own until another grouped
-    /// list takes the dragged row's centre.
+    /// list takes the dragged row's centre (LLP 1094 D7).
     pub target: Option<NodeKey>,
     /// The mounted wrapper that now holds the dragged row, in whichever
-    /// grouped list holds it: where a ghost lands.
+    /// grouped list holds it: where a ghost lands (LLP 1094 D6, D8).
     pub row: Option<NodeKey>,
 }
 
-/// Where a reorder session stands.
+/// Where a reorder session stands (LLP 1094 D4, D8).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ReorderPhase {
     /// The preview follows the contact (or the keys).
@@ -134,7 +134,7 @@ impl ReorderPhase {
     }
 }
 
-/// How a drop's hold ended.
+/// How a drop's hold ended (LLP 1094 D8).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReorderEnding {
     /// The row is in a grouped list: where it was dropped, or where the
@@ -158,7 +158,7 @@ impl ReorderEnding {
     }
 }
 
-/// One keyboard or custom-action move: the gap one row up or
+/// One keyboard or custom-action move (LLP 1094 D9): the gap one row up or
 /// down, or the same index in the previous or next grouped list.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReorderStep {
@@ -238,7 +238,7 @@ impl ReorderGeometry {
     }
     fn validate(&self) -> Result<(), super::FeedbackError> {
         // `scroll_top` is a collection's offset: negative in the padding
-        // before the first row.
+        // before the first row (LLP 1010 §6.9).
         if self.scroll_top.is_finite()
             && self.scroll_top.abs() <= f32::MAX as f64
             && [

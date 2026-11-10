@@ -13,7 +13,7 @@
 // geometry, so these are assertions about a decision: no window, no run
 // loop, no animation, no clock. Nothing here can flake on timing.
 //
-// `rules/RULES.md` §Loop shape
+// @ref LLP 1033 D4a, LLP 1010 (nested chaining), `rules/RULES.md` §Loop shape
 #if os(macOS)
 import AppKit
 import XCTest
@@ -101,15 +101,15 @@ final class ScrollRoutingTests: XCTestCase {
         XCTAssertNil(removed?.superview, "the obsolete mouse target leaves after release")
     }
 
-    /// A thread change under a press on a timeline's empty area: a batch
-    /// replaces the panel the scroll node is in, and the node is freed. AppKit
-    /// asks the scroll view to leave as it frees the node (`-[NSView
-    /// _finalize]`); one that stayed would reach its own dealloc with a
-    /// superview, which AppKit raises. With no node hearing the pointer the
-    /// node is freed in the batch; with an ancestor that does, at the up that
-    /// ends the hold. AppKit's calls are made directly, as
-    /// `GesturePrecedenceMacTests` makes them: a test's window ordered in keeps
-    /// the removed views past the batch.
+    /// The T3 Code clone's abort on a thread change under a press on its
+    /// timeline's empty area (X87): a batch replaces the panel the scroll
+    /// node is in, and the node is freed. AppKit asks the scroll view to
+    /// leave as it frees the node (`-[NSView _finalize]`); one that stayed
+    /// would reach its own dealloc with a superview, which AppKit raises.
+    /// With no node hearing the pointer the node is freed in the batch;
+    /// with an ancestor that does, at the up that ends the hold. AppKit's
+    /// calls are made directly, as `GesturePrecedenceMacTests` makes them:
+    /// a test's window ordered in keeps the removed views past the batch.
     func testAnEmptyScrollPortFreedUnderAPressGoesWithItsNode() throws {
         _ = NSApplication.shared
         clicksArriveAsInTheKeyWindow()
@@ -167,7 +167,7 @@ final class ScrollRoutingTests: XCTestCase {
             XCTAssertEqual(scroll == nil, !hears)
             // No up for that press: AppKit sends it to no view, the one
             // pressed having left the window. The next click is on the new
-            // panel, and its up ends a hold.
+            // panel, and its up ends a hold (#519).
             try autoreleasepool {
                 let button = try hit()
                 XCTAssertTrue(button === p.views[5])
@@ -236,7 +236,7 @@ final class ScrollRoutingTests: XCTestCase {
     }
 
     /// A wheel with no phases is a mouse wheel: AppKit scrolls it, by its own
-    /// step, as it scrolls the page (it was clamped here
+    /// step, as it scrolls the page (LLP 1115.000 D8.2; it was clamped here
     /// by hand, 40 points a notch). Only the agent's is applied here, at
     /// once, which is what a drive can read back without racing AppKit.
     func testAPhaselessWheelOnAContainedAxisIsAppKitsAndStopsAtItsEnd() {
@@ -256,7 +256,7 @@ final class ScrollRoutingTests: XCTestCase {
         XCTAssertEqual(sv.routing(dx: 0, dy: -50, phased: true, in: none), .drop)
     }
 
-    /// An `auto` axis with room is scrolled by AppKit, a
+    /// LLP 1115.000 D8.2: an `auto` axis with room is scrolled by AppKit, a
     /// trackpad's gesture and a mouse's wheel alike (it was scrolled here by
     /// hand, so it had no rubber band and a wheel step of its own). What
     /// begins at its end still goes to the scroller around it, which
@@ -273,7 +273,7 @@ final class ScrollRoutingTests: XCTestCase {
         }
     }
 
-    /// The driver's trackpad comes through the window server,
+    /// LLP 1142 D3: the driver's trackpad comes through the window server,
     /// marked, and AppKit runs it under the agent too; it is counted where a
     /// scroller hands it over, which is how the driver confirms delivery.
     func testTheDriversMarkedWheelIsAppKitsUnderTheAgent() throws {
@@ -327,10 +327,10 @@ final class ScrollRoutingTests: XCTestCase {
         XCTAssertEqual(scroller(containX: true).routing(dx: -50, dy: -50, phased: true, in: end), .chain)
     }
 
-    /// A phase-less tick is not split (Chrome's rule): over a strip that
-    /// scrolls only sideways, a mostly-vertical diagonal still scrolls the
-    /// strip by its x and drops its y, and a purely vertical tick chains to the
-    /// feed.
+    /// A phase-less tick is not split (LLP 1070 G2, Chrome's rule, its
+    /// §2): over a strip that scrolls only sideways, a mostly-vertical
+    /// diagonal still scrolls the strip by its x and drops its y, and a
+    /// purely vertical tick chains to the feed.
     func testAPhaselessTickGoesToTheDeepestScrollerThatCanTakeAnyOfIt() {
         let strip = scroller()
         strip.scrollsY = false
@@ -341,11 +341,11 @@ final class ScrollRoutingTests: XCTestCase {
         // At its end the strip takes no more x: the tick chains.
         let end = ChainingScrollView.Extent(maxX: 400, maxY: 0, origin: NSPoint(x: 400, y: 0))
         XCTAssertEqual(strip.routing(dx: -60, dy: -100, phased: false, in: end), .chain)
-        // A gesture still goes by its dominant axis (a gesture latches).
+        // A gesture still goes by its dominant axis (latching is LLP 1070 G1).
         XCTAssertEqual(strip.routing(dx: -60, dy: -100, phased: true, in: sideways), .chain)
     }
 
-    /// A gesture AppKit runs is AppKit's whole. Once an
+    /// LLP 1115.000 D8.2: a gesture AppKit runs is AppKit's whole. Once an
     /// `auto` scroller owns it, every event of it goes to AppKit: past the
     /// scroller's end, where AppKit rubber-bands and does not hand the rest
     /// to the page, and the zero-delta lift and momentum's end, which its
@@ -370,7 +370,7 @@ final class ScrollRoutingTests: XCTestCase {
         XCTAssertEqual(ChainingScrollView.latched(&latch, view: outer, began: false, over: false, moving: false, routing: .drop), .appKit, "and the page gets the lift")
     }
 
-    /// A trackpad gesture latches (Chrome's rule): the first
+    /// A trackpad gesture latches (LLP 1070 G1, Chrome's rule): the first
     /// scroller that takes a moving event owns the rest of the gesture, its
     /// zero-delta lift and momentum included; an inner list that reaches
     /// its end mid-gesture does not hand the rest to the page. Here scrolled
@@ -412,7 +412,7 @@ final class ScrollRoutingTests: XCTestCase {
     }
 
     /// The readers' panes, as they are declared: `overflow-x: hidden` with
-    /// `overscroll-behavior: contain`. A sideways gesture must
+    /// `overscroll-behavior: contain` (LLP 1033 D4). A sideways gesture must
     /// not escape to the page, and must not scroll the pane either.
     func testAReaderPaneNeitherScrollsSidewaysNorLeaks() {
         let sv = scroller(containX: true, containY: true)
@@ -423,7 +423,7 @@ final class ScrollRoutingTests: XCTestCase {
         XCTAssertEqual(sv.routing(dx: 0, dy: -80, phased: false, in: onlyVertical), .appKit)
     }
 
-    /// A mouse wheel's notch is AppKit's to apply, by its
+    /// LLP 1115.000 D8.2: a mouse wheel's notch is AppKit's to apply, by its
     /// own line (`verticalLineScroll`, 10 points unless set; the hand-rolled
     /// tick was 40). AppKit applies it on its own frames, some tens of
     /// milliseconds on, which a test off screen cannot wait on steadily; the

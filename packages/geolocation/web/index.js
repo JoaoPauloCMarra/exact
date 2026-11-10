@@ -1,16 +1,16 @@
-// @exact/geolocation on the web: the browser's
+// @exact/geolocation on the web (LLP 1133.002 D15): the browser's
 // `navigator.geolocation` and `navigator.permissions`, answered in the
 // interface's shapes. The page runtime (host/web-js/modules.js) calls it
 // outside the agent; under the agent the runner's substitute answers and
 // this is never loaded.
 //
-// - An option the call omits stays the browser's own; one it writes is
+// - An option the call omits stays the browser's own (D2); one it writes is
 //   passed as written.
-// - `accuracy` is `unknown`: the web says nothing of approximate location.
+// - `accuracy` is `unknown`: the web says nothing of approximate location (D8).
 // - One `watchPosition` registration serves every reader; each new fix
 //   announces `geolocation.watchPosition`, so readers are asked again, and
-//   `release` clears it when the last reader goes.
-// - `requestPreciseLocation` is `NotSupportedError` on the web.
+//   `release` clears it when the last reader goes (D5).
+// - `requestPreciseLocation` is `NotSupportedError` on the web (D10).
 // - The state is live: `PermissionStatus`'s change, and, since WebKit sends
 //   none, a look again when the page returns to the foreground (where the
 //   person comes back from the browser's settings).
@@ -31,7 +31,7 @@ function position(p) {
 
 const failure = e => ({ error: CODES[e?.code] || 'POSITION_UNAVAILABLE' });
 
-/** The written options, and only those. */
+/** The written options, and only those (D2). */
 function options(args) {
   const out = {};
   for (const k of ['enableHighAccuracy', 'timeout', 'maximumAge']) if (args?.[k] != null) out[k] = args[k];

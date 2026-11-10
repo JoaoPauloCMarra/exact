@@ -1,4 +1,4 @@
-//! Text fields the shell hosts, against a stand-in for
+//! Text fields the shell hosts (LLP 1115.001 D8), against a stand-in for
 //! Android's reader: a shell on the test's own thread whose field sets a
 //! character half its font's size wide and a line one and a quarter of it
 //! tall. What is held here is the presenter's side of the boundary: a field
@@ -366,7 +366,7 @@ fn an_edit_is_the_fields_text_and_the_app_answers_it_by_its_number() {
     assert_eq!(log(&p), heard, "the command's `select`, and no `input`");
 }
 
-/// The app hears `input` at every change, the
+/// LLP 1115.000 §5, ruling 6: the app hears `input` at every change, the
 /// composing text included, and a value it writes meanwhile is held, the
 /// last one, until the composition ends.
 #[test]
@@ -499,7 +499,7 @@ fn a_field_keeps_its_identity_while_its_node_lives() {
     assert_eq!((back[0].generation, back[0].seq), (0, 1));
     assert_eq!((back[0].rect, back[0].value.as_str()), (at, "kept"));
     assert_eq!(p.field_selection(first).start, 2, "and its caret");
-    // Its node renewed for another row's item: another field.
+    // Its node renewed for another row's item (LLP 1078): another field.
     p.hosted_renewed(&[first]);
     let renewed = told(&mut p);
     assert_eq!((renewed[0].generation, renewed[0].seq), (1, 0));

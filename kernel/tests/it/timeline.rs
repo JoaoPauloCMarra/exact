@@ -1,4 +1,4 @@
-//! Drag timelines through the kernel: the four
+//! Drag timelines through the kernel (LLP 1057.003 D1, D2, D4): the four
 //! rows parse as CSS text, refuse what is not their grammar, round-trip
 //! through EXWF, and reach the engine with the node's other motion rows, so
 //! a consumer follows its source's hold in the frame it moves, is handed
@@ -47,7 +47,7 @@ fn tree(k: &mut Kernel) -> CommitReceipt {
             create(1),
             create(SOURCE),
             create(CONSUMER),
-            // The two are siblings: their parent scopes the name.
+            // The two are siblings: their parent scopes the name (D4).
             Op::SetStyle {
                 id: 1,
                 patch: rows(&[(StyleId::TimelineScope, "--dismiss")]),

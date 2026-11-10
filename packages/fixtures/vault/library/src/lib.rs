@@ -1,4 +1,4 @@
-//! @fixture/vault's library, behind a C ABI as a package's prebuilt library is: it
+//! @fixture/vault's library, behind a C ABI as a package's prebuilt library is (LLP 1154 D3 "The library"): it
 //! carries its own Rust runtime and its own SQLite (rusqlite's bundled one), and exports these three functions alone.
 //! One caller at a time; nothing unwinds across the boundary (the release profile aborts on panic).
 

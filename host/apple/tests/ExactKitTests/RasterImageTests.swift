@@ -193,9 +193,9 @@ final class RasterImageTests: XCTestCase {
         XCTAssertThrowsError(try RasterMetadata.validated(width: 100000, height: 100000, orientation: 1, encodedBytes: 20, headerBytes: 20))
     }
     /// A whole file no decoder here reads is its format, which the image's
-    /// `error` names; a prefix too short to size stays the
+    /// `error` names (LLP 1011 §4); a prefix too short to size stays the
     /// header limit.
-    /// An SVG file is a picture: its header gives the natural
+    /// An SVG file is a picture (LLP 1011.001): its header gives the natural
     /// size in CSS pixels, the plan may exceed that size (a 3× screen gets a
     /// 3× drawing), under `fill` the plan is the box's own ratio with the
     /// picture letterboxed inside as the browser does, and the pixels are the

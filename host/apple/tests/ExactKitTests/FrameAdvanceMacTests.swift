@@ -5,8 +5,8 @@ import XCTest
 
 /// A display frame that advances to a deadline whose commit shows nothing
 /// skips the presenter's pass, as a timer's does: a `sent` reader is
-/// answered at each MIDI message's time, and a sequencer app's
-/// activity log, off screen while it plays, would cost the pass at every note.
+/// answered at each MIDI message's time (LLP 1125 D6), and euxy's activity
+/// log, off screen while the sequencer plays, cost the pass at every note.
 final class FrameAdvanceMacTests: XCTestCase {
     private static let plan: Result<Data, Error> = Result {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

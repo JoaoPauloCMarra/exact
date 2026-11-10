@@ -1,9 +1,9 @@
-//! The app's value of a param: a line of the design's `params` block, which
-//! `set-param` writes and `unset-param` removes (undoing the first restores the
-//! component's default), checked against the app's params and their ranges,
-//! classed `live` (or `rebuild` for a duration), folded into the build, and
-//! read by `resolve`, `explain`, `uses` and `describe` by the param's full
-//! name.
+//! @ref LLP 1121 D15, D13 (stage 7 B) — the app's value of a param: a line
+//! of the design's `params` block, which `set-param` writes and
+//! `unset-param` removes (undoing the first restores the component's
+//! default), checked against the app's params and their ranges, classed
+//! `live` (or `rebuild` for a duration), folded into the build, and read by
+//! `resolve`, `explain`, `uses` and `describe` by the param's full name.
 #![cfg(unix)]
 
 use serde_json::{json, Value};
@@ -191,7 +191,7 @@ fn set_param_writes_the_apps_value_and_undo_restores_the_default() {
     );
 }
 
-/// A param edit moved to the token it aliases,
+/// LLP 1122 T3 (D6's re-scope): a param edit moved to the token it aliases,
 /// and back, is one transaction of the edit's inverse and the new write, and
 /// one undo restores the bytes; a `when` branch moves to the same branch.
 #[test]
@@ -279,7 +279,7 @@ params"
     assert_eq!(read(), text);
 }
 
-/// A token edit that reaches a param names it in full in
+/// LLP 1122 T3: a token edit that reaches a param names it in full in
 /// `changed`, never by the IR token a plan names it by.
 #[test]
 fn a_token_edit_names_the_params_it_reaches_in_full() {
@@ -481,7 +481,7 @@ component App
     );
     let shown = s.ask(json!({"method": "resolve", "token": "App.shown"}));
     assert!(shown.to_string().contains("heart"), "{shown}");
-    // An icon param is explained as an icon, by its full name.
+    // An icon param is explained as an icon (stage 9 C1), by its full name.
     let explained = s.ask(json!({"method": "explain", "token": "App.shown"}));
     assert_eq!(explained["ok"]["kind"], "icon", "{explained}");
     assert!(
@@ -662,7 +662,7 @@ fn a_contract_edit_is_read_again_by_the_next_request() {
     );
 }
 
-/// What decides the params and the server's own
+/// Review round 1 of the walk: what decides the params and the server's own
 /// files beyond the Contract sources' bytes is read again too: a native
 /// component's params in the design, a `package.json` that makes a file a
 /// package's, and a root that comes after the server started.

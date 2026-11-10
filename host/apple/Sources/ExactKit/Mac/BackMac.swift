@@ -1,5 +1,5 @@
-// The Mac's ways back from a pushed route (Back is always there):
-// Go ▸ Back ⌘[ in the menu bar (DevMenuMac.swift),
+// The Mac's ways back from a pushed route (LLP 1115.000 D5.1; LLP 1115 D5,
+// "Back is always there"): Go ▸ Back ⌘[ in the menu bar (DevMenuMac.swift),
 // a navigational toolbar item, disabled at a stack's root (ToolbarMac.swift),
 // and the trackpad's swipe (`BackSwipe`, below). Each goes the way iOS's
 // Back button and edge swipe go (`NavigationBack.way`): an authored Back
@@ -8,7 +8,7 @@
 // handler by the runner's own `back`. A sheet or modal route is not pushed:
 // its close and Escape are its own.
 //
-// Forward goes where Back left, as a browser's does: Go ▸
+// Forward (LLP 1115.000 D5.5) goes where Back left, as a browser's does: Go ▸
 // Forward ⌘], the swipe the other way, and a mouse's forward button. The
 // mouse's back and forward buttons go Back and Forward at their release
 // unless a `pointerup` prevented it, which is Chrome's rule.
@@ -20,7 +20,7 @@
 // browser steps session history.
 //
 // The navigation root says which of the two ways it offers now
-// (`navigationHistory`), for an app whose own Back and
+// (`navigationHistory`, LLP 1115.000 D5.5), for an app whose own Back and
 // Forward go less far than its router's visits: a way it withholds is
 // offered by none of these, so AppKit tracks no swipe that would end on
 // nothing.
@@ -37,7 +37,7 @@ extension NavigationHost {
         let stack = selection.stack[...selection.at].compactMap { presenter.views[$0] }
         guard stack.count == selection.at + 1, let route = stack.last else { return nil }
         let owners = NavigationRules.segments(presentations: stack.map { $0.props["navigationPresentation"] })
-        // In a split the detail's pane begins at a row's
+        // In a split (LLP 1115.002 D4) the detail's pane begins at a row's
         // detail, which was not pushed: Back leads from what is above it.
         let lower = owners.last?.lowerBound ?? 0
         return selection.at > (lower == 0 ? split.base : lower) ? (root, route) : nil
@@ -83,14 +83,14 @@ extension NavigationHost {
 
     /// Whether the window's toolbar shows the chevron: the selected route,
     /// pushed or the first of its stack, did not ask for a screen with no
-    /// bar (`navigationBar="none"`). At the root of a
+    /// bar (`navigationBar="none"`, LLP 1115.000 D5.2). At the root of a
     /// stack it is there and disabled (`canGoBack`), as Finder's and
     /// Safari's is, so the title bar is the same on every route. The author
     /// hid the bar, not the way back: Go ▸ Back, ⌘[ and the swipe go from a
     /// route with no bar as from any other.
     ///
-    /// In a window that shows a list beside its detail the chevron comes
-    /// with a push inside the detail and goes with
+    /// In a window that shows a list beside its detail (LLP 1115.002 D4, §5
+    /// Q10) the chevron comes with a push inside the detail and goes with
     /// it, as SwiftUI's does: a list beside its detail has no Back to show,
     /// and a chevron that is never enabled is not in a hand-built window.
     var backInToolbar: Bool {
@@ -102,7 +102,7 @@ extension NavigationHost {
 
     /// The first navigation root when it has no routes, as an app whose one
     /// view follows the router, and hears `navigate`: Back and Forward then
-    /// step the router's visits from it.
+    /// step the router's visits from it (LLP 1115.000 D5.5).
     var routerRoot: NodeView? {
         guard routeless, let node = root?.node, node.handlers.contains("navigate") else { return nil }
         return node
@@ -171,7 +171,7 @@ extension NavigationHost {
         return (root, route)
     }
 
-    /// Where Forward goes: the nearest location Back
+    /// Where Forward goes (LLP 1115.000 D5.5): the nearest location Back
     /// left on the selected stack, which the runner keeps as a browser's
     /// session history does, and the navigation root that hears it.
     private var ahead: (root: NodeView, location: String)? {
@@ -188,8 +188,8 @@ extension NavigationHost {
             && presenter.viewport.window?.attachedSheet == nil && ahead != nil
     }
 
-    /// The platform's Forward, taken as the web host takes a browser's: the
-    /// root's `navigate` with the location ahead, else the
+    /// The platform's Forward, taken as the web host takes a browser's (LLP
+    /// 1038 D7): the root's `navigate` with the location ahead, else the
     /// runner's own `go`.
     @discardableResult func goForward() -> Bool {
         guard canGoForward, let (root, location) = ahead else { return false }
@@ -198,7 +198,7 @@ extension NavigationHost {
         return true
     }
 
-    /// The agent's `back` from a route: a pushed one's
+    /// The agent's `back` from a route (LLP 1116.006 D4): a pushed one's
     /// as ⌘[ takes it (`goBack`); a sheet's as iOS's swipe down does, which
     /// its `closedby="none"` refuses. nil with neither on top; the way, and
     /// why the app refused it ("" when it did not).
@@ -210,7 +210,7 @@ extension NavigationHost {
         }
         if let (_, route) = sheetRoute { return ("sheet", dismiss(route) ?? "") }
         if routerRoot != nil, back != nil { return ("route", goBack() ? "" : withheld) }
-        // A split's detail has no Back. A person leaves
+        // A split's detail has no Back (LLP 1115.002 D4). A person leaves
         // it by taking the selection off its row, and the pane's routes go
         // as their stack goes back: that is the way back from it.
         guard split.active, split.shown?.detail != nil else { return nil }
@@ -218,8 +218,8 @@ extension NavigationHost {
     }
 
     /// The platform's dismissal of a modal route: Escape or Command-period
-    /// in its sheet and a click behind a `closedby="any"` one, and the
-    /// agent's `back`. It goes as the stack goes back, which
+    /// in its sheet and a click behind a `closedby="any"` one (LLP 1115.002
+    /// D7.4), and the agent's `back`. It goes as the stack goes back, which
     /// the app decides; nil when it went, else why it was refused.
     @discardableResult func dismiss(_ route: NodeView) -> String? {
         let route = presenter.dialogs.dismissalOwner(of: route)
@@ -262,7 +262,7 @@ final class GoMenuTarget: NSObject, NSMenuItemValidation {
 extension Presenter {
     /// A mouse's back or forward button came up (`buttonNumber` 3 or 4): Back
     /// or Forward, after the event's `pointerup` has run, unless one of its
-    /// handlers prevented it. Chrome steps history at
+    /// handlers prevented it (LLP 1115.000 D5.5). Chrome steps history at
     /// the release and lets a `mouseup` or `pointerup` cancel it; a press, a
     /// `pointerdown` or an `auxclick` does not.
     func historyButton(_ event: NSEvent) {
@@ -287,7 +287,7 @@ extension Presenter {
 /// Only a scroll nothing took arrives: a scroller that can move that way
 /// takes it, one whose `overscroll-behavior-x` is `contain` or `none` keeps
 /// it at its edge, and a `wheel` handler's `preventDefault()` stops it, as
-/// Chrome's history swipe is.
+/// Chrome's history swipe is (LLP 1115.000 D5.5).
 ///
 /// The navigation root's `historyswipe` hears the two-finger swipe as AppKit
 /// tracks it, so an app can draw its own sign of it, as Chrome draws its

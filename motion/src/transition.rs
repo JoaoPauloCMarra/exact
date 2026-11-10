@@ -1,6 +1,6 @@
 //! `transition`: the declaration, and CSS's rules for running one.
 //!
-//! CSS Transitions Level 1 §3 ("Starting of transitions")
+//! @ref LLP 1002 §2; CSS Transitions Level 1 §3 ("Starting of transitions")
 //!
 //! A [`Transitions`] list is the value of a node's `transition` style row in
 //! the kernel — the same row a web host emits as CSS. The rest of this module
@@ -52,7 +52,7 @@ impl TransitionProperty {
         match name {
             "all" => Some(TransitionProperty::All),
             "border-color" => Some(TransitionProperty::BorderColor),
-            // A path's `d` transitions; no keyframe names it.
+            // A path's `d` transitions (LLP 1055.000 D15); no keyframe names it.
             "d" => Some(TransitionProperty::Property(Property::D)),
             name => Property::from_author_name(name).map(TransitionProperty::Property),
         }
@@ -157,7 +157,7 @@ impl Transition {
     /// spring drives as physics ([`Property::springs`]: paint, a path's
     /// stroke) is its curve from rest, a `linear()` easing over its settle
     /// time: the web's CSS plays those properties itself, and CSS interrupts
-    /// an easing from where it is.
+    /// an easing from where it is (LLP 1062 D3).
     pub fn governing(&self, property: Property) -> Transition {
         match &self.timing {
             TimingFunction::Spring(config) if !property.springs() => {
@@ -228,7 +228,7 @@ pub(crate) struct Running {
     pub reversing_adjusted_start: Value,
     /// CSS §3.2: how much of the authored duration this transition uses.
     pub reversing_shortening: f64,
-    /// While it waits for the first presented frame, the
+    /// While it waits for the first presented frame (LLP 1003.001 D1), the
     /// engine time it began: every reading is at that time, so it does not
     /// move until the frame starts it.
     pub pending: Option<f64>,
@@ -423,7 +423,7 @@ impl Running {
     }
 
     /// When the transition ends if the frame at `now` starts it: its own end,
-    /// or a pending one's moved by the wait.
+    /// or a pending one's moved by the wait (LLP 1003.001 D1).
     pub fn end_at(&self, now: f64) -> f64 {
         self.end_time() + self.wait(now)
     }

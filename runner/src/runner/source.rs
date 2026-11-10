@@ -1,10 +1,10 @@
-//! Data-source boundary.
+//! Data-source boundary (LLP 1004 D4, LLP 1027 D4–D5).
 use crate::request::{Answer, Dispatch, Outcome, Placement, Work};
 use crate::store::Store;
 use exact_plan::{Plan, Value};
 
-/// Stops a source's running call from another thread (a render's
-/// deadline). The call ends as a refusal, as one that threw does,
+/// Stops a source's running call from another thread (LLP 1048.000 D10: a
+/// render's deadline). The call ends as a refusal, as one that threw does,
 /// and its resource keeps what it showed. Clones stop the same source.
 #[derive(Clone)]
 pub struct Interrupt(std::sync::Arc<dyn Fn() + Send + Sync>);
@@ -76,16 +76,17 @@ pub struct NativeSlots {
 }
 
 /// Each module's synchronous form, by `extension.name`: the runner's answer
-/// now, or `None` where the host's own implementation answers.
+/// now, or `None` where the host's own implementation answers (LLP 1133.002
+/// D14).
 pub type SyncAnswers = std::collections::BTreeMap<String, Option<Vec<u8>>>;
 
 /// Where a host takes the device topics a native module announces
-/// ([`Native::changed`]), from any thread.
+/// ([`Native::changed`]), from any thread (LLP 1016.002).
 pub type Announce = std::sync::Arc<dyn Fn(&str) + Send + Sync>;
 
 /// The host's app module answering one call now (`native.call`), on the
 /// caller's thread: the request's JSON body in, the JSON reply out, or a
-/// refusal message.
+/// refusal message (LLP 1067.000 D9).
 pub type NativeCall = std::sync::Arc<dyn Fn(&[u8]) -> Result<Vec<u8>, String> + Send + Sync>;
 
 /// A native module's handler for calls that answer later: the request's
@@ -115,8 +116,8 @@ impl Native {
         })
     }
 
-    /// The session's app module, which the host owns and installs:
-    /// it outlives the source's activations, so unloading the
+    /// The session's app module, which the host owns and installs (LLP
+    /// 1067.000 Q6): it outlives the source's activations, so unloading the
     /// source leaves it, and it answers when the source has no handler of
     /// its own. `None` removes it.
     pub fn host(&self, handler: Option<NativeHandler>) {
@@ -199,13 +200,13 @@ impl Native {
     }
 }
 
-/// The continuation token of a module's background work:
+/// The continuation token of a module's background work (LLP 1097 D5):
 /// reserved, as an executor's own tokens are, and passed through every
 /// composer unchanged, so a forwarder never consumes a round's token and a
 /// [`DataSource::forgotten`] never prunes it.
 pub const BACKGROUND: u64 = u64::MAX - 2;
 
-/// A module's storage: `state.background`, and the
+/// A module's storage (LLP 1097 D8): `state.background`, and the
 /// `background` count a `clock` reply carries. Its operations are counted
 /// module-wide, an answer's and the background's alike, as the JS target,
 /// which has no owners, counts them.
@@ -271,8 +272,8 @@ pub struct Overlaid {
 }
 
 /// What a request answers: a resource or a mutation, by its index in the
-/// plan. The runner keeps at most one request in flight per target,
-/// so an executor that parks a call until its reply comes keys
+/// plan. The runner keeps at most one request in flight per target (LLP
+/// 1016 D5), so an executor that parks a call until its reply comes keys
 /// it by target: two targets may ask one source with equal arguments.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Target {
@@ -293,7 +294,7 @@ impl Target {
     }
 }
 
-/// Borrowed bytes of one pinned snapshot cohort.
+/// Borrowed bytes of one pinned snapshot cohort (LLP 1126 D8).
 #[derive(Clone, Copy)]
 pub struct SnapshotModule<'a> {
     /// Producer receipt admitting both the entry plan and bytecode.
@@ -306,12 +307,12 @@ pub struct SnapshotModule<'a> {
     pub kind: &'a str,
 }
 
-/// The app's data source: the one seam through which computation enters.
-/// Implemented once, in Rust, by the app's data crate.
+/// The app's data source: the one seam through which computation enters
+/// (LLP 1004 D4). Implemented once, in Rust, by the app's data crate.
 pub trait DataSource {
     /// Prepare a disposable, read-only snapshot refresh before activation.
     /// Bytecode and its receipt come from the app's pinned generation, never
-    /// from a separately selected update.
+    /// from a separately selected update (LLP 1126.000 WP5).
     fn prepare_snapshot(
         &mut self,
         module: Option<SnapshotModule<'_>>,
@@ -377,16 +378,16 @@ pub trait DataSource {
         false
     }
 
-    /// Where this source's module instance runs. A
+    /// Where this source's module instance runs (LLP 1027.002 D1). A
     /// composer orders every child that shares a `secret.keep` name with a
-    /// worker child; a host refuses a placement it cannot run.
+    /// worker child (D3); a host refuses a placement it cannot run.
     fn placement(&self) -> Placement {
         Placement::Main
     }
 
     /// The work behind continuation `token`, at dispatch: on the runner's
     /// thread, after the commit that handed the request out, with the store
-    /// as committed then (change 1). A worker's proxy takes
+    /// as committed then (LLP 1027.002 D3, change 1). A worker's proxy takes
     /// its scoped snapshot here. The default is `continuation`'s closure on
     /// the host's I/O worker, which is what every source did before
     /// placement existed.
@@ -399,7 +400,7 @@ pub trait DataSource {
     }
 
     /// Work `dispatch` answered `Held` that the commit just made releases,
-    /// in order (change 2). A host asks after every commit
+    /// in order (LLP 1027.002 D3, change 2). A host asks after every commit
     /// and runs each as it would have at dispatch.
     fn release(&mut self, store: &Store) -> Vec<(u64, Dispatch)> {
         let _ = store;
@@ -407,8 +408,8 @@ pub trait DataSource {
     }
 
     /// A `Later` answer whose transaction was refused: its token is never
-    /// dispatched. A source that recorded the call forgets it here (the
-    /// cleanup of rolled-back calls).
+    /// dispatched. A source that recorded the call forgets it here (LLP
+    /// 1027.002 D3, the cleanup of rolled-back calls).
     fn discard(&mut self, token: u64) {
         let _ = token;
     }
@@ -431,7 +432,7 @@ pub trait DataSource {
         self.module_landed(store, token, outcome).map(|()| None)
     }
 
-    /// Work the module started that no answer waits for: the
+    /// Work the module started that no answer waits for (LLP 1097 D5): the
     /// next round, a continuation under [`BACKGROUND`], or `None`. The
     /// runner polls it whenever no round is out; it arms only when the
     /// module's storage operation in flight is the background's, and
@@ -446,7 +447,7 @@ pub trait DataSource {
     /// A background round's outcome: the next round, or `None` when the
     /// operation in flight is no longer the background's or nothing was
     /// delivered. It makes no commit: no Contract `then` runs, no resource
-    /// is asked again.
+    /// is asked again (D4).
     fn background_landed(
         &mut self,
         store: &Store,
@@ -459,7 +460,7 @@ pub trait DataSource {
     /// At the end of every commit, after [`DataSource::forgotten`] when that
     /// is called. `let_go` holds the requests with effects
     /// ([`crate::Request::has_effects`]) the commit let go, which run to their
-    /// end. The answer has one entry per request, in order: the
+    /// end (LLP 1146 D2). The answer has one entry per request, in order: the
     /// token this source takes the reply under ([`DataSource::module_landed`]),
     /// or `None`, and the host cancels that request as it cancels any it lets
     /// go. A call this source set aside is dropped unless `let_go` names it;
@@ -478,7 +479,7 @@ pub trait DataSource {
 
     /// The timer of its own that the answer awaiting request `in_flight`
     /// armed (the request's [`crate::Request::wake_ms`]) came due before the
-    /// request's reply. A source that can resume
+    /// request's reply (LLP 1027.000 D1, *Fetches*). A source that can resume
     /// the answer now keeps the request running as module work, its reply
     /// delivered under the token it returns ([`DataSource::module_landed`]),
     /// and returns the answer's continuation, in which the timer runs. `None`
@@ -507,13 +508,13 @@ pub trait DataSource {
     }
 
     /// The module's background storage now, or `None` for a source that
-    /// has none.
+    /// has none (LLP 1097 D8).
     fn background_state(&self) -> Option<BackgroundState> {
         None
     }
 
-    /// The module's journal lines since the last take:
-    /// console output, including a refused answer's turn, plus failed
+    /// The module's journal lines since the last take (LLP 1012, LLP 1097
+    /// D8): console output, including a refused answer's turn, plus failed
     /// storage and unhandled rejections. The runner writes them to the
     /// journal after each answer and reply, and after a background round.
     fn take_logs(&mut self) -> Vec<String> {
@@ -582,7 +583,7 @@ pub trait DataSource {
     /// a `send`'s arguments. Bake and every in-process source use this.
     fn query(&mut self, source: &str, args: &[Value]) -> Result<Value, DataError>;
 
-    /// The app identity, reverse-DNS — the one declaration:
+    /// The app identity, reverse-DNS (LLP 1023 D5) — the one declaration:
     /// bake writes it into the plan header, and boot refuses a plan whose
     /// header names a different app. Empty is unnamed — a fixture or a
     /// stand-in — and unnamed matches anything.
@@ -590,10 +591,10 @@ pub trait DataSource {
         ""
     }
 
-    /// Answer now, or hand back a request the host will run (the runner
-    /// never does I/O). The default answers `query` now; a source
+    /// Answer now, or hand back a request the host will run (LLP 1016 D1:
+    /// the runner never does I/O). The default answers `query` now; a source
     /// that reaches outside the process overrides this and [`parse`]. The
-    /// [`Store`] is the app's durable state — the host's
+    /// [`Store`] is the app's durable state (LLP 1018 D1) — the host's
     /// snapshot, read here synchronously; a write rides the commit out.
     ///
     /// [`parse`]: DataSource::parse
@@ -609,12 +610,12 @@ pub trait DataSource {
 
     /// The value of a resource or mutation from what the host brought back
     /// for a request `answer` handed out, in the shape the declaration
-    /// names — or one more request (a TypeScript `answer`
+    /// names — or one more request (LLP 1027 D1a: a TypeScript `answer`
     /// that awaits a second `fetch` is pending again, on the same target,
     /// with the same arguments). No I/O, no host — the store is the one
-    /// thing it may write (a token from a reply). A failure on
+    /// thing it may write (a token from a reply, LLP 1018 D5). A failure on
     /// the wire is an `Outcome` too — what the app sees is the source's to
-    /// decide. A source that never answers later need not implement it.
+    /// decide (D4). A source that never answers later need not implement it.
     fn parse(
         &mut self,
         store: &mut Store,
@@ -660,7 +661,8 @@ pub trait DataSource {
         self.parse(store, source, args, outcome)
     }
 
-    /// What the app may reach and keep: one grant per line — `net.fetch <origin>` (matched whole, or `scheme://*.domain` for every host under one domain), `secret.keep
+    /// What the app may reach and keep (LLP 1016 D6, LLP 1018 D3; ibex LLP
+    /// 0067): one grant per line — `net.fetch <origin>` (matched whole, or `scheme://*.domain` for every host under one domain), `secret.keep
     /// <name>`. A request outside them fails as `Refused` on every host
     /// before any executor sees it; a secret outside them reads as absent
     /// and refuses a write. Empty: nothing. The set is read whole
@@ -678,7 +680,7 @@ pub trait DataSource {
     }
 
     /// The plan this source answers for — once, at boot, after the identity
-    /// gate and before any answer. An executor that marshals
+    /// gate and before any answer (LLP 1027 D2). An executor that marshals
     /// by the plan's declared shapes reads the `sources` table here; a Rust
     /// crate has nothing to learn and ignores it.
     fn bind(&mut self, plan: &Plan) {
@@ -687,7 +689,7 @@ pub trait DataSource {
 
     /// A value the runner holds for `source(args)` that this instance did
     /// not answer: the plan's compiled value, which a resource takes at
-    /// boot instead of asking. It is the bake's answer to
+    /// boot instead of asking (LLP 1027 D11). It is the bake's answer to
     /// the same query, so a source that keeps its own copy of what it
     /// answers may keep this one — cloning shares its allocations — instead
     /// of building it again. Told once per resource that takes it, after
@@ -698,7 +700,7 @@ pub trait DataSource {
     }
 
     /// After a commit that let requests go, the ones still in flight. A
-    /// request is let go when newer arguments replace it, when
+    /// request is let go when newer arguments replace it (LLP 1016 D5), when
     /// its target is answered now or assigned, when the runner is poisoned,
     /// or when a refused commit puts back what it had and drops what it
     /// asked; so is one a re-ask with equal arguments replaced (a `refresh`),
@@ -734,7 +736,7 @@ pub trait DataSource {
     }
 
     /// A handle another thread may trigger to stop this source's running
-    /// call, or `None` when a call always returns on its
+    /// call (LLP 1048.000 D10), or `None` when a call always returns on its
     /// own, as a Rust source's does. A source that forwards to another
     /// forwards this too.
     fn interrupt(&self) -> Option<Interrupt> {
@@ -749,25 +751,25 @@ pub trait DataSource {
     }
 
     /// Whether answers are available now. A TypeScript module before its
-    /// host loads it is not: the runner then boots resources
+    /// host loads it is not (LLP 1027 D4): the runner then boots resources
     /// from compiled placeholders, or matching kept store-reader answers,
-    /// and asks again at [`super::Runner::data_ready`].
+    /// and asks again at [`super::Runner::data_ready`] (LLP 1038 D5).
     fn ready(&self) -> bool {
         true
     }
 
-    /// The Canvas 2D surfaces this source draws, name and arity:
-    /// known without running app code — a Rust crate's is a constant,
+    /// The Canvas 2D surfaces this source draws, name and arity (LLP 1056
+    /// D1): known without running app code — a Rust crate's is a constant,
     /// a TypeScript module's is what the bake read. A `canvas surface=`
     /// naming one of these is a 2D canvas the runner draws; any other is the
-    /// GPU module's. A source that forwards forwards this too.
+    /// GPU module's (LLP 1009). A source that forwards forwards this too.
     fn canvas_surfaces(&self) -> Vec<(String, usize)> {
         Vec::new()
     }
 
-    /// Draw one 2D surface with the Rust recorder `ctx`:
+    /// Draw one 2D surface with the Rust recorder `ctx` (LLP 1056 D1):
     /// `Ok(true)` asks for another frame. A throw keeps every call made
-    /// before it. The default draws nothing, by name.
+    /// before it (D4, r3). The default draws nothing, by name.
     fn draw_2d(
         &mut self,
         surface: &str,
@@ -781,7 +783,7 @@ pub trait DataSource {
         )))
     }
 
-    /// Run one draw request. The runner keeps one Rust
+    /// Run one draw request (LLP 1056 D4). The runner keeps one Rust
     /// recorder per canvas generation and passes it as `ctx`; the default
     /// draws with [`DataSource::draw_2d`] into it and answers now. A source
     /// with its own recorders (TypeScript) records with its own, keyed by
@@ -830,20 +832,20 @@ pub enum DataError {
     /// The seam to a loaded Rust module could not carry the call (an
     /// answer over its bound, a trap): the source is there but cannot
     /// answer now. A resource asked this fails; it does not refuse the
-    /// commit.
+    /// commit (LLP 1071 §7, Charlie's ruling of 2026-09-29).
     Interface(String),
-    /// A failure whose class `failure(x)` names: a request's
+    /// A failure whose class `failure(x)` names (LLP 1109 D3): a request's
     /// or a storage call's that a TypeScript module let through, or an
     /// answer its seam found outside its shape, or a runtime TypeScript
     /// throw (`error`). The resource fails or the send ends unsent; the
-    /// asking commit stands. Bake and replacement
+    /// asking commit stands (LLP 1027.000 D3). Bake and replacement
     /// validation still refuse it. A Rust source's own error is `Unavailable`.
     /// The third field carries an application reason (`failure(x).reason`).
     Failed(crate::failure::FailureCode, String, String),
     /// A turn the source ran over its budget (exact-js's own time, or its
     /// wall backstop): transient, the machine's load as much as the
     /// source's, so a resource refused by it is asked again, twice at most,
-    /// before it fails. Never a mutation's.
+    /// before it fails (LLP 1027 as amended 2026-10-27). Never a mutation's.
     Overrun(String),
 }
 

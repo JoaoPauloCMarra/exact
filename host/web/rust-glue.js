@@ -1,5 +1,5 @@
 // Rust business-logic modules run in the browser's Wasm engine, after first
-// pixel. Each Rust adapter owns one private instance.
+// pixel. Each Rust adapter owns one private instance. LLP 1029.000 §3.
 export function rustRuntime(memory) {
   const instances = new Map();
   let next = 1;

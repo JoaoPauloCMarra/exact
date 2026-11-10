@@ -1,5 +1,5 @@
 // The browser's geometry events, loaded after first paint only where used.
-// Intersection visibility; the resize event's contentRect.
+// @ref LLP 1005 intersection visibility; the resize event's contentRect.
 import { onEnd, inflight, say, geoLoading } from "./rt.js";
 
 let Resizes = null;

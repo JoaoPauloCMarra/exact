@@ -1,4 +1,4 @@
-// In Chrome, Firefox and WebKit: the wasm runtime's agent `tree` (glue.js `tree`) flags a node `inactive`,
+// LLP 1153 D8, in Chrome, Firefox and WebKit: the wasm runtime's agent `tree` (glue.js `tree`) flags a node `inactive`,
 // and `hidden` too, as the navigation glue's projection left the page (navigation.js `routeFlags`, which the JS target's
 // tree reads too), not as the runner flags it: the runner knows no pane on the web, so it would hide a split's list
 // shown beside its detail. A split list is live beside its detail when wide and hidden under it when narrow; under a

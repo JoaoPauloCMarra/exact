@@ -13,7 +13,7 @@ import java.io.File
 import java.io.FileNotFoundException
 
 /**
- * The app's files as content URIs another app may read under a grant: what an intent carries
+ * The app's files as content URIs another app may read under a grant (LLP 1133.024 D22 item 2): what an intent carries
  * for a mail's attachments, as `androidx.core`'s `FileProvider` does, without the library. Unexported, so only a URI
  * the app granted with its intent opens, and only for reading; a path outside the app's own data directory opens
  * nothing. [uri] makes one; `AndroidManifest.xml` declares it as `<package>.exact.files`.

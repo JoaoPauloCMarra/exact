@@ -839,7 +839,7 @@ fn timer_demand_scheme_command_marks_its_visual_effect() {
 }
 #[test]
 fn timer_root_font_size_command_is_laid_out_by_the_runner() {
-    // The app's `:root { font-size }`; this host has nothing to run.
+    // LLP 1069.000 D3: the app's `:root { font-size }`; this host has nothing to run.
     let source = "component App\n  action tick\n    setRootFontSize(20)\n  task timer mount\n    every(250, tick)\n  view\n    view width=\"10rem\" height=\"2rem\"\n";
     let (mut p, _, _) = timer_primed(source);
     assert!(p.advance(250.).is_none());
@@ -1029,7 +1029,7 @@ fn timer_demand_content_region_remains_conservative_for_same_shell() {
 #[path = "follow_end_growth_tests.rs"]
 mod follow_end_growth;
 
-// A frame task keeps the display pump running and
+// @ref LLP 1073 D2, D4, D5 — a frame task keeps the display pump running and
 // fires once per display frame, at the frame's time; once frames are presented
 // the timer path fires none and owes no deadline for them; a stall is not
 // caught up.

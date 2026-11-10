@@ -1,5 +1,5 @@
 //! The builds of `app.wasm` this server has served, for the browsers that
-//! still hold one (Compression Dictionary Transport).
+//! still hold one (Compression Dictionary Transport; LLP 1047.000 §9).
 //!
 //! The web build names `app.wasm` by its content (`/app.wasm?v=<digest>`), so
 //! a browser caches it for good and may keep it as a dictionary. With

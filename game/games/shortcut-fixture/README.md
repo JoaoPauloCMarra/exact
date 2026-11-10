@@ -1,6 +1,6 @@
 # shortcut-fixture
 
-The shortcut rule on every host: with the world's canvas
+The shortcut rule on every host (LLP 1132 D11): with the world's canvas
 focused, Digit1 presses the HUD's `button action="buy" aria-keyshortcuts="1"`
 once, the world's own Digit1 binding (`one`) never fires, and nothing is left
 held. `bun game/games/shortcut-fixture/proof.mjs <linux|web> --paranoid` runs it

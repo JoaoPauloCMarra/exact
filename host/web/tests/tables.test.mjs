@@ -177,7 +177,7 @@ test('real game dev journals rejected edits and reloads tables after a gpu-dev p
     const receipt=JSON.parse(readFileSync(resolve(app,'dist/bake.json'),'utf8'));
     expect(receipt.products.some(p=>p.path.endsWith('/gpu-dev/beacons_gpu.wasm'))).toBe(true);
     // The rebuild restarts its resident producer; wait for its first generation. A game with data of its own bakes
-    // through its web shell's dev bin: a hang guard sized for a loaded machine, not a deadline.
+    // through its web shell's dev bin: a hang guard sized for a loaded machine, not a deadline (theme2's 05:50 ruling).
     await until(async()=>(await fetch(url+'/exact.json')).ok,300000,'the rebuilt producer\'s first generation (exact.json)');
     // A second logic edit compiles nothing of the app wasm: the first rebuild's table reload left assets/ alone (an
     // identical table isn't rewritten), so the web shell's build script, which watches assets/, doesn't rerun (Beacons:

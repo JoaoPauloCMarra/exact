@@ -1,5 +1,5 @@
 //! A paragraph's paint-only run data in canonical run order: colour and
-//! source (the palette), and inline backgrounds.
+//! source (the palette), and inline backgrounds (LLP 1053 §0).
 use super::rgba;
 use crate::text::markup::QUIET;
 use crate::text::{backgrounds::InlineBackground, Paragraph, RunPaint};
@@ -65,7 +65,7 @@ pub(crate) fn text_palette(
             if child.node_type == NodeType::Text {
                 text_palette(kernel, &child, dark, reveal, out);
             } else if child.inline_box().is_some() {
-                // An image's run: a box, no glyphs.
+                // An image's run (LLP 1011.002): a box, no glyphs.
                 out.push(RunPaint {
                     color: [0, 0, 0, 0],
                     source: child.id,
@@ -166,7 +166,7 @@ fn collect_backgrounds(
 }
 
 /// A text node's presented `color` while a colour animation or transition
-/// runs on the node its `color` comes from (an animated
+/// runs on the node its `color` comes from (LLP 1055.000 D6: an animated
 /// `color` is inherited like any computed value).
 pub(super) fn presented_color(
     walk: &super::Walk<'_, '_>,
@@ -184,7 +184,7 @@ pub(super) fn presented_color(
 }
 
 /// [`presented_color`] where the node's `color` stops at it (a platform
-/// field's start): only its own motion and its own press.
+/// field's start, LLP 1104 D4): only its own motion and its own press.
 pub(super) fn own_presented_color(
     walk: &super::Walk<'_, '_>,
     node: &NodeRef<'_>,
@@ -218,7 +218,7 @@ fn moving_color(walk: &super::Walk<'_, '_>, node: &NodeRef<'_>) -> Option<[u8; 4
         .color(exact_motion::Property::Color)
 }
 
-/// The press colour a text shows, and how far: the nearest
+/// The press colour a text shows (LLP 1061 D7), and how far: the nearest
 /// node from it up to where its `color` comes from (that node included)
 /// whose `:active` sets `color`, as CSS's `color` reaches a
 /// subtree. A text with a colour of its own takes only its own press's.
@@ -246,7 +246,7 @@ fn pressed_ink(
 
 /// The paragraph's run colours with presented ones applied, run by run. A
 /// Markdown paragraph's one source run paints as its expanded runs, the
-/// quieter roles (markers, quotes) at the web's `opacity: 0.62`.
+/// quieter roles (markers, quotes) at the web's `opacity: 0.62` (LLP 1045 D3).
 pub(super) fn presented_text_colors(
     walk: &super::Walk<'_, '_>,
     node: &NodeRef<'_>,

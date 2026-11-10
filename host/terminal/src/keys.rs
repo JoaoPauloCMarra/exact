@@ -1,4 +1,4 @@
-//! Keys and paste, and where they are routed.
+//! Keys and paste, routed as LLP 1101 D6 says.
 //!
 //! A key goes to the focused node's (or its nearest ancestor's) `key`
 //! handler first, with nothing focused to the root's (as the web's `window`
@@ -119,7 +119,7 @@ impl<D: DataSource> Host<D> {
             }
             Key::Named(dir @ ("ArrowUp" | "ArrowDown")) if self.is_textarea(f) => {
                 // By visual line, keeping the column; at the first or last
-                // line the caret stays: the arrows never
+                // line the caret stays (LLP 1101.001 P15): the arrows never
                 // leave the field.
                 let up = *dir == "ArrowUp";
                 let width = self.cells_of(f).map_or(1, |r| r.w.max(1) as usize);
@@ -170,7 +170,7 @@ impl<D: DataSource> Host<D> {
         let chord = key.chord();
         // A focused control the screen has not shown yet (a dialog this
         // read opened) takes no typed-ahead key: not its handler, not its
-        // text, not its submit.
+        // text, not its submit (LLP 1101.002 §0 P1).
         let focus = self.focus.filter(|f| self.armed(*f));
         // The focused node's (or its nearest ancestor's) `key` handler
         // first; with nothing focused, the first root's.
@@ -222,7 +222,7 @@ impl<D: DataSource> Host<D> {
             Key::Ctrl('c') | Key::Ctrl('d') => return After::Quit,
             // With nothing focused the keys scroll, as a page's do on the
             // web; with a control focused the arrows move among controls
-            // (a terminal list's convention).
+            // (a terminal list's convention, LLP 1101 D6).
             Key::Named("ArrowDown") if self.focus.is_none() => self.scroll_rows(1),
             Key::Named("ArrowUp") if self.focus.is_none() => self.scroll_rows(-1),
             Key::Char(' ') if self.focus.is_none() => self.page(true),

@@ -6,7 +6,7 @@ A use of a component is an *instance*. Its identity is the path that leads
 to it from the root — every use, region arm (a `when`/`match` arm, an
 `each` row by key and duplicate count) and `children` node on the way,
 each named by its component and node — so it is exactly "the declaration,
-which use, and the enclosing `each` keys". An instance's
+which use, and the enclosing `each` keys" (LLP 1017 P4c). An instance's
 state lives in a store under that path for as long as the instance is
 rendered: it is initialized, in the instance's scope, the first time the
 instance renders, kept while it keeps rendering, and dropped when a render
@@ -25,7 +25,7 @@ site's frame, locals, providers and fill. A handler names an action of its
 component or an `action` prop, resolved through the props to the action
 it names with the arguments curried on the way; its arguments are
 evaluated at dispatch, each in its own frame. A child's action writes its
-instance's states; a call of an `action` prop last in it
+instance's states; a call of an `action` prop last in it (LLP 1017 §11)
 runs the named action's statements after it, in that action's own frame,
 in the same commit, reading the same state.
 
@@ -354,7 +354,7 @@ def _root_.Contract.Components.CProgram.actionIn (p : CProgram) : Frame → Stri
 root alone. In an instance's frame an assignment writes the instance's
 state; a call of the component's own action runs its statements here, in
 the same frame, its parameters alone bound; and a command naming an
-`action` prop or injected action is a call: the action it names
+`action` prop or injected action is a call (LLP 1089): the action it names
 runs its statements here, in its own frame, its parameters bound to the
 curried arguments then the call's. Every statement reads the state the
 action started with. -/
@@ -721,7 +721,7 @@ def cboot (p : CProgram) (o : Oracle) : CConfig × Outcome :=
     match startTimers rp slots with
     | .error e => (empty, .refused e)
     | .ok timers =>
-      -- Queued sends and gated tasks are the flat semantics'
+      -- Queued sends and gated tasks (LLP 1092) are the flat semantics'
       -- alone: `difftest expansion` writes programs without them.
       if rp.mutations.any (·.queue) || rp.tasks.any (fun t => t.gate.isSome || t.key.isSome) then
         (empty, .refused (.unsupported "queued sends and gated tasks")) else

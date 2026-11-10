@@ -23,7 +23,7 @@ struct BadgeFace: Equatable {
         self.init(box: box)
     }
     /// The face of a filled box holding a text or a symbol (a title's
-    /// avatar too). `authored`: draw it at the size the author gave
+    /// avatar, §9.10, too). `authored`: draw it at the size the author gave
     /// the box (`faceBoxSize`, the authored points a replaced header has no frame for), between 20
     /// and 44, as a title's avatar is; otherwise at a bar item's 36.
     init?(box: NodeView, authored: Bool = false) {

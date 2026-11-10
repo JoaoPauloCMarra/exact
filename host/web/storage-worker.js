@@ -1,4 +1,4 @@
-// SQLite runs off the presentation thread.
+// @ref LLP 1027 D10 — SQLite runs off the presentation thread.
 import sqlite3InitModule from './sqlite3.mjs';
 import { createFileStore, lockPaths } from './storage-fs.js';
 

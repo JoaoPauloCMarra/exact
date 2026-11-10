@@ -13,7 +13,7 @@ final class CollectionTests: XCTestCase {
         XCTAssertEqual(Array(bytes.prefix(8)), [4, 0, 0, 0, 17, 0, 0, 0])
         XCTAssertEqual(Array(bytes[32..<40]), double(480), "the main axis first")
         XCTAssertEqual(Array(bytes[8..<16]), [9, 0, 0, 0, 0, 0, 0, 0])
-        XCTAssertEqual(Array(bytes[56..<72]), double(92) + double(83), "the padding laid out")
+        XCTAssertEqual(Array(bytes[56..<72]), double(92) + double(83), "the padding laid out (LLP 1010 §6.9)")
         XCTAssertEqual(Array(bytes[72..<80]), [31, 0, 0, 0, 0, 0, 0, 0])
         XCTAssertEqual(Array(bytes[88..<100]), [255, 255, 255, 255, 0, 0, 0, 0, 1, 0, 0, 0], "no limit, no moving ancestor, one row")
         XCTAssertEqual(Array(bytes[104..<112]), [0x10, 0x32, 0x54, 0x76, 0x98, 0xba, 0xdc, 0xfe])
@@ -45,7 +45,7 @@ final class CollectionTests: XCTestCase {
         b = a; b.interaction = nil
         XCTAssertNotEqual(a, b)
         // A padding change alone, which keeps a border-box list's size, is
-        // reported too
+        // reported too (LLP 1010 §6.9)
         b = a; b.paddingEnd = 109
         XCTAssertNotEqual(a, b)
     }
@@ -60,11 +60,11 @@ final class CollectionTests: XCTestCase {
         broken = value; broken["rows"] = [row, row]
         XCTAssertNil(CollectionSnapshot(broken))
         // A `scrollIntoView` into the padding before the first row is a
-        // negative correction; a non-finite one is not.
+        // negative correction (LLP 1010 §6.9); a non-finite one is not.
         var padded = value; padded["correction"] = ["scrollSequence": 1, "offset": -92]
         XCTAssertEqual(CollectionSnapshot(padded)?.correction?.offset, -92)
         // An anchor's correction taken from a port in that padding keeps its
-        // `from`, so it stays relative.
+        // `from`, so it stays relative (Grok's scroll-padding review r2).
         padded["correction"] = ["scrollSequence": 1, "offset": 500, "from": -92]
         XCTAssertEqual(CollectionSnapshot(padded)?.correction?.from, -92)
         padded["correction"] = ["scrollSequence": 1, "offset": -Double.infinity]

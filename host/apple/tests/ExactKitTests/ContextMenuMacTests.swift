@@ -3,7 +3,7 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// On AppKit, a context menu is its popover's menu rows as an
+/// LLP 1021 §5.1 on AppKit: a context menu is its popover's menu rows as an
 /// NSMenu (a Mac's has no preview, so the `contextPreview` row is no item),
 /// and a picked item presses its row once the menu has closed, as a button menu's.
 final class ContextMenuMacTests: XCTestCase {
@@ -236,7 +236,7 @@ final class ContextMenuMacTests: XCTestCase {
                          charactersIgnoringModifiers: "\u{F735}", isARepeat: false, keyCode: code)!
     }
 
-    /// A real menu key runs the action first, then tracks the updated
+    /// #235: a real menu key runs the action first, then tracks the updated
     /// native menu. Its point is the focus's centre, not the mouse position.
     func testContextMenuKeyRunsTheActionThenTracksTheNativeMenu() throws {
         try XCTSkipIf(ExactEnv.agentMode, "the agent presents painted popovers")
@@ -278,7 +278,8 @@ final class ContextMenuMacTests: XCTestCase {
     /// sends a menu item's action before `popUp` returns: nothing the run
     /// loop serves comes between. VoiceOver, asking where the focus was as
     /// the menu closed, was answered before a press that opened a dialog:
-    /// it re-read the page's long draft and never named the dialog.
+    /// it re-read the page's long draft and never named the dialog
+    /// (realinput-1017k H-9).
     func testAPickedItemPressesInTheTurnItsMenuClosed() throws {
         try XCTSkipIf(ExactEnv.agentMode, "the agent presents painted popovers")
         let p = presenter(), window = try XCTUnwrap(windows.last), source = try XCTUnwrap(p.views[1])
@@ -312,7 +313,7 @@ final class ContextMenuMacTests: XCTestCase {
     /// never hears its `rightMouseUp`. The press's hold ends when the menu
     /// starts tracking, with `pointerup` to the ancestor that heard its down, and
     /// hover follows the pointer again. A hold left behind kept every row's
-    /// hover from following until a left click.
+    /// hover from following until a left click (realinput-1017l, failure 3).
     func testTheHoldOfTheRightPressEndsWhenItsMenuStartsTracking() throws {
         try XCTSkipIf(ExactEnv.agentMode, "the agent presents painted popovers")
         let p = presenter(), window = try XCTUnwrap(windows.last), source = try XCTUnwrap(p.views[1])
@@ -403,7 +404,7 @@ final class ContextMenuMacTests: XCTestCase {
     /// highlighted, where a right release half a second after the press
     /// chooses it. The release is measured with real input: NSMenu's tracking
     /// reads no event posted to the app. A request from the keyboard still
-    /// puts the menu's top left at the middle of the node.
+    /// puts the menu's top left at the middle of the node (#235).
     func testAPointersMenuIsPlacedAsAppKitPlacesAContextMenu() throws {
         try XCTSkipIf(ExactEnv.agentMode, "the agent presents painted popovers")
         let p = presenter(), window = try XCTUnwrap(windows.last), source = try XCTUnwrap(p.views[1])
@@ -744,7 +745,7 @@ final class ContextMenuMacTests: XCTestCase {
         return Set(unsafeBitCast(symbol, to: Names.self)(element as AnyObject)?.takeUnretainedValue() as? [String] ?? [])
     }
 
-    /// VoiceOver's show menu (AXShowMenu, VO-⇧-M) takes the ContextMenu
+    /// X84: VoiceOver's show menu (AXShowMenu, VO-⇧-M) takes the ContextMenu
     /// key's path at the node, as Chrome sends both through
     /// `ShowNonLocatedContextMenu`: its `contextmenu` at its drawn middle,
     /// and a link run's at the run. It is offered only where one answers.
@@ -803,7 +804,7 @@ final class ContextMenuMacTests: XCTestCase {
     /// run in a span run (which the key at that run now reaches too; the key
     /// at the paragraph's link run now runs at the run's middle). It is
     /// offered there and not where nothing above answers or the one that
-    /// answers is a disabled control.
+    /// answers is a disabled control. (issues/20261013-macos-show-menu-ancestor-contextmenu.md)
     func testShowMenuReachesTheNearestAncestorThatAnswers() throws {
         let p = presenter(inSession: true), window = try XCTUnwrap(windows.last)
         func run(_ id: Int, _ text: String, parent: Int, _ props: [String: String] = [:], _ handlers: [String] = []) -> [String: Any] {
@@ -887,10 +888,10 @@ final class ContextMenuMacTests: XCTestCase {
         XCTAssertEqual(heard, [20])
     }
 
-    /// Show menu on a node with a `contextPopover` runs its action and
+    /// X84: show menu on a node with a `contextPopover` runs its action and
     /// then tracks the popover's native menu, as the ContextMenu key does. A
     /// default `button`'s accessibility element is its `NSButton`'s cell
-    /// (AppKit ignores the button), and its show menu is
+    /// (LLP 1069.011 D4; AppKit ignores the button), and its show menu is
     /// its node's: a `contextPopover` is all such a button can have for it.
     func testShowMenuOpensTheContextPopoversMenu() throws {
         try XCTSkipIf(ExactEnv.agentMode, "the agent presents painted popovers")
@@ -938,19 +939,19 @@ final class ContextMenuMacTests: XCTestCase {
                                windowNumber: window.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: type == .leftMouseDown ? 1 : 0)!
         }
         let up = event(.leftMouseUp)
-        clicksArriveAsInTheKeyWindow() // a test's process is never active
+        clicksArriveAsInTheKeyWindow() // a test's process is never active (LLP 1115.000 D7.9)
         NSApp.postEvent(up, atStart: true)
         NSApp.sendEvent(event(.leftMouseDown))
         if NSApp.nextEvent(matching: [.leftMouseUp], until: nil, inMode: .default, dequeue: true) != nil { NSApp.sendEvent(up) }
     }
 
-    /// A Control-click is the Mac's secondary click, as Chrome sends it:
+    /// X85: a Control-click is the Mac's secondary click, as Chrome sends it:
     /// `contextmenu` at its point, with the primary button and Control held,
     /// and no `click`. On a link (on its title), a drawn button, a box and a
     /// native button whose `contextmenu` or `contextPopover` answers, it runs
     /// that as a right-click does and presses nothing. On selectable text
-    /// with no authored handler it selects the word and opens the text menu,
-    /// and a plain click still presses.
+    /// with no authored handler it selects the word and opens the text menu
+    /// (#454), and a plain click still presses.
     func testAControlClickIsTheContextClickWhereOneAnswers() throws {
         try XCTSkipIf(ExactEnv.agentMode, "the agent opens no native menu")
         let p = presenter(inSession: true), window = try XCTUnwrap(windows.last)
@@ -998,14 +999,14 @@ final class ContextMenuMacTests: XCTestCase {
         XCTAssertEqual(try controlClick(23), ["contextmenu 22"], "a drawn button's")
         XCTAssertEqual(try controlClick(24), ["menu Pin"], "a box's contextPopover")
         XCTAssertEqual(try controlClick(25), ["menu Pin"], "a native button's contextPopover")
-        XCTAssertEqual(try controlClick(26, at: NSPoint(x: 6, y: 15)), ["menu Look Up “Alpha”"], "plain text: the word's text menu")
+        XCTAssertEqual(try controlClick(26, at: NSPoint(x: 6, y: 15)), ["menu Look Up “Alpha”"], "plain text: the word's text menu (#454)")
         XCTAssertEqual(p.selection.selectedText(), "Alpha")
         heard = []
         click(window, at: try XCTUnwrap(p.views[21]).convert(NSPoint(x: 50, y: 15), to: nil))
         XCTAssertEqual(heard, ["press 20"], "a plain click still presses")
     }
 
-    /// On AppKit's own controls: a Control-click on a checkbox, a
+    /// X85 on AppKit's own controls: a Control-click on a checkbox, a
     /// switch, a radio, a range, a select, a date field or a tablist's
     /// segmented control inside a node whose `contextmenu` answers runs that
     /// `contextmenu`, as Chrome's does, and the control keeps its value; so
@@ -1090,13 +1091,13 @@ final class ContextMenuMacTests: XCTestCase {
         XCTAssertEqual(heard, ["checked 31 true"], "a plain click still checks it")
     }
 
-    /// A run is no view, but the web's run is an element, and a
+    /// X77: a run is no view, but the web's run is an element, and a
     /// secondary click on it (a right-click, a Control-click) runs the
     /// nearest run's own `contextmenu` from the run's first line's top left,
     /// as Chrome measures an inline element, then its `contextPopover`'s
     /// menu, and ends there. A run with none leaves the paragraph's handler,
-    /// and plain words the word and text menu. Show menu on a run's
-    /// element opens its `contextPopover` too, not only its action.
+    /// and plain words #454's word and text menu. Show menu on a run's
+    /// element opens its `contextPopover` too (X84 ran only its action).
     func testASecondaryClickOnARunRunsTheNearestRunsContextMenu() throws {
         try XCTSkipIf(ExactEnv.agentMode, "the agent opens no native menu")
         let p = presenter(inSession: true), window = try XCTUnwrap(windows.last)
@@ -1175,7 +1176,7 @@ final class ContextMenuMacTests: XCTestCase {
         click(window, at: alpha.convert(word, to: nil), flags: .control)
         let deadline = Date(timeIntervalSinceNow: 5)
         while heard.isEmpty && Date() < deadline { RunLoop.main.run(mode: .default, before: Date(timeIntervalSinceNow: 0.02)) }
-        XCTAssertEqual(heard, ["menu Look Up “Alpha”"], "plain words: the word's text menu")
+        XCTAssertEqual(heard, ["menu Look Up “Alpha”"], "plain words: the word's text menu (#454)")
         // Show menu on the runs' elements: each one's own, its contextPopover
         // too; "the team" has none and its paragraph's answers.
         let elements = try XCTUnwrap(p.views[8]?.accessibilityChildren() as? [NSAccessibilityElement])
@@ -1335,7 +1336,7 @@ final class ContextMenuMacTests: XCTestCase {
         }
     }
 
-    /// "Submenus": a source (1) naming popover `row-menu`
+    /// LLP 1021 §5, "Submenus" (#141): a source (1) naming popover `row-menu`
     /// (2): Pinned (4, checked), Copy (7, opening `copy-menu`), an `hr` (6),
     /// Delete (5). `copy-menu` (8): Copy path (10), Copy link (11), an `hr`
     /// (12), Absolute paths (13, checked). `inside` authors `copy-menu` as a

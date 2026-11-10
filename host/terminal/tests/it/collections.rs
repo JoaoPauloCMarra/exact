@@ -1,4 +1,5 @@
 //! The terminal's real viewport drives the shared collection window.
+//! @ref LLP 1010 §6.5 / LLP 1101 D6-D7.
 
 use exact_terminal::host::{Host, Key, Mode};
 use exact_terminal::vt::Vt;
@@ -231,7 +232,7 @@ fn followed_end_tracks_changed_terminal_list_padding() {
     }
 }
 
-/// A row's margin is whole cells, as the kernel lays
+/// LLP 1121 stage 11 (c): a row's margin is whole cells, as the kernel lays
 /// it out, when a keyed jump aligns it too: rows with 8 px of bottom margin
 /// (half a row: none, laid out) end at row 30 on the list's last row, and
 /// rows with 14 px (a row) put row 30's text on the last row, its margin

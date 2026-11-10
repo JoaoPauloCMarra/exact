@@ -1,4 +1,4 @@
-// Real-touch fixture: a grouped list whose rows
+// Real-touch fixture (LLP 1080.000, LLP 1084 D5): a grouped list whose rows
 // UIKit draws, its authored rows hidden beneath. `tap <testId>` under
 // `--touch platform` aims at the cell or accessory a finger sees: the
 // switch flips `on`, the detail button and the row each count a press

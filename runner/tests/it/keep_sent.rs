@@ -1,5 +1,5 @@
-//! A request with effects that the runner lets go runs to its end:
-//! the runner offers it to the source when the commit ends, keeps it
+//! A request with effects that the runner lets go runs to its end (LLP 1146
+//! D2): the runner offers it to the source when the commit ends, keeps it
 //! when the source takes it, and delivers its reply to `module_landed`. A
 //! refused commit keeps nothing: what it let go is in flight again.
 use exact_kernel::Kernel;
@@ -308,8 +308,8 @@ fn a_refused_commit_keeps_nothing_it_let_go() {
 }
 
 /// Kept requests the host refuses at admission settle as module work lands,
-/// one a pump, each once, and the second still waiting asks for its own pump:
-/// each continuation hears its failure, and the runner holds
+/// one a pump, each once, and the second still waiting asks for its own pump
+/// (LLP 1146 §2.1): each continuation hears its failure, and the runner holds
 /// the ticket no more.
 #[test]
 fn kept_requests_the_host_refuses_together_each_settle_once() {
@@ -338,7 +338,7 @@ fn kept_requests_the_host_refuses_together_each_settle_once() {
 }
 
 /// An ordered kept request the host refuses fences later ordered work and
-/// settles only once earlier ordered work has, then once.
+/// settles only once earlier ordered work has (LLP 1041 §8.4), then once.
 #[test]
 fn an_ordered_kept_request_the_host_refuses_waits_behind_ordered_work() {
     let (mut r, seen) = boot(true);
@@ -382,7 +382,7 @@ fn a_refused_commit_after_a_module_turn_keeps_its_writes() {
 
 /// A kept reply's module turn writes the store: a reader whose request may
 /// never land (`held`) is asked again at once, and one in flight that will
-/// land (`reader`) waits for its reply.
+/// land (`reader`) waits for its reply (LLP 1146 §2.3).
 #[test]
 fn a_held_store_reader_is_asked_again_at_once_after_module_work() {
     let (mut r, _) = boot(true);
@@ -403,7 +403,7 @@ fn a_held_store_reader_is_asked_again_at_once_after_module_work() {
 
 /// A kept reply's module turn writes the store: `reader`, in flight, waits
 /// for its reply. An ordinary write after it asks `reader` again at once,
-/// as any other write does.
+/// as any other write does (LLP 1146 §2.3).
 #[test]
 fn module_work_s_wait_on_a_reader_lapses_at_the_next_write() {
     let (mut r, _) = boot(true);

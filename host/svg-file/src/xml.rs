@@ -1,4 +1,4 @@
-//! A strict XML tokenizer for SVG documents: elements,
+//! A strict XML tokenizer for SVG documents (LLP 1011.001 D2): elements,
 //! attributes and character data as events, with the five predefined
 //! entities and numeric references decoded, comments and processing
 //! instructions skipped, CDATA read as text, and a DOCTYPE accepted only
@@ -43,7 +43,7 @@ pub fn tokenize(text: &str) -> Result<Vec<Event>, Error> {
 }
 
 /// The root start tag alone: its name and attributes, from a prefix of the
-/// document, for a header read that stops before the content (the
+/// document, for a header read that stops before the content (D4's
 /// metadata). `None` when no start tag lies in the prefix.
 pub fn root_tag(prefix: &str) -> Option<(String, Vec<(String, String)>)> {
     let mut t = Tokenizer {

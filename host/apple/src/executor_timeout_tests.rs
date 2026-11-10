@@ -83,7 +83,7 @@ impl Transport for SlowRedirects {
 }
 
 #[test]
-#[ignore = "waits on the wall clock (a 180 ms deadline across slow redirect hops, under 3 s), timing-sensitive on a loaded machine; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: waits on the wall clock (a 180 ms deadline across slow redirect hops, under 3 s), timing-sensitive on a loaded machine; bun scripts/async.mjs runs it"]
 fn the_executor_deadline_bounds_a_slow_redirect_chain_as_one_exchange() {
     let opened = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let grants = "net.fetch https://example.test";
@@ -162,7 +162,7 @@ fn a_deadline_out_of_range_or_on_work_that_is_not_http_is_refused() {
 /// byte every 50 ms, which an idle timeout alone would never end. Each times
 /// out on its deadline, and the trickling exchange is torn down.
 #[test]
-#[ignore = "a real socket under the platform transport (URLSession), timing-sensitive on a loaded machine; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: a real socket under the platform transport (URLSession), timing-sensitive on a loaded machine; bun scripts/async.mjs runs it"]
 fn the_platform_transport_cancels_a_silent_and_a_trickling_server_at_the_deadline() {
     let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
     let port = listener.local_addr().unwrap().port();

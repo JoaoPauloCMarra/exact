@@ -1,4 +1,4 @@
-//! The `delivery` resource and its two commands, end to end
+//! The `delivery` resource and its two commands (LLP 1030 D7), end to end
 //! over `contract/corpus/delivery.contract`: the embedded answer a baked
 //! plan carries, a host's facts arriving in one commit, `state.delivery` as
 //! the agent's mirror, the commands reaching `take_commands` by name, and

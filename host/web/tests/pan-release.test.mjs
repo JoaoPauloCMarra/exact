@@ -1,4 +1,4 @@
-// `panrelease` in a real browser: the input glue's
+// `panrelease` in a real browser (LLP 1057 §10.6 phase 2): the input glue's
 // pan, driven by CDP mouse and touch events. A pan that began ends with one
 // release carrying the tracker's velocity over the contact's samples (each at
 // its event's own timestamp); a pan that never left the slop releases nothing;
@@ -114,7 +114,7 @@ check('a pan that began releases once with its velocity; a tap none; a cancel at
     log = await take();
     expect(kinds(log)).toContain('pan');
     expect(log.filter(([kind]) => kind === 'panrelease')).toEqual([['panrelease', 1, '0,0']]);
-    // The journal says the browser took it, and what keeps it.
+    // The journal says the browser took it, and what keeps it (files diary F10).
     expect(log.filter(([kind]) => kind === 'journal').map(([, line]) => line)).toEqual([expect.stringMatching(/^pan cancelled: the browser took the touch contact .*touch-action="none"/)]);
   } finally {
     await suite.close();

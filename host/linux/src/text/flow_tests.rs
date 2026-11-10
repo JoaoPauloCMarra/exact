@@ -1,4 +1,4 @@
-//! Shape once, fragment order and bounded residency.
+//! @ref LLP 1043.000 §3 D6/D7 — shape once, fragment order and bounded residency.
 use super::*;
 use exact_textflow::FlowShape;
 fn spec(text: &str) -> Spec {
@@ -159,7 +159,7 @@ fn fragment_byte_coverage_survives_clusters_and_hard_breaks() {
     let source = "office affinity e\u{301} 👩‍👩‍👧‍👦   word\n\nשלום עולם\r\nNext\t\tend".repeat(30);
     let mut s = spec(&source);
     s.overflow_wrap = exact_kernel::OverflowWrap::Anywhere;
-    // Fragments address the spec's text, collapsed per CSS.
+    // Fragments address the spec's text, collapsed per CSS (LLP 1053 G5).
     let text = s.runs[0].text.clone();
     assert!(text.len() < source.len());
     let p = engine.paragraph_flow(&s, 190., &circle(90.), None);
@@ -194,7 +194,7 @@ fn unbreakable_normal_word_reports_its_actual_overflow() {
 fn trailing_blank_lines_keep_source_glyphs_in_their_own_bands() {
     let mut engine = TextEngine::new();
     let text = "First source line.\nSecond source line.\n\n\n";
-    // Hard breaks are preserved segment breaks: `pre-wrap` (CSS).
+    // Hard breaks are preserved segment breaks: `pre-wrap` (CSS; LLP 1053 G5).
     let mut pre = spec("");
     pre.white_space = exact_kernel::WhiteSpace::PreWrap;
     pre.runs[0].text = text.into();
@@ -241,7 +241,7 @@ fn css_white_space_changes_flow_width_and_breaks() {
         .flat_map(|r| r.glyphs.iter().map(|g| g.x))
         .collect();
     assert_eq!(normal_ink, normalized_ink);
-    // The spec collapsed its source; preserve the raw source.
+    // The spec collapsed its source (LLP 1053 G5); preserve the raw source.
     s.white_space = exact_kernel::WhiteSpace::PreWrap;
     s.runs[0].text = "A    B\nC".into();
     let preserved = engine.paragraph_flow(&s, 500.0, &circle(900.0), None);
@@ -261,7 +261,7 @@ fn css_white_space_changes_flow_width_and_breaks() {
 
 #[test]
 fn pre_line_flows_the_lines_its_plain_layout_has() {
-    // Flowed text breaks where plain text does.
+    // @ref LLP 1053 §0 G5 — flowed text breaks where plain text does.
     let mut engine = TextEngine::new();
     let s = crate::paint::text_spec(
         &exact_kernel::StyleProps {

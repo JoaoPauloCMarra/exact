@@ -1,10 +1,10 @@
-//! `LLP 0042` in running prose, resolved to the document it names.
+//! `LLP 1234` in running prose, resolved to the document it names.
 //!
-//! A corpus cites itself constantly — "LLP 0030 D7", "RFC 0491 §3" — and a
+//! A corpus cites itself constantly — "LLP 1030 D7", "RFC 0491 §3" — and a
 //! reader that leaves those as text is a reader you navigate by scrolling
 //! the sidebar. Splitting a run at each reference is all this is; whether a
 //! number resolves is the index's business, and one that does not stays
-//! plain text rather than becoming a link to nothing.
+//! plain text rather than becoming a link to nothing. @ref LLP 1033
 
 use markdown_parse::Run;
 

@@ -1,4 +1,5 @@
 //! Shared device grants; optional diagnostics allocate only on request.
+//! @ref llp/1046.006.000-render-hooks.rfc.md#d6-inspection-and-budgets
 use crate::{wgpu, Gpu};
 use std::fmt;
 
@@ -66,7 +67,7 @@ pub async fn load_gpu(
 
 /// [`load_gpu`]; `module`: a native module's own device, whose adapter
 /// chooses the process's GPU tier, unless its host told one, before the
-/// device is made. A fixture's or a look frame's device
+/// device is made (LLP 1139.003 D2). A fixture's or a look frame's device
 /// never chooses.
 pub(crate) async fn load_gpu_as(
     instance: wgpu::Instance,
@@ -134,6 +135,7 @@ fn memory_hints() -> wgpu::MemoryHints {
 /// half-precision shader arithmetic (a game's colour math, which a mobile GPU
 /// runs at twice the rate in half the registers) and a first instance in
 /// indirect draws (a game's culled draws then share one scene binding).
+/// @ref llp/1046.003-game-engine-as-built.explainer.md#compressed-textures-2026-09-23
 pub fn requested_features() -> wgpu::Features {
     wgpu::Features::TIMESTAMP_QUERY
         | wgpu::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS

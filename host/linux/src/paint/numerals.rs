@@ -1,6 +1,6 @@
-//! A paragraph under `-exact-content-transition:
+//! @ref LLP 1077 D15 — a paragraph under `-exact-content-transition:
 //! numeric` rolls the glyphs that changed, as SwiftUI's numeric text does on
-//! Apple: when the number rose, the new glyph comes down
+//! Apple (LLP 1115.003 D3): when the number rose, the new glyph comes down
 //! from above out of a blur as the old one sinks, blurs and fades (the other
 //! way when it fell, and always for `numeric-countdown`), each changed glyph
 //! a beat after the one to its left; a glyph that stays slides to its new

@@ -1,4 +1,4 @@
-//! CSS multi-column layout against literal Chrome.
+//! CSS multi-column layout (LLP 1093) against literal Chrome.
 //!
 //! Chrome 154, 2026-10-04, by the method of `browser_cases.rs` (the outer box
 //! is the kernel root, everything `box-sizing: content-box` in a 16px/18px
@@ -11,8 +11,8 @@
 //! (`id>parent>declarations`, then `>` and a text node's lines joined by
 //! `|`), Chrome's rects (`id=x,y,w,h`, fragments joined by `/`), the
 //! multi-column containers' scroll sizes (`id=w,h`) and each paragraph's
-//! line starts (`id:x,y;x,y`). A case of a declared deviation (its name
-//! begins `deviation:`) carries three more fields, the kernel's own rects, scroll sizes and line
+//! line starts (`id:x,y;x,y`). A case D10 declares (its name says which)
+//! carries three more fields, the kernel's own rects, scroll sizes and line
 //! starts (`-` where the kernel matches Chrome), and both comparisons use
 //! those: each row holds the deviation to exactly what is declared.
 use crate::browser_cases::{css_rows, props};
@@ -157,7 +157,7 @@ fn columns_land_where_chrome_puts_them() {
         let name = field[0];
         let list = nodes(field[2]);
         let k = lay_out(field[1], &list);
-        // A deviation case's kernel columns, where it says the kernel differs.
+        // A D10 case's kernel columns, where it says the kernel differs.
         let want = |i: usize| match field.get(i + 3) {
             Some(own) if *own != "-" => *own,
             _ => field[i],
@@ -276,7 +276,7 @@ fn a_paragraph_s_height_bound_caps_its_columns() {
 
 /// A height bound that holds a percentage caps the columns where its basis
 /// is definite, as layout resolved it: an authored height or a stretched
-/// flex item gives one (Chrome 154 puts the fourth 20-point
+/// flex item gives one (LLP 1116 D5; Chrome 154 puts the fourth 20-point
 /// block at the top of the second column of a 60-point cap, the sixth of a
 /// 100-point one).
 #[test]

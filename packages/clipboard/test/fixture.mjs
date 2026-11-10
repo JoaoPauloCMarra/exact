@@ -1,4 +1,4 @@
-// The conformance fixture:
+// The conformance fixture (LLP 1133.001 D7, LLP 1133.006 §9 stage 1 item 7):
 // an app `exact new` made outside the repo, its files replaced by
 // `fixture/`'s, depending on this package by `file:` and installed.
 import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';

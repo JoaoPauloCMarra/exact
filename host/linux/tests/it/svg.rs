@@ -1,4 +1,4 @@
-//! A press inside an `svg` goes to the element under it,
+//! LLP 1055.000 D17: a press inside an `svg` goes to the element under it,
 //! by `pointer-events`, and bubbles as a box's press does.
 use exact_linux::{presenter::PainterChoice, Presenter};
 
@@ -80,9 +80,9 @@ fn a_zero_length_subpath_paints_its_cap() {
     assert_ne!(red(70), (255, 0, 255), "a butt cap paints nothing");
 }
 
-/// A portable symbol role is its path, stroked as the web
+/// LLP 1084 §4: a portable symbol role is its path, stroked as the web
 /// strokes it, in its `color`; an `sf/` name stays an empty box, unless it is a
-/// role's own Apple name, which draws that role.
+/// role's own Apple name, which draws that role (LLP 1121 D10).
 #[test]
 fn a_symbol_role_is_its_path_and_an_sf_name_is_empty() {
     const SYMBOLS: &str = "component App\n  view\n    row\n      image \"symbol:checkmark\" testId=\"role\" width=48 height=48 object-fit=\"contain\" color=\"#ff0000\"\n      image \"symbol:sf/checkmark.seal\" testId=\"sf\" width=48 height=48 object-fit=\"contain\" color=\"#ff0000\"\n      image \"symbol:sf/checkmark\" testId=\"apple\" width=48 height=48 object-fit=\"contain\" color=\"#ff0000\"\n";
@@ -188,7 +188,7 @@ fn every_symbol_role_draws_its_path() {
     assert!(empty.is_empty(), "roles that draw nothing: {empty:?}");
 }
 
-/// A path's `d` under `transition` morphs
+/// LLP 1055.000 D15 (issue #123): a path's `d` under `transition` morphs
 /// on the agent's clock, as Chrome does: the chevron is flat half way, and
 /// stands the other way when it settles.
 #[test]
@@ -236,7 +236,7 @@ fn a_transitioning_d_morphs_the_path() {
     assert_eq!(ink(&mut p), rest, "settled the other way");
 }
 
-/// An even-odd icon's form (`evenodd:` before its path) fills
+/// Stage 14 C2: an even-odd icon's form (`evenodd:` before its path) fills
 /// its path even-odd, so a ring of two squares wound alike has its hole; the
 /// same path as a nonzero icon is filled through, as before.
 #[test]

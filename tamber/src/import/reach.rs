@@ -1,4 +1,4 @@
-//! The importers' role analysis over names:
+//! The importers' role analysis over names (the checker bound's round 3):
 //! what a name reaches through the values that name others, found for every
 //! name at once, iteratively and linear in the design and the import, so a
 //! long chain of names is neither a recursion apiece nor a scan apiece.
@@ -77,8 +77,8 @@ pub(super) fn reaching(edges: &[Vec<usize>], seeds: impl IntoIterator<Item = usi
 /// that token names the words of the import token's value, else the design
 /// token's default. Every name the import or the design holds, and every
 /// word of the design's values, is a node; so is each token a name resolves
-/// to, once, so that its words are read once however many spellings name
-/// it.
+/// to, once, so that its words are read once however many spellings name it
+/// (Astra's round 3 re-check).
 pub(super) fn names_reaching<'a>(
     design: &'a Design,
     roles: &'a [(String, bool)],

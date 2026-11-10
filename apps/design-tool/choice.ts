@@ -1,5 +1,5 @@
-// A held import's card's choice: which of its tokens and role overrides are in, as the card begins and
-// as a value edit carries it to the import held again.
+// A held import's card's choice (LLP 1122 D11): which of its tokens and role overrides are in, as the card begins and
+// as a value edit carries it to the import held again (third pass #6).
 
 /** Whether a held import's card begins with everything it holds chosen (a recomputed import holds only what was
  * chosen) or as a fresh import's does, its tokens in and its role overrides off until ticked. A value edit holds the
@@ -9,7 +9,7 @@
 export const startsChosen = (h: any, r: any): boolean => !!r && (!!h?.replaces || !!r.kept) && !(h?.editedBy && h.replaces && r.from === h.replaces);
 
 /** An import's items its card has chosen: the server's choice (`heldChoice.base`) when there is one, else the mapped
- * tokens unless unticked and the role overrides only if ticked, or, on a recomputed import
+ * tokens unless unticked and the role overrides only if ticked (LLP 1121 D1), or, on a recomputed import
  * (`startsChosen`), all unless unticked; `picked`'s flips (`<proposal>:<i[,j]>`, joined by `;`) over it. */
 export function chosenOf(proposal: string, picked: string, r: any, ops: unknown[], h: any): number[] {
   const tokens = Number(r?.tokens ?? 0), recomputed = startsChosen(h, r), chose = heldChoice.base(proposal), base = chose && new Set(chose);

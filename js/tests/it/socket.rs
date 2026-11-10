@@ -1,5 +1,5 @@
-//! A resource's two-way socket in a TypeScript module, through the runner:
-//! the mapper's handle and its replies, a mutation's
+//! A resource's two-way socket in a TypeScript module, through the runner
+//! (LLP 1016.000 D7): the mapper's handle and its replies, a mutation's
 //! staged frames, a resource's answer's sends, and what refuses them.
 
 #![cfg(exact_js_engine)]
@@ -531,7 +531,7 @@ fn an_answer_let_go_sends_nothing_more() {
     );
 }
 
-/// The socket bounds hold per answer, over all its turns; past them, after its own
+/// D7's bounds hold per answer, over all its turns; past them, after its own
 /// close, or on a socket no resource owns, `send` throws, what went before
 /// stands, and the answer is not failed.
 #[test]
@@ -636,8 +636,8 @@ fn a_waiting_mutation_sends_as_an_answer() {
     );
 }
 
-/// Code that resumes from an await resumes as the answer it began in,
-/// whichever turn drains it. A waiting answer that a mapper's
+/// Code that resumes from an await resumes as the answer it began in (LLP
+/// 1133.002 D14), whichever turn drains it. A waiting answer that a mapper's
 /// frame settles sends its next request as itself when it is asked again. A
 /// let-go answer has no more turns: its code that another answer's turn
 /// resumes refuses to send, rather than sending as that answer.

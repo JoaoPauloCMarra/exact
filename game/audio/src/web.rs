@@ -8,6 +8,7 @@ type CachedBuffer = (Pcm, AudioBuffer);
 
 /// source → (splitter, for stereo) → left and right gains → merger → destination.
 /// Mono feeds both gains; stereo feeds each gain its own channel, as on Apple.
+/// @ref LLP 1046.003 §AU4 (outputs)
 struct Voice {
     source: AudioBufferSourceNode,
     nodes: Vec<AudioNode>,

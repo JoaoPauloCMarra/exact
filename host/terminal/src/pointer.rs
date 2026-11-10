@@ -1,9 +1,10 @@
-//! Pointer events against what the terminal last showed: one record of the
-//! presented painting — its boxes, its scrollers, the open layer's bounds, and
-//! where its first row sits on the screen — answers every click and wheel, in
-//! both modes. Inline, the origin is the live region's screen row, learned from
-//! the terminal's answer to a cursor-position query; until it is known, a
-//! pointer event goes nowhere.
+//! Pointer events against what the terminal last showed (LLP 1101.002 §0
+//! P3): one record of the presented painting — its boxes, its scrollers,
+//! the open layer's bounds, and where its first row sits on the screen —
+//! answers every click and wheel, in both modes. Inline, the origin is the
+//! live region's screen row, learned from the terminal's answer to a
+//! cursor-position query; until it is known, a pointer event goes nowhere.
+
 use crate::grid::CellRect;
 use crate::host::Host;
 use crate::paint::Painted;

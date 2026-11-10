@@ -1,4 +1,4 @@
-//! A page built ahead of time marks the header that is
+//! LLP 1115.000 D4.15 — a page built ahead of time marks the header that is
 //! its route's bar `data-exact-bar`, by the kernel's rule
 //! (`exact_kernel::bars::header_bar`), as navigation.js marks it (`barItems`).
 //! The mark sizes the bar's symbols (neutral.css), so they are the bar's size
@@ -73,7 +73,7 @@ pub(super) fn bar_header<S: Source>(
         .filter(|header| !site_header(src, *header))
 }
 
-/// Whether `header` is a site's: it holds a `nav` anywhere,
+/// LLP 1153 D8 — whether `header` is a site's: it holds a `nav` anywhere,
 /// a popover's too, or more than one link outside any `popover` or
 /// `dialog` in it (a menu's links are its button's, as an app bar's are).
 /// The shell draws it as written, with no app bar (`data-exact-site`), as

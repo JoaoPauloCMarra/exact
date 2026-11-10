@@ -1,6 +1,6 @@
 use super::*;
 
-/// A bound colour naming a theme entry or an
+/// @ref LLP 1095 D4 — a bound colour naming a theme entry or an
 /// overridden role writes the entry's CSS, as the literal path does.
 #[test]
 fn a_bound_theme_name_writes_its_entry() {
@@ -32,7 +32,7 @@ fn a_bound_theme_name_writes_its_entry() {
             "#123456",
             // The tint's role stays itself, under an authored accent too;
             // no name is read inside a colour function but a synthetic
-            // token's, which the view wrote.
+            // token's, which the view wrote (LLP 1121 D3).
             run(&SYSTEM_COLOR_MAP, &["AccentColor"])[0].clone(),
             "light-dark(#c8102eff, #000000ff)",
             "light-dark(rgb(0 0 0 / calc((1))), brand)",
@@ -41,7 +41,7 @@ fn a_bound_theme_name_writes_its_entry() {
     );
 }
 
-/// A design's dotted name and a synthetic token's
+/// LLP 1121 D3 — a design's dotted name and a synthetic token's
 /// expression, bound, read their folded colours as the kernel does.
 #[test]
 fn a_bound_design_name_and_synthetic_token_write_their_values() {
@@ -208,7 +208,7 @@ fn balanced_wrap_writes_the_same_property_for_bound_values() {
     assert_eq!(writes[0].map, None);
 }
 
-/// WebKit's and Chromium's name, bound or not.
+/// LLP 1019 D12: WebKit's and Chromium's name, bound or not.
 #[test]
 fn bound_font_smoothing_writes_the_prefixed_property() {
     let writes = style_writes(StyleId::FontSmoothing as u16, false, true).unwrap();
@@ -219,7 +219,7 @@ fn bound_font_smoothing_writes_the_prefixed_property() {
     assert!(writes[1].map.unwrap().contains("grayscale"));
 }
 
-/// A bound `::placeholder` colour writes css.rs's
+/// LLP 1104 D3: a bound `::placeholder` colour writes css.rs's
 /// private property, which index.html's `::placeholder` rule reads.
 #[test]
 fn a_bound_placeholder_colour_writes_the_private_property() {
@@ -288,7 +288,7 @@ pub(crate) fn run(map: &str, values: &[&str]) -> serde_json::Value {
     serde_json::from_slice(&out.stdout).unwrap()
 }
 
-/// A bound text style is written as css.rs writes a
+/// LLP 1115 D3: a bound text style is written as css.rs writes a
 /// literal one; a number is left for the row's `px`.
 #[test]
 fn a_bound_text_style_is_its_rem() {
@@ -307,7 +307,7 @@ fn a_bound_text_style_is_its_rem() {
     );
 }
 
-/// A bound control size writes what css.rs writes for
+/// LLP 1069.011.001 D8: a bound control size writes what css.rs writes for
 /// the literal one, and a clear (`null`) writes nothing.
 #[test]
 fn a_bound_control_size_writes_the_literal_declarations() {
@@ -339,7 +339,7 @@ fn a_bound_control_size_writes_the_literal_declarations() {
 
 #[test]
 fn a_computed_transition_is_checked_as_an_authors() {
-    // The new tint becomes the property the browser
+    // LLP 1081 D5: the new tint becomes the property the browser
     // animates; the old spelling, the host's own name (behind a comment
     // too) and any old name are dropped, as the native parser refuses
     // them; the physics spring stays with the engine.
@@ -422,7 +422,7 @@ pub(crate) fn assert_spring_transitions(map: &str) {
     }
 }
 
-/// A bound `color-scheme` writes `light` or `dark`, and a
+/// LLP 1034 §8: a bound `color-scheme` writes `light` or `dark`, and a
 /// bound `normal` (or an invalid value) retains an unset declaration.
 #[test]
 fn a_bound_color_scheme_is_light_dark_or_unset() {
@@ -476,7 +476,7 @@ fn a_role_name_inside_another_token_stays_as_written() {
         "background2",
         "fill(1)",
         "/* label */ red",
-        // An Exact role's bare name is no colour.
+        // An Exact role's bare name is no colour (LLP 1081 D2).
         "system-orange",
         "linear-gradient(secondary-label, fill)",
     ];
@@ -526,7 +526,7 @@ fn a_bound_platform_color_is_admitted_only_as_a_plan_literal() {
 /// A bound side is the side its author wrote: `margin-left` stays
 /// `margin-left`, not the logical `margin-inline-start` css.rs writes for a
 /// side only the sheet set, so right to left it stays on the left, as the
-/// kernel and the wasm target keep it;
+/// kernel and the wasm target keep it (s13c's restyle line read it there);
 /// one only the sheet binds is that logical side still.
 #[test]
 fn a_bound_side_is_written_as_its_author_wrote_it() {

@@ -1,11 +1,11 @@
-// `input type="date|time|datetime-local"` is an
+// @ref LLP 1069.001 D5 — `input type="date|time|datetime-local"` is an
 // `NSDatePicker`, a text field and stepper, formatted in the reported
 // locale. HTML's values carry no zone, so the picker reads and writes them
 // at UTC and never converts; an edit is HTML's `input` then `change`. The
 // bound value is written into it when it changes, as the web build writes
 // an input's `value` and this host a select's or a text field's: an action
 // that has not written it yet (a `send` whose reply is in flight) leaves the
-// person's choice showing, where it used to clear it.
+// person's choice showing, where it used to clear it (x2apps kanban2 #5).
 #if os(macOS)
 import AppKit
 
@@ -49,7 +49,7 @@ extension ControlHost {
         if let owner = presenter.views[id] { configureDate(picker, owner, accent: nil) }
     }
 
-    /// The agent's `type <id> <value>`: the value an edit reports, in
+    /// The agent's `type <id> <value>` (D9): the value an edit reports, in
     /// HTML's format; the runner holds it to the format and `min`/`max`.
     func typeDate(_ picker: NSDatePicker, _ node: NodeView, _ text: String) -> [String: Any] {
         let kind = kinds[node.id] ?? "date"
@@ -68,10 +68,10 @@ extension ControlHost {
 }
 
 /// HTML's empty date, time or datetime, where an `NSDatePicker`, which
-/// always holds a date, would show its reference date, 1/1/2001: the
-/// field's own text is clear, and it draws its author's
+/// always holds a date, showed its reference date, 1/1/2001 (x2apps kanban
+/// F23): the field's own text is clear, and it draws its author's
 /// `placeholder` in the placeholder colour or, with none, no words at all
-/// (it had drawn Chrome's `mm/dd/yyyy`). Editing an
+/// (LLP 1115.000 D13.1; it had drawn Chrome's `mm/dd/yyyy`). Editing an
 /// empty one starts at now, and only a change commits it.
 final class DateCellMac: NSDatePickerCell {
     override func accessibilityAttributeValue(_ attribute: NSAccessibility.Attribute) -> Any? {

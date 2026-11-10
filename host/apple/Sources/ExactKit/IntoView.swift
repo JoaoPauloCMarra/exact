@@ -1,9 +1,9 @@
-// `scrollIntoView("element-id", block=, inline=, behavior=)`:
-// `Element.scrollIntoView()` on any element by its HTML `id`, as
+// `scrollIntoView("element-id", block=, inline=, behavior=)` (minesweeper
+// F3): `Element.scrollIntoView()` on any element by its HTML `id`, as
 // `focus("id")` names one. Every scroll container above it aligns it,
 // innermost first, then the page, as CSSOM View's "scroll an element into
 // view" does; each clamps to its own range. A list's row by key is the
-// runner's. The scrollers' observers tell the app
+// runner's (LLP 1070.000). The scrollers' observers tell the app
 // and a virtualized list's window, as a reader's scroll does.
 import CoreGraphics
 

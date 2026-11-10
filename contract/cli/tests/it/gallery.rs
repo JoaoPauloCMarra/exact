@@ -1,4 +1,4 @@
-//! `contract gallery`: the design tool's variant
+//! `contract gallery` (LLP 1139 D5, §9 Q2): the design tool's variant
 //! gallery of an app's library components, generated into a build cache
 //! and checked by the compiler. Each cell is a component's variants' first
 //! values or one other value alone; every other prop a placeholder by type;
@@ -124,7 +124,7 @@ fn the_gallery_places_each_cell_refuses_one_the_compiler_wont_take_and_leaves_th
     let text = std::fs::read_to_string(&g.source).unwrap();
     assert!(text.contains(&format!("can't place: {why}")), "{text}");
     // A placeholder of each kind, an inert action, the variant values as written, the slot's
-    // sample: a tinted block saying "slot", not an invisible box.
+    // sample: a tinted block saying "slot", not an invisible box (stage 15 D4 batch 3 #1).
     assert!(text.contains(r#"Card(tone="quiet", compact=false, label="label", count=0, maybe=none, items=[], press=noop, info=Info(title="title", n=0))"#), "{text}");
     assert!(
         text.contains("  action noop\n")
@@ -691,8 +691,8 @@ component App
 
 /// A string prop the view names a symbol by gets a role (its own name names
 /// none), and an action prop a handler calls with its payload gets an inert
-/// action of that signature, one per signature (@exact/lists' ListRow and
-/// SwitchRow).
+/// action of that signature, one per signature (stage 13 C: @exact/lists'
+/// ListRow and SwitchRow).
 #[test]
 fn a_symbols_prop_gets_a_role_and_a_handlers_action_its_payloads_parameters() {
     let dir = fixture("handled");
@@ -1039,10 +1039,10 @@ component App
 
 /// A string prop written as a style row's value, directly or through a
 /// component it is passed to, gets a value of that row's kind, not its name,
-/// which no row reads (Avatar's `width=size`, VerifiedBadge's `color=ink`): a
-/// length row `24px`, a colour row the role `-exact-label` (a caret, an accent
-/// and a press colour too); a label keeps its name, and so does a shadow (a row
-/// that holds a colour but takes no colour alone; its name may be a token's).
+/// which no row reads (LLP 1121 stage 15 B: Avatar's `width=size`,
+/// VerifiedBadge's `color=ink`): a length row `24px`, a colour row the
+/// role `-exact-label` (a caret, an accent and a press colour too); a label keeps its name, and so does a shadow (a row that
+/// holds a colour but takes no colour alone; its name may be a token's).
 #[test]
 fn a_string_written_as_a_style_row_gets_a_value_of_its_kind() {
     let dir = fixture("styled");
@@ -1081,13 +1081,13 @@ fn a_string_written_as_a_style_row_gets_a_value_of_its_kind() {
         .expect("a Glow cell");
     assert!(glow.contains(r#"glow="glow""#), "{glow}");
     // A caret, an accent and the press colours, which refuse `currentcolor`,
-    // read the role.
+    // read the role (Astra r2).
     let inks = text
         .lines()
         .find(|l| l.contains("Inks("))
         .expect("an Inks cell");
-    // Each colour prop its own role, in declared order, so one drawn over
-    // another, as VerifiedBadge's check over its disc, shows.
+    // Each colour prop its own role, in declared order (D4 batch 2 #5: one
+    // drawn over another, as VerifiedBadge's check over its disc, shows).
     for (prop, role) in [
         ("caret", "-exact-label"),
         ("accent", "-exact-system-blue"),
@@ -1097,7 +1097,7 @@ fn a_string_written_as_a_style_row_gets_a_value_of_its_kind() {
         assert!(inks.contains(&format!(r#"{prop}="{role}""#)), "{inks}");
     }
     // A cell whose variant value is one of the roles: the other colour prop
-    // takes another, so the two never match.
+    // takes another, so the two never match (round 1, Astra).
     let blue = text
         .lines()
         .find(|l| l.contains(r#"Pair(ink="-exact-system-blue""#))
@@ -1105,14 +1105,14 @@ fn a_string_written_as_a_style_row_gets_a_value_of_its_kind() {
     assert!(!blue.contains(r#"mark="-exact-system-blue""#), "{blue}");
     assert!(blue.contains(r#"mark="-exact-label""#), "{blue}");
     // An enum colour prop's placeholder (its first literal) is taken too, and
-    // a role however it is spelled.
+    // a role however it is spelled (round 2, Astra).
     let tinted = (text.lines())
         .find(|l| l.contains("Tinted("))
         .expect("a Tinted cell");
     assert!(tinted.contains(r#"ink="-exact-system-blue""#), "{tinted}");
     assert!(tinted.contains(r#"mark="-exact-label""#), "{tinted}");
     // An enum colour placed by its placeholder (its first literal), read as
-    // written, not as its escaped source.
+    // written, not as its escaped source (re-check 2, Astra).
     let lined = (text.lines())
         .find(|l| l.contains("Lined("))
         .expect("a Lined cell");
@@ -1215,9 +1215,10 @@ component App
       Badge(badge="verified", label="a")
 "#;
 
-/// A string prop the view compares with literals is a variant of those literals
-/// and the empty string, one cell each, never its name, which draws nothing
-/// (VerifiedBadge's `badge`); a text prop keeps its name.
+/// A string prop the view compares with literals is a variant of those
+/// literals and the empty string, one cell each, never its name, which draws
+/// nothing (VerifiedBadge's `badge`, stage 15 D4 batch 1 #2); a text prop
+/// keeps its name.
 #[test]
 fn a_string_compared_with_literals_gets_a_cell_per_literal_and_the_empty_one() {
     let dir = fixture("badges");
@@ -1299,9 +1300,9 @@ component App
 "#;
 
 /// An enum prop the view compares with literals in an `if` is a variant of
-/// every value it declares, in order, one cell each (VerifiedBadge's `badge`,
-/// an enum, so "none" draws its empty cell); an enum the view never compares
-/// stays at its first value.
+/// every value it declares, in order, one cell each (VerifiedBadge's
+/// `badge`, an enum since stage 15 B batch 2, so "none" draws its empty
+/// cell); an enum the view never compares stays at its first value.
 #[test]
 fn an_enum_compared_with_literals_gets_a_cell_per_value() {
     let dir = fixture("enum-badges");
@@ -1333,9 +1334,9 @@ fn an_enum_compared_with_literals_gets_a_cell_per_value() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// An enum guarded by `!=` gets a cell per value too, so a PersonRow's or
-/// PostCard's gallery draws its badge, not only "none"; a string's `!=` adds
-/// no cells (a string's variants come from `==`).
+/// An enum guarded by `!=` gets a cell per value too (Astra's 2b r1: a
+/// PersonRow's or PostCard's gallery kept "none" and never drew a badge); a
+/// string's `!=` adds no cells (batch 1's rule is `==`).
 #[test]
 fn an_enum_guarded_by_not_equal_gets_a_cell_per_value_too() {
     let dir = fixture("ne-badges");

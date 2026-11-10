@@ -16,7 +16,7 @@ import android.view.accessibility.AccessibilityNodeProvider
 import android.widget.FrameLayout
 
 /**
- * What the reader answers accessibility services with. What the reader shows is painted: the
+ * What the reader answers accessibility services with (LLP 1115.001 D13). What the reader shows is painted: the
  * page in one view, each bar and each surface of the top layer in a [Pane]. None of it says anything to TalkBack by
  * itself, so the view that holds it answers through an [AccessibilityNodeProvider] whose virtual nodes are exact2's
  * own statement of the tree ([Native.access], `host/linux/src/presenter/access.rs`): for each node its identity,
@@ -350,7 +350,7 @@ internal class Access(private val host: View) {
     }
 
     /**
-     * What Android has for this view, for a driver's `tree --ax` ([AgentDrive]): each node's own
+     * What Android has for this view, for a driver's `tree --ax` (LLP 1080.002; [AgentDrive]): each node's own
      * [AccessibilityNodeInfo], the object Android hands a service, read back in the order a service walks it; for a
      * hosted field, the field's own. Appended to [out] as the driver's elements: what the node stands for, by its
      * class, its heading flag and its role description; its name, value and states as the node says them; its box

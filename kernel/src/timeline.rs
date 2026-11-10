@@ -1,10 +1,10 @@
-//! Animation timelines a drag drives.
+//! Animation timelines a drag drives (LLP 1057.003 D1, D4).
 //!
 //! CSS scroll-driven animations (CSS Animations 2, Scroll-driven Animations
 //! §3) name a timeline on a scroller (`scroll-timeline: <name> <axis>`) and
 //! bind a node's `animation`s to it (`animation-timeline: <name>`), over a
 //! stretch of it (`animation-range`). A drag has no CSS timeline; this is
-//! the same shape with a drag as the source, a deliberate deviation from CSS:
+//! the same shape with a drag as the source, a deviation LLP 1001 declares:
 //!
 //! - `-exact-drag-timeline: none | <dashed-ident> [x | y]?` on the node whose held
 //!   translate a drag moves: the timeline's position is that translate on
@@ -13,24 +13,24 @@
 //! - `animation-timeline: auto | <dashed-ident>` on a consumer: its
 //!   `animation`s follow the named timeline instead of the clock. Its third
 //!   value, `-exact-clock(<ident>)`, keeps them on the clock and only syncs their
-//!   starts; the lookup never sees it.
+//!   starts (LLP 1055.002); the lookup never sees it.
 //! - `animation-range: normal | <length> <length>` on the consumer: the
 //!   positions where its animations are at 0% and 100%; outside them the
 //!   progress clamps.
 //! - `timeline-scope: none | all | <dashed-ident>#`, CSS's: names declared
 //!   below a node, in scope for the node's subtree.
 //!
-//! The engine evaluates a consumer in the frame its source moves; no
+//! The engine evaluates a consumer in the frame its source moves (D2); no
 //! app code runs per frame. `animation-range` takes lengths only: a drag
 //! has no scroll range for CSS's `cover` or percentages to name. Names
-//! resolve as CSS resolves them, in the kernel ([`lookup`]), so the
+//! resolve as CSS resolves them, in the kernel ([`lookup`], D4), so the
 //! engine hears a node, never a name.
 //!
-//! The grammar and the lookup are linked by use: until a host
+//! The grammar and the lookup are linked by use (LLP 1047 D2): until a host
 //! calls [`link`], a text value for any of the four rows is refused as a
 //! bad value and no name resolves. The compiler and the native hosts link
 //! it at start; a web artifact links it when its plan sets one of the rows,
-//! which a plan that sets none never reaches.
+//! which a plan that sets none never reaches (D6).
 
 mod lookup;
 /// What a name resolves to, as the engine takes it ([`crate::Kernel::timeline_of`]).
@@ -80,9 +80,9 @@ pub struct DragTimeline {
     pub axis: Axis,
 }
 
-/// The clock timeline function, with its kind: Exact's, as
+/// The clock timeline function, with its kind (LLP 1081 D8): Exact's, as
 /// CSS has no clock timeline.
-pub const CLOCK_FUNCTION: (&str, &str) = ("-exact-clock(", "exact");
+pub const CLOCK_FUNCTION: (&str, &str) = ("-exact-clock(", "exact LLP 1055.002");
 
 /// `-exact-clock(<ident>)`'s ident: a Contract name, `[A-Za-z_][A-Za-z0-9_-]*`.
 fn clock_name(token: &str) -> Option<&str> {
@@ -144,7 +144,7 @@ impl DragTimeline {
 
 /// `animation-timeline`: `auto` (the clock), a named timeline, or a clock
 /// timeline, `-exact-clock(<ident>)`: the clock, from a start every animation on
-/// the same one shares (a deliberate deviation from CSS).
+/// the same one shares (LLP 1055.002 D2, a deviation LLP 1001 declares).
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct AnimationTimeline(pub Option<String>);
 
@@ -246,7 +246,7 @@ pub enum TimelineScope {
     All,
     /// A list of `<dashed-ident>`s, as its canonical text: `--a, --b`. One
     /// string, not a list of them, is less code in every artifact that
-    /// carries the row and sets none.
+    /// carries the row and sets none (LLP 1047 D9).
     Names(String),
 }
 

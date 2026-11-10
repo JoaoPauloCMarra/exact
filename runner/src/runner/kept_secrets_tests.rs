@@ -1,5 +1,5 @@
-//! A store reader's build-time answer at a store holding secrets: the bake
-//! computed it from an empty store, so
+//! A store reader's build-time answer at a store holding secrets (LLP 1027
+//! D4, approved 2026-10-10): the bake computed it from an empty store, so
 //! before the source is ready the declared placeholder shows instead.
 use super::*;
 use crate::{Answer, Outcome, Store};

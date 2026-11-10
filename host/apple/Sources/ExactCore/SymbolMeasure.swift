@@ -30,7 +30,7 @@ package enum SymbolMeasure {
     }
 
     /// The box a symbol takes: its glyph's, an em square when the OS has no
-    /// glyph by that name, none at a point size of 0.
+    /// glyph by that name (LLP 1035.004.000 D2), none at a point size of 0.
     package static func size(_ name: String, points: CGFloat, weight: CGFloat) -> CGSize? {
         guard points > 0 else { return nil }
         let config = configuration(points: points, weight: weight)

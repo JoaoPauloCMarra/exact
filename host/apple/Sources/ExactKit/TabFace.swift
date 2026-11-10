@@ -1,8 +1,8 @@
-// What a root tab shows, read from the
+// @ref LLP 1075.003 §3.7, §9.9 — what a root tab shows, read from the
 // authored tab: its symbol, if it has one, its label (a text-only tab is a
 // title alone), whether it is disabled, and its badge. UIKit's tab bar item
 // is made from it (NavigationTabsIOS.swift) and AppKit's sidebar row
-// (SidebarMac.swift). Which tabs a root has is
+// (LLP 1115.002 D3, SidebarMac.swift). Which tabs a root has is
 // NavigationTabs.swift's.
 #if canImport(AppKit)
 import AppKit
@@ -13,7 +13,7 @@ import UIKit
 struct TabFace: Equatable {
     /// The symbol without a `.fill` ending: a bar chooses the variant it
     /// draws (UIKit's the filled one for the selected tab). An svg-only
-    /// icon's path token (`FaceSymbol`) has no variant.
+    /// icon's path token (`FaceSymbol`, stage 9 A2) has no variant.
     /// `accessibilityDisabled`: `aria-disabled`, which reads as disabled
     /// and still presses.
     let base: String?, title: String, disabled: Bool, accessibilityDisabled: Bool
@@ -21,7 +21,7 @@ struct TabFace: Equatable {
     /// where the tab has no symbol: drawn as the item's template glyph.
     let raster: String?
     /// A filled box holding a text among the tab's children: the item's
-    /// badge, as the web paints it on the tab.
+    /// badge (LLP 1075.003 §9.9), as the web paints it on the tab.
     let badge: String?
     /// An svg-only icon's token name (`icon.reply`) where the face says it:
     /// the agent's name for a path `base`.
@@ -30,7 +30,7 @@ struct TabFace: Equatable {
         var icon: String?, raster: String?
         var symbol: String?, label = tab.props["accessibilityLabel"] ?? "", badges: [String] = []
         if tab.isNativeButton, let face = tab.face {
-            // A native button's children are its face.
+            // A native button's children are its face (LLP 1069.011.000 D1).
             symbol = face.symbol
             icon = face.symbolIcon
             if let title = face.title, !title.isEmpty { label = title }

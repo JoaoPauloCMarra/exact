@@ -1,6 +1,6 @@
 //! The journal's lines (what the agent API's `logs` reads), written piece by
 //! piece: boot and a first press journal, and `exact_num::text!` keeps
-//! `core::fmt` off those paths. Each line is the `format!`
+//! `core::fmt` off those paths (LLP 1047 §10). Each line is the `format!`
 //! text it was, byte for byte; the tests hold them to it.
 
 use crate::request::Request;
@@ -39,7 +39,7 @@ pub(super) fn query(resource: &str, source: &str) -> String {
 }
 
 /// A source not ready at boot: the bake's answer shows until it is ready
-/// and answers again. The web JS target says
+/// and answers again (LLP 1048.003 D6; feed F24). The web JS target says
 /// the same (`rt.js`).
 pub(super) fn build_time(resource: &str) -> String {
     text!(
@@ -49,7 +49,7 @@ pub(super) fn build_time(resource: &str) -> String {
 }
 
 /// A store reader's build-time answer is the bake's empty store's; a store
-/// holding secrets shows its placeholder instead.
+/// holding secrets shows its placeholder instead (LLP 1027 D4, 2026-10-10).
 pub(super) fn secrets_unseen(resource: &str) -> String {
     text!(
         "{} shows its placeholder until its source answers: the store holds secrets its build-time answer did not see",
@@ -88,8 +88,8 @@ pub(super) fn shortened(args: &str) -> String {
     shown
 }
 
-/// A kept answer the first frame does not show, and why:
-/// `kept` is what it was kept for, when it decoded.
+/// A kept answer the first frame does not show, and why (LLP 1027 D4,
+/// LLP 1027.005 D3): `kept` is what it was kept for, when it decoded.
 pub(super) fn kept_refused(resource: &str, kept: Option<&str>, why: &str) -> String {
     match kept {
         Some(kept) => text!(
@@ -102,7 +102,7 @@ pub(super) fn kept_refused(resource: &str, kept: Option<&str>, why: &str) -> Str
     }
 }
 
-/// A kept answer the fresh one contradicts.
+/// A kept answer the fresh one contradicts (LLP 1027 D4, LLP 1102 §3.17).
 pub(super) fn kept_contradicted(resource: &str) -> String {
     text!(
         "{} answered differently from its kept answer: the first frame showed the last session's value until its source answered",
@@ -128,7 +128,7 @@ pub(super) fn kept(ticket: u64, name: &str) -> String {
     )
 }
 
-/// A watched topic changed while a request was in flight.
+/// A watched topic changed while a request was in flight (LLP 1016.002 D4).
 pub(super) fn waits_for(topic: &str, ticket: u64, name: &str) -> String {
     text!(
         "changed {}: request {} ({}) lands first, then it is asked again",
@@ -151,7 +151,7 @@ pub(super) fn forgot(ticket: u64, name: &str) -> String {
     text!("forget request {} ({})", ticket, name)
 }
 
-/// Sends that waited and were never asked.
+/// Sends that waited and were never asked (LLP 1092 D4).
 pub(super) fn forgot_waiting(n: usize, name: &str) -> String {
     text!(
         "forgot {} waiting send{} ({})",
@@ -170,7 +170,7 @@ pub(super) fn enqueued(ticket: u64, name: &str, request: &Request) -> String {
             token
         ),
         None if request.storage.is_some() => text!("storage {} ({})", ticket, name),
-        // A child's program, never its arguments or environment.
+        // A child's program, never its arguments or environment (LLP 1133.007 D2).
         None if request.is_process() => {
             let (kind, program) = crate::process::summary(&request.body);
             let program = program.map_or(String::new(), |p| format!(" {p}"));

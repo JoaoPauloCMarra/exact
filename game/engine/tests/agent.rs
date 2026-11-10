@@ -27,7 +27,7 @@ fn hierarchy_preorder_under_and_cap() {
     let tree = s.agent(r#"{"op":"tree"}"#);
     assert_eq!(tree.matches("\"id\":").count(), 512);
     assert!(tree.ends_with("\"truncated\":true,\"total\":523,\"next\":512}"));
-    // A 2k-tree world must not be refused as truncated: pages reach every entity.
+    // The forest's 2k-tree world was refused as truncated: pages reach every entity.
     let rest = s.agent(r#"{"op":"tree","from":512,"limit":100}"#);
     assert_eq!(rest.matches("\"id\":").count(), 11);
     assert!(rest.ends_with("\"truncated\":false,\"total\":523}"));

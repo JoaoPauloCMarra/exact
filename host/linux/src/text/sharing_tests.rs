@@ -488,7 +488,7 @@ mod face_metrics {
     }
 }
 
-/// `direction: rtl` is the paragraph's base direction, so a Latin
+/// LLP 1053: `direction: rtl` is the paragraph's base direction, so a Latin
 /// word that starts it sits at the right; `text-align: start` (the initial
 /// value) is then the right edge, and `end` the left.
 #[test]
@@ -539,9 +539,10 @@ fn rtl_direction_sets_the_base_direction_and_start_alignment() {
     assert_eq!(crate::paint::text_spec(&style, text).align, TextAlign::Left);
 }
 
-/// Under `ltr` the first strong character still sets the bidi base, but the line box keeps the CSS
-/// direction: a wrapped line's trailing space hangs at its right end, where Chrome puts it, not at
-/// the left before the visible text (`bidi-ltr-starts-hebrew`).
+/// Under `ltr` the first strong character still sets the bidi base (LLP 1001
+/// §1), but the line box keeps the CSS direction: a wrapped line's trailing
+/// space hangs at its right end, where Chrome puts it, not at the left before
+/// the visible text (LLP 1085.000 host parity, `bidi-ltr-starts-hebrew`).
 #[test]
 fn ltr_text_that_starts_rtl_hangs_its_trailing_spaces_at_the_right() {
     let mut engine = compact_fixture_engine();

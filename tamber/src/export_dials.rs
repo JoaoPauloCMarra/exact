@@ -1,4 +1,4 @@
-//! Re-import's dials: a token whose
+//! Re-import's dials (LLP 1121 D14; §5 stage 10b's gate): a token whose
 //! every changed context sits on a line that is one colour dial alone, moved
 //! to one literal, and whose every context on such a line moved alike, is
 //! that dial's change, every token value it moves listed per tuple, so
@@ -69,10 +69,10 @@ impl Candidate {
 /// or the line and why they are refused too.
 pub(crate) type Literal = Result<Vec<Op>, (String, String)>;
 
-/// A candidate's literal, settled only when its dial falls back (the dial is
-/// decided first): its operations, a refusal of them (said beside the
-/// dial's), or a report that leaves it out of its dial's change (said as the
-/// token's own).
+/// A candidate's literal, settled only when its dial falls back (theme2's
+/// ruling on the counts' round 2: the dial decided first): its operations, a
+/// refusal of them (said beside the dial's), or a report that leaves it out
+/// of its dial's change (said as the token's own, as before).
 pub(crate) enum Fallback {
     Literal(Literal),
     Report(String, String),
@@ -556,7 +556,8 @@ mod tests {
         }
     }
 
-    /// The dial is decided on its candidates' values alone: a dial that takes the change asks
+    /// The dial is decided on its candidates' values alone (theme2's
+    /// conditions on the counts' round 2): a dial that takes the change asks
     /// for no literal, and a candidate whose literal can't be made swings
     /// nothing; when the dial falls back, each candidate's literal is asked
     /// for then, and one that can't be made is reported as its own.

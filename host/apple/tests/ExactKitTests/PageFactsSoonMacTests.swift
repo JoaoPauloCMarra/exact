@@ -4,7 +4,7 @@ import ExactCore
 import XCTest
 @testable import ExactKit
 
-/// A system notice of the page's facts does not hold the
+/// LLP 1027.007 P1: a system notice of the page's facts does not hold the
 /// main thread while the data source activates on the owner, and its batches
 /// land before any batch the owner makes after them.
 final class PageFactsSoonMacTests: XCTestCase {

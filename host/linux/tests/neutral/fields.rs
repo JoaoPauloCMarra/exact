@@ -170,7 +170,7 @@ pub(super) fn select_and_date_focus() {
                     assert_eq!(p.focus(), Some(field), "{context}: {pointer:?}");
                     // A press's focus shows no ring, by finger or mouse, as
                     // WinUI's ComboBox and DatePicker and GTK's drop-down have
-                    // it; Chrome rings a clicked select.
+                    // it (LLP 1115.004 D9.2); Chrome rings a clicked select.
                     let expected = unfocused;
                     let actual = pixel(&mut p, "field", 80.0, 1.0);
                     if actual != expected {

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// The streams' throughput gate, driven: the stream fixture on one host,
+// LLP 1133.003 §9's throughput gate, driven: the stream fixture on one host,
 // fed by `serve.mjs`, measured by `perf streams` and the host's frames.
 //
 //   bun apps/stream-fixture/gate.mjs <web|macos> [--seconds 60] [--baseline <n>]
@@ -10,8 +10,8 @@
 // For each run it starts the timing, opens the streams, waits, and reads:
 // every stream's message, commit and decode counts and rates, receipt to
 // decode p95 and p99, the data executor's busy share, what the server sent,
-// and the main thread's frame times beside a run with no stream. Pass:
-// three streams for the whole run with no overflow
+// and the main thread's frame times beside a run with no stream. Pass, as
+// ruled (§16 question 8): three streams for the whole run with no overflow
 // and no frame dropped by the path; receipt to decode p95 under 8 ms and
 // p99 under 16 ms; busy under 25% of one core; frame time unchanged within
 // the noise of the run with no stream. It writes `target/stream-fixture/
@@ -60,7 +60,7 @@ async function frames(s, during) {
   const w = after.window ?? {};
   const delta = (k) => (after.lifetime?.[k] ?? 0) - (before.lifetime?.[k] ?? 0);
   // `late` is a frame that missed its vsync or whose main-thread turn ran past
-  // its target; `missed` counts vsyncs lost.
+  // its target (LLP 1079's amendment of 2026-10-05); `missed` counts vsyncs lost.
   return { n: w.samples, p50: w.p50, p95: w.p95, p99: w.p99, max: w.max,
     presented: delta('presented'), late: delta('late'), missed: delta('missed'), overruns: delta('overruns') };
 }

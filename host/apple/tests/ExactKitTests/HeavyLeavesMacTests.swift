@@ -3,7 +3,7 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// Heavy leaves on macOS (`Mac/HeavyLeavesMac.swift`): a video in a
+/// LLP 1068 §5.2 on macOS (`Mac/HeavyLeavesMac.swift`): a video in a
 /// collection's row is made when its row comes within a quarter viewport
 /// of what shows, not when the row is built ahead; one outside any list is
 /// made with its batch; the agent's settle makes every one.

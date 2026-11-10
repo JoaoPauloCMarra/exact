@@ -180,7 +180,7 @@ fn network_request_preserves_absent_empty_and_restricted_grants() {
     }
 }
 
-/// A long poll's terms cross the seam (tag 10); bad ones
+/// A long poll's terms cross the seam (tag 10, LLP 1016.000 D8); bad ones
 /// are refused.
 #[test]
 fn a_long_poll_round_trips_and_bad_terms_are_refused() {
@@ -426,7 +426,7 @@ fn explicit_independent_http_survives_the_module_codec() {
     end(&reader).unwrap();
 }
 
-/// A file body has no encoding at the seam: refused,
+/// A file body (LLP 1108 D6 R2) has no encoding at the seam: refused,
 /// never sent as an empty body.
 #[test]
 fn a_body_from_a_file_is_refused_at_the_module_seam() {
@@ -456,7 +456,7 @@ fn a_body_to_a_file_is_refused_at_the_module_seam() {
     ));
 }
 
-/// A held mark has no encoding at the seam: refused, never
+/// A held mark (LLP 1016.000 D9) has no encoding at the seam: refused, never
 /// silently turned into a request a clock waits on.
 #[test]
 fn a_held_request_is_refused_at_the_module_seam() {
@@ -556,7 +556,7 @@ fn a_draw_crosses_the_seam_and_its_recorder_lives_for_its_generation() {
 /// Exercise the browser's actual encoder against a native Rust session,
 /// including finite strings containing the source descriptor separator.
 #[test]
-#[ignore = "launches Bun for the JS-to-Rust data seam; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: launches Bun for the JS-to-Rust data seam"]
 fn web_wire_enum_strings_cross_calls_and_nested_overlay_replies() {
     fn nested() -> Value {
         Value::record(vec![
@@ -637,7 +637,7 @@ process.stdout.write(w.done());
     }
 }
 
-/// A presence secret across the module seam: the per-call
+/// A presence secret across the module seam (LLP 1133.010 D5): the per-call
 /// snapshot carries its occupancy and never its bytes, an answer that reads
 /// it with `get` fails as it would in process, and a locked write goes back
 /// to the host's store, which keeps nothing of it either.

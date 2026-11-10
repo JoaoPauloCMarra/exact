@@ -1,11 +1,11 @@
-//! A param's levels (*1.15*): one walker over a param's value, per tuple,
-//! from the app's own value of it (`params`) or else its default, through
-//! each bare reference it makes (a param, an app token, a package token), at
-//! most [`HOPS`] hops, to the line whose value is no reference (a literal or
-//! an expression), a base name or a role. `explain` and `resolve` of a param
-//! say its `levels`, `resolve`'s tuples each their winning `level` and
-//! `name` per side (`{light, dark}`), and `describe`'s param rows what their
-//! default `reaches`.
+//! A param's levels (LLP 1121 stage 12 B2-levels, *1.15*): one walker over
+//! a param's value, per tuple, from the app's own value of it (`params`)
+//! or else its default, through each bare reference it makes (a param, an
+//! app token, a package token), at most [`HOPS`] hops, to the line whose
+//! value is no reference (a literal or an expression), a base name or a
+//! role. `explain` and `resolve` of a param say its `levels`, `resolve`'s
+//! tuples each their winning `level` and `name` per side (`{light, dark}`),
+//! and `describe`'s param rows what their default `reaches`.
 
 use crate::tamber_params::AppParams;
 use contract_lower::params::{self, ParamToken};
@@ -202,7 +202,7 @@ impl<'a> Designs<'a> {
         Some((role.to_string(), line(at)))
     }
 
-    /// A package's line `name` reads: a token, or an icon.
+    /// A package's line `name` reads: a token, or an icon (stage 13).
     fn package_token(
         &self,
         name: &str,
@@ -314,8 +314,8 @@ impl<'a> Designs<'a> {
     /// is a reference, else none (a literal or an expression).
     /// - `token`: the first app or package line the default reaches through
     ///   params' defaults (at most [`HOPS`]), `{name, package?, file, line,
-    ///   value}` (a package's own line, with its `package` and `file`;
-    ///   else the app's);
+    ///   value}` (a package's own line, with stage 11 A2's `package` and
+    ///   `file`; else the app's);
     /// - `app`: the app's override of a package's token, `{file, line,
     ///   value}`, or null;
     /// - `base`: the base name every tuple's walk reaches, or null when

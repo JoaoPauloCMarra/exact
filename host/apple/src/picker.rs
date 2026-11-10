@@ -1,4 +1,4 @@
-//! Where the picker's files land on Apple: the app's
+//! Where the picker's files land on Apple (LLP 1069.002 D4, D7): the app's
 //! `app:/data`, `app:/cache` and `app:/tmp` as storage configures them, or,
 //! for a scripted drive with no scratch store, a directory of this
 //! process's own. The Swift host copies into the file a `pickedPath` reply
@@ -13,7 +13,7 @@ use std::sync::Mutex;
 
 static ROOTS: Mutex<Option<[PathBuf; 3]>> = Mutex::new(None);
 
-/// The app's `app:/data`, `app:/cache` and `app:/tmp`: under
+/// The app's `app:/data`, `app:/cache` and `app:/tmp` (LLP 1027.001): under
 /// the user's Library, or a scripted drive's scratch tree (`--storage`),
 /// apart from the app's real files, with that tree when an authored test
 /// starts it empty (`EXACT_AGENT_STORAGE_FRESH`). `None`: an app with no id,
@@ -168,7 +168,7 @@ fn agent_scratch() -> Result<Option<String>, DataError> {
 
 /// The app's directories at boot, before storage is configured after first
 /// pixel: an `image "app:/data/…"` resolves from the first frame, whether or
-/// not anything was picked in this process. Nothing is
+/// not anything was picked in this process (D7; recipes F18). Nothing is
 /// emptied until storage is configured ([`set_roots`]).
 pub fn know_roots(app_id: &str) {
     if let Ok(Some((roots, _))) = app_dirs(app_id) {
@@ -178,7 +178,7 @@ pub fn know_roots(app_id: &str) {
 
 /// Record the app's directories, as storage is configured, and empty
 /// `app:/tmp/picked/` and `app:/tmp/shared/`: the last launch's picks and
-/// received shares are gone. Their handles are pinned
+/// received shares are gone (D4; LLP 1133.024 D3). Their handles are pinned
 /// here for a share's reads ([`pin`]).
 pub fn set_roots(data: PathBuf, cache: PathBuf, temporary: PathBuf) {
     let _ = std::fs::remove_dir_all(temporary.join("picked"));
@@ -251,7 +251,7 @@ pub fn file_op<D: exact_runner::DataSource>(op: &str, request: &str, data: &D) -
 }
 
 /// `{"file":"/…"}`: the file behind an `app:/data|cache|tmp/…` path, which
-/// an export copies out; an error for anything else.
+/// an export copies out (LLP 1069.010 D3); an error for anything else.
 pub fn app_file(path: &str) -> String {
     let [data, cache, temporary] = roots();
     let resolved = path.strip_prefix("app:/").and_then(|rest| {
@@ -283,10 +283,10 @@ pub fn app_file(path: &str) -> String {
 }
 
 /// Each app's directories as its storage opened them, by their paths, pinned
-/// by their handles from then on: a share reads through its
+/// by their handles from then on (LLP 1125 D12): a share reads through its
 /// own session's and never reopens a root by name, so a root or an ancestor
 /// of it renamed or replaced later (a link to another tree) changes nothing
-/// a share reads, and another session's storage (two sessions in
+/// a share reads, and another session's storage (LLP 1031: two sessions in
 /// one process, perhaps two apps) is not this one's. An app's entry is set
 /// when its storage is configured ([`set_roots`]), as storage reopens its own.
 static PINNED: Mutex<BTreeMap<[PathBuf; 3], Result<AppDirectories, String>>> =
@@ -301,7 +301,7 @@ fn pin(roots: &[PathBuf; 3]) {
         .insert(roots.clone(), opened);
 }
 
-/// The largest app file a share copies: the copy runs on the
+/// The largest app file a share copies (LLP 1125 D12): the copy runs on the
 /// thread that asked, the main one, so a larger file is refused by name
 /// rather than holding the interface while it copies.
 pub const SHARE_COPY_MAX: u64 = 64 << 20;
@@ -322,7 +322,7 @@ fn open_pinned(roots: &[PathBuf; 3]) -> Result<AppDirectories, String> {
     AppDirectories::new(&roots[0], &roots[1], &roots[2]).map_err(|e| e.to_string())
 }
 
-/// `{"file":to}`: a copy at `to` of the app file `path`, read
+/// `{"file":to}`: a copy at `to` of the app file `path` (LLP 1125 D12), read
 /// as `readFile` reads it: admitted by the app's `fs.read` grants and opened
 /// relative to the pinned roots' handles without following a symbolic link
 /// at any component, so a link in the app's tree cannot put a file outside
@@ -530,7 +530,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&base);
     }
 
-    /// Two sessions' apps pinned in one process: each share reads
+    /// Two sessions' apps pinned in one process (LLP 1031): each share reads
     /// its own app's tree, and roots never pinned have no files.
     #[test]
     fn each_session_shares_through_its_own_pinned_roots() {

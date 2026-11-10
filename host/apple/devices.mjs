@@ -11,10 +11,10 @@ import { decodePng, encodePng } from '../../scripts/png.mjs';
 
 const root = resolve(new URL('../..', import.meta.url).pathname);
 /** Use Xcode when `xcode-select` names the Command Line Tools, which carry
- * no iOS SDK and no `simctl`: the iOS build failed deep in a
+ * no iOS SDK and no `simctl` (LLP 1054 O2): the iOS build failed deep in a
  * crate's build script with `SDK "iphonesimulator" cannot be located`, and a
  * driver that resolved Xcode apart from the build could not find `simctl`
- * where the build had just installed the app. Every
+ * where the build had just installed the app (shop F20, recipes F16). Every
  * `xcrun` here goes through it, the build's and the driver's alike; an
  * explicit `DEVELOPER_DIR` is kept. Said on stderr: a drive's stdout is its reply. */
 export function useXcode() {
@@ -31,8 +31,8 @@ const read = (cmd, args, opts = {}) => { useXcode(); return spawnSync(cmd, args,
 
 /** A window capture the app drew (`path`, in `r`'s scale), its pixels then the simulator's own screenshot's, as a
  *  device screenshot has them: `drawHierarchy` draws Liquid Glass and the other backdrop materials only roughly (a tab
- *  bar's glass left the rows under it legible, an alert's the list behind it), and the
- *  software keyboard and the status bar are other processes' pixels. The rows of the
+ *  bar's glass left the rows under it legible, an alert's the list behind it: the euxy port's judged captures), and the
+ *  software keyboard (round 9: "blank keyboard region") and the status bar are other processes' pixels. The rows of the
  *  status bar, its top `appTop` points, stay the app's when the caller did not ask for it (`r.statusBar` unset; with it
  *  set, `xcrun simctl status_bar <udid> override --time 9:41` sets what it shows).
  *
@@ -158,7 +158,7 @@ function displayReads(udid, gap = 400) {
 /** What a drive passes from its own environment to an app that `simctl launch` (which forwards only `SIMCTL_CHILD_`
  *  names) or `devicectl` (only what it is given) starts, as a macOS drive's app inherits it: `EXACT_STORE`, so
  *  `EXACT_STORE=real` gives an iOS drive the Keychain a normal launch reads (host/apple/src/store.rs), and
- *  `EXACT_AGENT_PADS`, a drive's game pads. */
+ *  `EXACT_AGENT_PADS`, a drive's game pads (LLP 1133.022 §21). */
 export function forwardedEnv(env = process.env) {
   return Object.fromEntries(['EXACT_STORE', 'EXACT_AGENT_PADS'].filter((k) => env[k]).map((k) => [k, env[k]]));
 }
@@ -208,7 +208,7 @@ export function displayAsIs(r, path, udid) {
 
 /** Why the display is not the app's at the points the app drew itself (`points`, window points), or null: around a
  *  point whose 5x5 pixels the app drew in one colour (no edge of text or shape) the display's must be within 2 levels of
- *  it, as they are exactly where nothing lies over the app (measured light and dark). A notification
+ *  it, as they are exactly where nothing lies over the app (measured on the euxy port, light and dark). A notification
  *  banner's frosted material, 3 or 4 levels off a light page, changes such points; more than 1% of them, or 3, refuse. */
 function covered(points, app, display, scale) {
   if (!Array.isArray(points) || points.length === 0) return 'the app named no points to check the display against';
@@ -346,7 +346,7 @@ export function installedBuild(udid, id) {
 }
 
 /** What `build.mjs --ios` says when its development build replaced `replaced` (an `installedBuild` of another kind):
- *  one bundle id, so a benchmark or a person then finds the development build; how to put it back, from
+ *  one bundle id, so a benchmark or a person then finds the development build (euxy port); how to put it back, from
  *  the Release bundle at `release` when it was built here. */
 export function replacedNote(udid, app, replaced, release) {
   const back = existsSync(release) ? `xcrun simctl install ${udid} ${shellQuote(release)}` : `bun host/apple/build.mjs --ios ${app.crate('apple')} --release --sim ${udid}`;
@@ -358,7 +358,7 @@ export function replacedNote(udid, app, replaced, release) {
  *  not a development one (its receipt's `build.trust`: a `--release` or production bake, or one with no receipt), an
  *  APFS clone of it under `records`/<udid>-<id>, replacing any older one, and `note`, the one command that puts it back.
  *  Both share the bundle id, so a later benchmark or person would otherwise find the development build with no way
- *  back. Nothing is reinstalled for the drive: that is the person's call. A clone that cannot be made
+ *  back (euxy port). Nothing is reinstalled for the drive: that is the person's call. A clone that cannot be made
  *  throws, and nothing is installed. A drive's later sessions find the development build and copy nothing. */
 export function keepInstalledRelease(udid, id, bundle, executable, { records = resolve(homedir(), '.cache/exact/simulator-releases') } = {}) {
   if (installedAlready(udid, id, bundle, executable)) return { install: false };
@@ -379,7 +379,7 @@ export function keepInstalledRelease(udid, id, bundle, executable, { records = r
 
 /** A simulator's software keyboard for a drive: shown for a focused field, as a person's iPhone shows it. Once a Device
  *  Hub has attached the Mac's keyboard, the device keeps `com.apple.keyboard.preferences` `AutomaticMinimizationEnabled
- *  = 1` and minimizes its software keyboard behind it ("The pushed route's keyboard, found"). Read and
+ *  = 1` and minimizes its software keyboard behind it (LLP 1078, "The pushed route's keyboard, found"). Read and
  *  changed through the device's own `defaults` (`simctl spawn`), which cfprefsd answers before it writes the plist.
  *  On a simulator this drive booted (`owned`) the key is cleared and `restore()` puts it back; on any other it is
  *  left as it is and `note` says the keyboard may be hidden. Before clearing it the drive writes a record under
@@ -631,7 +631,7 @@ export function deviceLaunchArgs(device, id, environment = process.env) {
 
 /** The explicit app URL: the launch locator, and the one dev-server origin a
  * development build admits opening links for (`developmentAdmission`).
- * Validate it before invoking any build or signing tools. */
+ * Validate it before invoking any build or signing tools. @ref LLP 1030.000 §7 */
 export function developmentLaunchEnvironment(args, environment = process.env) {
   const index = args.indexOf('--url');
   if (index < 0) return { ...environment };
@@ -646,7 +646,7 @@ export function developmentLaunchEnvironment(args, environment = process.env) {
 }
 
 /** Whether a profile allows every entitlement in `required` (a grant's
- * signing entitlements). */
+ * signing entitlements, LLP 1069.008.000 D4). */
 export const allows = (p, required = []) => !!p && required.every((name) => p.entitlements.includes(name));
 
 /** What a profile that lacks a grant's entitlement needs, said once. */
@@ -726,7 +726,7 @@ export function decodeProfile(path) {
   const allowed = /<key>Entitlements<\/key>\s*<dict>([\s\S]*?)<\/dict>/.exec(xml)?.[1] ?? '';
   const entitlements = [...allowed.matchAll(/<key>([^<]+)<\/key>\s*(<false\/>)?/g)].filter((m) => !m[2]).map((m) => m[1]);
   const appId = str('application-identifier') ?? str('com.apple.application-identifier');
-  // What an app with widgets or Live Activities needs of it: the App Groups it grants, the
+  // What an app with widgets or Live Activities needs of it (LLP 1126.001 WP13): the App Groups it grants, the
   // Keychain groups (the team's `<prefix>.*`, usually) and the push environment.
   const dev = /<key>(?:com.apple.security.)?get-task-allow<\/key>\s*<true\/>/.test(xml), enterprise = /<key>ProvisionsAllDevices<\/key>\s*<true\/>/.test(xml);
   return { path, name: str('Name'), team, appId, prefix: appId?.split('.')[0], devices, dev, expires: new Date(expires ?? 0), entitlements, platforms: strings('Platform'),

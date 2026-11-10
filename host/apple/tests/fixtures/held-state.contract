@@ -1,4 +1,4 @@
-// HeldStateTests: a card that presses, its `:active`
+// HeldStateTests (LLP 1121 stage 8 E2): a card that presses, its `:active`
 // the press paint, with a child that is a flat leaf on iOS (a box with only a
 // fill and its size: no props, no handlers), and the count of its presses.
 component App

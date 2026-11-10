@@ -1,7 +1,8 @@
 // Work after a rendering opportunity (host/web/navigation.js `afterPaint`):
 // two animation frames or a second, whichever is first, run once, so a page in
 // a cross-origin frame scrolled out of view (the design tool's canvas) still
-// loads a canvas's GPU module and its Canvas 2D piece. The functions are
+// loads a canvas's GPU module and its Canvas 2D piece (LLP 1122's queue item
+// (3), its QUEUE follow-up; review2's 10:26 conditions). The functions are
 // read from the sources and run against stand-in frames and timers.
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';

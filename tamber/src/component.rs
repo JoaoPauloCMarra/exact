@@ -1,4 +1,4 @@
-//! A component that isn't Contract: a native module's view
+//! A component that isn't Contract (LLP 1121 D15): a native module's view
 //! or a Rust canvas component declares its params in the design,
 //! `component MapCard` over one `params` block, each param a dial's line of
 //! any token kind (`pin: color = accent.fill  control=color  priority=1`).
@@ -81,7 +81,7 @@ pub(crate) fn block(
         ));
     }
     // A param has one value in its component: the app's, with `when` lines,
-    // is its own design's.
+    // is its own design's (D15).
     let lines = &under[..end];
     let first = lines.first().map_or(0, |l| l.indent);
     let (whens, lines): (Vec<Line>, Vec<Line>) = lines

@@ -117,8 +117,8 @@ pub(crate) fn warp_clipped(
 }
 
 /// [`warp_clipped`] with soft edges: past the picture is transparent, so a
-/// box's warped outline is antialiased as a browser draws a 3D layer's.
-/// A canvas child keeps its opaque edges.
+/// box's warped outline is antialiased as a browser draws a 3D layer's
+/// (LLP 1077 D8). A canvas child keeps its opaque edges.
 pub(crate) fn warp_soft(
     source: &Pixmap,
     h: [f32; 9],

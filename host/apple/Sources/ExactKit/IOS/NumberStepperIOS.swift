@@ -1,4 +1,4 @@
-// `input type="number"` is a field with the platform's
+// @ref LLP 1116.007 D4 — `input type="number"` is a field with the platform's
 // stepping control, where the web draws its spin buttons: a `UIStepper` at the
 // field's trailing edge, inside the input's box, the text between the field's
 // leading edge and the stepper. The field stays the editor (direct entry, the
@@ -8,7 +8,7 @@
 // of any other `type` never has one, whatever its bounds say.
 //
 // A value typed past `min` or `max` is held to them too, when the edit
-// commits: the field shows the bound, and the app hears it
+// commits (LLP 1116.008 D5): the field shows the bound, and the app hears it
 // as it hears a step, `input` and then the `change` that committed. The web
 // leaves its bounds to the browser's validation; a typed 250 against a `max`
 // of 99 saved 250 while the stepper's plus was dimmed.
@@ -146,7 +146,7 @@ extension NodeView {
     }
 }
 
-// The agent's side (every path is a touch at a place): `layout <id>`
+// The agent's side (LLP 1012: every path is a touch at a place): `layout <id>`
 // says where the stepper's halves are in the node's own space, and a `tap <id>
 // at <x> <y>` over one steps it as a finger on that half does.
 extension NodeView {

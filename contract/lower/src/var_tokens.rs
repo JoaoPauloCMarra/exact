@@ -1,4 +1,4 @@
-//! `var(--name)` in a style row is the design's token
+//! @ref LLP 1153 D6 — `var(--name)` in a style row is the design's token
 //! `name`. Each one is written as the name before anything reads the row
 //! (scoping, the types, the design's retention): by the loader for a file,
 //! and by `contract::compile` for a source text. So it lowers exactly as the
@@ -637,7 +637,7 @@ fn refusal(a: &Attr, why: Why, literal: &str, span: Span, tokens: &Tokens) -> Lo
     LowerError { id, message, span }
 }
 
-/// The token kinds a row takes, by its rows.
+/// The token kinds a row takes, by its rows (LLP 1121 D3).
 fn kinds(a: &Attr) -> Vec<tamber::Kind> {
     use exact_kernel::style::theme::{admits, Kind as K};
     use tamber::Kind as T;

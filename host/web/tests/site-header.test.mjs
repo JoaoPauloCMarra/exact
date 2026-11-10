@@ -1,4 +1,4 @@
-// In Chrome, Firefox and WebKit: a route's header that holds a `nav`, a popover's too, or more than one
+// LLP 1153 D8, in Chrome, Firefox and WebKit: a route's header that holds a `nav`, a popover's too, or more than one
 // link outside a menu, is a site's. The navigation glue marks it `data-exact-site`, and the shell draws it as written:
 // not sticky, no ground or edge, no bar mark, and no Back is drawn for its route, wherever the header stands in it. So
 // is a header whose author wrote `appearance: none`. The header iOS makes its bar of (one heading, a button) keeps the

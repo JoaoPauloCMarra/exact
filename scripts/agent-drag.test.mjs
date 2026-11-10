@@ -1,4 +1,4 @@
-// `drag`'s reply carries what the host journaled about a reorder during it, and
+// `drag`'s reply carries what the host journaled about a reorder during it (LLP 1102 §3.17), and
 // keeps every field of the carrier's reply. `bun test ./scripts/agent-drag.test.mjs`.
 import { test, expect } from 'bun:test';
 import { dragTap, heldDown, heldPhase, heldRead, heldTick, HELD_LEAD, HELD_READ, HELD_STEP, STROKES, TICK_STEP } from './agent-drag.mjs';
@@ -27,18 +27,18 @@ function drive(lines, { touches = false, notes = {} } = {}) {
   return dragTap({ s, carrier, node: { id: 7 }, target: 'grip-a', host: 'web', timing: 'agent', tapRefusal: async (_, __, e) => e }, { dx: 0, dy: 40 });
 }
 
-const refusal = 't=12 reorder: a drag refused: the last drop is held until its move shows';
+const refusal = 't=12 reorder: a drag refused: the last drop is held until its move shows (LLP 1094 D8)';
 
 test('a refused drag names the refusal and keeps the reply', async () => {
   const r = await drive([refusal, 't=13 act move → epoch 2']);
-  expect(r.note).toBe('reorder: a drag refused: the last drop is held until its move shows');
+  expect(r.note).toBe('reorder: a drag refused: the last drop is held until its move shows (LLP 1094 D8)');
   expect(r.target).toBe('grip-a');
   expect(r.delivery).toBe('platform');
   expect(r.epoch).toBe(3);
   expect(r.drag).toEqual(expect.objectContaining({ dx: 0, dy: 40 }));
 });
 
-// A phase's reply says a refused write once a drive (`landed`): the drag's reply carries it on.
+// A phase's reply says a refused write once a drive (`landed`): the drag's reply carries it on (round-2 review).
 test('a note a phase of the drag carried is the drag\'s', async () => {
   const r = await drive([], { notes: { move: 'a data source\'s write was refused' } });
   expect(r.note).toBe('a data source\'s write was refused');
@@ -71,13 +71,13 @@ function iosDrive(host, opts = { dx: 0, dy: -300 }) {
   };
   const carrier = {
     touches: null,
-    async input(id, phase, opts) { asked.push([phase, opts]); return later({ phase, delivery: 'unsupported', reason: 'no held contact across requests on iOS' }); },
+    async input(id, phase, opts) { asked.push([phase, opts]); return later({ phase, delivery: 'unsupported', reason: 'no held contact across requests on iOS (LLP 1080.000 P3)' }); },
     async ask(req) { asked.push(req); return later(host(req)); },
   };
   return { asked, run: () => dragTap({ s, carrier, node: { id: 9 }, target: 'content', host: 'ios', timing: 'agent', tapRefusal: async (_, __, e) => e }, opts) };
 }
 
-// A drag without --touch platform must not answer `delivery: unsupported` and exit 0.
+// LLP 1116.003: a drag without --touch platform answered `delivery: unsupported` and exited 0 (r5 weather, mood journal).
 test('an iOS drag without real touches scrolls the scroller it starts on', async () => {
   const d = iosDrive(() => ({ tapped: 9, at: [200, 370], scrolledBy: [0, 300], delivery: 'recognized', native: 'scroll' }));
   const r = await d.run();
@@ -89,7 +89,7 @@ test('an iOS drag without real touches scrolls the scroller it starts on', async
   expect(r.note).toBeUndefined();
 });
 
-// A sheet's scroller as tall as its form takes drags that move nothing: the reply says what to look at.
+// euxy FRICTION 9: a sheet's scroller as tall as its form took drags that moved nothing, and said nothing.
 test('an iOS drag that scrolls nothing says what to look at', async () => {
   const r = await iosDrive(() => ({ tapped: 9, at: [200, 370], scrolledBy: [0, 0], delivery: 'recognized', native: 'scroll' })).run();
   expect(r.note).toContain('nothing scrolled');
@@ -108,7 +108,7 @@ test('an iOS drag with ops during it needs a held finger', async () => {
   expect(d.asked.filter((a) => !Array.isArray(a))).toEqual([]);
 });
 
-// `drag 0 -1500` on a scroller is not refused for leaving the viewport; it scrolls the whole way.
+// euxy FRICTION 14: `drag 0 -1500` on a scroller was refused for leaving the viewport; it scrolls the whole way.
 function strokeDrive(replies = () => ({})) {
   const strokes = [], node = { id: 9, type: 'ScrollView', x: 0, y: 0, w: 400, h: 800 };
   const s = { contact: null, async layout() { return { nodes: [node], viewport: { w: 400, h: 800 } }; },
@@ -457,7 +457,7 @@ function tickTouch({ pages, runner = { injected: {} }, liftAfter = 2000 }) {
 const began = { seq: 5, touch: 1, phase: 'began', t: 1, at: [30, 20], view: 'NodeView', node: 7, session: 'main', generation: 1 };
 const ended = { ...began, seq: 6, phase: 'ended', t: 2 };
 
-// With no ops the clock still waits out the press and the move, as ops do.
+// Round 2 (Astra, Grok): with no ops the clock waited for nothing; it now waits out the press and the move, as ops do.
 test('a hold\'s clock starts after the press and the move', async () => {
   for (const drag of [{ press: 300 }, { dx: 0, dy: 40, over: 300 }]) {
     const a = tickTouch({ pages: [{ log: [began] }], liftAfter: 900 }), at = Date.now(), seen = [];
@@ -469,7 +469,7 @@ test('a hold\'s clock starts after the press and the move', async () => {
   }
 });
 
-// A log reply that shows the touch began and ended moves no clock, nor does a runner that ended with no touch
+// Round 2: a log reply that shows the touch began and ended moves no clock, nor does a runner that ended with no touch
 // seen, whose error is the drag's; a log error is the drag's, said once the runner is done.
 test('a hold\'s clock moves only while the touch is known to be down, and a failure is said once the runner is done', async () => {
   const ticked = [];
@@ -489,7 +489,7 @@ test('a hold\'s clock moves only while the touch is known to be down, and a fail
   expect(downs).toEqual([false]);
 });
 
-// A log read that rejects (the carrier gone mid-hold) is said only once the runner has let go, its error first.
+// Round 2: a log read that rejects (the carrier gone mid-hold) is said only once the runner has let go, its error first.
 test('a hold whose log read rejects waits for the runner, whose error wins', async () => {
   const gone = tickTouch({ pages: [new Error('carrier closed')], liftAfter: 50 });
   await expect(gone.run({ tick: async () => {} })).rejects.toThrow('carrier closed');
@@ -513,7 +513,7 @@ test('a hold\'s clock steps while the finger is down and stops when it lifts', a
 
 // A still drag's ops wait for the touch to reach its view inside the finger's time: the runner holds that much longer,
 // and the reply says the hold asked. A hold moves the agent's clock by its length beside the finger (`tick`, after the
-// author's ops), never by holding it longer (a 100 ms hold held 650 ms is a long press); under platform
+// author's ops), never by holding it longer (Astra round 1: a 100 ms hold held 650 ms is a long press); under platform
 // timing the clock is the wall's and is not stepped.
 function tickDrive() {
   const asked = [], ran = [];
@@ -551,7 +551,7 @@ test('a real drag holds the finger as asked and moves the clock by the hold besi
   expect(d.asked).toEqual([200 + REACH_MS, 200, 200, 0]);
 });
 
-// `hold 100` must not be held 650 ms, past UIKit's 500 ms long press.
+// Astra round 1: `hold 100` was held 650 ms, past UIKit's 500 ms long press.
 test('a short real hold is held as asked, and the clock still moves by it', async () => {
   const d = tickDrive();
   await d.run({ dx: 0, dy: 0, hold: 100 });
@@ -559,7 +559,7 @@ test('a short real hold is held as asked, and the clock still moves by it', asyn
   expect(d.s.now).toBe(1100);
 });
 
-// `hold 1000 during "clock +900 real"` must not step 900 then 1000 more inside a longer hold.
+// Astra round 1: `hold 1000 during "clock +900 real"` stepped 900 then 1000 more inside a longer hold.
 test('a hold whose ops moved the clock moves it only by the rest', async () => {
   const d = tickDrive();
   await d.run({ dx: 0, dy: 0, hold: 1000, during: [() => d.s.clock('+900 real')] });

@@ -1,4 +1,5 @@
 //! Viewport targets reused after the frame has consumed their composites.
+//! @ref LLP 1149 D2.5, D11.
 use crate::counters::{self, Counter};
 use crate::device::{Device, Result};
 use crate::instance::TextureId;

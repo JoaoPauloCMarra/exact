@@ -1,6 +1,6 @@
 use super::*;
 impl<D: DataSource> Bridge<D> {
-    /// The executor's queued outcomes into the runner: the
+    /// The executor's queued outcomes into the runner (LLP 1016 D2): the
     /// presenter calls this on its thread after the wake; the output is the
     /// batch of every reply's commit.
     pub fn pump(&mut self, now_ms: f64) -> u32 {

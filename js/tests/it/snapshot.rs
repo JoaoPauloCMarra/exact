@@ -1,5 +1,5 @@
 //! A pinned TypeScript module behind the snapshot runner, with real file reads
-//! and a host-supplied fetch response. No UI boot or writes.
+//! and a host-supplied fetch response. No UI boot or writes (LLP 1126.000 WP5).
 #![cfg(exact_js_engine)]
 use exact_js::Module;
 use exact_kernel::Kernel;

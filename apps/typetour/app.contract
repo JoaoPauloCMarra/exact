@@ -10,8 +10,8 @@
 // with a Display & Text Size page that scales the text, and Messages with
 // six conversations. Tapping the time on the home screen locks the phone.
 //
-// Both families are declared here and bound to these bytes: the file's own
-// name table is never consulted, so a machine
+// Both families are declared here and bound to these bytes (exact2 LLP
+// 1019 D3): the file's own name table is never consulted, so a machine
 // with an older Exposure Sans installed still renders this exact build.
 
 font "Exposure Sans"
@@ -64,14 +64,14 @@ component TypeTour
     wifi = not wifi
   action setBluetooth(on: bool)
     bluetooth = on
-  // The platform's date and time pickers.
+  // The platform's date and time pickers (LLP 1069.001 slice 4).
   action setToday(value: string)
     today = value
   action setClock(value: string)
     clock = value
   action setAlarm(value: string)
     alarm = value
-  // The platform's pop-up menu chooses the scheme.
+  // The platform's pop-up menu chooses the scheme (LLP 1069.001 slice 2).
   action setAppearance(value: string)
     appearance = value
     setScheme(value)
@@ -87,7 +87,7 @@ component TypeTour
             text "9:41" font-family="Exciting Lilt" font-weight=600 font-size=112 line-height="120px" letter-spacing=-3 color="-exact-label"
           column flex=1 min-height=0 padding-left=16 padding-right=16 padding-top=18 gap=10
             Notification(id="nico", glyph="M", title="Nico", body="The Lilt terminals look great on the 4a Pro. Can you push the v4 build to Silver tonight?", time="now", press=openThread("nico"))
-            Notification(id="crew", glyph="M", title="Type Crew", body="Ravi: I still think the g needs a smaller ear", time="12m ago", press=openThread("crew"))
+            Notification(id="crew", glyph="M", title="Type Crew", body="James: I still think the g needs a smaller ear", time="12m ago", press=openThread("crew"))
             Notification(id="calendar", glyph="14", title="Type review", body="Today at 2:00 PM · Studio, second floor", time="1h ago", press=unlock)
             Notification(id="expose", glyph="E", title="Expose", body="Software update ready. Expose 1.0 will install tonight while the phone charges.", time="3h ago", press=go("settings"))
           row justify-content="space-between" align-items="center" padding-left=44 padding-right=44 padding-bottom=6
@@ -166,9 +166,9 @@ component TypeTour
                 text "Search" font-size=17 color="-exact-secondary-label"
               button press=go("settings") testId="settings-profile" width="100%" margin-top=22 display="flex" flex-direction="row" align-items="center" gap=14 padding=12 border-radius=12 background-color="-exact-secondary-grouped-background" text-align="start"
                 column width=58 height=58 border-radius=29 color-scheme="dark" background-color="-exact-tertiary-background" align-items="center" justify-content="center" flex-shrink=0
-                  text "AR" font-family="Exciting Lilt" font-weight=700 font-size=24 color="-exact-label"
+                  text "CC" font-family="Exciting Lilt" font-weight=700 font-size=24 color="-exact-label"
                 column flex=1 min-width=0 gap=2
-                  text "Alex Rivera" font-size=(20 * scale) font-weight=500 line-clamp=1
+                  text "Charlie Cheever" font-size=(20 * scale) font-weight=500 line-clamp=1
                   text "Expose Account, devices, and more" font-size=(13 * scale) color="-exact-secondary-label" line-clamp=1
                 text "›" font-size=22 color="-exact-tertiary-label"
               column margin-top=22 border-radius=12 background-color="-exact-secondary-grouped-background" overflow="hidden"
@@ -228,7 +228,7 @@ component TypeTour
                   option "Dark" value="dark"
               column border-radius=12 background-color="-exact-secondary-grouped-background" padding=16 gap=14
                 text "TEXT SIZE" font-size=13 color="-exact-secondary-label"
-                // The platform's slider, the text following the thumb.
+                // The platform's slider, the text following the thumb (LLP 1069.001 slice 3).
                 row align-items="center" gap=12
                   text "A" font-size=13 color="-exact-label"
                   input type="range" min=0.85 max=1.25 step=0.01 value=scale input=setScale testId="text-size" aria-label="Text size" accent-color="-exact-label" flex=1 min-width=0
@@ -283,9 +283,9 @@ component TypeTour
                   box width=12 height=12 border-radius=6 border-style="solid" border-width=2 border-color="-exact-secondary-label"
                   text "Search" font-size=17 color="-exact-secondary-label"
                 Conversation(id="nico", initials="N", name="Nico", preview="The Lilt terminals look great on the 4a Pro. Can you push the v4 build to Silver tonight?", time="9:12 AM", unread=true, scale=scale, press=openThread)
-                Conversation(id="crew", initials="TC", name="Type Crew", preview="Ravi: I still think the g needs a smaller ear", time="8:47 AM", unread=true, scale=scale, press=openThread)
+                Conversation(id="crew", initials="TC", name="Type Crew", preview="James: I still think the g needs a smaller ear", time="8:47 AM", unread=true, scale=scale, press=openThread)
                 Conversation(id="mom", initials="M", name="Mom", preview="Call me when you land 🩵", time="Yesterday", unread=false, scale=scale, press=openThread)
-                Conversation(id="ravi", initials="R", name="Ravi", preview="Sent you the kerning diff. Mostly pairs with T and Y, nothing structural.", time="Yesterday", unread=false, scale=scale, press=openThread)
+                Conversation(id="james", initials="J", name="James", preview="Sent you the kerning diff. Mostly pairs with T and Y, nothing structural.", time="Yesterday", unread=false, scale=scale, press=openThread)
                 Conversation(id="builds", initials="Ex", name="Expose Builds", preview="N-Silver rung 11 audio probe: attended run passed. 3 of 3 sine sweeps audible on the speaker.", time="Saturday", unread=false, scale=scale, press=openThread)
                 Conversation(id="ortega", initials="O", name="Dr. Ortega's Office", preview="Reminder: your appointment is Tuesday at 10:30 AM. Reply C to confirm.", time="Friday", unread=false, scale=scale, press=openThread)
             HomeBar(tone="-exact-label", press=go("home"))
@@ -298,12 +298,12 @@ component TypeTour
                   text "2" font-size=12 font-weight=600 color="-exact-background"
               column flex=1 align-items="center" gap=3
                 column width=36 height=36 border-radius=18 color-scheme="dark" background-color="-exact-tertiary-background" align-items="center" justify-content="center"
-                  text (thread == "nico" ? "N" : thread == "crew" ? "TC" : thread == "mom" ? "M" : thread == "ravi" ? "R" : thread == "builds" ? "Ex" : "O") font-family="Exciting Lilt" font-weight=700 font-size=17 color="-exact-label"
-                text (thread == "nico" ? "Nico" : thread == "crew" ? "Type Crew" : thread == "mom" ? "Mom" : thread == "ravi" ? "Ravi" : thread == "builds" ? "Expose Builds" : "Dr. Ortega's Office") font-size=11 font-weight=500 line-clamp=1
+                  text (thread == "nico" ? "N" : thread == "crew" ? "TC" : thread == "mom" ? "M" : thread == "james" ? "J" : thread == "builds" ? "Ex" : "O") font-family="Exciting Lilt" font-weight=700 font-size=17 color="-exact-label"
+                text (thread == "nico" ? "Nico" : thread == "crew" ? "Type Crew" : thread == "mom" ? "Mom" : thread == "james" ? "James" : thread == "builds" ? "Expose Builds" : "Dr. Ortega's Office") font-size=11 font-weight=500 line-clamp=1
               box width=72
             scroll flex=1 min-height=0
               column padding=16 gap=6
-                text (thread == "ortega" ? "Friday 4:02 PM" : thread == "builds" ? "Saturday 11:20 PM" : thread == "mom" or thread == "ravi" ? "Yesterday 6:15 PM" : "Today 8:31 AM") font-size=12 font-weight=500 color="-exact-secondary-label" text-align="center" padding-bottom=10
+                text (thread == "ortega" ? "Friday 4:02 PM" : thread == "builds" ? "Saturday 11:20 PM" : thread == "mom" or thread == "james" ? "Yesterday 6:15 PM" : "Today 8:31 AM") font-size=12 font-weight=500 color="-exact-secondary-label" text-align="center" padding-bottom=10
                 if thread == "nico"
                   Bubble(body="Got the v4 Lilt build onto the Pink phone", out=false, scale=scale)
                   Bubble(body="The flare on the t reads at 17 px now. It was mush in v3.", out=false, scale=scale)
@@ -314,11 +314,11 @@ component TypeTour
                   Bubble(body="Building now. Give me twenty minutes.", out=true, scale=scale)
                   text "Delivered" font-size=12 font-weight=500 color="-exact-secondary-label" text-align="right" padding-right=4
                 if thread == "crew"
-                  Sender(name="Ravi")
+                  Sender(name="James")
                   Bubble(body="New Exposure Sans 03 italics are in the branch", out=false, scale=scale)
                   Sender(name="Nico")
                   Bubble(body="The italic a is the best glyph in the family, fight me", out=false, scale=scale)
-                  Sender(name="Ravi")
+                  Sender(name="James")
                   Bubble(body="I still think the g needs a smaller ear", out=false, scale=scale)
                   Bubble(body="Ship the ear as is. We tune it after we see it on the lock screen.", out=true, scale=scale)
                   text "Delivered" font-size=12 font-weight=500 color="-exact-secondary-label" text-align="right" padding-right=4
@@ -326,7 +326,7 @@ component TypeTour
                   Bubble(body="Did you eat?", out=false, scale=scale)
                   Bubble(body="Yes 😄 pasta", out=true, scale=scale)
                   Bubble(body="Good. Call me when you land 🩵", out=false, scale=scale)
-                if thread == "ravi"
+                if thread == "james"
                   Bubble(body="Sent you the kerning diff", out=false, scale=scale)
                   Bubble(body="Mostly pairs with T and Y, nothing structural.", out=false, scale=scale)
                   Bubble(body="Merging. Thanks!", out=true, scale=scale)
@@ -425,7 +425,7 @@ component SettingsRow
         text "›" font-size=22 line-height="22px" color="-exact-tertiary-label" flex-shrink=0
 
 // A Settings row whose right side is a switch: the platform's, tinted to
-// the tour's monochrome.
+// the tour's monochrome (LLP 1069.001).
 component ToggleRow
   props
     id: string

@@ -464,7 +464,8 @@ fn storage_types_are_checked_by_the_actual_bake_without_granting_bake_io() {
     assert!(error.contains("error TS"), "{error}");
     // A source that lets the bake's refusal (`code: 'bake'`) through is the
     // device's to answer, as on the web build: no compiled value, the
-    // placeholder until a launch asks it.
+    // placeholder until a launch asks it (kanban2 #5: the native build
+    // stopped here).
     f.write(
         "app.ts",
         &SOURCE.replace(
@@ -899,7 +900,7 @@ fn web_build(app: &Path) -> Result<(), String> {
 }
 
 /// A package's declarations reach the type check of every producer from the
-/// capture ("Type-only package imports"): a type-only import
+/// capture (LLP 1027 D5, "Type-only package imports"): a type-only import
 /// checks against them, a changed `.d.ts` checks again, and a library the
 /// configuration does not load, or a global types package no file names, is
 /// refused alike.
@@ -1127,7 +1128,7 @@ fn type_only_package_imports_check_alike_and_package_code_never_runs() {
 /// One TypeScript configuration (`js/bake/src/typescript.mjs`) in both
 /// producers and the web build: ES2023 runs on Hermes as in a browser, a
 /// `.ts` import path resolves, and what one refuses every one refuses with
-/// the same diagnostic.
+/// the same diagnostic (calc F2, calendar F9/F11).
 #[test]
 fn every_build_takes_one_typescript_configuration_and_refuses_alike() {
     let f = Fixture::new();
@@ -1237,7 +1238,7 @@ fn an_alias_resolves_a_mounted_source_alike_in_both_producers_and_names_only_the
 
 /// A first-frame source over the runtime's 100 ms budget still bakes: the
 /// budget is about a device, and a build machine's load must not fail a
-/// build. The loop is deterministic work, far over 100 ms
+/// build (LLP 1027 §6). The loop is deterministic work, far over 100 ms
 /// on any machine this runs on, so the test never depends on timing.
 #[test]
 fn a_slow_first_frame_source_bakes_whatever_the_wall_clock() {
@@ -1270,7 +1271,7 @@ fn a_slow_first_frame_source_bakes_whatever_the_wall_clock() {
 
 /// The clock in the app's own code is refused at build, by file and line,
 /// in both compilers, so a Bun test (no guard there) cannot hide it from a
-/// device that refuses it on first use.
+/// device that refuses it on first use (LLP 1027.000).
 #[test]
 fn the_clock_in_a_data_module_is_refused_at_build_by_file_and_line() {
     if !exact_js::ENGINE_LINKED {
@@ -1311,7 +1312,7 @@ fn the_clock_in_a_data_module_is_refused_at_build_by_file_and_line() {
     let error = producer.bake(&f.0, None).err().unwrap();
     assert!(error.contains("logic.ts:4:24: Date.now()"), "{error}");
     assert!(error.contains("logic.ts:4:44: Math.random()"), "{error}");
-    // The refusal names where randomness comes from instead.
+    // LLP 1116 D8: the refusal names where randomness comes from instead.
     assert!(
         error.contains(
             "seed from crypto.getRandomValues in a source (docs/recipes/random-and-shuffle.md)"
@@ -1392,7 +1393,7 @@ export const i = () => Date['n\u006fw']();
     }
 }
 
-/// A native producer keeps package identity without symlink privilege.
+/// LLP 1091.001: a native producer keeps package identity without symlink privilege.
 #[cfg(windows)]
 #[test]
 fn windows_imported_packages_keep_identity_through_real_bakes() {

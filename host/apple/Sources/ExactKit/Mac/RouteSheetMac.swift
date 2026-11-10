@@ -1,4 +1,4 @@
-// A modal route is a sheet. A route presented
+// @ref LLP 1115.002 D7.4 — a modal route is a sheet. A route presented
 // modally (`navigationPresentation="modal"`) over the route beneath it is,
 // in a hand-built Mac app, a sheet attached to the window: a window of its
 // own that AppKit centres on its parent, dims it under and keeps it from
@@ -6,7 +6,7 @@
 // kept by the same host, as an entry whose node is the route: the route's
 // own subtree moves into the sheet's window, so its fields, their text, the
 // focus and every test id are the authored ones, and the kernel lays it out
-// in a containing block whose used size is the sheet's.
+// in a containing block (D8.2) whose used size is the sheet's.
 //
 // **Its size.** The block fits automatic axes under the content area of
 // the page's window, less this sheet's own rows. Authored dimensions and
@@ -25,7 +25,7 @@
 // that confirms (the header's one prominent, non-destructive button), which
 // is the sheet's default button and answers Return. Each presses its
 // authored button. What they stand for is hidden in the page and its box is
-// the platform's (`HostCovers`): the whole header when it shows
+// the platform's (`HostCovers`, D8.1): the whole header when it shows
 // nothing else, else the heading and the two buttons, and anything else the
 // header holds (a search field, a menu's button, a third action) stays in
 // it, where the author put it, at the top of the sheet's content.
@@ -409,8 +409,8 @@ extension DialogHost {
         reportRouteCovers()
     }
 
-    /// The header's boxes the sheets' rows stand for are the platform's,
-    /// said in the step the rows show them and taken back when they stop.
+    /// The header's boxes the sheets' rows stand for are the platform's
+    /// (D8.1), said in the step the rows show them and taken back when they stop.
     private func reportRouteCovers() {
         var covers: [UInt32: HostCover] = [:]
         for entry in entries where entry.route { for node in entry.stoodFor { covers[node.id] = .whole } }

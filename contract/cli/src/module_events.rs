@@ -1,4 +1,4 @@
-//! A native module's events: the app hears one with an
+//! A native module's events (LLP 1133.004 D6): the app hears one with an
 //! attribute on its root component's outermost node, as `navigate=` is
 //! written on a navigation root: `column notificationclick=opened`. The
 //! attribute names an action of the root, which takes a prefix of the

@@ -1,5 +1,5 @@
 //! `@exact/serial`, `@exact/hid` and `@exact/usb` under their declared
-//! substitute. The interfaces are the packages' own
+//! substitute (LLP 1133.037 §11). The interfaces are the packages' own
 //! `exact.json`s:
 //!
 //! - `requestPort` holds a chooser ticket listing the preferred ports;

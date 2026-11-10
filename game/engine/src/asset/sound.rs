@@ -1,5 +1,6 @@
 //! Baked sampled sounds. The bake decodes WAV and Ogg Vorbis; a module only
 //! undoes this layout, so no audio decoder is linked into a game.
+//! @ref LLP 1046.003 §AU4 (where decoding happens)
 use crate::Data;
 use std::sync::Arc;
 
@@ -11,6 +12,7 @@ pub const SOUND_RATES: std::ops::RangeInclusive<u32> = 8_000..=192_000;
 
 /// The `.sound` record: 16-bit PCM, channels planar, each channel stored as wrapping
 /// first differences, which gzip compresses 1.3–2.2× smaller than interleaved PCM.
+/// @ref LLP 1046.003 §AU4 (where decoding happens)
 #[derive(Data, Default, Clone, Debug, PartialEq)]
 pub struct SoundData {
     /// Frames per second.

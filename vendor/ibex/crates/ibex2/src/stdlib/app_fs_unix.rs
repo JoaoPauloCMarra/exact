@@ -1,4 +1,5 @@
 //! Host-selected app directories, anchored by directory descriptors.
+//! @ref LLP 0059.000#311-fs--delegating-capability-bearing-author-required — app paths
 use crate::stdlib::fs::{FsOp, FsResult, Stat};
 use crate::{
     boundary::HostError,
@@ -304,7 +305,7 @@ impl AppDirectories {
     }
     /// Pin the roots already published by the app without creating any. A
     /// missing root stays absent for this snapshot, and reads fail as missing
-    /// files so the data module can apply its first-launch behavior.
+    /// files so the data module can apply its first-launch behavior (LLP 1126 D8).
     pub fn snapshot(
         data: impl AsRef<Path>,
         cache: impl AsRef<Path>,
@@ -536,7 +537,7 @@ impl AppDirectories {
 }
 
 /// A path below a retained directory: an `app:/` path's root, or a `home:`
-/// or `bundle:` one's (Exact patch 24). Each
+/// or `bundle:` one's (exact2 LLP 1133.007 D6, Exact patch 24). Each
 /// component is opened `O_NOFOLLOW` from the root, so a link anywhere below
 /// it, planted or not, is refused rather than followed.
 pub(crate) struct Below {
@@ -664,7 +665,7 @@ pub(crate) fn run_below(
         }
     }
 }
-/// Exact patch 24's operations on an app path's leaf, through its retained
+/// LLP 1133.007 D6a's operations on an app path's leaf, through its retained
 /// parent directory, as every other app operation goes.
 fn at_parent(op: FsOp, parent: &File, leaf: &str, data: &[u8]) -> Result<FsResult, HostError> {
     use std::os::fd::AsRawFd;

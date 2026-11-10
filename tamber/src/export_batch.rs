@@ -1,4 +1,5 @@
-//! Re-import's proposal judged whole: the tokens' operations applied together and checked
+//! Re-import's proposal judged whole (LLP 1121 stage 10b; theme2's 13:16Z
+//! ruling, option B): the tokens' operations applied together and checked
 //! once, and only when that is refused, each token the design refuses found
 //! by the lines its diagnostics are on (split in two, in the members' order, where
 //! one is on no line of theirs), with its own reason. A proposal
@@ -51,16 +52,16 @@ fn judged_on(base: &str, folding: Folding, members: &[&[Op]], vocab: &Vocab) -> 
 
 /// `members` (each its place in the whole list, and its operations) on what
 /// `at` holds. The members a refusal blames are taken out and the rest tried
-/// again in a loop, not a call apiece (so a chain of edits each exposed by
-/// the last does not recurse once per edit); only
+/// again in a loop, not a call apiece (Astra's round 2 on the checker bound:
+/// a chain of edits each exposed by the last recursed once per edit); only
 /// halving recurses, as deep as the members halve.
 fn take(at: &mut Judged, members: &[(usize, &[Op])], vocab: &Vocab) {
     let mut members: Vec<(usize, &[Op])> = members.to_vec();
     let mut round = 0;
     loop {
         // Each round after the first a check of the whole design again,
-        // charged to the re-import's budget (the first is the judging any
-        // batch does): past it, nothing
+        // charged to the re-import's budget (theme2's ruling on the batch's
+        // time; the first is the judging any batch does): past it, nothing
         // more is judged, and the re-import is refused in the budget's
         // words, applying nothing (`reimport_against`).
         if members.is_empty() {
@@ -182,11 +183,11 @@ pub(crate) enum Planned {
     Report(String, String),
     /// Nothing the file changes.
     Unchanged,
-    /// A token of another kind, at its place in the design, and
+    /// A token of another kind (stage 6 G), at its place in the design, and
     /// its lines.
     Kind(usize, Vec<Op>),
     /// A colour, at its place in the design: its lines, why not, and a dial's
-    /// change if it is one.
+    /// change if it is one (D14).
     Colour {
         index: usize,
         ops: Vec<Op>,
@@ -214,13 +215,13 @@ pub(crate) struct Taken<'a> {
 /// reported with its own reason, and each other is asked (`again`) what the
 /// folding makes of its lines, until a round adds no pin, refuses nothing
 /// and clears no token's lines (`settle`).
-/// A token that may be a dial's change is not judged here: its literal
+/// A token that may be a dial's change (D14) is not judged here: its literal
 /// lines are only a fallback for when the dial cannot take it, which is known
 /// after (`export_dials::dials`), and beside the others they would stand for
 /// an edit the proposal may not make (its dial unused, say). Their indices
 /// are returned, for [`settle_alone`] to judge one on its own if its dial
-/// falls back (the dial is decided first, so N tokens a dial takes are no N
-/// checks of the design).
+/// falls back (theme2's ruling on the counts' round 2: the dial decided
+/// first, so N tokens a dial takes are no N checks of the design).
 pub(crate) fn rounds(
     names: &[String],
     planned: &mut [Planned],
@@ -250,7 +251,8 @@ pub(crate) fn rounds(
 }
 
 /// One token [`rounds`] left alone, judged on its own now that its dial falls
-/// back: one check of the design, charged to the re-import's budget; past it nothing is judged and the re-import is refused.
+/// back: one check of the design, charged to the re-import's budget (theme2's
+/// condition (3)); past it nothing is judged and the re-import is refused.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn settle_alone(
     i: usize,
@@ -323,7 +325,7 @@ fn settle(
             })
             .collect();
         let at = judged_on(current, cur.clone(), &ops, vocab);
-        // (past the budget, no member is asked again)
+        // (past the budget, no member is asked again: Astra's round 2)
         if crate::budget::spent().is_some() {
             return;
         }
@@ -524,8 +526,9 @@ mod tests {
         assert_eq!(refused(base, &members), first);
     }
 
-    /// A chain of members each exposed only when the last is refused (one
-    /// recursion per edit, were it recursive) is taken out in the loop: 1,500 rounds on a 2 MiB stack, each member refused with
+    /// A chain of members each exposed only when the last is refused (Astra's
+    /// round 2 on the checker bound: one recursion per edit) is taken out in
+    /// the loop: 1,500 rounds on a 2 MiB stack, each member refused with
     /// its own reason.
     #[test]
     fn a_chain_of_refusals_each_exposing_the_next_is_a_loop_not_a_recursion() {
@@ -562,7 +565,7 @@ mod tests {
     }
 
     /// A chain past the re-import's budget stops being judged, and the
-    /// budget says so: a named refusal, nothing applied.
+    /// budget says so (theme2's ruling: a named refusal, nothing applied).
     #[test]
     fn a_chain_past_the_budget_stops_and_the_budget_says_so() {
         let (base, members) = chain(5_000);

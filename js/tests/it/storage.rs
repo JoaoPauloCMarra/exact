@@ -84,7 +84,7 @@ pub(crate) fn response(body: &str) -> Outcome {
     })
 }
 /// One answer to its end, then the background work it left, as a native
-/// host runs both.
+/// host runs both (LLP 1097 D5).
 pub(crate) fn finish(m: &mut Module, s: &mut Store, a: &[Value], answer: Answer) -> String {
     let mut done = super::background::drive(m, s, vec![(a.to_vec(), answer)], |_, _| {
         panic!("storage never invents an HTTP request")
@@ -141,7 +141,7 @@ fn native_modules_are_deferred_retired_and_unavailable_to_validation() {
         text(m.query("work", &args("native", "bake")).unwrap()).contains("unavailable during bake")
     );
     // The bake links no module: `native.call` throws storage's refusal, and a
-    // source that lets it through leaves its resource to launch.
+    // source that lets it through leaves its resource to launch (euxy port F1).
     let src = "shape Result\n  text: string\ncomponent App\n  resource r = work(\"native-direct\", \"x\") as shape Result\n  view\n    text r.text\n";
     let mut baking = Module::inspect(HBC.to_vec()).unwrap();
     baking.set_budget_ms(f64::INFINITY);
@@ -255,11 +255,11 @@ fn storage_then_fetch_then_storage_preserves_each_answer_context() {
     assert!(matches!(s.get("session"), Some("a" | "b")));
 }
 
-/// Storage an answer starts and does not await still lands: a
+/// Storage an answer starts and does not await still lands (kanban F22): a
 /// write made before a value returned at once, and one queued behind the
 /// module's storage chain and begun after the answer's own promise resolved,
-/// or after a value it gave at once. The browser runs each to its
-/// end; so does Hermes, after the reply, as background work.
+/// or after a value it gave at once (drums R10). The browser runs each to its
+/// end; so does Hermes, after the reply, as background work (LLP 1097).
 #[test]
 fn storage_an_answer_does_not_await_still_lands() {
     let root = Root::new();
@@ -275,7 +275,7 @@ fn storage_an_answer_does_not_await_still_lands() {
     );
     assert_eq!(call(&mut m, &mut s, "read-at", "queued/file"), "second");
     // A save chained behind a resolved promise, the value given at once:
-    // the write begins in the checkpoint after the call.
+    // the write begins in the checkpoint after the call (drums R10).
     assert_eq!(call(&mut m, &mut s, "deferred", "third"), "answered");
     assert_eq!(call(&mut m, &mut s, "deferred", "fourth"), "answered");
     assert_eq!(
@@ -712,12 +712,12 @@ component App
     assert!(!other.data().is_loaded());
 }
 
-/// Ledger's pattern on a native host: every answer queued on one
+/// Ledger's pattern on a native host (ledger F12): every answer queued on one
 /// promise chain, a mutation that `refreshes` a storage-backed listing (asked
 /// when sent and again when it lands), a save that refuses bad input before
 /// touching storage, and filter changes that replace a listing between its
 /// storage steps, beside an independent read replaced mid-read by new
-/// arguments or a refresh. Driven as the Apple bridge drives it: let-go work still
+/// arguments or a refresh (minesweeper F10). Driven as the Apple bridge drives it: let-go work still
 /// runs and its reply is dropped; held work runs when released.
 #[test]
 fn queued_answers_survive_refreshes_refusals_and_replaced_turns() {
@@ -866,7 +866,7 @@ component App
     assert_eq!(read(&runner, "saved"), "y:2");
     assert_eq!(read(&runner, "listing"), ":2");
     // An independent read replaced mid-read, by new arguments or by a
-    // refresh with the same ones, leaves later reads working.
+    // refresh with the same ones, leaves later reads working (minesweeper F10).
     runner
         .act("save", vec![Value::str("file"), Value::str("peeked")])
         .unwrap();
@@ -906,7 +906,7 @@ component App
 
     assert!(!runner.has_pending(), "everything settled");
     // `peek` reads a file that may not be there and says so: its failed
-    // read is journaled, and nothing else failed.
+    // read is journaled (LLP 1097 D8), and nothing else failed.
     let refusals: Vec<&str> = runner
         .journal()
         .filter(|l| l.contains("pending on nothing") || l.contains("failed"))
@@ -915,13 +915,13 @@ component App
     assert!(refusals.is_empty(), "{refusals:#?}");
 }
 
-/// A re-read the runner dropped before handing it out (a mutation
-/// refreshing a folder's preview mid-walk) is forgotten here too.
+/// A re-read the runner dropped before handing it out (files diary F18: a
+/// mutation refreshing a folder's preview mid-walk) is forgotten here too.
 /// Left parked under the walk's key, it took the walk's next storage step,
 /// so the walk's turn never ended and every answer behind it waited forever.
 /// A composer above (the mixed source) cannot name the walk's dispatched
-/// token to `forgotten`, so only `discard` drops it. The re-read begins
-/// instead of waiting; `discard` still drops that call, and
+/// token to `forgotten`, so only `discard` drops it. LLP 1097 begins the
+/// re-read instead of deferring it; `discard` still drops that call, and
 /// the steps it already issued run as a let-go without becoming the walk's.
 #[test]
 fn a_discarded_re_read_leaves_the_read_in_flight_its_steps() {
@@ -949,8 +949,8 @@ fn a_discarded_re_read_leaves_the_read_in_flight_its_steps() {
             Answer::Later(request) => {
                 let token = request.continuation.expect("storage continuation");
                 // Queued behind the discarded re-read's issued step, the walk
-                // waits and is asked again once that step is delivered.
-                // `continuation` of that wait is the worker
+                // waits and is asked again once that step is delivered
+                // (LLP 1097 D3). `continuation` of that wait is the worker
                 // refusal; a host dispatches it.
                 answer = match crate::runnable(m.dispatch(token, &s)) {
                     Dispatch::Run(Work::Now(work)) => {
@@ -987,8 +987,8 @@ fn a_discarded_re_read_leaves_the_read_in_flight_its_steps() {
     panic!("the walk did not settle")
 }
 
-/// Each refusal names its reason as a code the web's adapters use too;
-/// the message beside it may differ by host.
+/// Each refusal names its reason as a code the web's adapters use too
+/// (kanban F28); the message beside it may differ by host.
 #[test]
 fn storage_refusals_carry_a_stable_code() {
     let root = Root::new();
@@ -1012,8 +1012,8 @@ fn storage_refusals_carry_a_stable_code() {
     );
 }
 
-/// A folder the person chose is reached from TypeScript as from Rust: the
-/// same `doc:` path, the same grants, the same
+/// A folder the person chose is reached from TypeScript as from Rust (LLP
+/// 1069.010 D1, files F2): the same `doc:` path, the same grants, the same
 /// executor, and with no app storage at all (a drive with no scratch store),
 /// where an `app:/` read finds an empty store, as a fresh install's does.
 #[test]
@@ -1120,7 +1120,7 @@ fn typescript_document_operations_refuse_descendant_symlinks() {
 }
 
 /// No later UI request is needed to finish writes these answers already
-/// issued. No answer waits on another to begin, so every
+/// issued. LLP 1097 D4.5 deletes the answer-to-answer deferral, so every
 /// answer begins at once and the discarded send has already issued: its
 /// write lands too. It is not an unstarted deferred mutation. Those
 /// answers' Store writes do not commit. A later live mutation does.
@@ -1170,7 +1170,7 @@ fn retired_deferred_writes_finish_without_another_answer() {
     assert_eq!(
         std::fs::read_to_string(root.0.join("data/note")).unwrap(),
         "uncommitted",
-        "an issued write still lands after its answer is discarded"
+        "an issued write still lands after its answer is discarded (LLP 1097)"
     );
     assert_eq!(store.get("session"), Some("original"));
     let logs = crate::authored_logs(m.take_logs());
@@ -1181,12 +1181,12 @@ fn retired_deferred_writes_finish_without_another_answer() {
 }
 
 /// Issued writes keep queue order beside the live answers, and the
-/// superseded answer's Store write does not commit. No answer waits on
-/// another to begin, so these answers interleave at their
+/// superseded answer's Store write does not commit. LLP 1097 D4.5 deletes
+/// the answer-to-answer deferral, so these answers interleave at their
 /// awaits: each `ordered` read is issued before any of the writes, each
 /// write therefore stores only its own letter, and the letters land A, then
 /// B, then C. The file is not the old deferral's `ABC`. Unload finishes
-/// those issued writes; it does not drop them.
+/// those issued writes (D10); it does not drop them.
 #[test]
 fn retired_writes_keep_submission_order_beside_live_targets_and_do_not_cross_unload() {
     use exact_runner::{Dispatch, InFlight, Target, Work};
@@ -1310,14 +1310,14 @@ fn retired_writes_keep_submission_order_beside_live_targets_and_do_not_cross_unl
         assert_eq!(
             m.in_flight(),
             3,
-            "three live calls; the superseded send is not parked as a deferred answer"
+            "three live calls; LLP 1097 does not park the superseded send as a deferred answer"
         );
         let ordered = root.0.join("data/ordered");
         if unload {
             m.unload();
             assert_eq!(m.in_flight(), 0);
             // The superseded send had already issued its write. Unload
-            // finishes it; the deleted deferral used to drop it, and
+            // finishes it (D10); the deleted deferral used to drop it, and
             // the file was absent. The last issued write is C's.
             assert_eq!(std::fs::read_to_string(&ordered).unwrap(), "C");
             assert_eq!(

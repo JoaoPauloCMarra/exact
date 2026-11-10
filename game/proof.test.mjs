@@ -725,7 +725,7 @@ test('pin scan includes authored benchmark tests and ordinary digest strings', (
   expect(pinLiterals('game/bench/feel.test.mjs',hash)).toEqual([hash]);
   for(const quote of ['"',"'",'`','']) expect(pinLiterals('game/engine/tests/foo.rs',quote+digest+quote).length).toBe(1);
   expect(pinLiterals('game/bench/results/receipt.md',digest)).toEqual([]);
-  expect(pinLiterals('game/bakeoff/demo/results/2026-10-06-r1/exact2/DIARY.md',hash)).toEqual([]); // a results diary is evidence, as the bench's is
+  expect(pinLiterals('game/bakeoff/garden/results/2026-10-06-r1/exact2/DIARY.md',hash)).toEqual([]); // a results diary is evidence, as the bench's is
   expect(pinLiterals('Cargo.lock',digest)).toEqual([]);
   expect(pinLiterals('game/engine/src/data/text.rs','0'.repeat(64))).toEqual([]); // Decimal padding, not a world pin.
   expect(pinLiterals('game/engine/src/data/text.rs',digest)).toEqual([digest]);
@@ -840,7 +840,7 @@ test('Fox predicate crops reported bounds and requires varied fur at the declare
 });
 
 
-test('proof inputs from game include host code and exclude other games', async () => {
+test('R12 proof inputs from game include host code and exclude other games', async () => {
   const {proofInputFiles}=await import('./proof.mjs');
   const files=proofInputFiles(import.meta.dir,resolve(import.meta.dir,'games/beacons'));
   expect(files).toContain('../host/web/gpu-glue.js');
@@ -848,7 +848,7 @@ test('proof inputs from game include host code and exclude other games', async (
   expect(files.some(f=>f.startsWith('bench/'))).toBe(false);
 });
 
-test('Fox crop accepts approximately 16:9 real screenshot coordinates', async () => {
+test('R12 Fox crop accepts approximately 16:9 real screenshot coordinates', async () => {
   const {foxPixels}=await import('./games/skinned-fixture/proof.mjs');
   const width=321,height=180,data=new Uint8Array(width*height*4).fill(255);
   for(let y=40;y<120;y++) for(let x=240;x<300;x++) data.set([160+(x%12)*8,70,25,255],(y*width+x)*4);
@@ -919,7 +919,7 @@ test('shared residency probe takes the authored replacement model name', async (
 });
 
 
-test('output names nested in logic remain proof inputs and change the hash', async () => {
+test('R13 output names nested in logic remain proof inputs and change the hash', async () => {
   const {proofInputExcluded, proofInputFiles}=await import('./proof.mjs');
   for(const name of ['target','.shells','dist','dist.previous','artifacts']) {
     expect(proofInputExcluded(`game/games/beacons/logic/src/${name}/mod.rs`,'beacons')).toBe(false);
@@ -945,7 +945,7 @@ test('a game\'s helper scripts are not proof inputs; its build inputs are', asyn
   expect(proofInputExcluded('../forest/bench.mjs','forest','../forest/')).toBe(true);
 });
 
-test('Fox screenshot reply scales logical bounds at DPR 2 and 3', async () => {
+test('R13 Fox screenshot reply scales logical bounds at DPR 2 and 3', async () => {
   const {foxScreenshotPixels}=await import('./games/skinned-fixture/proof.mjs');
   for(const scale of [2,3]) {
     const w=160,h=90,width=w*scale,height=h*scale,data=new Uint8Array(width*height*4).fill(255);
@@ -974,7 +974,7 @@ test('engine test sources are not bake inputs: editing one leaves the proof inpu
 });
 
 
-test('Linux proof profile changes invalidate the build receipt, native paranoid mode does not', () => {
+test('E10 Linux proof profile changes invalidate the build receipt, native paranoid mode does not', () => {
   expect(buildInputHash('linux', 'target', '0', 'gpu-dev').digest('hex'))
     .not.toBe(buildInputHash('linux', 'target', '0', 'release').digest('hex'));
   expect(buildInputHash('linux', 'target', '1', 'gpu-dev').digest('hex'))
@@ -982,7 +982,7 @@ test('Linux proof profile changes invalidate the build receipt, native paranoid 
 });
 
 
-test('snapshot-only proof records the same world observation as state', async () => {
+test('E10 snapshot-only proof records the same world observation as state', async () => {
   const observations=new Map();
   const record=worldObservations(observations, 1);
   const session={state:async target => {
@@ -997,7 +997,7 @@ test('snapshot-only proof records the same world observation as state', async ()
 });
 
 
-test('browser buttons retain UA keyboard focus and hover feedback', async () => {
+test('E10 browser buttons retain UA keyboard focus and hover feedback', async () => {
   const root=resolve(import.meta.dir,'../host/web');
   const server=Bun.serve({port:0,fetch(request) {
     const path=new URL(request.url).pathname;
@@ -1040,7 +1040,7 @@ test('browser buttons retain UA keyboard focus and hover feedback', async () => 
   }
 },60000);
 
-test('Beacons and skinned Linux proof hashes match release under the fast profile', async () => {
+test('E10 Beacons and skinned Linux proof hashes match release under the fast profile', async () => {
   const {cpSync, existsSync} = await import('node:fs');
   const root=mkdtempSync(resolve(tmpdir(),'e10-profiles-'));
   // The shared filesystem helper builds below this excluded output container.
@@ -1099,7 +1099,7 @@ test('proof commands quote the actual script and every argument', async () => {
   const script=resolve(dir, "inspect command's arguments.mjs");
   try {
     writeFileSync(script, 'console.log(JSON.stringify(process.argv.slice(2)))');
-    const args=['web', '--phone', "Alex's iPhone", '', '$HOME; $(false)', 'one\ntwo'];
+    const args=['web', '--phone', "Charlie's iPhone", '', '$HOME; $(false)', 'one\ntwo'];
     const command=proofCommand(script, ...args);
     const child=Bun.spawn(['/bin/sh','-c',command],{stdout:'pipe',stderr:'pipe'});
     const [code,out,error]=await Promise.all([child.exited,new Response(child.stdout).text(),new Response(child.stderr).text()]);
@@ -1107,7 +1107,7 @@ test('proof commands quote the actual script and every argument', async () => {
   } finally {rmSync(dir,{recursive:true,force:true});}
 });
 
-test('macOS receipt includes modulemaps and extensionless compile inputs',async()=>{
+test('R15 macOS receipt includes modulemaps and extensionless compile inputs',async()=>{
   const dir=mkdtempSync(resolve(tmpdir(),'r15-modulemap-'));
   try {
     const file=resolve(dir,'host/apple/Sources/CExact/module.modulemap');mkdirSync(dirname(file),{recursive:true});writeFileSync(file,'module CExact {}');
@@ -1154,7 +1154,7 @@ test.each(['in-tree','external','linked'])('R15 %s game compiles with contractio
   } finally {if(alias)rmSync(alias,{recursive:true,force:true});rmSync(root,{recursive:true,force:true});}
 });
 
-test('even linux-only repin refuses missing or divergent release observations',()=>{
+test('R15 even linux-only repin refuses missing or divergent release observations',()=>{
   const rows=candidates(['linux']), old=rows[0].pins;
   expect(()=>agreePins(rows.slice(0,-1),old,['linux'], '.')).toThrow('release');
   rows.at(-1).pins.ticks[60]=repeatedHash('d');
@@ -1206,7 +1206,7 @@ test('concurrent prove runs keep their save artifacts and web builds separate', 
     rmSync(dir,{recursive:true,force:true});
   }
 },15000);
-test('repin provenance requires every observed tree digest to agree',async()=>{
+test('E11 repin provenance requires every observed tree digest to agree',async()=>{
   const {pinInputs}=await import('./proof.mjs');
   const inputs='a'.repeat(64);
   expect(pinInputs([{inputs},{inputs}])).toBe(inputs);
@@ -1214,7 +1214,7 @@ test('repin provenance requires every observed tree digest to agree',async()=>{
   expect(()=>pinInputs([{inputs},{inputs:'b'.repeat(64)}])).toThrow('inputs');
 });
 
-test('Beacons walk uses bounded distance-sized holds and reports an obstruction',async()=>{
+test('E11 Beacons walk uses bounded distance-sized holds and reports an obstruction',async()=>{
   const {walkTo}=await import('./games/beacons/proof.mjs');
   for(const blocked of [false,true]) {
     const p=[0,0.9,0],holds=[],checks=[];

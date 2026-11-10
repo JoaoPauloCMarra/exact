@@ -1,5 +1,5 @@
 // linux: layout
-// HTML's table and description list: the browser's table
+// HTML's table and description list (LLP 1153 D7): the browser's table
 // algorithm on the web, a grid of `auto` columns in the kernel, whose boxes
 // conform.mjs compares. Every cell holds sized boxes, so no font decides a
 // width, and the spanned columns are equally wide, where a grid and CSS 2.1

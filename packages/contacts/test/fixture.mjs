@@ -1,7 +1,7 @@
-// The conformance fixtures of @exact/contacts and @exact/calendar, as
-// every platform's suite makes them: an app `exact new` made outside the
-// repo, its files replaced by a package's `test/fixture/`, depending on
-// that package by `file:` and installed.
+// The conformance fixtures of @exact/contacts and @exact/calendar (LLP
+// 1133.001 D7, LLP 1133.018 §10), as every platform's suite makes them: an
+// app `exact new` made outside the repo, its files replaced by a package's
+// `test/fixture/`, depending on that package by `file:` and installed.
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';

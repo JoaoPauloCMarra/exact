@@ -1,10 +1,10 @@
-//! Dropping across lists on Linux: a grip in a list with a
+//! Dropping across lists (LLP 1094 D5–D9) on Linux: a grip in a list with a
 //! `reorderGroup` lifts its row as a ghost (`paint/lift.rs`) that follows
 //! the contact; the ghost's centre picks the grouped list whose scrollport
 //! holds it and the gap there (the runner's `preview_reorder_into`, in
 //! process); the drop goes to that target and may hold until the move
 //! shows; the ghost then springs onto the row wherever it is, or goes with
-//! it. Keys move the gap a row or a list. The session is the runner's;
+//! it. Keys move the gap a row or a list (D9). The session is the runner's;
 //! this owns only the contact, the ghost and the scrolling.
 use super::arrange_geometry::{finite, intersect};
 use super::*;
@@ -16,7 +16,7 @@ use exact_runner::{ReorderBinding, ReorderEnding, ReorderPhase, ReorderStep, Reo
 /// The grouped drag's edge band (points) and top speed (points per second).
 const BAND: f32 = 24.;
 const SPEED: f32 = 300.;
-/// The lifted look, the same on every host.
+/// The lifted look, the same on every host (D6).
 const LIFTED: f32 = 1.03;
 /// The ghost's return: the preview's `-exact-spring(300,30,1)`.
 const SPRING: SpringConfig = SpringConfig {
@@ -96,7 +96,7 @@ impl<D: DataSource> Presenter<D> {
         })
     }
 
-    /// Lift: the session, with a ghost for a contact. The ghost starts
+    /// Lift: the session, with a ghost for a contact (D6). The ghost starts
     /// on the row, the contact's offset into it taken at the press.
     fn group_lift(
         &mut self,
@@ -105,8 +105,8 @@ impl<D: DataSource> Presenter<D> {
         ghost: bool,
         now: f64,
     ) -> Result<bool, String> {
-        // A landing ghost ends at once; no new lift while a
-        // session holds, cancels or settles.
+        // A landing ghost ends at once (LLP 1102 §3.18); no new lift while a
+        // session holds, cancels or settles (D8).
         if self
             .group
             .as_ref()
@@ -115,9 +115,9 @@ impl<D: DataSource> Presenter<D> {
             self.finish_group();
         }
         if self.group.is_some() || self.arrange.is_some() {
-            // Said, as the web says it: a drive's reply reads like a success otherwise.
+            // Said, as the web says it (LLP 1102 §3.17): a drive's reply reads like a success otherwise.
             if self.group.is_some() {
-                self.host.log("reorder: a drag refused: the last drop is held until its move shows; a person waits for the card to land; a drive waits with `clock settle` before the next drag".to_string());
+                self.host.log("reorder: a drag refused: the last drop is held until its move shows (LLP 1094 D8); a person waits for the card to land; a drive waits with `clock settle` before the next drag".to_string());
             }
             return Ok(false);
         }
@@ -169,7 +169,7 @@ impl<D: DataSource> Presenter<D> {
         Ok(true)
     }
 
-    /// A contact past the slop, in any direction, lifts.
+    /// A contact past the slop, in any direction, lifts (D6).
     pub(super) fn begin_group(
         &mut self,
         binding: ReorderBinding,
@@ -192,7 +192,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// The grouped list whose port holds the ghost's centre, the gap at
-    /// the centre's content y there; outside every port nothing,
+    /// the centre's content y there (D5, D7); outside every port nothing,
     /// so the last certified gap stands.
     fn group_sample(&mut self) -> Result<bool, String> {
         let Some(s) = self.group.as_ref() else {
@@ -272,7 +272,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// After a commit or a frame: a held drop waits; its end (or a cancel)
-    /// starts the ghost's return, or, with no ghost, finishes at once.
+    /// starts the ghost's return, or, with no ghost, finishes at once (D8).
     pub(super) fn observe_group(&mut self, now: f64) {
         let Some(s) = self.group.as_ref() else {
             return;
@@ -456,7 +456,7 @@ impl<D: DataSource> Presenter<D> {
         })
     }
 
-    /// Geometric autoscroll: the target list's port, then each scroll
+    /// Geometric autoscroll (D7): the target list's port, then each scroll
     /// ancestor of it whose box holds the ghost's centre, or the contact once
     /// the centre has gone past its edge (a tall ghost held by its top leaves
     /// the scroller before the contact reaches the band; a centre past an
@@ -582,12 +582,12 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    /// Keys on a focused grip of a grouped list that has no `press`,
+    /// D9's keys on a focused grip of a grouped list that has no `press`,
     /// `key`, `pan` or `pointerdown` of its own: Space lifts (no ghost),
     /// the arrows move the gap, Space or Enter drops, Escape cancels. A
     /// hold takes no keys. Whether the key was the session's.
     pub(super) fn group_key(&mut self, id: ViewId, name: &str, now: f64) -> bool {
-        // Escape cancels a drag with a ghost too, whatever has the focus.
+        // Escape cancels a drag with a ghost too, whatever has the focus (D8).
         if name == "Escape"
             && self
                 .group
@@ -624,7 +624,7 @@ impl<D: DataSource> Presenter<D> {
             self.dirty = true;
             return true;
         }
-        // A landing ghost yields to Space's lift, which ends it.
+        // A landing ghost yields to Space's lift, which ends it (LLP 1102 §3.18).
         let landing = self
             .group
             .as_ref()
@@ -644,7 +644,7 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    /// A grip the keys work on: its list grouped, and no `press`, `key`,
+    /// A grip D9's keys work on: its list grouped, and no `press`, `key`,
     /// `pan` or `pointerdown` of its own. It takes the focus.
     pub(crate) fn group_grip(&self, id: ViewId) -> Option<ReorderBinding> {
         let node = self.host.kernel().node(id)?;

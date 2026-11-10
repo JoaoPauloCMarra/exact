@@ -21,10 +21,10 @@
 //      it — `open -a` fails and Open With never lists it. `run` and `install`
 //      both launch `<Name>.app/Contents/MacOS/<Name>`: the executable inside
 //      a bundle, which *is* the app, with stdout still attached to the
-//      terminal that started it.
+//      terminal that started it. @ref LLP 1033 D2
 //   2. **Where the file argument goes.** `exact run markdown README.md` and
 //      `mdview README.md` and a Finder double-click are three different OS
-//      routes; all three end at the app's `open-file` node.
+//      routes; all three end at the app's `open-file` node (LLP 1033 D3).
 //      `run` passes paths as arguments; the installed shim goes through
 //      `open`, which hands them to an already-running copy instead of
 //      starting a second one.
@@ -284,7 +284,7 @@ function release(app) {
   // notarisation's requirements, not preferences: a build without them is
   // rejected at submission rather than at launch. The entitlements come from
   // the bake receipt inside the bundle: the app carries those its `device.*`
-  // and `runtime.* app` grants derive, a helper a
+  // and `runtime.* app` grants derive (LLP 1069.008 D4, D9), a helper a
   // `runtime.* <path>` grant names carries its own, and other nested code none.
   const built = JSON.parse(readFileSync(resolve(bundle, 'Contents/Resources/receipt.json'), 'utf8'));
   signRelease(staged, { compat: built.build?.compat, manifest: app.manifest, identity, id: app.id, scratch: out });
@@ -426,7 +426,7 @@ export function setup({check = false} = {}) {
         console.error(`exact setup: the ${target} Hermes bundle did not install; Apple TypeScript builds for it will name the command`);
       }
     }
-    // Android, where its SDK is: the Rust target the APK's library builds for. Its Hermes bundle has no
+    // Android, where its SDK is (LLP 1107): the Rust target the APK's library builds for. Its Hermes bundle has no
     // release to fetch yet (`sdkReport`'s row says how to install one).
     if (existsSync(androidSdk())) run('rustup', ['target', 'add', 'aarch64-linux-android', '--toolchain', pin.channel]);
     // Every bake resolves offline and locked: the checkout's crates, and the game SDK's for a game's shell.
@@ -451,10 +451,10 @@ export function setup({check = false} = {}) {
     : 'SDK tools ready. Build scripts select the pinned stable/nightly without changing rustup default.');
 }
 
-/** Every prerequisite at once: what is installed, what the SDK
+/** Every prerequisite at once (LLP 1086 D6): what is installed, what the SDK
  * pins, and, for what only some apps need, which ones. A row is `required`
  * when no app here builds without it. */
-/** The report's rows a platform's build reads: the web's are the toolchain exact2's own tools
+/** The report's rows a platform's build reads (LLP 1153 D1.2, D1.6): the web's are the toolchain exact2's own tools
  * build with, Bun, node_modules and Chrome; a native platform's add Xcode and the Hermes bundle its TypeScript runs on. */
 export function platformRowNames(platform, { os = process.platform, cpu = process.arch, device = false } = {}) {
   const host = `Hermes bundle (${hermesTarget(os, cpu)})`, simulator = `Hermes bundle (${hermesCrossTargets(os, cpu)[0]?.target})`;
@@ -551,7 +551,7 @@ export function sdkReport(env = process.env, { only = null, device = false } = {
       host.ok ? 'verified by hermes-lean-sys' : host.message,
       'the pinned Ibex release', host.ok, host.fix,
       // Only a native host's TypeScript data sources run Hermes; the web runs them in the browser
-      // (a bare MISSING here reads as a blocker for a web-only app).
+      // (builders read a bare MISSING here as a blocker for a web-only app: bench diaries, 2026-10-07).
       'TypeScript data sources on native hosts (macOS, iOS, Linux); not the web',
     ));
   }
@@ -561,7 +561,7 @@ export function sdkReport(env = process.env, { only = null, device = false } = {
     rows.push(row(`Hermes bundle (${target})`, cross.ok ? 'verified by hermes-lean-sys' : 'not installed or invalid',
       'the pinned Ibex release', cross.ok, cross.fix, need));
   }
-  // Android, where its SDK is, in the whole report: what `bun exact.mjs android` needs besides it
+  // Android, where its SDK is (LLP 1107), in the whole report: what `bun exact.mjs android` needs besides it
   // (`platformReport` checks the same for a first Android build).
   if (!only && existsSync(androidSdk(env))) {
     const ndks = resolve(androidSdk(env), 'ndk'), ndk = env.ANDROID_NDK_HOME ?? (existsSync(ndks) ? readdirSync(ndks).filter(v => /^\d/.test(v)).sort((a, b) => a.localeCompare(b, undefined, {numeric: true})).at(-1) : '');
@@ -594,7 +594,7 @@ export function printReport(rows, {onlyMissing = false} = {}) {
   }
 }
 
-/** `exact contract …` — this checkout's compiler, from anywhere.
+/** `exact contract …` — this checkout's compiler, from anywhere (LLP 1086 D4).
  * Debug, as the guides use it; the pinned toolchain whatever rustup would pick
  * from the caller's directory; exact2's own target/, never an inherited one
  * (an app's, or another checkout's). */
@@ -625,7 +625,7 @@ export function contract(args, env = process.env) {
   const json = args[0] === 'build' && args.includes('--json');
   const result = spawnSync('cargo', [...cargo.args, '--', ...args], {stdio: ['inherit', json ? 'pipe' : 'inherit', 'inherit'], env: cargo.env, encoding: 'utf8', maxBuffer: 1 << 26});
   if (result.error) throw new Error(`cargo: ${result.error.message} (install rustup from https://rustup.rs)`);
-  // A build of an app's `app.contract` refreshes the types its `app.ts` imports.
+  // A build of an app's `app.contract` refreshes the types its `app.ts` imports (LLP 1116.001 D4.5).
   const input = args[0] === 'build' ? args.slice(1).find((arg, i, rest) => !arg.startsWith('-') && rest[i - 1] !== '-o') : null;
   if (result.status === 0 && input && basename(input) === 'app.contract') {
     const dir = dirname(resolve(input));
@@ -672,7 +672,7 @@ export function typeDiagnostics(report, dir) {
 }
 
 /** The types `app.ts` imports, `contract types app.contract -o app.contract.d.ts`, rewritten
- * only when they changed: when a source's signature did. The web build and
+ * only when they changed: when a source's signature did (LLP 1116.001 D4.5). The web build and
  * the native development bake write the same file the same way, so a builder never runs the
  * step. A drawing app's carry the canvas seam, as both add it. Says so in one line on stderr,
  * so `--json` stays the build's reply; returns whether it wrote. */
@@ -698,14 +698,14 @@ function newApp(path, {update = false, without = null, with: platforms = [], gam
     const manifest = resolve(path, 'app.json');
     if (existsSync(manifest) && Object.values(JSON.parse(readFileSync(manifest, 'utf8')).typescript?.sources ?? {}).some(p => /(?:^|\/)snapback4\/ts\/?$/.test(p)))
       console.log(wireSnapback(path, {artifactOnly:true}));
-    // A file names what it uses: an app written before module
+    // A file names what it uses (LLP 1091 D1): an app written before module
     // scope gets the `use` lines its files lack, as `contract fmt --uses` writes them.
     if (contract(['fmt', '--uses', resolve(path, 'app.contract')]) !== 0)
       console.log('The `use` lines above that no rule writes are the author\'s; `bun exact.mjs contract build app.contract` names them.');
     return;
   }
   if (game && !path) throw new Error('Usage: exact new <path> --game [--assets] (the last part names the game: lowercase-hyphenated, no host suffix)');
-  // The web's rows alone for an app; a native platform's are checked by the verb that first needs it.
+  // The web's rows alone for an app (LLP 1153 D1.6); a native platform's are checked by the verb that first needs it.
   const report = sdkReport(process.env, game ? {} : { only: 'web' });
   if (report.some(row => row.name === 'rustup' && !row.ok)) {
     printReport(report, {onlyMissing: true});
@@ -715,8 +715,8 @@ function newApp(path, {update = false, without = null, with: platforms = [], gam
   console.log(game ? createGame(resolve(path), undefined, {assets}) : createApp(path, {snapback, title, id, with: platforms}));
   prebuildCompiler();
   if (report.some(row => !row.ok)) {
-    // A bare "still needs" list reads as the reason a later command failed: say when nothing on it
-    // blocks the app.
+    // Builders read a bare "still needs" list as the reason a later command failed (bench diaries,
+    // 2026-10-07/08): say when nothing on it blocks the app.
     const blocking = report.some(row => !row.ok && row.required);
     console.log(blocking
       ? '\nThis machine still needs (exact setup --check shows the whole table):'
@@ -780,12 +780,12 @@ release needs a "Developer ID Application" certificate and notarytool
 credentials in the keychain; it says how to get each if one is missing.
 EXACT_DEVELOPER_ID and EXACT_NOTARY_PROFILE name them explicitly.`;
 
-/** `exact add <module> [<app>]`: the app depends on one of exact2's standard modules by a path into
+/** `exact add <module> [<app>]` (LLP 1133.001 D8): the app depends on one of exact2's standard modules by a path into
  *  this checkout, as an app consumes exact2 by path, so the module never differs from the SDK it compiles against. */
 export function add(args, say = console.log) {
   const [module, name] = args, short = String(module ?? '').replace(/^@exact\//, '');
   const read = (path) => { try { return JSON.parse(readFileSync(path, 'utf8')); } catch { return null; } };
-  // A standard module (an interface), or a TypeScript library of exact2's own (`@exact/oauth`).
+  // A standard module (an interface), or a TypeScript library of exact2's own (`@exact/oauth`, LLP 1146 D5).
   const standard = readdirSync(resolve(ROOT, 'packages')).filter((p) => read(resolve(ROOT, 'packages', p, 'exact.json'))?.kind === 'interface'
     || read(resolve(ROOT, 'packages', p, 'package.json'))?.exports?.['.']?.types !== undefined);
   if (!standard.includes(short)) throw new Error(`add: ${module ? `no standard module ${module}` : 'name a module'}; exact2's are ${standard.join(', ')} (exact add geolocation)`);
@@ -799,7 +799,7 @@ export function add(args, say = console.log) {
   say(`add: ${key} is ${spec}. Name what you use: use … from "${key}" in app.contract, or import from it in app.ts${grants.length ? `; and grant one of ${grants.join(', ')} with its purpose's strings key in app.ts (exact docs a capability that asks permission)` : ''}.`);
 }
 
-/** `exact hatch <word> [<app>]`, `exact hatch --app [<app>]`, `exact hatch --window [<app>]`:
+/** `exact hatch <word> [<app>]`, `exact hatch --app [<app>]`, `exact hatch --window [<app>]` (LLP 1075.003.000.001 §5):
  *  an access hatch's stub for each target the app builds. A word is added to app.json `hatches` with the platforms
  *  stubs were written for; each stub has the hatch's moments, an end that undoes what built added, a region and one
  *  diagnostics line, and says what a hatched node gives up there. An app with no module gets each platform's. The
@@ -894,7 +894,7 @@ func ${camel}HatchEnded(_ element: ExactElement) {
       mark(main, '// exact:element ', `        if element.hatch == .${camel} { ${camel}Hatch(element) }`, 'call it from your module\'s element(_:)');
     } else {
       const type = scope === 'app' ? 'ExactApp' : 'ExactWindow';
-      write(stub, `// The ${scope} hatch on Apple. Yours to edit.
+      write(stub, `// The ${scope} hatch on Apple (LLP 1075.003.000.001 §2.1). Yours to edit.
 // ${scope === 'app' ? '`app.application` is nil unless the embedder gave this session the process; `app.prefersColorScheme` and the other facts are the ones Contract sees.' : '`window.window` is nil unless the window is this session\'s own (`window.exclusive`); its frame and moments are always there.'}
 #if os(macOS)
 import AppKit
@@ -948,7 +948,7 @@ export function elementEnded(e) {
 `);
       mark(main, '// exact:hatches', `import * as ${camel}Hatch from './${file}';\nhatches[${JSON.stringify(word)}] = ${camel}Hatch;`, 'import it and call its element and elementEnded from yours');
     } else {
-      write(resolve(mod, file), `// The ${scope} hatch on the web. Yours to edit.
+      write(resolve(mod, file), `// The ${scope} hatch on the web (LLP 1075.003.000.001 §2.1). Yours to edit.
 // ${scope === 'app' ? 'The page is the app\'s own: its facts (`a.prefersColorScheme`, `a.visibilityState`, …) are the ones Contract sees;\n// `a.data` holds the root node\'s data-* words, each declared in app.json `data`.' :'The page\'s window; `w.frame` is its inner size. Reach the global as `globalThis` in a file that exports `window`.'}
 
 /** When the page module connects (\`isNew\`), and when ${scope === 'app' ? 'a fact changes' : 'its size changes'}. */
@@ -1041,7 +1041,7 @@ fn ${snake}_hatch_ended<H: Hatches>(_element: &Element, _context: &mut Context<'
     }
   }
   if (existsSync(resolve(dir, 'android'))) {
-    // Android's reader runs the app's Kotlin beside its Rust: one class, exact.app.Hatches,
+    // Android's reader runs the app's Kotlin beside its Rust (LLP 1115.001.000 D4): one class, exact.app.Hatches,
     // compiled into the APK from modules/android. The app's Android crate writes its install (android_entry).
     platforms.push('android');
     const main = resolve(dir, 'modules/android/Hatches.kt');
@@ -1095,7 +1095,7 @@ class Hatches : ExactHatches() {
   }
   if (!platforms.length) throw new Error(`hatch: ${app.name} builds no target a hatch can be written for (apple/, web/, linux/ or android/)`);
   if (scope === 'element') {
-    // The declaration: the word, with the platforms a stub was written for. A list means every platform.
+    // The declaration (§5): the word, with the platforms a stub was written for. A list means every platform.
     const had = manifest.hatches;
     if (Array.isArray(had)) { if (!had.includes(word)) had.push(word); }
     else manifest.hatches = { ...(had ?? {}), [word]: [...new Set([...(had?.[word] ?? []), ...platforms])] };
@@ -1114,7 +1114,7 @@ class Hatches : ExactHatches() {
   return { wrote, todo, platforms };
 }
 
-/** `exact.mjs pattern [<name>] [--force]`: the starter patterns, or one written
+/** `exact.mjs pattern [<name>] [--force]` (LLP 1116.001 D3): the starter patterns, or one written
  * into the app (`EXACT_APP_DIR`, else this directory) with the types its app.ts imports. */
 export function pattern(args, say = console.log) {
   const name = args.find(arg => !arg.startsWith('-'));
@@ -1270,13 +1270,13 @@ async function main(argv) {
     return setup({check:flags.includes('--check')});
   }
   if (verb === 'list') return list();
-  // The compiler parses its own flags; its help is printed here, so asking compiles nothing.
+  // The compiler parses its own flags; its help is printed here, so asking compiles nothing (LLP 1116 D4).
   if (verb === 'contract') return process.exit(argv.includes('--help') || argv.includes('-h') ? (console.log(helpText('contract')), 0) : contract(argv.slice(1)));
-  // An app's design on its own: the compiler's `tamber` verbs.
+  // An app's design on its own (LLP 1121 D2): the compiler's `tamber` verbs.
   if (verb === 'tamber' && (argv.includes('--help') || argv.includes('-h'))) return console.log(helpText('tamber'));
-  // The design server's wire and its scripted client: development only.
+  // The design server's wire and its scripted client (LLP 1121 D13): development only.
   if (verb === 'tamber' && name === 'serve') return import('./tamber-server.mjs').then(m => m.serveAlone(rest)).then(code => process.exit(code));
-  // A stylesheet's custom properties written into app.tamber: the compiler's, with no server.
+  // A stylesheet's custom properties written into app.tamber (LLP 1153 D6): the compiler's, with no server.
   if (verb === 'tamber' && name === 'import' && rest[0] === 'css') return process.exit(contract(['tamber', ...argv.slice(1)]));
   if (verb === 'tamber' && name === 'import') return import('./tamber-server.mjs').then(m => m.importTheme(rest)).then(code => process.exit(code));
   if (verb === 'tamber' && name === 'op') return import('./tamber-server.mjs').then(m => m.op(rest)).then(code => process.exit(code));
@@ -1337,7 +1337,7 @@ async function main(argv) {
   if (!['run', 'install', 'uninstall', 'release'].includes(verb)) { console.error(`exact: no verb ${verb}\n\n${USAGE}`); process.exit(2); }
   if (!name) { console.error(`exact ${verb}: name an app (exact list)`); process.exit(2); }
   // An app outside the repository (EXACT_APP_DIR, or a path): a bare `run` of one that names no native platform runs
-  // its web loop, on any OS; otherwise the Mac is named the first time.
+  // its web loop, on any OS; otherwise the Mac is named the first time (LLP 1153 D1.2).
   const outsideDir = process.env.EXACT_APP_DIR ? resolve(process.env.EXACT_APP_DIR) : /[\\/]|^\.\.?$/.test(name) ? resolve(name) : null;
   const outsideApp = verb !== 'uninstall' && outsideDir && existsSync(resolve(outsideDir, 'app.contract')) && !gameDefaults(outsideDir);
   const outsideManifest = outsideApp && existsSync(resolve(outsideDir, 'app.json')) ? JSON.parse(readFileSync(resolve(outsideDir, 'app.json'), 'utf8')) : {};

@@ -11,9 +11,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * A share from another app's share sheet: `ACTION_SEND` or `ACTION_SEND_MULTIPLE` on the app's
+ * A share from another app's share sheet (LLP 1133.024 D5): `ACTION_SEND` or `ACTION_SEND_MULTIPLE` on the app's
  * activity, whose filters the build derives from the manifest's `share_target` and whose `dev.exact.share_target`
- * meta-data carries that member. exact2 claims it as every host does: one location, with each file copied into
+ * meta-data carries that member. exact2 claims it as every host does (D2, D3): one location, with each file copied into
  * `app:/tmp/shared/` after it, off this thread.
  *
  * [Receive simple data](https://developer.android.com/training/sharing/receive): `EXTRA_SUBJECT` (or `EXTRA_TITLE`)

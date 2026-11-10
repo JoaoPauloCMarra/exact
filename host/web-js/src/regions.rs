@@ -1,6 +1,6 @@
 //! Regions (`when`, `match`, `each`) and the slots a component instance
 //! owns: an arm's or a row's, declared where it is built, and a late root
-//! slot's.
+//! slot's (LLP 1017 P4c).
 
 use super::{type_code, type_json, Em};
 use crate::code::{self, Frame, Scope};
@@ -36,8 +36,8 @@ impl Em<'_> {
                         s
                     };
                     // The arm's own slots, started from their initializers
-                    // each time it shows, dropped when it hides.
-                    // A tab panel's one arm: the dev
+                    // each time it shows, dropped when it hides (LLP 1017 P4c).
+                    // A tab panel's one arm (LLP 1075.003 §9.14): the dev
                     // loop carries its state by the panel's `id`, as the runner does.
                     let panel = self.dev_reload
                         && row
@@ -153,7 +153,7 @@ impl Em<'_> {
         let key = code::expression(plan, plan.code(row.key), &inner, &mut self.uses)
             .map_err(|x| format!("region {r} key: {x}"))?;
         // The row's own slots, started from their initializers when
-        // the row is created and kept with its key.
+        // the row is created and kept with its key (LLP 1017 P4c).
         let rows_decl = self.owned(arms[0], &format!("$r{r}"), &mut inner, None)?;
         let saved = std::mem::take(&mut self.out);
         self.out.push_str(&rows_decl);
@@ -175,7 +175,7 @@ impl Em<'_> {
                     ""
                 };
                 // A development build names the region, for inspect mode's
-                // instance paths (rt.js `Eaches`).
+                // instance paths (rt.js `Eaches`, LLP 1122 T2b).
                 let pure = match (self.dev_reload, pure) {
                     (true, "") => format!(",0,{r}"),
                     (true, p) => format!("{p},{r}"),
@@ -205,7 +205,7 @@ pub(super) fn root_slot(
         .map_err(|e| format!("slot {}: {e}", plan.str(r.name)))?;
     let ty = serde_json::to_string(&type_code(plan, r.ty)).unwrap();
     // A persisted slot starts from the store's value where it fits, and is
-    // kept after each commit (persist.js).
+    // kept after each commit (LLP 1116 D5, persist.js).
     let quoted = serde_json::to_string(plan.str(r.name)).unwrap();
     let init = if r.persist {
         format!("$stored({quoted},{init},{})", type_json(plan, r.ty))
@@ -230,7 +230,7 @@ pub(super) fn root_slot(
 }
 
 /// A string slot's name, as `sig`'s third argument: a write past MAX_STRING
-/// is refused naming it (the runner's StringTooLong).
+/// is refused naming it (the runner's StringTooLong, LLP 1090 D6).
 fn string_name(plan: &Plan, slot: &exact_plan::SlotsRow) -> String {
     if type_code(plan, slot.ty) == "s" {
         format!(",{}", serde_json::to_string(plan.str(slot.name)).unwrap())

@@ -126,7 +126,7 @@ fn a_bool_aria_state_takes_its_token_in_quotes() {
     assert_eq!(prop("sheet", PropId::AccessibilityModal), Some(true));
 }
 
-/// `aria-modal` lowers to `accessibilityModal` and follows
+/// `aria-modal` (LLP 1080.003) lowers to `accessibilityModal` and follows
 /// its state; Signal Clone's call screen and menus had no way to say it.
 #[test]
 fn aria_modal_lowers_and_follows_state() {
@@ -212,7 +212,7 @@ fn form_states_and_haspopup_lower_by_their_aria_names() {
     }
 }
 
-/// HTML's `tabindex` and ARIA's `aria-labelledby` (ledger2
+/// HTML's `tabindex` (LLP 1088 D7.3) and ARIA's `aria-labelledby` (ledger2
 /// Rough 3) on any element and on a module tag's box: `tabindex` is the
 /// kernel's `tabIndex`, absent when unwritten, and may follow state; its
 /// DOM-property spelling is refused naming the attribute.
@@ -337,9 +337,9 @@ fn tabindex_and_labelledby_bind_by_their_html_names() {
     assert!(e.contains("`tabIndex` is spelled `tabindex` here"), "{e}");
 }
 
-/// ARIA's range values on a drawn bar (`role="progressbar"`), numbers written
-/// as HTML writes them, a bound one following its state; `aria-valuetext` is
-/// the words a reader speaks instead.
+/// LLP 1116 D8: ARIA's range values on a drawn bar (`role="progressbar"`),
+/// numbers written as HTML writes them, a bound one following its state;
+/// `aria-valuetext` is the words a reader speaks instead.
 #[test]
 fn aria_range_values_are_carried_as_htmls_numbers() {
     let mut r = boot(

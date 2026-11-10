@@ -1,4 +1,4 @@
-// AppKit's control font and real bezel measurements.
+// @ref LLP 1104 D4–D5: AppKit's control font and real bezel measurements.
 #if os(macOS)
 import AppKit
 import CExact

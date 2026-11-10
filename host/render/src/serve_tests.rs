@@ -27,7 +27,7 @@ fn a_scheme_line_is_a_scheme_source() {
 
 #[test]
 fn a_local_network_line_admits_local_names_and_no_address_range() {
-    // No CSP source names a private range, so a served page
+    // LLP 1133.036 D5: no CSP source names a private range, so a served page
     // reaches `.local` names by the line and an address only by a line naming it.
     let policy = csp(
         "net.fetch local-network\nnet.websocket local-network development",
@@ -55,7 +55,7 @@ fn connect_sources_use_app_grants_even_when_a_request_has_a_narrower_source_scop
 
 #[test]
 fn the_boot_swap_script_is_admitted_by_its_hash() {
-    // The one inline script a boot document's page adds.
+    // @ref LLP 1048.005 — the one inline script a boot document's page adds.
     let policy = csp("", Path::new("/nonexistent"));
     use sha2::{Digest, Sha256};
     let digest = Sha256::digest(crate::direct::boot_swap_js().as_bytes());

@@ -1,5 +1,5 @@
 //! A handler attribute: its action named, its arity and payload types
-//! checked against the event, its bound
+//! checked against the event (LLP 1006 §8, LLP 1017 P1b), its bound
 //! arguments lowered.
 use crate::{err, LowerError, Lowerer};
 use contract_syntax::{Attr, Expr};
@@ -20,7 +20,7 @@ impl Lowerer<'_> {
     ) -> Result<(), LowerError> {
         // HTML submits implicitly from a single-line input, never a
         // textarea, whose Enter breaks the line: one behaviour on
-        // every host.
+        // every host (kanban F21, chat F2 in the x2apps diaries).
         if event == "submit" && tag == "textarea" {
             return err(
                 "lower-handler-tag",
@@ -57,7 +57,7 @@ impl Lowerer<'_> {
         };
         // The view is inlined, so a handler behind a child's `action`
         // prop names the real action here: its arity is checked now,
-        // not at dispatch.
+        // not at dispatch (LLP 1006 §8's circle-back; LLP 1017 P1b).
         let valid = contract_analyze::handler_accepts(
             contract_syntax::typed_event(event, control),
             args.len(),
@@ -80,7 +80,7 @@ impl Lowerer<'_> {
                 a.span,
             );
         }
-        // Then optionally its `ReorderEvent`, which the
+        // Then optionally its `ReorderEvent` (LLP 1094 D2), which the
         // arity rule holds to its type.
         if event == "reorderdrop"
             && self.types.components[0].actions[ai][args.len()..]

@@ -1,6 +1,6 @@
-//! The agent's clock (`clock`): the runner's timers and the
+//! The agent's clock (LLP 1012 `clock`): the runner's timers and the
 //! motion engine's seek, moved to one instant; and the display's live clock
-//! while it owns time, given to every host booted.
+//! while it owns time (the timers RFC, D1), given to every host booted.
 use super::*;
 
 /// A live clock: milliseconds since the loop's start, the domain of the
@@ -69,7 +69,7 @@ impl<D: DataSource> Presenter<D> {
             .or(self.admit_timer_waits(now_ms, false))
     }
 
-    /// A display frame for the frame tasks: timers due by
+    /// A display frame for the frame tasks (LLP 1073 D5): timers due by
     /// `now_ms`, then every frame task once at it.
     pub fn animation_frame(&mut self, now_ms: f64) -> Option<String> {
         let admission = self.admit_timer_waits(now_ms, true);
@@ -108,7 +108,7 @@ impl<D: DataSource> Presenter<D> {
         self.clocked(e)
     }
 
-    /// The `then`s an agent's input settled, the clock unmoved.
+    /// The `then`s an agent's input settled, the clock unmoved (LLP 1012 §2).
     pub fn land_then(&mut self) -> (f64, Option<String>) {
         let e = self.host.land_then();
         self.clocked(e)

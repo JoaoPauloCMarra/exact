@@ -4,7 +4,7 @@
 //! One readiness-driven I/O pump owns each socket and rustls connection. It
 //! multiplexes the bounded outbound queue with requested receives, so control
 //! frames remain live while a large data message drains.
-//! The platform owns the socket and TLS.
+//! @ref LLP 0057#3-the-boundary — the platform owns the socket and TLS
 
 use crate::boundary::HostError;
 use crate::stdlib::abort::{AbortRegistration, AbortSignal};
@@ -29,7 +29,7 @@ const CONNECT_BUDGET: Duration = Duration::from_secs(15);
 const FRAGMENT: usize = 16 << 10;
 const MAX_OUTBOUND_BYTES: usize = 16 << 20;
 const MAX_OUTBOUND_MESSAGES: usize = 256;
-// Data and control frames share one bounded command channel.
+// @ref LLP 0059.000#312-websocket--delegating-capability-bearing-author-required — data and control frames share one bounded command channel
 const MAX_OUTBOUND_COMMANDS: usize = MAX_OUTBOUND_MESSAGES + 16;
 const MAX_READ_FRAMES_PER_TURN: usize = 32;
 const SOCKET_TOKEN: Token = Token(0);
@@ -181,7 +181,7 @@ impl TcpSocketTransport {
         self.tls.get_or_init(tls_config).clone()
     }
 
-    // The portable transport traverses fetch's environment proxy.
+    // @ref LLP 0059.000#312-websocket--delegating-capability-bearing-author-required — the portable transport traverses fetch's environment proxy
     /// The proxy a socket to `host:port` goes through: the environment's, as
     /// fetch's ureq agent reads it, unless `NO_PROXY` names the host. One the
     /// socket cannot speak (`https://`, SOCKS) fails the open rather than
@@ -1968,7 +1968,7 @@ const CLOSE_LINGER: Duration = Duration::from_secs(2);
 /// sends RST (every platform on close; Windows also on `SD_RECEIVE`), and RST
 /// discards our unsent send queue — including the Close or 1009 the peer has
 /// not read yet.
-// Half-close and drain before teardown.
+// @ref LLP 0059.000#312-websocket--delegating-capability-bearing-author-required — half-close and drain before teardown
 #[allow(clippy::too_many_arguments)]
 fn linger_close(
     poll: &mut Poll,
@@ -2711,7 +2711,7 @@ fn pump_loop(
                         // still belong to receive demand. Only parse leading
                         // control frames without demand; EOF itself is
                         // processed when a read reaches it.
-                        // Read FIN keeps queued messages.
+                        // @ref LLP 0059.000#312-websocket--delegating-capability-bearing-author-required — read FIN keeps queued messages
                         close.peer_fin = true;
                         read_ready = true;
                         #[cfg(test)]

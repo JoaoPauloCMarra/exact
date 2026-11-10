@@ -1,4 +1,4 @@
-// Watch complications use the snapshot driver and their own store.
+// @ref LLP 1126.001 WP17 — watch complications use the snapshot driver and their own store.
 import { resolve, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, writeFileSync, copyFileSync, cpSync, rmSync } from 'node:fs';
@@ -10,7 +10,7 @@ const root = resolve(new URL('../..', import.meta.url).pathname), pkg = resolve(
 export function watchEntries(app) {
   return platformWidgetEntries(app, 'watchos').filter(entry => {
     if (!existsSync(resolve(app.dir, 'app.ts'))) return true;
-    console.log(`host/apple: watchOS omits entry ${entry.kind}, including any Rust refresh in this TypeScript app, until TypeScript runs on the watch`);
+    console.log(`host/apple: watchOS omits entry ${entry.kind}, including any Rust refresh in this TypeScript app, until LLP 1126.001 §5 Q3 passes`);
     return false;
   });
 }
@@ -35,10 +35,10 @@ export async function buildWatch(app, args, { runApple, appleArtifacts, appleBui
     const watch = { ...app, id: `${app.id}.watchkitapp` };
     const bundle = resolve(parent.bundle, 'Watch', `${executableName(app)}.app`);
     rmSync(resolve(parent.bundle, 'Watch'), { recursive: true, force: true });
-    // The watch entry of an app with `app.ts` waits for the bake to refuse
-    // only an entry that reaches TypeScript, which runs nowhere on the watch yet.
+    // LLP 1126.002 D4: the watch entry of an app with `app.ts` waits for the bake to refuse
+    // only an entry that reaches TypeScript, which runs nowhere on the watch before §5 Q3's gate.
     const typescript = existsSync(resolve(app.dir, 'app.ts'));
-    if (app.manifest.watch && typescript) console.log('host/apple: watchOS omits the watch entry of this TypeScript app until TypeScript runs on the watch');
+    if (app.manifest.watch && typescript) console.log('host/apple: watchOS omits the watch entry of this TypeScript app until LLP 1126.001 §5 Q3 passes');
     const live = !!app.manifest.watch && !typescript;
     if (!entries.length && !live) {
       console.log(`host/apple: no watch entry and no Rust accessory entries; watch bundle omitted${args.includes('--run') ? '; --run skipped' : ''}`);

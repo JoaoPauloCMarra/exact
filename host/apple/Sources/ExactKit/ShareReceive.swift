@@ -1,9 +1,9 @@
-// A received share's claim: the Rust host claims it,
+// A received share's claim (LLP 1133.024 D2–D4): the Rust host claims it,
 // sets its tokens, delivers its location at the navigation root and lands
 // its files in `app:/tmp/shared/`. A share comes from the share extension's
 // inbox in the App Group, claimed at launch, at each foreground and on the
 // extension's Darwin notification; under the agent the driver's `share:`
-// form arrives here too. A host never takes `share:` from outside it.
+// form arrives here too (D9). A host never takes `share:` from outside it.
 #if canImport(UIKit)
 import UIKit
 #else
@@ -11,7 +11,7 @@ import AppKit
 #endif
 import Foundation
 
-/// The share extension's inbox: `<group>/shares/<uuid>/`, each complete
+/// The share extension's inbox (D4): `<group>/shares/<uuid>/`, each complete
 /// once its `share.json` is there.
 struct ShareInbox {
     /// The app's `share_target`, which the bake wrote into the Info.plist.
@@ -33,7 +33,7 @@ struct ShareInbox {
         return ShareInbox(target: target, directory: container.appendingPathComponent("shares", isDirectory: true))
     }
 
-    /// The complete shares, oldest first; a directory without
+    /// The complete shares, oldest first (D8's order); a directory without
     /// `share.json` is still being written, or was abandoned.
     func complete() -> [URL] {
         let dirs = (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? []
@@ -119,7 +119,7 @@ extension ExactSession {
 
     /// The cold share's files, once activation has configured storage; then
     /// the inbox's other shares, as `navigate` events after the first
-    /// frame (the launch URL's order), and the foreground and the ping from
+    /// frame (LLP 1038 D8's order), and the foreground and the ping from
     /// now on.
     func landColdShare() {
         if (ExactEnv.agentMode && ExactEnv.environment["EXACT_AGENT_SHARE"] != nil) || coldInboxShare != nil {

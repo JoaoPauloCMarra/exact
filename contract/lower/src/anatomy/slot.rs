@@ -1,4 +1,4 @@
-//! The slot: an exported library component that
+//! The slot (LLP 1139 D4, stage 12 C2): an exported library component that
 //! declares `slot` places `children` once, unconditionally, never into
 //! another component's slot; and no node from its view's root down to
 //! that placement (the slot's chain) may hide what fills it, in any branch
@@ -8,7 +8,7 @@
 //!
 //! [`denied`] is the one checker, the whole rule for one `(row, value)`: the
 //! compiler asks it of each chain row's every folded value, and the design
-//! server asks it of a candidate fold's from the chain the
+//! server asks it of a candidate fold's (stage 12 D) from the chain the
 //! Tamber IR records ([`chain`]): the same rows, the same values, a value
 //! no literal says written [`UNFOLDED`].
 
@@ -124,8 +124,8 @@ fn length(text: &str) -> Option<f64> {
 
 /// Why `value` on chain row `row` (a deny-list row, `font`, `transform`, or
 /// one of its attributes) hides the slot's fill, or why the check can't
-/// tell ([`UNFOLDED`], a text it can't read); `None` when it doesn't.
-/// The whole rule: the compiler's and the server's.
+/// tell ([`UNFOLDED`], a text it can't read); `None` when it doesn't (LLP
+/// 1139 D4). The whole rule: the compiler's and the server's.
 pub fn denied(row: &str, value: &str) -> Option<String> {
     let v = value.trim();
     if v == UNFOLDED {
@@ -262,20 +262,20 @@ fn placement<'c>(c: &'c Component, out: &mut Vec<LowerError>) -> Option<Vec<&'c 
     };
     if found.is_empty() {
         out.push(refuse(
-            format!("`{comp}` declares `slot` and places no `children`: a library component places its slot once"),
+            format!("`{comp}` declares `slot` and places no `children`: a library component places its slot once (LLP 1139 D4)"),
             c.span,
         ));
         return None;
     }
     for f in &found[1..] {
         out.push(refuse(
-            format!("`{comp}` places `children` again (the first at line {}): a library component places its slot once", found[0].span.line),
+            format!("`{comp}` places `children` again (the first at line {}): a library component places its slot once (LLP 1139 D4)", found[0].span.line),
             f.span,
         ));
     }
     if let Some(why) = found[0].why {
         out.push(refuse(
-            format!("`children` in `{comp}` is {why}: a library component places its slot unconditionally"),
+            format!("`children` in `{comp}` is {why}: a library component places its slot unconditionally (LLP 1139 D4)"),
             found[0].span,
         ));
     }
@@ -330,7 +330,7 @@ struct Row {
 
 /// Each chain node's tag and rows: every row its classes bring (each style
 /// a choice names, each state layer) that the node doesn't set itself in
-/// the same layer, and its own (state parts' precedence).
+/// the same layer, and its own (LLP 1121 D8's precedence).
 fn chain_rows(
     c: &Component,
     file: &File,
@@ -388,7 +388,7 @@ fn chain_rows(
     )
 }
 
-/// Each refusal of `c`'s slot: its placement, then each
+/// Each refusal of `c`'s slot (LLP 1139 D4): its placement, then each
 /// chain node's rows, every value [`denied`] asked: a token's every value
 /// over the tuples, a base name's in every column of the scale (`fold`).
 pub(crate) fn check(
@@ -419,7 +419,7 @@ pub(crate) fn check(
                 said.push((r.span, why.clone()));
                 out.push(LowerError {
                     id: "lower-anatomy-slot",
-                    message: format!("a `{tag}` on the slot's chain in `{comp}`: {why}, and the slot's fill would not show"),
+                    message: format!("a `{tag}` on the slot's chain in `{comp}`: {why}, and the slot's fill would not show (LLP 1139 D4)"),
                     span: r.span,
                 });
             }
@@ -504,7 +504,7 @@ impl SlotChains {
     }
 }
 
-/// The one checker on a candidate fold (the design server's):
+/// The one checker on a candidate fold (LLP 1139 D4; stage 12 D's server):
 /// each chain row whose value names a token of `folding` (a base name the
 /// design leaves unset in every column of the scale), asked [`denied`] of
 /// every value, a refusal in the compiler's words at the token's line.
@@ -518,7 +518,7 @@ pub fn check_slots(
     chains: &SlotChains,
     touched: &[&str],
 ) -> Vec<exact_tamber::Diagnostic> {
-    // Closed over references: a chain is touched
+    // Closed over references (theme2's D2 condition): a chain is touched
     // when a token its rows name reaches a touched name through any chain
     // of tokens, a base name among them (`cards.pad = space.md` and a write
     // to `space.md`).
@@ -577,7 +577,7 @@ pub fn check_slots(
                 }) {
                     out.push(exact_tamber::Diagnostic {
                         id: "lower-anatomy-slot",
-                        message: format!("a `{tag}` on the slot's chain in `{}`: {why}, and the slot's fill would not show", chain.component),
+                        message: format!("a `{tag}` on the slot's chain in `{}`: {why}, and the slot's fill would not show (LLP 1139 D4)", chain.component),
                         line: at.0,
                         col: at.1,
                     });

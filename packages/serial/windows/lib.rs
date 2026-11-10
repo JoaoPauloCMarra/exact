@@ -1,12 +1,12 @@
-//! @exact/serial on the Windows host: Win32's communications functions. The ports
+//! @exact/serial on the Windows host (LLP 1133.037 D7–D9, D14, D21): Win32's communications functions. The ports
 //! come from Configuration Manager (`CM_Get_Device_Interface_ListW` over the COM port interface class, each
 //! interface's `PortName` read from the device's registry key); a port is opened with `CreateFileW` and no sharing
-//! ("exclusive access"), its line set with `SetCommState`, its signals with `EscapeCommFunction` and read with
+//! ("exclusive access", D5), its line set with `SetCommState`, its signals with `EscapeCommFunction` and read with
 //! `GetCommModemStatus`; a thread per connection reads it (`ReadFile` with a short `ReadIntervalTimeout`) into the
-//! bytes not yet delivered, stopping while they reach the retained bound. `ClearCommError` names a break,
-//! framing, parity or overrun error at its offset.
+//! bytes not yet delivered, stopping while they reach the retained bound (D8). `ClearCommError` names a break,
+//! framing, parity or overrun error at its offset (D9).
 //!
-//! WinRT's `SerialDevice` needs a package capability the unpackaged host cannot declare, so this is Win32's,
+//! WinRT's `SerialDevice` needs a package capability the unpackaged host cannot declare (D14), so this is Win32's,
 //! declared here: the package names only `exact_linux` and `std`. Not built yet: the plug notifications; the list
 //! is read again at each ask. `requestPort` (the `DevicePicker`) fails `NotSupportedError`.
 
@@ -267,7 +267,7 @@ fn read_loop(handle: Arc<Shared>, stream: Arc<(Mutex<Stream>, Condvar)>, stop: A
         }
         if !ok {
             if !stop.load(Ordering::Relaxed) {
-                // ERROR_ACCESS_DENIED or ERROR_BAD_COMMAND: the port went away.
+                // ERROR_ACCESS_DENIED or ERROR_BAD_COMMAND: the port went away (D9).
                 s.errors.push(json!({ "at": at, "code": "NetworkError" }));
                 s.done = true;
             }
@@ -342,7 +342,7 @@ impl Serial {
             }
         }
         let name = wide(&port.path);
-        // SAFETY: no sharing: "exclusive access" (CreateFile).
+        // SAFETY: no sharing: "exclusive access" (CreateFile, D5).
         let h = unsafe { CreateFileW(name.as_ptr(), GENERIC_READ_WRITE, 0, std::ptr::null_mut(), OPEN_EXISTING, 0, std::ptr::null_mut()) };
         if h == INVALID {
             // SAFETY: the calling thread's last error.

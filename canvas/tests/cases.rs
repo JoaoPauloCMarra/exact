@@ -1,5 +1,5 @@
 //! `cases.txt` against the Rust recorder: the same calls, the same getters
-//! and throws Chrome gave. The TypeScript recorder runs the
+//! and throws Chrome gave (LLP 1056 §4). The TypeScript recorder runs the
 //! same file through `cases.mjs`.
 
 use exact_canvas::{list, CanvasGradient, CanvasWindingRule, Context2d, DomMatrix, Radius, Style};
@@ -311,7 +311,7 @@ fn query(ctx: &Context2d, q: &str) -> String {
 }
 
 /// A fresh context for a case: a `display-p3` canvas's when its name ends
-/// `(display-p3)`.
+/// `(display-p3)` (LLP 1100 D12a).
 fn context(name: &str) -> Context2d {
     let ctx = Context2d::new();
     if name.ends_with("(display-p3)") {
@@ -511,7 +511,7 @@ fn a_cycled_palette_records_what_a_fresh_parse_records() {
     assert_eq!(got, want);
 }
 
-/// A `display-p3` canvas records Display P3 bytes: sRGB red
+/// A `display-p3` canvas (LLP 1100 D12a) records Display P3 bytes: sRGB red
 /// converted, P3 red as written, and an sRGB `ImageData`'s pixels converted
 /// as they are put. `recorder.test.mjs` holds the TypeScript recorder to the
 /// same numbers.

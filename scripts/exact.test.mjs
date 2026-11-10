@@ -1,5 +1,5 @@
-// `exact release` signs every nested Mach-O file and bundle, innermost first; `exact contract build`
-// refreshes an app's types.
+// `exact release` signs every nested Mach-O file and bundle, innermost first (#119); `exact contract build`
+// refreshes an app's types (LLP 1116.001 D4.5).
 // `bun test ./scripts/exact.test.mjs`.
 import { test } from 'bun:test';
 import assert from 'node:assert/strict';
@@ -365,7 +365,7 @@ test.skipIf(!tools)('signing in that order seals a bundle with an unsigned helpe
   assert.match(helper.stderr, /flags=0x10002\(adhoc,runtime\)/);
 }), 60000);
 
-// A runtime grant's entitlement reaches the one executable it names.
+// LLP 1069.008 D9: a runtime grant's entitlement reaches the one executable it names.
 test.skipIf(!tools)('release signs each helper a runtime grant names with exactly its exceptions, and other code with none', () => inDir((dir) => {
   const app = resolve(dir, 'Fixture.app');
   // Exits 0 when the hardened runtime lets it map JIT memory, 1 when it refuses.
@@ -523,9 +523,9 @@ test.skipIf(process.platform !== 'darwin')('native resources sign and execute a 
   assert.equal(command(resolve(contents, 'Resources/server/helper'), []).stdout, 'helper ran\n');
 }));
 
-// An executable is named for its app, and an app may be named
+// An executable is named for its app (955b0463d), and an app may be named
 // "T3 Code (Exact)": otool reads a path ending in `name(member)` as an
-// archive's member, so the SDK check read nothing and refused the build.
+// archive's member, so the SDK check read nothing and refused the build (#234).
 test.skipIf(!tools)('an executable whose name ends in parentheses is read as a file, its SDK checked and its release stripped', () => inDir((dir) => {
   writeFileSync(resolve(dir, 'main.c'), 'int main(void){return 0;}\n');
   const executable = resolve(dir, 'Demo (Beta)');
@@ -548,7 +548,7 @@ test.skipIf(!tools)('an executable whose name ends in parentheses is read as a f
   assert.ok(readFileSync(executable).equals(bytes), 'the binary is unchanged');
 }));
 
-// `exact hatch` writes a stub a target, wires it into a module it wrote, and declares the word.
+// LLP 1075.003.000.001 §5: `exact hatch` writes a stub a target, wires it into a module it wrote, and declares the word.
 test('exact hatch writes each target\'s stub, wires it in, and declares the word with its platforms', async () => {
   const { hatch } = await import('./exact.mjs');
   const { readFileSync } = await import('node:fs');
@@ -791,7 +791,7 @@ test('Apple asset catalogs select platform modules and invalidate native receipt
   assert.throws(() => appleAssetCatalogInventory(app, 'ios'), /symlinks/);
 }));
 
-test.skipIf(process.platform !== 'darwin')('the iOS launch screen is the app\'s own ground: its colours, else the grouped grey under a first route that scrolls a grouped list, else the system\'s', () => inDir(dir => {
+test.skipIf(process.platform !== 'darwin')('the iOS launch screen is the app\'s own ground: its colours, else the grouped grey under a first route that scrolls a grouped list, else the system\'s (LLP 1116.011 D2.3)', () => inDir(dir => {
   const { useXcode } = require('../host/apple/devices.mjs');
   const { iosAssets } = require('../host/apple/assets.mjs');
   useXcode();
@@ -804,7 +804,7 @@ test.skipIf(process.platform !== 'darwin')('the iOS launch screen is the app\'s 
       .map(asset => [asset.Appearance ?? 'light', asset['Color components'].map(c => Math.round(c * 255))]) : [];
     return { keys, colours };
   };
-  // A first route on the grouped grey (a stopwatch app's), whose launch screen was the system's white.
+  // Stopwatch, round 13: a first route on the grouped grey, whose launch screen was the system's white.
   const grouped = made({}, { launch: 'grouped' });
   assert.match(grouped.keys.UILaunchScreen.UIColorName, /^ExactLaunch-[0-9a-f]{8}$/);
   assert.deepEqual(grouped.colours, [['light', [242, 242, 247, 255]], ['UIAppearanceDark', [0, 0, 0, 255]]]);
@@ -886,7 +886,7 @@ test.skipIf(process.platform !== 'darwin')('Apple asset catalogs retain named im
   assert.ok(!existsSync(resolve(mac, 'Assets.car')), 'removing all catalogs clears the previous output');
 }), 60000);
 
-// `exact contract build` of an app's app.contract rewrites the types its app.ts imports
+// LLP 1116.001 D4.5: `exact contract build` of an app's app.contract rewrites the types its app.ts imports
 // when a source's signature changed, and only then, saying so in one line on stderr (under `--json`, nothing on
 // stderr: the array is the whole reply); `contract types` agrees.
 test('contract build regenerates app.contract.d.ts when a signature changed, and only then', () => inDir(dir => {
@@ -1005,7 +1005,7 @@ test('docs prints the section on its words first, matching whole words', () => {
 });
 
 
-test.skipIf(!tools)('release keeps Mac widget entitlements, including the provisioned app group', async () => {
+test.skipIf(!tools)('release keeps Mac widget entitlements, including the provisioned app group (LLP 1126.001 WP16)', async () => {
   const { macWidgetEntitlements } = await import('../host/apple/widgets.mjs');
   inDir(dir => {
     const bundle = resolve(dir, 'Widget.app'), extension = resolve(bundle, 'Contents/PlugIns/ExactWidgets.appex');

@@ -1,4 +1,4 @@
-//! DTCG JSON (importer 3): Format 2025.10, with the Resolver
+//! DTCG JSON (LLP 1121 D14, importer 3): Format 2025.10, with the Resolver
 //! Module where present, from Tokens Studio and from Figma Variables
 //! exports. The source is a set of files read as layers, each active in some
 //! modes (always, one side of the scheme, or one value of a proposed axis),
@@ -539,7 +539,7 @@ fn studio(
     // when that names one set only; sets it does not name after the ones it
     // does, in the files' order.
     // (each id's first place, and how many sets end in each last segment,
-    // counted once)
+    // counted once: round 3 of the checker sweep)
     let mut place: HashMap<&str, usize> = HashMap::new();
     for (i, o) in order.iter().enumerate() {
         place.entry(o.as_str()).or_insert(i);
@@ -596,7 +596,8 @@ fn studio(
             format!("the theme group `{group}`")
         };
         // A group's themes are an axis's values: past the tuples a design
-        // may have, refused before anything compares them.
+        // may have, refused before anything compares them (round 2 of the
+        // checker sweep).
         if members.len() > crate::MAX_TUPLES {
             return Err(format!(
                 "{shown} has {} themes; a design has at most {} tuples",

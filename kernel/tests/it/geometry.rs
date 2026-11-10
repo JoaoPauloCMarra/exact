@@ -1,4 +1,4 @@
-//! Geometry reads: where layout put a node, and its
+//! Geometry reads (LLP 1051.000 D1, D3, D5): where layout put a node, and its
 //! height at `auto`, without writing a frame, the epoch or a receipt.
 
 use exact_kernel::{
@@ -102,7 +102,7 @@ fn a_frame_is_the_published_box_once_laid_out_and_nothing_before() {
         "an image without its natural size makes its box provisional"
     );
     // A change since the last layout: the box last laid out until the next
-    // layout, and no what-if, which would see the change.
+    // layout (D1), and no what-if, which would see the change.
     k.apply(
         0,
         2,
@@ -130,7 +130,7 @@ fn a_frame_is_the_published_box_once_laid_out_and_nothing_before() {
     assert_eq!(k.laid_out_frame(key(&k, 6)), None, "not laid out yet");
     k.compute_layout(1, offer()).unwrap();
     assert!(k.laid_out_frame(key(&k, 6)).is_some());
-    // `display` answers as last laid out: a box hidden since keeps its
+    // `display` answers as last laid out (D1): a box hidden since keeps its
     // box until the next layout, and one shown since has none until then.
     let display = |value: &str| style(2, &[(StyleId::Display, StyleValue::Text(value.into()))]);
     let shown = k.laid_out_frame(key(&k, 4)).unwrap().0;

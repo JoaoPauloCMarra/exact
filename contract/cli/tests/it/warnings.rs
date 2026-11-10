@@ -1,4 +1,4 @@
-//! Lowering's warnings: what compiles, runs, and is not what
+//! Lowering's warnings (LLP 1116 D6): what compiles, runs, and is not what
 //! the author meant. They fail nothing; each names its repair; and what the
 //! compiler cannot see through is given the benefit of the doubt.
 
@@ -78,7 +78,7 @@ fn what_the_bar_places_or_the_compiler_cannot_see_is_not_warned() {
         "  row\n    box background-color=\"-exact-system-blue\"\n      text \"AL\"\n    text \"Ada\" role=\"heading\" aria-level=1\n    row\n      image \"symbol:sf/bell.slash\"\n      text \"Muted\"",
         // A pressable group around the heading is the title, tapped.
         "  button press=go\n    text \"Ada\" role=\"heading\" aria-level=1\n    text \"online\"",
-        // Readouts: a status of a dot and a text after
+        // Readouts (LLP 1075.003 §9.15): a status of a dot and a text after
         // the buttons, a status text before the heading.
         "  text \"Saved\" role=\"status\"\n  text \"Log\" role=\"heading\"\n  button press=go\n    text \"Add\"\n  row role=\"status\" gap=6\n    view width=7 height=7 border-radius=3.5 background-color=\"-exact-system-blue\"\n    text \"Clock\" font-family=\"Menlo\" font-size=12",
         // `if`, `for` and a computed role are given the benefit.
@@ -103,9 +103,10 @@ const NO_BAR: &str = "lower-header-no-bar";
 
 #[test]
 fn a_header_with_no_heading_or_two_is_named_as_no_bar() {
-    // No heading, or two: on iOS the header is no bar and is drawn as written;
-    // nothing in it is called unplaced. The bar it leaves is the system Back
-    // alone on a pushed route, and the message names the way to have none.
+    // No heading, or two: on iOS the header is no bar and is drawn as
+    // written; nothing in it is called unplaced (LLP 1116.003 D2.2). The
+    // bar it leaves is the system Back alone on a pushed route (LLP
+    // 1115.000 D5.2), and the message names the way to have none.
     let none = route("  text \"one\"\n  button press=go testId=\"add\"\n    text \"Add\"");
     assert_eq!(warned(&none), [(NO_BAR.to_string(), 11)]);
     let (_, warnings) = contract::compile_warned(&none);
@@ -175,8 +176,8 @@ const BACK: &str = "button id=\"back\" press=back\n  text \"Back\"";
 
 #[test]
 fn a_back_control_drawn_under_the_system_back_is_named_with_the_opt_out() {
-    // On iOS every pushed route has the bar, whose Back presses the authored
-    // control, so one drawn in the page is a second.
+    // LLP 1115.000 D5.2: on iOS every pushed route has the bar, whose Back
+    // presses the authored control, so one drawn in the page is a second.
     let drawn = pushed(NAMED, "", &format!("{BACK}\ntext \"Detail\""));
     assert_eq!(warned(&drawn), [(BACK_TWICE.to_string(), 16)], "{drawn}");
     let (_, warnings) = contract::compile_warned(&drawn);
@@ -429,7 +430,7 @@ fn screen(view: &str) -> String {
 
 #[test]
 fn a_literal_colour_on_the_page_is_named_with_its_repair() {
-    // A light card and its tinted text: the same in dark mode.
+    // Round 4's light card and its tinted text: the same in dark mode.
     let card = screen("column background-color=\"#ffffff\"\n  text \"a\"");
     assert_eq!(warned(&card), [(ONE_SCHEME.to_string(), 5)]);
     let (_, warnings) = contract::compile_warned(&card);
@@ -526,7 +527,7 @@ fn every_literal_colour_is_named_past_the_cap_with_one_line_on_why() {
 
 const REREAD: &str = "analyze-read-after-assign";
 
-/// One action, `go`, its body from line 10.
+/// One action, `go`, its body from line 10 (LLP 1116.003 D6).
 fn go(body: &str) -> String {
     let body: String = body.lines().map(|l| format!("    {l}\n")).collect();
     format!(
@@ -597,14 +598,15 @@ const SEND_ASSIGNED: &str = "analyze-send-assigned";
 
 #[test]
 fn a_send_and_an_assignment_of_one_mutation_on_one_path_is_named_once_in_either_order() {
-    // An app's logout (send, then `session = none`) means it. A warning, with
-    // what the runner does and the three intents' spellings.
+    // LLP 1035.005.002 C1: no bake-off build wrote it; Weird Castle's
+    // logout (send, then `session = none`) means it. A warning, with what the
+    // runner does and the three intents' spellings.
     let after = go("send saved = keep(count)\nsaved = none");
     assert_eq!(warned(&after), [(SEND_ASSIGNED.to_string(), 11)]);
     let (_, warnings) = contract::compile_warned(&after);
     assert_eq!(
         warnings[0].message,
-        "`go` both sends `saved` and assigns it on one path: it sends in `go` at line 10 and assigns in `go` at line 11. A send is asked when the action runs; once the writes land, a request still in flight for a mutation the action assigned is forgotten and its reply dropped, and `saved` keeps the assigned value, whichever line comes first. To clear an old result before a retry, keep the send and hide the result while `pending(saved)`; to sign out, forget the sign-in mutation here and send the logout through a mutation of its own; to dismiss an answer, assign alone"
+        "`go` both sends `saved` and assigns it on one path: it sends in `go` at line 10 and assigns in `go` at line 11. A send is asked when the action runs; once the writes land, a request still in flight for a mutation the action assigned is forgotten and its reply dropped, and `saved` keeps the assigned value (LLP 1016 D5), whichever line comes first. To clear an old result before a retry, keep the send and hide the result while `pending(saved)`; to sign out, forget the sign-in mutation here and send the logout through a mutation of its own; to dismiss an answer, assign alone"
     );
     // The reset written first drops the new request just the same.
     let before = go("saved = none\nsend saved = keep(count)");
@@ -635,7 +637,7 @@ fn exclusive_arms_and_a_queue_send_beside_an_assignment_are_not_named() {
         assert_eq!(warned(&go(body)), [], "{case}");
     }
     // A queue's assignment clears the displayed answer and drops no queued
-    // work: nothing to say.
+    // work (LLP 1092 D4): nothing to say.
     let queued = "shape Ack\n  ok: bool\ncomponent App\n  mutation saved as shape Ack queue\n  state count = 0\n  action go\n    send saved = keep(count)\n    saved = none\n  view\n    button \"go\" press=go\n";
     assert_eq!(warned(queued), []);
 }
@@ -760,7 +762,7 @@ fn a_dialog_a_popover_and_a_modal_route_are_not_named() {
         "column id=\"pick\" popover=\"auto\" role=\"dialog\" aria-label=\"Theme\"\n  text \"Light\"",
         // A computed role is the benefit of the doubt.
         "column role=(label == \"\" ? \"dialog\" : \"region\")\n  text \"a\"",
-        // `aria-modal` alone keeps VoiceOver inside an overlay.
+        // `aria-modal` alone keeps VoiceOver inside an overlay (LLP 1080.003).
         "column aria-modal=true\n  text \"Call\"",
     ] {
         assert_eq!(warned(&buttons(view)), [], "{view}");
@@ -772,9 +774,9 @@ fn a_dialog_a_popover_and_a_modal_route_are_not_named() {
 
 const SYMBOL_ALIAS: &str = "lower-symbol-alias";
 
-// A role also answers to Apple's name for it (dotted, dashed or
+// @ref LLP 1116.007 D3.1 — a role also answers to Apple's name for it (dotted, dashed or
 // underscored) and to the schema's aliases: the plan carries the role, and a warning names it.
-// Builders guess these names often, so the build accepts them.
+// Round 9: 12 of 24 builders guessed one of these names and rebuilt.
 #[test]
 fn symbols_answer_to_apple_names_and_aliases_and_the_plan_carries_the_role() {
     for (written, role) in [
@@ -873,7 +875,7 @@ fn symbols_answer_to_apple_names_and_aliases_and_the_plan_carries_the_role() {
 
 #[test]
 fn a_symbol_by_another_spelling_than_its_role_is_named_with_the_role() {
-    // `symbol:trash` builds as the role `delete`, and says so.
+    // LLP 1116.007 D3.1: `symbol:trash` builds as the role `delete`, and says so.
     // A component used twice is one line; each literal arm of a choice is its own.
     let src = "component App\n  state on = false\n  view\n    column\n      Chip()\n      Chip()\n      image (on ? \"symbol:gearshape\" : \"symbol:settings\")\n      image \"symbol:sf/trash\"\n      image \"symbol:delete\"\n      image \"symbol:checkmark.circle.fill\"\ncomponent Chip\n  view\n    image \"symbol:trash\" width=16\n";
     assert_eq!(
@@ -881,7 +883,7 @@ fn a_symbol_by_another_spelling_than_its_role_is_named_with_the_role() {
         [
             (SYMBOL_ALIAS.to_string(), 13),
             (SYMBOL_ALIAS.to_string(), 7),
-            (SYMBOL_ALIAS.to_string(), 8), // `sf/trash`: delete's Apple name
+            (SYMBOL_ALIAS.to_string(), 8), // `sf/trash`: delete's Apple name (LLP 1121 D10)
             (SYMBOL_ALIAS.to_string(), 10)
         ]
     );
@@ -900,7 +902,7 @@ const LEVEL: &str = "lower-level-without-heading";
 
 #[test]
 fn a_level_with_no_heading_role_is_named_with_its_repair() {
-    // `aria-level` alone is not a heading. No host tells
+    // LLP 1115.000 D12.5: `aria-level` alone is not a heading. No host tells
     // a screen reader it is one, it gets no heading style, and the iOS bar
     // does not take it for the title.
     let bare =
@@ -971,8 +973,8 @@ fn counted(view: &str, function: &str) -> String {
 
 #[test]
 fn a_count_before_a_plural_noun_is_named_with_its_repair() {
-    // Lines a flashcard and an RSVP app wrote: the noun fixed, the count free
-    // to be 1, under a choice made on something else.
+    // flashcards' and event-rsvp's round-6 lines: the noun fixed, the count
+    // free to be 1, under a choice made on something else.
     let cards = counted(
         "text (known == total ? \"You worked through every card.\" : `${total - known} cards to keep practicing next time.`)",
         "",
@@ -1099,7 +1101,7 @@ fn a_content_heading_that_says_the_bars_title_is_named_with_its_repair() {
         "text \" Trivia  Quiz\" role=\"heading\" aria-level=2",
     );
     assert_eq!(warned(&spaced), [(TITLE_TWICE.to_string(), 14)]);
-    // A level with no role is not a heading: it is
+    // A level with no role is not a heading (LLP 1115.000 D12.5): it is
     // named for that, and not as a second title.
     let bare = titled(
         "  text \"Trivia Quiz\" role=\"heading\" aria-level=1",
@@ -1147,10 +1149,10 @@ const WIDTH_PADDING: &str = "lower-width-padding";
 
 #[test]
 fn a_full_width_box_with_padding_is_named_with_its_repair() {
-    // A body a focus timer and a recipe finder wrote,
-    // `column padding=24 width="100%"`, which ran past a phone's right side
-    // while `verify` said nothing. The parent is the view's column (lines 7
-    // on).
+    // LLP 1116.009 D5: focus-timer's and recipe-finder's round-11 bodies,
+    // `column padding=24 width="100%"`, which ran past a phone's right
+    // side while `verify` said nothing. The parent is the view's column
+    // (lines 7 on).
     let src = buttons(
         "column padding=24 gap=12 width=\"100%\"\n  text \"Timer\"\nbox width=\"100%\" padding=\"8px 16px\"\n  text \"x\"\nview width=\"100%\" border=\"1px solid -exact-separator\"\n  text \"y\"\nscroll flex=1\n  column padding-left=16 width=\"100%\"\n    text \"z\"",
     );
@@ -1300,7 +1302,7 @@ fn warned_circles(name: &str, body: &str) -> Vec<(String, u32, String)> {
 
 #[test]
 fn a_round_button_label_longer_than_the_circle_holds_is_named_with_its_repair() {
-    // A trivia app's `RoundButton(label="Start quiz")` drew "Start q…" in the 80-point
+    // trivia, round 13: `RoundButton(label="Start quiz")` drew "Start q…" in the 80-point
     // circle; the warning points at the label and names the prominent button.
     let call = |label: &str| {
         format!(

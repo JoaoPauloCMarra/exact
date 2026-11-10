@@ -89,7 +89,7 @@ pub enum Trap {
         pc: usize,
     },
     /// A `Map`, `Filter` or `join` (at `pc`) would take this evaluation past
-    /// [`crate::vm::MAX_LIST_STEPS`].
+    /// [`crate::vm::MAX_LIST_STEPS`] (LLP 1017.003 D3).
     IterationLimit {
         pc: usize,
     },
@@ -169,7 +169,7 @@ pub trait Val: Clone {
     fn str_eq(a: &Self, b: &Self) -> bool;
     /// Two strings joined; `None` past the string bound.
     fn concat(a: &Self, b: &Self) -> Option<Self>;
-    /// `op` (a comparison) over two strings by UTF-16 code units.
+    /// `op` (a comparison) over two strings by UTF-16 code units (LLP 1088 D1).
     fn str_cmp(op: Num, a: &Self, b: &Self) -> bool;
 }
 
@@ -278,7 +278,7 @@ pub trait Host<V> {
     fn collected(&mut self, out: Vec<V>, e: Self::Extent) -> V;
 }
 
-/// A `Map` or `Filter` in progress: its callback body is
+/// A `Map` or `Filter` in progress (LLP 1017.003 D5): its callback body is
 /// `start..end`, run once per item with the item and its index bound as
 /// locals `locals` and `locals + 1`, on an operand stack of its own (the
 /// caller's is kept in `caller`), so a body can neither read nor drop what
@@ -493,7 +493,7 @@ fn num2<V: Val>(stack: &mut Vec<V>, op: Num, opcode: Opcode, pc: usize) -> Resul
 }
 
 /// A comparison: two numbers by IEEE order (a NaN is unordered: every test
-/// false), two strings by UTF-16 code units.
+/// false), two strings by UTF-16 code units (LLP 1088 D1).
 fn cmp2<V: Val>(stack: &mut Vec<V>, op: Num, opcode: Opcode, pc: usize) -> Result<(), Trap> {
     let b = pop(stack, pc)?;
     let a = pop(stack, pc)?;
@@ -579,7 +579,7 @@ pub fn exec<V: Val, H: Host<V>>(
             let v = host.list(items, pc)?;
             m.stack.push(v);
         }
-        // The leftover attributes, one replaced object.
+        // @ref LLP 1024 D1 — the leftover attributes, one replaced object.
         Opcode::NativeProps => {
             let pairs = pop_n(&mut m.stack, a0 as usize * 2, Trap::StackUnderflow { pc })?;
             let v = host.native_props(pairs, pc)?;
@@ -676,7 +676,7 @@ pub fn exec<V: Val, H: Host<V>>(
             m.stack.truncate(at);
             m.stack.push(v);
         }
-        // A callback body follows inline, to `end`.
+        // @ref LLP 1017.003 D5 — a callback body follows inline, to `end`.
         Opcode::Map | Opcode::Filter => {
             let start = m.pos;
             if a0 < start as u64 || a0 > host.code_len() as u64 {

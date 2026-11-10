@@ -1,4 +1,4 @@
-// What has been run against an app's current sources.
+// What has been run against an app's current sources (LLP 1146 D2).
 import { expect, test } from 'bun:test';
 import { hostsTouched, standing } from './evidence.mjs';
 
@@ -22,5 +22,5 @@ test('a change touches the hosts whose code it is', () => {
   expect(hostsTouched(['host/apple/Sources/ExactKit/Mac/PresenterMac.swift'])).toEqual(['macos', 'ios', 'tvos']);
   expect(hostsTouched(['host/web-js/rt.js', 'host/windows/src/main.rs'])).toEqual(['web', 'windows']);
   expect(hostsTouched(['runner/src/perf.rs'])).toHaveLength(7);
-  expect(hostsTouched(['docs/testing.md', 'notes/1146-x.md'])).toEqual([]);
+  expect(hostsTouched(['docs/testing.md', 'llp/1146-x.rfc.md'])).toEqual([]);
 });

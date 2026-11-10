@@ -89,7 +89,7 @@ fn boot_source(source: &str) -> (Host<NoData>, Packet, String) {
 /// `source` compiled, with the `if shown` around the handle rewritten to
 /// trap once `x` passes 1e39: a failure while the tree changes, after an
 /// action wrote `x`. A region's subject, since a prop or style binding that
-/// traps is unset rather than failing the commit, as a
+/// traps is unset rather than failing the commit (LLP 1017.003 D3), as a
 /// bound value its row refuses is.
 fn boot_trapping(source: &str) -> (Host<NoData>, Packet, String) {
     use exact_plan::{asm::Asm, builder::PlanBuilder, Opcode, RegionKind, SlotsId};
@@ -424,7 +424,7 @@ fn zoom_action_changes_latest_target_but_not_pair_presentation_and_release_fires
         .split(',')
         .map(|v| v.parse().unwrap())
         .collect();
-    // Begin at 100 ms, terminal at 110 ms.
+    // LLP 1057.001 §3: begin at 100 ms, terminal at 110 ms.
     assert!((measured[0] - 1050.0).abs() < 1e-6, "{measured:?}");
     assert!((measured[1] + 75.0).abs() < 1e-6, "{measured:?}");
     assert_eq!(measured[2], 0.0);
@@ -1096,7 +1096,7 @@ fn passed_over_transform_target_is_journaled_until_its_binding_disappears() {
     let (mut host, _, _) = boot_source(&source);
     let message = |host: &Host<NoData>| {
         format!(
-        "transformDragFor: target view #{} passed over for owner view #{}; one owner (first valid, never stolen)",
+        "transformDragFor: target view #{} passed over for owner view #{}; one owner (first valid, never stolen; LLP 1071)",
         id(host, "other-photo"), id(host, "photo")
     )
     };

@@ -1,4 +1,4 @@
-// Caltrain's tests: `test` blocks whose steps are the agent
+// Caltrain's tests (LLP 1017 P7): `test` blocks whose steps are the agent
 // API's nine operations and `expect` lines over their replies — run on any
 // host with `bun scripts/agent.mjs <host> --test apps/caltrain/app.test.contract`,
 // and by the smoke. There is no second evaluator: a test is this script.

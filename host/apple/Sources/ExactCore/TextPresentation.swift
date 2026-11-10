@@ -8,7 +8,7 @@ package protocol TextPresentation: AnyObject {
     func controlFont(_ engine: TextEngine, size: CGFloat, weight: Int, family: Int, italic: Bool) -> PlatformFont?
     func measure(_ engine: TextEngine, _ request: ExactMeasureRequest) -> ExactMetrics?
     /// Markdown source as display runs, its inline atoms by the node's
-    /// `atoms` and `atomFaces` JSON (empty for none), in a
+    /// `atoms` and `atomFaces` JSON (LLP 1045.000; empty for none), in a
     /// paragraph `rtl` says runs right to left.
     func markdown(_ engine: TextEngine, source: Run, atoms: String, faces: String, rtl: Bool) -> [Run]?
     /// A Markdown text area's value as its editor lays it out: its syntax

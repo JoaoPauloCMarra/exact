@@ -1,15 +1,15 @@
-//! A render's environment: the app's own data source, holding nothing private.
-//! Its grants are the app's `net.fetch` lines and nothing else — no kept
-//! secrets (the store is empty and can't be written), no files, no SQLite, no
-//! key-value storage — so a render answers what a new anonymous device would
-//! see. A render never configures storage and never replaces the logic it
-//! booted with.
+//! A render's environment (LLP 1048 D3, 1048.000 D9): the app's own data
+//! source, holding nothing private. Its grants are the app's `net.fetch`
+//! lines and nothing else — no kept secrets (the store is empty and can't
+//! be written), no files, no SQLite, no key-value storage — so a render
+//! answers what a new anonymous device would see. A render never configures
+//! storage and never replaces the logic it booted with.
 //!
 //! A scheme-wide line (`net.fetch https:`) is not among them: a request's
 //! route can choose what a source fetches, and on the server nothing stands
 //! between that choice and the operator's own network. Such a source keeps
 //! its placeholder, and the client fetches it after adoption. So is
-//! `net.fetch local-network`: with it a visitor could point
+//! `net.fetch local-network` (LLP 1133.036 D5): with it a visitor could point
 //! the server at the operator's own network.
 use exact_plan::{Plan, Value};
 use exact_runner::{

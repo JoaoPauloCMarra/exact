@@ -1,5 +1,5 @@
 /**
- * Compiled registry crates, kept for the machine.
+ * Compiled registry crates, kept for the machine (LLP 1036.000 §11).
  *
  * Nine of ten crates under an app are from the registry, the same bytes in
  * every checkout, and the first build of every checkout compiled them again:

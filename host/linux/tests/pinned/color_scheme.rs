@@ -1,4 +1,4 @@
-//! On Linux a `light-dark()` colour under a `color-scheme`
+//! LLP 1034 §8 on Linux: a `light-dark()` colour under a `color-scheme`
 //! subtree resolves in that scheme while the app's stays light, and a
 //! nested `light` wins below it; a colour moving under the subtree moves in
 //! its scheme too.

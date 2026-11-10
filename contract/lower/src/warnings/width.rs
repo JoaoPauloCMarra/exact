@@ -1,10 +1,11 @@
-//! `lower-width-padding`: a box written `width="100%"`
+//! `lower-width-padding` (LLP 1116.009 D5): a box written `width="100%"`
 //! with horizontal padding or a border, under the default
 //! `box-sizing: content-box`. The percentage is of the content, so the box
 //! is as wide as its parent plus its padding and runs past it, and past the
-//! phone's right side when the parent is the screen: `column padding=24
-//! width="100%"` for a page's body clips the right side of a phone while
-//! `verify` says nothing. The repair is one of two words: drop the width (a block or a
+//! phone's right side when the parent is the screen. Focus-timer and
+//! recipe-finder, round 11, wrote `column padding=24 width="100%"` for a
+//! page's body, which clipped the right side of a phone while `verify` said
+//! nothing. The repair is one of two words: drop the width (a block or a
 //! stretched flex item fills its parent), or say `box-sizing="border-box"`.
 //!
 //! Only what is certain is named. The width is exactly `100%` (a smaller
@@ -292,7 +293,7 @@ fn flag(span: Span, seen: &mut BTreeSet<(u32, u32, u32, u32)>, out: &mut Vec<Low
     });
 }
 
-/// Role text grows with accessibility sizes; px widths do not.
+/// @ref LLP 1116.011 D2.4 — role text grows with accessibility sizes; px widths do not.
 pub(super) fn text_px_width(
     view: &[Node],
     styles: &[StyleDecl],

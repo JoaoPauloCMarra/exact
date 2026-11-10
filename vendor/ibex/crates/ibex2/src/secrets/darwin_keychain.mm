@@ -1,5 +1,4 @@
-// The Keychain behind the SecretStore trait: the platform half of the secrets
-// backends.
+// The Keychain behind the SecretStore trait: the platform half of LLP 0069 §3.
 //
 // Generic-password items: kSecAttrService is the app's identity, kSecAttrAccount
 // the secret's name, the value the data. `set` updates an existing item and
@@ -10,10 +9,12 @@
 // another device from a backup. macOS normally uses the login keychain,
 // whose ACL trusts the creating app's designated requirement. A provisioned
 // widget cohort uses its explicit restricted data-protection access group
-// instead. At provisioned app startup it migrates the
+// instead (LLP 1126.001 WP16). At provisioned app startup it migrates the
 // service's login items, deleting each only after a successful copy. The
 // move is one-way: an unprovisioned build cannot read the moved items.
 // The extension never reads or migrates the login keychain.
+//
+// @ref LLP 0069#3-the-backends — the Keychain, and why the login keychain on macOS
 
 #import <Foundation/Foundation.h>
 #import <Security/Security.h>

@@ -1,4 +1,4 @@
-//! The presence backend's vaults. Outside the
+//! The presence backend's vaults (LLP 1133.010 D4, D6, §7). Outside the
 //! agent, the platform's keychain: locked items in the data-protection
 //! keychain, reached through the hook ExactKit installs
 //! (`exact_on_presence_keychain`, `Sources/ExactKit/Presence.swift`).
@@ -11,7 +11,7 @@
 use exact_runner::presence::{Backend, Vault};
 use ibex2::host::{Bindings, Kv, Secrets};
 
-/// The kv scope of the backend's records.
+/// The kv scope of the backend's records (D4 step 1).
 pub const RECORDS: &str = "exact.presence";
 /// The kv scope of the agent's locked items, `<name>#<generation>`.
 pub const LOCKED: &str = "exact.presence.agent";
@@ -112,14 +112,14 @@ pub fn scopes() -> String {
     format!("storage.kv {RECORDS}\nstorage.kv {LOCKED}\nstorage.kv {INDEX}")
 }
 
-/// The platform's keychain for locked items, reached
+/// The platform's keychain for locked items (LLP 1133.010 D6), reached
 /// through the hook ExactKit installs (`exact_on_presence_keychain`): one
 /// generic-password item per name and generation in the data-protection
 /// keychain, `kSecAttrService` the app's id and `.presence`,
 /// `kSecAttrAccount` `<name>#<generation>`, its access control the line's
 /// policy. Each call returns once the keychain has answered, on the main
 /// thread; none shows the person anything. Reading an item takes the
-/// context the module's sheet evaluated, so it is ExactKit's alone.
+/// context the module's sheet evaluated, so it is ExactKit's alone (D13).
 pub type KeychainFn = extern "C" fn(
     op: u32,
     json: *const u8,
@@ -289,7 +289,7 @@ impl Vault for KeychainVault {
 }
 
 /// Whether this build keeps locked secrets: the hook is installed and says
-/// so (iOS; macOS only with a provisioned keychain group).
+/// so (iOS; macOS only with a provisioned keychain group, D7).
 pub fn keychain_capable() -> bool {
     call(5, serde_json::json!({}), &[]).is_ok_and(|(status, _)| status == 0)
 }
@@ -317,7 +317,7 @@ pub fn keychain_backend(
 }
 
 /// iOS keeps keychain items after an app is deleted, so a reinstalled app
-/// would find the last install's token. The first launch of an
+/// would find the last install's token (LLP 1018 D7). The first launch of an
 /// install, which a marker in Application Support (deleted with the app)
 /// tells, deletes every item under the app's two services. A container that
 /// already holds the backend's records or kept answers is an update, not an

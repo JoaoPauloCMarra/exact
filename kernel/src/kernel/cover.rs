@@ -1,4 +1,4 @@
-//! What a native container covers of a box.
+//! What a native container covers of a box (@ref LLP 1075.003 §3.5, §3.7).
 //!
 //! The host measures what its controller's bars take of a route — a
 //! navigation bar over its top edge, a tab bar over its bottom — and the
@@ -20,7 +20,7 @@
 //! A replaced header that cleared the status bar itself (the web's
 //! `padding-top: env(safe-area-inset-top)` under `viewport-fit=cover`)
 //! hands that inset to its route's top cover, so the route's content starts
-//! at the bar's bottom whichever of the two padded it.
+//! at the bar's bottom whichever of the two padded it (LLP 1075.003 §9.10).
 //!
 //! The margins a platform's own list gives a grouped list's cards and cells
 //! are a claim of the same kind (`grouped::GroupedMargins`), set here.
@@ -150,7 +150,7 @@ impl Kernel {
 
 impl Kernel {
     /// Set or clear (`None`) the margin the platform's cell gives the rows of
-    /// the cells list `view` at its left and right. Nonfinite or
+    /// the cells list `view` at its left and right (LLP 1138). Nonfinite or
     /// negative lengths are refused.
     pub fn set_list_margins(
         &mut self,
@@ -215,10 +215,10 @@ impl Kernel {
     }
 }
 
-/// A cover's part of a box's engine style: a
+/// A cover's part of a box's engine style (@ref LLP 1075.003 §3.5): a
 /// container's bars add to the padding of the route they cover, a box a bar
 /// replaces takes no space, and a scroller the platform insets ends its
-/// content box that much sooner: its end padding takes
+/// content box that much sooner (LLP 1116.000 D1.2): its end padding takes
 /// both insets, so its children keep their start and their scroll extent's
 /// end is where the platform's own inset begins.
 pub(crate) fn apply(arena: &NodeArena, slot: u32, s: &mut taffy::style::Style) {
@@ -413,8 +413,8 @@ fn positioned(arena: &NodeArena, slot: u32) -> bool {
 
 /// The points a cover adds to the box's padding as layout pads it (`apply`):
 /// `added_padding`, but nothing at the bottom where the scroller at the
-/// box's bottom edge takes the bar's clearance as its platform inset, so
-/// it reaches under the bar. An absolutely positioned
+/// box's bottom edge takes the bar's clearance as its platform inset (LLP
+/// 1116.000 D1.2), so it reaches under the bar. An absolutely positioned
 /// child is still placed past the whole cover (`added_padding`).
 pub(crate) fn applied_padding(arena: &NodeArena, slot: u32) -> [f32; 4] {
     let [top, right, bottom, left] = added_padding(arena, slot);
@@ -498,8 +498,8 @@ pub(crate) fn children_changed(
 
 /// The top inset a box's replaced first child cleared for itself: that
 /// child is covered whole and pads its top by `env(safe-area-inset-top)`
-/// or the corner-adapted safe area's, which never lies above it, or a
-/// `calc()` or comparison that reads one.
+/// or the corner-adapted safe area's, which never lies above it (LLP 1123
+/// D10), or a `calc()` or comparison that reads one (LLP 1001 §2).
 /// It counts only while a bar covers the box's top (`top > 0`); a scroller
 /// that goes under the bar is inset by the platform instead.
 pub(crate) fn header_inset(arena: &NodeArena, slot: u32, top: f32) -> f32 {

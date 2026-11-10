@@ -1,4 +1,4 @@
-//! Placing the images in a paragraph's text: the
+//! Placing the images in a paragraph's text (LLP 1011.002 D2): the
 //! measurer reserved each box where its run stands; the frame each image
 //! takes is where the measurer says that box went, read when its paragraph
 //! is published.
@@ -28,7 +28,7 @@ pub(super) fn place(
     let mut origins = Vec::with_capacity(images.len());
     // Columns and text flowed around exclusions lay its lines out apart:
     // where a box went there is not asked, and its image shows nothing
-    // rather than standing over the text ("Not built").
+    // rather than standing over the text (LLP 1011.002, "Not built").
     if arena.frag.multicol.contains_key(&slot) || !arena.flow_shapes(slot).is_empty() {
         origins.resize(images.len(), (f32::NAN, f32::NAN));
     } else if let Some(stamp) = arena.paragraph_stamp(slot) {

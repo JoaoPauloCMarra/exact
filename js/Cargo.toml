@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish = false
-description = "The TypeScript data-source executor: an app's `app.ts`, compiled to Hermes bytecode at bake, behind the runner's one data seam, run by the lean Hermes VM."
+description = "The TypeScript data-source executor (LLP 1027): an app's `app.ts`, compiled to Hermes bytecode at bake, behind the runner's one data seam, run by the lean Hermes VM."
 
 [lib]
 crate-type = ["rlib"]
@@ -33,7 +33,7 @@ hermes-lean-sys = { path = "../vendor/ibex/crates/hermes-lean-sys", default-feat
 
 [dev-dependencies]
 caltrain-data = { path = "../apps/caltrain/data" }
-# The storage composer a host stacks over the module.
+# The storage composer a host stacks over the module (LLP 1097 D5).
 exact-data-host = { path = "../data/host" }
 contract = { path = "../contract/cli" }
 exact-kernel = { path = "../kernel" }
@@ -42,6 +42,6 @@ exact-kernel = { path = "../kernel" }
 [target.'cfg(unix)'.dev-dependencies]
 exact-render = { path = "../host/render" }
 # The Apple host's Bridge, executor and pump over a module's answers
-# (tests/it/admission.rs).
+# (tests/it/admission.rs, LLP 1041 §8.4).
 [target.'cfg(target_os = "macos")'.dev-dependencies]
 exact-apple = { path = "../host/apple" }

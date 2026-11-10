@@ -1,4 +1,4 @@
-//! DTCG export and its own round trip.
+//! DTCG export and its own round trip (LLP 1121 D14, stage 5 commit 6).
 
 use crate::common::vocab;
 use exact_tamber::export::{dtcg, is_own, reimport};
@@ -125,10 +125,10 @@ fn re_importing_the_unedited_export_proposes_nothing() {
     }
 }
 
-/// A baseline is matched by the header's design digest, never its text: an
-/// export whose header is an older text (without the conversions' shadow
-/// clause) still re-imports against the kept export and against the
-/// design's own.
+/// Stage 12 B3 (theme2's T3): the header's conversions gained a shadow's
+/// clause, and a baseline is matched by the header's design digest, never
+/// its text: an export pulled before the change, its header the old text,
+/// still re-imports against the kept export and against the design's own.
 #[test]
 fn an_export_from_before_the_shadow_clause_still_finds_its_baseline() {
     const NEW: &str = ", a length over a base name the design leaves unset as a length's, the shadow's source in `lossy`";
@@ -147,7 +147,7 @@ fn an_export_from_before_the_shadow_clause_still_finds_its_baseline() {
         assert!(import.unmapped.is_empty(), "{:?}", import.unmapped);
     }
     // One value edited in the old-header export: exactly that edit, against
-    // the kept old export and against the design's own.
+    // the kept old export and against the design's own (round 1, Astra 5).
     let (text, _) = exported(FIXTURE);
     let old = text.replace(NEW, "");
     let mut doc: Value = serde_json::from_str(&old).unwrap();
@@ -765,7 +765,7 @@ fn round_four_edges() {
     exact_tamber::apply_all(src, &import.ops, &vocab()).unwrap();
 }
 
-/// Every kind is exported as its DTCG type (a length as a
+/// Stage 6 G: every kind is exported as its DTCG type (a length as a
 /// dimension, a text style as px at the default root size marked lossy, a
 /// type as typography with what it leaves unsaid named), re-imported
 /// unedited it proposes nothing, and a changed length or type proposes one
@@ -866,7 +866,7 @@ fn every_kind_exports_as_its_type_and_round_trips() {
     );
 }
 
-/// Re-import of other kinds: a tool that reprints whole numbers changes
+/// Review round 1 (stage 6 G): a tool that reprints whole numbers changes
 /// nothing; a weight the export left unsaid, once edited, is said; a shadow
 /// whose colours differ by scheme takes a new blur; a duration in seconds
 /// is read as the design writes it; an accepted edit proposes nothing more.
@@ -953,7 +953,7 @@ fn reprints_unsaid_parts_scheme_shadows_and_units_read_back() {
     assert!(again.ops.is_empty(), "{:?}", again.ops);
 }
 
-/// Re-import of other kinds, edited: a reprinted file with an edit keeps a type's
+/// Review round 2 (stage 6 G): a reprinted file with an edit keeps a type's
 /// text style; a line height edited over a unit's placeholder is taken; a
 /// `currentcolor` shadow given a colour takes it; an edit to one side of an
 /// axis under scheme=dark, which a length cannot vary by, is refused rather

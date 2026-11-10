@@ -373,9 +373,9 @@ fn byte_budget_and_illegal_opt_ins_refuse_before_transport() {
     fixture.release();
 }
 
-/// A second 8 MiB read beside a held one is not refused for the whole
-/// ceiling: admission waits for the bytes (16 MiB reads here, so that
-/// two outgrow the lane's 64 MiB).
+/// The Bluesky port's D5: a second 8 MiB read beside a held one was refused
+/// because admission charged the whole ceiling. It now waits for the bytes
+/// (16 MiB reads here, so that two outgrow the lane's 64 MiB).
 #[test]
 fn an_independent_read_over_the_budget_waits_instead_of_refusing() {
     let (core, fixture, woke) = setup();
@@ -499,7 +499,7 @@ fn a_full_new_cohort_recovers_only_after_old_outcomes_are_drained() {
         .all(|(ticket, outcome)| (128..256).contains(ticket)
             && matches!(outcome, Outcome::Response(Response { status: 200, .. }))));
     let state = core.shared.state.lock().unwrap();
-    // Draining can precede the async finisher's physical releases.
+    // Draining can precede the async finisher's physical releases (LLP 1120 D5).
     let (state, _) = core
         .shared
         .ready
@@ -657,7 +657,7 @@ fn grants_that_do_not_parse_are_named_in_every_refusal() {
 }
 
 /// A redirect that leaves the grants is refused naming the origin it led to
-/// (a feed moved to another host must not read only "outside the app's
+/// (podcast F5: a feed moved to another host read only "outside the app's
 /// grants"), and the second hop is never sent.
 #[test]
 fn a_refused_redirect_names_where_it_led() {
@@ -1112,8 +1112,8 @@ fn tickets(outcomes: Vec<(u64, Outcome)>) -> Vec<u64> {
 
 /// A request refused while work is held (here invalid: request buffers over
 /// 4 MiB) keeps its place: refused only when the held work before it has
-/// been admitted, so that its refusal settles after that work (A, B, C, D, not A, B,
-/// D, C).
+/// been admitted, so that its refusal settles after that work (Astra and
+/// Grok, round 1: it had settled first, A, B, D, C).
 #[test]
 fn a_refusal_behind_held_work_settles_after_it() {
     let (core, fixture, woke) = fenced_core();
@@ -1197,8 +1197,8 @@ fn the_request_past_the_held_bytes_is_refused_in_its_place() {
 }
 
 /// The last forgotten ordered job ending wakes the host: the lane is idle,
-/// so a retained refusal can settle and the work held behind it go
-/// (releasing its count alone would leave them waiting).
+/// so a retained refusal can settle and the work held behind it go (Astra,
+/// round 1: it released its count without a wake).
 #[test]
 fn the_last_forgotten_ordered_job_ending_wakes_the_host() {
     let (core, fixture, woke) = setup();
@@ -1339,9 +1339,9 @@ fn an_ordered_job_waits_for_retained_bytes_instead_of_refusing() {
 
 /// The platform transport, a loopback server and a body over its 64 KiB
 /// handoff, behind and beside handed-off module turns as worker placement
-/// queues them.
+/// queues them (the Crew port's F4/F6, not reproduced on macOS).
 #[test]
-#[ignore = "a real socket under the platform transport (URLSession), timing-sensitive on a loaded machine; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: a real socket under the platform transport (URLSession), timing-sensitive on a loaded machine; bun scripts/async.mjs runs it"]
 fn a_large_body_on_the_platform_transport_drains_behind_handed_off_turns() {
     use std::io::{Read, Write};
     let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();

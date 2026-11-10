@@ -152,7 +152,7 @@ impl<D: DataSource> Host<D> {
         };
         let out = self.hold_update(serial, Value::scalar(height), now_ms);
         // An accepted sample: record the constrained height shown, which the
-        // release velocity follows.
+        // release velocity follows (LLP 1057.001 §3).
         if self.engine.now() == now_ms / 1000. {
             if let Some(shown) = self.height_catch(drag.target) {
                 self.engine.track_hold(drag.token, now_ms / 1000., shown);
@@ -173,8 +173,8 @@ impl<D: DataSource> Host<D> {
         self.dispatch_height(serial, height, Some(velocity), now_ms)
     }
 
-    /// The same, at the velocity the engine measured over the heights shown:
-    /// what the native bridge sends.
+    /// The same, at the velocity the engine measured over the heights shown
+    /// (LLP 1057.001 §3): what the native bridge sends.
     pub fn dispatch_height_measured(&mut self, serial: u64, height: f64, now_ms: f64) -> String {
         self.dispatch_height(serial, height, None, now_ms)
     }

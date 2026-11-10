@@ -1,11 +1,11 @@
-// @exact/oauth: an OAuth 2.0 and OpenID Connect client
+// @exact/oauth (LLP 1146 D5, D8, D9): an OAuth 2.0 and OpenID Connect client
 // for `app.ts`. Authorization code with PKCE through `openAuthSession` or the
 // app's own sign-in (`authorize`), the code exchange, refresh with rotation,
 // authorized requests that refresh on 401 (`expiredStatus`), and sign-out.
 // Every decision about what a provider's reply means is here, so an app
 // writes none of them.
 //
-// Data code reads no clock. The time a token was issued is the
+// Data code reads no clock (LLP 1027.000). The time a token was issued is the
 // token response's `Date` header (RFC 9110 §6.6.1), and an expired access
 // token is learned from the resource server's 401 (RFC 6750 §3.1), or the
 // statuses `expiredStatus` names.
@@ -13,7 +13,7 @@
 // A session's code exchange, refreshes and sign-out run one at a time
 // (`exclusive`), so a rotated refresh token is spent once. Each is a POST,
 // which runs to its end even when the answer that started it is let go, and
-// what its reply's turn writes to the store stands.
+// what its reply's turn writes to the store stands (LLP 1146 D2).
 
 /** What `session()` answers; `OAuthSession` in Contract. */
 export interface OAuthSession {
@@ -120,11 +120,11 @@ export interface OAuthAuthorization {
 }
 
 export interface OAuthSignIn {
-  /** For an app that signs the person in with its own screens: sends the authorization request as the provider documents, and answers the URL it redirected to. Throw an `OAuthError` to say why it could not. */
+  /** For an app that signs the person in with its own screens (LLP 1146 D8): sends the authorization request as the provider documents, and answers the URL it redirected to. Throw an `OAuthError` to say why it could not. */
   authorize?: (request: OAuthAuthorization) => Promise<string>;
 }
 
-/** A failed authorized request. A resource source that throws it keeps its last answer. */
+/** A failed authorized request. A resource source that throws it keeps its last answer (LLP 1016 D4). */
 export class OAuthError extends Error {
   code: string;
   status: number;
@@ -251,7 +251,7 @@ export function oauth(config: OAuthConfig): OAuthProvider {
     const log = config.log;
     if (log) logged.set(config.key, (logged.get(config.key) ?? Promise.resolve()).then(event).then(log).catch(() => undefined));
   };
-  // Whether a token endpoint error ends the session ("Refresh").
+  // Whether a token endpoint error ends the session (LLP 1146 §5, "Refresh").
   const ends = (reply: TokenReply): boolean => {
     if (reply.error === 'invalid_grant') return !throttled(reply);
     return SIGN_IN_AGAIN.includes(reply.error) || (config.endedErrors ?? []).some((e) =>
@@ -328,13 +328,13 @@ export function oauth(config: OAuthConfig): OAuthProvider {
       return { signedIn: true, subject: kept.subject ?? '', expiresAt: kept.expiresAt ?? 0, scopes: kept.scopes ?? [], error: '', ended: false };
     }
     // Ready the next sign-in now, so that the press opens the browser before
-    // awaiting anything: a web popup must open in the press's task,
-    // and discovery and the S256 digest are asynchronous.
+    // awaiting anything: a web popup must open in the press's task
+    // (LLP 1069.006 D4), and discovery and the S256 digest are asynchronous.
     await prepare().catch(() => undefined);
     return { signedIn: false, subject: '', expiresAt: 0, scopes: [], error: kept?.ended ?? unprepared, ended: kept?.ended !== undefined };
   };
 
-  // The app's own sign-in sends the authorization request: no browser
+  // The app's own sign-in sends the authorization request (D8): no browser
   // opens, so it may await. What it answers must be the callback.
   const sentByApp = async (tx: Transaction | null, authorize: NonNullable<OAuthSignIn['authorize']>): Promise<[Transaction, string] | OAuthResult> => {
     try {
@@ -434,8 +434,22 @@ export function oauth(config: OAuthConfig): OAuthProvider {
 
   // Renews `seen`'s access token: one refresh of this session at a time, its
   // rotated refresh token kept before anyone uses the new access token
-  // (RFC 9700 §4.14.2).
-  const refresh = (store: OAuthStore, seen: Kept): Promise<Kept> => exclusive(store, async () => {
+  // (RFC 9700 §4.14.2). The exclusive work returns the failure it decided on,
+  // and `refresh` throws it after the work: a host treats a work that throws
+  // as an update that stopped before its reply and forgets the session (LLP
+  // 1146 §5, "One at a time"), though the failure keeps it. An error the
+  // package did not decide on, such as a failed store write, still throws
+  // inside the work.
+  const refresh = async (store: OAuthStore, seen: Kept): Promise<Kept> => {
+    const outcome = await exclusive(store, () => renew(store, seen).catch((e: unknown) => {
+      if (e instanceof OAuthError) return e;
+      throw e;
+    }));
+    if (outcome instanceof OAuthError) throw outcome;
+    return outcome;
+  };
+
+  const renew = async (store: OAuthStore, seen: Kept): Promise<Kept> => {
     const now = read(store);
     // Another caller refreshed, or the person signed out or in, meanwhile.
     if (!now?.accessToken) throw signedOutError(now);
@@ -448,7 +462,10 @@ export function oauth(config: OAuthConfig): OAuthProvider {
     // What the session keeps is enough: a refresh awaits no discovery,
     // which an answer may have started and may be let go mid-way.
     const endpoint = now.tokenEndpoint;
-    if (!endpoint) throw new OAuthError('config', 'The session keeps no token endpoint. Sign in again.', 0, false, true);
+    if (!endpoint) {
+      end(store, sent, 'The session keeps no token endpoint. Sign in again.', 0, 'config');
+      throw new OAuthError('config', 'The session keeps no token endpoint. Sign in again.', 0, false, true);
+    }
     const body: Record<string, string> = { grant_type: 'refresh_token', refresh_token: sent };
     if (config.refreshScopes) body.scope = (now.scopes?.length ? now.scopes : config.scopes).join(' ');
     // No usable reply (none, or a 2xx whose body stops short): the server may
@@ -518,7 +535,7 @@ export function oauth(config: OAuthConfig): OAuthProvider {
     store.set(config.key, JSON.stringify(next));
     note(async () => ({ type: 'refreshed', sent: await print(sent), got: await print(next.refreshToken), expiresIn: lifetime(reply) ?? 0 }));
     return next;
-  });
+  };
 
   // Ends the session for good, only if the refresh token refused is still
   // the one kept: a newer sign-in or a sign-out already replaced it otherwise.
@@ -593,7 +610,7 @@ export function oauth(config: OAuthConfig): OAuthProvider {
     while (owed.length) {
       const last = owed[owed.length - 1], endpoint = last.revocationEndpoint;
       // Best effort (RFC 7009 §2.2): the session is already gone here. No
-      // reply, or 429 or 5xx, leaves the token to revoke later (RFC 7009 §2.2.1).
+      // reply, or 429 or 5xx, leaves the token to revoke later (§2.2.1).
       const done = (reply: TokenReply): boolean => reply.status !== 429 && reply.status < 500;
       if (endpoint && !await tokenRequest(config, endpoint, { token: token(last)!, token_type_hint: last.refreshToken ? 'refresh_token' : 'access_token' }).then(done, () => false)) break;
       owed.pop();
@@ -754,14 +771,14 @@ async function tokenRequest(config: OAuthConfig, endpoint: string, body: Record<
   }
   let response: Response;
   try {
-    // A deadline: a token request may outlive its answer, and
+    // A deadline: a token request may outlive its answer (LLP 1146 D2), and
     // the session's other work waits for it.
     response = await transport(config)(endpoint, { method: 'POST', headers, body: form(fields), redirect: 'error', exactTimeout: TOKEN_TIMEOUT_MS } as RequestInit);
   } catch (e) {
     throw grantOrNetwork(e, endpoint, true);
   }
-  // A 429 or 5xx is the server's failure whatever its body says, as an OAuth error response is a 400 or 401
-  // (RFC 6749 §5.2); otherwise an `error` member fails the call under any status, 200 included (GitHub).
+  // A 429 or 5xx is the server's failure whatever its body says, as an OAuth error response is a 400 or 401 (RFC 6749
+  // §5.2); otherwise an `error` member fails the call under any status, 200 included (GitHub).
   const unavailable = response.status === 429 || response.status >= 500;
   let text: string;
   try {
@@ -798,21 +815,21 @@ function keep(reply: TokenReply, before: Kept | null, meta: Metadata | null, con
   const f = reply.fields;
   const accessToken = typeof f.access_token === 'string' ? f.access_token : '';
   if (!accessToken) return 'no access token';
-  // `token_type` is required and case-insensitive (RFC 6749 §5.1); some providers omit it (`bearerByDefault`).
+  // `token_type` is required and case-insensitive (§5.1); some providers omit it (`bearerByDefault`).
   const tokenType = typeof f.token_type === 'string' ? f.token_type : config.bearerByDefault ? 'Bearer' : '';
   if (!tokenType) return 'no token type';
   if (tokenType.toLowerCase() !== 'bearer') return `token type ${tokenType} is not Bearer`;
   // Without `expires_in` or a `Date` the expiry is unknown, and the server's 401 says when.
   const seconds = lifetime(reply);
   const expiresAt = seconds !== undefined && reply.date ? reply.date + seconds * 1000 : 0;
-  // A scope list is space-separated (RFC 6749 §3.3); its absence keeps what was held, or what was asked for.
+  // A scope list is space-separated (§3.3); its absence keeps what was held, or what was asked for.
   const scopes = typeof f.scope === 'string' ? f.scope.split(config.commaScopes ? /[\s,]+/ : ' ').filter(Boolean) : before?.scopes ?? (before ? [] : config.scopes);
   const text = (v: unknown): string | undefined => (typeof v === 'string' && v ? v : undefined);
   return {
     issuer: before?.issuer ?? meta?.issuer ?? '',
     first: before?.first,
     accessToken,
-    // No new refresh token: the old one stands (RFC 6749 §6).
+    // No new refresh token: the old one stands (§6).
     refreshToken: text(f.refresh_token) ?? before?.refreshToken,
     idToken: text(f.id_token) ?? before?.idToken,
     expiresAt,
@@ -851,7 +868,7 @@ function checkIdToken(token: string, meta: Metadata, config: OAuthConfig, nonce:
   if ((aud.length > 1 || c.azp !== undefined) && c.azp !== config.clientId) return 'the ID token is for another app';
   if (now && c.exp * 1000 + SKEW_MS < now) return 'the ID token has expired';
   if (first) {
-    // A refreshed ID token is the same person's, for the same app (OpenID Connect Core §12.2).
+    // A refreshed ID token is the same person's, for the same app (§12.2).
     if (c.iss !== first.iss || c.sub !== first.sub || !sameAudiences(c.aud, first.aud) || c.azp !== first.azp) return 'the ID token is for another account';
     if (c.nonce !== undefined && c.nonce !== first.nonce) return 'the ID token is for another sign-in';
   } else if (nonce && c.nonce !== nonce) {

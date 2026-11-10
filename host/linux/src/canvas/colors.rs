@@ -1,4 +1,4 @@
-//! The device's colours, from the reader. The reader
+//! The device's colours, from the reader (LLP 1115.001 D4). The reader
 //! resolves Material 3's colour roles for the device and tells them whole,
 //! before the host boots and again whenever they change (`Native.colors`).
 //! What it said last is kept for the process, as the device's settings are

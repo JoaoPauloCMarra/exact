@@ -3,7 +3,7 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// A quit the app holds fades its window and takes it out of
+/// LLP 1069.010: a quit the app holds fades its window and takes it out of
 /// full screen first, `setWindowOpacity(opacity)` and `exitFullscreen()`.
 @MainActor
 final class WindowCommandsMacTests: XCTestCase {

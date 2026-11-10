@@ -1,17 +1,17 @@
-// Tool calls on the JS target, as the runner's `modules/calls.rs`: a door hands
+// Tool calls on the JS target (LLP 1111 D4, LLP 1133.023 D7), as the runner's `modules/calls.rs`: a door hands
 // `{tool, args, door}`, and the tool's action runs as one commit of origin `tool`, after any wake or earlier call
 // (waiting up to 5 s), done when the work it owns has settled, else `timeout` 10 s after its dispatch. `fails when`
 // and `returns` are read once, at the end.
 //
-// What a call owns on the web: the page cannot tell one request from another, so the call stamps the requests
+// What a call owns (D7, "The web"): the page cannot tell one request from another, so the call stamps the requests
 // its dispatch commit issued, and then those issued in a turn in which one of its own settled (a `then`'s ask, an
 // answer's next send); a mutation queued from its dispatch on; a request the server holds among them. A person's
 // commit meanwhile is not the call's, but neither is it told apart when it replaces the call's ask, so a call here
 // never ends `superseded`.
 //
 // Each faced tool is offered to the browser's agent through WebMCP where the page has `document.modelContext`
-// (https://webmachinelearning.github.io/webmcp/): registered with an input schema from the plan's types and the
-// face's words, its annotations (`readOnlyHint` for `reads`, `consequentialHint` for `writes` and
+// (https://webmachinelearning.github.io/webmcp/, D8): registered with an input schema from the plan's types and the
+// face's words, its annotations from LLP 1111 D3 (`readOnlyHint` for `reads`, `consequentialHint` for `writes` and
 // `destroys`), withdrawn while `available when` is false, and its `execute` a call through the `web` door.
 import { clock, data, After, Clocked, Mutations, Origin, say, time as refreshTime, drive, order } from "./rt.js";
 import { Counting, heldTickets } from "./held.js";
@@ -47,7 +47,7 @@ function check(json, type, path) {
   });
 }
 
-/** The JSON Schema of plan type `type`, with the face's title and `integer` for a parameter. */
+/** The JSON Schema of plan type `type`, with the face's title and `integer` for a parameter (D8). */
 function schema(type, face = {}) {
   const words = { ...(face.title ? { title: face.title } : {}), ...(face.description ? { description: face.description } : {}) };
   if (typeof type === "string") return { type: { n: face.type === "integer" ? "integer" : "number", b: "boolean", s: "string" }[type] ?? "null", ...words };
@@ -198,7 +198,7 @@ export function tools(table) {
       ? { call: id, state: "waiting" } : { error: `no call ${id}` }),
   };
 
-  // ---- WebMCP
+  // ---- WebMCP (D8)
   const context = globalThis.document?.modelContext;
   if (context?.registerTool) {
     const offered = new Map();

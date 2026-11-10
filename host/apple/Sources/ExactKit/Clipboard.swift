@@ -1,4 +1,4 @@
-// DOM's clipboard events: ⌘C, ⌘X and ⌘V — the Edit
+// DOM's clipboard events (spreadsheet F4, F14): ⌘C, ⌘X and ⌘V — the Edit
 // menu's copy:, cut: and paste:, or a hardware keyboard's on iPadOS — reach
 // the focused node as `copy`, `cut` and `paste`, the nearest node with a
 // handler (itself or an ancestor) hearing them, as on the web. A paste
@@ -10,7 +10,7 @@
 // A text field's or text area's own editing (its field editor, NSTextView,
 // UITextField, UITextView) fires them too, before its own cut, copy or
 // paste, which an action that calls `preventDefault()` cancels, as the DOM's
-// default action is.
+// default action is (#125).
 #if os(macOS)
 import AppKit
 #else
@@ -36,7 +36,7 @@ extension NodeView {
         #if os(macOS)
         let chain = sequence(first: self as NSView, next: \.superview)
         #else
-        // Up the logical ancestry, out of a presentation too
+        // Up the logical ancestry, out of a presentation too (LLP 1123 D2)
         let chain = presenter?.logicalAncestry(of: self) ?? sequence(first: self as UIView, next: \.superview)
         #endif
         guard let node = chain.lazy.compactMap({ $0 as? NodeView }).first(where: { $0.handlers.contains(name) && !$0.disabled }) else { return nil }
@@ -236,7 +236,7 @@ extension NodeView {
 }
 
 extension Agent {
-    /// `type <id> copy|cut|paste [text]`: the event ⌘C, ⌘X
+    /// `type <id> copy|cut|paste [text]` (spreadsheet F6): the event ⌘C, ⌘X
     /// or ⌘V delivers with the focus at `v` — a paste carrying `text` as
     /// the pasteboard's, which the driver leaves alone.
     func clipboardType(_ v: NodeView, _ edit: String, _ text: String?, board: Pasteboard? = nil) -> [String: Any] {
@@ -259,11 +259,11 @@ extension Agent {
         // The page's shortcuts hear the chord before the handlers, as the
         // web's capture listener does: a button declaring Meta+V takes it.
         // Its release comes up through the `keyup` handlers last, whatever
-        // took the down, as the web driver's.
+        // took the down, as the web driver's (#140).
         // Command's own keyup after it, without its own bit, as a keyboard's.
         defer { if edit == "paste" { v.presenter?.keyUp(at: v, "v", held: "Meta+", code: "KeyV"); v.presenter?.keyUp(at: v, "Meta", held: "", code: "MetaLeft") } }
         if edit == "paste", let presenter = v.presenter {
-            // Command's own keydown first, as a keyboard's.
+            // Command's own keydown first, as a keyboard's (Charlie, 2026-10-07).
             _ = presenter.keyDown(at: v, "Meta", held: "Meta+", code: "MetaLeft")
             if pasteShortcut(v, presenter) {
                 return ["typed": Int(v.id), "clipboard": edit, "shortcut": true, "delivery": "recognized"]

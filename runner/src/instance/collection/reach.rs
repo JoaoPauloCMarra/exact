@@ -1,5 +1,6 @@
 //! A list's edges: when `reachstart` and `reachend` fire, and how far ahead
-//! of them `reach-margin` and the window's travel lead say.
+//! of them `reach-margin` and the window's travel lead say (@ref LLP 1145 D4,
+//! LLP 1027.004 D3).
 use super::*;
 
 /// One side of a `reach-margin`.
@@ -119,7 +120,7 @@ impl Collection {
         let reached = self.geometric_edges(fill.velocity)?;
         let ready = [0, 1].map(|i| reached[i] && self.edge_armed[i] && self.edge_handlers[i]);
         let edge = (0..2).find(|&i| ready[i]);
-        // A build-only report runs no action: the edge stays
+        // A build-only report runs no action (LLP 1072 §5): the edge stays
         // armed and the report is pending, so the next report runs it.
         if fill.create_only && edge.is_some() {
             self.pending = true;

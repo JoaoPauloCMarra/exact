@@ -1,7 +1,8 @@
-//! The lines builders wrote that failed to compile, each in a minimal contract
-//! that otherwise compiles, and each refused with the edit that fixes it
-//! leading the message. Taken from builders' logs; a failure the logs show next
-//! joins the list.
+//! LLP 1116.014 D2: the lines builders wrote that failed to compile, each in
+//! a minimal contract that otherwise compiles, and each refused with the edit
+//! that fixes it leading the message. Taken from the bake-off's Exact2 builds
+//! (rounds 13 and 14, LLP 1116.013's comparison). A failure the logs show
+//! next joins the list.
 //!
 //! The edit is also run: each case names what the message tells the builder
 //! to write, and that must build, so a message cannot point at a spelling the
@@ -149,8 +150,8 @@ const CASES: &[Case] = &[
             ("", "button press=go aria-label=\"Add\"\n  image \"symbol:add\" width=24"),
         ],
     },
-    // The refusals whose repairs lost behaviour, each with the edit that keeps
-    // it.
+    // LLP 1116.018: the refusals whose repairs lost behaviour, each with the
+    // edit that keeps it.
     Case {
         wrote: ("", "image src=\"https://example.com/a.png\" aria-label=\"A\" width=48 height=48"),
         id: "lower-attr-tag",
@@ -195,7 +196,7 @@ const CASES: &[Case] = &[
         leads: "put the `role` on a node beside the button",
         fixed: &[("", "text \"Card\" role=\"heading\" aria-level=2\nbutton press=go buttonStyle=\"bordered\" aria-label=\"Front\"\n  text \"Front\"")],
     },
-    // The Pokédex benchmark's type badge and hand-bulleted list.
+    // The Pokédex benchmark's type badge and hand-bulleted list (LLP 1048.007).
     Case {
         wrote: ("", "row gap=4\n  text \"Fire\" display=\"inline-block\" padding=\"0 8px\""),
         id: "lower-attr-value",
@@ -304,8 +305,8 @@ fn a_value_nothing_names_an_edit_for_keeps_its_rule() {
     assert!(negative.ends_with("expected integer"), "{negative}");
 }
 
-/// Two top-level nodes are refused with the wrapper that keeps both, named with
-/// what they are.
+/// LLP 1116.018: two top-level nodes are refused with the wrapper that keeps
+/// both, named with what they are.
 #[test]
 fn a_view_of_two_nodes_is_told_to_wrap_both() {
     let two = "component App\n  view\n    text \"Notes\" role=\"heading\" aria-level=1\n    text \"Nothing yet\"\n";

@@ -1,10 +1,10 @@
-// @exact/motion on Apple: Core Motion
+// @exact/motion on Apple (LLP 1133.013 D2, D3, D4, D5, D8): Core Motion
 // through one `CMMotionManager`, answered in the interface's shapes. The
 // app's composed module calls it outside the agent, through `ExactPackage`'s
 // shape; under the agent the runner's substitute answers and no manager is
 // made, unless the drive binds it (`--bind motion`).
 //
-// - One manager serves every reader, with four streams: the raw
+// - One manager serves every reader (D4), with four streams: the raw
 //   accelerometer, gyroscope and magnetometer, and device motion for the
 //   rest. Each runs at the fastest frequency its readers ask (60 Hz when one
 //   names none; `deviceMotion` always 60 Hz, as WebKit) and device motion in
@@ -12,8 +12,8 @@
 //   orientation, else `xArbitraryZVertical`). Each reader group (a name with
 //   one `frequency`, `referenceFrame` and `history`) keeps a ring of its own
 //   thinned samples, numbered, answered from the cursor the runner passes as
-//   `after`.
-// - Units and sign are the W3C's: Core Motion's accelerations are in g
+//   `after` (D5).
+// - Units and sign are the W3C's (D2): Core Motion's accelerations are in g
 //   with gravity pointing down (face up reads z = −1), so each is multiplied
 //   by −9.80665; rotation rates are rad/s and fields µT as Core Motion gives
 //   them. An absolute orientation is turned from Core Motion's x-north frame
@@ -22,8 +22,8 @@
 //   (the context's `orientation`, the web's `screen.orientation.angle`;
 //   Accelerometer §7.1).
 // - The streams stop while the app is in the background and start again in
-//   the foreground; each reader's next answer reads `interrupted`.
-// - A canvas input is a consumer of its stream like a reader, thinned to
+//   the foreground; each reader's next answer reads `interrupted` (D8).
+// - A canvas input (D6) is a consumer of its stream like a reader, thinned to
 //   its own frequency (60 Hz by default), each sample written into the
 //   surface's input (the context's `surfaces`), which the host drains into
 //   the canvas once a frame. It holds the lease while displayed: hidden, it
@@ -31,7 +31,7 @@
 //   wake's, it stays paused. The background pauses it too, and the return
 //   resumes one whose canvas stayed displayed. The first sample after a
 //   pause counts the samples the pause lost in its `dropped`.
-// - Tier 3: `MotionModule.hatch` is given the manager once, when made.
+// - Tier 3 (D10): `MotionModule.hatch` is given the manager once, when made.
 // - The Mac has none of this (`CMMotionManager` is iOS's); its module answers
 //   the status unavailable.
 import CoreMotion
@@ -40,7 +40,7 @@ import Foundation
 
 #if os(iOS)
 public final class MotionModule: ExactPackage {
-    /// The app's access hatch: given the manager once, when it is made.
+    /// The app's access hatch (D10): given the manager once, when it is made.
     public static var hatch: ((CMMotionManager) -> Void)?
 
     private static let g = 9.80665
@@ -75,7 +75,7 @@ public final class MotionModule: ExactPackage {
         var history: Int { min(MotionModule.most, Int(args["history"] as? Double ?? 0)) }
     }
 
-    /// A canvas input: `sensor`'s samples, read as source `name` reads
+    /// A canvas input (D6): `sensor`'s samples, read as source `name` reads
     /// them, written into `surface`'s input.
     private final class Feed {
         let surface: String, sensor: String, name: String, stream: Stream, input: ExactSurfaceInput
@@ -122,7 +122,7 @@ public final class MotionModule: ExactPackage {
     public func later(_ name: String, _ args: [String: Any], preferred: Any?, reply: @escaping ([String: Any]) -> Void) {
         DispatchQueue.main.async { [self] in
             switch name {
-            // Core Motion asks no permission for these sensors.
+            // Core Motion asks no permission for these sensors (D11).
             case "motionStatus", "requestMotionPermission": reply(status())
             case "startSensorInput": reply(startInput(args))
             case "stopSensorInput": reply(stopInput(args))
@@ -188,7 +188,7 @@ public final class MotionModule: ExactPackage {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: once)
     }
 
-    /// A reader's answer from its group's ring after `after`.
+    /// A reader's answer from its group's ring after `after` (D5).
     private func answer(_ group: Group, _ args: [String: Any]) -> [String: Any] {
         guard let newest = group.ring.last else { return ["error": "NotReadableError"] }
         var out = newest.fields
@@ -224,7 +224,7 @@ public final class MotionModule: ExactPackage {
         restart()
     }
 
-    // MARK: canvas inputs
+    // MARK: canvas inputs (D6)
 
     private func startInput(_ args: [String: Any]) -> [String: Any] {
         let surface = args["surface"] as? String ?? "", sensor = args["sensor"] as? String ?? ""
@@ -326,7 +326,7 @@ public final class MotionModule: ExactPackage {
             }
         case .deviceMotion:
             manager.deviceMotionUpdateInterval = interval
-            // Core Motion's own calibration display, as a hand-built compass sets it.
+            // Core Motion's own calibration display, as a hand-built compass sets it (D3).
             manager.showsDeviceMovementDisplay = frame == .xMagneticNorthZVertical
             manager.startDeviceMotionUpdates(using: frame ?? .xArbitraryZVertical, to: .main) { [weak self] m, _ in
                 guard let m else { return }
@@ -340,7 +340,7 @@ public final class MotionModule: ExactPackage {
         now() - (ProcessInfo.processInfo.systemUptime - t) * 1000
     }
 
-    /// A sample of `stream` for each of its groups that takes it (the
+    /// A sample of `stream` for each of its groups that takes it (D4's
     /// thinning), `values(name)` giving a name's values in the device frame.
     /// No reader is asked again for it: the runner polls each at its
     /// `interval`, and the samples between are the next answer's batch.
@@ -431,7 +431,7 @@ public final class MotionModule: ExactPackage {
 }
 #else
 /// The Mac has no device motion (`CMMotionManager` is iOS's): the status
-/// reads unavailable and every sensor `NotSupportedError`.
+/// reads unavailable and every sensor `NotSupportedError` (D14).
 public final class MotionModule: ExactPackage {
     private static let status: [String: Any] = [
         "available": false, "state": "unknown", "apple": NSNull(), "android": NSNull(),

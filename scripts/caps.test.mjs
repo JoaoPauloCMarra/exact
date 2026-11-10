@@ -719,15 +719,15 @@ for (const [name, html, files, expectCode, expect] of [
   result('authored-test stores: a dead run\'s are swept, a live run\'s and other names stay',
     JSON.stringify(left)===JSON.stringify(['mine.r999999-ab12.t0','test','test.r'+process.pid+'-cd34.t0','test.t0','tests.r999999-ab12.t0'].sort()),JSON.stringify(left));
   result('authored-test stores live where the hosts keep them',storeBase('com.x','mac',{},'/h')==='/h/Library/Caches/exact/com.x/agent'&&storeBase('com.x','linux',{XDG_CACHE_HOME:'/c'},'/h')==='/c/exact/com.x/agent'&&storeBase('com.x','linux',{XDG_CACHE_HOME:'rel'},'/h')==='/h/.cache/exact/com.x/agent'&&storeBase('com.x','ios')===null);
-  // A web store is a kept Chrome profile and one origin, the same port each drive.
+  // dash, weather, kanban: a web store is a kept Chrome profile and one origin, the same port each drive.
   const x={id:'com.x',dir:'/apps/x'},dx=appDigest('/apps/x');
   const a=webStore(x,'pulse',{},'/h','darwin'),b=webStore(x,'pulse',{XDG_CACHE_HOME:'/c'},'/h','linux'),c=webStore(x,'other',{},'/h','darwin');
   result('a web drive\'s named store keeps its profile and port',a.profile===`/h/Library/Caches/exact/com.x/agent-web-${dx}/pulse`&&b.base===`/c/exact/com.x/agent-web-${dx}`&&a.port===b.port&&a.port>=20000&&a.port<48000&&c.port!==a.port&&/^[0-9a-f]{12}$/.test(dx),JSON.stringify([a,b,c]));
-  // The driver opens Chrome's store where runTests sweeps and removes it, under the drive's env.
+  // review b5-c 3: the driver opens Chrome's store where runTests sweeps and removes it, under the drive's env.
   const d=driveStore(x,'pulse',{XDG_CACHE_HOME:'/iso',HOME:'/hh'},'linux'),e=driveStore(x,'pulse',{HOME:'/hh'},'darwin');
   result('a drive\'s env places its web store',d.base===`/iso/exact/com.x/agent-web-${dx}`&&e.profile===`/hh/Library/Caches/exact/com.x/agent-web-${dx}/pulse`,JSON.stringify([d,e]));
-  // An app may share its default id and store name with an app in another directory (an earlier
-  // build's copy, say); a store is its app's directory's too, so neither its profile nor its origin is shared.
+  // LLP 1116.004 D8: contacts' drive read an earlier round's contacts.json, the same default id and store name in
+  // another directory; a store is its app's directory's too, so neither its profile nor its origin is shared.
   const y=webStore({id:'com.x',dir:'/rounds/r6/x'},'pulse',{},'/h','darwin');
   result('two apps of one id and one store name keep apart',y.profile!==a.profile&&y.port!==a.port&&!y.profile.startsWith(a.base+'/'),JSON.stringify([a,y]));
 }
@@ -831,7 +831,7 @@ for (const [name, html, files, expectCode, expect] of [
   result('Apple packages reject linked static files and roots', copied && appRefused && hostRefused && danglingRootRefused);
 }
 
-// Exercise the driver's actual method with a quantized wall clock.
+// Exercise the driver's actual method with a quantized wall clock (#285).
 test('clock +N real never seeks behind the last reply and ends at from + N', async () => {
   const source = readFileSync(new URL('./agent.mjs', import.meta.url), 'utf8');
   const start = source.indexOf("    async clock(spec = 'settle'"); // (its parameters after the spec are its own)

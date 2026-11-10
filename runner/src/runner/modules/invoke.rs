@@ -1,11 +1,11 @@
-//! A module calling the app back: an
+//! A module calling the app back (LLP 1133.016 D9, D15 item 1): an
 //! implementation's `invoke(handle, handler, args)` runs one of the data
 //! module's `tools` for the work a handle names. Only a handler the call
 //! that made the handle listed runs: that call's `handlers` path names them
 //! (`tools[].name`), or its `handlersFrom` option names the handle whose
 //! list it takes.
 //!
-//! A pending call is an anchor too: the handle
+//! A pending call is an anchor too (LLP 1133.034 D16 item 1): the handle
 //! `request:<n>` names the send numbered `n` while its implementation has
 //! not answered it, and admits the handlers its `callbacks` options named.
 //! One marked `final` holds the call while it runs: a let-go send is not
@@ -347,8 +347,8 @@ impl<D: DataSource> Runner<D> {
                 self.next_ticket += 1;
                 request.reach = self.reach_of(run.origin);
                 run.effects = request.has_effects();
-                // A program starts only from the app's origin:
-                // a handler's is refused before it reaches the host,
+                // A program starts only from the app's origin (LLP 1133.007
+                // D13): a handler's is refused before it reaches the host,
                 // so no ordered work waits on it.
                 match self.process_refusal(&request) {
                     Some(why) => self.refuse_tool(ticket, why, false),
@@ -566,7 +566,7 @@ mod tests {
 
     /// Two handlers' requests refused together each settle once, the second
     /// in its own pump; an ordered one waits behind the ordered fence until
-    /// earlier ordered work is done.
+    /// earlier ordered work is done (LLP 1133.016 D9, LLP 1041 §8.4).
     #[test]
     fn refused_handler_requests_settle_once_each_in_order() {
         let mut r = boot();
@@ -606,7 +606,7 @@ mod tests {
 
     /// A handler's POST is a request with effects until it lands, so the host
     /// keeps the app running for it; its GET is not one, nor a POST the host
-    /// refused at admission.
+    /// refused at admission (LLP 1146 D2).
     #[test]
     fn a_handler_s_post_has_effects_until_it_lands() {
         let mut r = boot();

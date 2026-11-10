@@ -1,5 +1,5 @@
 //! The presenter's clock owns time until the agent's takes it (the timers
-//! RFC): a running runner and every one booted later take the choice.
+//! RFC, D1): a running runner and every one booted later take the choice.
 use super::super::{Bridge, Hooks};
 use exact_plan::Value;
 use exact_runner::{DataError, DataSource};

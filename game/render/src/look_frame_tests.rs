@@ -1,4 +1,5 @@
-//! A look frame judges the frame the live renderer draws: the same bytes on the direct and HDR paths with particles counted, and
+//! A look frame judges the frame the live renderer draws (LLP 1127.000 D1, D3,
+//! D4): the same bytes on the direct and HDR paths with particles counted, and
 //! bounds and levels of detail from where the frame drew each entity.
 use crate::WorldSurface;
 use exact_game::*;
@@ -643,7 +644,7 @@ impl Game for Explosion {
             Material::rgb(0.3, 0.3, 0.3),
         ));
         if args.sphere {
-            // A shooter's explosion: an alpha-blended sphere, drawn as 528 triangles.
+            // Rivals' explosion: an alpha-blended sphere, drawn as 528 triangles.
             w.spawn((
                 Transform::at(1., if args.above { 1. } else { -2. }, 0.).with_scale(0.4),
                 Mesh::sphere(1.),

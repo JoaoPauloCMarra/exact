@@ -1,4 +1,4 @@
-// Where a painted popover sits against the invoker that
+// LLP 1021 D2, §5: where a painted popover sits against the invoker that
 // opened it — CSS `position-area` with the invoker as its implicit anchor, in
 // the subset the contract admits — the same on iOS's and macOS's top layers,
 // and the point macOS pops a chooser's NSMenu up at.
@@ -24,8 +24,8 @@ enum PositionArea {
     /// flip-block, flip-inline, then both).
     static let defaultFallbacks = "flip-block, flip-inline, flip-block flip-inline"
 
-    /// The area and fallbacks a painted popover is placed by: its author's,
-    /// and where its author wrote no area the
+    /// The area and fallbacks a painted popover is placed by (theme2
+    /// 2026-10-23 20:05): its author's, and where its author wrote no area the
     /// web's UA default, `block-end span-inline-end` with flips (`neutral.css`),
     /// so the same contract opens alike on the web, iOS and the Mac and a
     /// popover near an edge flips rather than covering its invoker. An authored
@@ -89,7 +89,7 @@ enum PositionArea {
     static func origin(_ area: String, anchor: CGRect, size: CGSize, margins: Margins = .init(),
                        fallbacks: String = "none", overflow: Overflow = .fixed, rtl: Bool = false,
                        history: inout History, in bounds: CGRect) -> CGPoint {
-        // A change of `position` or direction is a fallback-sensitive change.
+        // A change of `position` or direction is a fallback-sensitive change (§6.5.1).
         if history.area != area || history.fallbacks != fallbacks || history.size != size || history.margins != margins
             || history.mode != overflow.mode || history.rtl != rtl {
             history = History(area: area, fallbacks: fallbacks, size: size, margins: margins, mode: overflow.mode, rtl: rtl)
@@ -100,7 +100,7 @@ enum PositionArea {
             let outer = CGSize(width: size.width + m.left + m.right, height: size.height + m.top + m.bottom)
             var point = CGPoint(x: at(x, anchor.minX, anchor.maxX, outer.width, bounds.minX, bounds.maxX),
                                 y: at(y, anchor.minY, anchor.maxY, outer.height, bounds.minY, bounds.maxY))
-            // No authored area keeps the native default placement.
+            // No authored area keeps D2's native default placement.
             if area == "none" {
                 point.x = max(bounds.minX, min(point.x, bounds.maxX - outer.width))
                 point.y = max(bounds.minY, min(point.y, bounds.maxY - outer.height))
@@ -108,7 +108,7 @@ enum PositionArea {
             return Option(point: CGPoint(x: point.x + m.left, y: point.y + m.top), box: CGRect(origin: point, size: outer), x: x, y: y)
         }
         let options = ["none"] + fallbacks.split(separator: ",").map(String.init)
-        // Each flip transforms what the one before it left.
+        // Each flip transforms what the one before it left (§6.1).
         // `flip-start` mirrors across the diagonal from the start-start
         // corner (top-left, or top-right in a right-to-left document); the
         // width and height it would also exchange are the laid-out size here.
@@ -128,8 +128,8 @@ enum PositionArea {
         return overflowed(current.box, point: current.point, x: current.x, y: current.y, anchor: anchor, overflow: overflow, rtl: rtl, in: bounds)
     }
 
-    /// Where a box sized in each option's region goes, and that region (the
-    /// iOS lift and the Mac's painted popover). CSS sizes a box
+    /// Where a box sized in each option's region goes, and that region (LLP
+    /// 1021 D2; the iOS lift and the Mac's painted popover). CSS sizes a box
     /// placed by `position-area` in its inset-modified containing block: the
     /// option's cell of the grid the anchor's edges make with the containing
     /// block's, whose outer lines reach the anchor where it is past them. An
@@ -199,7 +199,7 @@ enum PositionArea {
             return axis(o.x, o.box.minX, o.box.maxX, (r.minX, r.maxX), (bounds.minX, bounds.maxX))
                 && axis(o.y, o.box.minY, o.box.maxY, (r.minY, r.maxY), (bounds.minY, bounds.maxY))
         }
-        // The chosen option where its scroll had the anchor; the scroll since moves it, last.
+        // The chosen option where its scroll had the anchor; the scroll since moves it, last (§5.2).
         let then = anchor.offsetBy(dx: shift.x, dy: shift.y), current = option(history.choice, at: then)
         func moved(_ p: Placement) -> Placement {
             Placement(origin: CGPoint(x: p.origin.x - shift.x, y: p.origin.y - shift.y), size: p.size,
@@ -241,7 +241,7 @@ enum PositionArea {
     }
 
     /// An option's region: on each axis the grid's band its side names, the
-    /// outer lines reaching the anchor where it is past the block.
+    /// outer lines reaching the anchor where it is past the block (§3.1.1).
     static func region(_ x: Int, _ y: Int, anchor: CGRect, in block: CGRect) -> CGRect {
         func band(_ side: Int, _ low: CGFloat, _ high: CGFloat, _ start: CGFloat, _ end: CGFloat) -> (CGFloat, CGFloat) {
             let (min, max) = (Swift.min(start, low), Swift.max(end, high))
@@ -272,7 +272,7 @@ enum PositionArea {
     }
 
     /// An option's axes and margins: each flip transforms what the one before
-    /// it left. `flip-start` mirrors across the diagonal from the
+    /// it left (§6.1). `flip-start` mirrors across the diagonal from the
     /// start-start corner (top-left, or top-right in a right-to-left document).
     private static func flipped(_ option: String, _ axes: (x: Int, y: Int), _ margins: Margins, rtl: Bool) -> (Int, Int, Margins) {
         var (x, y, m) = (axes.x, axes.y, margins)
@@ -301,7 +301,7 @@ enum PositionArea {
         case .absolute(let page): block = page
         }
         // One axis of the limit: the containing block with the option's area,
-        // whose grid's outer lines reach the anchor where it is past them.
+        // whose grid's outer lines reach the anchor where it is past them (§3.1.1).
         func limit(_ side: Int, _ low: CGFloat, _ high: CGFloat, _ block: (CGFloat, CGFloat), startHigh: Bool) -> (CGFloat, CGFloat) {
             let (min, max) = (Swift.min(block.0, low), Swift.max(block.1, high))
             let area: (CGFloat, CGFloat) = switch side {
@@ -333,7 +333,7 @@ enum PositionArea {
     }
 
     /// Where `popover`'s authored `left` and `top` put its border box, from
-    /// the viewport's top-left (`clientX`/`clientY`'s space):
+    /// the viewport's top-left (`clientX`/`clientY`'s space, LLP 1021 D2):
     /// past its margin, as CSS places a fixed box by its insets; an axis with
     /// none at its margin. Nil when it writes neither, and its invoker places
     /// it; nil too under an authored `position-area`, which CSS lets win (the

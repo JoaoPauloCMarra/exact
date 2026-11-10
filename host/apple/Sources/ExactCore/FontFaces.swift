@@ -1,4 +1,4 @@
-// A family's faces and CSS Fonts 4 §5.2 matching inside it.
+// LLP 1019 D6: a family's faces and CSS Fonts 4 §5.2 matching inside it.
 import Foundation
 import CoreText
 
@@ -6,13 +6,13 @@ package struct RegisteredFace {
     package let family: String
     package let generic: Int?
     /// The CSS weights it covers, as `@font-face`'s `font-weight`: a variable
-    /// face declared over a range draws each on its `wght` axis.
+    /// face declared over a range draws each on its `wght` axis (LLP 1019 D2).
     package let weights: ClosedRange<Int>
     /// The widths it covers, in percent, as `@font-face`'s `font-stretch`.
     package let stretches: ClosedRange<CGFloat>
     package let italic: Bool
     /// Created from the registered URL itself — never from the Contract alias
-    /// or a lookup in the system font library.
+    /// or a lookup in the system font library (LLP 1019 D3).
     package let descriptor: CTFontDescriptor
     /// Whether the file has an `opsz` axis.
     let opticalSize: Bool

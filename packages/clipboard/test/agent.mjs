@@ -1,4 +1,4 @@
-// @exact/clipboard under the agent:
+// @exact/clipboard under the agent (LLP 1133.006 §9 stage 1 item 7, §7):
 // the fixture app made outside the repo and driven on each host named. The
 // implementation is its own substitute: each write is decoded, bounded and
 // sanitized as in production, lands on the session's private pasteboard (in

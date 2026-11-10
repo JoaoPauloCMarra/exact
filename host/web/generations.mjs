@@ -1,5 +1,5 @@
-// Builds kept by generation, so a page is served from the build it booted: a request across a dist swap would
-// otherwise mix two builds, and a drive's page could lose a lazy chunk.
+// Builds kept by generation, so a page is served from the build it booted (QUEUE: "a request across a dist swap
+// can mix two builds", "a drive's page can lose a lazy chunk"; theme2's ruling 2026-10-24, dtool2-buildswap-plan.md).
 // `dist` stays the current build, a real directory, as every reader expects; `replaceBuild` (serve.mjs) moves the
 // tree it replaces to `<dist>.gen/<id>/`, a real directory too (the filesystem helper refuses links), where its pages
 // still find it. A build's generation is its receipt's file cards' digest, so a byte-identical rebuild is the same one.
@@ -133,7 +133,7 @@ const bytesIn = (dir) => {
   }
   return total;
 };
-/** Kept generations of `dist` removed as the retention rule keeps them (replaceBuild, under its lock): what was removed. A
+/** Kept generations of `dist` removed as the ruling keeps them (replaceBuild, under its lock): what was removed. A
  * cap leased generations alone exceed is said once and kept. */
 let overSaid = false;
 export function reapGenerations(dist, keep = KEEP, now = Date.now()) {

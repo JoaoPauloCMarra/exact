@@ -1,16 +1,16 @@
-//! A host's own implementation of a module:
-//! outside the agent the host binds the extensions it carries, and
+//! A host's own implementation of a module (LLP 1133.001 D4, LLP 1133.002
+//! D5): outside the agent the host binds the extensions it carries, and
 //! their names go to the native slot as `{"extension", "source"|"send",
 //! "args"}`, which the host's composed module routes to the implementation.
 //! Under the agent the host binds those a drive names (`--bind`) as in
 //! production, and the rest told they run under the agent: those answer an
 //! interface that is its own substitute, behind the runner's tickets
-//! (`admit.rs`), and the declared substitute answers every other.
-//! The runner keeps each bound live source's readers, and tells the
+//! (`admit.rs`), and the declared substitute answers every other (LLP 1124
+//! D7). The runner keeps each bound live source's readers, and tells the
 //! module when the last one goes (`{"extension", "release": name}`), so its
 //! acquisition stops.
 //!
-//! A synchronous form (`geolocationStatusSync`) is a
+//! A synchronous form (`geolocationStatusSync`, LLP 1133.002 D14) is a
 //! `native.call` that data code makes inside an answer, which the runner
 //! cannot be asked during. So the runner keeps each one's answer in the
 //! native slot: none when bound as in production (the host's module
@@ -118,9 +118,9 @@ impl<D: DataSource> Runner<D> {
 
     /// The body of a call of `row` for its implementation, `{"extension",
     /// "source"|"send", "args"}`; under the agent with the preferred value
-    /// the agent set for it, as `preferred`; with
+    /// the agent set for it, as `preferred` (LLP 1133.009 D10 item 11); with
     /// its `origin` when a tool or a wake made it, so an implementation that
-    /// starts a device on a read (a track's first lease) can refuse. A
+    /// starts a device on a read (a track's first lease, D6) can refuse. A
     /// live source's reader is counted, so its release can be said, and a
     /// Contract reader (`reader`, its resource) with its arguments, so each
     /// argument group's can.
@@ -131,11 +131,11 @@ impl<D: DataSource> Runner<D> {
         reader: Option<usize>,
     ) -> Vec<u8> {
         let verb = if row.send { "send" } else { "source" };
-        // An option the call omits is left out, so it stays the platform's.
+        // An option the call omits is left out, so it stays the platform's (D2).
         let mut args = args;
         written(&mut args);
         // The options its declaration names strings keys are sent as their
-        // text, which the platform shows (a sheet's reason).
+        // text, which the platform shows (a sheet's reason, LLP 1133.010 D1).
         let strings = self.substitute(row)["strings"].clone();
         for path in strings
             .as_array()
@@ -183,7 +183,7 @@ impl<D: DataSource> Runner<D> {
         };
         if origin != super::CallOrigin::App {
             body["origin"] = json!(origin.word());
-            // A call not the app's that would ask: the
+            // A call not the app's that would ask (LLP 1133.002 D12): the
             // host reads the status first and refuses it while `prompt`,
             // since only the implementation knows the platform's state.
             let sub = self.substitute(row);
@@ -198,7 +198,7 @@ impl<D: DataSource> Runner<D> {
                 });
             }
         }
-        // A send's number, which `cancel` names if it is let go.
+        // A send's number, which `cancel` names if it is let go (LLP 1133.016 D15 item 2).
         if row.send {
             self.extensions.requests += 1;
             body["request"] = json!(self.extensions.requests);
@@ -217,7 +217,7 @@ impl<D: DataSource> Runner<D> {
             }
             self.extensions.live.insert(key);
         }
-        // A sampled source's reader carries its cursor,
+        // A sampled source's reader carries its cursor (LLP 1133.013 D5),
         // outside the group its arguments make.
         if let Some(after) = self.cursor(row) {
             body["args"]["after"] = json!(after);
@@ -255,10 +255,10 @@ impl<D: DataSource> Runner<D> {
 
     /// Each send let go before its reply landed (superseded, its commit
     /// refused): its implementation is told `{"extension", "cancel": n}`,
-    /// so the work no one reads stops.
+    /// so the work no one reads stops (LLP 1133.016 D15 item 2).
     pub(in crate::runner) fn cancel_let_go(&mut self) {
-        // A call whose final handler runs is held until it answers:
-        // its cancel goes once that ends.
+        // A call whose final handler runs is held until it answers (LLP
+        // 1133.034 D16 item 1): its cancel goes once that ends.
         let gone: Vec<u64> = (self.extensions.sent.iter())
             .filter(|(t, (_, n))| {
                 !self.pending.iter().any(|p| p.ticket == **t) && !self.final_running(*n)
@@ -282,8 +282,8 @@ impl<D: DataSource> Runner<D> {
 
     /// The preferred values the agent set for `extension`'s names, for its
     /// implementation bound under the agent: given when it is bound and
-    /// whenever one changes, whether or not anything reads the name,
-    /// as `{"extension", "preferred": {name: value}}`.
+    /// whenever one changes, whether or not anything reads the name (LLP
+    /// 1133.008 D8 item 9), as `{"extension", "preferred": {name: value}}`.
     pub(in crate::runner) fn tell_preferred(&self, extension: &str) {
         let Some(handler) = self.native_slot().handler() else {
             return;
@@ -293,7 +293,7 @@ impl<D: DataSource> Runner<D> {
             .filter_map(|(k, v)| Some((k.strip_prefix(&prefix)?.to_owned(), v.clone())))
             .collect();
         // And the state of each permission it declares, which its answers
-        // follow (under `limited`, only the selection).
+        // follow (LLP 1133.019 §10: under `limited`, only the selection).
         let permissions: serde_json::Map<String, Json> = (self.plan.modules.iter())
             .filter(|m| self.plan.str(m.extension) == extension)
             .flat_map(|m| {
@@ -324,7 +324,7 @@ impl<D: DataSource> Runner<D> {
         if let Some(facts) = self.facts_of(extension) {
             values.insert("facts".into(), facts);
         }
-        // The app's catalogue, which a synthetic store sells.
+        // The app's catalogue, which a synthetic store sells (LLP 1133.015 §9).
         let catalog = (self.plan.modules.iter())
             .filter(|m| self.plan.str(m.extension) == extension)
             .map(|m| self.substitute(m)["catalog"].clone())
@@ -339,7 +339,7 @@ impl<D: DataSource> Runner<D> {
 
     /// The app went to the foreground or left it: each implementation that
     /// answers here is told, `{"extension", "foreground": bool}`, as the
-    /// fact admission reads. An implementation
+    /// fact admission reads (LLP 1133.009 D10 item 3). An implementation
     /// begins in the foreground.
     pub(in crate::runner) fn tell_foreground(&self) {
         let Some(handler) = self.native_slot().handler() else {
@@ -367,7 +367,7 @@ impl<D: DataSource> Runner<D> {
     /// Each bound live source no answer reads any longer: released, once
     /// (after a commit), `{"extension", "release": name}`. Before that, each
     /// argument group no Contract reader asks with any longer, `{"extension",
-    /// "release": name, "args"}`: only once no
+    /// "release": name, "args"}` (LLP 1133.009 D10 item 12): only once no
     /// request of the source is in flight, so the implementation has a
     /// reader's new arguments before it hears the old ones are gone. A
     /// group data code asks for is released only with the whole name.

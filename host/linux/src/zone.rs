@@ -1,4 +1,4 @@
-//! Locale, IANA zone, launch seed and UTC offset.
+//! Locale, IANA zone, launch seed and UTC offset (LLP 1027.000.000).
 #![allow(unsafe_code)]
 
 /// The local zone's current UTC offset in minutes east, from the C
@@ -24,7 +24,7 @@ pub fn local_offset_minutes() -> f64 {
 
 /// Under the agent, the date at the clock's zero (`EXACT_AGENT_EPOCH`, Unix
 /// milliseconds; default 2026-01-01T00:00:00Z) and the agent zone's offset
-/// at that instant; `None` reads the machine.
+/// at that instant; `None` reads the machine (LLP 1027.000.000 D3).
 pub fn agent_time(
     env: impl Fn(&str) -> Option<String>,
     zone: &str,
@@ -92,7 +92,7 @@ pub fn launch_place(
     } else {
         #[cfg(windows)]
         crate::com::ensure_mta().map_err(|error| format!("launch COM: {error}"))?;
-        // Below 2^32: four bytes of entropy.
+        // Below 2^32 (LLP 1116.005 D5): four bytes of entropy.
         let mut bytes = [0; 4];
         getrandom::fill(&mut bytes).map_err(|e| format!("launch seed: {e}"))?;
         exact_runner::time::Place {
@@ -122,7 +122,7 @@ pub fn launch_place(
 }
 
 /// The drive's seed as given (default 1), refused unless it is a whole
-/// number below 2^32, the range every host draws.
+/// number below 2^32, the range every host draws (LLP 1116.005 D5).
 fn agent_seed(value: Option<String>) -> Result<f64, String> {
     let Some(value) = value else { return Ok(1.0) };
     value.parse::<u32>().map(f64::from).map_err(|_| {
@@ -278,7 +278,7 @@ mod tests {
         assert_eq!(custom.time_zone, "America/Toronto");
         assert_eq!(custom.seed, 4_294_967_295.0);
         assert_eq!(custom.format_locale, "fr-FR");
-        // A seed past 2^32 is refused, not wrapped.
+        // A seed past 2^32 is refused, not wrapped (LLP 1116.005 D5).
         for bad in ["4294967296", "9007199254740991", "-1", "1.5", "seven"] {
             let refused = launch_place(|key| match key {
                 "EXACT_AGENT" => Some("1".into()),
@@ -319,7 +319,7 @@ mod tests {
         assert_eq!(a.time_zone, "Europe/Paris");
         assert_ne!(a.seed, b.seed);
         assert!(a.validate().is_ok() && b.validate().is_ok());
-        // The drawn seed is a whole number below 2^32.
+        // The drawn seed is a whole number below 2^32 (LLP 1116.005 D5).
         for _ in 0..64 {
             let seed = launch_place(env).unwrap().seed;
             assert!(

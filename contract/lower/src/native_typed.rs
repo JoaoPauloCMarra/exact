@@ -1,4 +1,5 @@
-//! A package view's typed props and declared events.
+//! A package view's typed props and declared events (LLP 1133.021 §9 items
+//! 1 and 2).
 //!
 //! - **A record or list prop** (`markers: MapMarker[]`) reaches the
 //!   implementation as JSON text under the prop's name, in the one object of

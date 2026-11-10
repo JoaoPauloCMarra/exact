@@ -1,5 +1,5 @@
-//! The design server's walk and params across design edits, so that a hand edit's `changed` event does not parse
-//! every Contract source again (three parses of each once cost a large app ~700 ms).
+//! The design server's walk and params across design edits (the design tool's third hands-on pass: a hand edit's
+//! `changed` event took ~700 ms on the clone, three parses of every Contract source; theme2's ruling of the 26th).
 //! A design-only change keeps the walk's Contract half and folds the rest again from the designs; the app's params are
 //! keyed by what their load reads of the designs. (a) a design edit that moves what the graph reads (an icon's SVG, a
 //! package's design) is a cold walk's graph; (b) each of what the params read (a native component's param, a motion
@@ -265,7 +265,7 @@ fn a_design_edit_that_moves_the_graph_is_a_cold_walks() {
     assert!(lines.iter().any(|l| l == "walk designs"), "{lines:?}");
 }
 
-/// The default design deleted and made again is a design come (the walk keeps its path there
+/// Round 1's cases (Astra): the default design deleted and made again is a design come (the walk keeps its path there
 /// or not); a private package's design gone and back moves which library files are read, folded and checked cold.
 #[test]
 fn the_default_design_made_again_and_a_private_packages_design_are_cold_walks() {
@@ -314,7 +314,7 @@ fn the_default_design_made_again_and_a_private_packages_design_are_cold_walks() 
     );
 }
 
-/// `app.json` naming a package's design file as the app's: a colour edit there is in the
+/// Round 1's case (Astra): `app.json` naming a package's design file as the app's: a colour edit there is in the
 /// params whole (the package's text), so they load again, checked cold.
 #[test]
 fn an_app_design_that_is_a_packages_design_keys_the_params_by_its_text() {
@@ -340,7 +340,7 @@ fn an_app_design_that_is_a_packages_design_keys_the_params_by_its_text() {
     assert!(lines.iter().any(|l| l == "params loaded"), "{lines:?}");
 }
 
-/// With no app design, a package's design replaced by a link out of its package with the same
+/// Round 2's case (Astra): with no app design, a package's design replaced by a link out of its package with the same
 /// bytes fails the load (unreadable) where it loaded: the params load again, never kept, checked cold.
 #[test]
 fn a_package_design_linked_out_with_the_same_bytes_and_no_app_design_loads_the_params_again() {

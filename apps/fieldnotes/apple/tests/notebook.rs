@@ -10,7 +10,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
-/// Run dispatched work the way a host's executor does:
+/// Run dispatched work the way a host's executor does (LLP 1027.002 D3):
 /// `Now` on an I/O thread, `Later` by handing the reply to its owner.
 fn run_work(work: Work) -> Outcome {
     match work {
@@ -188,7 +188,7 @@ impl<D: DataSource> Notebook<D> {
                 Answer::Later(request) => {
                     assert!(request.url.is_empty(), "offline app never uses HTTP");
                     let token = request.continuation.expect("native storage continuation");
-                    // Dispatched the way a host does it:
+                    // Dispatched the way a host does it (LLP 1027.002 D3):
                     // on this thread, with the store as committed.
                     let outcome = match self.module.dispatch(token, &self.store) {
                         Dispatch::Run(work) => run_work(work),
@@ -832,7 +832,7 @@ fn drive(root: &Root, typescript: Placement, rust: Placement) -> Vec<Json> {
 
 #[test]
 fn worker_placement_gives_the_same_notebook_results_off_the_owner_thread() {
-    // The same ordered operations, the same
+    // LLP 1027.002 §5 step 4: the same ordered operations, the same
     // results, durable data and revisions on every placement pair.
     let expected = drive(&Root::new(), Placement::Main, Placement::Main);
     assert_eq!(expected[9], json!("6"), "{:?}", expected[9]);
@@ -908,7 +908,7 @@ fn worker_placement_orders_the_notebook_through_the_runner_and_releases_held_tur
 
 #[test]
 fn apple_bridge_runs_the_placed_notebook_through_its_executor_and_pump() {
-    // The host's own loop: a continuation dispatched in
+    // The host's own loop (LLP 1027.002 D3/D4): a continuation dispatched in
     // `emit` after the commit, its work handed to the executor, the reply
     // arriving through `pump`, held turns released after a later commit —
     // with both halves of Fieldnotes on owner threads of their own.

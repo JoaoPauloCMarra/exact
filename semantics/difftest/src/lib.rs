@@ -367,17 +367,18 @@ fn compare(rust: Vec<String>, lean: Vec<String>) -> Verdict {
         });
     // Where the two first differ, the runner refusing a step for passing
     // one of its evaluation bounds is outside the semantics, which is
-    // unbounded: every executor refuses that step alike.
+    // unbounded (LLP 1090 D8): every executor refuses that step alike.
     let bound = |at: usize| -> Option<String> {
         let mut lines = rust_raw.iter().flat_map(|l| l.lines());
         lines.by_ref().filter(|l| !l.starts_with('#')).nth(at)?;
         lines
             .take_while(|l| l.starts_with('#'))
             .find(|l| BOUNDS.iter().any(|b| l.contains(b)))
-            .map(|l| format!("{l} (the runner's evaluation bound)"))
+            .map(|l| format!("{l} (the runner's evaluation bound, LLP 1090 D8)"))
     };
-    // A binding past a bound was unset and the runner went on: from that
-    // step on, what it shows is outside the unbounded semantics.
+    // A binding past a bound was unset and the runner went on (LLP
+    // 1017.003 D3): from that step on, what it shows is outside the
+    // unbounded semantics.
     let unset = |at: usize| -> Option<String> {
         let mut seen = 0;
         for l in rust_raw.iter().flat_map(|l| l.lines()) {
@@ -387,7 +388,7 @@ fn compare(rust: Vec<String>, lean: Vec<String>) -> Verdict {
                     return None;
                 }
             } else if l.contains(" trapped Trap(") && BOUNDS.iter().any(|b| l.contains(b)) {
-                return Some(format!("{l} (the runner's evaluation bound)"));
+                return Some(format!("{l} (the runner's evaluation bound, LLP 1090 D8)"));
             }
         }
         None
@@ -555,7 +556,7 @@ pub fn corpus(dirs: &[PathBuf]) -> Result<(Vec<Scripted>, Vec<String>), String> 
 }
 
 /// `cases`, each followed, when its program persists a state, by the same
-/// events on a device store the oracle fills: its `expect`s
+/// events on a device store the oracle fills (LLP 1116 D5): its `expect`s
 /// are the empty store's, so the variant only compares the two sides.
 pub fn stored_variants(cases: Vec<Scripted>) -> Vec<Scripted> {
     let mut out = Vec::new();
@@ -584,7 +585,7 @@ pub(crate) fn stored_variant(s: &Scripted) -> Scripted {
 
 /// `cases`, each followed, when its program has a tab panel, by the same
 /// events on a host that builds every panel from boot on (a prerendered
-/// page): its `expect`s are for panels that wait, so
+/// page, LLP 1075.003 §9.14): its `expect`s are for panels that wait, so
 /// the variant only compares the two sides.
 pub fn prerendered_variants(cases: Vec<Scripted>) -> Vec<Scripted> {
     let mut out = Vec::new();
@@ -686,7 +687,7 @@ mod tests {
     }
 
     /// A step the runner refuses for an evaluation bound is outside the
-    /// unbounded semantics; any other refusal still diverges.
+    /// unbounded semantics; any other refusal still diverges (LLP 1090 D8).
     #[test]
     fn a_bound_refusal_is_outside_and_another_refusal_diverges() {
         let lean = lines(&["== boot", "outcome ok", "== tap \"go\"", "outcome ok"]);
@@ -758,7 +759,7 @@ mod tests {
     /// A binding the runner unset for passing an evaluation bound shows
     /// what the unbounded semantics does not: outside, from that step on.
     /// One unset for another trap shows what the semantics shows (none), so
-    /// a difference there still diverges.
+    /// a difference there still diverges (LLP 1017.003 D3).
     #[test]
     fn a_binding_unset_for_a_bound_is_outside() {
         let lean = lines(&[

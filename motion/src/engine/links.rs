@@ -1,4 +1,4 @@
-//! What an engine plays, chosen once: every animation, or
+//! What an engine plays, chosen once (LLP 1047.001 D3): every animation, or
 //! only settled values. A plan that animates nothing (no transition, layout
 //! transition, shared element, keyframes, timeline, spring or hold) still
 //! needs the engine as the store of what the host presents, and nothing
@@ -85,7 +85,7 @@ impl EngineLinks {
 
     /// Settled values only: every change is presented at once, and nothing
     /// starts. A plan that would start something is refused before its
-    /// engine is made, so these answers are never a
+    /// engine is made (LLP 1047.001 D5), so these answers are never a
     /// silent loss: a transition declared here moves nothing, a hold never
     /// begins, an exit ends where it starts.
     pub const SETTLE: EngineLinks = EngineLinks {

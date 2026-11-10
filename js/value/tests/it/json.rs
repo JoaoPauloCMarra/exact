@@ -427,7 +427,7 @@ fn numbers_are_written_as_the_formatter_wrote_them() {
 }
 
 /// Inline and shared text with the same bytes cross the JSON bridge as one
-/// text, both ways.
+/// text, both ways (Charlie, 2026-09-28, LLP 1017.003 "The value's text").
 #[test]
 fn inline_and_shared_text_are_one_text_across_the_bridge() {
     use exact_js_value::Shape;

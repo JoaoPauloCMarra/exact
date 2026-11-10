@@ -1,5 +1,5 @@
 //! Vertical viewport collections on the terminal's row-based scroller.
-//! The runner owns windows and anchors; the host
+//! @ref LLP 1010 §6.5/§6.9 — the runner owns windows and anchors; the host
 //! reports the actual port and wrapper measurements after layout.
 
 use crate::host::Host;

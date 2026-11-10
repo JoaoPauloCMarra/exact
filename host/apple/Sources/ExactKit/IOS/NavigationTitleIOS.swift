@@ -1,10 +1,10 @@
-// What a route's authored header and the root's
+// @ref LLP 1075.003 §9.10 — what a route's authored header and the root's
 // tablist say about the bars beyond a title and items, declared, with no
 // module: the heading's group as a richer title (an avatar, a subtitle, a
 // press), and the tab bar hidden for a route pushed while the authored
 // tablist is. The web, macOS, Linux and the agent paint what is authored,
 // which is where each rule comes from.
-// Which routes show the bar (`routeShowsBar`,
+// @ref LLP 1115.000 D5.2, D5.3 — which routes show the bar (`routeShowsBar`,
 // by `NavigationRules.bar`): each route's own header, the system Back alone
 // on a pushed route with none, and no bar where the route says so.
 #if os(iOS) || os(tvOS)
@@ -13,7 +13,7 @@ import UIKit
 /// The heading's group in a header-shaped route: the element around the
 /// heading that holds no bar item, search field or tablist — or the
 /// pressable element around it, which a tap on the title presses — else
-/// the header itself. Before the heading, a filled box
+/// the header itself (LLP 1116 D2). Before the heading, a filled box
 /// holding a text or a symbol is the title's avatar (in a wrapper group
 /// only: a box beside the heading in the header is no avatar); after it,
 /// the first text is its subtitle.
@@ -55,7 +55,7 @@ struct HeaderTitle: Equatable {
         // No wrapper qualifies (the heading is the header's own child, or
         // what wraps it holds a bar item): the header is the group, whose
         // walk passes over the items, the search field and the tablist as
-        // controls.
+        // controls (LLP 1116 D2, amending LLP 1075.003 §9.10).
         let wrapper = tap ?? chain.last(where: { a in !apart.contains { $0.isDescendant(of: a) } })
         let group = wrapper ?? header
         var avatar: BadgeFace?, subtitle = "", glyphs: [Glyph] = [], passed = false, spoken: String?, rtl = false
@@ -183,17 +183,17 @@ struct HeaderTitle: Equatable {
 
 extension HeaderShape {
     /// The header a route's bar is projected from in the app: its shape,
-    /// unless the route says it has no bar (`navigationBar="none"`), where
-    /// its header paints in the page as written, or
+    /// unless the route says it has no bar (`navigationBar="none"`, LLP
+    /// 1115.000 D5.2), where its header paints in the page as written, or
     /// its header is hidden as authored (`display: none`): a header the web
-    /// does not show is no bar's, and its route is one with no
+    /// does not show is no bar's (§9.10), and its route is one with no
     /// header. Both are the shared rule's (`HeaderRule`, `projected`).
     static func bar(of route: NodeView, back: String? = nil, backIsUIKits: Bool = true) -> HeaderShape? {
         HeaderShape(route: route, back: back, backIsUIKits: backIsUIKits, projected: true)
     }
 
-    /// The heading's group as the bar shows it. A tablist's
-    /// segments take the title view first: beside them a group
+    /// The heading's group as the bar shows it (§9.10). A tablist's
+    /// segments take the title view first (§9.8): beside them a group
     /// shows only as UIKit's own subtitle (iOS 26), never drawn.
     static func presented(_ group: HeaderTitle?, segments: NodeView?) -> HeaderTitle? {
         guard let group else { return nil }
@@ -201,7 +201,7 @@ extension HeaderShape {
     }
 
     /// Whether the bar shows `node`, a node of the header it replaces, or
-    /// stands for it: a node it places, one inside such a
+    /// stands for it (LLP 1116 D2): a node it places, one inside such a
     /// node (a button's face), or one holding one (the header, a wrapper).
     /// Everything else in the header is hidden with it on iOS, which the
     /// agent says under its own chrome (`unshownByBar`). A node outside the
@@ -240,7 +240,7 @@ final class HeaderTitleView: UIControl {
     private lazy var avatarHeight = avatar.heightAnchor.constraint(equalToConstant: BadgeFace.size)
 
     /// The theme's `secondary-label` on the subtitle, set again when a live
-    /// edit moves the roles.
+    /// edit moves the roles (LLP 1121 stage 5).
     func retheme() {
         guard let host else { return }
         subtitle.textColor = ThemeRoles.color("secondary-label", in: host.presenter.root, or: .secondaryLabel)
@@ -307,7 +307,7 @@ final class HeaderTitleView: UIControl {
                 // the run's (dynamic) colour, so it follows the appearance.
                 guard let image = FaceSymbol.image(name, points: font.pointSize, configuration: UIImage.SymbolConfiguration(font: font))?.withRenderingMode(.alwaysTemplate) else { continue }
                 let attachment = NSTextAttachment(image: image)
-                // An svg-only icon's path is no symbol TextKit
+                // An svg-only icon's path (stage 9 A2) is no symbol TextKit
                 // seats on the line: its em square centred on the cap height.
                 if FaceSymbol.isPath(name) {
                     attachment.bounds = CGRect(x: 0, y: (font.capHeight - image.size.height) / 2, width: image.size.width, height: image.size.height)
@@ -387,8 +387,8 @@ extension NavigationHost {
     /// What the agent says of a header node the bar leaves out.
     static let unshownReason = "the iOS navigation bar does not show this node; in the app it is not visible (the bar shows a header's heading, the first text after it as its subtitle, one search field, one tablist and its buttons)"
 
-    /// The authored header nodes the iOS navigation bar would not show,
-    /// by id. Under the agent's own chrome the header paints
+    /// The authored header nodes the iOS navigation bar would not show
+    /// (LLP 1116 D2), by id. Under the agent's own chrome the header paints
     /// as on the web, so such a node still answers `expect` and shows in a
     /// screenshot; the agent marks it, and refuses a tap on it, by this.
     /// Each shown header of a route whose stack has a bar in the app (not
@@ -437,7 +437,7 @@ extension NavigationHost {
     #endif
 
     /// What a route shows of the bar, where its stack's routes may show it
-    /// (`NavigationRules.bar`): its header, the system
+    /// (`NavigationRules.bar`, LLP 1115.000 D5.2): its header, the system
     /// Back alone, or nothing.
     func bar(of route: NodeView, pushed: Bool) -> NavigationRules.Bar {
         if HeaderRule.keepsAuthoredHeader(route) { return .hidden }
@@ -454,7 +454,7 @@ extension NavigationHost {
 
     /// Whether the bar is UIKit's for now on a route's account: its header
     /// search is active or being presented or dismissed, and UIKit hides and
-    /// shows the bar for it (`hidesNavigationBarDuringPresentation`).
+    /// shows the bar for it (`hidesNavigationBarDuringPresentation`, §9.6).
     func searching(_ c: RouteController?) -> Bool {
         guard let search = c?.search?.controller else { return false }
         return search.isActive || search.isBeingPresented || search.isBeingDismissed
@@ -506,10 +506,10 @@ extension NavigationHost {
         #endif
     }
 
-    /// The heading's group as the item's title. A subtitle alone is
+    /// The heading's group as the item's title (§9.10). A subtitle alone is
     /// UIKit's own (`navigationItem.subtitle`, iOS 26); an avatar or a press,
     /// or a subtitle before iOS 26, is a drawn title view. A tablist's
-    /// segments take the title view first. What a hatch set instead —
+    /// segments take the title view first (§9.8). What a hatch set instead —
     /// another title view, its own subtitle — is left alone.
     func richTitle(_ shape: HeaderShape?, in c: RouteController) {
         let item = c.navigationItem
@@ -545,7 +545,7 @@ extension NavigationHost {
     /// above. The route the root names follows the tablist; routes pushed
     /// with it in one batch (a cold launch's) take the same. Written on
     /// change, so a hatch's own value stands till then. The root itself
-    /// follows too: its tablist
+    /// follows too (LLP 1075.003 §3.7, amended 2026-10-05): its tablist
     /// hidden hides the bar, shown shows it, both with UIKit's own animated
     /// `setTabBarHidden` (iOS 18), as Signal hides its tab bar for the chat
     /// list's multi-select.
@@ -592,7 +592,7 @@ extension NavigationHost {
         }
     }
 
-    /// The root on top. Its wish is
+    /// The root on top (LLP 1075.003 §3.7, amended 2026-10-05). Its wish is
     /// recorded whenever it is the selected route or a transition settles on
     /// it (`tablistHidden`), and the bar moves, animated
     /// once the stack is on screen, when the wish changes or the root has
@@ -637,8 +637,8 @@ extension NavigationHost {
     /// takes that route's wish with `setTabBarHidden`, hidden if it or a
     /// route below it (the root aside) hides it, as UIKit reads the flag on
     /// a phone, and shown again only if Exact hid it (`tablistHidBar`). The
-    /// root on top is `followTablistAtRoot`'s, after the transition. An
-    /// interactive pop that is cancelled shows
+    /// root on top is `followTablistAtRoot`'s, after the transition (the
+    /// lead's ruling, 2026-10-19). An interactive pop that is cancelled shows
     /// its source again, and so its wish.
     func followFloatingBar(_ nav: UINavigationController, for c: UIViewController, animated: Bool) {
         #if os(iOS)

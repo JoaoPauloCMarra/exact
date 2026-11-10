@@ -1,5 +1,5 @@
 // A native client's first join while the dev loop's resident producers
-// start: its envelope request
+// start (dtool2's pass 3 #8; theme2's plan approval): its envelope request
 // is answered at once, a 503 `application/vnd.exact.dev-status+json` with
 // the step the resident is on, not held for the minutes a first build takes;
 // once the resident is up it is served as before. A start that fails ends

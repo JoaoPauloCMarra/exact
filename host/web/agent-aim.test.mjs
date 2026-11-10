@@ -1,4 +1,4 @@
-// `tap`: a tap addressed by id presses what it names (scripts/agent-aim.mjs): a row with a press of
+// @ref LLP 1012 §1 `tap` — a tap addressed by id presses what it names (scripts/agent-aim.mjs): a row with a press of
 // its own is clicked beside the link card at its middle, a box without one never presses the control inside it, and
 // `tap <target> at <x> <y>` keeps a point's semantics (the Bluesky clone's likes on real people's posts, 2026-10-09).
 import { test, expect } from 'bun:test';
@@ -86,7 +86,7 @@ test('a plain web tap presses what it names: beside the card, never Like in a bo
   try {
     await drive(session);
     // In the page: a surface's action button over its canvas is a recipient of its own (gpu-glue.js), and a reachable
-    // perimeter 2 px wide around a child that covers the rest is found.
+    // perimeter 2 px wide around a child that covers the rest is found (Astra, round 1).
     const probe = await session.carrier.evaluate(`(() => {
       const box = (css, attrs = {}) => { const e = document.createElement(attrs.tag ?? 'div'); e.style.cssText = css; for (const [k, v] of Object.entries(attrs)) if (k !== 'tag') e.setAttribute(k, v); return e; };
       const canvas = box('position:fixed;left:0;top:400px;width:200px;height:100px;z-index:9', { 'data-gpu-input': '' });

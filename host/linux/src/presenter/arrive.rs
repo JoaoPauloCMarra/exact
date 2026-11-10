@@ -1,7 +1,7 @@
 //! The focus a commit leaves: its `autofocus`, then the route's.
 //!
-//! **The focus follows the route** (the painted hosts take the web's
-//! focus rule). The web's rule
+//! **The focus follows the route** (LLP 1115.000 D4.2, and §5's ruling 5 of
+//! 2026-10-12: the painted hosts take the web's focus rule). The web's rule
 //! is `arrive` in `host/web/input-glue.js`, which both web targets run; this
 //! is that rule over the kernel's tree, for every host this presenter
 //! paints, and conformance compares the two step by step
@@ -67,7 +67,7 @@ pub(super) struct State {
 
 impl<D: DataSource> Presenter<D> {
     /// The focus leaves a node that is gone, or inert under its route
-    /// (`clear_removed_focus` sends its `focusout` first).
+    /// (`clear_removed_focus` sends its `focusout` first, #283).
     pub(super) fn release_focus(&mut self) {
         let Some(focus) = self.focus else {
             return;
@@ -81,8 +81,8 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// The first `autofocus` node not yet offered that can take the focus
-    /// takes it, when nothing has it or a surface's focus handed it on,
-    /// with its `focus` and bubbling `focusin`.
+    /// takes it, when nothing has it or a surface's focus handed it on
+    /// (LLP 1035.000 D9), with its `focus` and bubbling `focusin` (#283).
     pub(super) fn autofocus(&mut self) -> Option<String> {
         // Only autofocus nodes matter: a walk that keeps those, in
         // preorder, not an export row per node of every mounted row.
@@ -226,7 +226,7 @@ impl<D: DataSource> Presenter<D> {
             .or_else(|| self.route_title(top))
             .unwrap_or(top);
         // None after a pointer's press, one after a key's. With no press a
-        // finger leaves none, and otherwise the focus
+        // finger leaves none (LLP 1115.001 D7.6), and otherwise the focus
         // left decides, as for any focus the app moves (`set_focus`).
         // In Android's touch mode, whether a key came after the last finger.
         let ring = if self.brush.touch_mode {

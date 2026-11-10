@@ -1,17 +1,17 @@
-// Window-owned presentation of
+// @ref LLP 1031 D5/D12; LLP 1001 §10 — window-owned presentation of
 // Contract commands, not an embedded NativeView or a second action registry.
-// And the platform's Back: the window of an app with a
+// And the platform's Back (LLP 1115.000 D5.1): the window of an app with a
 // navigation stack leads its toolbar with a navigational back chevron, in
 // the toolbar the author declared or, with none, in one that holds only it.
 // It is there at a stack's root too, disabled, as Finder's and Safari's is:
 // a toolbar that came with each push and went with each pop made the title
 // bar 8 points taller and moved the content every time. A route that asks
-// for no bar (`navigationBar="none"`) gets no chevron and the toolbar
+// for no bar (`navigationBar="none"`, D5.2) gets no chevron and the toolbar
 // stays, empty, at the same height. An app with no stack, or one whose
 // every mounted route asks for no bar, gets no toolbar; one comes with the
 // first route that shows a bar and then stays (`heldForBack`), so the title
 // bar's height changes at most that once. With no toolbar declared, the
-// route's `header` is this bar too (HeaderMac.swift): its
+// route's `header` is this bar too (LLP 1115.002 D2, HeaderMac.swift): its
 // heading the window's title, its buttons items after Back.
 #if os(macOS)
 import AppKit
@@ -25,15 +25,15 @@ final class WindowToolbarHost: NSObject, NSToolbarDelegate, NSToolbarItemValidat
     /// The authored rendering the toolbar stands for: the declared toolbar,
     /// or the route's header (`header`).
     private(set) weak var owner: NodeView?
-    /// The authored rendering hidden while the window's toolbar shows it.
+    /// LLP 1080.001 D3: the authored rendering hidden while the window's toolbar shows it.
     func hides(_ node: NodeView) -> Bool { (projected && node === owner) || besideParts.contains { $0.node === node } }
     private weak var heading: NodeView?
-    /// The route's header this bar shows, with no toolbar declared, and
-    /// what was last said of it in the session's log.
+    /// The route's header this bar shows, with no toolbar declared (LLP
+    /// 1115.002 D2), and what was last said of it in the session's log.
     private(set) var header: WindowHeader?
     private(set) var headerDecision: String?
-    /// In a window that shows a list beside its detail, the header of the
-    /// route beside the one that owns the
+    /// In a window that shows a list beside its detail (LLP 1115.002 D4,
+    /// §5 Q10), the header of the route beside the one that owns the
     /// window: its heading stays the first line of its pane, and its
     /// buttons are the bar's items over its own column. What the bar took
     /// of it is hidden in the page, each with what VoiceOver was told of it.
@@ -104,16 +104,16 @@ final class WindowToolbarHost: NSObject, NSToolbarDelegate, NSToolbarItemValidat
     private var appliedTitle = ""
     private var savedSubtitle = ""
     private var appliedSubtitle = ""
-    /// The active head's title and the window's own title
+    /// The active head's title (LLP 1048.003 D1) and the window's own title
     /// before one arrived: the head's is the window's title, under a
     /// projected toolbar heading, and its absence gives the app's back.
     private var headTitle: String?
     private var ownTitle: String?
-    /// `head edited`: the dot in the window's close button.
+    /// `head edited` (LLP 1069.010 D6): the dot in the window's close button.
     private var headEdited = false
     private var refusal: String?
     var onChange: (() -> Void)?
-    /// The app module's `toolbar` hatch, once a
+    /// LLP 1075.003.000 §3.7: the app module's `toolbar` hatch, once a
     /// toolbar is installed; the items it adds after Exact's, which Exact
     /// never removes; its delegate, which hears what Exact does not answer.
     private var hatched = false
@@ -162,7 +162,7 @@ final class WindowToolbarHost: NSObject, NSToolbarDelegate, NSToolbarItemValidat
     /// The window's title while the toolbar is its own: a declared
     /// toolbar's heading; else the authored document title (the head's),
     /// else the heading of the route whose header the bar shows, else the
-    /// window's own, the app's name. `base` is the
+    /// window's own, the app's name (LLP 1115.002 D2, §5 Q2). `base` is the
     /// head's title or the window's own.
     private func title(over base: String) -> String {
         if let heading { return text(heading) }
@@ -187,8 +187,8 @@ final class WindowToolbarHost: NSObject, NSToolbarDelegate, NSToolbarItemValidat
         reportCover()
     }
 
-    /// The header's box is the platform's while the bar shows it: said in
-    /// the step in which it was projected, and taken
+    /// The header's box is the platform's while the bar shows it (LLP
+    /// 1115.002 D8.1): said in the step in which it was projected, and taken
     /// back in the step in which it stopped. Never from inside a pass:
     /// telling the kernel can apply a batch, whose own pass must run whole.
     private func reportCover() {
@@ -316,8 +316,8 @@ final class WindowToolbarHost: NSObject, NSToolbarDelegate, NSToolbarItemValidat
                 "appEnabled": appItems.map { $0.validate(); return $0.isEnabled }]
     }
 
-    /// `state.window.toolbar.header`: the route's header the bar shows, its
-    /// items by their authored buttons, and which of them
+    /// `state.window.toolbar.header`: the route's header the bar shows (LLP
+    /// 1115.002 D2), its items by their authored buttons, and which of them
     /// AppKit has moved to the overflow menu.
     private var headerSummary: [String: Any]? {
         guard let header, projected, let toolbar else { return nil }
@@ -364,7 +364,8 @@ final class WindowToolbarHost: NSObject, NSToolbarDelegate, NSToolbarItemValidat
 
     /// A native button's prominent style is a prominent item, tinted by its
     /// `accent-color`, in the macOS 26 design; every other button, and every
-    /// button in the earlier design, is the plain bordered item.
+    /// button in the earlier design, is the plain bordered item (LLP
+    /// 1069.011.000 D2).
     private func prominence(_ item: NSToolbarItem, _ node: NodeView, _ face: ButtonFace?) {
         guard #available(macOS 26.0, *) else { return }
         let prominent = LinkedDesign.liquidGlass
@@ -423,7 +424,7 @@ final class WindowToolbarHost: NSObject, NSToolbarDelegate, NSToolbarItemValidat
     /// Where a popover opened from one of the bar's buttons is placed. Such
     /// a button has no box in the page and AppKit gives an item no frame,
     /// so it is the top of the viewport, at the end the item is on. The
-    /// driver's painted menu uses it; a person's menu is the
+    /// driver's painted menu uses it (LLP 1021 D4); a person's menu is the
     /// item's own.
     func anchor(of node: NodeView, in view: NSView) -> NSRect? {
         // Asked inside a batch too, between `prepare` and the pass that hides the header again.
@@ -461,15 +462,15 @@ final class WindowToolbarHost: NSObject, NSToolbarDelegate, NSToolbarItemValidat
 
     /// Whether the author declared a toolbar for this window, shown now:
     /// one the toolbar can show or not, the bar is theirs, and no route's
-    /// header is projected into it ("Precedence").
+    /// header is projected into it (LLP 1115.002 D2, "Precedence").
     private func declares(in window: NSWindow) -> Bool {
         presenter.carrying("toolbarPlacement").contains {
             $0.props["toolbarPlacement"] == "window" && $0.props["accessibilityRole"] == "toolbar" && visible($0) && $0.window === window
         }
     }
 
-    /// The route's header as this window's bar shows it (HeaderMac.swift):
-    /// none under the agent's authored chrome, with a
+    /// The route's header as this window's bar shows it (LLP 1115.002 D2,
+    /// HeaderMac.swift): none under the agent's authored chrome, with a
     /// toolbar the author declared, or for a header the bar cannot show
     /// whole, which stays painted and is said once.
     private func readHeader(in window: NSWindow) -> WindowHeader? {
@@ -545,7 +546,7 @@ final class WindowToolbarHost: NSObject, NSToolbarDelegate, NSToolbarItemValidat
         let navigation = presenter.navigation
         let held = navigation.hasStack && (heldForBack || navigation.barRoute)
         let back = held && navigation.backInToolbar
-        // A window whose sidebar is the app's root tab bar
+        // A window whose sidebar is the app's root tab bar (LLP 1115.002 D3)
         // has a toolbar for it: the sidebar's button, then the separator
         // that follows its divider, ahead of Back and the rest, which so
         // begin at the page's edge. Both are AppKit's own items. The author
@@ -560,7 +561,7 @@ final class WindowToolbarHost: NSObject, NSToolbarDelegate, NSToolbarItemValidat
         self.header = header
         self.beside = beside
         let declarations = declared?.shown ?? [], buttons = declared?.buttons ?? (header?.buttons ?? []) + (beside?.buttons ?? [])
-        // A list beside its detail: the bar's items stop
+        // A list beside its detail (LLP 1115.002 D4): the bar's items stop
         // at the divider between them and begin again after it, so each
         // header's buttons are over its own column.
         let split = presenter.navigation.split, columns = declared == nil && split.active && split.controller?.view.window === window
@@ -575,7 +576,7 @@ final class WindowToolbarHost: NSObject, NSToolbarDelegate, NSToolbarItemValidat
             // window's bar is its own route's (an insertion in one window
             // put the item in another's, found as two tests in one process;
             // and the toolbar the window had until the view moved to or
-            // from a sidebar's pane).
+            // from a sidebar's pane, #393).
             let value = NSToolbar(identifier: "Exact.window.commands." + UUID().uuidString)
             value.delegate = self
             value.displayMode = .iconOnly
@@ -604,8 +605,8 @@ final class WindowToolbarHost: NSObject, NSToolbarDelegate, NSToolbarItemValidat
                 items[node.id] = item
                 continue
             }
-            // A header's button that opens a menu is AppKit's menu item:
-            // it pops the menu up itself, so it has no
+            // A header's button that opens a menu is AppKit's menu item
+            // (LLP 1115.002 D2): it pops the menu up itself, so it has no
             // action.
             let menu = declared == nil && presenter.menus.toolbarPopover(of: node) != nil
             if items[node.id]?.view is NSImageView { items.removeValue(forKey: node.id) }
@@ -621,13 +622,13 @@ final class WindowToolbarHost: NSObject, NSToolbarDelegate, NSToolbarItemValidat
                 item.target = self; item.action = #selector(performItem(_:))
                 item.autovalidates = true
             }
-            // A native button's children are its face, not views.
+            // A native button's children are its face, not views (LLP 1069.011.000 D1, D2).
             let face = node.isNativeButton ? node.face : nil
             let label = node.props["accessibilityLabel"] ?? face?.title ?? text(node)
             if item.label != label { item.label = label; item.paletteLabel = label; item.toolTip = label }
             let image = children(node).first { $0.kind == "image" }
             // Standard toolbar items own their image sizing, tint and glass.
-            // An svg-only icon's path is a template image too.
+            // An svg-only icon's path is a template image too (stage 9 A2).
             let symbol = face?.symbol ?? image?.faceSymbol ?? ""
             let painted = BadgeFace(node) == nil ? MacBarFace(node) : nil
             if let painted {
@@ -735,7 +736,7 @@ final class WindowToolbarHost: NSObject, NSToolbarDelegate, NSToolbarItemValidat
         if identifier == .sidebarTrackingSeparator, let split = presenter.sidebar.splitView {
             return NSTrackingSeparatorToolbarItem(identifier: identifier, splitView: split, dividerIndex: 0)
         }
-        // The same for the divider between a list and its detail.
+        // The same for the divider between a list and its detail (LLP 1115.002 D4).
         if identifier == Self.listSeparatorIdentifier, let controller = presenter.navigation.split.controller {
             return NSTrackingSeparatorToolbarItem(identifier: identifier, splitView: controller.splitView, dividerIndex: controller.listDivider)
         }
@@ -808,7 +809,7 @@ final class WindowToolbarHost: NSObject, NSToolbarDelegate, NSToolbarItemValidat
         guard let item = items[node.id] else { return nil }
         // A menu item's menu is AppKit's to pop up, which no driver can do
         // for it: the button is pressed, and under the agent its menu opens
-        // as the painted popover every menu is there.
+        // as the painted popover every menu is there (LLP 1021 D4).
         if item is NSMenuToolbarItem {
             guard available(node) else { return false }
             presenter.press(node.id)

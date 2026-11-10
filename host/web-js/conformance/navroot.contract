@@ -1,5 +1,5 @@
-// Synthetic conformance plan: a navigation root in a plan with no `routes`.
-// `main` is the root (its navigationKey and navigationBack),
+// Synthetic conformance plan: a navigation root in a plan with no `routes`
+// (LLP 1038 D6). `main` is the root (its navigationKey and navigationBack),
 // its routes are its children with a navigationKey, and the one whose key is
 // the root's is selected. With no router, the covered route is still hidden
 // and inert after every commit, as the web host projects after every batch:
@@ -29,8 +29,8 @@ component NavRoot
             text "bump home"
         if depth == 2
           column navigationKey="2" testId="route-detail" padding=8 gap=4 background-color="#ffe4d6"
-            // A header-shaped route with a readout after its heading:
-            // the web draws it as authored, its count live.
+            // A header-shaped route with a readout after its heading (LLP
+            // 1075.003 §9.15): the web draws it as authored, its count live.
             header display="flex" align-items="center" gap=8 testId="detail-header"
               text "detail" role="heading" aria-level=2
               row role="status" aria-label=`${count} ${count == 1 ? "bump" : "bumps"}` display="flex" align-items="center" gap=6 testId="detail-readout"

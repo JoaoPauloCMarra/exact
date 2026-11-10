@@ -1,4 +1,4 @@
-//! The containing block of absolutely positioned descendants:
+//! The containing block of absolutely positioned descendants (LLP 1074 T1):
 //! which attributes make a box one on some host, and the `position:
 //! relative` lowering adds where a box is one on every host. Split from
 //! `tags.rs`, whose attribute table it reads.
@@ -6,8 +6,8 @@ use crate::tags::{attr, AttrTarget, Tag};
 use exact_kernel::{NodeType, StyleId};
 
 /// The rows that make a box the containing block of its absolutely
-/// positioned descendants on some host, whatever its `position`: a box
-/// with one is lowered `position: relative` unless it names a
+/// positioned descendants on some host, whatever its `position` (LLP 1074
+/// T1): a box with one is lowered `position: relative` unless it names a
 /// position.
 ///
 /// - `overflow`: a native host clips and scrolls a box's view subtree, so a
@@ -34,7 +34,7 @@ pub const CONTAINS_ABSOLUTE: [StyleId; 16] = [
     StyleId::PressScale,
     StyleId::DragTimeline,
     StyleId::AnimationTimeline,
-    // CSS: `perspective` makes a containing block too.
+    // CSS: `perspective` makes a containing block too (LLP 1077 D8).
     StyleId::Perspective,
 ];
 /// Whether an attribute makes its box a containing block (see

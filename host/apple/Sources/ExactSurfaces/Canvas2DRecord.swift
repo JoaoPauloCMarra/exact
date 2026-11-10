@@ -1,5 +1,5 @@
-// A canvas that animates is drawn by Core Animation's
-// recording. The bitmap spends its time rasterising: a full-screen
+// @ref LLP 1056 §8.4 — a canvas that animates is drawn by Core Animation's
+// recording. The bitmap (§8.3) spends its time rasterising: a full-screen
 // canvas of 3,000 arcs took 57 ms of Core Graphics a frame on an iPhone 13
 // Pro Max at 3x, 17 redraws a second. The same Core Graphics calls made into
 // a layer that `drawsAsynchronously` are recorded, not rasterised, and Core

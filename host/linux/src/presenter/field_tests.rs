@@ -1,8 +1,8 @@
-//! A text field's selection and a radio group on the Linux host, against what
-//! Chrome does: the selection's edits, moves and `select` events,
-//! `setSelectionRange` on an unfocused field; a radio's exclusive check, its
-//! arrows and Space, a refused action's snap back, and an unbound group's own
-//! state.
+//! A text field's selection (x2apps codeedit #2) and a radio group (x2apps
+//! survey #2) on the Linux host, against what Chrome does: the selection's
+//! edits, moves and `select` events, `setSelectionRange` on an unfocused
+//! field; a radio's exclusive check, its arrows and Space, a refused
+//! action's snap back, and an unbound group's own state.
 use super::field::{byte_at, delete, fit, moved, replace, TextBoundary};
 use super::*;
 use exact_runner::{FieldSelection, SelectionDirection, Value};

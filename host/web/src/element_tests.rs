@@ -77,7 +77,7 @@ fn svg_only(prop: PropId) -> bool {
         )
 }
 
-/// A determinate progress is HTML's own `<progress>`, which
+/// LLP 1116 D8: a determinate progress is HTML's own `<progress>`, which
 /// the browser draws and sizes: its `value` and `max` the attributes, its
 /// role implicit, no `type`, and none of the ring's box.
 #[test]
@@ -118,15 +118,15 @@ fn a_progress_with_a_value_is_htmls_progress_element() {
     }
     let css = super::host_css_of(&facts, None, String::new(), "progress");
     assert!(!css.contains("contain"), "the browser's box: {css}");
-    // The page draws its bar (tests/document.test.mjs), and
+    // The page draws its bar (LLP 1116.003; tests/document.test.mjs), and
     // gives the element the intrinsic size the kernel measures, `10em` by
-    // `1em`, and no automatic minimum.
+    // `1em`, and no automatic minimum (LLP 1115.000 D10.2).
     assert!(include_str!("../index.html").contains(
         "progress { display: block; appearance: none; border: none; background: none; contain: size; contain-intrinsic-size: 10em 1em; min-width: 0; }"
     ));
 }
 
-/// An indeterminate progress is a box
+/// LLP 1069.001, amended 2026-10-07: an indeterminate progress is a box
 /// the base sheet draws a ring in (HTML's own draws a bar), ARIA's role
 /// and busy state its attributes, sized as the kernel's 20 × 20 leaf.
 #[test]
@@ -251,7 +251,7 @@ fn a_progress_or_canvas_in_block_flow_follows_the_parents_justify_items() {
     }
 }
 
-/// A date, time or local date-time control is marked for
+/// LLP 1116.001 D1: a date, time or local date-time control is marked for
 /// the page's field look while its appearance is the platform's; the
 /// author's `appearance: none`, and every other control, is not.
 #[test]
@@ -285,7 +285,7 @@ fn a_date_or_time_control_takes_the_field_look_unless_the_author_has_it() {
     assert!(include_str!("../index.html").contains("input[data-exact-field]"));
 }
 
-/// A text field whose appearance is `textfield` is still the
+/// LLP 1116.007 D4: a text field whose appearance is `textfield` is still the
 /// platform's field (`data-native`) and is marked for the page to take a
 /// number input's spin buttons off; `auto` and `none` are not.
 #[test]
@@ -320,7 +320,7 @@ fn a_textfield_appearance_is_native_and_marked_for_the_page() {
 }
 
 /// A link to an absolute URL opens outside the app, as natively, unless
-/// its `target` is authored; a path stays.
+/// its `target` is authored; a path stays (chat F11, hn-reader F3).
 #[test]
 fn a_link_out_of_the_app_opens_a_new_browsing_context() {
     let link = |href: &str, target: Option<&str>| {
@@ -360,7 +360,7 @@ fn a_link_out_of_the_app_opens_a_new_browsing_context() {
     assert!(e.contains("`target` takes"), "{e}");
 }
 
-/// Every `data-` name this host writes on an
+/// @ref LLP 1075.003 §3.3 — every `data-` name this host writes on an
 /// HTML element for a prop of its own is a word Contract refuses, so an
 /// app's `data-*` never lands on one.
 #[test]
@@ -435,7 +435,7 @@ fn menu_hints_write_no_dom_attributes() {
     }
 }
 
-/// A Markdown node's faces go to the page with each
+/// LLP 1045.000 D2: a Markdown node's faces go to the page with each
 /// face's paint as the CSS a pill takes, and one that is none empty.
 #[test]
 fn a_faces_paint_is_written_as_css() {
@@ -562,7 +562,7 @@ fn complex_svg_geometry_attributes_take_the_initial_value() {
     }
 }
 
-/// A browser has no layout regions: each is written as the
+/// A browser has no layout regions (LLP 1123 D10): each is written as the
 /// safe area it resolves to on every host that reports none, its offset
 /// and any calculation around it kept.
 #[test]
@@ -603,7 +603,7 @@ fn a_layout_region_is_the_browsers_safe_area() {
     }
 }
 
-/// A live region's `aria-atomic` reaches the page.
+/// LLP 1116.018 D3: a live region's `aria-atomic` reaches the page.
 #[test]
 fn a_live_region_says_whether_it_is_announced_whole() {
     let style = StyleProps::default();
@@ -624,7 +624,7 @@ fn a_live_region_says_whether_it_is_announced_whole() {
     assert_eq!(out.get("aria-atomic").map(String::as_str), Some("true"));
 }
 
-/// Every frame grants its guest fullscreen, sandboxed
+/// @ref LLP 1020.002 D5 — every frame grants its guest fullscreen, sandboxed
 /// or not; no other element is told.
 #[test]
 fn a_frame_grants_its_guest_fullscreen() {

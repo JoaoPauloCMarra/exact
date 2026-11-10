@@ -1,5 +1,5 @@
 //! Deadlines for the sampled executor. Values still come from `sample_in`.
-//! A step's held value needs no display callbacks.
+//! @ref LLP 1149.001 M2b — a step's held value needs no display callbacks.
 
 use super::{Animation, Direction, Phase};
 use crate::{Easing, Property, StepPosition, Value};

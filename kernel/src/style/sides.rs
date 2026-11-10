@@ -4,7 +4,7 @@
 //! CSS Scroll Snap 1 §6) and `border-radius` (CSS Backgrounds 3 §5.1). The
 //! compiler splits a literal, or a template at its text's white space, into
 //! its four rows, as the browser expands the shorthand, and refuses another
-//! computed list: no row splits one.
+//! computed list (LLP 1001 §1): no row splits one.
 
 use super::{Dimension, StyleProps};
 use crate::generated::StyleId;

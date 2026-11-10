@@ -1,4 +1,4 @@
-//! The binding core: a design token by its name,
+//! The binding core (LLP 1121 D12, stage 5): a design token by its name,
 //! resolved in this session for a place. Code outside a plan (a native
 //! module's view, a hatch's object, a host screen) holds a token's name and
 //! kind, never a row's index, so a plan that reloads, updates or takes a
@@ -18,7 +18,7 @@ pub enum Place {
     Node(ViewId),
 }
 
-/// A generated constant (`contract tamber gen rust`): a
+/// A generated constant (`contract tamber gen rust`, LLP 1121 D12): a
 /// token's name and kind, which a session resolves by name.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Token<K> {
@@ -42,26 +42,26 @@ impl<K> Token<K> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Color;
 
-/// A length token's kind: its points at the place.
+/// A length token's kind (stage 6 G): its points at the place.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Length;
 
-/// A number token's kind.
+/// A number token's kind (stage 6 G).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Number;
 
-/// A type token's kind: the [`Font`] it draws at the place.
+/// A type token's kind (stage 6 G): the [`Font`] it draws at the place.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Type;
 
-/// A type token's font at a place, as a host draws it.
+/// A type token's font at a place, as a host draws it (LLP 1121 D6).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Font {
     /// Points: a text style's at the person's text size, a `rem` by the
     /// root font size.
     pub size: f64,
-    /// The weight: the token's, else its text style's on this platform,
-    /// stepped by Bold Text on a system family.
+    /// The weight: the token's, else its text style's on this platform
+    /// (LLP 1115.000 D12.2), stepped by Bold Text on a system family.
     pub weight: u16,
     /// Italic.
     pub italic: bool,
@@ -122,8 +122,8 @@ pub struct Tamber<'a, D: DataSource> {
 }
 
 impl<D: DataSource> Runner<D> {
-    /// This session's design tokens, by name, for code outside the plan:
-    /// `session.tamber()`.
+    /// This session's design tokens, by name, for code outside the plan
+    /// (LLP 1121 D12): `session.tamber()`.
     pub fn tamber(&mut self) -> Tamber<'_, D> {
         Tamber { runner: self }
     }
@@ -164,7 +164,8 @@ impl<D: DataSource> Tamber<'_, D> {
     /// that spelling or the name the design wrote (`link`); else `name`.
     fn row_name(&self, name: &str) -> Option<String> {
         let plan = &self.runner.plan;
-        // A colour binding names a colour token.
+        // A colour binding names a colour token (a length's binding is
+        // stage 6's commit G).
         let row = plan
             .theme
             .iter()
@@ -257,7 +258,8 @@ impl<D: DataSource> Tamber<'_, D> {
     /// Length `text` (px, `rem`, `em`, a text style, the hairline, cells) in points
     /// at `place`.
     fn points(&self, text: &str, place: Place) -> Option<f64> {
-        // The terminal's column holds cells (`1ch`, `2lh`): their px.
+        // The terminal's column holds cells (`1ch`, `2lh`): their px (round
+        // 3, Grok).
         if let Some(px) = exact_kernel::style::cells::parse(text) {
             return Some(f64::from(px));
         }
@@ -271,16 +273,16 @@ impl<D: DataSource> Tamber<'_, D> {
         }
     }
 
-    /// Length token `name` at `place`, in points, as a row reads
+    /// Length token `name` at `place`, in points (stage 6 G), as a row reads
     /// it: through the kernel's token lookup under the place's tuple, so an
     /// alias to a base name the design leaves unset (`card.pad = space.md`)
     /// and a base name itself read this process's column, the design's own
-    /// definition first.
+    /// definition first (LLP 1121 stage 11 B, round 2).
     pub fn length(&mut self, name: &str, place: Place) -> Option<f64> {
         use exact_kernel::style::theme;
         let table = crate::bridge::theme_table_at(&self.runner.plan, self.tuple(place));
         // Read aside, as `color` reads: the names a style parse records stay
-        // its own.
+        // its own (round 3, Grok).
         let (text, _) = theme::recorded(|| {
             let _scope = theme::bind(&table);
             theme::measure(name, |k, _| k == theme::Kind::Length).map(|(_, v)| v.to_string())
@@ -292,13 +294,13 @@ impl<D: DataSource> Tamber<'_, D> {
         self.points(&text, place)
     }
 
-    /// Number token `name` at `place`.
+    /// Number token `name` at `place` (stage 6 G).
     pub fn number(&mut self, name: &str, place: Place) -> Option<f64> {
         let text = self.entry(name, exact_kernel::style::theme::Kind::Number, place)?;
         exact_num::parse_f64(text.trim()).ok()
     }
 
-    /// Type token `name` at `place`: the font a host draws.
+    /// Type token `name` at `place`: the font a host draws (stage 6 G).
     pub fn font(&mut self, name: &str, place: Place) -> Option<Font> {
         use exact_kernel::style::relative::{text_style, text_style_weight};
         use exact_kernel::style::theme::typeface;
@@ -337,7 +339,7 @@ impl<D: DataSource> Tamber<'_, D> {
         })
     }
 
-    /// What a host's binding asks besides colours, as the JSON
+    /// What a host's binding asks besides colours (stage 6 G), as the JSON
     /// members its answer appends: `,"lengths":{name: points},"numbers":
     /// {name: n},"fonts":{name: {size, weight, italic, lineHeight,
     /// family}}`, each for the names `request` lists under that key
@@ -418,7 +420,7 @@ impl<D: DataSource> Tamber<'_, D> {
         format!("{:?}", runner.viewport().preferences.contrast).hash(&mut h);
         runner.root_font_size().to_bits().hash(&mut h);
         // Bold Text, which a font's weight reads, the place's own font size
-        // (an `em`) and a device pixel (the hairline).
+        // (an `em`) and a device pixel (the hairline), stage 6 G.
         runner.viewport().preferences.bold_text.hash(&mut h);
         self.font_sizes(place).1.to_bits().hash(&mut h);
         runner.kernel().device_pixel().to_bits().hash(&mut h);
@@ -428,7 +430,7 @@ impl<D: DataSource> Tamber<'_, D> {
     /// Say `why` (its `{name}` the token's) once for this runner.
     fn say_once(&mut self, name: &str, why: &str) {
         let line = format!(
-            "tamber: {}: its binding keeps its fallback",
+            "tamber: {}: its binding keeps its fallback (LLP 1121 D12)",
             why.replace("{name}", name)
         );
         if !self.runner.tamber_said.contains(&line) {

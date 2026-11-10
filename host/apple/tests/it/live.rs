@@ -1,4 +1,4 @@
-//! The live table on Apple: a batch from the dev
+//! The live table on Apple (LLP 1121 D13, stage 4): a batch from the dev
 //! stream sets a running build's rows in place, with no restart (its state
 //! stays) and no layout for colours; a build past the batch's base answers
 //! stale.
@@ -63,7 +63,7 @@ fn a_running_build_applies_a_batch_in_place() {
         .starts_with("{\"live\":\"stale\""));
 }
 
-/// A role override's value edit reaches a
+/// LLP 1121 stage 5, commit 2: a role override's value edit reaches a
 /// running build as a batch. The presenter gets its new role table (its
 /// tint: `AccentColor`) and text that resolves an overridden role,
 /// unsaid text's `CanvasText` included, is re-presented in place.

@@ -1,12 +1,12 @@
-//! Masks and patterns: the two references whose
+//! Masks and patterns (LLP 1055.000 D7, D10): the two references whose
 //! content native hosts render to pixels, an island, rather than to vector
 //! layers.
 //!
-//! `mask`: `maskUnits` `objectBoundingBox` with the region
-//! −10%/−10%/120%/120%, `maskContentUnits` `userSpaceOnUse`, `mask-type`
-//! luminance or alpha. `pattern`: `patternUnits`
+//! @ref LLP 1055.000 D10 (`mask`: `maskUnits` `objectBoundingBox` with the
+//! region −10%/−10%/120%/120%, `maskContentUnits` `userSpaceOnUse`,
+//! `mask-type` luminance or alpha), D7 (`pattern`: `patternUnits`
 //! `objectBoundingBox`, `patternContentUnits` `userSpaceOnUse`, `viewBox`,
-//! `patternTransform`, `href` templates. CSS Masking 1 §7, SVG 2 §14.3.
+//! `patternTransform`, `href` templates); CSS Masking 1 §7, SVG 2 §14.3
 //!
 //! The kernel resolves both into items, as it does a `use`: the content
 //! inherits from the referenced element's own ancestors, and is placed in

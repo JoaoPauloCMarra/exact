@@ -33,7 +33,7 @@ mod text_style;
 /// process on a stack overflow (20,000 levels did).
 pub const MAX_DEPTH: u32 = 128;
 
-/// A destroyed node that leaves with its `-exact-exit-animation`: the
+/// A destroyed node that leaves with its `-exact-exit-animation` (LLP 1063): the
 /// root of a destroyed subtree whose parent survived the batch and that no
 /// batch-local creation owns, or a virtualized list's row whose item left the
 /// data. Its descendants go with it; their own exit rows never play.
@@ -68,25 +68,25 @@ pub struct CommitReceipt {
     /// The destroyed nodes that play an exit before a host removes them.
     pub exits: Vec<Exit>,
     /// Shared-element names handed from a destroyed node to a created one
-    ///.
+    /// (LLP 1013.000 D3).
     pub handoffs: Vec<crate::Handoff>,
     /// Live nodes whose `display` changed: their descendants' animations
-    /// are cancelled or restarted (CSS Animations 1 §3).
+    /// are cancelled or restarted (LLP 1055.000 D15; CSS Animations 1 §3).
     pub display_changed: Vec<NodeKey>,
     /// Consumers whose `animation-timeline` name resolves to another
-    /// timeline after this commit, beyond those it created or touched: a
-    /// node inserted, removed or moved, or a row set on
+    /// timeline after this commit, beyond those it created or touched (LLP
+    /// 1057.003 D4): a node inserted, removed or moved, or a row set on
     /// another node, can change what a name finds.
     pub timelines: Vec<NodeKey>,
-    /// Live nodes a producer reused for a new mount (a list row rebound to
-    /// another item), whatever else the batch did to them: to
+    /// Live nodes a producer reused for a new mount (LLP 1078: a list row
+    /// rebound to another item), whatever else the batch did to them: to
     /// motion and to a host's per-node state each is a node destroyed and
     /// created by this commit (no transition from what it showed, its
     /// animations from their start). The kernel never fills it; the producer
     /// that rebinds does.
     pub renewed: Vec<NodeKey>,
     /// List rows that showed in their port for the first time since they
-    /// were mounted out of it ([`crate::Kernel::reveal`]):
+    /// were mounted out of it ([`crate::Kernel::reveal`]; LLP 1055 D13):
     /// the animations below them that waited for that start now. The
     /// producer that mounts rows fills it, as it does `renewed`.
     pub revealed: Vec<NodeKey>,
@@ -432,7 +432,7 @@ fn validate(arena: &NodeArena, ops: &[Op]) -> Result<(), ApplyError> {
                             node_type: child_type,
                         });
                     }
-                    // An `svg` or `g` holds SVG elements
+                    // @ref LLP 1055 D3 — an `svg` or `g` holds SVG elements
                     // and nothing else; an SVG element lives only there.
                     let svg_parent = node_type.is_svg_container();
                     if svg_parent != child_type.is_svg_element() {
@@ -728,7 +728,7 @@ pub(crate) fn continue_document(
                     }
                     arena.mark_export_dirty(slot, NodeFlags::PROPS_DIRTY);
                     view_box_changed(arena, layout, slot, *prop, receipt);
-                    // A first `value` makes a `progress` the bar.
+                    // A first `value` makes a `progress` the bar (LLP 1116 D8).
                     receipt.layout_invalidated |=
                         crate::style::top_layer::prop_changed(arena, layout, slot, *prop);
                     if matches!(
@@ -1093,7 +1093,7 @@ fn sync_text_nodes(arena: &mut NodeArena, layout: &mut dyn LayoutMirror, nodes: 
     }
 }
 
-/// The exit a destroyed subtree root plays, if any. Not for a
+/// The exit a destroyed subtree root plays, if any (LLP 1063). Not for a
 /// node this batch created (nothing presented it), a root or inline run
 /// (nowhere to stay), or a virtualized list's row the window scrolled away
 /// ([`leaving_with`]).
@@ -1337,7 +1337,7 @@ fn inherited_after_move(
     }
 }
 
-/// An `svg`'s `viewBox` is its natural aspect ratio: a
+/// An `svg`'s `viewBox` is its natural aspect ratio (LLP 1055.000 D4): a
 /// change restyles and re-measures the box.
 fn view_box_changed(
     arena: &mut NodeArena,
@@ -1412,7 +1412,7 @@ fn style_changed(
 /// computed value of every logical descendant that does not set the row
 /// itself. Mark and touch them, stopping under a descendant that overrides
 /// every changed row, so the receipt names what changed and no host has to
-/// re-derive descendants per frame.
+/// re-derive descendants per frame (LLP 1035.000 D4).
 fn propagate_inherited(
     arena: &mut NodeArena,
     layout: &mut dyn LayoutMirror,

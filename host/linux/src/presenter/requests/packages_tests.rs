@@ -1,7 +1,8 @@
-//! The native slot's one handler on a desktop loop: a composed package's body reaches its instance
-//! on the loop's turn, a shell's goes to the shell beside it, any other is refused; a call the
-//! runner asks to admit reads the instance's own status first; the session's end destroys each
-//! instance once.
+//! The native slot's one handler on a desktop loop (LLP 1133.022 D10 item
+//! 5): a composed package's body reaches its instance on the loop's turn, a
+//! shell's goes to the shell beside it, any other is refused; a call the
+//! runner asks to admit reads the instance's own status first; the session's
+//! end destroys each instance once.
 use super::super::*;
 use crate::package::{json, Context, Entry, Json, Package, Reply};
 use std::cell::RefCell;

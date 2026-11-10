@@ -1,7 +1,8 @@
-//! A `tool` line, and a call of it as an invocation of origin `tool` that owns
-//! the work its commit started, identified by the invocation's id: the ask its
-//! mutation's refresh makes, not a re-ask the device or the person makes, and
-//! not one a refused commit let go of.
+//! LLP 1111 D2–D4a and LLP 1133.023 D7: a `tool` line, and a call of it as
+//! an invocation of origin `tool` that owns the work its commit started,
+//! identified by the invocation's id: the ask its mutation's refresh makes,
+//! not a re-ask the device or the person makes, and not one a refused
+//! commit let go of.
 
 use exact_runner::{agent, CallHow, Runner, Value, BACKGROUND};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -199,9 +200,9 @@ fn the_tool_line_is_the_plans_tools_row() {
     }
 }
 
-/// The call's commit, the `add` it sends and the `counter` re-ask its refresh
-/// makes are its own; it ends when they have landed, with what `returns` reads
-/// then.
+/// D7: the call's commit, the `add` it sends and the `counter` re-ask its
+/// refresh makes are its own; it ends when they have landed, with what
+/// `returns` reads then.
 #[test]
 fn a_call_owns_its_send_and_the_refresh_it_makes() {
     let (mut r, _) = boot();
@@ -233,9 +234,9 @@ fn a_call_owns_its_send_and_the_refresh_it_makes() {
     assert_eq!(calls(&r)[1]["outcome"], "failed", "{}", logs(&r));
 }
 
-/// A re-ask the person's commit makes of a resource the call last asked is not
-/// the call's; it replaces the call's ask, and the call is `superseded`, its
-/// write `applied`.
+/// D7: a re-ask the person's commit makes of a resource the call last
+/// asked is not the call's; it replaces the call's ask, and the call is
+/// `superseded`, its write `applied`.
 #[test]
 fn a_persons_refresh_supersedes_the_calls_ask() {
     let (mut r, _) = boot();
@@ -252,8 +253,8 @@ fn a_persons_refresh_supersedes_the_calls_ask() {
     );
 }
 
-/// A commit that would let go of the call's ask and is then refused lets go of
-/// nothing: the call runs on to its end.
+/// D7: a commit that would let go of the call's ask and is then refused
+/// lets go of nothing: the call runs on to its end.
 #[test]
 fn a_refused_commit_does_not_supersede() {
     let (mut r, _) = boot();
@@ -266,9 +267,9 @@ fn a_refused_commit_does_not_supersede() {
     assert_eq!(calls(&r)[0]["outcome"], "ok", "{}", logs(&r));
 }
 
-/// A re-ask the device makes of a resource a call last asked keeps the call's
-/// origin and no invocation's id: a later call does not wait for it. Nor for a
-/// re-ask the person made.
+/// D7: a re-ask the device makes of a resource a call last asked keeps the
+/// call's origin and no invocation's id: a later call does not wait for
+/// it. Nor for a re-ask the person made.
 #[test]
 fn a_device_reask_is_not_the_calls() {
     let (mut r, _) = boot();
@@ -301,8 +302,8 @@ fn a_calls_commit_skips_a_command_that_moves_the_view() {
     );
 }
 
-/// Background storage still writing when the call's work has landed: `failed`,
-/// `uncertain`.
+/// D7: background storage still writing when the call's work has landed:
+/// `failed`, `uncertain`.
 #[test]
 fn background_storage_at_the_end_is_uncertain() {
     let (mut r, background) = boot();
@@ -322,7 +323,7 @@ fn background_storage_at_the_end_is_uncertain() {
     );
 }
 
-/// Arguments are the action's, exactly; a refusal is `none`.
+/// LLP 1111 D4: arguments are the action's, exactly; a refusal is `none`.
 #[test]
 fn arguments_that_are_not_the_actions_are_refused() {
     let (mut r, _) = boot();

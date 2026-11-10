@@ -1,5 +1,5 @@
-// The intrinsic freeze, run after the standard library is installed and before
-// any module code.
+// The LLP 0067 R4 intrinsic freeze (measured in LLP 0062 §3), run after the standard library is
+// installed and before any module code.
 //
 // Three properties this walk must have, all of which the retired native
 // __exactDeepFreeze also had: it reads property DESCRIPTORS so getters are not
@@ -15,9 +15,9 @@
 // distinct `__exact*` names, plus `process`, `window`, `self`, `global`, and
 // `navigator`, and with a frozen global every one of those writes silently
 // did nothing — the first symptom was a `TypeError` three modules later,
-// reading a registry that had never been created. Authority is unaffected:
-// nothing capability-bearing is on the global object to begin with, and a
-// property an application adds is state, not authority.
+// reading a registry that had never been created. R1 is unaffected: nothing
+// capability-bearing is on the global object to begin with, and a property
+// an application adds is state, not authority.
 (function () {
   "use strict";
   // Everything the walk calls is captured here, and every descriptor it builds

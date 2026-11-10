@@ -19,7 +19,7 @@
 // `{"*": "local"}` before the app exists.
 // `local` keeps the diary and never asks or sends. `status` prints the diary's
 // instructions (docs/diary.md) under any answer that keeps one, so the app's AGENTS.md
-// carries one line for them and a `never` project carries none. With
+// carries one line for them and a `never` project carries none (LLP 1116 D3). With
 // EXACT_DIARY=detailed set, it also prints the detailed diary's extra instructions
 // (DETAILED below), so only a study's agents carry them in context.
 import { createHash } from 'node:crypto';
@@ -100,7 +100,7 @@ export function pending(dir) {
 }
 const safeParse = line => { try { return JSON.parse(line); } catch { return null; } };
 
-// A workaround an agent writes into its README is feedback the diary may not hold.
+// A workaround an agent writes into its README is feedback the diary may not hold (LLP 1139.004 D5).
 const WORKAROUND = [/\bif\b[^]*?\bfail/i, /\bdelete\b/i, /\bre-?run\b/i, /\bworkaround\b/i];
 const NOTES = '<!-- exact:begin', NOTES_END = '<!-- exact:end -->';
 /** The passages (paragraphs and list items) of `text` that read as workarounds. */

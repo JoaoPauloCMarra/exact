@@ -1,15 +1,15 @@
 //! The C ABI, with no `unsafe` on this side.
 //!
-//! The header is `host/apple/include/exact.h`.
+//! @ref LLP 1008 §4; `host/apple/include/exact.h` (the header)
 //!
 //! The host owns the buffers: `exact_in(len)` resizes input and returns its
 //! address; each call returns the output length, read via `exact_out()`.
 //! Measurement, line boxes and the font catalog call host functions ([`crate::measure`]).
 //!
-//! Every export takes a runtime handle: `exact_create` returns
+//! Every export takes a runtime handle (LLP 1031 D2): `exact_create` returns
 //! a never-reused `u32` from the thread-local [`Registry`], never a pointer.
 //! Invalid/destroyed handles are refused; `exact_destroy` frees the session.
-//! Calls stay on their runtime's creating thread: ExactKit's owner thread on Apple.
+//! Calls stay on their runtime's creating thread: ExactKit's owner thread on Apple (LLP 1072 T1).
 //! Re-entrant calls return `busy` instead of trapping. [`host!`] exports one app's source and baked plan;
 //! each process links one app archive because the C names are fixed.
 mod control_text;
@@ -42,28 +42,28 @@ pub struct Bridge<D: DataSource> {
     measure_revision: Option<Rc<std::cell::Cell<u64>>>,
     fonts_ctx: *mut c_void,
     inline_geometry: Option<Rc<dyn exact_runner::geometry::InlineGeometry>>,
-    /// The archive's `compat.json`, from the `host!`
+    /// The archive's `compat.json` (LLP 1030 D3a), from the `host!`
     /// invocation: what the runner's `delivery` resource says about this
     /// binary's cohort, its update store, and its executors.
     compat: Option<&'static str>,
     delivery: Option<&'static crate::delivery::Hooks>,
-    /// What every boot links: the entry's, from `host!`;
+    /// What every boot links (LLP 1047.001 D3): the entry's, from `host!`;
     /// everything for a bridge a test makes.
     links: crate::link::Links<D>,
-    /// Requests whose continuation a source held at dispatch:
-    /// released after a later commit, by token.
+    /// Requests whose continuation a source held at dispatch (LLP 1027.002
+    /// D3): released after a later commit, by token.
     parked: std::collections::BTreeMap<u64, exact_runner::RequestOut>,
     launch: Option<String>,
     /// Whether motion an author's commit begins waits for the first presented
-    /// frame: every host booted here takes it.
+    /// frame (LLP 1003.001 D7): every host booted here takes it.
     start_on_frame: bool,
-    /// The session's app module: installed into each
+    /// The session's app module (LLP 1067.000 Q6): installed into each
     /// activated source's native slot, so it outlives activations.
     app_module: Option<exact_runner::NativeHandler>,
     app_call: Option<exact_runner::NativeCall>,
-    /// The pan contact's velocity samples (`crate::pan_velocity`).
+    /// The pan contact's velocity samples (LLP 1057 §10.6; `crate::pan_velocity`).
     pub(crate) pan: crate::pan_velocity::PanVelocity,
-    /// Canvas draws in a turn of their own, in each host booted.
+    /// Canvas draws in a turn of their own (LLP 1072 §8.5), in each host booted.
     canvas_deferred: bool,
     /// The display preferences last told (`set_preferences`), kept across
     /// boots: a runner booted later lays out its first frame with them, not
@@ -93,7 +93,7 @@ impl<D: DataSource> Bridge<D> {
         Bridge::with_links(crate::link::Links::ALL)
     }
 
-    /// Empty, linking what `links` names (the entry's).
+    /// Empty, linking what `links` names (the entry's, LLP 1047.001 D3).
     pub const fn with_links(links: crate::link::Links<D>) -> Bridge<D> {
         Bridge {
             document_owner: 0,
@@ -132,7 +132,7 @@ impl<D: DataSource> Bridge<D> {
         }
     }
 
-    /// Canonical location from the input URL, in the output buffer.
+    /// Canonical location from the input URL, in the output buffer. @ref LLP 1038 D8
     pub fn location_of(&mut self, len: usize) -> u32 {
         let href = String::from_utf8_lossy(&self.input[..len.min(self.input.len())]);
         self.emit(exact_route::location_of(&href))
@@ -200,7 +200,7 @@ impl<D: DataSource> Bridge<D> {
         self.output.len() as u32
     }
 
-    /// This binary's `compat.json`, for the delivery facts
+    /// This binary's `compat.json` (LLP 1030 D3a), for the delivery facts
     /// every subsequent boot hands the runner before its first frame. The
     /// `host!` macro passes the app's `COMPAT` const; nothing crosses the C ABI for it.
     pub fn set_compat(&mut self, json: &'static str) {
@@ -233,9 +233,9 @@ impl<D: DataSource> Bridge<D> {
 
     fn emit(&mut self, mut s: String) -> u32 {
         // Whatever the last call asked the host to run goes to the executor
-        // with the batch; the presenter never sees a request.
+        // with the batch (LLP 1016 D2); the presenter never sees a request.
         // A continuation is dispatched here, on this thread, after the
-        // commit that handed it out; one a source holds
+        // commit that handed it out (LLP 1027.002 D3); one a source holds
         // is parked and released after a later commit.
         let Bridge {
             host,
@@ -250,7 +250,7 @@ impl<D: DataSource> Bridge<D> {
             // An app's aborted fetches first (any method), then what the runner let go.
             x.cancel(&h.runner_mut().take_explicit_aborts());
             x.forget(&|ticket| h.runner().holds(ticket));
-            // Of the uploads it let go, which had begun to go out.
+            // Of the uploads it let go, which had begun to go out (LLP 1016.000 D10).
             let started = x.let_go_started(&|ticket| h.runner().holds(ticket));
             h.runner_mut().uploads_started(&started);
             if !h.has_ordered_request_refusals() {
@@ -264,7 +264,7 @@ impl<D: DataSource> Bridge<D> {
             Self::auth_forgotten(h, &mut presenter);
             for r in h.take_requests() {
                 // A deadline the auth and surface paths can't keep, or a long poll on work that is no HTTP
-                // request: the executor refuses it, fencing ordered work.
+                // request (LLP 1016.000 D8): the executor refuses it, fencing ordered work.
                 if r.request
                     .timeout_refusal()
                     .or(r.request.long_poll_refusal())
@@ -294,7 +294,7 @@ impl<D: DataSource> Bridge<D> {
                 let dispatch = match r.request.continuation {
                     Some(token) => h.dispatch_work(token),
                     None if r.request.is_native() => h.native_work(&r.request),
-                    // A driver fault fails it before transport.
+                    // @ref LLP 1103 D1 — a driver fault fails it before transport.
                     None => (h.runner_mut().fault_dispatch(&r))
                         .unwrap_or(exact_runner::Dispatch::Missing),
                 };
@@ -310,7 +310,7 @@ impl<D: DataSource> Bridge<D> {
                 x.notify();
             }
             presenter.presences(h.runner_mut().take_presence_asks());
-            h.runner_mut().publish_sockets(|batch| x.socket(batch));
+            h.runner_mut().publish_sockets(|batch| x.socket(batch)); // LLP 1016.000 D7
             presenter.prepend_to(&mut s);
         }
         self.output = s.into_bytes();
@@ -334,7 +334,7 @@ impl<D: DataSource> Bridge<D> {
                 }
                 Ok(())
             }
-            // A re-ask: settled in its ordered place, no work.
+            // A re-ask: settled in its ordered place, no work (LLP 1041 §8.4).
             exact_runner::Dispatch::Again => x.again(&r),
             exact_runner::Dispatch::Host(_) | exact_runner::Dispatch::Missing => x.run(r, None),
         };
@@ -405,9 +405,9 @@ impl<D: DataSource> Bridge<D> {
         }
     }
 
-    /// `exact_boot`: boot what the update store selected —
+    /// `exact_boot`: boot what the update store selected (LLP 1026 D9) —
     /// the selected entry's plan when there is one, else `embedded`, the
-    /// bytes baked into the library — counting the boot first. An
+    /// bytes baked into the library — counting the boot first (D11). An
     /// entry whose plan is refused at boot boots entry zero in the same
     /// launch, the refusal journaled and the failure left standing in the
     /// record, so first pixel does not bless it. `data` makes the source for each attempt.
@@ -472,13 +472,13 @@ impl<D: DataSource> Bridge<D> {
             ),
             None => Box::new(MonospaceMeasurer::default()),
         };
-        // The app's bindings, once: the secrets it
+        // The app's bindings, once (LLP 1016 D6; LLP 1018 D6): the secrets it
         // kept are read into a snapshot before the runner boots, so the first
         // frame is a returning user's; the executor thread takes the same
         // bindings for its requests. Build beside any running host: the dev
         // menu may use this fresh-state path to reload the baked plan.
         // A fresh named drive empties leftover secrets before that read.
-        // An archive that links no I/O binds nothing.
+        // An archive that links no I/O binds nothing (LLP 1047.001).
         let crate::store::Endowed {
             bindings,
             snapshot,
@@ -558,8 +558,8 @@ impl<D: DataSource> Bridge<D> {
         }
     }
 
-    /// What the update store has to say, into this runtime's runner
-    /// — after a check, after an activation; the output is the
+    /// What the update store has to say, into this runtime's runner (LLP
+    /// 1030 D7) — after a check, after an activation; the output is the
     /// batch of the `delivery` resource's re-answer.
     pub fn sync_delivery(&mut self) -> u32 {
         let out = self
@@ -569,7 +569,7 @@ impl<D: DataSource> Bridge<D> {
         self.emit(out)
     }
 
-    /// The session's app module: `later(ctx, body, len,
+    /// The session's app module (LLP 1067.000): `later(ctx, body, len,
     /// reply)` takes each long native call on the executor's thread and
     /// answers it once ([`crate::app_module::reply`]); `call` answers a
     /// `native.call` before it returns ([`crate::app_module::answer`]).
@@ -585,7 +585,7 @@ impl<D: DataSource> Bridge<D> {
         self.adopt_app_module();
     }
 
-    /// The app module announced `topic`: the live source's
+    /// The app module announced `topic` (LLP 1016.002): the live source's
     /// watching answers are asked again. An `app:/` topic is a file the
     /// module wrote (`ExactModuleContext.wrote`): the commit reports a
     /// storage change too, so a widget reloads as after a TypeScript write.
@@ -892,7 +892,7 @@ impl<D: DataSource> Bridge<D> {
     }
 
     /// Requests in flight hold a module replacement back; `requests` says ask
-    /// again, and a dev generation lets them go (`let_go`) after its window.
+    /// again, and a dev generation lets them go (`let_go`) after its window (LLP 1007 §6).
     fn refuse_pending(&mut self) -> u32 {
         self.prepared = None;
         let refusal = self
@@ -917,7 +917,7 @@ impl<D: DataSource> Bridge<D> {
         };
         candidate.host.commit_boot();
         // The old executor lets go of everything, then says which uploads had
-        // begun to go out; the rest never left.
+        // begun to go out; the rest never left (LLP 1016.000 D10).
         if let Some(old) = self.executor.as_deref() {
             old.forget(&|_| false);
             let started = old.let_go_started(&|_| false);
@@ -961,17 +961,17 @@ impl<D: DataSource> Bridge<D> {
     /// 8 = load, 9 = message (the payload — a change's text, a key's chord
     /// (`Event::key`), or a guest message — is the input buffer's first `len`
     /// bytes, UTF-8).
-    /// Kinds 43/44 are `keyup`/`keycapture`; 46/47 are `focusin`/`focusout`.
-    /// Kind 14 is navigate: one UTF-8 location at the navigation root.
+    /// Kinds 43/44 are `keyup`/`keycapture`; 46/47 are `focusin`/`focusout` (#283).
+    /// Kind 14 is navigate: one UTF-8 location at the navigation root (LLP 1038 D8).
     /// Kind 23 is a text field's `input`; 24 and 25 a checkbox's `change`
-    /// and `input`, the payload `true` or `false`; 40 and
+    /// and `input`, the payload `true` or `false` (LLP 1069.001 D4); 40 and
     /// 41 a text field's `input` and `change` with its selection, 42 its
     /// `select` (`start,end,direction,text`; x2apps codeedit #2).
     pub fn dispatch(&mut self, view: u32, kind: u32, len: usize, now_ms: f64) -> u32 {
         let payload =
             String::from_utf8_lossy(&self.input[..len.min(self.input.len())]).into_owned();
         let event = match kind {
-            // A press, with the modifiers held as a chord prefix.
+            // A press, with the modifiers held as a chord prefix (gallery F20).
             0 => {
                 let Some(event) = Event::press(&payload) else {
                     return self.refuse("invalid press modifiers");
@@ -979,8 +979,8 @@ impl<D: DataSource> Bridge<D> {
                 event
             }
             1 => Event::Change(payload.into()),
-            // 23 is a text field's `input`; 24 and 25 a checkbox's `change` and `input`, the payload `true`/`false`.
-            // 26 is a file input's `change`, one picked file per line; 27 its `cancel`.
+            // @ref LLP 1069.001 D4 — 23 is a text field's `input`; 24 and 25 a checkbox's `change` and `input`, the payload `true`/`false`.
+            // @ref LLP 1069.002 D3, D2 — 26 is a file input's `change`, one picked file per line; 27 its `cancel`.
             26 => {
                 let Some(files) = exact_runner::Picked::payload(&payload) else {
                     return self.refuse("invalid picked files");
@@ -1012,8 +1012,8 @@ impl<D: DataSource> Bridge<D> {
             // The platform's pull-to-refresh control fired.
             22 => Event::Refresh,
             // A context menu (its point when it has one), scroll, media, pan,
-            // selection and pan release, the pointer's down,
-            // up and move with its record,
+            // selection and pan release (LLP 1057 §10.6), the pointer's down,
+            // up and move with its record (LLP 1005 §3; LLP 1056 §3 stage 3),
             // the clipboard's three, a text's selectionchange, and
             // beforeunload, wheel and drop, and a text field's `input`,
             // `change` and `select` with its selection (x2apps codeedit #2),
@@ -1027,7 +1027,7 @@ impl<D: DataSource> Bridge<D> {
                     Err(error) => return self.refuse(error),
                 }
             }
-            // The next ABI kind after scroll.
+            // @ref LLP 1038 D8 — the next ABI kind after scroll.
             14 => Event::Navigate(payload),
             15 => {
                 let Some(event) = Event::height_release_payload(&payload) else {
@@ -1120,7 +1120,7 @@ impl<D: DataSource> Bridge<D> {
         self.emit(out)
     }
     /// Apply the final sample and typed release action while held.
-    /// At the engine's measured velocity.
+    /// At the engine's measured velocity (LLP 1057.001 §3).
     pub fn height_drag_release(&mut self, token: u64, height: f64, now_ms: f64) -> u32 {
         let out = self.host.as_mut().map_or_else(not_booted, |h| {
             h.dispatch_height_measured(token, height, now_ms)
@@ -1128,7 +1128,7 @@ impl<D: DataSource> Bridge<D> {
         self.emit(out)
     }
 
-    /// Arrange: catch a `reorderFor` handle's row.
+    /// Arrange (LLP 1041 §8.5): catch a `reorderFor` handle's row.
     pub fn reorder_begin(&mut self, handle: u32, scroll_top: f64, now_ms: f64) -> u32 {
         let out = self
             .host
@@ -1176,7 +1176,7 @@ impl<D: DataSource> Bridge<D> {
 
     /// Release (or cancel) a live hold after its authored action.
     /// `cancel`: 0 releases at `vx, vy`, 1 cancels, 2 releases at the
-    /// engine's measured velocity.
+    /// engine's measured velocity (LLP 1057.001 §3).
     pub fn hold_end(&mut self, token: u64, cancel: u32, vx: f64, vy: f64, now_ms: f64) -> u32 {
         let end = match cancel {
             0 => exact_motion::HoldEnd::Release {
@@ -1210,8 +1210,8 @@ impl<D: DataSource> Bridge<D> {
         self.emit(out)
     }
 
-    /// Whether the display drives frame tasks.
-    /// A presented display frame.
+    /// Whether the display drives frame tasks (LLP 1073 D4).
+    /// A presented display frame (LLP 1073 D5).
     pub fn frame(&mut self, now_ms: f64) -> u32 {
         let out = self
             .host
@@ -1221,7 +1221,7 @@ impl<D: DataSource> Bridge<D> {
     }
 
     /// [`Bridge::frame`] at the target `now_ms`, the wall at `wall_ms`
-    /// stopping the engine's input clock.
+    /// stopping the engine's input clock (LLP 1003.001 D5).
     pub fn frame_at(&mut self, now_ms: f64, wall_ms: f64) -> u32 {
         let out = self
             .host
@@ -1258,8 +1258,8 @@ impl<D: DataSource> Bridge<D> {
         self.emit(out)
     }
 
-    /// A placement root's margins and its width's authorship:
-    /// a measurement, written to the output as it is, with no batch
+    /// A placement root's margins and its width's authorship (LLP 1126.001
+    /// WP10): a measurement, written to the output as it is, with no batch
     /// around it (`emit` prepends the presenter's pending ops to a batch).
     pub fn placement_box(&mut self, view: u32) -> u32 {
         let out = self
@@ -1270,7 +1270,7 @@ impl<D: DataSource> Bridge<D> {
         self.output.len() as u32
     }
 
-    /// The page's facts changed or became known: bit 0
+    /// The page's facts changed or became known (LLP 1069.000 D2): bit 0
     /// hidden, bit 1 offline, bit 2 a share sheet.
     pub fn set_page(&mut self, bits: u32) -> u32 {
         let page = exact_runner::Page::from_bits(bits);
@@ -1307,7 +1307,7 @@ impl<D: DataSource> Bridge<D> {
     }
 
     /// One view's own appearance, where the presenter finds it differs from
-    /// the session's.
+    /// the session's (LLP 1062 D4).
     pub fn view_scheme(&mut self, view: u32, dark: bool) -> u32 {
         let out = self
             .host
@@ -1352,7 +1352,7 @@ impl<D: DataSource> Bridge<D> {
         self.emit(out)
     }
 
-    /// The display for Canvas 2D: its scale and memory, for
+    /// The display for Canvas 2D (LLP 1056 D4): its scale and memory, for
     /// every session; a booted host redraws its canvases at the new scale.
     pub fn canvas_display(&mut self, scale: f64, memory: f64) -> u32 {
         crate::host::canvas2d::set_display(scale, memory);
@@ -1365,7 +1365,7 @@ impl<D: DataSource> Bridge<D> {
 
     /// A Canvas 2D image handle (the input buffer's first `len` bytes,
     /// UTF-8) decoded at `width` × `height` pixels, or not (`ok` false):
-    /// the canvases that asked draw again.
+    /// the canvases that asked draw again (LLP 1056 D9).
     pub fn canvas_image(&mut self, len: usize, width: u32, height: u32, ok: bool) -> u32 {
         let src = String::from_utf8_lossy(&self.input[..len.min(self.input.len())]).into_owned();
         let out = self.host.as_mut().map_or_else(not_booted, |h| {
@@ -1383,7 +1383,8 @@ impl<D: DataSource> Bridge<D> {
         self.emit(out)
     }
 
-    /// A motion frame for the display frame presented at `frame_ms`.
+    /// A motion frame for the display frame presented at `frame_ms`
+    /// (LLP 1003.001 D5).
     pub fn tick_at(&mut self, now_ms: f64, frame_ms: f64) -> u32 {
         let out = self
             .host
@@ -1392,7 +1393,7 @@ impl<D: DataSource> Bridge<D> {
         self.emit(out)
     }
 
-    /// Turn the first-frame rule on or off: every host
+    /// Turn the first-frame rule on or off (LLP 1003.001 D7): every host
     /// booted after takes it; off, the live host starts what waits at
     /// `at_ms`, in the batch returned, and a prepared one at its commit.
     pub fn start_on_frame(&mut self, on: bool, at_ms: f64) -> u32 {
@@ -1413,13 +1414,13 @@ impl<D: DataSource> Bridge<D> {
     pub fn agent(&mut self, len: usize) -> u32 {
         let request =
             String::from_utf8_lossy(&self.input[..len.min(self.input.len())]).into_owned();
-        // `tap @t` / `type @t` answer a held device request
-        // before any view is looked up.
+        // `tap @t` / `type @t` answer a held device request (LLP 1069.007
+        // D4) before any view is looked up.
         let out = match self.host.as_mut() {
             Some(h) => h.answer_hold(&request).unwrap_or_else(|| h.agent(&request)),
             None => exact_runner::agent::error("not booted"),
         };
-        // An answered auth hold is delivered by the next pump.
+        // An answered auth hold is delivered by the next pump (LLP 1069.006 D7).
         if out.contains("\"capability\":\"auth\"") {
             self.executor.as_deref().inspect(|x| x.notify());
         }

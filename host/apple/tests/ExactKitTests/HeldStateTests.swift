@@ -8,14 +8,15 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// Held states on UIKit and AppKit: a hold is shown as the real state, kept
-/// apart from it: `active` the press of the node the press resolves to through
-/// the logical tree (its press paint), `hover` (the Mac) and `focus-visible`
-/// that node's look. A real press down as it is held is taken over; one after
-/// lets it go at its down, as a key, the pointer coming or going and the focus
-/// coming or going do. A disabled node, or one under a disabled node, refuses
-/// one; disabling and going let it go. A new generation lets it go unsaid and
-/// takes it again. `layout` names what is held, and its rows' CSS values.
+/// Held states on UIKit and AppKit (LLP 1122 D8, LLP 1121 stage 8 E2): a hold
+/// is shown as the real state, kept apart from it: `active` the press of the
+/// node the press resolves to through the logical tree (its press paint),
+/// `hover` (the Mac) and `focus-visible` that node's look. A real press down
+/// as it is held is taken over; one after lets it go at its down, as a key, the
+/// pointer coming or going and the focus coming or going do. A disabled node,
+/// or one under a disabled node, refuses one; disabling and going let it go.
+/// A new generation lets it go unsaid and takes it again. `layout` names what
+/// is held, and its rows' CSS values.
 ///   bun host/apple/build.mjs --test --ios   (and --test for the Mac)
 final class HeldStateTests: XCTestCase {
     #if os(iOS)
@@ -628,7 +629,7 @@ final class HeldStateTests: XCTestCase {
     }
 
     #if os(macOS)
-    /// A held hover's rows are its look's as the runner says
+    /// Stage 9 E: a held hover's rows are its look's as the runner says
     /// them, each with the token it read.
     @MainActor func testAHeldHoversRowsNameTheirTokens() throws {
         _ = NSApplication.shared
@@ -681,7 +682,7 @@ final class HeldStateTests: XCTestCase {
         let rows = try XCTUnwrap(HeldState.rows(for: label, in: p)?["rows"] as? [[String: Any]], "the label named answers too")
         XCTAssertEqual(rows.first?["name"] as? String, "press_background_color")
         XCTAssertEqual(rows.first?["value"] as? String, "#0000ff", "the runner's CSS value")
-        // It names the node it is held on, the press, by its site.
+        // It names the node it is held on, the press, by its site (stage 9 E).
         let answer = try XCTUnwrap(HeldState.rows(for: label, in: p))
         XCTAssertEqual(answer["node"] as? Int, Int(card.id))
         XCTAssertEqual((answer["site"] as? NSNumber)?.intValue, (try node(card.id)["site"] as? NSNumber)?.intValue)
@@ -743,7 +744,7 @@ final class HeldStateTests: XCTestCase {
         v.lookHovering(g)
     }
 
-    // A pointer's hover on iOS: a node with a `:hover` look has
+    // A pointer's hover on iOS (stage 9 G3): a node with a `:hover` look has
     // its look recognizer; the look shows while it has the pointer, and a
     // hover holds, let go by the pointer coming over the node or leaving it,
     // not by a cancel (inspect mode turns every recognizer off and on).

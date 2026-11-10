@@ -1,7 +1,7 @@
 //! Colour as an author writes it, stored as the renderer reads it. CSS text and
 //! sRGB floats are encoded for display; the renderer blends and lights in linear
 //! light, so both are decoded once, here, through the repository's CSS colour
-//! crate (`exact-color`), the parser Contract's `color` uses.
+//! crate (`exact-color`, LLP 1100), the parser Contract's `color` uses.
 use crate::{Data, DataError, Reader, Writer};
 
 /// A colour in linear light: `N` channels, red, green, blue and (when `N` is 4)

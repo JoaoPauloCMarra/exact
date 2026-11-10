@@ -24,22 +24,22 @@ fun interface Drive {
  * `kinds=…` (BENCH_KINDS); `scenario` reaches the data source as BENCH_SCENARIO, `live` as BENCH_LIVE.
  */
 open class ExactActivity : Activity() {
-    /** The app's native modules, by name. */
+    /** The app's native modules (LLP 1024), by name. */
     protected open val modules: Map<String, NativeModule> = emptyMap()
     /** The app's `video` player ([VideoPlayer]); none for an app without video. */
     protected open val video: ((Context) -> VideoPlayer)? = null
     private var natives: Natives? = null
-    /** The app's text fields, each the platform's own ([Fields]). */
+    /** The app's text fields, each the platform's own ([Fields], LLP 1115.001 D8). */
     private var fields: Fields? = null
     /** The row pitch `start=N` scrolls by (0: the app's plan scrolls to it itself). */
     protected open val startPitchDp = 0f
     /** The app has text fields: keys and the software keyboard reach it ([Keys]). */
     protected open val input = false
-    /** What shows a date or time control's picker: the framework's dialogs, unless the app
+    /** What shows a date or time control's picker (LLP 1115.001.000 D1): the framework's dialogs, unless the app
      * links a library's (the shell's Compose Material 3 pickers, linked when the plan has such a control). */
     open val pickers: Pickers get() = FrameworkPickers
 
-    /** The app's Kotlin hatches, made the first time exact2 tells a moment, which is after
+    /** The app's Kotlin hatches (LLP 1115.001.000 D4), made the first time exact2 tells a moment, which is after
      * first pixel; one for the process, as exact2's host is, and given each activity made again. */
     internal fun hatches(): HatchReader? {
         if (!hatchesLooked) { hatchesLooked = true; hatchReader = HatchReader.make(this) }
@@ -65,7 +65,7 @@ open class ExactActivity : Activity() {
         pads.motion(event) || super.dispatchGenericMotionEvent(event)
 
     override fun onCreate(state: Bundle?) {
-        // An activity made again in a process whose host runs (a configuration change this
+        // An activity made again in a process whose host runs (LLP 1115.001 D15.1: a configuration change this
         // activity does not declare, or one the system destroyed in the background) starts no second host: its view
         // adopts the one that runs ([Owner.boot], [Native.start]). The environment below is read once, as the library
         // loads and the host boots, and other threads read it from then on, so it is written only the first time.
@@ -87,19 +87,19 @@ open class ExactActivity : Activity() {
         edgeToEdge()
         // exact2's thread, made before the assets are checked: it loads exact2's library meanwhile.
         owner()
-        // The modules' implementations the APK carries answer their names.
+        // The modules' implementations the APK carries answer their names (LLP 1133.001 D5).
         Extensions.bind(this)
         installAssets(File(storage, "app"))
-        // What the host asks of the platform, acted on here, on the main thread.
+        // What the host asks of the platform (LLP 1115.001 D5), acted on here, on the main thread.
         requests = Requests(this).also { it.back = { goes -> takeBack(goes) } }
         // No background of its own: the window's shows behind the page, the launch theme's surface until the host says
         // the page's ([chrome]).
         root = Root(this)
-        // The top layer's windows are this activity's, and outlive its reader.
+        // The top layer's windows (LLP 1115.001 D10) are this activity's, and outlive its reader.
         requests.surfaces = Surfaces(this, root).also { it.covering = { on -> fields?.covered(on) } }
         read()
         // The raw insets go to the host whenever they change, and the window's size when it does; nothing is padded
-        // here.
+        // here (D3.3).
         root.setOnApplyWindowInsetsListener { _, insets -> window(insets); insets }
         root.addOnLayoutChangeListener { _, l, t, r, b, ol, ot, or, ob ->
             if (r - l != or - ol || b - t != ob - ot) root.rootWindowInsets?.let { window(it) }
@@ -112,8 +112,8 @@ open class ExactActivity : Activity() {
         if (again && state == null) received(intent)
     }
 
-    /** A URL or a share given to the running activity: its location, as a link's, or the
-     * share's (`singleTask` brings this task forward for it). */
+    /** A URL or a share given to the running activity: its location, as a link's (LLP 1133.023 D15 item 3), or the
+     * share's (LLP 1133.024 D5; `singleTask` brings this task forward for it). */
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -125,7 +125,7 @@ open class ExactActivity : Activity() {
         else intent.data?.let { Exact.open(it.toString()) }
     }
 
-    /** Whether an accessibility service is on. The reader answers one through its root
+    /** Whether an accessibility service is on (LLP 1115.001 D13). The reader answers one through its root
      * ([Root], [Access]) and asks exact2 for the tree only while one is on: with none, exact2 is never asked and
      * builds nothing. */
     private val accessibility by lazy { getSystemService(android.view.accessibility.AccessibilityManager::class.java) }
@@ -142,7 +142,7 @@ open class ExactActivity : Activity() {
     }
 
     /** A driver's `tree --ax`, once exact2 has answered: what Android has for the window that is in front, the open
-     * surface's or the page's, as the driver's reply (`scripts/agent-ax.mjs` has the form). Read from
+     * surface's or the page's, as the driver's reply (LLP 1080.002; `scripts/agent-ax.mjs` has the form). Read from
      * each node's own [android.view.accessibility.AccessibilityNodeInfo] ([Access.ax]). */
     internal fun ax(limit: Int): org.json.JSONObject {
         val surface = requests.surfaces?.answers
@@ -180,7 +180,7 @@ open class ExactActivity : Activity() {
 
     private lateinit var requests: Requests
 
-    /** System Back goes where the app's routes send it ([Native.back]). The callback is registered
+    /** System Back goes where the app's routes send it ([Native.back], LLP 1115.001 D6). The callback is registered
      * only while the host says Back has somewhere to go in the app ([Requests.back]): at the first screen there is
      * none, so Back is the system's own, which leaves the app with its own animation. A Back that arrives and the
      * app does not take (it had somewhere to go a moment ago) finishes the activity, as it always did. */
@@ -237,7 +237,7 @@ open class ExactActivity : Activity() {
     /**
      * Make this activity's reader, the view that replays the host's streams with the hosted views under it, and give
      * it the host: booted now, or adopted where one runs already ([Native.start]). Called when the activity is made,
-     * and again each time it starts after a stop: Android discards a stopped window's display
+     * and again each time it starts after a stop (LLP 1115.001 D15.2): Android discards a stopped window's display
      * lists, the rows and pictures the reader kept among them, so the reader that comes back holds nothing the host
      * sent it. A new one adopts the host, which paints everything again for it; the app is as it was.
      */
@@ -246,15 +246,15 @@ open class ExactActivity : Activity() {
         fields?.leaving()
         root.removeAllViews()
         // Before the host boots: its first layout measures the app's text fields in a field of this activity's
-        // theme ([Fields.measure]).
+        // theme ([Fields.measure], LLP 1115.001 D8).
         Fields.context = this
         val owner = owner()?.also { it.published = { view.onPublished() } }
         // The device's settings, told before the host boots: its first frame is laid out and painted with them. Its
-        // colours too: read again by each reader, since a wallpaper changed while the last one was stopped is
+        // colours too (D4): read again by each reader, since a wallpaper changed while the last one was stopped is
         // another palette.
         val device = Device.read(this).also { told = it }
         val colors = Palette.read(this).also { toldColors = it }
-        // The window as it is now, with the system's raw insets: told before the host boots too, so the page is
+        // The window as it is now, with the system's raw insets (D3.3): told before the host boots too, so the page is
         // laid out where it will be shown. The view's own size is never told: the presenter places the page.
         val size = windowSize()
         val density = Device.scale(this)
@@ -306,7 +306,7 @@ open class ExactActivity : Activity() {
         natives = elements
         elements.hatched = { node, context -> hatchReader?.made(node, context) }
         view.natives = elements
-        // The app's text fields outlive a reader made again: a field keeps its view, and with it
+        // The app's text fields (LLP 1115.001 D8) outlive a reader made again: a field keeps its view, and with it
         // its selection and its undo, while its node lives. Under the view, which takes every touch and hands a
         // field its own ([Fields.touch]).
         val hosted = fields ?: Fields(this).also { fields = it }
@@ -314,7 +314,7 @@ open class ExactActivity : Activity() {
         // A surface of the top layer that is open over this reader's page keeps its fields from the focus.
         hosted.covered(requests.surfaces?.open == true)
         view.fields = hosted
-        // What the reader answers accessibility services with: the root answers for the page, the bars and
+        // What the reader answers accessibility services with (D13): the root answers for the page, the bars and
         // the fields; the page's view and the layers are pictures and say nothing themselves. Hosted elements (a
         // web view, a video) report themselves, after exact2's nodes.
         view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
@@ -334,7 +334,7 @@ open class ExactActivity : Activity() {
             })
         } else root.addView(ticker, FrameLayout.LayoutParams(1, 1))
         view.ticker = ticker
-        // The app's bars, over the page and everything it hosts. The host tells this reader its
+        // The app's bars (LLP 1115.001 D11), over the page and everything it hosts. The host tells this reader its
         // bars anew, as it paints everything again for it.
         view.bars = Bars(this, root)
         accessible(accessibility.isEnabled || asked)
@@ -342,7 +342,7 @@ open class ExactActivity : Activity() {
 
     private lateinit var root: Root
 
-    /** The app is edge to edge: the window reaches under transparent system bars and into the
+    /** The app is edge to edge (LLP 1115.001 D3.4): the window reaches under transparent system bars and into the
      * display's cutout, and the software keyboard is an inset the host is told, not a pan of the window. Android 15
      * does most of this to every app that targets it; the calls make it so from Android 11 on, [Legacy] before. */
     @Suppress("DEPRECATION")
@@ -385,7 +385,7 @@ open class ExactActivity : Activity() {
     private var toldWindow: Triple<Pair<Int, Int>, Float, List<Int>>? = null
 
     /** Tell the host the window, whole, when its size, the display's density or any inset is not what it was last
-     * told. The host answers with where the page is ([chrome]). */
+     * told (LLP 1115.001 D3.3). The host answers with where the page is ([chrome]). */
     private fun window(insets: android.view.WindowInsets) {
         if (!reads()) return
         val size = if (root.width > 0 && root.height > 0) root.width to root.height else windowSize()
@@ -424,7 +424,7 @@ open class ExactActivity : Activity() {
     private var toldColors: IntArray? = null
 
     /** Read the device's settings and its colours and tell the host each, whole, when any of it is not what it was
-     * last told. */
+     * last told (LLP 1115.001 D3.1, D4). */
     private fun configure() {
         if (!reads()) return
         val owner = view.owner
@@ -446,7 +446,7 @@ open class ExactActivity : Activity() {
         override fun onChange(selfChange: Boolean) = configure()
     }
 
-    /** A configuration changed in place: the manifest declares the size, night mode, font scale,
+    /** A configuration changed in place (LLP 1115.001 D15.1): the manifest declares the size, night mode, font scale,
      * bold text, locale, density and keyboard changes, so none of them makes the activity again. The settings go to
      * the host whole ([configure]), and the window with its density ([window]); a new size or new insets arrive
      * through the root's own listeners as well. */
@@ -459,7 +459,7 @@ open class ExactActivity : Activity() {
     /** The activity was stopped since its reader was made: Android discarded what that reader kept. */
     private var stopped = false
 
-    /** The host does its frame work only while the activity is started, and a start after a
+    /** The host does its frame work only while the activity is started (LLP 1115.001 D15.2), and a start after a
      * stop makes the reader again ([read]). */
     override fun onStart() {
         super.onStart()
@@ -499,13 +499,14 @@ open class ExactActivity : Activity() {
         super.onPause()
     }
 
-    /** A permission an extension asked for ([ExtensionContext.requestPermissions]). */
+    /** A permission an extension asked for ([ExtensionContext.requestPermissions], LLP 1133.002 D9). */
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         Extensions.permissionsResult(requestCode)
     }
 
-    /** An activity an extension started for its result ([ExtensionContext.startActivityForResult]). */
+    /** An activity an extension started for its result ([ExtensionContext.startActivityForResult], LLP 1133.018 D13
+     * item 2). */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         Extensions.activityResult(requestCode, resultCode, data)
@@ -545,12 +546,12 @@ open class ExactActivity : Activity() {
         // Rust's `temp_dir` is TMPDIR, else /data/local/tmp, which an app cannot write. API 29 sets none, and a
         // drive with no scratch store keeps its `app:/` files under it (`exact_linux::picker`).
         android.system.Os.setenv("TMPDIR", cacheDir.absolutePath, false)
-        // The launching intent's URL is the launch location: the activity is exported, so
+        // The launching intent's URL is the launch location (LLP 1133.023 D15 item 3): the activity is exported, so
         // any app may start it with one, which reaches only what the navigation root routes, as a link does.
         intent.data?.takeUnless { Shares.isShare(intent) }?.let { android.system.Os.setenv("EXACT_LAUNCH_URL", it.toString(), true) }
-        // A share that starts the app is its launch location, claimed before the boot.
+        // A share that starts the app is its launch location, claimed before the boot (LLP 1133.024 D5).
         Shares.request(this, intent)?.let { android.system.Os.setenv("EXACT_SHARE", it, true) }
-        // GPU modules come from this APK. Exported intents never select executable content.
+        // GPU modules (LLP 1009) come from this APK. Exported intents never select executable content.
         android.system.Os.setenv("EXACT_NATIVE_LIBS", applicationInfo.nativeLibraryDir, true)
         android.system.Os.setenv("EXACT_MOVE_TRACKS", "1", true)
         val development = packageManager.getApplicationInfo(packageName, android.content.pm.PackageManager.GET_META_DATA)
@@ -583,7 +584,7 @@ open class ExactActivity : Activity() {
         // A move may carry layers' tracks ([applyMove]), so a row coming into view starts its animations without a
         // paint, and exact2 paints only by the frame new rows can show (movetracks=0: a paint within six moves).
         if (intent.getStringExtra("movetracks") != "0") android.system.Os.setenv("EXACT_MOVE_TRACKS", "1", true)
-        // reuse=0: list rows built anew, not rebound (exact2's EXACT_ROW_REUSE), to compare.
+        // reuse=0: list rows built anew, not rebound (exact2's EXACT_ROW_REUSE, LLP 1078), to compare.
         intent.getStringExtra("reuse")?.let { android.system.Os.setenv("EXACT_ROW_REUSE", it, true) }
         Shadows.enabled = intent.getStringExtra("shadowmask") != "0"
         Exact.detachWait = intent.getStringExtra("detachwait") == "1"

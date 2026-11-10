@@ -8,7 +8,7 @@ import android.os.Handler
 import android.os.Looper
 
 /**
- * The process's one audio focus owner: a module that plays or captures claims focus
+ * The process's one audio focus owner (LLP 1133.012 D4, D12 item 2): a module that plays or captures claims focus
  * here rather than requesting it, so the process makes one request, for the strongest type claimed:
  *
  * - `capture`: `AUDIOFOCUS_GAIN` for the capture's length; speech under it requests nothing more.

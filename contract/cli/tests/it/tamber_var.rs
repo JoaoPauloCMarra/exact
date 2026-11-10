@@ -1,11 +1,11 @@
-//! `var(--name)` is the token `name`: it compiles to the plan the name
-//! compiles to, for a colour, a length, a number, a type, a family, a box
-//! and a text shadow, a duration and an easing; a name the design lacks is
-//! refused naming the tokens the row could take, fallback or not, in a row
-//! or where a component's argument carries it to one (a `fn`'s result and a
-//! `derive`'s value name a token as an argument does); a `var()` whose name
-//! data completes is the name it makes; a fallback is warned once; a token
-//! of another kind is refused as its name is.
+//! @ref LLP 1153 D6 — `var(--name)` is the token `name`: it compiles to the
+//! plan the name compiles to, for a colour, a length, a number, a type, a
+//! family, a box and a text shadow, a duration and an easing; a name the
+//! design lacks is refused naming the tokens the row could take, fallback or
+//! not, in a row or where a component's argument carries it to one (a
+//! `fn`'s result and a `derive`'s value name a token as an argument does); a
+//! `var()` whose name data completes is the name it makes; a fallback is
+//! warned once; a token of another kind is refused as its name is.
 
 use std::path::PathBuf;
 

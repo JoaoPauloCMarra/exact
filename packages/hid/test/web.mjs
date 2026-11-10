@@ -1,5 +1,5 @@
-// @exact/hid's web conformance suite in Chromium, over a fake `navigator.hid`
-// (`packages/serial/test/chromium.mjs`): the chooser asked with the app's filters and every pad usage excluded,
+// @exact/hid's web conformance suite in Chromium (LLP 1133.037 §16 stage 1), over a fake `navigator.hid`
+// (`packages/serial/test/chromium.mjs`): the chooser asked with the app's filters and every pad usage excluded (D11),
 // a pad never offered, a lease per open on one shared open, input reports as a batch (the latest first, then every
 // report since, `dropped` past `history`), output and feature reports, an unplug, and `forget`.
 //

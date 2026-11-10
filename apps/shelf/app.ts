@@ -81,8 +81,8 @@ async function load(storage: Storage): Promise<Saved> {
   return loading;
 }
 
-// The module's storage runs one operation at a time, in the order issued,
-// so both are issued here, in this answer's own turn: the
+// The module's storage runs one operation at a time, in the order issued
+// (LLP 1097 D3), so both are issued here, in this answer's own turn: the
 // directory is made before the write, and a later edit writes after this
 // one. A write chained on another answer's would run after that answer
 // replied, where the module counts it as storage no answer awaits.
@@ -129,7 +129,7 @@ function patchBook(storage: Storage, id: string, patch: Partial<Book>) {
 // Shelf's own NDEF record: an external type whose data is the book's id.
 const BOOK_RECORD = 'com.exact.shelf:book';
 
-/** A failed write's cause: the module's (after the error's name), else ours. */
+/** A failed write's cause: the module's (D3 puts it after the error's name), else ours. */
 function tagCause(e: unknown): string {
   const code = (e as { code?: string })?.code ?? '';
   const said = String((e as Error)?.message ?? '').split(': ').at(-1) ?? '';
@@ -223,7 +223,7 @@ const sources: Sources = {
     }
   },
 
-  // Tag this book: the book's Open Library page first, which
+  // Tag this book (LLP 1133.035 §11): the book's Open Library page first, which
   // a phone without Shelf opens, then Shelf's own record naming this copy. On
   // iOS the sheet says how it went; elsewhere the view does, from `cause`.
   tagBook: async ([id], _store, storage) => {

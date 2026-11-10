@@ -1,4 +1,4 @@
-// On the web, in a real browser with a real composition (CDP's
+// LLP 1115.000 §5, ruling 6, on the web, in a real browser with a real composition (CDP's
 // `Input.imeSetComposition`, which fires `compositionstart`, `compositionupdate` and `input` as an input method does;
 // `Input.insertText` commits it, an empty composition cancels it): the app hears `input` at every change, the marked
 // text included, and a value it writes meanwhile never ends the composition. It is held, the last one, and written

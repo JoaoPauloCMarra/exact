@@ -1,5 +1,5 @@
 //! The generated seam is checked by the actual pinned TypeScript compiler.
-//! A wrong-shaped answer is a build refusal.
+//! @ref LLP 1027 D5 — a wrong-shaped answer is a build refusal.
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
@@ -70,12 +70,12 @@ async function storageTypes() {
   await database.query('SELECT ?', [{unexpected: true}]);
   // @ts-expect-error SQLite row IDs are bigint, never lossy numbers
   const lossy: number = batch[0].lastInsertRowid;
-  // `fs.compressImage` as the docs give it: options in, the record out.
+  // `fs.compressImage` as the docs give it (LLP 1069.002 A1): options in, the record out.
   const image = await storage.fs.compressImage(path, storage.fs.directories.cache + '/out.jpg', {maxDimension: 1024, maxBytes: 1_000_000});
   const shrunk: {path: string; type: 'image/jpeg'; size: number; width: number; height: number} = image;
   // @ts-expect-error the engine's positional binding is not the app interface
   await storage.fs.compressImage(path, path, 1024, 1_000_000);
-  // `fs.transformImage`: the edit in, what was written out.
+  // `fs.transformImage` (LLP 1133.019 D14): the edit in, what was written out.
   const edit = await storage.fs.transformImage(path, storage.fs.directories.temporary + '/edit', {rotate: 90, crop: {x: 0, y: 0, width: 10, height: 10}, metadata: 'no-location'});
   const kept: {path: string; type: string; colorSpace: 'srgb' | 'display-p3' | 'other'; hdr: boolean; metadata: 'keep' | 'no-location' | 'none'} = edit;
   await storage.fs.compressImage(path, path, {maxDimension: 512, maxBytes: 100_000, rotate: 90, flip: 'horizontal'});
@@ -136,11 +136,11 @@ impl Drop for Fixture {
     }
 }
 
-/// The app interface of `storage.fs.compressImage` as docs/reference.md
-/// gives it: the declaration apps type-check against says options in and the
-/// record out. Kept outside the tsc check, which the default checks skip, so
-/// a vendor refresh that replaces the declaration with the engine's
-/// positional binding fails here.
+/// The app interface of `storage.fs.compressImage` (LLP 1069.002 A1) as
+/// docs/reference.md gives it: the declaration apps type-check against says
+/// options in and the record out. Kept beside the tsc check (the async lane),
+/// which the default checks skip: an Ibex refresh once replaced the
+/// declaration with the engine's positional binding and nothing failed.
 #[test]
 fn compress_image_is_declared_as_the_docs_give_it() {
     let declared = include_str!("../../../../vendor/ibex/crates/ibex2/src/bindings/storage.d.ts");
@@ -171,7 +171,7 @@ fn compress_image_is_declared_as_the_docs_give_it() {
 }
 
 #[test]
-#[ignore = "typechecks generated signatures with tsc; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: typechecks generated signatures with tsc; bun scripts/async.mjs runs it"]
 fn generated_signatures_check_real_sync_and_async_providers_and_the_dispatcher() {
     let plan = contract::compile(CONTRACT).unwrap();
     let declarations = contract::typescript(&plan).unwrap();
@@ -210,7 +210,7 @@ fn generated_signatures_check_real_sync_and_async_providers_and_the_dispatcher()
 }
 
 #[test]
-#[ignore = "typechecks Caltrain with tsc; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: typechecks Caltrain with tsc; bun scripts/async.mjs runs it"]
 fn caltrain_types_follow_its_real_plan_without_requiring_the_host_owned_source() {
     let plan = contract::compile_path(
         &Path::new(env!("CARGO_MANIFEST_DIR")).join("../../apps/caltrain/app.contract"),
@@ -239,10 +239,10 @@ const wrong: Result<'board'> = [{ id: 'mv', name: 'Mountain View', zone: 4, dist
 }
 
 #[test]
-#[ignore = "typechecks the guides' TypeScript examples with tsc; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: typechecks the guides' TypeScript examples with tsc; bun scripts/async.mjs runs it"]
 fn every_typescript_example_in_the_guides_checks_against_its_contracts_types() {
-    // Each `ts` block after a `contract` block in the same section is
-    // checked against that Contract's `contract types` output.
+    // LLP 1086 D10: each `ts` block after a `contract` block in the same
+    // section is checked against that Contract's `contract types` output.
     let mut failures = Vec::new();
     let mut checked = 0;
     for block in crate::docs::blocks() {
@@ -357,7 +357,7 @@ fn router_shapes_are_already_named_by_the_plan_type_generator() {
     }
 }
 
-// A builder reads the top of app.contract.d.ts, not its declarations.
+// LLP 1116.006 D7: a builder reads the top of app.contract.d.ts, not its declarations.
 #[test]
 fn the_file_opens_with_what_app_ts_writes_one_line_each() {
     let declaration = contract::typescript(&contract::compile(CONTRACT).unwrap()).unwrap();
@@ -421,7 +421,7 @@ fn a_contract_without_sources_has_no_summary() {
 }
 
 #[test]
-#[ignore = "checks the stream handle with tsc; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: checks the stream handle with tsc"]
 fn generated_socket_handle_types_text_binary_and_close_events() {
     let plan = contract::compile(CONTRACT).unwrap();
     let fixture = Fixture::new();
@@ -669,10 +669,11 @@ fn types_check_is_read_only_and_build_reports_only_changed_declarations() {
     );
 }
 
-/// A data module returning one of the design's colour tokens checks, and one
-/// returning a name the design lacks fails `tsc`.
+/// LLP 1121 D12 (stage 5 commit 4): a data module returning one of the
+/// design's colour tokens checks, and one returning a name the design lacks
+/// fails `tsc` (the stage 5 gate line).
 #[test]
-#[ignore = "typechecks the design's token union with tsc; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: typechecks the design's token union with tsc; bun scripts/async.mjs runs it"]
 fn a_data_module_returning_an_unknown_token_fails_tsc() {
     let dir = std::env::temp_dir().join(format!("exact-types-tokens-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
@@ -704,7 +705,7 @@ fn a_data_module_returning_an_unknown_token_fails_tsc() {
     let output = fixture.check(&module("\"surface.nonesuch\""));
     assert!(!output.status.success(), "an unknown token passed tsc");
     assert!(String::from_utf8_lossy(&output.stdout).contains("error TS"));
-    // Each kind its own union; a colour is no length.
+    // Stage 6 G: each kind its own union; a colour is no length.
     let length = |token: &str| {
         format!("import type {{ LengthToken }} from './app.contract';\nexport const gap = (): LengthToken => {token};\n")
     };

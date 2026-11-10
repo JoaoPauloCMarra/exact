@@ -1,4 +1,4 @@
-//! The canvas host's answer to Android's `ExactTamber`.
+//! The canvas host's answer to Android's `ExactTamber` (LLP 1121 D12).
 
 use super::CanvasHost;
 use exact_runner::DataSource;

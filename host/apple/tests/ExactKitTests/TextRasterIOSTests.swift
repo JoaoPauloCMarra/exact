@@ -358,7 +358,7 @@ final class TextRasterIOSTests: XCTestCase {
         XCTAssertTrue(node.textRasterReady, "what the scroll brought in has pixels")
     }
 
-    /// A document in its mount, under a native container (an inbox), is
+    /// A document in its mount, under a native container (r27's inbox), is
     /// indexed by its place in the mount as it is in the viewport: a far
     /// paragraph is not visited every pass.
     func testTheIndexSkipsAFarParagraphInTheDocumentsMount() throws {

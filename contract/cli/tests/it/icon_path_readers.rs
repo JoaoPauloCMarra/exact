@@ -1,5 +1,6 @@
-//! An even-odd icon's path starts `evenodd:`, in the plan's `icons` row and in
-//! the source form's `<path>`; every reader strips it through ONE shared parse,
+//! @ref LLP 1121 stage 14 C2 (theme2's condition, closed hard) — an even-odd
+//! icon's path starts `evenodd:`, in the plan's `icons` row and in the source
+//! form's `<path>`; every reader strips it through ONE shared parse,
 //! `exact_kernel::Icon`. The guard parses nothing:
 //! - Rust, by type: an `icons` row's `path` is an `exact_plan::IconPathId`,
 //!   which `plan.str()` and the string pool don't take, and which can't be
@@ -20,19 +21,19 @@
 //!   or a colon (`\|`, `/:/`), or the even-odd marker's text (`evenodd:`),
 //!   fails unless that exact line is allowed below, with why.
 //!
-//! The threat model: the guard stops ACCIDENTAL raw readers, code
+//! The threat model (theme2): the guard stops ACCIDENTAL raw readers, code
 //! that reaches for an icons row's path or a source form's `<path>` by hand.
 //! Deliberate laundering of the escape (through a static, a const, a
 //! closure, a macro, a re-export) is out of its scope and is caught by
 //! review.
 //!
-//! The JS scan is a TRIPWIRE with a stated limit: it covers only the files that
-//! name a symbol source, so a reader that never does (say
-//! `node.props.imageSource.split("|")` in a file naming none) isn't scanned.
-//! The enforcement is Rust's type, and the page's `iconForm`
+//! The JS scan is a TRIPWIRE with a stated limit (theme2's ruling): it covers
+//! only the files that name a symbol source, so a reader that never does
+//! (say `node.props.imageSource.split("|")` in a file naming none) isn't
+//! scanned. The enforcement is Rust's type, and the page's `iconForm`
 //! (host/web-js/symbols.js) as the one JavaScript reader of a source string,
-//! held to Icon::parse's cases and drawn by the web hole test. Widening the
-//! selection would close the limit.
+//! held to Icon::parse's cases and drawn by the web hole test. QUEUE.md names
+//! the limit and the option of widening the selection.
 
 use std::path::{Path, PathBuf};
 
@@ -408,9 +409,9 @@ fn the_scan_catches_each_bypass() {
     ] {
         assert!(!rust(bypass.clone()).is_empty(), "missed: {bypass}");
     }
-    // The definition line passes; a doc mention beside it fails; a call that
-    // hides inside braces in comments (`// {` … `// }`) is a second occurrence
-    // in icon_of, which the exactly-twice count fails.
+    // The definition line passes; a doc mention beside it fails; a call
+    // that hides inside braces in comments (Astra's `// {` … `// }`) is a
+    // second occurrence in icon_of, which the exactly-twice count fails.
     let allowed = "    pub fn raw_for_icon(self) -> StrId {\n        StrId(self.0)\n    }\n";
     assert!(readers("plan/src/lib.rs", allowed).0.is_empty());
     let doc = "/// The one way out, raw_for_icon.\n    pub fn raw_for_icon(self) -> StrId {\n";
@@ -420,8 +421,8 @@ fn the_scan_catches_each_bypass() {
         "the doc mention"
     );
     let braces = format!("pub fn icon_of<'a>(plan: &Plan, row: &IconsRow) {{\n    // {{\n    let raw = row.path.{e}();\n    // }}\n        s(row.path.{e}()),\n}}\n");
-    // A duplicate line: a second helper in the same file with the identical
-    // call line fails; a second call inside icon_of counts twice.
+    // Astra's duplicate line: a second helper in the same file with the
+    // identical call line fails; a second call inside icon_of counts twice.
     let duplicate = format!("pub fn icon_of<'a>(plan: &Plan, row: &IconsRow) {{\n        s(row.path.{e}()),\n}}\nfn other(plan: &Plan, row: &IconsRow) {{\n        s(row.path.{e}()),\n}}\n");
     let (counts, other) = rust_escapes("runner/src/bridge.rs", &duplicate);
     assert_eq!((counts, other.len()), ((0, 1), 1), "{other:?}");
@@ -440,7 +441,7 @@ fn the_scan_catches_each_bypass() {
         ((0, 0), 2),
         "a function only named alike: {other:?}"
     );
-    // The `// {` … `// }` case: the hidden call is not the exact call
+    // Astra's `// {` … `// }` case: the hidden call is not the exact call
     // line, so it fails; the real call line is the one allowed.
     let (counts, other) = rust_escapes("runner/src/bridge.rs", &braces);
     assert_eq!((counts, other.len()), ((0, 1), 1), "{other:?}");
@@ -469,7 +470,7 @@ fn the_scan_catches_each_bypass() {
         r"const f = name.split(/\|/);",
         "const at = name.search(/:/);",
         "const at = name.indexOf(':');",
-        // The marker's text in a selected file.
+        // The marker's text in a selected file (round 5 restores it).
         "const rule = d.startsWith('evenodd:');",
         r#"const f = name.split("|" /* sep */, 4);"#,
         r#"const at = source.indexOf("|", i);"#,

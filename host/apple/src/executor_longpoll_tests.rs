@@ -1,4 +1,4 @@
-//! A long poll through the executor: a scripted
+//! A long poll through the executor (LLP 1016.000 D8): a scripted
 //! transport answers each request from the test's queue and records the
 //! URL it was asked with, so every cursor, heartbeat, retry and end is the
 //! test's to make.
@@ -509,11 +509,11 @@ fn a_cursor_no_host_can_carry_ends_the_stream() {
     }
 }
 
-/// A real local long-poll server on the platform transport (Darwin on Apple,
-/// the Linux host's own otherwise): it answers an event, a heartbeat (204), a
-/// 503 with `Retry-After: 0`, a second event, then holds the next request until
-/// the client goes, which it reports on `gone`. Every request it saw, in order,
-/// on `asked`.
+/// A real local long-poll server on the platform transport (Darwin on
+/// Apple, the Linux host's own otherwise; theme2's 07:51 ruling): it answers
+/// an event, a heartbeat (204), a 503 with `Retry-After: 0`, a second event,
+/// then holds the next request until the client goes, which it reports on
+/// `gone`. Every request it saw, in order, on `asked`.
 fn server() -> (u16, Arc<Mutex<Vec<String>>>, Receiver<()>) {
     use std::io::{Read, Write};
     let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
@@ -552,7 +552,7 @@ fn server() -> (u16, Arc<Mutex<Vec<String>>>, Receiver<()>) {
 }
 
 #[test]
-#[ignore = "a real socket under the platform transport (URLSession), timing-sensitive on a loaded machine; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: a real socket under the platform transport (URLSession), timing-sensitive on a loaded machine; bun scripts/async.mjs runs it"]
 fn a_long_poll_on_a_real_connection_asks_with_each_cursor_and_closes_when_dropped() {
     let (port, asked, gone) = server();
     let (wake, woke) = channel();

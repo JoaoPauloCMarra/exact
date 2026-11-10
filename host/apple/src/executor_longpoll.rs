@@ -1,4 +1,4 @@
-//! A long poll, natively: a stream whose request says
+//! A long poll, natively (LLP 1016.000 D8): a stream whose request says
 //! `long_poll`. The host asks the URL, delivers each 2xx reply with a body
 //! as one message (its `id` the new cursor, its `data` the body's text), and
 //! asks again with the cursor the reply gives, set in the named query

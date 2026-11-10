@@ -1,5 +1,6 @@
-//! The design server's retention build: the pipeline as any build runs it,
-//! stopped once the design's retention and synthetic tokens are known
+//! The design server's retention build (LLP 1121 stage 12 B1's follow-up,
+//! theme2's 11:32 ruling): the pipeline as any build runs it, stopped once
+//! the design's retention and synthetic tokens are known
 //! (`contract_lower::retention_only`), and, on a build whose Contract the
 //! design cannot have moved, the types and expansion of the last one kept
 //! ([`Kept`]) in place of checking them again.
@@ -24,10 +25,10 @@ pub struct Kept {
 
 /// What [`retention_build`] found.
 pub struct Retained {
-    /// The plan's retention: none when the build stopped before its
+    /// The plan's retention (D7): none when the build stopped before its
     /// design.
     pub retention: Option<exact_tamber::Retention>,
-    /// The app's synthetic tokens, each its expression and whether a
+    /// The app's synthetic tokens (D3), each its expression and whether a
     /// colour row writes it.
     pub candidates: Vec<(String, bool)>,
     /// This build's types and expansion, for the next.
@@ -126,7 +127,7 @@ pub(crate) fn reuse(
 ) -> Option<(Types, Expanded)> {
     let offered = PROGRAM.with(|p| p.borrow_mut().offered.take())?;
     // A design that doesn't parse is a doubt, whatever the loader made of
-    // it: checked again.
+    // it: checked again (condition (c)).
     let parses = file
         .design
         .iter()
@@ -165,7 +166,7 @@ pub(crate) fn keep(
 }
 
 /// Whether reused types and expansion are to be checked against fresh
-/// ones (`EXACT_TAMBER_RETENTION_VERIFY`): a
+/// ones (`EXACT_TAMBER_RETENTION_VERIFY`, theme2's condition (b)): a
 /// test's, so that a pass that comes to read the design fails a test
 /// instead of going stale.
 pub(crate) fn verifying() -> bool {
@@ -182,7 +183,7 @@ pub(crate) fn verify(fresh: (&Types, &Expanded), reused: (&Types, &Expanded)) ->
     same
 }
 
-/// Checking again refused what reuse would have taken: said
+/// Checking again refused what reuse would have taken (condition (b)): said
 /// as [`Retained::stale`].
 pub(crate) fn refused_fresh() {
     PROGRAM.with(|p| p.borrow_mut().stale = true);

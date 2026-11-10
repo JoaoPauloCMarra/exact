@@ -68,8 +68,8 @@ impl QueuedDeadline {
 }
 
 impl Core {
-    /// Let go of the work for every ticket the runner no longer `held`:
-    /// its reply would only be dropped there. A completed
+    /// Let go of the work for every ticket the runner no longer `held`
+    /// (LLP 1016 D5): its reply would only be dropped there. A completed
     /// outcome is dropped undrained and a queued safe HTTP read unrun; a
     /// running one is aborted. Other work (a write, a module turn) still runs,
     /// since a write that was sent, or a turn that has begun, is not undone.
@@ -121,7 +121,7 @@ impl Core {
                         return true;
                     }
                     // Its bytes held by a job still physically running go
-                    // when that ends.
+                    // when that ends (LLP 1120 D5).
                     if let Some(run) = running.iter_mut().find(|r| r.ticket == done.ticket) {
                         run.drained = true;
                     }

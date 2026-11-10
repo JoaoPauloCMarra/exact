@@ -1,18 +1,18 @@
 #if os(iOS) || os(tvOS)
 import UIKit
 
-/// A route whose first child is a `header` holding exactly one heading.
-/// The bar shows the heading as
+/// A route whose first child is a `header` holding exactly one heading
+/// (LLP 1035.001 D9's header-shaped route). The bar shows the heading as
 /// its title — large for a level-1 heading, inline for any other — and the
 /// header's buttons as its items, those before the heading leading and
 /// those after it trailing, each pressing its authored button. The stack's
 /// Back control is UIKit's back button, never an item. iOS does not paint
-/// the header; the web and the agent do.
+/// the header; the web and the agent do (LLP 1021 D4's one presentation).
 struct HeaderShape: Equatable {
     struct Item: Equatable {
         let id: UInt32, title: String, symbol: String?, label: String?, disabled: Bool, accessibilityDisabled: Bool
         /// The button's `testId`: the item's `accessibilityIdentifier`, so
-        /// XCUITest and Maestro address it as any other node.
+        /// XCUITest and Maestro address it as any other node (LLP 1116 D2).
         let testId: String?
         let toolbarGroup: UInt32?
         /// A face drawn from the button's one filled box (an avatar or a
@@ -24,14 +24,14 @@ struct HeaderShape: Equatable {
         let chip: ChipFace?
         /// Whether the button opens a menu-shaped popover or a confirmation
         /// (`MenuHost.pullsDown`): the item's menu, its rows read when it
-        /// opens, as a pull-down. Any other popover opens as
+        /// opens, as LLP 1021 D3's pull-down. Any other popover opens as
         /// itself, from the item (`MenuHost.openFromBar`).
         let menu: Bool
         /// The popover's `aria-label`: the menu's title, as an in-page
         /// button's is (MenusIOS: "Open location in", "Sort by").
         let menuTitle: String
         /// A native button's prominent style: a prominent bar item (iOS 26),
-        /// as the Mac maps `NSToolbarItem`.
+        /// as LLP 1069.011.000 D2 maps `NSToolbarItem`.
         let prominent: Bool
         /// A native button's `glass` or `clear-glass` style: a glass capsule
         /// of its own, not the one iOS 26 shares among adjacent items
@@ -45,14 +45,14 @@ struct HeaderShape: Equatable {
         /// Whether that colour is the tint itself: the item's tint then, its node's `ownAccent` or the bar's
         let followsTint: Bool
         /// A native button's title font where its face's rows give a size or
-        /// a weight, as its in-page control draws it:
+        /// a weight (LLP 1069.011.001 D4), as its in-page control draws it:
         /// the item's title in it, so its glass fits those words. Nil is
         /// UIKit's bar title font.
         let font: UIFont?
         let active: NativeButtonState
         let activeTitleColor: BatchValue?
         var supportsActiveColor: Bool { symbol == nil && badge == nil && chip == nil && readout == nil }
-        /// A readout's face (`role="status"`): an item
+        /// A readout's face (`role="status"`, LLP 1075.003 §9.15): an item
         /// no one presses, whose custom view shows the face as written and
         /// follows it in place (BarReadoutIOS.swift).
         let readout: ChipFace?
@@ -83,7 +83,7 @@ struct HeaderShape: Equatable {
                     else { walk(child) }
                 }
             }
-            // A native button's children are its face, not views.
+            // A native button's children are its face, not views (LLP 1069.011.000 D1).
             let face = button.isNativeButton ? button.face : nil
             if let face {
                 symbol = face.symbol
@@ -179,13 +179,13 @@ struct HeaderShape: Equatable {
     let level: Int
     let leading: [Item], trailing: [Item]
     /// The header's `input type="search"`, if it has one: the item's
-    /// search controller.
+    /// search controller (LLP 1075.003 §9.6).
     let search: NodeView?
     /// The header's tablist of text tabs, if it has one: the item's title
-    /// view, a segmented control.
+    /// view, a segmented control (LLP 1075.003 §9.8).
     let segments: NodeView?
     /// What the heading's group holds besides it (an avatar, a subtitle) and
-    /// whether pressing it does something: the item's title, richer.
+    /// whether pressing it does something: the item's title, richer (§9.10).
     let group: HeaderTitle?
     /// The header's nodes the bar places (`presents`): the heading, every
     /// item's button (the Back control's too), the search field, the
@@ -200,7 +200,7 @@ struct HeaderShape: Equatable {
     /// when there is one (`backIsUIKits`): the root of a presented stack
     /// has none, so there it is an item like the others.
     init?(route: NodeView, back: String?, backIsUIKits: Bool = true, projected: Bool = false) {
-        // What is header-shaped is the kernel's rule, read over this route's views (`HeaderRule`).
+        // What is header-shaped is the kernel's rule, read over this route's views (`HeaderRule`, LLP 1115.001 D11).
         guard let rule = HeaderRule(route: route, back: back, backIsPlatforms: backIsUIKits, projected: projected) else { return nil }
         // Every role the header rule assigns can remain authored. In
         // particular the title's tap target is not one of its bar items.
@@ -261,7 +261,7 @@ struct HeaderShape: Equatable {
         placed = ([heading] + rule.items + shownReadouts + [search, tablist, wrapper].compactMap { $0 } + (HeaderShape.presented(group, segments: segments)?.placed ?? [])).filter(projects)
     }
 
-    /// The tabs of a header's tablist the segmented title shows.
+    /// The tabs of a header's tablist the segmented title shows (§9.8).
     static func titleTabs(_ list: NodeView) -> [NodeView] {
         list.container.subviews.compactMap { $0 as? NodeView }.filter {
             $0.isButton && $0.props["accessibilityRole"] == "tab" && $0.handlers.contains("press")

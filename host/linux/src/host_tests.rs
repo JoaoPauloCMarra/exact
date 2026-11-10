@@ -258,7 +258,7 @@ fn windows_persists_state_and_kept_answers_outside_the_agent_without_plaintext_s
 }
 
 /// A named agent drive keeps `secret.keep` in its scratch tree, and a
-/// fresh launch reads nothing back. A child, so the
+/// fresh launch reads nothing back (platformer R10). A child, so the
 /// environment stays off this process.
 #[test]
 fn named_agent_storage_keeps_a_secret_across_a_relaunch() {
@@ -302,7 +302,7 @@ fn named_agent_storage_keeps_a_secret_across_a_relaunch() {
     assert!(StoreWrites::default()
         .flush(app, &[write("exact.kept.score", Some("9"))])
         .is_empty());
-    // A persisted state is a preference in its own kv scope.
+    // A persisted state (LLP 1116 D5) is a preference in its own kv scope.
     let tip = write("exact.state.tipPercent", Some("22"));
     assert!(StoreWrites::default().flush(app, &[tip]).is_empty());
     let again = store_snapshot(app, false);
@@ -422,7 +422,7 @@ fn a_fresh_tree_that_cannot_be_emptied_is_not_read() {
     std::fs::set_permissions(&secrets, std::fs::Permissions::from_mode(0o755)).unwrap();
 }
 
-/// Outside the agent, a secret is kept across a relaunch in
+/// LLP 1027.007 D13: outside the agent, a secret is kept across a relaunch in
 /// the app's own data root, `0600` in a `0700` directory. A child, so the
 /// environment stays off this process.
 #[cfg(unix)]

@@ -35,7 +35,7 @@ pub(super) struct Checkpoint {
     timers: Vec<super::Timer>,
     published: Option<Box<Published>>,
     commands: usize,
-    /// Socket batches of earlier commits, not yet taken:
+    /// Socket batches of earlier commits, not yet taken (LLP 1016.000 D7):
     /// a refusal takes back the batches staged after them.
     sockets: usize,
     /// The root font size, and the window's app tuple (`setMode`).
@@ -43,16 +43,16 @@ pub(super) struct Checkpoint {
     /// Kept answers refused before this commit (`kept::refuse`).
     refused: usize,
     resource_inspection: Vec<crate::perf::ResourceWork>,
-    /// Who each request and `then` is from.
+    /// Who each request and `then` is from (LLP 1133.023 D7).
     origins: super::modules::OriginsSaved,
-    /// The arguments refused a child's resource.
+    /// The arguments refused a child's resource (LLP 1133.007 D13).
     refused_args: super::modules::Refused,
     gone: Vec<bool>, // which elements of resources over lists had left (`each.rs`)
 }
 
 /// What a settlement publishes that a refusal after it — the gate step
-/// — must put back; taken only for a plan with a gated task
-/// or a sequence, whose gate steps are the one refusal that
+/// (LLP 1092 D8) — must put back; taken only for a plan with a gated task
+/// or a sequence (LLP 1125 D2), whose gate steps are the one refusal that
 /// follows a settlement that stood.
 pub(super) struct Published {
     settled: Option<super::settlement::Settled>,
@@ -81,7 +81,7 @@ impl<D: DataSource> Runner<D> {
         self.copied_at_checkpoint = self.store.copied_bytes();
         let store = self.store.checkpoint();
         // What the presence backend moved since the last commit shows in
-        // this one; a refused commit puts it back.
+        // this one (LLP 1133.010 D5); a refused commit puts it back.
         self.adopt_presence();
         Checkpoint {
             store,
@@ -228,7 +228,7 @@ impl<D: DataSource> Runner<D> {
             }
         }
         self.refused_unsent.clear();
-        // What a refused commit's gate step read is let go.
+        // What a refused commit's gate step read is let go (LLP 1125 D2).
         self.transport.pending = None;
         self.hear_forgotten();
         // Every commit ends so: what the source set aside is kept or let go.
@@ -278,8 +278,8 @@ impl<D: DataSource> Runner<D> {
 
     /// Run an action: its body, its sends, its writes, settlement, the
     /// update — one commit. What it kept in the store is journaled once the
-    /// commit stands and rolled back with everything else when it does not:
-    /// nothing reaches the host from a refused action.
+    /// commit stands and rolled back with everything else when it does not
+    /// (LLP 1018 D1): nothing reaches the host from a refused action.
     pub(super) fn run_action(
         &mut self,
         action: ActionsId,
@@ -377,7 +377,7 @@ impl<D: DataSource> Runner<D> {
             .iter()
             .map(|w| self.plan.write(w).slot.0)
             .collect();
-        // Geometry: every `measure` in the body is
+        // Geometry (LLP 1051.000 D2): every `measure` in the body is
         // answered now, with the kernel's engine tree to lay out; `frame`
         // reads through the borrowed kernel while the body runs.
         let measured;
@@ -399,17 +399,17 @@ impl<D: DataSource> Runner<D> {
             None => None,
         };
         let outcome = {
-            // The frames in force at the view the event hit:
+            // The frames in force at the view the event hit (LLP 1017 P4c):
             // a row action reads and writes its row through them.
             let mut env = self.env(&args, frames);
             env.geometry = geometry.as_ref();
             vm::eval(self.plan.code(row.body), &env, &allowed)?
         };
-        // Sends: each asks the source now. An answer lands in
+        // Sends (LLP 1016 §4): each asks the source now. An answer lands in
         // the mutation's slot inside this commit; a request goes to the host
         // once the commit stands. A queue mutation's send is asked only when
         // the mutation is free and it is the commit's first; else it waits
-        // its turn.
+        // its turn (LLP 1092 D2).
         let mut later: Vec<(usize, String, Vec<Value>, Request)> = Vec::new();
         let mut answered: Vec<(u32, Value)> = Vec::new();
         let mut asked: Vec<usize> = Vec::new();
@@ -419,12 +419,12 @@ impl<D: DataSource> Runner<D> {
         // request of its own: an answer at once, or one waiting for the source.
         let mut replaced: Vec<usize> = Vec::new();
         // A send before the source can answer — a TypeScript module a native
-        // host loads after first pixel — waits for it, pending,
+        // host loads after first pixel (LLP 1027 D4) — waits for it, pending,
         // as a resource's ask does and as the web's send to a module still
-        // loading does: `data_ready` sends it, so a document opened at launch
-        // is not refused and lost. A queue's waits in its
+        // loading does: `data_ready` sends it (notes diary: a document
+        // opened at launch was refused, and lost). A queue's waits in its
         // queue instead, every send in order, its head asked once the source
-        // is ready.
+        // is ready (LLP 1092 D2).
         let mut unsent: Vec<Unsent> = Vec::new();
         for (m, source, sargs) in &outcome.sends {
             let m = *m as usize;
@@ -534,7 +534,8 @@ impl<D: DataSource> Runner<D> {
         // An assignment to a mutation's slot tentatively makes it not
         // pending. The pending map is changed only after settlement stands:
         // a refused assignment did not change what reply the view wants.
-        // A queue's assignment forgets nothing: every reply still lands.
+        // A queue's assignment forgets nothing: every reply still lands
+        // (LLP 1092 D4).
         let assigned: Vec<usize> = (0..self.plan.mutations.len())
             .filter(|m| {
                 written.contains(&self.plan.mutations[*m].slot.0) && !self.plan.mutations[*m].queue
@@ -579,8 +580,8 @@ impl<D: DataSource> Runner<D> {
                 self.pending_mut[*m] = true;
             }
         }
-        // What the action refreshes, added to what is already waiting.
-        // A mutation answered at once has landed:
+        // What the action refreshes, added to what is already waiting
+        // (LLP 1054.000.000 D2). A mutation answered at once has landed:
         // what it changes is asked, as a reply's landing asks it
         // (`fulfill`). A send still in flight asks nothing: its write shows
         // through the overlay.
@@ -611,7 +612,7 @@ impl<D: DataSource> Runner<D> {
         }
         // A refusal from here is put back by the checkpoint (run_action);
         // row slots live in the tree, so they are undone here. The gate
-        // step joins this path: before `enqueue` and
+        // step joins this path (LLP 1092 D8): before `enqueue` and
         // `into_view`, which a refusal there must not leave applied.
         if let Err(e) = self
             .router_change()
@@ -678,12 +679,12 @@ impl<D: DataSource> Runner<D> {
             ));
         }
         self.take_set_modes(first_command);
-        // A module's sends that answer nothing: the
+        // A module's sends that answer nothing (LLP 1133.004 D5): the
         // runner's, run once the commit stands.
         let effects = self.take_module_effects(first_command);
         self.refuse_in_wake(first_command);
         self.skip_in_call(first_command);
-        // The scheme and root size a development host holds: kept as asked, not applied.
+        // The scheme and root size a development host holds: kept as asked, not applied (LLP 1122 T7).
         self.take_held(first_command);
         // `setRootFontSize` is the runner's too: the size lands in this
         // commit's layout, and the command stays for a host that mirrors it;
@@ -718,8 +719,8 @@ impl<D: DataSource> Runner<D> {
                 s
             })
             .collect();
-        // `scrollIntoView` of a list's row is the runner's own:
-        // it runs in this commit, after the update, and never
+        // `scrollIntoView` of a list's row is the runner's own (LLP
+        // 1070.000): it runs in this commit, after the update, and never
         // reaches a host. An element's (its id and three options, not the
         // row form's seven arguments) is the host's, as `focus` is.
         let stated: Vec<Command> = self.commands.drain(first_command..).collect();
@@ -794,7 +795,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Drop the request in flight for `target`, if any: its reply, when it
-    /// comes, is dropped too (a `POST` already sent is not unsent).
+    /// comes, is dropped too (a `POST` already sent is not unsent — LLP 1016 D5).
     pub(super) fn forget(&mut self, target: Target) {
         self.forget_ticket(target);
         if let Target::Mutation(m) = target {
@@ -804,7 +805,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Let go of `target`'s request in flight, keeping a send that waits
-    /// for the source; `false` keeps a child.
+    /// for the source; `false` keeps a child (LLP 1133.007 D13).
     pub(super) fn forget_ticket(&mut self, target: Target) -> bool {
         if self.holds_child(target) {
             return false;
@@ -839,8 +840,8 @@ impl<D: DataSource> Runner<D> {
 
     /// Hand `request` to the host under a fresh ticket, replacing any
     /// request in flight for the same target — unless only the arguments
-    /// moved and the request is the one already in flight: then that
-    /// ticket is kept, to be parsed
+    /// moved and the request is the one already in flight (LLP 1054.000.000
+    /// D3, amending LLP 1016 D5): then that ticket is kept, to be parsed
     /// with the newer arguments, and nothing is sent.
     pub(super) fn enqueue(
         &mut self,
@@ -860,8 +861,8 @@ impl<D: DataSource> Runner<D> {
                     && !p.refused
                     && p.refusal.is_none()
                     && p.args != args
-                    // Who asked it is stamped as it goes out,
-                    // so it is no part of the same request.
+                    // Who asked it is stamped as it goes out (LLP 1133.036
+                    // D6), so it is no part of the same request.
                     && (p.keepable.as_ref())
                         .is_some_and(|k| request == Request { reach: request.reach, ..k.clone() })
             }) {
@@ -873,12 +874,12 @@ impl<D: DataSource> Runner<D> {
                         self.ids.work.resources.get(i).map_or(0, |w| w.request);
                 }
                 let (ticket, upload) = (p.ticket, p.upload);
-                // An upload kept for newer arguments is asked at them too.
+                // An upload kept for newer arguments is asked at them too (D10).
                 if upload {
                     let args = p.args.clone();
                     self.upload_sent(target, &args, ticket);
                 }
-                // The newer arguments' causes join the request's.
+                // The newer arguments' causes join the request's (LLP 1133.035 D16 item 6).
                 self.note_kept(target, ticket);
                 // A source that parks calls hears the kept ticket's newer
                 // arguments and drops the call parked under the old ones.
@@ -972,9 +973,9 @@ impl<D: DataSource> Runner<D> {
         self.sync_pending_flags();
     }
 
-    /// The requests the host is to run since the last take.
-    /// The module's background round goes out here when it has one,
-    /// and its journal lines come in.
+    /// The requests the host is to run since the last take (LLP 1016 D2).
+    /// The module's background round goes out here when it has one (LLP
+    /// 1097 D5), and its journal lines come in.
     pub fn take_requests(&mut self) -> Vec<RequestOut> {
         self.take_data_logs();
         self.arm_background();
@@ -985,11 +986,11 @@ impl<D: DataSource> Runner<D> {
         self.hold_data_timers(requests)
     }
 
-    /// The work behind continuation `token`: a host asks
+    /// The work behind continuation `token` (LLP 1027.002 D3): a host asks
     /// on this thread, after the commit that handed the request out, so a
     /// worker's snapshot is the store as committed then.
     pub fn dispatch_work(&mut self, token: u64) -> Dispatch {
-        // A module request the runner holds for the agent.
+        // A module request the runner holds for the agent (LLP 1133.002 §6).
         if let Some(dispatch) = self.module_dispatch(token) {
             return dispatch;
         }
@@ -999,7 +1000,7 @@ impl<D: DataSource> Runner<D> {
 
     /// Where this app's long native calls go: the source's own slot, or,
     /// for a source with none (a Rust source), the runner's. The host
-    /// installs the app module in it.
+    /// installs the app module in it (LLP 1067.000 Q6, Q9).
     pub fn native_slot(&self) -> crate::Native {
         self.data.native().unwrap_or_else(|| self.native.clone())
     }
@@ -1009,17 +1010,17 @@ impl<D: DataSource> Runner<D> {
     /// worker, which returns at once — the module's own thread answers.
     pub fn native_work(&mut self, request: &Request) -> Dispatch {
         // A module request whose reply carries handles: watched as it leaves
-        // the implementation.
+        // the implementation (LLP 1133.009 D6).
         if let Some(dispatch) = self.handled_work(&request.body) {
             return dispatch;
         }
         // A store's presence call: the host's backend, on the store's own
-        // path, never a module's.
+        // path, never a module's (LLP 1133.010 D13).
         if let Some(dispatch) = self.presence_call(&request.body) {
             return dispatch;
         }
         // A module's name called from data code: the runner's admission, then
-        // the module.
+        // the module (LLP 1133.002 D14).
         if let Some(dispatch) = self.module_call(&request.body) {
             return dispatch;
         }
@@ -1064,7 +1065,7 @@ impl<D: DataSource> Runner<D> {
         }
     }
 
-    /// A long poll's reply, an event or not: from its first
+    /// A long poll's reply, an event or not (LLP 1016.000 D8): from its first
     /// it is held, and each raises `heldReplies` for `clock held`.
     fn long_poll_replied(&mut self, pos: usize) {
         let p = &mut self.pending[pos];
@@ -1091,8 +1092,8 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Whether request `ticket` is still wanted. A host asks after each
-    /// commit and lets go of the work for any it holds that isn't:
-    /// a superseded or forgotten reply would only be dropped here.
+    /// commit and lets go of the work for any it holds that isn't (LLP 1016
+    /// D5): a superseded or forgotten reply would only be dropped here.
     pub fn holds(&self, ticket: u64) -> bool {
         self.is_background(ticket)
             || self.is_tool(ticket)
@@ -1103,7 +1104,7 @@ impl<D: DataSource> Runner<D> {
     /// The host brought back the outcome of request `ticket`: the source
     /// parses it, the resource takes its value or the mutation's slot its
     /// `some`, and everything downstream settles as after an action — one
-    /// commit. A ticket no longer held (forgotten) is dropped with a
+    /// commit. A ticket no longer held (forgotten, D5) is dropped with a
     /// journal line and no commit.
     pub fn fulfill(
         &mut self,
@@ -1136,17 +1137,17 @@ impl<D: DataSource> Runner<D> {
         elapsed_ms: Option<u64>,
     ) -> Result<Option<CommitReceipt>, RunnerError> {
         if self.is_background(ticket) {
-            // Its own path: no commit, no `then`, no update.
+            // Its own path (LLP 1097 D5): no commit, no `then`, no update.
             self.background_landed(outcome);
             return Ok(None);
         }
         if self.is_tool(ticket) {
-            // A handler's request: its turn resumes, no commit.
+            // A handler's request (LLP 1133.016 D9): its turn resumes, no commit.
             self.tool_landed(ticket, outcome);
             return Ok(None);
         }
         if self.is_module_work(ticket) {
-            // Module work's: its turn, then a commit of its own.
+            // Module work's (LLP 1146 D2): its turn, then a commit of its own.
             return self.module_work_landed(ticket, outcome);
         }
         let mut summary = outcome.summary();
@@ -1156,23 +1157,23 @@ impl<D: DataSource> Runner<D> {
         let Some(pos) = self.pending.iter().position(|p| p.ticket == ticket) else {
             self.log(super::lines::dropped(ticket, &summary));
             // A module's reply carrying handles that is not delivered
-            // disposes of them.
+            // disposes of them (LLP 1133.009 D6).
             self.dispose_dropped();
             return Ok(None);
         };
         let handles = self.landed_handles(ticket);
         self.landed_send(ticket);
         if let (Some(_), Outcome::Message(m)) = (self.pending[pos].stream, &outcome) {
-            // A long poll's reply that is no event: it holds.
+            // A long poll's reply that is no event (LLP 1016.000 D8): it holds.
             if self.pending[pos].long_poll && m.event == crate::LONG_POLL_REPLY {
                 self.long_poll_replied(pos);
                 return Ok(None);
             }
-            // A listener's word on its address alone.
+            // A listener's word on its address alone (LLP 1133.005 D2).
             if self.listen_event(pos, m) {
                 return Ok(None);
             }
-            // An upload's start: noted; no mapper sees it.
+            // An upload's start (LLP 1016.000 D10): noted; no mapper sees it.
             if self.pending[pos].upload && m.upload_started() {
                 self.pending[pos].sent = true;
                 return Ok(None);
@@ -1193,8 +1194,8 @@ impl<D: DataSource> Runner<D> {
         }
         let what = super::lines::fulfilling(ticket, &self.target_name(p.target), &summary);
         let target = p.target;
-        // An answer lands as a commit of its request's origin,
-        // with every cause the request has.
+        // An answer lands as a commit of its request's origin (LLP 1133.002
+        // D12), with every cause the request has (LLP 1133.035 D16 item 6).
         let (origin, id) = (self.ticket_origin(ticket), self.ticket_id(ticket));
         let causes = self.ticket_causes(ticket);
         let result = self.as_invocation_caused(origin, id, causes, |r| r.fulfill_inner(p, outcome));
@@ -1227,7 +1228,7 @@ impl<D: DataSource> Runner<D> {
         result.map(Some)
     }
 
-    /// One message of the open stream at `pos`: parsed
+    /// One message of the open stream at `pos` (LLP 1016.000 D1): parsed
     /// like a single reply and committed as its own settlement, with the
     /// ticket kept open. A message the source cannot take ends the stream,
     /// as a failed reply ends a request.
@@ -1238,7 +1239,7 @@ impl<D: DataSource> Runner<D> {
         summary: &str,
     ) -> Result<Option<CommitReceipt>, RunnerError> {
         let was_poisoned = self.poisoned;
-        // An upload's bytes sent: it has reached the network, which a
+        // An upload's bytes sent: it has reached the network (D10), which a
         // refused commit of this message does not undo.
         let upload = self.pending[pos].upload;
         self.pending[pos].sent |= upload;
@@ -1259,17 +1260,17 @@ impl<D: DataSource> Runner<D> {
         let what = super::lines::fulfilling(ticket, &name, summary);
         let before = self.sockets.len();
         crate::stream_timing::entered(ticket);
-        // A frame lands as a commit of its stream's origin,
-        // with every cause its request has,
+        // A frame lands as a commit of its stream's origin (LLP 1133.002
+        // D12), with every cause its request has (LLP 1133.035 D16 item 6),
         // as a one-shot's reply does: a stream a tool asked answers as the
         // tool's, frame after frame.
         let (origin, id) = (self.ticket_origin(ticket), self.ticket_id(ticket));
         let causes = self.ticket_causes(ticket);
         let result = self.as_invocation_caused(origin, id, causes, |r| r.fulfill_inner(p, outcome));
-        // What the mapper staged answering this frame:
+        // What the mapper staged answering this frame (LLP 1016.000 D7):
         // addressed for the commit, or left staged by a frame that failed.
-        // The commit's answers may have sent too;
-        // their batches are not the mapper's.
+        // The commit's answers may have sent too (its amendment of
+        // 2026-10-18); their batches are not the mapper's.
         let left = !self.store.take_sockets().is_empty();
         let mapper = |b: &crate::SocketSend| matches!(b.origin, crate::SocketOrigin::Mapper(_));
         let replied = left || self.sockets[before..].iter().any(mapper);
@@ -1309,8 +1310,8 @@ impl<D: DataSource> Runner<D> {
         };
         self.store.take_topics();
         self.snapshot_sockets();
-        // A live module source's answer may name when it goes stale,
-        // whether Contract or data code reads it.
+        // A live module source's answer may name when it goes stale (LLP
+        // 1133.015 D7), whether Contract or data code reads it.
         let live = (self.plan.module_named(&p.source))
             .filter(|row| row.live && !row.send)
             .map(|row| self.key(row))
@@ -1336,15 +1337,16 @@ impl<D: DataSource> Runner<D> {
         };
         // What the turn of a reply to a request with effects wrote stands,
         // whatever the commit then does: it keeps what the server did, as a
-        // browser's continuation keeps it outside every commit.
+        // browser's continuation keeps it outside every commit (LLP 1146 D2).
         if p.effects {
             self.module_work.standing = Some(self.store.checkpoint());
         }
         if self.store.revision() != revision_before {
             self.ask_failed_readers(Some(p.target));
         }
-        // Only a socket's mapper answering a frame stages for this commit;
-        // a turn of an answer sends whatever it answered.
+        // Only a socket's mapper answering a frame stages for this commit
+        // (LLP 1016.000 D7); a turn of an answer sends whatever it answered
+        // (the amendment of 2026-10-18).
         if !message {
             self.store.take_sockets();
         }
@@ -1358,13 +1360,13 @@ impl<D: DataSource> Runner<D> {
         // call) watched them as much as the one that answers.
         if let Target::Resource(i) = p.target {
             // A read in a later turn (after an `await`) makes a store reader
-            // as one in the first does.
+            // as one in the first does (LLP 1146 §2.3).
             if self.store.reads() > reads_before {
                 self.store_readers[i] = true;
                 self.module_work.reply_reader = Some(i);
             }
             // A module's source that data code read: the answer is asked
-            // again when that source's answer changes.
+            // again when that source's answer changes (LLP 1133.002 D14).
             let module = (p.keepable.as_ref()).and_then(|r| self.module_topic(&r.body));
             for topic in self.store.take_topics().into_iter().chain(module) {
                 if !self.watching[i].contains(&topic) {
@@ -1381,7 +1383,7 @@ impl<D: DataSource> Runner<D> {
             Answer::Later(request) if message && !request.stream => {
                 // A message commits as its own settlement; a request that is
                 // not a stream would replace the stream's ticket with one
-                // answer.
+                // answer (LLP 1016.000 D1).
                 return Err(RunnerError::Data {
                     resource: name,
                     error: DataError::Unavailable(
@@ -1390,11 +1392,11 @@ impl<D: DataSource> Runner<D> {
                 });
             }
             Answer::Later(request) => {
-                // One more round: the target keeps its value, a new ticket goes
+                // One more round (LLP 1027 D1a): the target keeps its value, a new ticket goes
                 // out for the same arguments, and this commit changes only the pending set. The
-                // round carries an ask made before a watched topic changed on to its last;
-                // a continuation, the rest of this reply's answer (a worker's later
-                // turn too), keeps the request's obligation to finish.
+                // round carries an ask made before a watched topic changed on to its last (LLP
+                // 1016.002 D4); a continuation, the rest of this reply's answer (a worker's later
+                // turn too), keeps the request's obligation to finish (LLP 1146 D2).
                 self.log(super::lines::one_more(&name));
                 let (ticket, effects) = (self.next_ticket, p.admitted_effects());
                 self.enqueue(p.target, p.source, p.args, request, false);
@@ -1415,7 +1417,7 @@ impl<D: DataSource> Runner<D> {
         if !self.conforms(&value, ty) {
             return Err(self.shape(name, &value, ty));
         }
-        // Its replies go out once this frame's commit stands.
+        // Its replies go out once this frame's commit stands (D7).
         if message {
             if let Err(why) = self.stage_replies(&p) {
                 let error = DataError::Unavailable(why);
@@ -1433,7 +1435,7 @@ impl<D: DataSource> Runner<D> {
                 self.failed_args[i] = None;
                 self.keep_answer(i, &p.args, &value);
                 // An upload's end is the answer it stands on at its arguments;
-                // one that never reached the network is an ordinary answer.
+                // one that never reached the network is an ordinary answer (D10).
                 if p.upload && !message {
                     let end = super::UploadEnd::Answered(value.clone());
                     self.upload_over(p.ticket, p.sent || !failed_end, end);
@@ -1461,7 +1463,7 @@ impl<D: DataSource> Runner<D> {
                 self.slots[slot] = Value::some(value);
                 self.landed.push(m);
                 // The reply landed: what the mutation changed is asked again
-                // in this commit; its write shows until
+                // in this commit (LLP 1054.000.000 D1); its write shows until
                 // that answer lands.
                 for r in self.declared_refreshes(m) {
                     self.force_refresh(r);

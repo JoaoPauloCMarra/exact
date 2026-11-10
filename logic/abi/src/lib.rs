@@ -1,5 +1,5 @@
 //! Versioned, bounded data-only module seam. No Rust allocation or layout crosses it.
-//! Rust logic replacement after first pixel.
+//! @ref LLP 1029.000 — Rust logic replacement after first pixel.
 
 use exact_plan::{
     bytes::{Reader, Writer},
@@ -201,7 +201,7 @@ fn encode_outcome(w: &mut Writer, outcome: &Outcome) {
             pairs(w, &r.headers);
             bytes(w, &r.body);
         }
-        // One message of a stream; additive, as tag 6 was.
+        // One message of a stream (LLP 1016.000); additive, as tag 6 was.
         Outcome::Message(m) => {
             w.u8(8);
             w.string(&m.event);
@@ -209,7 +209,7 @@ fn encode_outcome(w: &mut Writer, outcome: &Outcome) {
             w.string(&m.data);
             w.u32(m.coalesced);
         }
-        // A Rust module's stream only listens: a two-way
+        // A Rust module's stream only listens (LLP 1016.000 D7): a two-way
         // socket's end crosses as the listener's end, worded as natively.
         Outcome::Closed { code, reason, .. } => {
             w.u8(1);
@@ -278,8 +278,8 @@ fn read_outcome(r: &mut Reader<'_>) -> Result<Outcome, String> {
 }
 fn encode_result(w: &mut Writer, result: Result<Answer, DataError>) {
     match result {
-        // A long poll that is no stream's independent GET, or with bad terms,
-        // is refused before it crosses, ahead of every other kind.
+        // A long poll that is no stream's independent GET, or with bad terms (LLP
+        // 1016.000 D8), is refused before it crosses, ahead of every other kind.
         Ok(Answer::Later(r))
             if r.long_poll.is_some()
                 && (r.long_poll_refusal().is_some()
@@ -311,7 +311,7 @@ fn encode_result(w: &mut Writer, result: Result<Answer, DataError>) {
                 "a request timeout cannot cross the Rust module seam".into(),
             )),
         ),
-        // Nor a held mark: refused, never silently waited on.
+        // Nor a held mark (LLP 1016.000 D9): refused, never silently waited on.
         Ok(Answer::Later(r)) if r.held => encode_result(
             w,
             Err(DataError::Unavailable(
@@ -325,7 +325,7 @@ fn encode_result(w: &mut Writer, result: Result<Answer, DataError>) {
                 "an upload's progress cannot cross the Rust module seam yet".into(),
             )),
         ),
-        // Nor has it a file body: refused, never sent empty.
+        // Nor has it a file body (LLP 1108 D6 R2): refused, never sent empty.
         Ok(Answer::Later(r)) if r.body_from.is_some() => encode_result(
             w,
             Err(DataError::Unavailable(
@@ -390,8 +390,8 @@ fn encode_result(w: &mut Writer, result: Result<Answer, DataError>) {
         {
             // Additive HTTP result kind. Older hosts reject tag 6 before
             // executing effects; it must never silently decode as ordered.
-            // A stream (tag 9) is always independent; a long
-            // poll (tag 10) is a stream with its terms after the body.
+            // A stream (tag 9) is always independent (LLP 1016.000); a long
+            // poll (tag 10, D8) is a stream with its terms after the body.
             let poll = r.long_poll.as_ref().filter(|_| r.stream);
             match r.http {
                 HttpScheduling::Ordered => w.u8(1),
@@ -433,7 +433,7 @@ fn encode_result(w: &mut Writer, result: Result<Answer, DataError>) {
                 DataError::UnknownSource(s) => (2, s),
                 DataError::BadArguments(s) => (3, s),
                 // A coded failure's class is the TypeScript seam's and the
-                // runner's: a Rust source's own is `error`.
+                // runner's (LLP 1109 D3): a Rust source's own is `error`.
                 // (an overrun is exact-js's; a Rust module's seam never makes one)
                 DataError::Unavailable(s)
                 | DataError::Interface(s)
@@ -491,7 +491,7 @@ fn read_result(r: &mut Reader<'_>) -> Result<Result<Answer, DataError>, String> 
 }
 
 /// An HTTP result's request (tags 1, 6, 9 and 10): a stream's, a long poll's
-/// terms after its body.
+/// terms after its body (LLP 1016.000 D8).
 fn read_http(r: &mut Reader<'_>, tag: u8) -> Result<Request, String> {
     let mut request = Request {
         stream: tag >= 9,
@@ -687,7 +687,7 @@ impl<D: DataSource> Session<D> {
                     self.data.answer(&mut store, &source, &args)
                 };
                 // An answer that read a locked presence name with `get` fails,
-                // as it does in process.
+                // as it does in process (LLP 1133.010 D5).
                 let result = match store.take_locked_read() {
                     Some(name) => Err(exact_runner::StoreError::Locked(name).into()),
                     None => result,

@@ -258,7 +258,7 @@ fn write_validate_domain(w: &mut String, schema: &Schema) {
     writeln!(w, "    }}").unwrap();
 }
 
-/// The control-role table: a known control, with a state
+/// The control-role table (LLP 1121 D9): a known control, with a state
 /// part's state where it names one; a parameter `accent-color` or a colour
 /// role; each host a fidelity, `: why` after it; one row a pair.
 fn validate_controls(schema: &Schema) {

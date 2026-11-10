@@ -556,7 +556,7 @@ fn release_handler_survives_empty_set_clear_set_idref() {
     }
 }
 
-/// The bridge's release velocity is the engine's, over the
+/// LLP 1057.001 §3: the bridge's release velocity is the engine's, over the
 /// heights actually shown: a `max-height` stops the measured motion.
 #[test]
 fn measured_release_velocity_follows_the_constrained_height_shown() {

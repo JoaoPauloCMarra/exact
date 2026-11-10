@@ -8,7 +8,7 @@ import AppKit
 import UIKit
 #endif
 
-/// Gamepads for world canvases through GameController's
+/// Gamepads for world canvases (LLP 1127.003 D2) through GameController's
 /// extended gamepad profile, in the W3C Gamepad API's standard mapping
 /// (https://w3c.github.io/gamepad/#remapping): buttons by position, so
 /// `buttonA` is the bottom face button, standard button 0, on every family.

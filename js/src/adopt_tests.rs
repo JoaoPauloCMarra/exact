@@ -1,4 +1,4 @@
-//! An adopted fetch on the module itself: only one an answer's
+//! An adopted fetch (LLP 1146 D2) on the module itself: only one an answer's
 //! settle handed out is adopted; the app's abort of it waits for the module
 //! turn, unless the host has no door 23; and it ends with its instance, so no
 //! surviving realm awaits it.

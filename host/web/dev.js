@@ -1,4 +1,4 @@
-// The dev connection owns complete, verified generations.
+// The dev connection owns complete, verified generations (LLP 1023 D3).
 // A new epoch resets ordering; each commit replaces the entire asset roster.
 const es = typeof EventSource === "undefined" ? null : new EventSource("/__dev");
 const encoder = new TextEncoder();
@@ -268,7 +268,7 @@ if (es) {
       retry = setTimeout(discover, 250);
     },
   });
-  // The first boot's generation, named in the page: fetched
+  // The first boot's generation, named in the page (LLP 1007 §6): fetched
   // when glue.js asks. Its Rust module, if any, is still applied as an update.
   const firstMeta = document.querySelector('meta[name="exact-dev-generation"]');
   if (firstMeta) {
@@ -282,7 +282,7 @@ if (es) {
     };
     slot.ready?.();
   }
-  // The live table: a batch applies on its base; a stale
+  // The live table (LLP 1121 stage 4): a batch applies on its base; a stale
   // build asks for the snapshot. A frame before boot waits for it, the
   // latest only (a snapshot carries the whole design).
   let designing = Promise.resolve();
@@ -310,7 +310,7 @@ if (es) {
     if (out.unsupported) { console.warn("exact dev: the wide colour table is full: a colour was refused, its rows keep their value"); report({ kind: "unsupported", what: "batch", detail: "the wide colour table is full: a colour was refused" }); }
     return out;
   };
-  // A scrub's frame shows with no transition, as the tool
+  // A scrub's frame (LLP 1121 D13) shows with no transition, as the tool
   // drags it: every transition off while its rows are set and styled, then
   // back on, with nothing left to move.
   const unmoving = (apply) => {
@@ -353,7 +353,7 @@ if (es) {
       else if (out.live.startsWith("refused")) console.error("exact dev:", out.live);
     }).catch((error) => console.error("exact dev:", String(error)));
   };
-  // The build channel: this page registers with its stream's
+  // The build channel (LLP 1122 D4): this page registers with its stream's
   // nonce, reports its effective facts, and takes `pin` and `inspect` from
   // the design server's clients; the other commands are reserved, and
   // answered unsupported. Every report waits for the stream's registration.
@@ -361,7 +361,7 @@ if (es) {
   let applying = null;
   // The tab's own id, kept across its reloads (sessionStorage); a duplicated
   // tab, which copies that storage, takes another when this one answers.
-  // A copy the design tool frames (same-origin frames share the
+  // A copy the design tool frames (LLP 1122 T7: same-origin frames share the
   // tab's storage) keeps its own under the frame's name, `exact-copy-<n>`,
   // which the page only reads; any other name is the app's, left alone.
   const framed = globalThis.parent != null && globalThis.parent !== globalThis, copy = framed && /^exact-copy-\d{1,2}$/.test(globalThis.name ?? ""), buildKey = copy ? `exact.dev.build:${globalThis.name}` : "exact.dev.build";
@@ -433,9 +433,9 @@ if (es) {
     const contrast = matchMedia("(prefers-contrast: more)").matches ? "more" : matchMedia("(prefers-contrast: less)").matches ? "less" : "no-preference";
     return { kind: "status", scheme, contrast, mode: await modes(), rootFontSize: parseFloat(rootStyle.fontSize), plan: channel.plan, planDigest: await planDigest(), design: globalThis.exact.designDigest ?? await designNow(), revision: channel.revision, location: here(), app: appAsked() ?? undefined };
   };
-  // In a copy the design tool pins, the
+  // In a copy the design tool pins (LLP 1122 T7, theme2's F2 ruling), the
   // pin holds over the app's own setScheme, setMode and setRootFontSize for
-  // the facts it pins (elsewhere the app's own wins): the runner keeps
+  // the facts it pins (elsewhere the app's own wins, D3): the runner keeps
   // what the app asks of a held fact, applies none of it, and applies its
   // latest when the pin is handed back (`exact_hold_facts`). What the app
   // asked against the pin is said beside the status (`app`).
@@ -492,7 +492,7 @@ if (es) {
   if (pages) for (const name of ["pushState", "replaceState"]) { const write = pages[name]; pages[name] = function (...args) { const out = write.apply(this, args); committed(); return out; }; }
   globalThis.addEventListener?.("popstate", committed);
   globalThis.addEventListener?.("hashchange", committed);
-  // `navigate` (*1.14*): the location routed in place as a link
+  // `navigate` (LLP 1122 T7, *1.14*): the location routed in place as a link
   // to it is (input-glue.js): the navigation root's `navigate` handler, else
   // the router's own `go`, no reload; a fragment that differs then set on
   // the entry the router wrote. One that is no route says so, by the
@@ -580,7 +580,7 @@ if (es) {
     channel.revision = frame.revision;
     status();
   };
-  // Inspect mode, from a design-server client's
+  // Inspect mode (LLP 1122 D4, D5; T2b), from a design-server client's
   // `inspect {on}`: a banner with a close control (and Escape) says so; the
   // page takes every input itself (pointer, mouse, touch, wheel, keys,
   // gestures, and guest frames, which stop taking pointer input), so nothing
@@ -782,7 +782,7 @@ if (es) {
       inspecting.banner = inspecting.outline = inspecting.shield = inspecting.cover = inspecting.close = inspecting.press = null;
     }
   };
-  // `outline {sites, plan}`: every copy of the selected node, the
+  // `outline {sites, plan}` (D4, D5): every copy of the selected node, the
   // views of those plan sites, outlined while inspect mode is on (the first
   // scrolled into view, unless the frame answers a click here (`click`);
   // then measured; kept on them as the page scrolls and resizes). A frame for another plan leaves the outlines as they are (a
@@ -822,7 +822,7 @@ if (es) {
     // shows nowhere, never another copy of it (Apple pass #2: a move
     // scrolled to a copy rows away); else (the tool's Outline) the first.
     // As the Apple hosts' Inspect.revealing.
-    // (shown: rendered and not `visibility: hidden`, whose box would still take a scroll)
+    // (shown: rendered and not `visibility: hidden`, whose box would still take a scroll; Astra's round 1)
     const shown = (el) => el?.isConnected && (el.checkVisibility?.({ visibilityProperty: true }) ?? true);
     const was = inspecting.selected;
     const holds = was && was.plan === frame.plan && was.generation === globalThis.exact.generation && wanted.has(was.site);
@@ -839,7 +839,7 @@ if (es) {
     place();
     legend(found.length);
   };
-  // `hold {revision, hold}` (*1.11*): `{site, instance, state}` of this page's plan, the view by
+  // `hold {revision, hold}` (LLP 1122 D4, D8; *1.11*): `{site, instance, state}` of this page's plan, the view by
   // its site and instance path (exactly one, as a refresh finds it), held by the input glue as the real state; null
   // lets it go. What it holds or let go, and why, is reported (`held`), to every client.
   // A new generation's tree takes the hold again (the glue let it go unsaid with the old tree): under the same plan
@@ -946,7 +946,7 @@ if (es) {
     const id = inspecting.selected?.id;
     if (!inspecting.on || id == null || !Number.isSafeInteger(up)) { await refresh(); return; }
     // (Only the selection, its instance, generation and plan the server took them from. One that moved since on its
-    // way here is no inability: the page reports its selection as it is now, and the tool follows.)
+    // way here is no inability (theme2 15:02): the page reports its selection as it is now, and the tool follows.)
     if (inspecting.selected.generation !== globalThis.exact.generation || plan !== inspecting.selected.plan || from !== inspecting.selected.site || JSON.stringify(instance ?? []) !== inspecting.selected.instance) { await refresh(); return; }
     const copies = copiesHeld.plan === plan ? copiesHeld.list : null;
     if (!copies) { await refresh(); return; }
@@ -1020,7 +1020,7 @@ if (es) {
     if (message.gpu !== undefined) {
       // A drive owns its clock and code. Do not change either behind the driver.
       if (new URLSearchParams(location.search).get('agent') === '1') return;
-      // A declared module's rebuild names it; the primary's does not.
+      // A declared module's rebuild names it (LLP 1009 D6); the primary's does not.
       const versions = message.module ? (globalThis.exact.gpuVersions ??= {}) : globalThis.exact, key = message.module ? `gpu/${message.module}` : 'gpuVersion';
       versions[key] = message.gpu;
       if (globalThis.exact.gpu) (async () => {
@@ -1049,8 +1049,8 @@ if (es) {
       channel.registered = (async () => {
         await globalThis.exact.ready;
         const id = await buildId, answer = await post(nonce, { kind: "register", id, host: "web", capabilities: ["pin", "inspect", "copies", "hold", "navigate"], plan: channel.plan, planDigest: await planDigest(), design: globalThis.exact.designDigest ?? await designNow() });
-        // A framed copy tells the page framing it which build it is:
-        // the design tool maps the frame to its tile by this
+        // A framed copy tells the page framing it which build it is (LLP
+        // 1122 T7): the design tool maps the frame to its tile by this
         // message's source. The id grants nothing without the stream's nonce.
         if (answer.ok && framed) globalThis.parent.postMessage({ type: "exact-build", id }, "*");
         return answer.ok;

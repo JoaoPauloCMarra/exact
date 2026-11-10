@@ -1,4 +1,4 @@
-// The window's bar is presented again only by a batch
+// @ref LLP 1115.002 D2 — the window's bar is presented again only by a batch
 // that touches what it read. Each present records its reads (`BarReads`):
 // the routes it consulted and each one's direct children, the header it
 // read (shown, kept painted, or the declared toolbar), every node carrying
@@ -16,8 +16,8 @@
 // from routes the bar never read.
 //
 // A scrolling list's slice of rows touches none of it, so it no longer
-// presents the bar: that was a fifth of `Presenter.apply` while a chat app's
-// transcript filled rows.
+// presents the bar: a fifth of `Presenter.apply` while Excord's transcript
+// filled rows (QUEUE, 2026-10-25; x2-perf4's plan, theme2 2026-10-29 05:08).
 // An exclusion (skip a collection's rows) could not be made sound: a toolbar
 // can sit in a row, and a header's popover can live in one.
 //
@@ -81,7 +81,7 @@ extension WindowToolbarHost {
         var created: Set<UInt32>?
         // A node with no view, made by none of this batch's ops: nothing to place, so it may be the bar's.
         // Conservative: an op on a viewless node anywhere in the page presents the bar (rare: a viewless
-        // node changes through `Batch.controls`, not ops; a chat transcript's fill hits none).
+        // node changes through `Batch.controls`, not ops; Excord's fill hits none).
         func unplaced(_ id: UInt32) -> Bool {
             guard presenter.views[id] == nil, presenter.leaving[id] == nil else { return false }
             if created == nil { created = Set(batch.ops.lazy.filter { $0.op == .create }.map(\.id)) }
@@ -324,7 +324,7 @@ extension WindowToolbarHost {
 }
 
 extension Presenter {
-    /// The accent or another system colour changed: every view applies its colours again.
+    /// The accent or another system colour changed (LLP 1095 D5): every view applies its colours again.
     func systemColorsChanged() {
         views.values.forEach { $0.systemColorsChanged() }
         // A prominent item's tint is resolved when the bar presents (`prominence`): no batch says it moved.

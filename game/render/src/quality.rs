@@ -1,4 +1,4 @@
-//! The quality ladder: the rung a world's renderer is made
+//! The quality ladder (LLP 1139.003 D3): the rung a world's renderer is made
 //! at, from the game's `Game::quality` and the device's GPU tier, and what
 //! each rung clamps of what the game left unsaid. Presentation only: nothing
 //! here reaches the world, its saves or its hash.

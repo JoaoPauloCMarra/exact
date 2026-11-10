@@ -1,5 +1,5 @@
-// The update store's Swift face: the C entries of `exact.h`'s update
-// section, per process —
+// The update store's Swift face (LLP 1026 D9/D11; LLP 1030 D7; LLP 1030.000
+// §4 stage 4): the C entries of `exact.h`'s update section, per process —
 // open at launch, the selection's assets for the resolver, first pixel, the
 // check on the library's own thread, the staged plan's bytes for an
 // activation. No networking here: the library fetches over its own

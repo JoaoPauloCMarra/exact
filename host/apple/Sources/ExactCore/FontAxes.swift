@@ -1,4 +1,4 @@
-// CSS `font-variation-settings`: the axes a run sets after its
+// CSS `font-variation-settings` (LLP 1019 D9): the axes a run sets after its
 // weight, width and optical size, each winning for its own axis. A run under
 // `font-optical-sizing: none` carries `FontAxis.ownOpticalSize` first.
 import Foundation

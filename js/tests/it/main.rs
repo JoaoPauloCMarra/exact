@@ -43,7 +43,7 @@ mod watch;
 mod windows_lean;
 
 /// What a host runs for `dispatch`: its work, or for a re-ask
-/// (`Dispatch::Again`) the empty success a host settles it
+/// (`Dispatch::Again`, LLP 1041 §8.4) the empty success a host settles it
 /// with, as a harness standing in for a host's executor needs. These
 /// harnesses test the module, not admission: a re-ask's place in a native
 /// executor is tested through the real one (`admission.rs`, and the core's

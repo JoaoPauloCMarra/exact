@@ -1,5 +1,5 @@
 // A source that never returns on its own: a synchronous loop only an
-// interrupt from another thread ends. `words` answers at
+// interrupt from another thread ends (LLP 1048.000 D10). `words` answers at
 // once, except for the name "spin", for which it spins, telling the native
 // module, where there is one, from inside the loop once it is running.
 

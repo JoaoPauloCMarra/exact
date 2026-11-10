@@ -1,6 +1,6 @@
-//! Calls of actions: a call's arguments against its callee's
-//! parameters, cut where the call's own begin; a call is a statement
-//! and gives no value, and an action is never an argument.
+//! Calls of actions (LLP 1089): a call's arguments against its callee's
+//! parameters, cut where the call's own begin (D8); a call is a statement
+//! and gives no value, and an action is never an argument (D1, D10).
 
 use super::{checks, err, infer, routes, ComponentTypes, Ref, Scope, Shapes, Ty, TypeError, Types};
 use contract_syntax::inline::calls::{shown, MARK};
@@ -160,7 +160,7 @@ fn arg_types(
 }
 
 /// A call of an action prop or injected action in its component's scope,
-/// before lifting resolves it: its arguments are values of the types
+/// before lifting resolves it (D7): its arguments are values of the types
 /// its declaration gives, all of them when it gives any.
 pub(super) fn prop_args(
     name: &str,
@@ -190,7 +190,7 @@ pub(super) fn prop_args(
 
 /// A call's own arguments against its callee's own parameters: a lifted
 /// callee's captures skipped, then the arguments curried where the action
-/// was passed. The callee's body is the callee's, checked as its own
+/// was passed (D8). The callee's body is the callee's, checked as its own
 /// action; a call of the same component in a lifted action was checked in
 /// its component.
 pub(super) fn check(
@@ -309,9 +309,9 @@ fn each_call<'b>(
 }
 
 /// The calls in `c`'s action bodies give an untyped parameter of the
-/// callee its type, as a handler's arguments do: `action move(dr, dc)`
+/// callee its type, as a handler's arguments do (D8): `action move(dr, dc)`
 /// called only as `move(1, 0)`. Once, in declaration order; a type learned
-/// later does not flow back.
+/// later does not flow back (LLP 1088 §9.2).
 pub(super) fn refine(c: &Component, ct: &mut ComponentTypes, types: &Types) {
     let shapes = &types.shapes;
     let names = crate::actions::Names::new(c);
@@ -453,7 +453,7 @@ pub(super) fn unknown_function(
         };
     }
     // The web's list operations and number formatters Contract refuses
-    // say what to do instead.
+    // (LLP 1017.003 §Diagnostics) say what to do instead.
     if let Some(why) = contract_syntax::idioms::refusal(name) {
         return TypeError {
             id: "type-refused-idiom",
@@ -461,7 +461,7 @@ pub(super) fn unknown_function(
             span,
         };
     }
-    // An `empty()` outside a resource's `else` is a list's `[]`.
+    // @ref LLP 1116.014 D1 — an `empty()` outside a resource's `else` is a list's `[]`.
     if name == crate::placeholder::EMPTY {
         return TypeError {
             id: "type-unknown-function",
@@ -473,8 +473,8 @@ pub(super) fn unknown_function(
         "`{name}` is not in the stdlib roster and is not an action; data comes from a `resource`"
     );
     // The runner's own sources (the `SOURCE` of runner/src/time.rs, viewport.rs, page.rs,
-    // delivery.rs, surface_record.rs, transport.rs, midi.rs), called like functions
-    // (`exactTime().epochAtZero`).
+    // delivery.rs, surface_record.rs, transport.rs, midi.rs), called like functions (r34 t7:
+    // `exactTime().epochAtZero`).
     if matches!(
         name,
         "exactTime"
@@ -496,7 +496,7 @@ pub(super) fn unknown_function(
              root component, with a shape S of the fields you read, and read `r.field`"
         ));
     } else if let Some(candidate) = similar_function(name, scope, shapes) {
-        // A method's name is offered as the method.
+        // A method's name is offered as the method (LLP 1116.015 D2).
         let candidate = match candidate {
             "length" => "x.length".to_string(),
             c if contract_syntax::idioms::is_method(c) => format!("x.{c}(…)"),

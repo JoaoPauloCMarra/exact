@@ -1,4 +1,4 @@
-//! Icon tokens at build. Each icon's SVG is
+//! @ref LLP 1121 D10 (stage 6 F) — icon tokens at build. Each icon's SVG is
 //! read ([`crate::icon_svg`]) and each target the app ships is checked to
 //! have a source (`tamber-icon-missing`); a literal `symbol:icon.reply` is
 //! written as the source form every host reads,
@@ -22,7 +22,7 @@ pub(crate) struct Resolved {
     pub sf: String,
     pub view_box: String,
     /// Empty when the SVG is no template, which the web draws as the file.
-    /// An even-odd icon's starts `evenodd:`, in the plan's row
+    /// An even-odd icon's starts `evenodd:` (stage 14 C2), in the plan's row
     /// and the source form alike; a nonzero one's is the `d`s alone, as
     /// before. Every reader strips it through `exact_kernel::Icon`.
     pub path: String,
@@ -73,9 +73,9 @@ fn apple(target: &str) -> bool {
     matches!(target, "ios" | "macos" | "tvos" | "watchos")
 }
 
-/// The source `target` draws for `icon`, by the icon rule (the one
+/// The source `target` draws for `icon`, by D10's rule (the one
 /// `tamber-icon-missing` checks): Apple the SF Symbol, else a template
-/// SVG's path (not yet a watch's), every other host a
+/// SVG's path (stage 9 A; not yet a watch's), every other host a
 /// template's path, and the web an SVG as written; `None` where it draws
 /// none.
 fn drawn(
@@ -91,7 +91,7 @@ fn drawn(
     }
 }
 
-/// The package an icon's sources are written in,
+/// The package an icon's sources are written in (LLP 1121 D11, stage 13),
 /// by name, and its directory: a package's icon (its line in the package's
 /// band), a package component's icon param's default, in its design or its
 /// Contract (its line a param's, `params` the list the design was laid
@@ -150,7 +150,7 @@ impl<'a> Home<'a> {
 
     /// Whether `path` (this home's SVG, [`Home::svg`]) leaves its package:
     /// a package's file must be its own, links followed, under its own
-    /// `assets/` ([`confined::read`], the one
+    /// `assets/` (round 1, Astra 4 = Grok 2; [`confined::read`], the one
     /// rule every reader of a package's file applies), so no link passes off
     /// the app's or another package's bytes as the package's. One not there
     /// leaves nothing. The app's are not confined: its `assets/` are its own
@@ -176,8 +176,9 @@ impl<'a> Home<'a> {
 /// its path has a `|` (it joins the source form's parts), it is not under
 /// its design file's `assets/` (the app's, or its package's), it doesn't
 /// read as one, a template is over its size (its path travels in the plan
-/// and in every literal source), or a package's is no template (the web,
-/// which alone draws an SVG as written, stages the app's `assets/` only).
+/// and in every literal source), or a package's is no template (stage 13,
+/// Q2: the web, which alone draws an SVG as written, stages the app's
+/// `assets/` only).
 fn svg_of(icon: &tamber::Icon, home: Home) -> Result<Option<crate::icon_svg::Svg>, String> {
     let (file, root) = match (&icon.svg, home.root) {
         (None, _) => return Ok(None),
@@ -188,8 +189,8 @@ fn svg_of(icon: &tamber::Icon, home: Home) -> Result<Option<crate::icon_svg::Svg
         (Some(file), Some(root)) => (file, root),
     };
     let path = root.join("assets").join(file);
-    // A package's read only as its own file, from the file checked
-    // ([`confined::read`]); the app's as it is.
+    // A package's read only as its own file, from the file checked (round 3,
+    // R3-4: [`confined::read`]); the app's as it is.
     let bytes = match home.package {
         Some(_) => confined::read(&path, root).map_err(|why| match why {
             Unread::Leaves => format!(
@@ -216,7 +217,7 @@ fn svg_of(icon: &tamber::Icon, home: Home) -> Result<Option<crate::icon_svg::Svg
 }
 
 /// Which source each target the app at `root` ships draws for `icon`
-/// (`describe`'s icon entry), its SVG read as the build
+/// (`describe`'s icon entry, LLP 1121 stage 9 C), its SVG read as the build
 /// reads it ([`svg_of`], under `home`); one the build refuses draws as none.
 pub fn draws(icon: &tamber::Icon, root: &Path, home: Home) -> Vec<(String, Option<&'static str>)> {
     let svg = svg_of(icon, home).ok().flatten();
@@ -271,7 +272,7 @@ fn targets(root: Option<&Path>) -> Vec<Target> {
             from: vec![from],
         }),
     };
-    // An app's target crate is a target it builds.
+    // An app's target crate is a target it builds (theme2's ruling).
     for dir in ["android", "linux", "web"] {
         if root.is_some_and(|r| r.join(dir).join("Cargo.toml").is_file()) {
             add(dir, format!("the `{dir}/` crate"));
@@ -293,7 +294,7 @@ fn targets(root: Option<&Path>) -> Vec<Target> {
 /// Read each icon's SVG (under its `home`) and check each target the app
 /// ships (read by [`clear`]) has a source; `span` places a refusal at the
 /// icon's line. `exported`: whether an icon is kept for code outside the
-/// views.
+/// views (D7).
 pub(crate) fn declare<'a>(
     icons: &[tamber::Icon],
     home: &dyn Fn(&tamber::Icon) -> Home<'a>,
@@ -341,8 +342,8 @@ pub(crate) fn declare<'a>(
                             .unwrap_or_default()
                     ),
                 ),
-                // No SVG for a host that draws only one (refused: the app ships that host). An
-                // Apple-only app with no SVGs needs the form that builds.
+                // No SVG for a host that draws only one (LLP 1121 D10 refuses it: the app ships
+                // that host). The euxy port, Apple-only with no SVGs, needed the form that builds.
                 (None, _) if !apple(target) => {
                     let file = icon.name.trim_start_matches("icon.").replace('.', "-");
                     // A bare SF Symbol blank on the web alone is one line of a build (the CLI's `web_only`).

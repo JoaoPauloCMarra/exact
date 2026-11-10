@@ -87,8 +87,8 @@ fn fixture(name: &str, scale: f32, choice: PainterChoice) -> Presenter<()> {
 }
 
 /// A card with an opaque colour and a radius on a white page: the fixture
-/// for radii (the app's own panels are translucent white over the sky,
-/// and say nothing about a corner).
+/// for radii (the app's own panels are translucent white over the sky since
+/// LLP 1014 §1a, and say nothing about a corner).
 const CARD: &str = "component Card
   view
     column background-color=\"#ffffff\" padding=20 width=\"100%\" height=\"100%\"
@@ -120,12 +120,12 @@ fn px(frame: &Pixmap, x: f32, y: f32) -> (u8, u8, u8) {
 }
 
 /// The page's colour: the root's background as the kernel holds it (the
-/// app paints the sky's colour under everything; a
+/// app paints the sky's colour under everything since LLP 1014 §1a; a
 /// fixture with no background is white — never assumed here).
 fn page<D: DataSource>(p: &Presenter<D>) -> (u8, u8, u8) {
     let id = view(p, "caltrain-main");
-    // The row holds a colour as authored, which may be a `light-dark()` pair.
-    // This fixture reads the light half, which is the
+    // The row holds a colour as authored, which may be a `light-dark()` pair
+    // (LLP 1034 D1). This fixture reads the light half, which is the
     // appearance a headless painter draws in unless the app says otherwise.
     let c = p.host().kernel().node(id).unwrap().style.background_color;
     let [r, g, b, a] =
@@ -240,7 +240,7 @@ fn motion_presents_as_a_transform_and_a_group_opacity() {
     }
 }
 
-/// `transform-origin` is the point the transforms turn about;
+/// LLP 1061 D6: `transform-origin` is the point the transforms turn about;
 /// the painted box (what `layout` reports and hit-testing reads) follows.
 #[test]
 fn transforms_turn_about_the_transform_origin() {
@@ -352,7 +352,7 @@ fn band(a: &Pixmap, b: &Pixmap) -> (f64, f64) {
 
 #[test]
 fn the_two_painters_agree_within_a_band() {
-    // Tiny-skia is the pixel oracle and vello must land within
+    // LLP 1015 §2: tiny-skia is the pixel oracle and vello must land within
     // a band of it over the same frame — the whole app at 390×844, text and
     // all. Glyphs are where they part (outlines hinted by vello against
     // swash's bitmaps at snapped positions), so the band is on the frame,
@@ -435,7 +435,7 @@ fn patterned_borders_leave_gaps_without_losing_width() {
     }
 }
 
-/// A `box-shadow` falls outside the border box only — offset
+/// LLP 1064 D2: a `box-shadow` falls outside the border box only — offset
 /// hard, or blurred as a Gaussian of half the blur radius — on every painter,
 /// and a clipping node's shadow is not clipped by it.
 #[test]
@@ -1119,7 +1119,7 @@ fn accessibility_focus_is_session_scoped_and_buttons_activate_from_keys() {
     p.reload(&contract::compile(source).unwrap().encode(), ())
         .unwrap();
     // A carried reload is the same document: focus stays at Other's place,
-    // and First's autofocus does not take it back.
+    // and First's autofocus does not take it back (LLP 1035.000 D9).
     assert_eq!(p.focus(), Some(id(&p, "other")));
     assert!(p.host().agent(r#"{"op":"state"}"#).contains(r#""count":3"#));
     p.key(Some('\n'), false, 2000.0);

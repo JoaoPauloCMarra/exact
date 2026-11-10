@@ -1,4 +1,5 @@
 # Contract syntax: lexer, parser, AST, spans. Depends on nothing.
+# @ref LLP 1004 D2.
 [package]
 name = "contract-syntax"
 version.workspace = true

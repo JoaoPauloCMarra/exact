@@ -1,4 +1,4 @@
-//! The registry's claims: an effect completes after its
+//! The registry's claims (LLP 1133.022 D4): an effect completes after its
 //! span; a second on the same device preempts the first, whichever client
 //! made it; a disconnect ends every claim on the device; a client's end
 //! ends only its own; `current` follows a press, not a stick.

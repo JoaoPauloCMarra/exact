@@ -1,4 +1,4 @@
-//! On iOS, a box's `translate`, `scale`, `rotate` and
+//! LLP 1055.001 on iOS: a box's `translate`, `scale`, `rotate` and
 //! `background-color` keyframes go to Core Animation where it plays them as
 //! CSS does, and the engine keeps no frames busy for them; the rest are
 //! sampled as before. The host here is flipped to iOS's lowering after boot.
@@ -235,7 +235,7 @@ fn hosts_without_box_lowering_sample_them() {
         844.0,
     )
     .unwrap();
-    // watchOS samples box motion; it has no Core Animation presenter.
+    // LLP 1126 D10: watchOS samples box motion; it has no Core Animation presenter.
     assert!(!host.svg.box_motion || cfg!(any(target_os = "ios", target_os = "tvos")));
     let on = host.dispatch_at(id(&host, "go"), Event::Press, 100.0);
     if !cfg!(any(target_os = "ios", target_os = "tvos")) {
@@ -244,7 +244,7 @@ fn hosts_without_box_lowering_sample_them() {
     }
 }
 
-/// A glass group ignores the opacity Core Animation
+/// LLP 1053.000.000 D4: a glass group ignores the opacity Core Animation
 /// plays between it and its glass, so an opacity animation inside a group is
 /// sampled and reaches the host as values; outside one, it is lowered.
 #[test]
@@ -298,7 +298,7 @@ component A
     );
 }
 
-/// An opacity animation still lowered when a group is
+/// LLP 1053.000.000 D4: an opacity animation still lowered when a group is
 /// above it (a group set after it started) is switched to sampling by the
 /// pass over every running animation, and its Core Animation spec withdrawn.
 #[test]
@@ -338,7 +338,7 @@ component A
     assert!(svg_lower::glass_sampling(host.runner.kernel(), &mut host.engine).is_empty());
 }
 
-/// A box's `translate` given as a percentage of itself
+/// LLP 1115.003 D4: a box's `translate` given as a percentage of itself
 /// lowers too, resolved against its border box when its specs are made, and
 /// its specs are made again when it resizes.
 #[test]
@@ -378,7 +378,7 @@ fn a_percentage_translate_lowers_against_the_box_and_follows_a_resize() {
     assert_eq!(y(&grown), [120.0, 0.0], "{grown}");
 }
 
-/// An opacity animation on a node whose press (`:active`
+/// @ref LLP 1121 D8 — an opacity animation on a node whose press (`:active`
 /// lowered to the press paint) or `:hover` look paints its opacity stays
 /// sampled by the engine on both platforms (Core Animation would add the
 /// host's opacity layers to its own sample); one on a node without either

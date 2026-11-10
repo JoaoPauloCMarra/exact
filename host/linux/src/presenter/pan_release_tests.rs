@@ -1,4 +1,4 @@
-//! On Linux, a pan that began ends with one `panrelease`, its
+//! LLP 1057 §10.6 on Linux: a pan that began ends with one `panrelease`, its
 //! velocity the contact tracker's; a tap releases nothing; a cancel at rest.
 use super::super::*;
 

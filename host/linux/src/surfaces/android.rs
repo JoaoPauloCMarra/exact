@@ -1,8 +1,9 @@
-//! GPU canvases that present, on Android's Canvas host: the module loads with a
-//! device, a canvas is made as on Linux (headless, so its binding and assets
-//! run unchanged) and is given the window its reader's view makes for it
-//! (`gpu_attach`); the host renders and flushes every attached canvas each
-//! frame. Shader text is the app's `shaders/*.wgsl` under the asset root.
+//! GPU canvases that present, on Android (LLP 1009 on the Canvas host,
+//! LLP 1076): the module loads with a device, a canvas is made as on Linux
+//! (headless, so its binding and assets run unchanged) and is given the
+//! window its reader's view makes for it (`gpu_attach`); the host renders and
+//! flushes every attached canvas each frame. Shader text (LLP 1030 D8) is the
+//! app's `shaders/*.wgsl` under the asset root.
 #![allow(unsafe_code)]
 use super::*;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -106,7 +107,7 @@ impl<D: DataSource> Presenter<D> {
 }
 
 /// Start making the app's primary GPU module's device, on threads of
-/// their own, while the host boots: the canvas's first frame on
+/// their own, while the host boots (LLP 1076): the canvas's first frame on
 /// the host's thread loads the module (`gpu_load`, which takes the device)
 /// without making one. Nothing when the app has no GPU module.
 pub(crate) fn prepare(compat: &'static str) {

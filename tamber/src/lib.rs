@@ -1,6 +1,10 @@
-//! Tamber, Exact's design system: the `.tamber` grammar, its checker and
-//! the build's one evaluator, which folds a design to the IR every generator
-//! and the editor read.
+//! Tamber, Exact's design system (LLP 1121): the `.tamber` grammar (§3),
+//! its checker (D3–D5) and the build's one evaluator (D7), which folds a
+//! design to the IR every generator and the editor read (D2).
+//!
+//! Stage 2 builds colour tokens and app axes, stage 6 length and number
+//! tokens; every other kind is parsed where the grammar has it and refused
+//! with the stage that brings it.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
@@ -112,7 +116,7 @@ impl std::fmt::Display for Diagnostic {
     }
 }
 
-/// A colour role, as the kernel's schema lists it.
+/// A colour role, as the kernel's schema lists it (LLP 1095 D2).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Role {
     /// The schema's name: CSS's (`Canvas`) or Exact's (`secondary-label`).
@@ -140,13 +144,13 @@ pub struct Vocab {
     /// the DTCG export writes a text style or the hairline as (and a base
     /// name, the caller's chosen column's: Exact gives the neutral one's).
     pub sizes: Vec<(String, String)>,
-    /// The base names the host resolves per platform (Exact's base scale),
-    /// matched exactly. One the design
+    /// The base names the host resolves per platform (Exact's base scale,
+    /// `space.md`; LLP 1121 stage 11 B), matched exactly. One the design
     /// leaves unset: a value naming it bare is a named length, kept as
     /// written and never folded, so each host reads its own; a length's
     /// `calc()`, `min()`, `max()` or `clamp()` over it is kept too, folded
-    /// as far as it goes ([`Residual`]), and so is a shadow's length over it
-    /// ([`ShadowLength`]); any other value over
+    /// as far as it goes ([`Residual`], stage 12 B2), and so is a shadow's
+    /// length over it ([`ShadowLength`], stage 12 B3); any other value over
     /// it is refused (`tamber-base-expression`). One the design sets is its
     /// token, as any.
     pub bases: Vec<String>,
@@ -183,13 +187,13 @@ pub struct Folding {
     pub design: Design,
     /// Its tokens, in declaration order.
     pub tokens: Vec<Checked>,
-    /// Its icon tokens, in declaration order.
+    /// Its icon tokens, in declaration order (D10).
     pub icons: Vec<Icon>,
     /// How many full app tuples its axes make.
     pub tuples: usize,
     /// What the author should know and the build does not refuse: a pair
-    /// below WCAG's text contrast (`tamber-contrast`); a type token in
-    /// px (`tamber-type-fixed`).
+    /// below WCAG's text contrast (`tamber-contrast`, D3); a type token in
+    /// px (`tamber-type-fixed`, D6).
     pub warnings: Vec<Diagnostic>,
     fallbacks: Vec<Option<[String; 2]>>,
     dials: Vec<String>,
@@ -216,7 +220,7 @@ pub fn check(src: &str, vocab: &Vocab) -> Result<Folding, Vec<Diagnostic>> {
 }
 
 /// Check and fold a design already parsed, or built by a caller: the
-/// compiler's inline `theme` and its synthetic tokens.
+/// compiler's inline `theme` (LLP 1095 D4) and its synthetic tokens (D3).
 pub fn check_design(design: Design, vocab: &Vocab) -> Result<Folding, Vec<Diagnostic>> {
     check_uncached(design, vocab)
 }
@@ -273,7 +277,7 @@ fn check_uncached(mut design: Design, vocab: &Vocab) -> Result<Folding, Vec<Diag
             return Err(misnamed(&design, kinds(&checked.0), vocab))
         }
         // Each refusal at once: a base name misdeclared beside another
-        // refusal is said too.
+        // refusal is said too (round 3, Grok).
         Ok(checked) => {
             refused.extend(misnamed(&design, kinds(&checked.0), vocab));
             refused.sort_by_key(|d| (d.line, d.col));
@@ -307,7 +311,7 @@ fn check_uncached(mut design: Design, vocab: &Vocab) -> Result<Folding, Vec<Diag
     })
 }
 
-/// `tamber-base-kind`: a base name the design
+/// `tamber-base-kind` (stage 11 B, theme2's (c)): a base name the design
 /// declares as anything but a length, which every reader of the design
 /// refuses (the build, a write's plan), not the lowering alone.
 fn misnamed(design: &Design, kinds: Vec<Kind>, vocab: &Vocab) -> Vec<Diagnostic> {
@@ -328,8 +332,8 @@ fn kinds(tokens: &[Checked]) -> Vec<Kind> {
     tokens.iter().map(|t| t.kind).collect()
 }
 
-/// Each type token whose size is px in some tuple (`tamber-type-fixed`):
-/// the author's choice not to scale with the person's text size,
+/// Each type token whose size is px in some tuple (`tamber-type-fixed`,
+/// D6): the author's choice not to scale with the person's text size,
 /// which the build does not refuse.
 fn type_fixed(design: &Design, tokens: &[Checked]) -> Vec<Diagnostic> {
     tokens
@@ -354,7 +358,7 @@ fn type_fixed(design: &Design, tokens: &[Checked]) -> Vec<Diagnostic> {
 /// WCAG 2's text ratio, below which a declared pair is warned of.
 pub const TEXT_CONTRAST: f64 = 4.5;
 
-/// Each declared pair (`pair=`) whose colours, in some tuple and scheme,
+/// Each declared pair (`pair=`, D3) whose colours, in some tuple and scheme,
 /// fall below 4.5:1: one warning a pair, at its lowest, naming the tuple,
 /// the scheme and the ratio. A residual side (a role, a platform colour) is
 /// read at its fallback, and the warning says so; a background that is not
@@ -368,7 +372,8 @@ fn contrast(design: &Design, tokens: &[Checked], tuples: usize, vocab: &Vocab) -
         }
     };
     let mut out = Vec::new();
-    // The checked tokens by name, the first of each (linear).
+    // The checked tokens by name, the first of each (linear: round 1 of the
+    // checker sweep).
     let mut by_name = std::collections::HashMap::new();
     for u in tokens.iter().rev() {
         by_name.insert(u.name.as_str(), u);
@@ -448,7 +453,7 @@ fn modes_of(design: &Design, tuple: usize) -> String {
 /// The lowest contrast white text has over the colour of the token that
 /// overrides `role` (by the schema's name), over the tuples and both
 /// schemes, and whether it falls in dark: what a filled button's white
-/// label reads at on `AccentColor`. None when no token
+/// label reads at on `AccentColor` (LLP 1116.019 D3). None when no token
 /// overrides the role or its colour is the host's.
 pub fn white_over(tokens: &[Checked], role: &str) -> Option<(f64, bool)> {
     let t = tokens.iter().find(|t| t.role.as_deref() == Some(role))?;
@@ -510,7 +515,7 @@ pub fn ratio(fg: &str, bg: &str) -> Option<f64> {
     Some((x.max(y) + 0.05) / (x.min(y) + 0.05))
 }
 
-/// Whether an `exports` line names token `name`, which overrides `role`
+/// Whether an `exports` line (D7) names token `name`, which overrides `role`
 /// if it does: its name, or the role in any spelling a row may write
 /// (`canvastext`, `secondary-label` for `-exact-secondary-label`).
 pub fn exports_names(line: &str, name: &str, role: Option<&str>) -> bool {
@@ -520,7 +525,7 @@ pub fn exports_names(line: &str, name: &str, role: Option<&str>) -> bool {
     line == name || role.is_some_and(|r| spelled(line, r) || spelled(line, name))
 }
 
-/// A value's fallback pair: light and dark, roles at theirs.
+/// A value's fallback pair (D7): light and dark, roles at theirs.
 pub fn fallback(value: &Folded, vocab: &Vocab) -> Option<[String; 2]> {
     match value {
         Folded::One(h) => Some([h.clip(), h.clip()]),
@@ -547,7 +552,7 @@ pub fn fallback(value: &Folded, vocab: &Vocab) -> Option<[String; 2]> {
 }
 
 impl Folding {
-    /// The IR, `tamber.json`: generated, never committed.
+    /// The IR, `tamber.json` (D2): generated, never committed.
     pub fn ir(&self) -> String {
         ir::write(self)
     }

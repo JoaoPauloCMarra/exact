@@ -1,4 +1,4 @@
-//! Through the actual Hermes bytecode executor and runner.
+//! LLP 1027.000 through the actual Hermes bytecode executor and runner.
 #![cfg(exact_js_engine)]
 
 use exact_js::Module;
@@ -466,7 +466,7 @@ component App
         old.carry().resources.is_empty(),
         "an in-flight placeholder is not a settled answer"
     );
-    // A pending reload may use the compiled placeholder
+    // @ref LLP 1038 D5 — a pending reload may use the compiled placeholder
     // only for its baked arguments; the source is still asked under a fresh ticket.
     let mut next = Runner::boot_carrying(
         plan,

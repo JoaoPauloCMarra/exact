@@ -52,7 +52,8 @@ theorem SettledOK.addResource {p : Program} {st : Settled} {r : ResourceDecl} {v
 theorem rowKey_legit (v : Value) : GoodR (fun _ => True) (rowKey v) := by
   cases v <;> simp only [rowKey] <;> (try split) <;> simp [GoodR, Legit]
 
-/-- A resource over a list's elements, its key and arguments typed with the element bound at `te`:
+/-- A resource over a list's elements (LLP 1017.000 P4c, amended
+2026-11-04), its key and arguments typed with the element bound at `te`:
 each step fails only legitimately. -/
 theorem settleEachGo_good {p : Program} {o : Oracle} {env : Env} {r : ResourceDecl}
     {e : ResourceEach} {prev : List Value} {forced : Bool} {G : Scope} {te : Ty} {ts : List Ty}

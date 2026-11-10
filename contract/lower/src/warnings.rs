@@ -1,4 +1,4 @@
-//! Lowering's warnings: what compiles and runs but is
+//! Lowering's warnings (@ref LLP 1116 D6): what compiles and runs but is
 //! not what the author meant, where a host would drop it without a word.
 //! Beside the refusals (`lint.rs`, [`crate::lower_all`]), never instead of
 //! them: a warning fails no build and no test, and names its repair as a
@@ -86,7 +86,7 @@ pub(crate) fn with_text_styles(checked: &Checked<'_>, lowered: &TextStyles) -> V
                 // A component used twice is inlined twice: one line for its source.
                 let span = node.span();
                 let fresh = seen.insert((span.source_id, span.line, span.col, span.end_col));
-                // A symbol by another spelling than its role.
+                // @ref LLP 1116.007 D3.1 — a symbol by another spelling than its role.
                 if let (true, "image", Some(source)) = (fresh, tag.as_str(), positional.first()) {
                     out.extend(crate::symbols::image_source(source, &mut platform));
                 }
@@ -97,7 +97,7 @@ pub(crate) fn with_text_styles(checked: &Checked<'_>, lowered: &TextStyles) -> V
                     line_height::multiplier(attrs, &mut out);
                 }
                 let keyed = has(attrs, "navigationKey");
-                // A name or a key that meets nothing.
+                // @ref LLP 1116.010 D5 — a name or a key that meets nothing.
                 miswiring::swipe(attrs, children, fresh, &mut out);
                 if tag == "image" {
                     miswiring::image_source(positional.first(), fresh, &mut out);
@@ -108,7 +108,7 @@ pub(crate) fn with_text_styles(checked: &Checked<'_>, lowered: &TextStyles) -> V
                 }
                 miswiring::navigation_split(tag, attrs, keyed, keyed && !in_root, fresh, &mut out);
                 let route = in_root && keyed && !has(attrs, "navigationBack");
-                // A route that says it has no bar draws its header as written.
+                // A route that says it has no bar (LLP 1115.000 D5.2) draws its header as written.
                 let no_bar = literal(attrs, "navigationBar") == Some("none");
                 if route && !no_bar {
                     route_header(children, &[], &mut out);
@@ -145,24 +145,24 @@ pub(crate) fn with_text_styles(checked: &Checked<'_>, lowered: &TextStyles) -> V
     // A `replace` the router refuses on a root route's screen, a `select` after a push.
     out.extend(root_replace::router(checked));
     out.extend(counts::count_plural(checked));
-    // A row that searches another data list, or its own, or reads a key by position.
+    // @ref LLP 1116.016 D4 — a row that searches another data list; LLP 1017.003 D3, its own; LLP 1142 D6, a key by position.
     out.extend(rows::row_lookup(checked));
-    // A `delete=` no list row holds.
+    // @ref LLP 1116.020 D1 — a `delete=` no list row holds.
     out.extend(crate::swipe_rows::unplaced(
         &root.view,
         &checked.file.styles,
     ));
-    // A RoundButton label of more than a word.
+    // @ref LLP 1116.011 D2.1 — a RoundButton label of more than a word.
     out.extend(parts::round_button_label(checked));
-    // An empty state drawn as a list's row.
+    // @ref LLP 1116.020 D5 — an empty state drawn as a list's row.
     out.extend(parts::empty_state_in_list(checked));
-    // A summary card in a grouped list's card.
+    // @ref LLP 1116.021 D7 — a summary card in a grouped list's card.
     out.extend(parts::summary_card_in_list(checked));
-    // A node's own state part it never meets.
+    // @ref LLP 1121 D8 — a node's own state part it never meets.
     states::dead(&root.view, &mut out);
     performance_now(root, &checked.file.fns, &mut out);
     sounds::undeclared(checked, &mut out);
-    // An identifying argument of the launch's own.
+    // @ref LLP 1027.005 D6 — an identifying argument of the launch's own.
     launch::launch_identity(root, &checked.file.fns, &mut out);
     width::width_padding(&root.view, &checked.file.styles, &mut out);
     scroll_bound::scroll_grows(&root.view, &checked.file.styles, &mut out);
@@ -178,7 +178,7 @@ pub(crate) fn with_text_styles(checked: &Checked<'_>, lowered: &TextStyles) -> V
                 span: e.span,
             }),
     );
-    // The design's values of params the app no longer has.
+    // @ref LLP 1121 D15 — the design's values of params the app no longer has.
     if let Some(source) = &checked.file.design {
         if let Ok(design) = exact_tamber::parse(&source.text) {
             let params = crate::params::tokens(checked.file);
@@ -207,7 +207,7 @@ pub(crate) fn with_text_styles(checked: &Checked<'_>, lowered: &TextStyles) -> V
     out
 }
 
-/// What the one-scheme warning knows of the app's tokens.
+/// What the one-scheme warning knows of the app's tokens (LLP 1121 D3).
 struct Tokens {
     /// The tokens one colour in light and dark, not marked `scheme=fixed`,
     /// with that colour and whether in every tuple (`theme::one_scheme_tokens`).
@@ -242,7 +242,7 @@ fn computed(attrs: &[Attr], name: &str) -> bool {
         .is_some_and(|a| !matches!(a.value, Expr::Str(..)))
 }
 
-/// The plain boxes a bar's walk looks inside.
+/// The plain boxes a bar's walk looks inside (LLP 1075.003 §9.10).
 const BOXES: &[&str] = &[
     "view", "box", "column", "row", "header", "nav", "section", "footer", "article", "aside",
     "main",
@@ -256,7 +256,7 @@ enum Part {
     /// or dialog, which shows over the page when it opens.
     Hidden,
     /// `text role="heading"`: the bar's title. An `aria-level` with no role
-    /// is not one, there or to the bar.
+    /// is not one (LLP 1115.000 D12.5), there or to the bar.
     Heading,
     /// Another `text`: the subtitle when it is the first after the heading.
     Text,
@@ -266,8 +266,8 @@ enum Part {
     Tablist,
     /// A button that presses, or opens a popover: a bar item.
     Pressable,
-    /// `role="status"`: a readout, a bar item that nothing presses,
-    /// what it holds its face.
+    /// `role="status"`: a readout, a bar item that nothing presses (LLP
+    /// 1075.003 §9.15), what it holds its face.
     Status,
     /// A plain box, walked into.
     Box,
@@ -392,20 +392,20 @@ struct Bar<'a> {
     unplaced: Vec<(Span, String)>,
 }
 
-/// A route's `header` that is not the bar, in `lower-header-no-bar`'s words.
+/// A route's `header` that is not the bar, in `lower-header-no-bar`'s words (LLP 1115.000 D5.2).
 const NOT_THE_BAR: &str = "the header is drawn in the page as written, and the bar has no title: a pushed route's holds the system Back button alone, above the header, and a stack's first route has no bar.";
 
 /// The other repairs `lower-header-no-bar` names: a site's header, and the route's own chrome.
 const OR_NO_BAR: &str = "; or, for a site's header, say `appearance=\"none\"` on it; or, if this screen draws its own chrome, say `navigationBar=\"none\"` on the route's element (the one with `navigationKey`, not its line under `routes`)";
 
 /// `lower-header-unplaced`: a node in a route's first `header` that the
-/// iOS navigation bar does not place. The
+/// iOS navigation bar does not place (LLP 1075.003 §9.10, LLP 1116 D6). The
 /// bar takes one heading as its title, the first text after it as the
 /// subtitle (a filled box before it as the avatar), one search field, one
 /// tablist, the buttons that press, open a popover or are disabled, and the
-/// readouts (`role="status"`); the rest of the header is hidden
+/// readouts (`role="status"`, LLP 1075.003 §9.15); the rest of the header is hidden
 /// with it. With no heading or with two, the bar takes nothing and the
-/// header is shown as written: `lower-header-no-bar`'s.
+/// header is shown as written: `lower-header-no-bar`'s (LLP 1116.003 D2.2).
 /// An `if` first among the route's children is read branch by branch: a branch's first node
 /// is the route's first child while it is taken, and `after` the route's nodes past that `if`.
 fn route_header<'a>(children: &'a [Node], after: &[&'a Node], out: &mut Vec<LowerError>) {
@@ -547,9 +547,9 @@ fn first_headers<'a>(children: &'a [Node], out: &mut Vec<&'a Node>) {
 
 /// `lower-back-twice`: a route draws its own Back control (the element
 /// whose `id` the root's `navigationBack` names) where iOS shows the system
-/// Back too. Every pushed route has the navigation bar
+/// Back too (LLP 1115.000 D5.2). Every pushed route has the navigation bar
 /// unless it says `navigationBar="none"`, and the bar's Back presses the
-/// authored control, so a control drawn in the page is a
+/// authored control (LLP 1115 D5), so a control drawn in the page is a
 /// second Back on the same screen.
 ///
 /// A control in the route's first `header` is not drawn there on iOS: when
@@ -611,8 +611,9 @@ fn drawn_back(route: &[Attr], children: &[Node], name: &str, out: &mut Vec<Lower
 }
 
 /// `lower-single-tab`: a root tab bar (a `role="tablist"` whose tabs name
-/// their panels with `aria-controls`) with fewer than two tabs: a bar of
-/// one tab under a single screen, copied from a tab skeleton.
+/// their panels with `aria-controls`) with fewer than two tabs (LLP 1116
+/// D6): a bar of one tab under a single screen, which builders copied from
+/// a tab skeleton (polls, chat-rooms).
 fn single_tab(tablist: &Node, out: &mut Vec<LowerError>) {
     let (mut tabs, mut controls, mut doubt) = (0, false, false);
     let mut stack: Vec<&Node> = kids(tablist).iter().collect();
@@ -906,7 +907,7 @@ fn sent(
 
 /// `type-performance-now-persisted`: a value made from `performanceNow()`
 /// without `epochAtZero` added, given to a source by a `send` or kept in a
-/// persisted state.
+/// persisted state (LLP 1116 D6, D5).
 /// `performanceNow()` counts from 0 at each launch, so a start mark a
 /// source keeps reads as a time before the next launch began (stopwatch:
 /// laps of `0-5:0-41`). A span, one reading less another (or less an
@@ -956,7 +957,7 @@ fn performance_now(root: &contract_syntax::Component, fns: &[FnDecl], out: &mut 
     for a in &root.actions {
         sent(&clock, &a.body, &mut Vec::new(), &mut found);
     }
-    // A persisted state outlives the launch as a source's copy does.
+    // A persisted state outlives the launch as a source's copy does (D5).
     for s in root.states.iter().filter(|s| root.persists(&s.name)) {
         if clock.names.get(&s.name).is_some_and(|k| k & TIME != 0) {
             out.push(LowerError {
@@ -1085,8 +1086,8 @@ fn literal_colours(text: &str, out: &mut Vec<String>) {
 struct Leaves<'a> {
     fns: &'a [FnDecl],
     derives: &'a [Binding],
-    /// The theme's entries, by every spelling a row names them: a name is
-    /// the colour it stands for.
+    /// The theme's entries, by every spelling a row names them (LLP 1095
+    /// D4): a name is the colour it stands for.
     theme: Vec<(String, &'a str)>,
     /// The entries a row names: their colours are their declaration's to
     /// report, once, not each row's.
@@ -1095,7 +1096,8 @@ struct Leaves<'a> {
 
 impl Leaves<'_> {
     /// The entry a theme name is, as declared, and the colour text it
-    /// stands for: a name exactly, a role's spelling without case.
+    /// stands for: a name exactly, a role's spelling without case (LLP 1095
+    /// D4).
     fn entry_named(&self, word: &str) -> Option<(&str, &str)> {
         self.theme
             .iter()
@@ -1115,7 +1117,7 @@ impl Leaves<'_> {
         match e {
             Expr::Str(text, _) => {
                 literal_colours(text, out);
-                // A token's colours are its declaration's.
+                // A token's colours are its declaration's (LLP 1121 D3).
                 for word in text.split(|c: char| c.is_whitespace() || c == ',') {
                     if let Some((name, _)) = self.entry_named(word) {
                         let mut named = self.named.borrow_mut();
@@ -1221,9 +1223,9 @@ fn white(c: &str) -> bool {
 }
 
 /// `lower-colour-one-scheme`: a literal colour (a hex, `rgb()`, `hsl()`, a
-/// named colour) on a colour property of the page, outside `light-dark()`.
-/// It stays the same in dark mode while the platform's
-/// text and controls change: light cards under white text. The
+/// named colour) on a colour property of the page, outside `light-dark()`
+/// (LLP 1116.002 D1). It stays the same in dark mode while the platform's
+/// text and controls change: round 4's light cards under white text. The
 /// one authored colour is the accent, a role or one `light-dark()` pair;
 /// the rest are roles or unsaid. It still fires when the app forces a
 /// `color-scheme`, which is the app with no dark mode. Artwork (`fill`,
@@ -1240,7 +1242,7 @@ fn one_scheme(
     tokens: &Tokens,
     out: &mut Vec<LowerError>,
 ) {
-    // A game reads its world through `exactSurface`: its HUD and
+    // A game (LLP 1046) reads its world through `exactSurface`: its HUD and
     // title screen are its art, over a world no scheme repaints.
     if root.resources.iter().any(|r| r.source == "exactSurface") {
         return;
@@ -1327,7 +1329,7 @@ fn one_scheme(
                 }
                 let first = sites.len();
                 colour_sites(attrs, &leaves, &locals, &mut sites);
-                // White text on an accent fill is a
+                // @ref LLP 1116.020 D7 — white text on an accent fill is a
                 // filled button's label (Messages' bubble): the accent stays
                 // a fill in both schemes, and `check` holds the pair to 3:1.
                 if accent {
@@ -1371,7 +1373,7 @@ fn one_scheme(
         );
     }
     // A token a row names that is one colour in every scheme: one line, at
-    // its declaration, however many rows name it.
+    // its declaration, however many rows name it (LLP 1121 D3).
     let named = leaves.named.borrow().clone();
     for e in entries {
         let spellings = [e.name.clone(), format!("-exact-{}", e.name)];
@@ -1414,7 +1416,7 @@ fn one_scheme(
         };
         format!("{} on `{}` {stay}", shown.join(", "), s.name)
     };
-    // A token's line names it and both ways out.
+    // A token's line names it and both ways out (LLP 1121 D3).
     let mark = match tokens.design {
         true => "mark it `scheme=fixed` in the design if one colour is deliberate (an ink on a fixed fill, a ground under media)",
         false => "an inline `theme` cannot mark one deliberate: move it to `app.tamber` and mark it `scheme=fixed`",

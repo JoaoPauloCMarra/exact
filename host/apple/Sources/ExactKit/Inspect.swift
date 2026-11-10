@@ -1,4 +1,4 @@
-// Inspect mode on the Apple hosts (T2c): the design
+// Inspect mode on the Apple hosts (LLP 1122 D4, D5; T2c): the design
 // tool's `inspect {on}` turns it on in a development build. A tap then
 // selects the plan node it lands on, reported from the runner's own `node`
 // op, so its rows are the kernel's, as the wasm page's are (host/web/dev.js).
@@ -74,7 +74,7 @@ enum Inspect {
                                        "site": node["site"] ?? NSNull(), "instance": node["instance"] ?? [], "planDigest": node["planDigest"] ?? NSNull(),
                                        "tuple": node["modes"] ?? NSNull(), "rows": rows, "held": NSNull(), "trimmed": false]
         if let moved { selected["moved"] = moved } // (a `select`'s move: the up asked and the steps taken, 1.17)
-        MainActor.assumeIsolated { if let held = HeldState.rows(for: id, in: s.presenter) { selected["held"] = held } } // what is held on it
+        MainActor.assumeIsolated { if let held = HeldState.rows(for: id, in: s.presenter) { selected["held"] = held } } // what is held on it (LLP 1122 D8)
         func envelope() -> [String: Any] {
             var body: [String: Any] = ["kind": "selected", "selected": selected, "design": BuildChannel.design ?? NSNull(), "revision": BuildChannel.revision.map { $0 as Any } ?? NSNull()]
             if let seq { body["inspect"] = seq }
@@ -159,8 +159,8 @@ enum Inspect {
     /// A session holding the selection (that plan and generation, its site
     /// among `sites`) brings its own copy in, and nothing when that copy
     /// does not show (a recycled row, a collapsed one): never another copy
-    /// of it (a move would scroll a feed to a copy five rows away).
-    /// Otherwise (the tool's Outline, a session holding no selection
+    /// of it (Apple pass #2: a move scrolled the feed to a copy five rows
+    /// away). Otherwise (the tool's Outline, a session holding no selection
     /// there) the first copy that shows.
     static func revealing<V>(_ copies: [(session: ObjectIdentifier, id: UInt32, view: V, shown: Bool)], sites: Set<Int>, plan: String, sessions: [ObjectIdentifier: Int]) -> V? {
         if let was = selected, was.plan == plan, let site = was.site, sites.contains(site), sessions[was.session] == was.generation {
@@ -247,7 +247,7 @@ extension ExactApp {
         if let body = Inspect.select(s, id: id, clicked: true) { reportSelected(body) }
     }
 
-    /// The banner's close (the local way out): inspect mode off here, and
+    /// The banner's close (D4's local way out): inspect mode off here, and
     /// the exit reported under the command it left.
     func leaveInspect() {
         guard Inspect.on else { return }
@@ -258,14 +258,14 @@ extension ExactApp {
         reportExit(seq)
     }
 
-    /// `hold {revision, hold}` (*1.11*): `{site, instance,
+    /// `hold {revision, hold}` (LLP 1122 D4, D8; *1.11*): `{site, instance,
     /// state}` of the plan the app runs, the one view at that site and
     /// instance path, held as the real state (HeldState.swift); null lets it
     /// go. What it holds or let go, and why, is reported (`held`), and a state
     /// this host can't hold is said so (`unsupported`).
     func holdCommand(_ frame: [String: Any]) {
         let revision = (frame["revision"] as? NSNumber)?.intValue
-        // The stream the frame came on (host/web/dev.js binds its holds the same way): its revisions are
+        // The stream the frame came on (LLP 1122 D4; host/web/dev.js binds its holds the same way): its revisions are
         // its own. A new one (a reconnect, a restarted server, which may number from where an old one did) forgets the
         // revisions ended on the one before, and what a hold of an old stream says later (its let-go) is said to none.
         let stream = holdStream

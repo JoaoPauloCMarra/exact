@@ -1,4 +1,4 @@
-//! What a reorder lifts above the page: a row
+//! What a reorder lifts above the page (LLP 1041 §8.5, LLP 1094 D6): a row
 //! carried within its own list, painted after its siblings inside that
 //! list's clip; and a grouped drag's ghost, the row's subtree painted last,
 //! over everything, under no ancestor's clip, at the contact.
@@ -22,7 +22,7 @@ pub(crate) struct Lift {
     pub(crate) ghost: Option<Ghost>,
 }
 
-/// A grouped drag's ghost.
+/// A grouped drag's ghost (LLP 1094 D6).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct Ghost {
     /// The wrapper whose subtree it paints: the row wherever it is now.
@@ -50,7 +50,7 @@ impl Painter {
         child_rect: Option<Rect4>,
     ) {
         let lift = self.lifted_child(walk, node);
-        // A native button's children are its face, painted above.
+        // A native button's children are its face, painted above (LLP 1069.011 D5).
         let native =
             node.node_type == NodeType::Control && node.props.str(PropId::Type) == Some("button");
         let children: Vec<_> = node
@@ -58,7 +58,7 @@ impl Painter {
             .into_iter()
             .filter(|id| Some(*id) != lift && !native)
             .collect();
-        // A canvas's placed children first, by
+        // @ref LLP 1083.000 D5 — a canvas's placed children first, by
         // projective depth, as the web gives them negative indices by
         // depth; then every other child by its rank, then tree order.
         // All in flow and none placed (most parents): tree order as it is.
@@ -130,7 +130,7 @@ impl Painter {
         if opacity < 1. {
             self.backend.push_opacity(opacity);
         }
-        // The lifted ghost's shadow, the same on every host: `0 8px 24px` at 25% black.
+        // D6's look, the same on every host: `0 8px 24px` at 25% black.
         let rect: Rect4 = (ghost.at.0, ghost.at.1, w, h);
         if ghost.shadow > 0. {
             let shadow = ShadowPaint::lifted(ghost.shadow);
@@ -141,8 +141,8 @@ impl Painter {
         let boxes = walk.boxes.len();
         let (reveal, page) = (walk.reveal, (node.frame.x - rect.0, node.frame.y - rect.1));
         walk.reveal = Some(node.id);
-        // Painted after the walk, out of its ancestors: the row's own scheme,
-        // else the app's.
+        // Painted after the walk, out of its ancestors: the row's own scheme
+        // (LLP 1034 §8), else the app's.
         let previous = self.dark;
         self.dark = node.color_scheme_dark().unwrap_or(previous);
         self.node(walk, node.id, ts, page, None);

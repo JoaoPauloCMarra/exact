@@ -459,6 +459,7 @@ fn near(w: &mut World, input: &Input) {
 /// The far player has just struck: ask Jev now for its next shot, so the
 /// question has both balls' flight time (~2.4 s) before its commit point.
 /// Asking when you strike leaves ~1.1 s; the live check measured 19% late.
+/// @ref game/diaries/003-tennis.md "Design: Jev plans, the engine executes"
 fn ask_next(w: &World, intent: &Intent) {
     let flight = ball(w).flight;
     let hint = *w.require::<Player>("near");

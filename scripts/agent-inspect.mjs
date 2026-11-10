@@ -6,7 +6,7 @@ import { dirname, resolve } from 'node:path';
 import { renderAx } from './agent-ax.mjs';
 import { decodePng, encodePng, shrink } from './png.mjs';
 
-/** Film's bounds: a drive's pictures, not a recording, decoded in memory at once. */
+/** Film's bounds (LLP 1012.001.000 D2): a drive's pictures, not a recording, decoded in memory at once. */
 export const FILM_FRAMES = 240, FILM_PIXELS = 64e6;
 export const WORLD_LIMIT = 256 * 1024 * 1024;
 export function worldFile(path) {
@@ -30,7 +30,7 @@ const sourceLocation = value => value && typeof value.file === 'string' && value
   && ['line', 'col', 'end_col'].every(key => Number.isSafeInteger(value[key]) && value[key] > 0)
   && value.end_col >= value.col && typeof value.component === 'string';
 
-/** Only the driver reads source maps.
+/** @ref LLP 1035.005 D3 / 1035.002 D6 — only the driver reads source maps.
  * The locator discovers candidates; the node's same-reply digest decides whether
  * one is compatible. Identical plans can have different formatting/ranges, so
  * compatibility does not establish the original authored source revision. */
@@ -59,9 +59,9 @@ export function sourceMapReader(locator) {
   }
   const at = value => ({file: value.file, line: value.line, col: value.col, end_col: value.end_col, component: value.component});
   return {
-    /** The map read for a plan digest, if any (`trace --out` writes it). */
+    /** The map read for a plan digest, if any (LLP 1142 D2: `trace --out` writes it). */
     get(digest) { return maps.get(digest); },
-    /** A map a trace carries: found by its own digest, as a refreshed one is. */
+    /** A map a trace carries (LLP 1079 D5): found by its own digest, as a refreshed one is. */
     add(map) { if (digest(map?.digest) && Array.isArray(map.nodes)) maps.set(map.digest, map); },
     async refresh() {
       if (!locator) return false;
@@ -105,18 +105,18 @@ export function sourceMapReader(locator) {
       const entry = Number.isSafeInteger(node.site) && node.site >= 0 ? map?.nodes[node.site] : null;
       if (!entry || !sourceLocation(entry) || !Array.isArray(entry.chain) || !entry.chain.every(sourceLocation)
         || !Array.isArray(entry.bindings) || !entry.bindings.every(b => b && typeof b.row === 'string'
-          // A base origin, absent where only a state part writes the row; each part's own.
+          // A base origin, absent where only a state part writes the row; each part's own (theme2's 03:18).
           && (b.origin === undefined || origin(b.origin)) && (b.states === undefined || Array.isArray(b.states) && b.states.every(p => p && typeof p.state === 'string' && origin(p.origin))))) {
         node.sourceMap = {status: 'unavailable', reason: map ? 'invalid source location' : problem};
         return;
       }
       node.sourceMap = {status: 'compatible', digest: map.digest, ...at(entry), chain: entry.chain.map(at)};
-      // The first reason belongs only to this compatible plan site.
+      // @ref LLP 1104 D2 — the first reason belongs only to this compatible plan site.
       if (typeof entry.bare_reason === 'string' && entry.bare_reason.length > 0 && entry.bare_reason.length <= 1024) node.bare_reason = entry.bare_reason;
       for (const b of entry.bindings) {
         const style = node.style?.[b.row];
         if (!style || !['authored', 'dynamic'].includes(style.source)) continue;
-        // A row's base origin; a press row has none, and is its `:active` part's, written in its part.
+        // A row's base origin; a press row has none, and is its `:active` part's, written in its part (LLP 1121 D8).
         const part = b.origin === undefined ? b.states?.find(p => p.state === 'active') : null;
         if (b.origin === undefined && !part) continue;
         style.origin = part ? part.origin : b.origin;
@@ -154,7 +154,7 @@ export function identifyResources(reply, maps) {
   return reply;
 }
 
-/** List reasons only when geometry and tree
+/** LLP 1104 D2 / 1035.002 D3: list reasons only when geometry and tree
  * describe the same settlement; a target read already owns its identity. */
 export function identifyLayoutNodes(layout, tree, maps) {
   const same = layout.epoch === tree.epoch && layout.incarnation === tree.incarnation;
@@ -170,7 +170,7 @@ export function identifyLayoutNodes(layout, tree, maps) {
 
 /** A targeted reply owns its identity. A concurrently fetched tree may already
  * describe a replacement plan with reused view IDs and cannot relabel it. */
-/** `layout`'s CLI arguments: `layout
+/** `layout`'s CLI arguments (LLP 1012 §7; LLP 1080.001 D1, D2): `layout
  * [<target>]`, `layout <target> at <x> <y>`, `layout <target> native
  * [<depth>]`, `layout agree [<limit>]` — the keyword wins over a testId of
  * that name, which a numeric id still reaches. Returns `layout`'s arguments. */
@@ -194,11 +194,11 @@ export function identifyInspectedNode(reply, target) {
   if (box) { box.type = node.type; if (testId != null) box.testId = testId; }
 }
 
-/** HTML's table and description list elements, which a `View` is by its `semanticTag`. */
+/** HTML's table and description list elements, which a `View` is by its `semanticTag` (LLP 1153 D7). */
 const TABLE_ELEMENTS = /^(table|caption|thead|tbody|tfoot|tr|th|td|dl|dt|dd)$/;
 
 /**
- * The transcript form: the one text rendering of a reply, for
+ * The transcript form (LLP 1012 §7): the one text rendering of a reply, for
  * eyes — a pure function of the JSON, lossy on purpose (the JSON is
  * complete; only text, value, label and checked ride along), never parsed back.
  * `scripts/fixtures/transcript.txt` pins it. A part in [brackets] appears
@@ -208,7 +208,7 @@ const TABLE_ELEMENTS = /^(table|caption|thead|tbody|tfoot|tr|th|td|dl|dt|dd)$/;
  *           {"  " × depth}{Type}#{id} [<{element}>, a table's or a description list's] [{testId}] hatch="…" "{text}" value="…" label="…" checked=true|false [focused] [hidden]|[inactive] ({handlers, comma-separated})
  *           `[hidden]` under a route the host does not show (inactive too), `[inactive]` under one only a sheet covers
  *           an iframe adds url="…" loading=true|false, a partitioned one partition="…", one that
- *           reported a navigation at="…" title="…", and `[guest]` outline lines
+ *           reported a navigation at="…" title="…" (LLP 1020.002 §10), and `[guest]` outline lines
  *   layout  viewport W×H [· safe-area T R B L · keyboard K, when any is not 0] [· status bar light-content|dark-content (#id), iOS] · clock C ms
  *           #{id} [{testId}] {Type} {x},{y} {w}×{h} scroll {sx},{sy} of {rx},{ry} [port {x},{y} {w}×{h}] [overscroll {ox},{oy}]
  *   logs    "(N earlier lines dropped by the journal ring)" when dropped > 0; the journal lines as they are;
@@ -234,13 +234,13 @@ const TABLE_ELEMENTS = /^(table|caption|thead|tbody|tfoot|tr|th|td|dl|dt|dd)$/;
  * authored frames times the factor, which no style asked for and none should undo. */
 export const scaledLines = (layout) => (layout?.scaled ?? []).map((p) =>
   `route ${p.route || '?'} is a ${p.presentation} the platform draws at ${p.scale} of its laid-out size: its boxes are the authored frames × ${p.scale}, not the app's doing`);
-/** The floating image's window on its `tree` row: its kind, title, frame on screen and controls. */
+/** The floating image's window on its `tree` row (LLP 1042 §9.1): its kind, title, frame on screen and controls. */
 export const pictureInPictureNote = (w) => w ? ` pictureInPicture{${w.presentation} ${JSON.stringify(w.title)} ${w.open ? 'open' : 'closed'} at ${(w.frame ?? []).join(',')} controls ${(w.controls ?? []).join(',')}${w.controlsShown ? ' shown' : ''}}` : '';
 export function render(op, r, how = {}) {
-  if (op === 'ax' || (op === 'tree' && r.ax)) return renderAx(r);
+  if (op === 'ax' || (op === 'tree' && r.ax)) return renderAx(r); // LLP 1080.002 D9
   const q = JSON.stringify;
   switch (op) {
-    case 'check': return r.text; // agent-check.mjs
+    case 'check': return r.text; // LLP 1116.003 D8 (agent-check.mjs)
     case 'screenshot': return r?.compare ? r.text : renderLine(op, r); // `compare`: the comparison with a reference (agent-compare.mjs)
     case 'tree': {
       const entities = Array.isArray(r.entities) ? r.entities : r.nodes?.some((n) => n.components) ? r.nodes : null;
@@ -265,12 +265,12 @@ export function render(op, r, how = {}) {
       const e = r.env;
       const insets = ['safe-area-inset-top', 'safe-area-inset-right', 'safe-area-inset-bottom', 'safe-area-inset-left', 'keyboard-inset-height'];
       const env = e && insets.some((k) => e[k]) ? ` · safe-area ${e['safe-area-inset-top']} ${e['safe-area-inset-right']} ${e['safe-area-inset-bottom']} ${e['safe-area-inset-left']} · keyboard ${e['keyboard-inset-height']}` : '';
-      // The fold, when the device is not flat: its posture, the segment counts and each segment's box.
+      // The fold (LLP 1078 D7), when the device is not flat: its posture, the segment counts and each segment's box.
       const fold = e && (e['device-posture'] === 'folded' || (e['horizontal-viewport-segments'] ?? 1) * (e['vertical-viewport-segments'] ?? 1) > 1) ? ` · posture ${e['device-posture']} · segments ${e['horizontal-viewport-segments']}×${e['vertical-viewport-segments']}${(e['viewport-segments'] ?? []).map((r) => ` [${r[0]},${r[1]} ${r[2]}×${r[3]}]`).join('')}` : '';
       // `overscroll` is how far a scroller sits past its own ends — a stretched rubber band, which the offset
       // alone cannot distinguish from an ordinary scroll position. Printed only when there is one.
       const past = (n) => (n.ox != null || n.oy != null ? ` overscroll ${n.ox ?? 0},${n.oy ?? 0}` : '');
-      // The status bar's style Exact asks for (iOS), when it is not the default.
+      // The status bar's style Exact asks for (LLP 1105 D7, iOS), when it is not the default.
       const bar = r.statusBar && r.statusBar.style !== 'default' ? ` · status bar ${r.statusBar.style} (#${r.statusBar.source})` : '';
       // The title-bar area beside the window's controls, where the host defines it.
       const titlebar = e && e['titlebar-area-width'] != null ? ` · titlebar-area ${e['titlebar-area-x']},${e['titlebar-area-y']} ${e['titlebar-area-width']}×${e['titlebar-area-height']}` : '';
@@ -285,7 +285,7 @@ export function render(op, r, how = {}) {
       if (!r || typeof r !== 'object') return q(r);
       if (Array.isArray(r)) return stateCap(q(r), r, how);
       if (r.draws || r.visible || r.look) return renderLook(r);
-      // One line a section: pretty-printing cost an app's state more than half again its JSON.
+      // One line a section: pretty-printing cost an app's state more than half again its JSON (Caltrain, 2026-10-09).
       const { epoch, incarnation, clock, ...rest } = r, app = 'slots' in r;
       const head = [epoch != null && `epoch ${epoch}`, incarnation != null && `incarnation ${incarnation}`, clock != null && `clock ${clock} ms`].filter(Boolean).join(' · ');
       const sections = Object.entries(rest).filter(([, v]) => !(app && emptySection(v)));
@@ -332,7 +332,7 @@ function renderLine(op, r) {
     delete rest.screenshot; delete rest.w; delete rest.h;
   }
   // What a picture shows that the app does not (a menu the agent painted, the authored bars), each on a line of its
-  // own: in the run of key=values it read as one more field, and a painted menu as an app bug.
+  // own: in the run of key=values it read as one more field, and a painted menu as an app bug (euxy port).
   const notes = op === 'screenshot' ? ['paintedNote', 'chromeNote', 'unshownNote', 'note'].filter((k) => typeof rest[k] === 'string').map((k) => {
     const said = rest[k]; delete rest[k]; return `\n  NOTE: ${said}`;
   }) : [];
@@ -370,7 +370,7 @@ function stateCap(text, r, { full = false, name = null } = {}, head = '', sectio
     `${one ? `${one}; ` : ''}all of it: "${what} --full", or the drive flag --json`].join('\n');
 }
 
-/** A section an app's `state` transcript leaves out (the JSON keeps every one): null, an empty list or an
+/** A section an app's `state` transcript leaves out (LLP 1012 §7; the JSON keeps every one): null, an empty list or an
  * empty record — one that holds nothing, so leaving it out hides no value. Nothing else is judged: a host's defaults
  * (a hidden keyboard, an idle navigation) show, since the renderer cannot know them on every host. A world's or an
  * entity's reply has no `slots` and is never filtered: its empty `busy` or `entities` is the answer. */
@@ -384,7 +384,7 @@ function rangeAndPort(scroller) {
 }
 
 /**
- * The block `layout <target>` adds under the listing: the
+ * The block `layout <target>` adds under the listing (LLP 1035.002 D1): the
  * node's identity and site, one line per row with its source, its spaces,
  * the chains above it, its visibility, and what the host mounted. Every
  * part appears only when the host reported it — a space a host cannot
@@ -414,13 +414,13 @@ function renderNode(n) {
   // depend on which host answered.
   const sorted = (o) => Object.entries(o ?? {}).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
   for (const [row, v] of sorted(n.style)) out.push(`  ${row} = ${typeof v.value === 'string' ? v.value : q(v.value)} (${v.source}${v.from != null ? ` from #${v.from}` : ''}${v.origin ? `, ${v.origin}` : ''}${v.applied != null ? `, applied ${v.applied}` : ''}${v.token ? `, token ${v.token.names.join(' ') || v.token.text} in ${v.token.modes || 'the one tuple'}${v.token.implied ? ', implied by the boundary' : ''}` : ''})`);
-  // Web geometry is paragraph-content-local.
+  // @ref LLP 1043.000 §3 D4, D7 — web geometry is paragraph-content-local.
   const flowSpace = n.flow?.coordinate_space === 'content' ? 'leaf content box' : 'leaf border box';
   for (const { kind, ...values } of n.flow_shapes ?? []) out.push(`  flow ${kind} ${Object.entries(values).map(([k, v]) => `${k}=${q(v)}`).join(' ')} (${flowSpace})`);
   if (n.flow_skipped ?? n.flow?.skipped) out.push(`  flow skipped: ${n.flow_skipped ?? n.flow.skipped}`);
-  // Painted fragments retain logical byte ranges.
+  // @ref LLP 1043.000 §3 D6 — painted fragments retain logical byte ranges.
   for (const f of n.fragments ?? n.flow?.fragments ?? []) out.push(`  fragment bytes ${f.start}..${f.end} · band ${f.band ?? f.line} · ${f.x},${f.y} ${f.width}×${f.height ?? n.flow?.line_height} (leaf content box)`);
-  // A box a multi-column flow breaks, and a container's columns.
+  // @ref LLP 1093 D12 — a box a multi-column flow breaks, and a container's columns.
   for (const f of n.column_fragments ?? []) out.push(`  column fragment ${f.x},${f.y} ${f.w}×${f.h}${f.lines ? ` · lines ${f.lines[0]}..${f.lines[1]}` : ''}`);
   for (const c of n.columns ?? []) out.push(`  column ${c.x},${c.y} ${c.w}×${c.h}${c.holds ? '' : ' · holds nothing'}`);
   if (n.fragment_skipped) out.push(`  kept whole in its column: ${n.fragment_skipped}`);
@@ -431,21 +431,21 @@ function renderNode(n) {
   if (n.visible) out.push(`  visible ${sorted(n.visible).map(([k, v]) => `${k}=${v}`).join(' ')}`);
   if (n.native) out.push(`  native ${sorted(n.native).filter(([k]) => k !== 'subviews').map(([k, v]) => `${k}=${typeof v === 'string' ? v : q(v)}`).join(' ')}`);
   if (n.browser) out.push(`  browser ${sorted(n.browser).map(([k, v]) => `${k}=${q(v)}`).join(' ')}`);
-  // A pressed paint, on the page's images, which the computed opacity and background don't show.
+  // A pressed paint, on the page's images, which the computed opacity and background don't show (LLP 1061 D7).
   if (n.press_shown) out.push(`  press shows opacity=${n.press_shown.opacity} background=${q(n.press_shown.backgroundColor)} color=${q(n.press_shown.color)} (paint ${n.press_shown.paint})`);
   if (n.native?.subviews) out.push(...renderSubviews(n.native.subviews));
   return out;
 }
 
-/** The counters a `perf` site row may carry, in the order they print. */
+/** The counters a `perf` site row may carry, in the order they print (LLP 1079 D1). */
 const COUNTERS = ['instances', 'created', 'retired', 'evaluated', 'unchanged', 'authored', 'inherited', 'moved', 'rowConstructed', 'rowRebound', 'rowRetired'];
 
 /** `perf [<target>] [during "<op>" …]` and `perf frames [live <ms>] [late <n>]`
- * `during` reads, drives each quoted op through `step`, reads
+ * (LLP 1079 D2, D4). `during` reads, drives each quoted op through `step`, reads
  * again, and subtracts: the delta belongs to the driver, a read changes nothing.
  * `live <ms>` lends the page's clock to the wall for that long and measures the
- * frames it presents (a game's 60 fps, say). */
-/** `tap <node>/<part>`: a control a hatch drew, by the id `tree` lists under its node. Reached
+ * frames it presents (the platformer's diary, R11: a game's 60 fps). */
+/** `tap <node>/<part>` (LLP 1075.003.000.001 §3.5): a control a hatch drew, by the id `tree` lists under its node. Reached
  *  only as real platform input at its place: the host aims (the part live, in its window, not covered), the driver delivers a
  *  pointer event there (a touch on iOS under `--touch platform`), and the host says where it landed, against the aim's token.
  *  `unsupported` where no real carrier exists; never a fallback, never an activation by name. Null when `target` names no part. */
@@ -576,9 +576,9 @@ export async function perfOp(s, args, line, step) {
     }
     return s.perf(null, { frames: true, late, ...(live !== undefined ? { live } : {}) });
   }
-  // `perf streams [start]`: each stream message's receipt to mapper entry, decode and commit.
+  // `perf streams [start]` (LLP 1133.003 §9): each stream message's receipt to mapper entry, decode and commit.
   if (args[0] === 'streams') return s.op({ op: 'perf', streams: true, ...(args[1] === 'start' ? { start: true } : {}) });
-  // `perf hatches`: the hatches' calls and what their code counted.
+  // `perf hatches` (LLP 1075.003.000.001 §3.3): the hatches' calls and what their code counted.
   if (args[0] === 'hatches') {
     const read = () => s.op({ op: 'perf', hatches: true });
     const at = line.search(/\sduring\s/);
@@ -623,7 +623,7 @@ export function perfDelta(a, b) {
     }
     return d;
   });
-  // Handlers by site and event; one that ran only between the reads is all new.
+  // Handlers by site and event (LLP 1142 D6); one that ran only between the reads is all new.
   const ran = new Map((a.handlers ?? []).map(h => [`${h.site} ${h.event}`, h]));
   const handlers = (b.handlers ?? []).map(h => {
     const was = ran.get(`${h.site} ${h.event}`);
@@ -643,7 +643,7 @@ export function perfDelta(a, b) {
     }
     counted[key] = {...after, counts};
   }
-  // Each resource's asks between the reads; a host that counts none has no `resources`.
+  // Each resource's asks between the reads (LLP 1146 D3); a host that counts none has no `resources`.
   const asked = new Map((a.resources ?? []).map(r => [r.name, r.asked]));
   const resources = b.resources?.map(r => ({ ...r, asked: r.asked - (asked.get(r.name) ?? 0) })).filter(r => r.asked > 0);
   return { ...b, ...counted, sites, handlers, ...(resources ? { resources } : {}), from: { seq: a.seq, clock: a.clock } };
@@ -679,13 +679,13 @@ export function hatchDelta(a, b) {
   return { ...b, hatches, calls, counters, timings, from: { seq: a.seq, clock: a.clock } };
 }
 
-// `perf streams`: a line per stream, its latencies from receipt in ms.
+// `perf streams` (LLP 1133.003 §9): a line per stream, its latencies from receipt in ms.
 function renderStreamTiming(t) {
   if (!t.measuring) return 'stream timing is not measuring: `perf streams start` begins it';
   const ms = x => `p50 ${x.p50} p95 ${x.p95} p99 ${x.p99} max ${x.max} (${x.n})`;
   return [`stream timing over ${t.seconds} s`, ...t.streams.map(x => `  ${x.name ?? `ticket ${x.ticket}`}: ${x.messages} messages (${x.messageRate}/s) · ${x.commits} commits (${x.commitRate}/s) · ${x.decodes} decodes (${x.decodeRate}/s, ${x.decodedBytes} bytes)${x.frames != null ? ` · ${x.frames} frames out, ${x.decodeErrors} errors` : ''}${x.refused ? ` · ${x.refused} refused` : ''} · busy ${(x.busy * 100).toFixed(2)}%\n    receipt to entry ${ms(x.toEntry)}\n    receipt to decode ${ms(x.toDecode)}\n    receipt to commit ${ms(x.toCommit)}`)].join('\n');
 }
-/** Events a gesture sends on every frame, and how many make a fling's worth to judge. */
+/** Events a gesture sends on every frame, and how many make a fling's worth to judge (LLP 1144 D3). */
 const CONTINUOUS = new Set(['scroll', 'pointermove', 'wheel', 'drag']), CONTINUOUS_FROM = 20;
 
 /** A scroll track's reply (`exact.frame-health.track/1`): a start, a read or stop's rows summarized, or a refusal. */
@@ -721,7 +721,7 @@ export function renderPerf(r) {
     ...r.spans.map(s => `  ${s.name} at ${s.at}: p50 ${s.p50} p95 ${s.p95} max ${s.max} perTick ${s.perTick} (${s.count} ticks)`)].join('\n');
   if (r.calls && r.hatches) return renderHatchPerf(r);
   if (r.streamTiming) return renderStreamTiming(r.streamTiming);
-  if (r.virtual) return 'virtual clock: no frame was presented; `perf frames live <ms>` measures a live window';
+  if (r.virtual) return 'virtual clock: no frame was presented (LLP 1079 D4); `perf frames live <ms>` measures a live window';
   if (r.unavailable) return `this host observes no presented frames${r.reason ? `: ${r.reason}` : ''}`;
   if (r.unmeasured) return `frames not measured: ${r.unmeasured}`;
   if (r.lifetime) {
@@ -750,10 +750,10 @@ export function renderPerf(r) {
   const head = ['component', 'site', ...cols], width = head.map((h, i) => Math.max(h.length, ...rows.map(row => row[i].length)));
   const pad = row => '  ' + row.map((c, i) => c.padEnd(width[i])).join('  ').trimEnd();
   const unmapped = r.sites.find(x => x.source?.status !== 'compatible');
-  // Each handler's dispatches and the ones that changed the tree: counts, no judgement.
+  // Each handler's dispatches and the ones that changed the tree (LLP 1142 D6): counts, no judgement.
   const handlers = (r.handlers ?? []).filter(h => h.dispatched > 0).sort((x, y) => y.dispatched - x.dispatched)
     .map(h => `  ${h.event} at ${where(h)}${h.source?.status === 'compatible' ? ` (${h.source.component})` : ''}: ${h.dispatched} dispatched, ${h.committed} changed the tree`
-      // A scroll's every event a commit: said once, since that is what a fling multiplies.
+      // A scroll's every event a commit (LLP 1144 D3): said once, since that is what a fling multiplies.
       + (CONTINUOUS.has(h.event) && h.dispatched >= CONTINUOUS_FROM && h.committed * 10 >= h.dispatched * 9
         ? `\n    each ${h.event} event changed the tree, and each was a runner turn the main thread waited on`
         : ''));
@@ -761,9 +761,9 @@ export function renderPerf(r) {
     pad(head), ...rows.map(pad), ...(handlers.length ? ['handlers', ...handlers] : []), ...(r.resources?.length ? ['resources asked', ...r.resources.map(x => `  ${x.name}: ${x.asked}`)] : []), ...['work', 'hostWork'].filter(k => r[k]).map(k => `${k} (${r[k].scope}, since ${r[k].since ?? 'unmeasured'} ${r[k].timebase}): ${Object.entries(r[k].counts ?? {}).map(([n,v]) => `${n}=${v}`).join(' ')}`)].join('\n');
 }
 
-/** `bun scripts/agent.mjs trace <file>`: a person's session
+/** `bun scripts/agent.mjs trace <file>` (LLP 1079 D5): a person's session
  * read back with no app running. Its sites are joined to source by plan
- * digest: a map `plan` names first (`--plan`), then the one the
+ * digest: a map `plan` names first (`--plan`, LLP 1142 D2), then the one the
  * trace carries, then `locate`'s, which the live driver tries. The map that
  * answered is the result's `joinedMap` (not enumerable: `--json` leaves it out). */
 export async function readTrace(file, locate = () => [], plan = null) {
@@ -787,7 +787,7 @@ export async function readTrace(file, locate = () => [], plan = null) {
   return out;
 }
 
-/** `--plan <path>`: a plan, its `.map.json`, or a directory
+/** `--plan <path>` (LLP 1142 D2): a plan, its `.map.json`, or a directory
  * searched four levels deep for plans with a map beside them (a bake's
  * output, a web build, another checkout's `target/`), as locators. */
 export function planLocators(path) {
@@ -806,7 +806,7 @@ export function planLocators(path) {
   return out;
 }
 
-/** `trace --out <file>`, and `trace --pid`'s copy: the trace
+/** `trace --out <file>`, and `trace --pid`'s copy (LLP 1142 D2): the trace
  * with the map that matched its plan joined in by the driver, so it reads on
  * a machine with no build of it. No host reads or carries a map. */
 export function writeTrace(t, file) {
@@ -814,7 +814,7 @@ export function writeTrace(t, file) {
   console.error(`trace written to ${file}${t.joinedMap ? ' with its source map' : ' (no source map matched its plan)'}`);
 }
 
-/** `trace --pid <pid>`: a running development app on this Mac,
+/** `trace --pid <pid>` (LLP 1142 D5): a running development app on this Mac,
  * or in a simulator, asked for its trace by `SIGUSR1` (`TraceSignal`), with
  * no person at its menu. The process's temporary directory holds the marker
  * it wrote when it installed the handler, and the trace it writes; a process
@@ -858,7 +858,7 @@ export async function pidTrace(pid, dest, run = spawnSync, timeout = 10000) {
 
 /** The trace a phone's dev menu saved last (`ExactSession.latestTrace`,
  * `tmp/trace-latest.json` in the app's container), copied into the app's
- * `target/traces/`: from a simulator's container, which
+ * `target/traces/` (LLP 1079 D5): from a simulator's container, which
  * devicectl cannot copy, else off the phone as its screenshots are. */
 export function phoneTrace(ph, a, run = spawnSync) {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -884,16 +884,16 @@ export function phoneTrace(ph, a, run = spawnSync) {
 
 /** A trace as text: who and what made it, each timing's proxy, the frames,
  * each late frame beside the journal lines stamped in its interval and the
- * transactions it carried (juxtaposition, never a cause), the sites. */
+ * transactions it carried (D4: juxtaposition, never a cause), the sites. */
 export function renderTrace(t) {
   if (t.format === 'exact.frame-health.metrics/2') return renderFrameHealthMetrics(t);
   if (t.format === 'exact.frame-health/2') return renderFrameHealthReport(t);
   const id = t.identity ?? {};
-  // A web trace names the checkout's commit at export; a native one its host binary's build.
+  // A web trace names the checkout's commit at export; a native one its host binary's build (LLP 1142 D2).
   const hb = id.hostBuild ?? {};
   const build = hb.commit ? ` · host built from ${hb.commit.slice(0, 12)}${hb.dirty === true ? ' (dirty)' : ''}${hb.machine ? ` on ${hb.machine}` : ''}` : '';
   const out = [`trace · ${[id.host, id.target].filter(Boolean).join('/')} · ${id.app ?? 'app ?'} · ${id.trust ?? 'trust ?'}${id.commit || !hb.commit ? ` · commit ${id.commit?.slice(0, 12) ?? '?'}${id.working_tree ? ' (dirty)' : ''}` : ''}${build}${id.pid ? ` · pid ${id.pid}` : ''}${id.session ? ` session ${id.session}` : ''} · ${[id.platform, id.arch, id.cpu, id.os, id.device].filter(Boolean).join(' ')}`];
-  // No map fitted its plan: what would. The host's build is a
+  // No map fitted its plan: what would (LLP 1142 D2). The host's build is a
   // lead, not the plan's source: a development host can run another plan.
   const digest = t.perf?.plan ?? t.plan;
   if (t.perf?.sites?.some(x => x.source?.status !== 'compatible') && typeof digest === 'string') {
@@ -907,7 +907,7 @@ export function renderTrace(t) {
     // journal's `t=` is the runner's logical clock, which need not be the
     // frame's (a page adopted from a checkpoint keeps the render's).
     const lines = t.journal?.lines ?? [];
-    if (t.frames.late?.some(r => r.phases)) out.push('  (phases: the main thread\'s host work inside each late interval, each charged only what nothing inside it took; unattributed: idle time, the platform\'s own work, Core Animation putting new pictures on screen, anything not wrapped)');
+    if (t.frames.late?.some(r => r.phases)) out.push('  (phases: the main thread\'s host work inside each late interval, each charged only what nothing inside it took; unattributed: idle time, the platform\'s own work, Core Animation putting new pictures on screen, anything not wrapped — LLP 1142 D1, 1144 D2)');
     for (const r of t.frames.late ?? []) {
       const at = lines.findIndex(l => l.includes(` frame late at ${r.t}:`));
       let from = at;
@@ -915,7 +915,7 @@ export function renderTrace(t) {
       const near = at < 0 ? [] : lines.slice(from, at);
       const n = r.seq ? r.seq[1] - r.seq[0] + 1 : 0;
       out.push(`  late at ${r.t}: ${r.missed} missed (${r.interval} ms)${r.overrun ? ` · committed ${r.overrun} ms late` : ''} · ${r.seq ? `${n} transaction${n === 1 ? '' : 's'} (seq ${r.seq.join('..')})` : 'no transaction range'}${r.batches ? ` · ${r.batches} batch${r.batches === 1 ? '' : 'es'}` : ''}${r.apply ? ` · apply ${r.apply}` : ''}${r.layout != null ? ` · layout ${r.layout}` : ''}${r.paint != null ? ` · paint ${r.paint}` : ''}${r.loaf ? ` · loaf script ${r.loaf.script}${r.loaf.styleLayout != null ? ` style+layout ${r.loaf.styleLayout}` : ''}` : ''}${at < 0 ? ' · its journal line is gone (the ring turned over)' : ` · ${near.length} journal line${near.length === 1 ? '' : 's'} before it`}`);
-      // The main thread's host phases inside the interval, innermost charged, and the hatch calls that overlapped it.
+      // The main thread's host phases inside the interval, innermost charged (LLP 1142 D1), and the hatch calls that overlapped it.
       if (r.phases) out.push(`    of its ${r.interval} ms: ${[...[...r.phases].sort((a, b) => b.ms - a.ms).map(p => `${p.phase} ${p.ms}${p.segments > 1 ? ` (${p.segments})` : ''}`), `unattributed ${r.unattributed}`].join(' · ')}${r.phasesCoverage ? ' · recording does not reach its start' : ''}`);
       if (r.hatches?.length) out.push(`    hatches: ${r.hatches.map(h => `${h.hatch} ${h.ms} ms (${h.calls})`).join(' · ')}${r.coverage ? ' · partial' : ''}`);
       for (const l of near) out.push(`    ${l}`);
@@ -1036,7 +1036,7 @@ export function renderFrameHealthReport(report) {
 const box = (b) => (b ? `${b.x},${b.y} ${b.w}×${b.h}` : '—');
 
 /**
- * `layout <target> native`: the views and flat-leaf
+ * `layout <target> native` (LLP 1080.001 D1, D6): the views and flat-leaf
  * layers under the node, one line each, indented by depth — observation,
  * no verdicts.
  *
@@ -1063,7 +1063,7 @@ function renderSubviews(s) {
 }
 
 /**
- * `layout agree`: whether the walk was complete, what
+ * `layout agree` (LLP 1080.001 D2, D6): whether the walk was complete, what
  * it covered, then one line per disagreement.
  *
  *   agreement complete|INCOMPLETE (reasons) · N disagreements · ±P px · roots …
@@ -1090,20 +1090,20 @@ function renderAgreement(a) {
   return out.join('\n');
 }
 
-/** The `state` op's words. `state` is the whole record; `state <target>` a world's own (a game's
+/** The `state` op's words (LLP 1116.007 D3.9). `state` is the whole record; `state <target>` a world's own (a game's
  * `world:*` or `world:entity`: its entities; `state <canvas> input` its world's input); a name that is a state, derive or resource, or a field of the record
  * (`mediaSession`), reads that, down a dotted path (`groceries.0.done`) as an authored `expect state` does. Any other
  * view answers with the whole record, so a name the record holds reads that even when a view carries it as its testId
  * or text (a sequencer's `transport` bar and the record's `transport`). */
 export async function stateOp(s, args) {
-  // `state <canvas> draws`, `state <canvas>:<entity> visible` and `state <canvas> look` are a world's look frame.
+  // `state <canvas> draws`, `state <canvas>:<entity> visible` and `state <canvas> look` are a world's look frame (LLP 1127.000 D1, D4).
   const look = ['draws', 'visible', 'look'].includes(args[1]) ? { [args[1]]: true, world: true } : {};
   const page = { ...look, ...(args[1] === 'events' ? {world:true, events:true, ...(args[2] ? {event_type:args[2]} : {})} : {}), ...(args.includes('from') ? { from: Number(args[args.indexOf('from') + 1]) } : {}), ...(args.includes('limit') ? { limit: Number(args[args.indexOf('limit') + 1]) } : {}), ...(args.includes('resources') ? { resources: true } : {}) };
   const read = (target) => s.state(target, args[1] === 'under' ? args[2] : undefined, args[1] === 'pose', args[1] === 'busy', page);
   if (args[0] == null) return read();
-  // `state intents.entities <kind> [<text>]`: what the content index's query answers a system's.
+  // `state intents.entities <kind> [<text>]` (LLP 1133.023 §10): what the content index's query answers a system's.
   if (args[0] === 'intents.entities') return s.op({ op: 'entities', kind: args[1], ...(args.length > 2 ? { matching: args.slice(2).join(' ') } : {}) });
-  // `state <canvas> input`: the world's controls, the devices and pads held, contexts, bindings, and
+  // `state <canvas> input` (LLP 1127.003 D8): the world's controls, the devices and pads held, contexts, bindings, and
   // what fired at the last tick.
   if (args[1] === 'input') {
     const r = await s.op({ op: 'state', ...await s.target(args[0]), world: true });
@@ -1135,7 +1135,7 @@ export async function stateOp(s, args) {
 
 /** The tasks due within 1 ms of `now`, `[name, at]`, soonest first: an `after(1, …)` an input or an answer armed, the web's
  * `setTimeout(f, 0)`, which runs a commit after the one that armed it. A frozen clock reaches it only when it moves, so
- * `clock settle` runs it as part of settling and `clock data`, which fires no timer, names it. */
+ * `clock settle` runs it as part of settling and `clock data`, which fires no timer, names it (euxy FRICTION 7). */
 export async function nextCommitTasks(session, now) {
   const tasks = Object.entries((await session.state())?.tasks ?? {});
   return tasks.filter(([, at]) => Number.isFinite(at) && at > now && at <= now + 1).sort((a, b) => a[1] - b[1]);
@@ -1151,7 +1151,7 @@ export function settleBound(soon) {
 export async function tapRefusal(session, target, error) {
   if (error.transport || error.malformed) return error; // App state cannot explain malformed input or a failed transport.
   // What covers a target may leave on one of the app's timers, which the agent's frozen clock never reaches (a boot
-  // overlay's `after(900, …)`): the tasks still waiting, and the step that runs them.
+  // overlay's `after(900, …)`, euxy FRICTION 9): the tasks still waiting, and the step that runs them.
   if (/covers its middle/.test(error.message ?? '')) try {
     const r = await session.state(), now = r?.clock;
     const due = Object.entries(r?.tasks ?? {}).filter(([, at]) => Number.isFinite(at) && at > now).sort((a, b) => a[1] - b[1]);
@@ -1226,7 +1226,7 @@ export function worldView(session, name) {
   };
 }
 
-// The layout regions, `env(-exact-<region>-inset-<edge>)`: the Apple hosts report UIKit's and
+// @ref LLP 1123 D10 — the layout regions, `env(-exact-<region>-inset-<edge>)`: the Apple hosts report UIKit's and
 // AppKit's; a host that reports none resolves each to its safe area, which is what its facts then say too.
 const REGIONS = ['safe-area-corners', 'layout-margins', 'layout-margins-corners', 'readable-content', 'readable-content-corners'];
 export function withRegions(env) {
@@ -1235,7 +1235,7 @@ export function withRegions(env) {
   return env;
 }
 
-/** A world's look frame as text: its tells, its draws, or why an entity is or is not drawn. */
+/** A world's look frame as text (LLP 1127.000): its tells, its draws, or why an entity is or is not drawn. */
 export function renderLook(r) {
   const q = JSON.stringify, head = `tick ${r.tick} · hash ${r.hash}`;
   if (r.visible) return `${head}\n${r.entity?.name ?? '#' + r.entity?.id}: ${r.visible} (${r.reason})`;
@@ -1251,7 +1251,7 @@ function lookLines(look) {
 }
 
 /** `screenshot <png> <canvas> from <yaw> <pitch> <distance> | from top <height> | from camera [over <ms> every <ms>]`
- * The world's look frame, the tick the agent's clock has reached drawn offscreen from that view and
+ * (LLP 1127.000 D3): the world's look frame, the tick the agent's clock has reached drawn offscreen from that view and
  * written as a PNG, with its tells; `over … every` films it on the clock. A form of `screenshot`, never a new operation:
  * presentation only, the hash does not move. A device-less host draws it where the machine has a GPU. */
 export async function worldLook(s, args) {
@@ -1266,8 +1266,8 @@ export async function worldLook(s, args) {
   return s.tagged(await shoot(resolve(path)));
 }
 
-/** After `clock settle` (`r` its reply) and every pixel `screenshot`, each shown world's tells where its canvas draws:
- * a look frame of the tick the clock reached, whose `look: …` lines reach the world's `logs`. The reply
+/** After `clock settle` (`r` its reply) and every pixel `screenshot`, each shown world's tells where its canvas draws (LLP
+ * 1127.000 D1): a look frame of the tick the clock reached, whose `look: …` lines reach the world's `logs`. The reply
  * carries them as `look`, the canvases looked at as `lookSeen`, what a frame could not measure, or a drawing canvas's "no
  * picture", as `lookGaps`, and a look frame that failed as `lookFailed`. The worlds are the ones shown now (a settle's
  * reply lists them; otherwise `state` does). A canvas that draws no frames (the GPU-less host) answers at once and adds

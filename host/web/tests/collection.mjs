@@ -137,7 +137,7 @@ try {
     writeFileSync(dir+'/result.json',JSON.stringify(result,null,2));
     console.log(JSON.stringify({passed:true,case:process.env.EXACT_COLLECTION_EDGES,...result}));
   } else if (process.env.EXACT_COLLECTION_JUMP) {
-    // An authored jump builds its target rows, then moves the
+    // LLP 1050.000 §6: an authored jump builds its target rows, then moves the
     // port, inside the press's task: no frame can show the offset uncovered.
     await until('collectionSmoke.snapshots[0]?.rows.length > 0 && collectionSmoke.snapshots[0].rows.every(r=>r.measured)');
     await evaluate('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');

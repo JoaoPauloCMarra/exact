@@ -1,5 +1,5 @@
 // data: caltrain
-// Synthetic conformance plan: the voice table on the
+// Synthetic conformance plan: the voice table (LLP 1096 D5, §5) on the
 // wasm runner, the JS runtime and the Linux host, all under the driver
 // (`state.sounds.output` is `"agent"`, nothing plays): a window clock
 // scheduled from the press and then each tick, from a list a `fn` makes of
@@ -7,7 +7,7 @@
 // a stop that ends what sounds and cancels what waits; the bound of 32 live
 // voices; the drops a computed call can make; and a voice's playback rate
 // and pan, literal, clamped, non-finite and small enough that JavaScript's
-// own text for it is exponential. The journal's `sound`
+// own text for it is exponential (LLP 1125 D10). The journal's `sound`
 // lines and `state.sounds` compare on every target, and the JS target
 // never refuses one of the three commands. (No slot shares a name with
 // Caltrain's: the wasm page carries its first world into this plan by slot

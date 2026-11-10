@@ -1,7 +1,7 @@
-//! `openAuthSession` on the web: the page's half is
+//! `openAuthSession` on the web (LLP 1069.006 D4): the page's half is
 //! `auth-glue.js`, which must open its popup inside the press's own call
 //! stack, so the request reaches it as a batch op (`{"op":"auth","ticket"}`)
-//! and it asks back synchronously (`exact_auth`): the runner's decision on the
+//! and it asks back synchronously (`exact_auth`): the runner's ruling on the
 //! request ([`exact_runner::auth::arm`]), and later the callback it saw,
 //! which the runner checks. An answer settled here is delivered by the
 //! page's `fulfill` with kind 9 ([`exact_runner::auth::take_settled`]).
@@ -16,7 +16,7 @@ impl<D: DataSource> Host<D> {
     pub(super) fn emit_auth(&mut self, r: RequestOut, batch: &mut Batch) {
         // An artifact that doesn't link auth grants none (its app declares
         // no `auth.session`): the session is refused, as the grant check
-        // would refuse it.
+        // would refuse it (LLP 1069.006 D1).
         if self.auth_word.is_none() {
             let why =
                 "openAuthSession is not linked into this artifact: the app grants no auth.session";

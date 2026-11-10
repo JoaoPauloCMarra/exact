@@ -1,4 +1,4 @@
-// Inspect mode's runtime hooks on the JS target are a
+// Inspect mode's runtime hooks on the JS target (LLP 1122 T2b) are a
 // development build's alone: `bun test host/web-js/inspect.test.mjs`.
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';

@@ -1,17 +1,17 @@
-//! At every fetch hop and WebSocket open this executor makes:
+//! LLP 1133.036 D6 at every fetch hop and WebSocket open this executor makes:
 //! a reach asked by a tool invocation, a wake or a package's event, whose
 //! destination could show the Local Network prompt, is checked against the
 //! host's local-network fact before it connects ([`exact_runner::local_network`]).
 //!
 //! The test of the destination is the host's. Under the agent it is the
-//! grant's static test, since the substitute reads no interface. In
+//! grant's static test, since the substitute reads no interface (D19). In
 //! production on Apple it is TN3179's: a `.local` name; a link-local,
 //! multicast or broadcast address; an address on the subnet of an interface
 //! that can broadcast (Wi-Fi, Ethernet; not a VPN's point-to-point tunnel or
 //! cellular); a unicast name that resolves to one of those. A name is
 //! resolved here for the test and again by the transport when it connects,
 //! and an answer that changes between the two escapes the test, a declared
-//! limit.
+//! limit (D6).
 
 use exact_runner::local_network::{self, Reach};
 use exact_runner::CallOrigin;

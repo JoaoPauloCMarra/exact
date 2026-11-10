@@ -1,6 +1,6 @@
-// The proposal panel docked at the window's bottom (a proposal opened below its field could land about
-// 16,500 px down, after the token list): seen wherever the edit began, never over the edited row,
-// one panel; a typed draft keeps its field's focus, a press's proposal takes it.
+// The proposal panel docked at the window's bottom (the second hands-on pass, finding 2: a param's proposal opened
+// about 16,500 px below its field, after the token list): seen wherever the edit began, never over the edited row,
+// one panel; a typed draft keeps its field's focus, a press's proposal takes it (review2 06:54).
 import { expect, test } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

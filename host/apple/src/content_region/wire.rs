@@ -19,8 +19,8 @@ fn metric(style: TextStyle, out: &mut String) {
 }
 fn colors(node: &exact_kernel::NodeRef<'_>, out: &mut String) {
     // The channels cross resolved, so the colour's kind crosses beside them:
-    // selected text keeps an ink its author fixed, where a role's turns.
-    // A colour nobody set is the platform's.
+    // selected text keeps an ink its author fixed, where a role's turns
+    // (LLP 1115.000 D7.9). A colour nobody set is the platform's.
     let set = node.computed_row(StyleId::TextColor, |s| s.mask.has(StyleId::TextColor));
     let fixed = set && crate::style::fixes_ink(node.text_color());
     let _ = write!(out, ",\"fixed\":{fixed}");

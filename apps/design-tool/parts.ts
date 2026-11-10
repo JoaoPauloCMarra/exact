@@ -1,4 +1,4 @@
-// The branch editor's typed fields:
+// The branch editor's typed fields (LLP 1122 D6; stage 6's kinds, step 3):
 // a token's value cut into the parts a person edits (a length's amount and
 // unit, a shadow's lengths, inset and colour, a type's longhands), with the
 // source between them kept as written. Joined again, the parts are the value

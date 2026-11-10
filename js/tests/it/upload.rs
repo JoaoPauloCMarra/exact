@@ -1,8 +1,8 @@
-//! `fetch(url, {exactStream, exactUploadProgress: true})` from TypeScript:
-//! the prelude sends the request as an upload, the
+//! `fetch(url, {exactStream, exactUploadProgress: true})` from TypeScript
+//! (LLP 1016.000 D10): the prelude sends the request as an upload, the
 //! native executor core (the one the Apple, Linux and render hosts share,
 //! here the render host's, whose transport is the portable one, rustls, on a
-//! Mac too) tells the body's bytes sent as they go, and the
+//! Mac too: LLP 1048.000 D10) tells the body's bytes sent as they go, and the
 //! mapper gets each as `progress` and then the reply as `load`. URLSession's
 //! is `exact-apple`'s `an_upload_through_urlsession_…`.
 #![cfg(all(exact_js_engine, unix))]
@@ -152,7 +152,7 @@ fn an_empty_upload_maps_no_progress_then_its_reply() {
 /// (15 s for the response, 30 s for the whole), which the upload's deadline
 /// of 60 s replaces.
 #[test]
-#[ignore = "a real socket and a reply 32 s after its body; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: a real socket and a reply 32 s after its body; bun scripts/async.mjs runs it"]
 fn an_upload_waits_out_a_reply_past_the_portable_transports_own_limits() {
     let (deadline, said) = mapped("upload-patient", &[7; 1 << 20], Duration::from_secs(32));
     assert_eq!(deadline, Some(60_000));

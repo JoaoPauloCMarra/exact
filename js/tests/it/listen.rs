@@ -1,5 +1,5 @@
-//! A local listener in a TypeScript module, through the runner:
-//! `exactListen`'s request and options, its events with the
+//! A local listener in a TypeScript module, through the runner (LLP
+//! 1133.005): `exactListen`'s request and options, its events with the
 //! connection handle beside them, the mapper's replies on its own
 //! connection, a mutation's on a handle it kept, and what refuses.
 

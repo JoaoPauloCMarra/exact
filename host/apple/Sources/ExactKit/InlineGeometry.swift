@@ -1,4 +1,4 @@
-// Inline frames are the union of the presented fragments.
+// @ref LLP 1051.000 D1 — inline frames are the union of the presented fragments.
 import Foundation
 import CoreText
 import CExact
@@ -41,11 +41,11 @@ extension Runtime {
 }
 
 extension Presenter {
-    /// `rangeFrame`: a textarea's UTF-16 range as TextKit
+    /// `rangeFrame` (LLP 1114.007): a textarea's UTF-16 range as TextKit
     /// last laid it out, a plain one's or a Markdown one's source alike, in
     /// viewport points; collapsed, the caret's rectangle. Nil past the
     /// field's text, while text is marked, or when the field is hidden. A
-    /// Markdown reader answers its atoms' pills.
+    /// Markdown reader answers its atoms' pills (LLP 1045.000 D7).
     func rangeFrame(_ id: UInt32, start: UInt32, end: UInt32) -> CGRect? {
         if let node = views[id], node.textArea == nil, node.props["markup"] == "markdown" {
             var ancestor: PlatformView? = node
@@ -66,7 +66,7 @@ extension Presenter {
         // Each TextKit 2 segment's text box: its glyphs across and its font's
         // content area down (ascent over descent at the segment's baseline),
         // not the line fragment, which a paragraph's line height makes
-        // taller (the grammar's, as Chrome and Linux answer).
+        // taller (the grammar's, as Chrome and Linux answer; theme2's 22:27).
         guard let manager = field.textLayoutManager, let content = manager.textContentManager,
               let first = content.location(content.documentRange.location, offsetBy: Int(start)),
               let last = content.location(content.documentRange.location, offsetBy: Int(end)),

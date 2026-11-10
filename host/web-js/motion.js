@@ -1,4 +1,4 @@
-// The JS target's motion capability: springs, holds, swipes
+// The JS target's motion capability (LLP 1071 §7): springs, holds, swipes
 // and a pan's release velocity. A chunk fetched after the first painted
 // frame by a plan that uses motion, as the wasm host's motion piece is:
 // the engine is `motion.wasm` (host/web-js/motion, the one `exact_motion`
@@ -100,7 +100,7 @@ export async function engine({ clock, wall, views, viewId, hooks, say, inflight 
       }
       // A height drag (host/web/src/height_drag.rs): the handle's binding
       // names the owner it holds; its action runs at the height shown and
-      // the engine's velocity over the heights shown.
+      // the engine's velocity over the heights shown (LLP 1057.001 §3).
       case 'height-begin': {
         const b = handles.get(facts.view);
         if (!b || b.target == null || b.target !== owner) return { accepted: false };

@@ -1,4 +1,4 @@
-// The Android pedometer's sums, fed recorded reads and counter events, since an emulator
+// The Android pedometer's sums (LLP 1133.026 §15 stage 3), fed recorded reads and counter events, since an emulator
 // need not have a step counter or current Play services. `count.mjs` compiles this with `android/Count.kt` and runs it.
 import exact.pedometer.Count
 import kotlin.system.exitProcess

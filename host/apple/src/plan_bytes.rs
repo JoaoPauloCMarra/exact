@@ -4,7 +4,7 @@ use exact_plan::Plan;
 
 /// A plan's bytes at boot: copied from while decoding, linked into the
 /// program (whose data pool the decoded plan then keeps in place), or a
-/// snapshot entry's by its kind: the headless session's boot,
+/// snapshot entry's by its kind (LLP 1126 D2): the headless session's boot,
 /// which the running hosts never take.
 #[derive(Clone, Copy)]
 pub(crate) enum PlanBytes<'a> {

@@ -1,5 +1,6 @@
-//! A popover in a content region: it stays in the region's trial, laid out
-//! in-region (the native region captures it); out of the region it is in the viewport again.
+//! A popover in a content region (stage 14 B, theme2 09:54): it stays in
+//! the region's trial, laid out in-region as on main (the native region
+//! captures it: QUEUE); out of the region it is in the viewport again.
 use super::support::*;
 use exact_kernel::*;
 
@@ -64,7 +65,7 @@ fn a_popover_under_a_region_stays_in_its_trial() {
 }
 
 /// A static owner over a popover is refused, as over any absolutely
-/// positioned box: under a region the popover is in the trial.
+/// positioned box (LLP 1074 T1): under a region the popover is in the trial.
 #[test]
 fn a_static_owner_over_a_popover_is_refused() {
     let k = with_popover(true);

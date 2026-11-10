@@ -1,12 +1,12 @@
-//! `showPicker` and its answer on Linux: refused with
-//! `cancel` outside the agent (there is no desktop host yet); under the agent,
+//! `showPicker` and its answer on Linux (LLP 1069.002 D8, D9): refused with
+//! `cancel` outside the agent (ruled: no desktop host yet); under the agent,
 //! held for `tap @t cancel` or `type @t <path>…`, whose files are copied
-//! into `app:/tmp/picked/` before `change` fires. `saveFile` likewise:
-//! refused with `cancel`, or held as `export` for
+//! into `app:/tmp/picked/` before `change` fires. `saveFile` likewise
+//! (LLP 1069.010 D3): refused with `cancel`, or held as `export` for
 //! `type @t <path>`, which the `app:/` file is copied to. Notifications have
 //! no centre here either: refused, or listed for the agent. On a host with
 //! a shell (Android) the platform has every one of these, and the channel
-//! to it (`requests.rs`) carries none of them yet: the
+//! to it (`requests.rs`, LLP 1115.001 D5) carries none of them yet: the
 //! refusal then says that, beside the runner's own line.
 use super::*;
 use exact_runner::picker_support as support;
@@ -68,7 +68,7 @@ impl<D: DataSource> Presenter<D> {
                 .map(|n| n.to_string_lossy().into_owned())
                 .unwrap_or_default();
             let mime = support::mime_for(&name);
-            // A HEIC photo under an `accept` without HEIC is a JPEG,
+            // D6: a HEIC photo under an `accept` without HEIC is a JPEG,
             // which this host cannot make.
             if support::delivered_type(mime, &accept) != mime {
                 self.host.log(format!(
@@ -147,8 +147,8 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    /// `showOpenFilePicker`, `showDirectoryPicker`, `showSaveFilePicker`:
-    /// the runner's rule, with no picker.
+    /// `showOpenFilePicker`, `showDirectoryPicker`, `showSaveFilePicker`
+    /// (LLP 1069.010 D2): the runner's rule, with no picker.
     pub(crate) fn document_picker(&mut self, name: &str, args: &[exact_plan::Value]) {
         use exact_runner::file_pickers::{arm, Arm, Kind, Picker};
         let Some(kind) = Kind::of(name) else {
@@ -167,7 +167,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// The agent's answer to a held picker: each path minted as a handle
-    /// the person chose, one per line in `change`, or `cancel`.
+    /// the person chose (D1), one per line in `change`, or `cancel`.
     pub(crate) fn answer_document(&mut self, request: &str, reply: &str) {
         let r: serde_json::Value = serde_json::from_str(reply).unwrap_or_default();
         let name = match r["capability"].as_str() {
@@ -189,7 +189,7 @@ impl<D: DataSource> Presenter<D> {
             exact_runner::file_pickers::answer_paths(q["text"].as_str().unwrap_or(""))
                 .into_iter()
                 .filter_map(|p| {
-                    // Kept across launches where the app keeps documents.
+                    // Kept across launches where the app keeps documents (LLP 1069.010.000 D3).
                     let p = std::path::Path::new(p);
                     crate::kept::chosen(0, p).or_else(|| exact_data::documents::mint(p, 0))
                 })
@@ -204,7 +204,7 @@ impl<D: DataSource> Presenter<D> {
         self.deliver_picker(view, Event::Change(value));
     }
 
-    /// `requestPermission(id, path, mode)`: the
+    /// `requestPermission(id, path, mode)` (LLP 1069.010.000 D7): the
     /// runner's rule, then `granted` at `id` for a document that resolves
     /// (the host owns no permission a person could withhold), else `denied`.
     pub(crate) fn request_permission(&mut self, args: &[exact_plan::Value]) {

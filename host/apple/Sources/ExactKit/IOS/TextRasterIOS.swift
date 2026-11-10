@@ -1,5 +1,6 @@
 // UIKit paragraph layers consume pixels from the same workers and paint routine
 // as AppKit. Native views, inline links and accessibility keep their identities.
+// @ref LLP 1044.000 §6 S5
 #if os(iOS) || os(tvOS)
 import UIKit
 import CoreText
@@ -10,7 +11,7 @@ final class TextRasterizer {
         let key: TextRasterKey
         let namespace: Int
         let diagnosticNode: UInt32
-        /// The node's incarnation when the job was issued.
+        /// The node's incarnation when the job was issued (LLP 1068 §4.9).
         let incarnation: UInt64
         let group = DispatchGroup()
         weak var operation: Operation?
@@ -426,14 +427,14 @@ extension NodeView {
     var canRasterText: Bool {
         if textRasterFailed && textRasterKey != nil { return false }
         // `text-overflow: ellipsis` truncates in the raster job, as `draw(_:)`
-        // does: a label stretched across a row rasters its text,
+        // does (LLP 1053 G5): a label stretched across a row rasters its text,
         // not a backing store of the row's width. A `line-clamp`'s last line
         // is made again from the range it broke at (`LineGeometry.clamped`).
         guard isParagraph && flowShapes.isEmpty && columnRecord == nil && !Capture.capturing && window != nil && backgroundClip != "text"
             && bounds.width > 0 && bounds.height > 0 else { return false }
         return canvasAbove == nil && !paintsVisibleInlineRun && !rollsNumerals
     }
-    /// The paragraph's numerals roll per glyph, drawn by the
+    /// LLP 1077 D15: the paragraph's numerals roll per glyph, drawn by the
     /// Numerals capability rather than as a raster (`NumeralLink`). Not in a
     /// capture, which draws the paragraph as a picture.
     var rollsNumerals: Bool {
@@ -446,7 +447,7 @@ extension NodeView {
     var textRasterSettled: Bool { textRasterReady && textRasterWhole }
     func textRasterGeometryChanged() {
         // Laid out to nothing (a text that became a collapsed space, as
-        // stopwatch's status line did on Reset), it paints
+        // stopwatch's status line did on Reset, LLP 1116.005 D4), it paints
         // nothing. Neither the pump nor UIKit's `draw(_:)`, which lets go of
         // a raster that no longer applies, visits an empty box: the old ink
         // goes here, or it stays on screen beside the text that replaced it.
@@ -775,7 +776,7 @@ extension Presenter {
     /// Before the frame commits (the scroll callback, a rescue): a paragraph
     /// that shows without pixels for what shows gets them now, from its
     /// worker if that has finished or is running, else painted here — the
-    /// reader never sees it blank. A settled paragraph
+    /// reader never sees it blank (LLP 1050.000 D1). A settled paragraph
     /// costs one flag; the rest, their frame against the port. True while
     /// some paragraph lacks pixels: the pump's refresh has work then.
     @discardableResult
@@ -808,11 +809,11 @@ extension Presenter {
         return owed
     }
 
-    /// Paint motion's colour reaches the screen with its value: a paragraph
-    /// whose presented colour a batch changed is painted
+    /// Paint motion's colour reaches the screen with its value (LLP 1062
+    /// D6): a paragraph whose presented colour a batch changed is painted
     /// as the batch ends, where it shows, not on a worker a frame later.
     /// The paragraphs a batch gave new words (`changedText`) show them in
-    /// the batch's frame, where they show, as UIKit draws a
+    /// the batch's frame, where they show (LLP 1116.005 D4), as UIKit draws a
     /// label's new text in the commit that sets it, never the old words a
     /// frame longer while a worker paints.
     func paintChangedText() {

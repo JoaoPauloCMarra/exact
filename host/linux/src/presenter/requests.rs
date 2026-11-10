@@ -1,4 +1,4 @@
-//! One channel out: what the presenter asks of the shell
+//! One channel out (LLP 1115.001 D5): what the presenter asks of the shell
 //! that shows it. Every call between the two goes from the shell into the
 //! presenter; a haptic, an opened link, the share sheet, the clipboard, the
 //! software keyboard and whether Back has somewhere to go need the other
@@ -39,44 +39,45 @@ pub enum Request {
     /// Show the system's share sheet with this. Answered `shared` or
     /// `dismissed`, or with why it could not be shown.
     Share(Share),
-    /// Whether system Back has somewhere to go in the app: the
-    /// shell takes Back only while it has, so that Back at the
+    /// Whether system Back has somewhere to go in the app (LLP 1115.001
+    /// D6): the shell takes Back only while it has, so that Back at the
     /// first screen leaves with the system's own animation.
     Back(bool),
     /// The software keyboard: hidden (0), shown for an `input` (1) or for a
     /// `textarea` (3); and the field it is for where the shell hosts that
-    /// field, which then takes the focus and shows its
+    /// field (LLP 1115.001 D8), which then takes the focus and shows its
     /// own keyboard, else 0 (a field this host paints).
     Keyboard(u32, ViewId),
-    /// The top layer's surface: the window the shell
+    /// The top layer's surface (LLP 1115.001 D10): the window the shell
     /// shows for a confirmation or a menu, with its picture, or that it
     /// closed. A statement, told when it changes (`top.rs`). The shell says
     /// what happens in the window by a call of its own
     /// ([`Presenter::surface_event`]), not by this request's id.
     Surface(super::top::Surface),
-    /// Whether a displayed element says `wakelock="screen"`:
+    /// Whether a displayed element says `wakelock="screen"` (LLP 1125 D11):
     /// the shell keeps the screen on while it does. A statement, told when it
     /// changes.
     KeepScreenOn(bool),
-    /// A date or time control's picker: the shell shows the platform's dialog for it and
+    /// A date or time control's picker (LLP 1115.001 D9, as amended by
+    /// 1115.001.000): the shell shows the platform's dialog for it and
     /// answers with the value chosen, in HTML's form, or cancels.
     Pick(Pick),
-    /// The moments the reader's own hatches hear, as
+    /// The moments the reader's own hatches hear (LLP 1115.001.000 D4), as
     /// `hatches/reader.rs` writes them. Queued with no wake: the reader
     /// takes them with its requests after each turn.
     Hatch(Vec<i32>),
-    /// A call of a module the reader's extensions implement, its
-    /// body as the runner wrote it (`{"extension", "source"|"send",
+    /// A call of a module the reader's extensions implement (LLP 1133.001
+    /// D5), its body as the runner wrote it (`{"extension", "source"|"send",
     /// "args"}` or `{"extension", "release"}`): answered with the reply's
     /// JSON, which is the call's.
     Module(String),
-    /// The platform's check for a presence call, as
+    /// The platform's check for a presence call (LLP 1133.010 D8), as
     /// `PresenceAsk::json` writes it: the reader's authenticator shows its
     /// prompt and the reader reads the item. Answered by `Native.presence`
     /// on the store's completion path, never by this request's id, so the
     /// value never passes the requests' journal.
     Presence(String),
-    /// The session's orientation lock, told when it
+    /// The session's orientation lock (LLP 1133.029 D6), told when it
     /// changes: none (the manifest's orientation), or the types' set with
     /// whether a holder says `natural` or `current`, and each counted
     /// holder's view and word for a conflict line the shell writes.
@@ -124,7 +125,7 @@ impl Request {
     }
 }
 
-/// Exact's haptics: `-exact-press-haptic`'s kinds, and
+/// Exact's haptics (LLP 1077 D14): `-exact-press-haptic`'s kinds, and
 /// `haptic()`'s, which adds the three outcomes. The number is the wire's.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Haptic {
@@ -183,7 +184,7 @@ impl Haptic {
 /// A request the shell took and has not answered.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Waiting {
-    /// The share sheet: its outcome is a journal line.
+    /// The share sheet: its outcome is a journal line (LLP 1069.003 D2).
     Share,
     /// A date or time control's picker: its answer is the control's value.
     Pick(ViewId),
@@ -316,8 +317,8 @@ impl<D: DataSource> Presenter<D> {
         self.handle_modules();
     }
 
-    /// The packages this binary composes (`crate::package`): bound
-    /// now, each told it runs under the agent unless the
+    /// The packages this binary composes (`crate::package`, LLP 1133.022
+    /// D10 item 5): bound now, each told it runs under the agent unless the
     /// drive binds it (`--bind`), on the target this binary was built for.
     pub fn serve_packages(&mut self, table: Vec<crate::package::Entry>) {
         let agent = self.agent || std::env::var("EXACT_AGENT").as_deref() == Ok("1");
@@ -470,7 +471,7 @@ impl<D: DataSource> Presenter<D> {
             self.queue(Request::Orientation(session));
         }
         // A package view's displayed state, by the same rule, now the bars'
-        // covers are set.
+        // covers are set (LLP 1133.008 D8 item 2).
         self.host.runner_mut().report_views();
     }
 
@@ -492,7 +493,7 @@ impl<D: DataSource> Presenter<D> {
 
     /// A host with no shell (desktop Linux, Windows, a headless run) keeps no
     /// display awake: the first time an element holds the wake lock, the
-    /// journal says so. Asked as a loop's turn runs its
+    /// journal says so (LLP 1125 D11). Asked as a loop's turn runs its
     /// commands (`run_commands`), which Android's reader serves before.
     pub(super) fn wakelock_unavailable(&mut self) {
         if self.requests.shell || self.requests.wakelock_said || self.wakelock_moved() != Some(true)
@@ -523,7 +524,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// A host with no shell (desktop Linux, a headless run) has no screen
-    /// orientation to lock: the first time a lock is
+    /// orientation to lock (LLP 1133.029 D12): the first time a lock is
     /// held, the journal says so, and `state.orientationlock.applied` reads
     /// "unavailable". The Windows host applies the lock itself
     /// ([`Presenter::orientation_lock`]).
@@ -540,12 +541,12 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// The session's orientation lock when it changed since the last call,
-    /// for a host that applies it itself (Windows).
+    /// for a host that applies it itself (Windows, LLP 1133.029 D8).
     pub fn orientation_lock(&mut self) -> Option<Session> {
         self.orientation_moved()
     }
 
-    /// What the host applied, JSON, and whether its
+    /// What the host applied (LLP 1133.029 §8), JSON, and whether its
     /// resolution found a conflict: `state.orientationlock.applied`.
     pub fn orientation_applied(&mut self, applied: String, conflict: bool) {
         self.host
@@ -634,7 +635,7 @@ impl<D: DataSource> Presenter<D> {
             return false;
         };
         match waiting {
-            // The outcome is a journal line, as on every host.
+            // The outcome is a journal line, as on every host (LLP 1069.003 D2).
             Waiting::Share => self.host.log(match answer {
                 Some("shared") => "share: shared".to_string(),
                 None | Some("dismissed") => "share: dismissed".to_string(),
@@ -679,7 +680,7 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    /// Views a commit renewed: one whose picker is up is another
+    /// Views a commit renewed (LLP 1078): one whose picker is up is another
     /// item now, so that picker's answer is not its (a list's row given
     /// another item while it was up).
     pub(crate) fn picks_renewed(&mut self, renewed: &[ViewId]) {
@@ -753,8 +754,8 @@ impl<D: DataSource> Presenter<D> {
             step: text(PropId::Step),
             accent: crate::paint::control::accent(&node, self.brush.dark),
         };
-        // Under the agent the picker is held for it, on every host:
-        // `type @date 2026-10-23`, `tap @date clear` or
+        // Under the agent the picker is held for it, on every host (LLP
+        // 1069.007 D4): `type @date 2026-10-23`, `tap @date clear` or
         // `tap @date cancel` answer it, by the control's kind.
         if self.agent {
             let held = (self.host.runner().device_holds().iter())
@@ -802,7 +803,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// `haptic(kind)`, and a pressable's `-exact-press-haptic`: the shell
-    /// plays it. Desktop Linux has no haptic engine, so
+    /// plays it. Desktop Linux has no haptic engine (LLP 1077 D14), so
     /// there is nothing to feel there.
     pub(crate) fn haptic(&mut self, kind: &str) {
         if !self.requests.shell {
@@ -818,7 +819,7 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    /// A pointer pressed `id`: its `-exact-press-haptic`
+    /// A pointer pressed `id` (LLP 1077 D14): its `-exact-press-haptic`
     /// plays at the press, host-owned as `-exact-press-scale` is, with no
     /// commit.
     pub(super) fn press_haptic(&mut self, id: ViewId) {
@@ -858,7 +859,7 @@ impl<D: DataSource> Presenter<D> {
 
     fn open_url_now(&mut self, args: &[exact_plan::Value]) -> bool {
         let url = args.first().and_then(exact_plan::Value::as_str);
-        // The app's page in Settings, the shell's to open;
+        // The app's page in Settings (LLP 1133.002 D11), the shell's to open;
         // under the agent, journaled only.
         if url == Some("app-settings:") {
             if !self.has_shell() {
@@ -942,7 +943,7 @@ impl<D: DataSource> Presenter<D> {
     /// `share(…)`: the runner's rule, then the shell's sheet where there
     /// is one. Its outcome arrives by the request's id. The request carries
     /// no files: Android's sheet would take them as content URIs from a
-    /// `FileProvider`, which the shell does not have.
+    /// `FileProvider`, which the shell does not have (LLP 1125 D12).
     pub(super) fn share(&mut self, args: &[exact_plan::Value], source: Option<ViewId>) {
         const ANDROID: &str = "files are not carried to Android's share sheet yet";
         let share = Share::from_args(args);
@@ -968,7 +969,7 @@ impl<D: DataSource> Presenter<D> {
     pub(super) fn not_carried(&mut self, what: &str, reason: &str) {
         if self.requests.shell && reason == "unavailable" {
             self.host.log(format!(
-                "{what}: the host's channel to the platform does not carry it yet"
+                "{what}: the host's channel to the platform (LLP 1115.001 D5) does not carry it yet"
             ));
         }
     }

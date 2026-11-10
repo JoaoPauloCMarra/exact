@@ -1,5 +1,5 @@
 //! The build script of an app's Android crate, the library the Canvas reader
-//! loads (`host/android`): the Linux bake, which the Canvas
+//! loads (LLP 1076 §3.3, `host/android`): the Linux bake, which the Canvas
 //! host shares, then what the APK's build reads beside the plan.
 
 use crate::{build, BakeError};

@@ -1,10 +1,10 @@
-//! An icon token's path for Apple: an icon with no
+//! An icon token's path for Apple (LLP 1121 D10; stage 9 A): an icon with no
 //! `sf` source and a template SVG draws its path, as Linux, the reader and the
 //! web do, from the plan's path data. Swift gets it as absolute `M`/`L`/`C`/`Z`
 //! commands (`exact_kernel::svg::parse_d`, the parse Linux draws, quadratics
 //! and arcs already cubics) beside its viewBox, so it builds a `CGPath` with
 //! no SVG parser of its own. An `sf` wins: nothing is sent when one is given.
-//! An even-odd icon (its path's `evenodd:` marker, which only
+//! An even-odd icon (stage 14 C2: its path's `evenodd:` marker, which only
 //! `exact_kernel::Icon` reads) says so beside its path: `symbolFillRule`.
 
 use std::fmt::Write;
@@ -51,7 +51,7 @@ pub(crate) fn commands(name: &str) -> Option<(String, &str, bool)> {
 
 /// `,"symbolPath":…,"symbolViewBox":…` after a control face's symbol in
 /// its JSON (a button face, a grouped row) when `source` (after `symbol:`)
-/// is an icon Apple draws by its path: the face makes a
+/// is an icon Apple draws by its path (stage 9 A2): the face makes a
 /// template image of it its control tints as a symbol. Nothing otherwise.
 pub(crate) fn push_json(source: Option<&str>, json: &mut String) {
     let Some((d, view_box, even_odd)) = source.and_then(commands) else {
@@ -74,7 +74,7 @@ pub(crate) fn push_json(source: Option<&str>, json: &mut String) {
 /// away), so two tokens with the same source (`icon.reply` and
 /// `icon.respond` on one SVG) are told apart by nothing the host gets: the
 /// first declared is the best known. Keeping the chosen name would move the
-/// source form or the plan. `None` for no icon or no row.
+/// source form or the plan (theme2's to rule). `None` for no icon or no row.
 pub(crate) fn icon_name<'a>(plan: &'a exact_plan::Plan, source: &str) -> Option<&'a str> {
     let icon = exact_kernel::Icon::parse(source)?;
     let s = |id| plan.strings.get(id as usize).unwrap_or("");
@@ -198,7 +198,7 @@ mod tests {
         assert_eq!(commands("star"), None);
     }
 
-    /// An even-odd icon (its path's `evenodd:` marker, read by
+    /// Stage 14 C2: an even-odd icon (its path's `evenodd:` marker, read by
     /// `exact_kernel::Icon`) sends its path, the marker gone, and says
     /// `symbolFillRule`; a nonzero icon sends what it always did.
     #[test]

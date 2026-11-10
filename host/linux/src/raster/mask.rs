@@ -1,4 +1,4 @@
-//! Clip intersections and CSS `mask-image` for the CPU painter.
+//! Clip intersections and CSS `mask-image` for the CPU painter (LLP 1077 D2).
 
 use super::{reach, rounded_rect, Raster, Target};
 use crate::paint::{Backend, GradientPaint, Shape};

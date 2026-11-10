@@ -1,5 +1,5 @@
-// What the dev loop says before it has a plan to give: a small pill in the
-// window's bottom corner,
+// What the dev loop says before it has a plan to give (dtool2's pass 3 #8;
+// llp/1023.001's dev status): a small pill in the window's bottom corner,
 // "Dev loop: building the module producer …", while a native client's first
 // join waits on the loop's producers, or the error their start ended with.
 // Dev only (a connection to a dev URL; never in a release build), drawn

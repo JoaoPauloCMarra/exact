@@ -1,7 +1,8 @@
 //! Paint servers: `linearGradient` and `radialGradient`, resolved for one
 //! shape into stops, a spread and one transform to the shape's user space.
 //!
-//! Defaults, `href` templates and object bounding boxes as SVG 2 §14.2 (gradients), §14.2.3
+//! @ref LLP 1055.000 D3 (references), D7 (servers: defaults, `href`
+//! templates, object bounding boxes); SVG 2 §14.2 (gradients), §14.2.3
 //! (template inheritance)
 
 use super::length::{Length, Viewport};

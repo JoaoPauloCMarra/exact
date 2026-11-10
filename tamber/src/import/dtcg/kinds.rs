@@ -1,6 +1,6 @@
-//! DTCG's `$type`s besides colour as Tamber's kinds: a token's value in a
-//! tuple, its aliases followed (inside a composite value too), as a design
-//! writes a token of its kind. A value of these
+//! DTCG's `$type`s besides colour as Tamber's kinds (LLP 1121 D14, stage 6
+//! H): a token's value in a tuple, its aliases followed (inside a composite
+//! value too), as a design writes a token of its kind. A value of these
 //! kinds is written out, not as a reference to the token it aliases.
 //!
 //! - `dimension` (2025.10's `{value, unit}`), and Tokens Studio's

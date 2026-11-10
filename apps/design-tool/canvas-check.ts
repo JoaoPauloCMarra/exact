@@ -1,4 +1,4 @@
-// The dev loop's page refusing this tool's frame, in words: `tamber tool --via`
+// The dev loop's page refusing this tool's frame, in words (the second hands-on pass, finding 3): `tamber tool --via`
 // asks the page's frame-ancestors (scripts/tamber-frame.mjs) and answers at /__tamber/tool/canvas-check, the tool's
 // own route, not tamber/1. None when it lets the tool frame it, or when nothing answers (a tool served without
 // --via, or the stub): the canvas then says nothing more.

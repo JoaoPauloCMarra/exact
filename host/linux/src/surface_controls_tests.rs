@@ -358,7 +358,7 @@ fn r13_named_and_empty_arguments_reach_linux_gpu_binding() {
     }
 }
 
-/// A key typed at a world's canvas reaches the
+/// The platformer's diary, R8: a key typed at a world's canvas reaches the
 /// canvas's `key` handler as on the web, and the world unless one prevents it.
 #[test]
 fn a_world_key_reaches_the_canvas_key_handler_first() {
@@ -513,7 +513,7 @@ fn a_hardware_shortcut_keyup_does_not_stick_the_key_in_the_world() {
     done(p, path);
 }
 
-/// A held Control chord's auto-repeats reach the shortcut as
+/// LLP 1132 D11: a held Control chord's auto-repeats reach the shortcut as
 /// repeats, so its button is pressed once, as a browser's `keydown` repeat
 /// is not a click.
 #[test]
@@ -582,7 +582,7 @@ fn r15_pointer_hud_button_releases_focus_but_keyboard_keeps_it() {
         .values()
         .any(|c| c.held.contains("Space")));
     p.hardware_key("Space", "Space", false, false);
-    // Tab from the stop before it (Tab moves the focus).
+    // Tab from the stop before it (LLP 1088 D7.3: Tab moves the focus).
     p.type_key(find(&p, "b-jump"), "Tab", "Tab", true, false)
         .unwrap();
     assert_eq!(p.focus(), Some(button));
@@ -873,7 +873,7 @@ fn removed_hud_keyboard_press_returns_focus_to_its_canvas() {
 
 #[test]
 fn a_declared_module_is_routed_by_surface_and_verified_by_its_own_card() {
-    // Every surface a module does not list is the primary's, and
+    // LLP 1009 D6: every surface a module does not list is the primary's, and
     // each artifact is admitted only by its own signed digest.
     use sha2::{Digest, Sha256};
     let dir = std::env::temp_dir().join(format!("d6-gpu-modules-{}", std::process::id()));
@@ -905,9 +905,9 @@ fn a_declared_module_is_routed_by_surface_and_verified_by_its_own_card() {
     std::fs::remove_dir_all(&dir).unwrap();
 }
 
-/// A held contact on a canvas is the canvas's own: the presenter does not
-/// retire it at its first move (`contact:false`), or the world would see
-/// neither the down nor any move, and mouse look could not turn.
+/// A held contact on a canvas is the canvas's own (rivals diary, limit 7): the
+/// presenter used to retire it at its first move (`contact:false`) and the
+/// world saw neither the down nor any move, so mouse look could not turn.
 #[test]
 fn held_canvas_contact_streams_down_moves_and_up_to_the_canvas() {
     let (mut p, path) = fixture();
@@ -981,7 +981,7 @@ fn held_canvas_contact_streams_down_moves_and_up_to_the_canvas() {
 
 /// A canvas sees the pointer's motion beside its position (the device's own,
 /// from evdev, past the screen's edge), its hover, and the secondary and
-/// middle buttons as the web's chorded buttons.
+/// middle buttons as the web's chorded buttons (rivals diary, limit 2).
 #[test]
 fn canvas_pointer_carries_motion_hover_and_the_other_buttons() {
     let (mut p, path) = fixture();
@@ -1269,7 +1269,7 @@ fn agent_primary_mouse_after_touch_preserves_device_identity_and_refusal_atomici
         r#""at":null"#,
         r#""at":[25]"#,
         r#""at":[1e100,75]"#,
-        // A phase with `mouse` is a held contact,
+        // A phase with `mouse` is a held contact (9d75806c8, review A1),
         // which takes x/y, never a click's `at`.
         r#""phase":"down","at":[25,75]"#,
         r#""contextmenu":true"#,

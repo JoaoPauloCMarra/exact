@@ -1,11 +1,11 @@
-//! A resource's two-way socket. A mutation's source
+//! A resource's two-way socket (LLP 1016.000 D7). A mutation's source
 //! stages operations on a socket handle it kept from a resource's mapper,
 //! and the mapper itself may stage replies on its own socket as it answers
 //! the socket's `open` or a `message`. The runner addresses them to the
 //! stream ticket of the resource that owns the socket now, and hands them
 //! to the host only once the commit that staged them stands. A refused
 //! commit takes them back with everything else (`commit.rs`'s checkpoint).
-//! An answer in flight sends too: each turn's
+//! An answer in flight sends too (the amendment of 2026-10-18): each turn's
 //! operations are one batch, sent once the commit that ran the turn stands
 //! whatever the answer turns out to be.
 use super::*;
@@ -36,7 +36,7 @@ pub struct SocketState {
     pub sent: u64,
     /// The transport's buffered bytes as of the last turn or publication.
     pub buffered: u64,
-    /// A local listener's address, where it stands.
+    /// A local listener's address, where it stands (LLP 1133.005 D2).
     pub listen: Option<crate::listen::Standing>,
 }
 
@@ -76,7 +76,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Read each long poll's backoff wait from the host with `reader`, for
-    /// `state.streams`.
+    /// `state.streams` (LLP 1016.000 D8).
     pub fn set_retry_reader(&mut self, reader: crate::RetryReader) {
         self.retry_reader = Some(reader);
     }
@@ -196,9 +196,9 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// `batch` for publication once its commit stands. A write to, an end
-    /// of or a signal to a child from an origin that may not
-    /// is dropped and said, and a tool's call ends `person-required`;
-    /// the batch's other operations go, and the commit
+    /// of or a signal to a child from an origin that may not (LLP 1133.007
+    /// D13) is dropped and said, and a tool's call ends `person-required`
+    /// (LLP 1111 D4a); the batch's other operations go, and the commit
     /// stands either way.
     fn push_batch(&mut self, mut batch: SocketSend) {
         let mut dropped = Vec::new();
@@ -248,7 +248,7 @@ impl<D: DataSource> Runner<D> {
     /// What the host made of a batch [`Runner::take_socket_sends`] gave it:
     /// for each socket, the frames it accepted and the bytes its transport
     /// buffers now; or why it refused the whole batch, which sent nothing
-    /// (the commit stood, and acceptance is not server acknowledgement).
+    /// (D7: the commit stood, and acceptance is not server acknowledgement).
     pub fn socket_published(
         &mut self,
         batch: &SocketSend,
@@ -294,7 +294,7 @@ pub(super) fn refused(origin: &SocketOrigin, why: &str) -> String {
     )
 }
 
-/// A child's operation dropped from its batch.
+/// A child's operation dropped from its batch (LLP 1133.007 D13).
 pub(super) fn refused_op(origin: &SocketOrigin, why: &str) -> String {
     let (verb, name) = origin.words();
     exact_num::text!(
@@ -320,8 +320,8 @@ pub(super) fn stream_count(request: &crate::Request) -> Option<StreamCount> {
 }
 
 /// A delivered message's effect on its socket's state: `open` (a
-/// listener's `listening`) opens it, as a child's first `spawn` does,
-/// which stays open across its restarts.
+/// listener's `listening`) opens it, as a child's first `spawn` does (LLP
+/// 1133.007 D2), which stays open across its restarts.
 pub(super) fn socket_message(count: &mut StreamCount, message: &crate::Message) {
     if let Some(socket) = count.socket.as_mut() {
         let opens = if socket.listen.is_some() {

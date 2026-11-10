@@ -2,8 +2,8 @@
 
 How to write and change a test in this repository so that it stays trustworthy
 and fast. The merge-blocking checks must run in under 65 seconds
-(`rules/RULES.md`). The tests they leave out (ignored tests, the crates outside
-`default-members`) are run by hand before landing, so their time counts too.
+(`rules/RULES.md`). The async lane runs everything else for every commit, so
+its time counts too.
 
 ## Principles
 
@@ -24,19 +24,21 @@ and fast. The merge-blocking checks must run in under 65 seconds
 - **No external I/O unless it is the point.** External I/O is relatively slow
   and unreliable. A subprocess, a network call, a real file or a nested build
   costs time and adds ways to fail. Tests that use compiled fixtures should use a
-  binary built once (below).
+  binary the lane has built (below).
 - **Keep coverage.** A randomized test, a fuzz loop or a stress test keeps its
   seeds and iteration counts. Change compiler optimization levels only for a
   whole test suite or when the intent is to test a specific optimization level.
 
-## What has run
+## Whose failure it is, and what has run
 
 - **`bun scripts/affected.mjs`** lists the suites a branch's changes can affect
   (the working tree included) and how to run each. `--run` runs the selected
   Cargo and Bun suites, and `--why <suite>` shows the changed file that
   selected a suite and how the suite reaches it. A suite's inputs come from
   its sources: Cargo's dependencies, imports, and the paths, packages, apps
-  and platforms its tests name.
+  and platforms its tests name. The async lane makes the same selection on
+  each commit, keeps a failure until a run covers it again, and runs every
+  step in full at least daily.
   For a test to be selected when what it reads changes, name what it reads: a
   path (from the root or from the test's own directory), `--app <name>` or
   `resolveApp('<name>')`, `-p <package>`, or the platform in the call that
@@ -49,9 +51,17 @@ and fast. The merge-blocking checks must run in under 65 seconds
   reads as it runs, not what an earlier build read: a file a Rust crate
   includes (`include_str!`, `#[path]`) or a build script's input shows only
   when the audit builds that crate again.
+- **`bun scripts/known.mjs -- <command>`** runs `cargo test …`, `bun test …` or
+  `bun host/apple/build.mjs --test …` and, when it fails, sorts each failing
+  test against the async lane's record of origin/main (LLP 1146 D1): **known**
+  (it fails there too, with how often it failed in the lane's last ten runs),
+  **new** (the lane ran it there and it passed), or **unknown** (no lane run
+  there covers it). The exit status stays the command's. The lane attaches what
+  each commit's checks found to that commit as a git note
+  (`refs/notes/async`, tier 2's `async2`), which it fetches from origin.
 - **`bun scripts/evidence.mjs --app <name>`** lists the drives, test runs and
-  `verify` runs recorded against the app's builds
-  (`<app>/.exact/runs.jsonl`): current while the build they ran on is still the
+  `verify` runs recorded against the app's builds (LLP 1146 D2,
+  `<app>/.exact/runs.jsonl`): current while the build they ran on is still the
   host's and still fresh, else stale, saying what changed. It names the hosts
   the branch changed that no current run covers; `--draft` prints lines for a
   diary's Checkpoints or a PR's Test Plan. `evidence.mjs note <host> "<what>"
@@ -80,8 +90,8 @@ and fast. The merge-blocking checks must run in under 65 seconds
   - Browsers: an event or a promise, or the agent's `clock settle` and virtual
     time.
   - A drive or an authored test: `clock settle` or `clock data` for what the
-    app has in flight. A stream counts as landed at its first message, so
-    for state a protocol reaches later (a socket's READY after
+    app has in flight. A stream counts as landed at its first message (LLP
+    1016.000 D5), so for state a protocol reaches later (a socket's READY after
     its HELLO) write `clock until state <path> == <literal> within <ms>`, not
     `clock +N real`: the clock stays frozen while it polls `state` on real
     time, and a miss fails naming the last value. A task due a commit later
@@ -120,7 +130,8 @@ and fast. The merge-blocking checks must run in under 65 seconds
   (`--sim` picks one). When a branch changes no input of the XCTests but Swift
   files in `tests/ExactKitTests`, `bun scripts/affected.mjs` names, for each
   platform, the classes those files declare or extend and the classes of any
-  file that names one of them (a subclass, a caller of a helper). A change to a file of shared
+  file that names one of them (a subclass, a caller of a helper), and after the
+  push the async lane runs those iOS classes alone. A change to a file of shared
   helpers (one that declares a function, a type or an extension other files can
   use) or to anything else the XCTests read (the host, a fixture, a resource)
   runs every class. The lane runs no macOS class.
@@ -130,7 +141,8 @@ and fast. The merge-blocking checks must run in under 65 seconds
   (`host/web-js/rt.js`) break each other in one process: a mock that does not
   take can leave a test spinning on the real module, past any test timeout.
   Run several such files with `bun test --isolate` (a fresh global and module
-  registry per file) or `--parallel`, which implies it.
+  registry per file) or `--parallel`, which implies it and is how the async
+  lane's glue step runs them.
 - **Platform availability belongs in Swift.** The iOS run includes every test
   compiled for its destination, including shared classes without an `IOSTests`
   suffix. Guard platform-specific assertions with `#if os(...)`.
@@ -147,7 +159,7 @@ and fast. The merge-blocking checks must run in under 65 seconds
   threads start). A browser shared by a file's tests gives each test a context
   of its own.
 - **Build once, outside the test, where you can.** A test compiles a Contract
-  fixture with a debug `contract` binary built once beforehand, run
+  fixture with the debug `contract` binary the lane's build step has built, run
   directly; not `cargo run --release`, and not a `cargo run` per fixture. The
   compiler's output does not depend on its build profile.
 - **An app's Rust tests are its data crate's.** An app's logic and its Rust tests
@@ -261,7 +273,7 @@ change the native state inside that pair, then wait for the runner to apply it
   pointing at an installed Chrome, and one of its tests builds the app's web
   dist inside its 180 s limit: beside a `cargo build` or `cargo test` holding
   the Cargo lock, that build is killed at the limit and the test fails with
-  `Received: null`, which is contention, not a fault.
+  `Received: null`, which is contention, not a fault (seen twice, 2026-10-28).
 - **Name a need when the shell lacks what the test uses.**
   `chromium({ needs })` answers the full build (Chrome for Testing, run with
   `--headless=new`) for `gpu` (WebGPU and WebGL on the GPU: the shell has only
@@ -282,20 +294,21 @@ change the native state inside that pair, then wait for the runner to apply it
   fails there first. `document.fullscreenElement` is set before the
   display-mode media changes are sent; `fullscreenchange` comes after them.
 
-## Windows: the test machine
+## Windows: the NucBox
 
-Windows's oracle and its consumers' drives run on one Windows machine reached
-over SSH. The one these notes describe:
+Windows's oracle and its consumers' drives run on the NucBox, `nucbox-evo-x2`
+on the tailnet (LLP 1115.004 D13). As recorded on 2026-10-23:
 
 - **The machine.** Windows 11 Pro 25H2, build 26200, x64; an AMD Ryzen AI
   Max+ 395 with Radeon 8060S graphics. It has Rust's `x86_64-pc-windows-msvc`,
   Bun 1.4.2, and the .NET SDKs 9.0.313 and 10.0.203.
 - **The display and input.** One display, a Samsung C49RG9x at 5120×1440, with
-  no display scale or text scale set. It has no precision touchpad; checks of
-  touchpad gestures need one added.
-- **Reaching it.** SSH lands in PowerShell. If the Windows user name has a
-  space (`ssh -l "first last" <host>`), `scp` refuses it in `user@host`, so
-  name the user in a config file (`User "first last"`) and pass it with `-F`. An SSH session has no GitHub credentials, so send
+  no display scale or text scale set. It has no precision touchpad; D8 needs
+  one added.
+- **Reaching it.** SSH as `charlie cheever`, whose shell is PowerShell:
+  `ssh -l "charlie cheever" nucbox-evo-x2`. `scp` refuses a space in
+  `user@host`, so name the user in a config file (`User "charlie cheever"`)
+  and pass it with `-F`. An SSH session has no GitHub credentials, so send
   commits as a bundle: `git bundle create`, copy it, then
   `git fetch <bundle> main:refs/remotes/origin/main` and `git merge --ff-only`.
 - **SSH is not the desktop.** An SSH session sees one 1024×768 stand-in
@@ -316,7 +329,7 @@ over SSH. The one these notes describe:
   PowerShell, `$env:EXACT_FONT = ""` removes the variable, and the pin
   returns.
 - **Confirm focus independently when reports disagree.** Sky's focused-element
-  field can remain on a chat app's composer after Tab moves to a button. Windows SDK
+  field can remain on Excord's composer after Tab moves to a button. Windows SDK
   Inspect reports the button's UI Automation focus correctly, and Enter activates
   it. Check the visible focus, action and an independent accessibility client
   before changing the provider (`target/windows-chat-comparison/focus-inspect-qualification.json`).

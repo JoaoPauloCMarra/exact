@@ -37,9 +37,9 @@ extension NodeView {
 
 extension NodeView {
     /// A button: a custom one (`kind == "button"`) or a native one, under any
-    /// role.
+    /// role (LLP 1069.011.000 D1).
     var isButton: Bool { kind == "button" || isNativeButton }
-    /// Its face, as the kernel reads it; nil when the
+    /// Its face, as the kernel reads it (LLP 1069.011.000 D1); nil when the
     /// presenter cannot read one. UIKit's presenter keeps a native button's
     /// until a batch changes it (`ControlHost.face`); a custom button's face
     /// is read from its child views, whose ops do not name the button, so
@@ -59,14 +59,14 @@ extension NodeView {
     /// descendant's own label stands for its content, so a labelled image
     /// inside a link counts in the link's name, as on the web.
     private func contentText(naming: Bool) -> String {
-        // A Markdown text reads as its words, each inline atom its accessible name.
+        // A Markdown text reads as its words, each inline atom its accessible name (LLP 1045.000 D8).
         if let text = props["text"], props["markup"] == "markdown", !(props["atoms"] ?? "").isEmpty, let plain = MarkdownLink.installed?.plain(text, range: nil, atoms: props["atoms"] ?? "", faces: props["atomFaces"] ?? "", spoken: true) { return plain }
         if let text = props["text"] { return text }
-        // A native button's children are its face, not views,
-        // read from the kernel, current on its first batch.
+        // A native button's children are its face, not views (LLP 1069.011 D5),
+        // read from the kernel, current on its first batch (LLP 1069.011.000 D1).
         if isNativeButton { return face?.title ?? "" }
         if isParagraph { return visibleParagraphText }
-        // accname: an `aria-hidden` child names nothing (a tab's icon glyph).
+        // accname: an `aria-hidden` child names nothing (habits F16: a tab's icon glyph).
         let children = container.subviews.compactMap { $0 as? NodeView }.filter { $0.props["accessibilityElementsHidden"] != "true" }
         return children.map { naming ? $0.authoredLabel ?? $0.contentText(naming: true) : $0.accessibleText }.filter { !$0.isEmpty }.joined(separator: " ")
     }
@@ -114,9 +114,9 @@ extension NodeView {
     }
     /// A button to assistive technology: a `button`, or a box whose ARIA
     /// role is `button` or `link`, as the web's tree has a `div` with one
-    /// (a message bubble with `role="button"` was no button natively).
+    /// (chat F14: a message bubble with `role="button"` was no button natively).
     /// A box with a checkable role is one too: the web's tree has a `div`
-    /// with `role="checkbox"` as a checkbox. A native module's
+    /// with `role="checkbox"` as a checkbox (habits F16). A native module's
     /// box takes these roles as a box does.
     /// On the Mac a menu's row (`menuitem`, `menuitemcheckbox`,
     /// `menuitemradio`) is one too, as AppKit's menu item is.
@@ -132,8 +132,8 @@ extension NodeView {
     static let menuItemRoles: Set<String> = ["menuitem", "menuitemcheckbox", "menuitemradio"]
     var isMenuItem: Bool { Self.menuItemRoles.contains(props["accessibilityRole"] ?? "") }
     /// ARIA's checkable roles (Core-AAM): `checkbox`, `radio` and `switch`,
-    /// their state `aria-checked`; nil for any other role (otherwise a
-    /// `button role="radio"` reads as a plain button on macOS).
+    /// their state `aria-checked`; nil for any other role (onboarding F16:
+    /// a `button role="radio"` read as a plain button on macOS).
     var checkedRole: (role: String, checked: Bool)? {
         guard let role = props["accessibilityRole"], ["checkbox", "radio", "switch"].contains(role) else { return nil }
         return (role, props["accessibilityChecked"] == "true")
@@ -145,7 +145,7 @@ extension NodeView {
               let pressed = props["accessibilityPressed"], ["true", "false", "mixed"].contains(pressed) else { return nil }
         return pressed
     }
-    /// accname's description: the text of the elements
+    /// accname's description (onboarding F22): the text of the elements
     /// `aria-describedby` names, in order, else `aria-description`'s words.
     var accessibleDescription: String? {
         if let refs = props["accessibilityDescribedBy"], let presenter {
@@ -156,8 +156,8 @@ extension NodeView {
         return props["accessibilityHint"].flatMap { $0.isEmpty ? nil : $0 }
     }
     /// The ARIA states served under AppKit attribute names: `AXEnabled`
-    /// for ARIA disabled, WebKit's `AXInvalid`,
-    /// Chromium's `AXHasPopup` and `AXPopupValue`, WebKit's
+    /// for ARIA disabled, WebKit's `AXInvalid` (onboarding F22),
+    /// Chromium's `AXHasPopup` and `AXPopupValue` (spreadsheet F20), WebKit's
     /// `AXARIACurrent` (Depot: a navigation link's `aria-current`). A
     /// `false` (or absent) state serves none.
     func ariaAttribute(_ name: String) -> Any? {
@@ -242,7 +242,7 @@ extension NodeView {
         return view
     }
     #endif
-    /// ARIA's range roles: a value is `aria-valuenow` between
+    /// ARIA's range roles (LLP 1116 D8): a value is `aria-valuenow` between
     /// `aria-valuemin` and `aria-valuemax`, and the children are
     /// presentational, so the node is one element. A control's own view
     /// (a `progress`'s indicator) says its role and value itself.
@@ -425,7 +425,7 @@ extension NodeView {
             setAccessibilityElement(true)
             if let checked = checkedRole { setAccessibilityChecked(checked.role, checked.checked) }
             else { setAccessibilityToggle(pressedState, else: buttonRole) }
-            // A link's `AXURL` is its `href`, as a run's is.
+            // A link's `AXURL` is its `href`, as a run's is (X78).
             let url = role == "link" ? props["href"].flatMap { URL(string: $0) } : nil
             if accessibilityURL() != url { setAccessibilityURL(url) }
             setAccessibilitySelected(props["accessibilitySelected"] == "true")
@@ -449,7 +449,7 @@ extension NodeView {
         } else if let range = rangeRole {
             // A range role is one element, its value between its bounds and
             // its `aria-valuetext` the description, as WebKit serves a drawn
-            // one. Only a change is written: each posts.
+            // one (LLP 1116 D8). Only a change is written: each posts.
             let axRole: NSAccessibility.Role = ["slider": .slider, "meter": .levelIndicator, "scrollbar": .scrollBar, "spinbutton": .incrementor][range] ?? .progressIndicator
             setAccessibilityElement(true)
             if accessibilityRole() != axRole { setAccessibilityRole(axRole) }
@@ -552,7 +552,7 @@ extension NodeView {
         }
     }
     /// VoiceOver's show menu (AXShowMenu, VO-⇧-M) is the ContextMenu key's
-    /// request at this node, as Chrome sends both through Blink's
+    /// request at this node (X84), as Chrome sends both through Blink's
     /// `ShowNonLocatedContextMenu`: the `contextmenu`, then the
     /// `contextPopover`'s menu, of the first node from this one up that
     /// answers (`contextTarget`; the event bubbles), at this one's drawn
@@ -654,7 +654,7 @@ extension UIView {
         if accessibilityTraits.contains(.toggleButton) != (pressed != nil) { accessibilityTraits.formSymmetricDifference(.toggleButton) }
         accessibilityValue = pressed.map { $0 == "mixed" ? "2" : $0 == "true" ? "1" : "0" }
     }
-    /// A checkable role as UIKit reads one: a checkbox
+    /// A checkable role as UIKit reads one (LLP 1115.000 D13.3): a checkbox
     /// or switch is a toggle, the `toggleButton` trait with UIKit's value,
     /// "1" or "0", which VoiceOver speaks in the reader's language (as the
     /// native checkbox, `ControlsIOS`); a radio is a button, selected while
@@ -673,19 +673,19 @@ extension UIView {
 #endif
 
 /// What an authored tab shows as one segment of the system's segmented
-/// control: its one image, or its words.
+/// control (LLP 1035.001 D10): its one image, or its words.
 enum SegmentFace: Equatable { case image(NodeView), symbol(String), title(String) }
 
 extension NodeView {
     /// How this tab shows as a segment, or nil when a segment cannot show
     /// what was authored: exactly one image child is the segment's image;
     /// text alone is its title — the visible words, with an `aria-label`
-    /// that says more (`Temp`, named `Temperature`) its accessibility label.
-    /// An icon beside a label, a badge, or any other node
+    /// that says more (`Temp`, named `Temperature`) its accessibility label
+    /// (LLP 1116 D6). An icon beside a label, a badge, or any other node
     /// keeps the authored rendering — the web's, where a role never changes
     /// what is drawn.
     var segmentFace: SegmentFace? {
-        // A native button's face, not views: a symbol
+        // A native button's face, not views (LLP 1069.011.000 D4): a symbol
         // alone (named by its label), or a title.
         if isNativeButton {
             guard let face, face.fits else { return nil }
@@ -695,7 +695,7 @@ extension NodeView {
         }
         let children = container.subviews.compactMap { $0 as? NodeView }
         // An `aria-hidden` child (an icon glyph) is drawn but not named: no
-        // segment shows one thing and is named another.
+        // segment shows one thing and is named another (habits F16).
         if children.contains(where: { $0.props["accessibilityElementsHidden"] == "true" }) { return nil }
         if children.count == 1, children[0].kind == "image" { return .image(children[0]) }
         let text = accessibleText
@@ -783,7 +783,7 @@ extension Presenter {
         }
         for node in nodes {
             node.applyFormAccessibility()
-            // A native button's control is its accessibility element.
+            // A native button's control is its accessibility element (LLP 1069.011 D4).
             if (node.actsAsButton || node.props["accessibilityRole"] == "button") && !node.isNativeButton {
                 #if os(macOS)
                 node.setAccessibilityLabel(node.accessibleName)
@@ -820,7 +820,7 @@ extension Presenter {
                 editor.setSelectedRange(NSRange(location: Self.caret(in: editor, at: click), length: 0))
             }
             #else
-            // Any focus a node holds stays, however it came, except: the session's own
+            // Any focus a node holds stays, however it came (Charlie, 2026-10-17), except: the session's own
             // view holding it for its shortcuts (ShortcutsIOS), a surface control's from its touch, which the
             // author did not ask for, and the focus a press left on its control while that press's work runs,
             // which an autofocus the work mounts takes (PressHandoffIOS).
@@ -899,8 +899,8 @@ extension Presenter {
     /// focus: the focused element's AXFocusedUIElementChanged, last
     /// (measured with a sheet, a panel, an `NSPopover` and a child window
     /// whose field or row is the first responder; none posts a layout
-    /// change). A changed modal also posts its one layout change,
-    /// naming the same element: the focus when it is in
+    /// change). A changed modal also posts its one layout change
+    /// (LLP 1080.003 D3), naming the same element: the focus when it is in
     /// the modal (posted on the modal), else the modal; as a modal goes,
     /// the focus given back, or the trigger of a popover that closed with
     /// the focus where it was, which VoiceOver returns to from an `NSMenu`
@@ -956,7 +956,7 @@ extension Presenter {
     }
     var macModalAccessibilityChildren: [NodeView]? {
         guard let modal = macAccessibilityModal else { return nil }
-        // In its sheet the dialog is that window's: the page behind it exposes nothing.
+        // In its sheet the dialog is that window's (LLP 1115.002 D7.2): the page behind it exposes nothing.
         if modal.window !== viewport.window { return [] }
         return [modal] + menus.presented(within: modal).filter { $0 !== modal && $0.window === viewport.window }
     }
@@ -1010,7 +1010,7 @@ extension Presenter {
     }
     #endif
     #if os(iOS) || os(tvOS)
-    /// `aria-modal`, after a batch and after a native
+    /// `aria-modal` (LLP 1080.003), after a batch and after a native
     /// transition settles. A view is modal while its prop is true and it is
     /// exposed: attached, displayed, not hidden, inert or leaving, with no
     /// accessibility-hidden ancestor and no visible sibling painted over it (a
@@ -1146,7 +1146,7 @@ extension Presenter {
             launchAutofocusReleased = true
             syncAccessibility()
             #if os(macOS)
-            focusInitialKeyView() // after the author's `autofocus` had its say
+            focusInitialKeyView() // LLP 1115.000 D7.5, after the author's `autofocus` had its say
             #endif
         }
     }
@@ -1174,7 +1174,7 @@ extension Agent {
         reply["pending"] = pendingRequests()
         let focus = (stateSections()["focus"] as? [String: Any])?["logical"] as? Int
         #if os(iOS) || os(tvOS)
-        // A header node the navigation bar leaves out.
+        // A header node the navigation bar leaves out (LLP 1116 D2).
         let unshown = presenter.navigation.unshownByBar()
         #endif
         reply["nodes"] = (reply["nodes"] as? [[String: Any]] ?? []).map { row in

@@ -1,5 +1,5 @@
 //! Native speed metrics for any app, from the baked plan its web build wrote,
-//! as one JSON line for `scripts/metrics.mjs`.
+//! as one JSON line for `scripts/metrics.mjs` (LLP 1054 O4).
 //!
 //! `plan-metrics <app.plan> [--contract <app.contract>] [--press <testId>[,<testId>]]`
 //!
@@ -95,7 +95,7 @@ fn main() -> ExitCode {
 }
 
 fn measure(encoded: &[u8], contract: Option<String>, presses: &[String]) -> Result<String, String> {
-    // A native tool that boots the whole plan links every capability.
+    // A native tool that boots the whole plan links every capability (LLP 1047 D7).
     exact_web::link(exact_web_capabilities::ALL);
     let mut out = String::from("{");
     let mut put = |key: &str, value: String| {
@@ -172,7 +172,7 @@ fn measure(encoded: &[u8], contract: Option<String>, presses: &[String]) -> Resu
             .collect::<Result<Vec<_>, _>>()?;
         put("update_ms", format!("{:.3}", p50(samples)));
     }
-    // An inherited row changed on the root, alternating two
+    // An inherited row changed on the root (LLP 1035.000 D2), alternating two
     // inks so every change is a change: the invalidation's cost and reach.
     {
         use exact_kernel::{Color, ColorValue, Op, StyleId, StyleMask, StyleProps};

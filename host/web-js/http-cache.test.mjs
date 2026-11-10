@@ -33,7 +33,7 @@ test('an answer is kept for the lifetime its headers give, and given again with 
   o.advance(59);
   expect(await o.get('http://api.test/a')).toEqual({ body: 'answer 3', age: '59' });
   expect((await o.fetch('http://api.test/a')).url).toBe('http://api.test/a');
-  // What a render reads of each answer: how long any reader may still be given it.
+  // What a render reads of each answer: how long any reader may still be given it (LLP 1048.007 D8).
   expect((await o.fetch('http://api.test/a'))[FRESH]).toBe(1000);
   o.advance(1);
   expect((await o.get('http://api.test/a')).body).toBe('answer 4');

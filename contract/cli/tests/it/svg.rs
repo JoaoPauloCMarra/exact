@@ -1,4 +1,4 @@
-//! Inline SVG and CSS animations, compiled and booted — the rows
+//! LLP 1055: inline SVG and CSS animations, compiled and booted — the rows
 //! and props on the kernel, the keyframes resolved onto the `animation` row,
 //! the longhands composed, and every refusal by its id.
 
@@ -162,7 +162,14 @@ fn attribute_lengths_refuse_deferred_units_and_functions() {
                 format!("\"2{unit}\"")
             };
             let error = refused(&source(tag, attr, &value));
-            for expected in ["lower-svg-length", "refused", unit, attr, "px", "%"] {
+            for expected in [
+                "lower-svg-length",
+                "refused (LLP 1055.000 D4)",
+                unit,
+                attr,
+                "px",
+                "%",
+            ] {
                 assert!(
                     error.contains(expected),
                     "{tag} {attr}: missing {expected}: {error}"
@@ -452,7 +459,7 @@ fn refusals_are_named() {
     assert!(refused("component A\n  view\n    circle r=3\n").contains("lower-svg-content"));
     assert!(refused(&svg("column")).contains("lower-svg-content"));
     assert!(refused(&svg("text \"hi\" rotate=\"10 20\"")).contains("later stage"));
-    // HTML inside, the web's; SVG shapes need an `svg`.
+    // LLP 1055.000 §8 ruling 5: HTML inside, the web's; SVG shapes need an `svg`.
     assert!(
         refused(&svg("foreignObject width=10 height=10\n        circle r=3"))
             .contains("lower-svg-content")
@@ -466,7 +473,7 @@ fn refusals_are_named() {
     assert!(refused(&svg("circle r=3 padding=4")).contains("lower-svg-attr"));
     assert!(refused(&svg("rect points=\"0,0\"")).contains("lower-attr-tag"));
     assert!(refused("component A\n  view\n    column points=\"0,0\"\n").contains("lower-attr-tag"));
-    assert!(refused(&svg("filter\n        feImage")).contains("not in Exact's SVG yet"));
+    assert!(refused(&svg("filter\n        feImage")).contains("later stage"));
     assert!(refused(&svg("hatch")).contains("Chrome does not implement"));
     assert!(refused(&svg("linearGradient\n        rect width=1")).contains("does not hold"));
     assert!(refused(&svg("circle r=3 animation=\"nope 1s\"")).contains("lower-animation-name"));
@@ -481,7 +488,7 @@ fn refusals_are_named() {
     );
 }
 
-// Ellipse, nested viewports, geometry rows and
+// LLP 1055.000 stage 1: ellipse, nested viewports, geometry rows and
 // lengths, transforms in both grammars, `class=` on SVG elements, and SVG
 // inside a component.
 const STAGE1: &str = "\
@@ -545,7 +552,7 @@ fn stage_one_geometry_transforms_and_classes() {
     assert_eq!(inner.style.width, Percent(50.0));
 }
 
-// Colour keyframes and transitions, transforms on SVG
+// LLP 1055.000 stage 2: colour keyframes and transitions, transforms on SVG
 // elements animated.
 #[test]
 fn stage_two_colour_and_transform_motion() {
@@ -566,7 +573,7 @@ fn stage_two_colour_and_transform_motion() {
     assert_eq!(spin.keyframes.properties(), vec![Property::Rotate]);
 }
 
-// Definitions, gradients, use and symbol, paint order.
+// LLP 1055.000 stage 3: definitions, gradients, use and symbol, paint order.
 #[test]
 fn stage_three_references_and_servers() {
     let r = boot(
@@ -592,7 +599,7 @@ fn stage_three_references_and_servers() {
     );
 }
 
-// clipPath and clip-path on SVG elements.
+// LLP 1055.000 stage 4: clipPath and clip-path on SVG elements.
 #[test]
 fn stage_four_clipping() {
     let r = boot(
@@ -611,7 +618,7 @@ fn stage_four_clipping() {
     );
 }
 
-// SVG text and its runs.
+// LLP 1055.000 stage 5: SVG text and its runs.
 #[test]
 fn stage_five_text() {
     let r = boot(
@@ -634,8 +641,8 @@ fn stage_five_text() {
     assert_eq!(s.props.str(PropId::TextDx), Some("2"));
 }
 
-// An element that renders takes events, and `pointer-events` decides
-// what of it is hit.
+// LLP 1055.000 stage 6: an element that renders takes events, and
+// `pointer-events` decides what of it is hit.
 #[test]
 fn stage_six_events() {
     let r = boot(
@@ -646,7 +653,7 @@ fn stage_six_events() {
     assert_eq!(c.style.pointer_events, exact_kernel::PointerEvents::Stroke);
 }
 
-// `marker`, its attributes, and the marker rows.
+// LLP 1055.000 stage 7: `marker`, its attributes, and the marker rows.
 #[test]
 fn stage_seven_markers() {
     let r = boot(
@@ -671,8 +678,8 @@ fn stage_seven_markers() {
     assert!(refused(&svg("rect markerWidth=3")).contains("lower-attr-tag"));
 }
 
-// `mask` and `pattern`, their attributes, and the `mask` and `mask-type`
-// rows.
+// LLP 1055.000 stage 8: `mask` and `pattern`, their attributes, and the
+// `mask` and `mask-type` rows.
 #[test]
 fn stage_eight_masks_and_patterns() {
     let r = boot(
@@ -698,8 +705,8 @@ fn stage_eight_masks_and_patterns() {
     );
 }
 
-// `filter`, its primitives as `SvgFe` nodes named by their `fe` prop,
-// the renamed attributes, and the filter rows.
+// LLP 1055.000 stage 9: `filter`, its primitives as `SvgFe` nodes named by
+// their `fe` prop, the renamed attributes, and the filter rows.
 #[test]
 fn stage_nine_filters() {
     let r = boot(
@@ -723,7 +730,7 @@ fn stage_nine_filters() {
     assert!(refused(&svg("rect filter=\"wobble(2)\"")).contains("lower-attr-value"));
 }
 
-// Geometry keyframes and blending on SVG elements only.
+// LLP 1055.000 stage 10: geometry keyframes and blending on SVG elements only.
 #[test]
 fn stage_ten_geometry_and_blend() {
     let r = boot(
@@ -743,7 +750,7 @@ fn stage_ten_geometry_and_blend() {
     );
 }
 
-// A path's `d` is a transition property, as
+// LLP 1055.000 D15 (issue #123): a path's `d` is a transition property, as
 // CSS names it; `all` covers it. No keyframe names it yet.
 #[test]
 fn d_transitions_and_all_covers_it() {
@@ -950,6 +957,7 @@ component App
                         "lower-attr-tag",
                         "`transform`",
                         "deferred",
+                        "LLP 1055.000 D5",
                         "`translate`",
                         "`rotate`",
                         "`scale`",
@@ -1048,7 +1056,7 @@ fn box_transforms_report_independent_attribute_refusals() {
                 contract_lower::vocab::BOX_TRANSFORM_REFUSAL
             );
             if tag == "step-strip" {
-                message.push_str("; on `step-strip` a name Contract knows binds to the box, not the module, so give the module prop another name");
+                message.push_str("; on `step-strip` a name Contract knows binds to the box, not the module (LLP 1024 D1), so give the module prop another name");
             }
             if transform_error.message != message {
                 failures.push(format!("{tag} {transform}: {}", transform_error.message));

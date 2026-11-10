@@ -21,8 +21,8 @@ fn broken_bytes(missing: bool) -> Vec<u8> {
 }
 
 /// The good face and a damaged copy of it (same family name), as one
-/// catalog's fonts: fontique refuses the copy at registration,
-/// so the family keeps one face and text never reaches the copy.
+/// catalog's fonts: fontique refuses the copy at registration (LLP 1085.000
+/// G2), so the family keeps one face and text never reaches the copy.
 fn catalog_with_bad(missing: bool) -> catalog::Catalog {
     let bad = broken_bytes(missing);
     catalog::Catalog::from_bytes(&[GOOD, bad.as_slice()], "DejaVu Sans")

@@ -65,9 +65,10 @@ fn main() {
     if target_os == "windows" {
         installer.flag("/EHsc").define("NOMINMAX", None);
     }
-    // The Intl shims exceed the default-on size budget, so they are absent
-    // unless the consumer opts in. Windows compiles the same C-API shims
-    // against the SDK's <icu.h>; its icuuc/icuin link lines also come from
+    // @ref LLP 0057.000#51-included-gated-or-a-crate — D5/D6 require this
+    // over-budget family to be absent unless the consumer opts in.
+    // Windows compiles the same C-API shims against the SDK's <icu.h>
+    // (LLP 0057.000 §5.1.1); its icuuc/icuin link lines also come from
     // hermes-lean-sys `icu`, and the icu.dll-only entry points are bound at
     // run time by intl_icu_windows.cc, so no link argument is needed here.
     let intl_shims = has_intl && (target_os == "linux" || target_os == "windows");
@@ -151,10 +152,10 @@ fn main() {
         required("DEP_HERMES_LEAN_ENGINE_DIGEST")
     );
     if target_os == "linux" {
-        // Export all three receipt-bound available identities and never the
-        // selected one: the one hermes-lean-sys instance that links (there is
-        // no build-dependency on it) alone reports LINKED_*, so this crate
-        // ignores it.
+        // @ref LLP 0057.000#l1--the-bindings-door — export all three
+        // receipt-bound available identities and never the selected one: the
+        // one hermes-lean-sys instance that links (there is no build-
+        // dependency on it) alone reports LINKED_*, so this crate ignores it.
         for (source, destination) in [
             ("DEP_HERMES_LEAN_ICU_DATA", "IBEX2_BINDINGS_ICU_DATA"),
             ("DEP_HERMES_LEAN_ICU_EN_DATA", "IBEX2_BINDINGS_ICU_EN_DATA"),

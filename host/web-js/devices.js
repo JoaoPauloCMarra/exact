@@ -1,4 +1,4 @@
-// A module of devices a person plugs in, under the agent's substitute on the JS target, as the
+// A module of devices a person plugs in, under the agent's substitute on the JS target (LLP 1133.037 §11), as the
 // runner's `modules/devices.rs`: the interface's `devices` names the agent word listing the devices, the handle kind,
 // whether an open is exclusive and the record's fields; each name's `device.role` says what it does. The web has no
 // attached list (`attachedPorts` is refused by its `unsupported`) and no permission at open, so neither is here.

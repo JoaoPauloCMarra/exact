@@ -1,4 +1,4 @@
-// What an app
+// @ref LLP 1115.000 §5 (ruling 6, 2026-10-12) and LLP 1045 D5: what an app
 // hears of a field or a text area while an input method composes in it
 // (Japanese kana before its kanji, pinyin, a Korean syllable), and what the
 // app's value does to a composition. The same on macOS and iOS.

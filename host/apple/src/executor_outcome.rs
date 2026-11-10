@@ -54,13 +54,13 @@ pub(super) fn fetch_failure(e: ibex2::boundary::HostError, abort: &AbortControll
             FailureKind::Refused,
             format!("outside the app's grants ({capability})"),
         ),
-        // The origin a redirect led to, which the grants lack.
+        // The origin a redirect led to, which the grants lack (podcast F5).
         ibex2::boundary::HostError::DeniedRedirect { capability, origin } => failed(
             FailureKind::Refused,
             format!("outside the app's grants ({capability}): redirected to {origin}"),
         ),
-        // A tool's, a wake's or a package event's reach that could prompt:
-        // never sent.
+        // A tool's, a wake's or a package event's reach that could prompt
+        // (LLP 1133.036 D6): never sent.
         ibex2::boundary::HostError::NotAllowed { reason } => {
             failed(FailureKind::Refused, format!("NotAllowedError: {reason}"))
         }
@@ -107,7 +107,7 @@ pub(super) fn check_headers(
     Ok(r)
 }
 
-/// A count a measurement build sets (`EXACT_HTTP_WORKERS`,
+/// A count a measurement build sets (LLP 1120 §5's arms: `EXACT_HTTP_WORKERS`,
 /// `EXACT_HTTP_IN_FLIGHT`), or `default`.
 pub(super) const fn build_number(set: Option<&str>, default: usize) -> usize {
     let Some(text) = set else {

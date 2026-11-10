@@ -1,5 +1,5 @@
-//! Font rows the runner moves beyond a row's own transitions:
-//! keyframes, `font-variation-settings` axis by axis, and a
+//! Font rows the runner moves beyond D10's own-row transitions (LLP 1019
+//! §13 D10): keyframes, `font-variation-settings` axis by axis, and a
 //! transition a node starts when the row it inherits changes.
 use exact_kernel::{Kernel, StyleId};
 use exact_plan::Value;
@@ -78,7 +78,7 @@ fn keyframes_breathe_a_weight_forever_over_its_own() {
     // The first frame is the first keyframe's.
     assert_eq!(rows(&r, "title").0, 200);
     assert!(r.wants_frames());
-    // An infinite animation never settles.
+    // An infinite animation never settles (LLP 1055 D10).
     assert_eq!(r.text_axes_settle_ms(), None);
     r.advance(250.0).unwrap();
     assert_eq!(rows(&r, "title").0, 350);

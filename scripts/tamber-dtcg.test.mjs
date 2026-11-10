@@ -1,4 +1,4 @@
-// Tamber's DTCG export against DTCG 2025.10's
+// Tamber's DTCG export (LLP 1121 D14, stage 5 commit 6) against DTCG 2025.10's
 // own JSON Schemas, pinned in tamber/tests/dtcg/: the theme fixture's design
 // and the Bluesky clone's (tamber/tests/corpus/bluesky.tamber). The validator
 // below is the part of JSON Schema draft-07 those schemas use; it is checked

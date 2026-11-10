@@ -1,4 +1,4 @@
-//! An incremental update equals a full one: every app plan,
+//! An incremental update equals a full one (LLP 1005 §8): every app plan,
 //! compiled through the Contract API, runs twice in lockstep — once
 //! evaluating only what changed, once evaluating everything — through seeded
 //! random host events, clock seeks, late replies, store reads and writes,
@@ -295,7 +295,7 @@ fn observe<D: DataSource>(r: &mut Runner<D>) -> (Seen, Vec<u64>) {
         collections,
         r.journal().collect::<Vec<_>>(),
     );
-    // Its own roles, as a host binds them: the two
+    // Its own roles, as a host binds them (LLP 1121 stage 5): the two
     // runners compared share this thread.
     let _roles = r.bind_roles();
     let kernel = r.kernel().export(None).map_err(|e| format!("{e:?}"));
@@ -730,7 +730,7 @@ fn every_app_plan_updates_incrementally_exactly_as_it_does_in_full() {
 }
 
 /// Store provenance travels through derives and resource arguments even
-/// when no value changes: input → first → second →
+/// when no value changes (Astra, 2026-09-22): input → first → second →
 /// dependent, and input starts reading the store while answering the same.
 #[test]
 fn store_provenance_propagates_through_unchanged_values() {

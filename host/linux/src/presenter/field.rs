@@ -1,4 +1,4 @@
-//! A text field's selection: the start, end and
+//! A text field's selection (x2apps codeedit #2): the start, end and
 //! direction HTML gives an `input` or a `textarea`, in UTF-16 units of its
 //! value. Typing replaces it and leaves a caret after the text, the arrows
 //! move or (with Shift) extend it, `setSelectionRange` and `select()` set it
@@ -260,7 +260,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// What `id` shows: typed text kept against its bound value, else that
-    /// value. A selection indexes this, not the prop a
+    /// value (LLP 1069.001 D4). A selection indexes this, not the prop a
     /// later write replaced.
     fn field_value(&self, id: ViewId) -> String {
         self.field_text(id)
@@ -370,7 +370,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// [`Presenter::mark_field`] for a selection the shell's own field
-    /// already shows: kept for the next `input`, and
+    /// already shows (LLP 1115.001 D8): kept for the next `input`, and
     /// nothing here is painted again for it.
     pub(super) fn note_field(&mut self, id: ViewId, value: &str, selection: FieldSelection) {
         let mark = FieldMark {
@@ -635,8 +635,8 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    /// `setSelectionRange(id, start, end[, direction])`:
-    /// clamped as HTML clamps it, the focus unmoved; an unfocused field
+    /// `setSelectionRange(id, start, end[, direction])` (x2apps codeedit
+    /// #2): clamped as HTML clamps it, the focus unmoved; an unfocused field
     /// keeps it, and the next typing there edits at it.
     pub(crate) fn set_selection_range(&mut self, args: &[exact_plan::Value]) {
         let Some(name) = args.first().and_then(exact_plan::Value::as_str) else {
@@ -865,7 +865,7 @@ impl<D: DataSource> Presenter<D> {
     /// typed into (its `change` waits for blur or Enter), and its `input`,
     /// which carries the selection. The watch is the bound value from before
     /// the dispatch, so a write during the edit replaces the typed text and
-    /// one that writes nothing leaves it.
+    /// one that writes nothing leaves it (LLP 1069.001 D4).
     pub(super) fn field_edit(
         &mut self,
         id: ViewId,

@@ -1,5 +1,7 @@
 //! A location, a retained stack per tab, and six pure verbs.
 //!
+//! @ref LLP 1038 §3 (the whole core), D1–D3 (URLs and patterns), D9 (one crate).
+//!
 //! The table says which screen a location names and what sits beneath it on
 //! a deep link. The value says where the user has been. An entry's id belongs
 //! to that visit, not to the screen: pushing a URL already lower in the stack
@@ -33,8 +35,8 @@ pub use table::encode_route_segment;
 /// [`Table::param_names`] supplies the first-declaration order for plan records.
 ///
 /// A map from name to value in name order, as one sorted vector: a table has
-/// a handful of names, and a tree map compiles its code per type.
-/// Equality, iteration, `Debug`, `FromIterator` (the last of equal names
+/// a handful of names, and a tree map compiles its code per type (LLP 1047
+/// §6). Equality, iteration, `Debug`, `FromIterator` (the last of equal names
 /// wins) and the JSON object are a `BTreeMap<String, String>`'s.
 #[derive(Clone, Default, PartialEq, Eq)]
 pub struct Params(Vec<(String, String)>);
@@ -183,7 +185,7 @@ pub struct Destination {
     pub params: Params,
 }
 
-/// One visit to a screen.
+/// One visit to a screen. @ref LLP 1038 §3 — Entry; LLP 1153 D5.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Entry {
     /// A monotone visit id, never reused.
@@ -215,7 +217,7 @@ impl Entry {
     }
 }
 
-/// A retained stack.
+/// A retained stack. @ref LLP 1038 §3 — Router.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Tab {
     /// The tab root's route name.
@@ -224,7 +226,7 @@ pub struct Tab {
     pub stack: Vec<Entry>,
 }
 
-/// Navigation is one serializable value.
+/// Navigation is one serializable value. @ref LLP 1038 §3 — Router.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Router {
     /// The selected tab's name.
@@ -235,7 +237,7 @@ pub struct Router {
     pub next: u64,
 }
 
-/// A static table reject, with its reject id.
+/// A static table reject, using D2's reject ids.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CheckError {
     /// `route-duplicate`, `route-shadowed`, `route-parent-param`, or `route-pattern`.
@@ -246,7 +248,7 @@ pub struct CheckError {
     pub message: String,
 }
 
-/// A path formatting error; its code is `route-unknown`.
+/// A path formatting error; its code is `route-unknown` (D3).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PathError {
     /// The compiler's reject id.

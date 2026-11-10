@@ -1,4 +1,4 @@
-//! `lower-colour-one-scheme`'s question: which of the app's
+//! `lower-colour-one-scheme`'s question (LLP 1121 D3): which of the app's
 //! tokens are one opaque colour in both schemes (moved from `theme.rs`).
 
 use super::{inline_design, packages, stand_in_profiles, vocab};
@@ -7,7 +7,7 @@ use exact_tamber as tamber;
 use std::collections::{HashMap, HashSet};
 
 /// The app's tokens that are one opaque colour in light and dark in some app
-/// tuple and not marked `scheme=fixed`, each by its name as
+/// tuple and not marked `scheme=fixed` (LLP 1121 D3), each by its name as
 /// declared with that colour's text and whether it is one colour in every
 /// tuple (only then may it be marked): what `lower-colour-one-scheme` reports
 /// at a token's declaration. Folded by the crate, so a `light-dark()` over a
@@ -22,7 +22,7 @@ pub(crate) fn one_scheme_tokens(file: &File) -> Vec<(String, String, bool)> {
         },
         (None, None) => return Vec::new(),
     };
-    // Folded with its packages' tokens, which an app token may name;
+    // Folded with its packages' tokens, which an app token may name (D11);
     // only the app's own are judged.
     let app = design.tokens.len();
     let Some(mut design) = packages::merge(Some(design), &file.package_designs).0 else {

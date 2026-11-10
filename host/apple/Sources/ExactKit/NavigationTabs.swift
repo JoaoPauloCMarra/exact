@@ -1,21 +1,21 @@
-// A navigation root's tabs, as the web finds them
+// @ref LLP 1075.003 §3.7 — a navigation root's tabs, as the web finds them
 // (`host/web/navigation.js` `panelsOf`): the tabpanels its own tablist's
 // tabs name with `aria-controls`, in tab order. Each panel holds one tab's
 // stack — its route rows — and every tab's stack stays mounted. A tablist or
 // a panel inside a route is that route's, never the root's. Shared by the AppKit
-// presenter (hidden and inert, the web's rule) and the UIKit one (a
+// presenter (hidden and inert, LLP 1038 D6's rule) and the UIKit one (a
 // tab bar controller, one navigation controller a tab).
 import Foundation
 
 /// A navigation root's tabs as the kernel finds them (`exact_root_tabs`;
-/// `Kernel::root_tabs`): the rule every host with a tab
+/// `Kernel::root_tabs`, LLP 1115.001 D11): the rule every host with a tab
 /// bar reads, over the kernel's own tree in tree order. The Mac's sidebar
-/// reads it; UIKit's tab bar still reads `NavigationTabs`
+/// reads it (LLP 1115.002 D3); UIKit's tab bar still reads `NavigationTabs`
 /// below, over its views.
 struct RootTabs: Equatable {
     let tablist: UInt32, tabs: [UInt32], panels: [UInt32]
     /// The app left the bar's placement unsaid, by the web's rule for its
-    /// own sidebar (`host/web/navigation.js` `unsaidBar`):
+    /// own sidebar (LLP 1116.004 D1.1; `host/web/navigation.js` `unsaidBar`):
     /// read from the kernel's layout rows, which do not cross to the views.
     let unsaid: Bool
     /// The kernel lays the tablist out as `display: none`: the boot covered

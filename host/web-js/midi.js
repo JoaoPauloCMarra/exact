@@ -1,4 +1,4 @@
-// MIDI on the JS target: the runner's (runner/src/midi.rs,
+// MIDI on the JS target (LLP 1125 D6–D8): the runner's (runner/src/midi.rs,
 // runner/src/runner/midi.rs, runner/src/agent/midi.rs) with the same rules,
 // ids, order, journal lines and `state.midi`; read it beside them. Imported
 // by an app's module for a plan that keeps a MIDI queue (`uses::keeps_midi`:
@@ -80,7 +80,7 @@ function merged(reported) {
 }
 const connectedOutput = id => Ports.access === 'granted' && Ports.outputs.some(p => p.id === id && p.connected);
 const connectedInput = id => Ports.access === 'granted' && Ports.inputs.some(p => p.id === id && p.connected);
-// `""`, no output, goes to no host but `sent` lists it as any other (midi.rs `can_send`).
+// `""`, no output, goes to no host but `sent` lists it as any other (LLP 1125 D6; midi.rs `can_send`).
 const canSend = id => id === '' || connectedOutput(id);
 function setPorts(reported) {
   if (!Granted) return false;
@@ -191,7 +191,7 @@ export const Midi = {
     push({ output, data: [0x80 | (on[0] & 0x0F), on[1], 0], at: offAt, stepAt, seq: true, onAt }, t);
     return 'done';
   },
-  // An edit at `t`, or a clock's Start or new anchor (`by` 'clock'; `strict` at the hold's edge): what waits, for a step from `from`.
+  // An edit at `t`, or a clock's Start or new anchor (`by` 'clock', LLP 1125 D9; `strict` at the hold's edge): what waits, for a step from `from`.
   retractSeq(t, from = t, by = 'edit', strict = false) {
     let n = 0;
     for (const s of [...Queue]) if (s.seq && waits(s, t) && (strict ? s.stepAt > from : s.stepAt >= from) && !offOfHanded(s, t)) { if (s.tick != null && Clock) Clock.next = Math.min(Clock.next, s.tick); else n++; retract(s, by); }
@@ -242,7 +242,7 @@ function listeners(input) {
   }
   return out.sort(([[a]], [[b]]) => a === b ? 0 : a.compareDocumentPosition(b) & 4 ? -1 : 1);
 }
-// The inputs the listeners name, then the one a sequence follows, opened with or without a listener.
+// The inputs the listeners name, then the one a sequence follows (LLP 1125 D9), opened with or without a listener.
 function inputsHeard() {
   const open = [], clockIn = Sounds.clockInput?.();
   for (const [, inputs] of listeners(null)) for (const i of inputs) if (!open.includes(i)) open.push(i);
@@ -274,7 +274,7 @@ function coalesce(batch) {
   return out.filter(Boolean);
 }
 // One host delivery of input messages (the runner's `midi_input`): the followed input's clock messages to the transport
-// first, then each message to every listener, a commit each, one no element hears dropped unrecorded; a refusal does
+// first (D9), then each message to every listener, a commit each, one no element hears dropped unrecorded; a refusal does
 // not stop the rest, and the first is returned.
 function hear(batch) {
   const clockIn = Sounds.clockInput?.();
@@ -316,7 +316,7 @@ function prefer(m) {
 }
 // `tap midi "<input>" 90 3c 64`: one delivery of the messages the bytes make (the runner's `midi_tap`).
 const unconnected = input => connectedInput(input) ? null : { error: `tap midi: ${Ports.access === 'granted' ? `${JSON.stringify(input)} is not a connected input (prefer midi.inputs)` : `MIDI access is ${Ports.access} (requestMIDIAccess, prefer midi.state)`}` };
-// Its clock form: one delivery from the input a sequence follows, stamps rising from its last tick to now.
+// Its clock form (D9): one delivery from the input a sequence follows, stamps rising from its last tick to now.
 function tapClock(input, list) {
   const f = Sounds.follower?.();
   if (!f || f.input !== input) return { error: `tap midi: no sequence follows ${JSON.stringify(input)} (clock=)` };

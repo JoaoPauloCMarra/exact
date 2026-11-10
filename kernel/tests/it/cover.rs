@@ -1,4 +1,4 @@
-//! What a native container covers of a box: a
+//! What a native container covers of a box (LLP 1075.003 §3.5, §3.7): a
 //! navigation bar over a route's top edge adds to its padding, the header
 //! whose heading the bar shows takes no space, and clearing either lays the
 //! route out as authored again.
@@ -307,10 +307,10 @@ fn a_replaced_header_that_cleared_the_status_bar_hands_that_inset_to_the_bar() {
     assert_eq!(frame(&mut kernel, 4).1, 20.0 + 44.0 + 52.0);
 }
 
-/// A header padded by a comparison that reads
+/// LLP 1001 §2 (2026-10-07): a header padded by a comparison that reads
 /// the top inset cleared it too; one that reads only another inset did not.
-/// The corner-adapted safe area's top is never less than the inset, so it
-/// clears it; the margins' top can lie above the safe area where
+/// The corner-adapted safe area's top is never less than the inset (LLP 1123
+/// D10), so it clears it; the margins' top can lie above the safe area where
 /// an app turns `insetsLayoutMarginsFromSafeArea` off, so it does not.
 #[test]
 fn a_replaced_header_padded_by_a_comparison_of_the_top_inset_hands_it_over() {
@@ -396,7 +396,7 @@ fn a_replaced_header_destroyed_outright_leaves_no_inset() {
 /// The route's list (4) as a scroller padded by 16 holding a column (5)
 /// that fills its height (`flex: 1` in its flex column) and, when `long`,
 /// a 2000-point box after it: trivia-quiz's results and a filled-height
-/// screen.
+/// screen (LLP 1116.000 D1.2).
 fn scroller(long: bool) -> Kernel {
     let mut kernel = route();
     let flex_column = [
@@ -611,7 +611,7 @@ fn a_scroller_two_boxes_down_reaches_under_the_bar_and_the_footer_still_rests_on
     );
 }
 
-/// A scroller the host marks off the kernel's chain counts for
+/// theme2's Q1: a scroller the host marks off the kernel's chain counts for
 /// nothing, so the route keeps its padding: an inset twice at worst, never
 /// the scroller above the bar for good nor the footer under it.
 #[test]
@@ -684,7 +684,7 @@ fn a_marked_scroller_off_the_chain_leaves_the_route_its_padding() {
     assert_eq!(frame(&mut kernel, 4), (0.0, 52.0, 390.0, 709.0));
 }
 
-/// A box's `position` or `display` moves
+/// Astra's and Grok's round-1 finding: a box's `position` or `display` moves
 /// it onto the chain or off it with the scroller's inset unchanged, and the
 /// route is derived again.
 #[test]
@@ -735,7 +735,7 @@ fn a_box_moved_onto_the_chain_or_off_it_re_derives_the_route() {
     assert_eq!(frame(&mut kernel, 4).3, 709.0, "the route padded again");
 }
 
-/// A footer attached, or moved away, after the
+/// Round 2 (Astra, Grok): a footer attached, or moved away, after the
 /// route's cover has settled is placed past it, or no longer; a box that
 /// clips across (`overflow-x: hidden`, so its `visible` height scrolls as
 /// the engine computes it) is a scroller the chain stops at; and the
@@ -827,7 +827,7 @@ fn a_footer_attached_late_a_clipping_box_and_the_reported_padding() {
     assert_eq!(kernel.cover_bottom(key), 83.0);
 }
 
-/// An absolute child at `top: 0` of a route whose top
+/// Round 3 (Astra, Grok): an absolute child at `top: 0` of a route whose top
 /// cover holds its replaced header's inset (`header_inset`) follows that
 /// inset as the header is replaced, its padding changes, and the inset does.
 #[test]
@@ -888,7 +888,7 @@ fn an_absolute_child_follows_the_inset_its_routes_replaced_header_hands_the_bar(
     assert_eq!(frame(&mut kernel, 5).1, 0.0, "placed as written");
 }
 
-/// An inset at its top alone on a box down the chain stops
+/// Round 3 (Astra): an inset at its top alone on a box down the chain stops
 /// the walk there; said or cleared, in either order with the scroller's,
 /// the route is derived again.
 #[test]

@@ -1,4 +1,4 @@
-//! The window a shell shows the page in: what the
+//! The window a shell shows the page in (LLP 1115.001 D3.3, D3.6): what the
 //! presenter makes of the raw insets, and the colour behind the page.
 use super::*;
 
@@ -346,7 +346,7 @@ fn an_authored_swipe_yields_the_edges_the_systems_gesture_starts_from() {
     assert_eq!(swiped(&mut p, 5., 0.), "1");
 }
 
-/// A TV's window: no bars, no cutout, at 1080 points tall.
+/// A TV's window: no bars, no cutout, at 1080 points tall (LLP 1115.001.003 D6).
 fn tv_window() -> Window {
     Window {
         size: (1920., 1080.),

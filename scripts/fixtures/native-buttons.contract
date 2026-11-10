@@ -1,12 +1,12 @@
-// Native buttons — every `buttonStyles` row with a title,
+// LLP 1069.011: native buttons — every `buttonStyles` row with a title,
 // then a symbol, a symbol and a title, a fixed width, a stretched one, a
 // disabled one, an accent (on a button, and inherited by the styles that
 // draw their title in the label colour), an SF Symbol by name, a long title
 // in a narrow button,
 // and glass buttons in a glass group with a
-// fading one, and a value chosen from three, a radio group of radios, and
-// the same with radios that paint the chosen one, which
-// is the author's drawn control. The platform draws each; the
+// fading one, and a value chosen from three, a radio group of radios (LLP
+// 1116.004 D5.2), and the same with radios that paint the chosen one, which
+// is the author's drawn control (LLP 1104 D2). The platform draws each; the
 // web draws its stated look.
 style Chosen
   background-color="-exact-fill"

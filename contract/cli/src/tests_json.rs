@@ -1,4 +1,4 @@
-//! The tests as JSON for the driver.
+//! The tests as JSON for the driver (LLP 1012).
 
 use contract_syntax::{Expr, Step, TapForm, TestDecl};
 
@@ -19,7 +19,7 @@ fn q(s: &str, out: &mut String) {
 }
 
 /// The tests as JSON for the driver: `[{"name":…,"steps":[{"op":…}]}]`,
-/// written by hand — no serde anywhere in the runtime.
+/// written by hand — no serde anywhere in the runtime (LLP 1012).
 pub fn tests_json(tests: &[TestDecl]) -> String {
     let mut s = String::from("[");
     for (ti, t) in tests.iter().enumerate() {
@@ -89,7 +89,7 @@ fn step_json(step: &Step, s: &mut String) {
                 TapForm::Wheel { dx, dy } => {
                     s.push_str(&format!("\"wheel\",\"wheel\":[{dx},{dy}]"))
                 }
-                // The platform's action, never a press.
+                // @ref LLP 1098 D10 — the platform's action, never a press.
                 TapForm::MediaSession { action, seconds } => {
                     s.push_str("\"mediasession\",\"action\":");
                     q(action, s);
@@ -119,7 +119,7 @@ fn step_json(step: &Step, s: &mut String) {
             s.push_str("{\"op\":\"drag\",\"target\":");
             q(target, s);
             match to {
-                // The driver's `drag to`.
+                // LLP 1094 D12: the driver's `drag to`.
                 Some((to, at)) => {
                     s.push_str(",\"to\":");
                     q(to, s);
@@ -216,7 +216,7 @@ fn step_json(step: &Step, s: &mut String) {
             s.push_str("{\"op\":\"pass-fetch\",\"prefix\":");
             q(prefix, s);
         }
-        // The body as JSON text, the persona as `as`.
+        // @ref LLP 1116.006 D8 — the body as JSON text, the persona as `as`.
         Step::Request {
             method,
             path,
@@ -236,7 +236,7 @@ fn step_json(step: &Step, s: &mut String) {
                     None => s.push_str("null"),
                 }
             }
-            // `expect` only when written, so a plain request's line carries none.
+            // LLP 1116.010 D3: only when written, so a plain request's line is as it was.
             if let Some(status) = status {
                 s.push_str(&format!(",\"expect\":{status}"));
             }
@@ -371,7 +371,7 @@ fn step_json(step: &Step, s: &mut String) {
             q(action, s);
             s.push_str(&format!(",\"present\":{present}"));
         }
-        // The driver's `prefer midi.*` and `tap midi`, and `state.midi.sent`.
+        // @ref LLP 1125 §4 — the driver's `prefer midi.*` and `tap midi`, and `state.midi.sent`.
         Step::Midi { step, .. } => midi_step(step, s),
         Step::ExpectState { name, value, .. } => {
             s.push_str("{\"op\":\"expect-state\",\"name\":");

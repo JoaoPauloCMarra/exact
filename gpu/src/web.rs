@@ -1,5 +1,5 @@
 //! The web ABI: wasm-bindgen exports the glue calls after the module's
-//! wasm is fetched on demand.
+//! wasm is fetched on demand (LLP 1009 D2).
 
 use crate::{json, Frame, Module, Registry, SurfaceRef};
 use std::cell::RefCell;
@@ -159,7 +159,7 @@ pub fn create(name: &str, canvas: web_sys::HtmlCanvasElement, width: u32, height
     .unwrap_or(0)
 }
 
-/// Register the text of shader `name`: validated, its
+/// Register the text of shader `name` (LLP 1030 D8): validated, its
 /// interface checked against the one this module's Rust binds. `true` on
 /// success; the refusal is [`error`]'s.
 pub fn shader(name: &str, text: &str) -> bool {
@@ -260,7 +260,7 @@ pub fn render(id: u32, width: f32, height: f32, scale: f32, now_ms: f64) -> u32 
     .unwrap_or(2)
 }
 
-/// Submit the frame the canvases recorded, once: before the
+/// Submit the frame the canvases recorded, once (LLP 1009 D7): before the
 /// task that rendered them ends, which is when the browser presents.
 /// `true` on success; a surface's failure is [`error`]'s.
 pub fn flush() -> bool {
@@ -300,12 +300,12 @@ pub fn wants_input(id: u32) -> bool {
     with(|m| m.wants_input(id)).unwrap_or(false)
 }
 
-/// Whether a canvas draws above SDR white.
+/// Whether a canvas draws above SDR white (LLP 1100 D12b).
 pub fn high_dynamic_range(id: u32) -> bool {
     with(|m| m.high_dynamic_range(id)).unwrap_or(false)
 }
 
-/// The headroom an HDR canvas draws its next frames to.
+/// The headroom an HDR canvas draws its next frames to (LLP 1100 D12b).
 pub fn headroom(id: u32, headroom: f32) {
     with(|m| m.set_headroom(id, headroom));
 }
@@ -403,7 +403,7 @@ pub fn error() -> String {
     with(|m| m.take_error()).unwrap_or_default()
 }
 
-/// The exports for one app's registry, wasm-bindgen.
+/// The exports for one app's registry, wasm-bindgen (see LLP 1009 D2).
 #[macro_export]
 macro_rules! module {
     ($registry:expr) => {
@@ -433,7 +433,7 @@ macro_rules! module {
             $crate::web::create(name, canvas, width, height)
         }
 
-        /// Register a shader's text. `true` on success.
+        /// Register a shader's text (LLP 1030 D8). `true` on success.
         #[::wasm_bindgen::prelude::wasm_bindgen]
         pub fn gpu_shader(name: &str, text: &str) -> bool {
             $crate::web::shader(name, text)
@@ -516,7 +516,7 @@ macro_rules! module {
             $crate::web::wants_input(id)
         }
 
-        /// Whether a canvas draws above SDR white.
+        /// Whether a canvas draws above SDR white (LLP 1100 D12b).
         #[::wasm_bindgen::prelude::wasm_bindgen]
         pub fn gpu_high_dynamic_range(id: u32) -> bool {
             $crate::web::high_dynamic_range(id)

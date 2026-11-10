@@ -1,16 +1,16 @@
-// The root tab bar as the window's sidebar. Where an
+// @ref LLP 1115.002 D3 — the root tab bar as the window's sidebar. Where an
 // app's root `tablist` is placed as the tabs recipe writes it (the web's
-// rule for its own sidebar: a horizontal bar, a direct
+// rule for its own sidebar, LLP 1116.004 D1.1: a horizontal bar, a direct
 // child of the root's flex column, in flow), a Mac window shows the tabs as
 // AppKit's source list in a real sidebar beside the page. Which tablist is
-// the root's is the kernel's rule (`Kernel::root_tabs`);
+// the root's is the kernel's rule (`Kernel::root_tabs`, LLP 1115.001 D11);
 // what a tab shows is `TabFace`'s, as UIKit's tab bar item's is.
 //
 // This host says whether the sidebar is wanted and what it shows. The
 // window's owner composes it (`ExactSidebarController`, SidebarViewsMac.swift):
 // a view mounted in someone else's window claims no chrome. While a
 // controller shows the rows, the authored tablist is hidden and its box is
-// the platform's (`HostCovers`), so the page simply narrows. A row a
+// the platform's (`HostCovers`, D8.1), so the page simply narrows. A row a
 // person chooses presses its authored tab: selection, history and a
 // re-press at a tab's root stay the app's, and the selected row is the
 // tab whose stack holds the route the root shows.
@@ -73,7 +73,7 @@ final class SidebarHost {
         if let said { presenter.session?.log("sidebar: \(said)") }
     }
 
-    /// The authored tablist hidden while the sidebar shows it.
+    /// LLP 1080.001 D3: the authored tablist hidden while the sidebar shows it.
     func hides(_ node: NodeView) -> Bool { projected === node }
     /// Whether the sidebar shows this tablist's tabs: no segmented control
     /// is made of it (SegmentsMac.swift).
@@ -173,7 +173,7 @@ final class SidebarHost {
             return
         }
         // An explicit opt-out keeps the bar authored, including when the
-        // sidebar already stands for it.
+        // sidebar already stands for it (LLP 1075.003 §9.10).
         if host.tablist.wrote("appearance"), host.tablist.style["appearance"]?.string == "none" {
             shown = nil
             decide("kept as authored: the root tablist #\(host.tablist.id) writes appearance none")

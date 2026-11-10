@@ -1,5 +1,5 @@
 //! Bounded keyed row realization, driven by actual nested-scrollport feedback.
-//! No historical instance or row-state cache.
+//! @ref LLP 1010 §6 / LLP 1041 §8. No historical instance or row-state cache.
 mod api;
 mod index;
 mod inset;
@@ -33,7 +33,7 @@ pub(crate) use keep::idents as keep_mounted;
 pub use reorder_api::*;
 pub(super) use traversal::{collections_json, invalidate_typography};
 
-/// A collection's data update, through [`super::LISTS`].
+/// A collection's data update, through [`super::LISTS`] (LLP 1047.000 §9).
 pub(super) fn update_collection(
     c: &mut Collection,
     u: &mut Update<'_>,
@@ -130,7 +130,7 @@ struct Mounted {
     epoch: u64,
     token: MeasurementToken,
     preview_target: Option<f64>,
-    /// Hidden while a ghost stands for it.
+    /// Hidden while a ghost stands for it (LLP 1094 D6).
     preview_hidden: bool,
     /// The position and count the wrapper last published (`aria-posinset`,
     /// `aria-setsize`), for hosts that select and copy across rows.
@@ -143,18 +143,18 @@ struct Mounted {
 }
 #[derive(Debug)]
 pub(crate) struct Collection {
-    /// The app modes around the list: what a row it mounts
+    /// The app modes around the list (LLP 1121 D5): what a row it mounts
     /// later, on a report, is in.
     pub(crate) around: super::theme::Around,
     preview: Option<reorder::Preview>,
-    /// The gap a grouped session opens here as its target.
+    /// The gap a grouped session opens here as its target (LLP 1094 D4).
     incoming: Option<reorder_group::Incoming>,
-    /// The dragged row's identity while a ghost stands for it.
+    /// The dragged row's identity while a ghost stands for it (D6).
     hidden: Option<String>,
-    /// Emit preview offsets at once: the rows moved with them.
+    /// Emit preview offsets at once: the rows moved with them (D8).
     instant: bool,
     view: ViewId,
-    /// Fixed at creation from the list's style.
+    /// Fixed at creation from the list's style (LLP 1070 H1).
     axis: ListAxis,
     region: RegionsId,
     index: SizeIndex,
@@ -183,7 +183,7 @@ pub(crate) struct Collection {
     correction: Option<AnchorCorrection>,
     follow_end: bool,
     /// The list's `scroll-behavior: smooth`: its end-follow and its smooth
-    /// `scrollIntoView` corrections ask the host to animate.
+    /// `scrollIntoView` corrections ask the host to animate (LLP 1070.000 §6.2).
     smooth: bool,
     edge_handlers: [bool; 2],
     reorderable: bool,
@@ -192,7 +192,7 @@ pub(crate) struct Collection {
     edge_fired: [Option<Rc<str>>; 2],
     /// The last realization left window rows unbuilt or kept rows past it.
     pending: bool,
-    /// The outer list whose row holds this one.
+    /// The outer list whose row holds this one (LLP 1070 N1).
     parent: Option<ViewId>,
     /// Whether this list's rows can hold virtualized lists.
     nested: bool,
@@ -200,7 +200,7 @@ pub(crate) struct Collection {
     inner: Option<Rc<traversal::InnerSites>>,
     /// The pins inside its rows, as of a [`nest::PinEpoch`] count.
     inner_pins: std::cell::Cell<Option<(u64, [Option<ViewId>; 2])>>,
-    /// Where its inner lists were when their rows left.
+    /// Where its inner lists were when their rows left (Q1 as ruled).
     kept: nest::Kept,
     /// `scroll-restoration: manual`: the app keeps this list's position.
     manual: bool,
@@ -208,7 +208,7 @@ pub(crate) struct Collection {
     restored: bool,
     /// That position, until a host reports one.
     restored_at: Option<(Rc<str>, f64)>,
-    /// A `scrollIntoView` under way.
+    /// A `scrollIntoView` under way (LLP 1070.000).
     target: Option<into_view::Target>,
     /// The last report said the reader's scroll is under way and a jump
     /// would not end it ([`CollectionFill::scrolling`]).
@@ -240,7 +240,7 @@ pub(crate) struct Collection {
     end_travel: u8,
     /// The followed end last sent as a correction (`start::at_target`).
     end_sent: f64,
-    /// What a retiring row may be rebound to another item under:
+    /// What a retiring row may be rebound to another item under (LLP 1078):
     /// `None` when no row of this list can be.
     reuse: Option<Rc<reuse::Reuse>>,
 }
@@ -450,7 +450,7 @@ impl Collection {
             ListAxis::Horizontal => 1,
         }];
         // A list's reads of its own options are its structure, as a region's
-        // subject is: a trap here still poisons.
+        // subject is: a trap here still poisons (LLP 1017.003 D3).
         let mut manual = false;
         for b in descriptor.bindings.iter().map(|b| plan.binding(b)) {
             if b.kind == BindingKind::Prop && b.id == PropId::ScrollRestoration as u16 {
@@ -566,8 +566,8 @@ impl Collection {
         let rows_changed =
             u.changed_outside(&deps.keys[index], 1) || u.changed_outside(&deps.bodies[index], 1);
         let changed = fresh || rows_changed || u.changed_outside(&deps.subjects[index], 0);
-        // A grouped session's offsets move with its rows, at once:
-        // the layout moved by what they gave.
+        // A grouped session's offsets move with its rows, at once (LLP 1094
+        // D8): the layout moved by what they gave.
         let instant = changed
             && (self.incoming.is_some() || self.preview.as_ref().is_some_and(|p| p.grouped));
         if changed {
@@ -610,7 +610,7 @@ impl Collection {
             // in full evaluation); `rekeyed` says whether one changed. Asking
             // it here made the revision differ between modes when a re-ask
             // answered the same rows (exact-live, a build-time answer asked
-            // again at data_ready).
+            // again at data_ready, 2026-10-04).
             // A key put in, taken out or moved: the rows that move are the
             // data's (`data_generation`).
             if fresh || shared || rekeyed {
@@ -639,7 +639,8 @@ impl Collection {
             if self.index.len() == 0 {
                 self.edge_armed = [true; 2];
             }
-            // Rows that arrived are a new end: the old last row is still here with rows
+            // @ref LLP 1010 (2026-09-29 ruling, provisional) — rows that
+            // arrived are a new end: the old last row is still here with rows
             // after it, or the list grew and kept it (a page inserted before
             // a trailing row that stays last, a feed's "loading" tail), so the
             // edge re-arms and a reader still there when a page lands is
@@ -708,7 +709,7 @@ impl Collection {
     }
     /// An update restores the anchor, unless the host's animation left the
     /// port's position unknown: then nothing anchors, and no correction
-    /// planned before stands.
+    /// planned before stands (LLP 1070.000 §2.5).
     fn restore_unless_unknown(
         &mut self,
         anchor: Option<index::Anchor>,
@@ -790,7 +791,7 @@ impl Collection {
     /// the side of travel first, retiring at most `max(2·limit, 4)` rows past
     /// the window (none for a limit of zero), farthest first, more when the
     /// rows kept past the window would outnumber the window's own, and every
-    /// row more than two viewports from what shows. A
+    /// row more than two viewports from what shows (@ref LLP 1050.000 §6). A
     /// data update realizes the whole window. What a limit leaves undone is
     /// `pending`.
     fn realize_window(
@@ -907,7 +908,7 @@ impl Collection {
             admitted.extend(optional.into_iter().take(limit as usize).map(|(_, _, p)| p));
         }
         // With reuse, the rows nothing mounts are built once the retiring
-        // rows are known, so one can be rebound to each.
+        // rows are known, so one can be rebound to each (LLP 1078).
         let reusing = self.reusing(u);
         let mut needed: Vec<(usize, String)> = Vec::new();
         for position in ranges.into_iter().flatten() {
@@ -937,7 +938,7 @@ impl Collection {
             };
             self.settle_mounted(u, mounted, &text)?;
         }
-        // A build-only report retires nothing: rows past the
+        // A build-only report retires nothing (LLP 1072 §5): rows past the
         // window stay, and the report is pending until an immediate one.
         if fill.create_only && !update {
             self.build_needed(u, needed, Vec::new(), Vec::new(), None, 0, frames)?;
@@ -1038,7 +1039,7 @@ impl Collection {
     /// Move a mounted row to `position`; which fields of its item changed
     /// ([`crate::compare::changed_fields`]), every one when its position
     /// changed and its body reads its position (`reads_position`: a row that
-    /// moved reads its new one). A row that reads none keeps
+    /// moved reads its new one, LLP 1062 D8). A row that reads none keeps
     /// its bindings as an unmoved one would (a prepend moves every kept
     /// row). An equivalent item keeps its object for nested memos.
     fn reposition(&self, mounted: &mut Mounted, position: usize, reads_position: bool) -> u64 {
@@ -1193,7 +1194,7 @@ impl Collection {
         {
             return Ok(None);
         }
-        // A build-only report keeps the port, width and
+        // @ref LLP 1072 §5 — a build-only report keeps the port, width and
         // pins: a report that changes them may retire, so it is immediate.
         if fill.create_only
             && self.geometry.as_ref().is_none_or(|g| {
@@ -1286,7 +1287,7 @@ impl Collection {
         self.animating = fill.animating;
         // A report gives where the port is, unless the host animates.
         self.port_unknown &= fill.animating;
-        // the padding the host laid out, taken in now
+        // @ref LLP 1010 §6.9 — the padding the host laid out, taken in now
         // that the report is accepted. A new padding (a rotation's safe area)
         // is no travel: the anchor is taken on the old range and restored on
         // the new, so a followed end follows it.
@@ -1307,7 +1308,7 @@ impl Collection {
         // A new port size or width retires every row that left and builds
         // the whole window: only travel is sliced. A list's first report
         // retires nothing, so a slice there builds what shows and leaves its
-        // lead pending (a tap's response frame).
+        // lead pending (a tap's response frame, LLP 1072 §5).
         if self.geometry.as_ref().is_some_and(|g| {
             (g.port_cross, g.port_main, g.cross)
                 != (feedback.port_cross, feedback.port_main, feedback.cross)
@@ -1322,7 +1323,7 @@ impl Collection {
         let pins_changed = self.geometry.as_ref().is_some_and(|g| {
             (g.focus_view, g.interaction_view) != (feedback.focus_view, feedback.interaction_view)
         });
-        // An enclosing list is moving: build what this list
+        // An enclosing list is moving (LLP 1070 F2): build what this list
         // owes and nothing else, first report and resize included.
         if fill.ancestor_moving {
             fill.limit = Some(0);
@@ -1340,12 +1341,12 @@ impl Collection {
         let previous = self.snapshot();
         self.scrolling = fill.scrolling;
         self.follow_into_view(fill);
-        // A request that waited lands in the report that ends its wait
+        // A request that waited lands in the report that ends its wait (§2.6)
         let landing = waited && self.target.is_some() && !self.request_waits();
         if landing {
             self.refuse_if_inner_gone(u, frames)?;
         }
-        // H4, Q3 (a): a row list anchors only an estimate
+        // @ref LLP 1070 H4, Q3 (a): a row list anchors only an estimate
         // replaced by a first measurement, the jump virtualization makes. A
         // card measured again moves what follows it, as Chrome, which does
         // not anchor on the inline axis, moves it. So its re-measurements

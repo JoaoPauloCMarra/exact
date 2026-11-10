@@ -1,4 +1,4 @@
-//! A request body read from an app file: `fetch(url,
+//! A request body read from an app file (LLP 1108 D6 R2): `fetch(url,
 //! {exactBodyFrom: "app:/tmp/…"})` from TypeScript, `Request::body_from`
 //! from Rust. The worker that runs the request reads the file just before
 //! it goes out, under the same `fs.read` grant and app-directory handles a
@@ -264,7 +264,7 @@ pub(super) fn size(
 /// At most `cap` bytes of the file, in chunks through the opened
 /// descriptor, stopping between chunks once the request has ended. `Err(None)`
 /// when the file holds more than `cap` (it grew, or was replaced). `exact`:
-/// `cap` is the stat's size, which the async core charged, and
+/// `cap` is the stat's size, which the async core charged (LLP 1120 D5), and
 /// the buffer is allocated once at that size and one byte, never more.
 pub(super) fn read_at_most(
     roots: Roots<'_>,
@@ -325,7 +325,7 @@ pub(super) fn read_at_most(
 
 /// Run `job` on a reader thread of its own, holding one of the process's
 /// [`MAX_READERS`] places until it ends; refused, as today's fifth reader
-/// is, when none is free or no thread can be made.
+/// is, when none is free or no thread can be made (LLP 1120 D4).
 pub(super) fn reader(job: impl FnOnce() + Send + 'static) -> Result<(), Outcome> {
     use std::sync::atomic::Ordering;
     if READERS

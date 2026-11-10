@@ -16,7 +16,7 @@
  * app, a package or another platform's host does so to build or drive what its caller asks for (the CLI builds any app
  * for any host), so in it only a path into one app or package counts; and a module that another unit imports is
  * loaded, not driven: its imports count, and of its names only those its top level reads. `GLOBAL` lists the files
- * every suite reads, and `suites` lists by hand the roots of the XCTests, touch smoke, Apple compiles, Harmony and
+ * every suite reads, and `suites` lists by hand the roots of the XCTests, touch smoke, Apple compiles and
  * conformance, from the scripts that run them. Code other than a test names a directory of tests to run the tests
  * there, and the suite that runs them has that directory among its roots, so in such code the name does not count; a
  * file there that it names (a fixture, a script) does. An XCTest suite selected by its own Swift files alone runs only
@@ -70,8 +70,8 @@ export const stepEnv = step => Object.fromEntries(LANE_DISTS.filter(d => d.steps
 /** Scripts that check every file of the checkout by design: a suite that runs one reads them all. */
 const WHOLE = new Set(['scripts/caps.mjs', 'scripts/metrics.mjs']);
 
-/** The Cargo workspaces whose packages' tests run: the root's, and the two kept apart from it. */
-const WORKSPACES = ['Cargo.toml', 'game/Cargo.toml', 'apps/harmony/app/Cargo.toml'];
+/** The Cargo workspaces whose packages' tests run: the root's, and the game's, kept apart from it. */
+const WORKSPACES = ['Cargo.toml', 'game/Cargo.toml'];
 
 /** The hosts an app's crate directory serves; the directory is the platform's name. */
 const APP_HOSTS = { web: ['web'], apple: ['macos', 'ios'], linux: ['linux'], windows: ['windows'], android: ['android'] };
@@ -114,7 +114,6 @@ export function xctestClasses(root, host, because) {
  *   `xctest`   the Swift host tests (`host`: macos or ios), `build.mjs --test`
  *   `touch`    real touches on an iOS simulator, `smoke-touch.mjs --build`
  *   `compile`  the tvOS or watchOS build (`host`), installed on nothing
- *   `harmony`  Harmony's end-to-end tests (`memory-backend-test.mjs`) and its workspace's check
  *   `conform`  the web JS target against the wasm runner and the Linux host, for one app (`app`)
  */
 export function suites(repo) {
@@ -145,7 +144,6 @@ export function suites(repo) {
   const caltrain = appBuild(repo, 'apps/caltrain', ['apple']);
   out.push({ id: 'touch:ios', kind: 'touch', host: 'ios', roots: [...apple, 'js:scripts/smoke-touch.mjs', 'test:host/apple/link.test.mjs', ...caltrain] });
   for (const host of ['tvos', 'watchos']) out.push({ id: `compile:${host}`, kind: 'compile', host, roots: [...apple, ...caltrain] });
-  out.push({ id: 'harmony', kind: 'harmony', roots: ['app:apps/harmony', 'js:scripts/memory-backend-test.mjs', 'platform:web', 'pkg:exact-web-js', 'pkg:contract'] });
   for (const app of WEB_APPS) {
     const dir = repo.appNames.get(app);
     if (!dir) continue;
@@ -801,7 +799,6 @@ export function commands(selected) {
     else if (s.kind === 'xctest') out.push(['bun', 'host/apple/build.mjs', '--test', ...(s.host === 'ios' ? ['--ios'] : []), ...(only ? ['--only', only.join(',')] : [])]);
     else if (s.kind === 'touch') out.push(['bun', 'scripts/smoke-touch.mjs', '--build']);
     else if (s.kind === 'compile') out.push(['bun', 'host/apple/build.mjs', `--${s.host}`, '--no-install']);
-    else if (s.kind === 'harmony') out.push(['bun', 'scripts/memory-backend-test.mjs', 'apps/harmony/app'], ['cargo', 'check', '--manifest-path', 'apps/harmony/app/Cargo.toml', '--all-targets', '--keep-going']);
   }
   const conform = selected.filter(s => s.suite.kind === 'conform').map(s => s.suite.app);
   if (conform.length) out.push(['bun', 'host/web-js/conform.mjs', ...conform, '--synthetic', '--build', '--linux']);
@@ -931,7 +928,7 @@ if (import.meta.main) {
     process.exit(0);
   }
   const counts = kind => `${selected.filter(s => s.suite.kind === kind).length} of ${catalogue.filter(s => s.kind === kind).length}`;
-  console.log(`${changed.length} changed files select ${selected.length} of ${catalogue.length} suites: Cargo packages ${counts('cargo')}, Bun files ${counts('bun')}, app tests ${counts('app')}, Apple ${['xctest', 'touch', 'compile'].map(counts).join(' + ')}, Harmony ${counts('harmony')}, conformance ${counts('conform')}`);
+  console.log(`${changed.length} changed files select ${selected.length} of ${catalogue.length} suites: Cargo packages ${counts('cargo')}, Bun files ${counts('bun')}, app tests ${counts('app')}, Apple ${['xctest', 'touch', 'compile'].map(counts).join(' + ')}, conformance ${counts('conform')}`);
   const run = commands(selected);
   for (const c of run) console.log(`  ${c.map(quote).join(' ')}`);
   if (!argv.includes('--run')) process.exit(0);

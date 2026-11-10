@@ -295,7 +295,7 @@ test('opaque sandbox loads app text like Chrome, while sandboxed PDFs report err
   }
 }), 90000);
 
-// A page that reports what it can read of each `file` its query names: a fetch, and an `img`.
+// A page that reports what it can read of each `file` its query names (LLP 1020.001 D7): a fetch, and an `img`.
 const GIVEN_PAGE = `<!doctype html><script>(async () => {
   const out = { search: location.search, hash: location.hash, files: [] };
   for (const file of new URLSearchParams(location.search).getAll('file')) {

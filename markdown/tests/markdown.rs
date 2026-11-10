@@ -416,7 +416,7 @@ fn the_defects_astra_traced_are_fixed() {
 }
 
 #[test]
-#[ignore = "a 2 s wall-clock bound that a loaded machine can miss; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: a 2 s wall-clock bound; 2.3–4.4 s at load 140–180 (2026-09-23)"]
 fn adversarial_input_stays_linear() {
     let start = std::time::Instant::now();
     let brackets = "[".repeat(20_000) + "]";
@@ -980,7 +980,7 @@ fn pieces_flatten_a_document_into_runs_one_engine_paints() {
 
 #[test]
 fn a_list_item_hangs_its_marker_in_its_indent_as_the_browser_does() {
-    // A list item's paragraph starts 40 px in per level (the
+    // LLP 1045 D4: a list item's paragraph starts 40 px in per level (the
     // UA sheet's `padding-inline-start`), its marker outside, its end at the
     // indent; a continuation line starts at the indent with no marker.
     let out =

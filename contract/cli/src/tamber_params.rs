@@ -1,9 +1,10 @@
-//! The IR's `components` block: each component of the app that declares params,
-//! by its identity, and each param by its full name, with its short name where
-//! it is unambiguous, its token name below the IR, its kind, its default as
-//! written, its value per tuple, and the editor's metadata. `describe` and
-//! `contract tamber ir` return it beside the design's IR. Read from the app's
-//! Contract, loaded as a build loads it (the same identities and token names).
+//! The IR's `components` block (LLP 1121 D15, stage 7 A): each component of
+//! the app that declares params, by its identity, and each param by its full
+//! name, with its short name where it is unambiguous, its token name below
+//! the IR, its kind, its default as written, its value per tuple, and the
+//! editor's metadata. `describe` and `contract tamber ir` return it beside
+//! the design's IR. Read from the app's Contract, loaded as a build loads it
+//! (the same identities and token names).
 
 use contract_lower::params::{self, ParamToken};
 use contract_syntax::params::ParamValue;
@@ -17,7 +18,7 @@ pub struct AppParams {
     /// Every param, as a token.
     pub tokens: Vec<ParamToken>,
     /// Each component that names parts, by identity and name, with what the
-    /// Tamber IR says of its anatomy (the IR file only).
+    /// Tamber IR says of its anatomy (LLP 1139 D5; the IR file only).
     pub library: Vec<(String, String, contract_lower::anatomy::Described)>,
     /// Every component's identity.
     pub identities: Vec<String>,
@@ -30,12 +31,12 @@ pub struct AppParams {
     /// The app's Contract did not load (the build says why): its params are
     /// unknown, not none.
     pub failed: bool,
-    /// The designs of the packages it links, which a fold of
+    /// The designs of the packages it links (LLP 1121 D11), which a fold of
     /// the app's design joins as the build does.
     pub packages: Vec<contract_syntax::DesignSource>,
     /// Its tokens are an inline `theme` in its Contract, no design file.
     pub inline: bool,
-    /// Each package root its load resolved, real: direct,
+    /// Each package root its load resolved (LLP 1121 D11), real: direct,
     /// hoisted or vendored, what the server never writes into.
     pub package_roots: Vec<std::path::PathBuf>,
     /// `tokens`' names in full, indexed on first use (`shown`).
@@ -69,7 +70,7 @@ impl AppParams {
 /// Contract, or it does not load (the build says why).
 pub fn params_of(app_contract: &Path) -> AppParams {
     // None when it has no Contract; one there that can't be read is a load that failed (its
-    // packages unknown: the server writes no package-looking file).
+    // packages unknown: the server writes no package-looking file, LLP 1121 D11).
     let src = match std::fs::read_to_string(app_contract) {
         Ok(src) => src,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return AppParams::default(),
@@ -129,7 +130,7 @@ pub fn params_of(app_contract: &Path) -> AppParams {
             shown_index: Default::default(),
         },
         // Its packages' roots as far as it loaded (a source past them can't be read): still the server's
-        // never to write into.
+        // never to write into (LLP 1121 D11).
         Err(_) => AppParams {
             failed: true,
             package_roots: crate::source_graph(app_contract)
@@ -148,7 +149,7 @@ pub fn params_of(app_contract: &Path) -> AppParams {
 /// which is returned; every name in full.
 pub fn relocate(d: &mut exact_tamber::Diagnostic, app: &AppParams) -> Option<String> {
     d.message = contract_lower::package_unband(&app.shown(&d.message));
-    // A package token's: at its line in its package's design.
+    // A package token's (D11): at its line in its package's design.
     if let Some((band, line)) = contract_lower::package_line(d.line) {
         let source = app.packages.get(band)?;
         d.line = line;
@@ -180,9 +181,9 @@ pub fn located(d: &exact_tamber::Diagnostic, app: &AppParams, design: &Path) -> 
     }
 }
 
-/// `design` laid out with the app's params as the build lays it: each
+/// `design` laid out with the app's params as the build lays it (D15): each
 /// a token, each of its `params` lines in its param's place; and its
-/// packages' tokens joined, as the build joins them.
+/// packages' tokens joined, as the build joins them (LLP 1121 D11).
 pub fn laid(design: &exact_tamber::Design, app: &AppParams) -> exact_tamber::Design {
     let mut out = contract_lower::with_package_designs(Some(design.clone()), &app.packages)
         .unwrap_or_else(|| design.clone());
@@ -207,7 +208,7 @@ pub fn fold_with(
     }
     // (an unchanged design answered from the last few checked: a client
     // asking again can't make the server fold it, dial influence and all,
-    // each time)
+    // each time; theme2's condition on the counts)
     let folding = exact_tamber::check_design_cached(laid(&design, app), vocab)?;
     let wrong =
         contract_lower::package_references(&folding, &app.packages, &app.tokens, &app.identities);
@@ -255,9 +256,9 @@ fn packaged(e: contract_lower::LowerError, app: &AppParams) -> exact_tamber::Dia
     }
 }
 
-/// The package tokens a fold of the app's design joins, as
+/// The package tokens a fold of the app's design joins (LLP 1121 D11), as
 /// the build numbers them: what the design server's plans fold beside it;
-/// and the package icons beside them, which an app icon may name.
+/// and the package icons beside them (stage 13), which an app icon may name.
 pub fn joined_all(app: &AppParams) -> (Vec<exact_tamber::Token>, Vec<exact_tamber::Token>) {
     contract_lower::with_package_designs(None, &app.packages)
         .map_or_else(Default::default, |d| (d.tokens, d.icons))
@@ -372,7 +373,7 @@ pub fn hide(ir: &mut Value) {
 /// A param's short name, `Component.param`, when no other component of
 /// that name is in the app (`identities`, with params or none, and every
 /// param's own: a design's and a package design's components, which
-/// `resolve` reads too), else none.
+/// `resolve` reads too; stage 12 B1 round 1), else none.
 fn short(p: &ParamToken, sharing: &std::collections::HashMap<String, usize>) -> Option<String> {
     let name = component(&p.identity);
     (sharing.get(&name) == Some(&1)).then(|| format!("{name}.{}", p.param.name))
@@ -400,7 +401,7 @@ fn sharing(identities: &[String], all: &[ParamToken]) -> std::collections::HashM
     out
 }
 
-/// The IR's `library` block: each component that names parts,
+/// The IR's `library` block (LLP 1139 D5): each component that names parts,
 /// its parts with their groups and slot, and its variant props.
 pub fn library(app: &AppParams, design: Option<&exact_tamber::Design>) -> Value {
     // The tokens each chain row's value reaches, folded with the app's
@@ -486,7 +487,7 @@ pub fn components(
     let all = app.tokens.as_slice();
     let design = design.cloned().unwrap_or_default();
     let folding = exact_tamber::check_design_cached(laid(&design, app), vocab).ok();
-    // What each param's default reaches (*1.15*).
+    // What each param's default reaches (stage 12 B2-levels, *1.15*).
     let designs = crate::tamber_levels::Designs::parsed("", Some(design.clone()), app, vocab);
     let mut out: Vec<Value> = Vec::new();
     // Each component's params, in first-seen order; the params' lines, the
@@ -521,14 +522,14 @@ pub fn components(
                 let attr = |name: &str| q.param.attr(name).map(ParamValue::text);
                 // The app's value, its `params` line; a literal there in
                 // place of a default that names tokens no longer follows them
-                // (marked as a pinned dial override is).
+                // (D15, marked as D14 marks a pinned dial override).
                 let set = lines.get(q.token.as_str()).copied();
                 // Each token or icon the default names that the set value
                 // and its `when` values no longer read, directly or through
                 // another token.
                 // Each token or icon the default names that a value set
                 // (the line's own, or a `when` line's) no longer reads,
-                // directly or through another: the pinned mark, per branch.
+                // directly or through another: D14's mark, per branch.
                 let pinned: Vec<String> = match set {
                     Some(e) => {
                         let direct: Vec<String> = reads(&q.param.default, &reach)
@@ -590,9 +591,9 @@ pub fn components(
         let name = identity.rsplit_once('#').map_or(*identity, |(_, c)| c);
         out.push(json!({"identity": identity, "name": name, "params": list}));
     }
-    // An exported library component's parts and variant props (*1.15*), from
-    // the component's IR, with params or without (one with none listed with
-    // `params: []`).
+    // An exported library component's parts and variant props (LLP 1139 D5,
+    // stage 12 D3, *1.15*), from C's IR, with params or without (one with
+    // none listed with `params: []`).
     for (identity, _, d) in app.library.iter().filter(|(_, _, d)| d.library) {
         let at = match out.iter().position(|c| c["identity"] == identity.as_str()) {
             Some(i) => i,

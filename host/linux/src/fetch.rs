@@ -1,12 +1,13 @@
-//! The network form of the dev plan on Linux: given the app URL — the one a
-//! browser opens — resolve the envelope, negotiated or through `index.html`'s
-//! `rel=alternate` link, fetch the plan, verify its length and SHA-256, and
-//! hand back the bytes to boot. One shot, at process start: a headless run is
-//! per-invocation (the fleet's shape — run, read, run again), and the display
-//! loop's live SSE half is not yet verified on a Linux display.
+//! The network form of the dev plan (LLP 1023 Stage 1, Linux): given the
+//! app URL — the one a browser opens — resolve the envelope, negotiated or
+//! through `index.html`'s `rel=alternate` link, fetch the plan, verify its
+//! length and SHA-256, and hand back the bytes to boot. One shot, at
+//! process start: a headless run is per-invocation (the fleet's shape —
+//! run, read, run again), and the display loop's live SSE half waits for a
+//! Linux display to verify it on (QUEUE).
 //!
 //! The transport is ibex2's default — rustls off Apple, the platform's on a
-//! Mac — used directly: grants govern *app* authority; this
+//! Mac — used directly: grants govern *app* authority (ibex LLP 0067); this
 //! is host apparatus, the same standing as the Apple host's URLSession use
 //! in `PlanURL.swift`. Redirects are not followed in v1: the error names
 //! the limitation and the direct URL fixes it. Every line goes to stderr —
@@ -17,7 +18,7 @@ use sha2::{Digest, Sha256};
 
 const ENVELOPE_TYPE: &str = "application/vnd.exact.envelope+json";
 /// A dev loop's answer while its producers start, or after their start
-/// failed (host/web/dev-phase.mjs): a status, said once.
+/// failed (llp/1023.001; host/web/dev-phase.mjs): a status, said once.
 const DEV_STATUS_TYPE: &str = "application/vnd.exact.dev-status+json";
 /// How a dev loop's status reads as a poll's error while its producers start,
 const LOOP_PREPARING: &str = "dev loop: ";
@@ -27,7 +28,7 @@ const LOOP_FAILED: &str = "dev loop failed to start: ";
 /// a page and an envelope are small documents, a plan is the only large one.
 /// These reach the transport as `Request::max_body` and are enforced while
 /// the bytes arrive — a reachable dev server that answers and never stops
-/// sending is refused at the ceiling rather than after it.
+/// sending is refused at the ceiling rather than after it (ibex2 LLP 0057 §3).
 const MAX_PAGE_BYTES: usize = 64 * 1024;
 const MAX_ENVELOPE_BYTES: usize = 64 * 1024;
 const MAX_PLAN_BYTES: usize = 64 * 1024 * 1024;
@@ -95,7 +96,7 @@ pub struct Generation {
 
 type FetchOutcome = Result<Option<Generation>, String>;
 
-/// The design the dev server's builds run:
+/// The design the dev server's builds run (LLP 1121 stage 4):
 /// `Some(Some(snapshot))` on a 200; `Some(None)` on a 204, the published
 /// plan's own design; `None` when there is no answer to act on (no server
 /// that keeps one, or a failed request).
@@ -125,7 +126,7 @@ pub(crate) struct Poller {
     /// The dev server's design snapshot, as last polled, for the presenter
     /// to apply (a build on it already applies nothing).
     pub design: Option<String>,
-    /// The build channel, polled on its own worker: a slow
+    /// The build channel (LLP 1122 D4), polled on its own worker: a slow
     /// plan download must not leave the stream unpolled past the server's
     /// 5 s, which drops it and the pins sent meanwhile.
     pub link: Option<crate::build_channel::Link>,
@@ -163,7 +164,7 @@ const TICK: std::time::Duration = std::time::Duration::from_millis(500);
 
 impl Poller {
     pub fn new(url: String, compat: String, identity: Option<String>) -> Self {
-        // No channel in a production build, dev plan or not.
+        // No channel in a production build (LLP 1122 D4), dev plan or not.
         let link = (is_url(&url) && !exact_runner::delivery::production(&compat))
             .then(|| crate::build_channel::Link::new(identity.clone()));
         let now = std::time::Instant::now();
@@ -302,7 +303,7 @@ impl Poller {
             let compat = self.compat.clone();
             let previous = self.identity.clone();
             // Once the channel is on, live frames come down its poll and
-            // the snapshot is fetched only when asked.
+            // the snapshot is fetched only when asked (LLP 1122 D4).
             let design = self.link.as_mut().is_none_or(|link| link.take_design());
             self.asked_design = design;
             let (send, receive) = std::sync::mpsc::channel();
@@ -380,9 +381,10 @@ pub fn fetch_changed(
     {
         (decode_envelope(&body)?, page.to_string())
     } else {
-        // The link rung: a bounded, parser-free scan of the page's first 16 KB
-        // for the alternate-representation link, resolved against the page URL.
-        // No redirects, so the page URL is the base.
+        // The link rung: a bounded, parser-free scan of the page's first
+        // 16 KB (exact1 LLP 0268's rule) for the alternate-representation
+        // link, resolved against the page URL. No redirects, so the page
+        // URL is the base.
         let href = envelope_link(&body)
             .ok_or_else(|| format!("{page} is not an Exact app: no envelope and no link"))?;
         let url = join(page, &href)?;
@@ -528,7 +530,7 @@ pub(crate) fn join(base: &str, href: &str) -> Result<String, String> {
     ))
 }
 
-/// Same-origin only in v1: scheme, host, and effective port
+/// Same-origin only in v1 (LLP 1023 D2): scheme, host, and effective port
 /// must match the page's. Explicit default ports equal their implicit form.
 fn same_host(page: &str, url: &str) -> Result<(), String> {
     if origin(page).is_some() && origin(page) == origin(url) {
@@ -666,9 +668,9 @@ mod tests {
         format!("http://127.0.0.1:{port}/")
     }
 
-    /// A dev loop whose producers start answers its status, read as what it is:
-    /// preparing, or the error its start ended with; anything else is the HTTP
-    /// error it was.
+    /// A dev loop whose producers start answers its status, read as what
+    /// it is (dtool2's pass 3 #8): preparing, or the error its start ended
+    /// with; anything else is the HTTP error it was.
     #[test]
     fn a_loops_status_is_read_as_preparing_or_failed() {
         let preparing = serve_status(
@@ -690,10 +692,11 @@ mod tests {
         assert_eq!(loop_status("text/plain", b"{}"), None);
     }
 
-    /// Its status is said once however often the host polls, for the Linux
-    /// display and the Android reader alike: both poll through this `Poller`
-    /// and say what `says` lets through (`Presenter::tick_development`); a
-    /// change, or another error first, is said again.
+    /// Its status is said once however often the host polls (theme2's
+    /// condition c), for the Linux display and the Android reader alike:
+    /// both poll through this `Poller` and say what `says` lets through
+    /// (`Presenter::tick_development`); a change, or another error first,
+    /// is said again.
     #[test]
     fn a_loops_status_is_said_once_across_polls() {
         let page = serve_status(

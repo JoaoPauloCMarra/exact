@@ -1,7 +1,7 @@
-//! The events beyond press and change, as the web and Apple
+//! The events beyond press and change (LLP 1005 §3), as the web and Apple
 //! hosts dispatch them: `focus` and `blur` as the focus moves from node to
 //! node, `keycapture`, `key` and `keyup` by the web's name at the focused node with the
-//! physical key (`code`) and auto-repeat, `submit` for Enter in a
+//! physical key (`code`) and auto-repeat (#140), `submit` for Enter in a
 //! single-line input, and `hover` in and out as the pointer crosses nodes.
 use super::*;
 
@@ -159,7 +159,7 @@ impl<D: DataSource> Presenter<D> {
             return (false, None);
         }
         // A TV remote's focus on a bar's target: its node is inert under the
-        // route the bar lifted it from, and keeps the focus.
+        // route the bar lifted it from, and keeps the focus (LLP 1115.001.003 D4).
         if self.host.kernel().node(id).is_some() && self.remote() && self.bar_node(id) {
             self.focus_out = self.host.runner().focus_bubble(id, None, false);
             return (false, None);
@@ -332,8 +332,8 @@ impl<D: DataSource> Presenter<D> {
     /// `focus(id)` selects a surface row or a live, eligible page node.
     /// A refusal goes to the journal, as it does on the web host.
     pub(crate) fn focus_command(&mut self, args: &[exact_plan::Value]) -> Option<ViewId> {
-        // Bare `focus()` is the window's: this host brings
-        // none forward yet.
+        // Bare `focus()` is the window's (LLP 1133.025 §8): this host brings
+        // none forward yet (LLP 1133.005 D10).
         if args.is_empty() {
             self.host
                 .log("focus window: unsupported: this host brings no window forward");
@@ -551,7 +551,7 @@ impl<D: DataSource> Presenter<D> {
     /// target is `<body>`), by the web's name, with its physical key
     /// (`code`, "" when unknown) and whether it is an auto-repeat: every
     /// `keycapture` hears a keydown outermost first, then each `key` handler
-    /// (`kind`; `keyup` for a release) at or above it hears it,
+    /// (`kind`; `keyup` for a release, #140) at or above it hears it,
     /// innermost first as the keydown bubbles — the path fixed
     /// before the first runs; one that called `stopPropagation()` is the
     /// last. True when one called `preventDefault()`: the caller skips the
@@ -603,7 +603,7 @@ impl<D: DataSource> Presenter<D> {
                 key: name.to_owned(),
                 code: code.to_owned(),
                 repeat: repeat && kind == EventKind::Key,
-                // No input method composes text here.
+                // No input method composes text here (LLP 1005).
                 is_composing: false,
                 held: self.modifiers(),
             };
@@ -621,7 +621,7 @@ impl<D: DataSource> Presenter<D> {
             let queued = self.commands.len();
             self.commands.retain(|c| c.name != "preventDefault");
             prevented |= self.commands.len() != queued;
-            // `stopPropagation()`: no ancestor hears it.
+            // `stopPropagation()`: no ancestor hears it (files diary F8).
             let queued = self.commands.len();
             self.commands.retain(|c| c.name != "stopPropagation");
             if self.commands.len() != queued {
@@ -631,7 +631,7 @@ impl<D: DataSource> Presenter<D> {
         (error, prevented)
     }
 
-    /// A key's release at the focus (or the root): its `keyup` handlers, by the
+    /// A key's release at the focus (or the root): its `keyup` handlers (#140), by the
     /// name its keydown had (`Space` is " "). A release has no default here.
     pub(crate) fn key_up(&mut self, key: &str, code: &str, now_ms: f64) {
         let name = match key {
@@ -672,7 +672,7 @@ impl<D: DataSource> Presenter<D> {
         self.hover_point = at;
         let mut under = Vec::new();
         let hit = at.and_then(|(x, y)| self.hit(x, y));
-        // Its `:hover` looks follow the same point, a resting one's too.
+        // Its `:hover` looks follow the same point, a resting one's too (LLP 1121 D8).
         self.refresh_looks(Some(hit));
         let mut node = hit;
         while let Some(id) = node {
@@ -720,14 +720,14 @@ impl<D: DataSource> Presenter<D> {
     /// After a painted frame: what the layout, a scroll or the tree moved
     /// under a resting pointer is hovered, as a browser's hover follows
     /// layout and scrolling without a move (a synthetic mouse move's
-    /// boundary events). Only a pointer that has moved (a display's
+    /// boundary events; #139). Only a pointer that has moved (a display's
     /// boot-time cursor hovers nothing), and nothing while a button or a
     /// contact is down. Never inside `frame()`: its pixels and witness are
     /// the tree it painted.
     pub fn follow_pointer(&mut self) {
         let Some(at) = self.hover_point else { return };
         if self.contact.is_some() || self.pointer_held.is_some() || self.pointer_buttons != 0 {
-            // No hover event while held, but a `:hover` look follows the point.
+            // No hover event while held, but a `:hover` look follows the point (LLP 1121 D8).
             let hit = self.hit(at.0, at.1);
             self.refresh_looks(Some(hit));
             return;
@@ -737,7 +737,7 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    /// The agent's hover (`tap … hover`): the pointer to the node's
+    /// The agent's hover (`tap … hover`, LLP 1012): the pointer to the node's
     /// projected center, as a mouse moved there — never a press.
     pub fn hover(&mut self, id: ViewId) -> Result<String, String> {
         let (x, y) = self.pointer_target(id, None)?;
@@ -796,8 +796,8 @@ impl<D: DataSource> Presenter<D> {
 
     /// A secondary mouse click on a canvas, through the device input path.
     /// Other native context menus remain unsupported, never a primary press:
-    /// one a node names with `contextPopover` (its submenus
-    /// too) is refused as a popover, which Linux does not present.
+    /// one a node names with `contextPopover` (LLP 1021 §5.1, its submenus
+    /// §5.2) is refused as a popover, which Linux does not present.
     pub(crate) fn contextmenu(
         &mut self,
         id: ViewId,
@@ -808,7 +808,7 @@ impl<D: DataSource> Presenter<D> {
             .kernel()
             .node(id)
             .is_some_and(|node| node.props.str(PropId::ContextPopover).is_some());
-        // Where the top layer is windows the menu a node
+        // Where the top layer is windows (LLP 1115.001 D10) the menu a node
         // names opens as a finger held on it opens it: its `contextmenu`
         // runs, then the menu shows at the point (the node's middle unsaid).
         if names_popover && self.has_windows() {

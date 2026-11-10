@@ -1,8 +1,8 @@
 //! A reimport's search for the narrowest `when` a changed value needs
 //! (`export::reimport_against`): the axis subsets it tries, bounded.
 
-/// The narrowest `when` searched for at most this many candidates (singleton
-/// axes would make the search exponential);
+/// The narrowest `when` searched for at most this many candidates (Astra's
+/// round 2 on the checker bound: singleton axes made the search exponential);
 /// past it the line names every axis, which holds where the edit does.
 pub(crate) const SELECTORS: usize = 4096;
 

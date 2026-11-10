@@ -1,6 +1,6 @@
-//! A `pan` that began ends with one `panrelease`.
+//! A `pan` that began ends with one `panrelease` (LLP 1057 §10.6 phase 2).
 //! evdev measures no velocity, so the contact's `VelocityTracker` does, over
-//! every sample since the contact went down; a cancelled
+//! every sample since the contact went down (LLP 1057.001 §3); a cancelled
 //! contact (Escape, wheel takeover, disconnection, an invalidated node)
 //! releases at rest.
 use super::*;

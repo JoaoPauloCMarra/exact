@@ -3,7 +3,7 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// `color-scheme` on a subtree is the view's own appearance,
+/// LLP 1034 §8: `color-scheme` on a subtree is the view's own appearance,
 /// which UIKit's traits carry below: a child's `light-dark()` colour, and a
 /// material view's traits, resolve in it; leaving it off restores.
 final class ColorSchemeIOSTests: XCTestCase {

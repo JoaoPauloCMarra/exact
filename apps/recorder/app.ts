@@ -1,4 +1,4 @@
-// The recorder's data: the takes are the
+// The recorder's data (LLP 1133.009 §11, LLP 1133.012 §10): the takes are the
 // files @exact/recording wrote to app:/data/takes; each one's length and
 // level, which the Contract passes when it files a take, are kept beside them
 // in index.json. A take's transcript is the directory

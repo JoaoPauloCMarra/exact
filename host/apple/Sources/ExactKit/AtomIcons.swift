@@ -1,4 +1,4 @@
-// An inline atom's icon from an image source: an asset, an
+// An inline atom's icon from an image source (LLP 1045.000 D2): an asset, an
 // `app:/` file, a `data:` URL or an http(s) URL, read as an `image` reads it
 // (`RasterInput.open`) and decoded at the pill's size off the main thread, an
 // SVG as the image host draws one (`exact_svg_image_scene`, `SvgIsland`).
@@ -69,7 +69,7 @@ package enum AtomIcons {
         let readies = waiting.removeValue(forKey: key) ?? []
         lock.unlock()
         DispatchQueue.main.async {
-            if let failure { log("atom icon refused: \(named): \(failure)") }
+            if let failure { log("atom icon refused: \(named): \(failure) (LLP 1045.000 D2)") }
             readies.forEach { $0() }
         }
     }

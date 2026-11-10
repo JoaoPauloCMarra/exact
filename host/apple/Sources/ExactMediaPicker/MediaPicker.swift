@@ -1,4 +1,4 @@
-// iOS's photo picker
+// @ref LLP 1069.002 D8, LLP 1047.001.000 E — iOS's photo picker
 // (`PHPickerViewController`; no permission, no usage string) for a file
 // input whose `accept` is only images and videos. PhotosUI is in its own
 // module because linking it costs every launch, before `main`, the loading
@@ -28,7 +28,7 @@ final class MediaPicker: MediaPickerCapability {
         config.selectionLimit = multiple ? 0 : 1
         let images = accept.contains { $0.hasPrefix("image/") }, videos = accept.contains { $0.hasPrefix("video/") }
         config.filter = images && videos ? .any(of: [.images, .videos]) : images ? .images : .videos
-        // HEVC/ProRes stays as is under `video/*`; otherwise H.264.
+        // D6: HEVC/ProRes stays as is under `video/*`; otherwise H.264.
         config.preferredAssetRepresentationMode = accept.contains("video/*") || !videos ? .current : .compatible
         let picker = PHPickerViewController(configuration: config)
         let delegate = Delegate(done)
@@ -50,7 +50,7 @@ final class MediaPicker: MediaPickerCapability {
             // A cancel finishes with no results.
             if results.isEmpty { done([]); return }
             // The provider's URL is deleted when its callback returns: stage
-            // a copy there, for the core to copy into app:/tmp/picked/.
+            // a copy there, for the core to copy into app:/tmp/picked/ (D4).
             let group = DispatchGroup(), lock = NSLock()
             var staged = [(url: URL, name: String)?](repeating: nil, count: results.count)
             for (i, result) in results.enumerated() {

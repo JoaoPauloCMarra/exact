@@ -192,7 +192,7 @@ theorem update_render {p o slots store now prev force old st view live}
   exact renderTabs_render fuel hr
 
 /-- An action keeps its timers' actions (its gate step moves only their
-deadlines), and its view is the old one or the program's view
+deadlines, LLP 1092 D8), and its view is the old one or the program's view
 rendered. -/
 theorem runAction_frame {p o c name args rows c' out}
     (h : runAction p o c name args rows = (c', out)) :
@@ -206,7 +206,7 @@ theorem runAction_frame {p o c name args rows c' out}
        obtain ⟨cx, hr⟩ := update_render (by assumption)
        exact ⟨gateStep_actions (by assumption), .inr ⟨cx, _, hr⟩⟩)
 
-/-- A queued send's commit keeps the timers' actions, and
+/-- A queued send's commit (LLP 1092 D3) keeps the timers' actions, and
 its view is the old one or the program's view rendered. -/
 theorem nextCommit_frame {p o c m c' out}
     (h : nextCommit p o c m = (c', out)) :
@@ -870,7 +870,7 @@ def Stmt.noAssign (x : String) : Stmt → Bool
   | .assign t _ => t != x
   | .ifS _ a b => Stmt.noAssigns x a && Stmt.noAssigns x b
   | .matchS _ _ a b => Stmt.noAssigns x a && Stmt.noAssigns x b
-  -- What a call assigns is its callee's, which this test
+  -- What a call assigns is its callee's (LLP 1089 D9), which this test
   -- does not look up: a call may assign anything.
   | .call _ _ => false
   | _ => true
@@ -1002,7 +1002,7 @@ theorem BodyKeeps.untouched {p x V c name args rows}
   ⟨fun v hv => (nomatch ExecR.noAssign hx (hn a ha).1 v hv),
    fun s hs hx' => (nomatch ExecR.noSend hx (hn a ha).2 s hs hx')⟩
 
-/-- A queued send's commit writes its mutation's slot alone. -/
+/-- A queued send's commit (LLP 1092 D3) writes its mutation's slot alone. -/
 theorem nextCommit_lookup {p o c m c' out x} (hx : x ≠ m) (h : nextCommit p o c m = (c', out)) :
     lookup x c'.slots = lookup x c.slots := by
   simp only [nextCommit] at h
@@ -1039,7 +1039,7 @@ theorem boot_slotIn {p o x V} (h : ∀ v, SlotOrigin p x v → V v) :
 /-- **Invariants of one slot.** `SlotIn x V` holds of every reachable
 configuration when every value `x` can start with has `V`, and the body
 of every action a handler or a task names keeps it. The slot is not a
-`queue` mutation's, whose answers an advance lands (that case is
+`queue` mutation's, whose answers an advance lands (LLP 1092; that case is
 the restriction `semantics/README.md` names). -/
 theorem Reachable.slotIn {p : Program} {x : String} {V : Value → Prop} (hq : isQueue p x = false)
     (hboot : ∀ v, SlotOrigin p x v → V v)

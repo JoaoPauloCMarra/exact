@@ -1,16 +1,16 @@
-//! The agent's `reveal`: before a tap or a type, a node
+//! The agent's `reveal` (ledger F7, shop F11): before a tap or a type, a node
 //! whose middle is out of view is scrolled to the middle of its nearest
 //! scroll containers, then of the page — the web's `scrollIntoView` (block
 //! centre), as the web host's `navigation.js` asks of the browser. Offsets
 //! move as a wheel's do (`wheel_at`), clamped to each container's travel.
-//! An app's `scrollIntoView("element-id", block=, inline=)`
+//! An app's `scrollIntoView("element-id", block=, inline=)` (minesweeper F3)
 //! walks the same containers, aligning by CSSOM View's rules.
 use super::*;
 
 pub(super) enum Cause {
     InsetAdjustment,
     FieldNavigation,
-    /// A remote's arrow moved the focus.
+    /// A remote's arrow moved the focus (LLP 1115.001.003 D4).
     FocusMove,
 }
 
@@ -27,8 +27,8 @@ impl<D: DataSource> Presenter<D> {
             };
         }
         // A row of the top layer's open surface is no box of the page's:
-        // it is in view in its window. Nor is what a
-        // shell's bar stands for: it is in view in the bar.
+        // it is in view in its window (LLP 1115.001 D10). Nor is what a
+        // shell's bar stands for (D11): it is in view in the bar.
         if self.surface_row(id) || self.bar_node(id) {
             return Ok(format!("{{\"revealed\":{id},\"scrolled\":false}}"));
         }
@@ -98,7 +98,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// A target whose middle (`at`) a sticky box of its own scroller covers, as the tap's own hit test finds it (the
-    /// design tool's edit dock): that scroller (or the page) scrolled so the middle lands in the
+    /// design tool's edit dock; theme2's 14:49 ruling): that scroller (or the page) scrolled so the middle lands in the
     /// band of its port the box leaves. Never a box that holds the target, nor one of another scroller or the top
     /// layer, which no scroll takes away: the tap still refuses there. Whether it scrolled.
     fn clear_of_sticky(&mut self, id: ViewId, at: (f32, f32)) -> bool {
@@ -216,7 +216,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// The runner's `scrollToFragment(visit, fragment, activation)`, once a
-    /// route's data has arrived: the node with that HTML `id`
+    /// route's data has arrived (LLP 1153 D5): the node with that HTML `id`
     /// in the visit's own route (a route beneath may hold the same id) at
     /// the start of each scroll container above it, as `scrollIntoView` with
     /// `block="start"`, then the starting point of the next Tab, and held

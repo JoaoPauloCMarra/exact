@@ -1,4 +1,4 @@
-//! An image in a paragraph's text takes its box in the line
+//! LLP 1011.002: an image in a paragraph's text takes its box in the line
 //! Parley breaks, the glyphs after it start past it, and the kernel places
 //! the image where the box went.
 use crate::presenter::{PainterChoice, Presenter};

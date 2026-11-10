@@ -6,7 +6,7 @@ import AppKit
 import UIKit
 #endif
 
-/// Regions and parts: each bound refuses a
+/// Regions and parts (LLP 1075.003.000.001 §3.4, §3.5): each bound refuses a
 /// registration whole and counts it; a region whose object is not in a window
 /// is retired to a tombstone that every read sees alike; a view's interior is
 /// its innermost bound ancestor's; a node's end takes what it registered.
@@ -73,7 +73,7 @@ final class HatchRegionsTests: XCTestCase {
         XCTAssertTrue(regions.regions.isEmpty)
     }
 
-    /// The window's walk: a recognizer that was there before the call
+    /// The window's walk (§3.4): a recognizer that was there before the call
     /// is nobody's news; one the call added is journaled once, by class,
     /// unless a region binds it.
     func testAWindowsNewRecognizerIsNamedOnceUnlessARegionBindsIt() throws {

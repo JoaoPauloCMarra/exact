@@ -1,8 +1,8 @@
 //! What HTML's UA sheet gives a table's and a description list's elements,
-//! as layout, where the kernel lays them out: a native host.
+//! as layout, where the kernel lays them out (LLP 1153 D7.3): a native host.
 //! The web's browser has the sheet itself, and the plan carries none of it.
 //!
-//! **The declared deviation.** A table here is a grid, not
+//! **The declared deviation (LLP 1153 D7.3).** A table here is a grid, not
 //! CSS 2.1 §17.5's table. `layout/table.rs` places its cells where HTML's
 //! table-forming algorithm puts them (HTML §4.9.12) and makes each column an
 //! `auto` grid track; the table is as wide as its columns, as an auto-width

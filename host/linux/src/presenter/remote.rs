@@ -1,9 +1,9 @@
-//! A TV remote's D-pad. A TV is a device with no
-//! pointer at all (`pointer: none`). Its page is one view the reader
+//! A TV remote's D-pad (LLP 1115.001.003 D3, D4). A TV is a device with no
+//! pointer at all (`pointer: none`, D2). Its page is one view the reader
 //! draws, so Android's own focus search cannot see the nodes: the arrows
 //! move the focus by the rules of Android's `FocusFinder`
 //! (`frameworks/base/core/java/android/view/FocusFinder.java`), and Select
-//! presses the focus, as tvOS's Select does.
+//! presses the focus, as tvOS's Select does (LLP 1008 §9).
 use super::*;
 use std::collections::BTreeSet;
 
@@ -144,14 +144,14 @@ pub(crate) fn nearest(
 }
 
 impl<D: DataSource> Presenter<D> {
-    /// The device has no pointer at all: a TV, whose remote's arrows
+    /// The device has no pointer at all (D2): a TV, whose remote's arrows
     /// move the focus.
     pub(crate) fn remote(&self) -> bool {
         self.host.runner().viewport().preferences.pointer == exact_runner::Pointer::None
     }
 
     /// A remote's key at the focused node `id`, after its `key` handlers
-    /// left the default: Select presses, once for a held press, as a
+    /// left the default (D3): Select presses, once for a held press, as a
     /// held Enter presses a button once; an arrow moves the focus, its
     /// repeats too. A text field keeps both, as its caret and Enter.
     /// Whether it was the remote's.
@@ -211,8 +211,8 @@ impl<D: DataSource> Presenter<D> {
         self.activate_with(id, now_ms, false);
     }
 
-    /// What a TV's Back with no route to go back from presses (its
-    /// Menu): the first enabled button of those that answer Escape as
+    /// What a TV's Back with no route to go back from presses (D3, LLP 1008
+    /// §9's Menu): the first enabled button of those that answer Escape as
     /// a page shortcut ([`Self::shortcut_buttons`]) that is shown, in the
     /// page or in a bar. A TV's remote has no Escape key, so its Back is one.
     pub(super) fn remote_back_target(&mut self) -> Option<ViewId> {
@@ -243,7 +243,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// A remote's arrow at a focus that a commit disabled: the page's keys
-    /// refuse it, and the arrow moves the focus off it all the same.
+    /// refuse it, and the arrow moves the focus off it all the same (D4).
     /// Whether it did.
     pub(super) fn remote_leaves_disabled(&mut self, id: ViewId, name: &str, now_ms: f64) -> bool {
         let Some(d) = Direction::of(name).filter(|_| self.remote()) else {
@@ -317,7 +317,7 @@ impl<D: DataSource> Presenter<D> {
             .contains(&EventKind::Press)
     }
 
-    /// The focus moves to the nearest stop in `d`, and that stop is
+    /// The focus moves to the nearest stop in `d` (D4), and that stop is
     /// scrolled into view. The stops are the page's ([`Self::page_stops`])
     /// and the targets of the shell's bars. From no focus, or from one that
     /// holds stops (a column the app focused), it moves to the first stop in

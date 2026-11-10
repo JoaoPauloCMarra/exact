@@ -1,4 +1,4 @@
-// The grouped reorder's ghost in a real browser: a deep clone
+// The grouped reorder's ghost (LLP 1094 D6) in a real browser: a deep clone
 // of the row in a manual popover (the top layer), carrying the row's look
 // inline and none of the five identities a node of the app's has, so no
 // glue adopts it, no handler finds it and no driver names it.
@@ -64,7 +64,7 @@ check('the ghost is a stripped clone in the top layer, with the row\'s look', as
   }
 }, 60000);
 
-// A centre past a port's edge is that
+// LLP 1094 D7 (amended 2026-10-07): a centre past a port's edge is that
 // edge's, even in a port shorter than the band. A 120 px row in a 24 px
 // port, grabbed near its top and held: its centre is ~60 px below the port,
 // and the port scrolls down, not up.

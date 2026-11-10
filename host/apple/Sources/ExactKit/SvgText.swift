@@ -1,5 +1,5 @@
-// SVG text on Apple: each run shaped by Core Text
-// with the presenter's own fonts, its glyphs' outlines one path
+// @ref LLP 1055.000 D11 — SVG text on Apple: each run shaped by Core Text
+// with the presenter's own fonts (LLP 1019), its glyphs' outlines one path
 // in a `CAShapeLayer`, so fill, stroke and dashes paint text as they paint
 // any shape. A chunk is anchored by its runs' total advance and set on the
 // baseline `dominant-baseline` names, with Chrome's arithmetic: integer
@@ -33,7 +33,7 @@ enum SvgText {
             var x = (chunk["x"] as? NSNumber).map { CGFloat($0.doubleValue) } ?? pen.x
             var y = (chunk["y"] as? NSNumber).map { CGFloat($0.doubleValue) } ?? pen.y
             x -= anchor
-            // The first run's font sets the chunk's baseline.
+            // The first run's font sets the chunk's baseline (LLP 1055.000 D11).
             var shift: CGFloat = 0
             if let font = shaped.first?.1 {
                 let ascent = CTFontGetAscent(font).rounded(), descent = CTFontGetDescent(font).rounded()

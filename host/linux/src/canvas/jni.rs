@@ -1,4 +1,4 @@
-//! The Canvas host's JNI, once for every app: an app's library is
+//! The Canvas host's JNI, once for every app (LLP 1076): an app's library is
 //! its plan, its data source and `exact_linux::canvas_jni!(Data)`, which
 //! defines `dev.exact.canvas.Native`'s methods (the reader's class,
 //! `host/android/canvas`) over a [`super::CanvasHost`] that lives on the
@@ -109,7 +109,7 @@ macro_rules! canvas_jni {
             }
 
             /// Whether a host runs in this process: a reader that starts
-            /// again adopts it and boots no second one.
+            /// again adopts it (LLP 1115.001 D15.1) and boots no second one.
             static RUNNING: std::sync::atomic::AtomicBool =
                 std::sync::atomic::AtomicBool::new(false);
             /// The size and scale a reader asked `startAsync` for while a
@@ -149,7 +149,7 @@ macro_rules! canvas_jni {
                 if adopt_running((width as u32, height as u32), scale) {
                     return JNI_TRUE;
                 }
-                // The reader hosts the app's text fields.
+                // The reader hosts the app's text fields (LLP 1115.001 D8).
                 $crate::canvas::field::attach(env, scale);
                 $crate::canvas::legacy::attach(env);
                 $crate::canvas::presence::attach(env);
@@ -275,7 +275,7 @@ macro_rules! canvas_jni {
                 }
             }
 
-            /// The device's settings, whole: before
+            /// The device's settings, whole (LLP 1115.001 D3.1): before
             /// `start`, from any thread, and on the host's thread again
             /// whenever one changes. A host that runs on the calling thread
             /// takes them now; one that boots later starts with them.
@@ -316,7 +316,7 @@ macro_rules! canvas_jni {
                 with(|h| h.configure(&device));
             }
 
-            /// The window: its size in pixels, the
+            /// The window (LLP 1115.001 D3.3): its size in pixels, the
             /// display's pixels a point, and sixteen raw insets in pixels,
             /// four (top, right, bottom, left) each for the system bars,
             /// the display cutout, the software keyboard and the system's
@@ -350,7 +350,7 @@ macro_rules! canvas_jni {
                 with(|h| h.set_window(told));
             }
 
-            /// The device's colours: Material 3's colour
+            /// The device's colours (LLP 1115.001 D4): Material 3's colour
             /// roles as the reader resolved them, twelve light and then the
             /// same twelve dark, ARGB, in `presenter::Material`'s order.
             /// Before `start`, from any thread, so the host boots resolving
@@ -373,7 +373,7 @@ macro_rules! canvas_jni {
             }
 
             /// What the presenter asks of the platform since the reader
-            /// last took it, as words, or null when it
+            /// last took it (LLP 1115.001 D5), as words, or null when it
             /// asks nothing: for each request its kind, its id, the count
             /// of words that follow and those words
             /// (`presenter/requests.rs`). The presenter wakes the reader
@@ -517,7 +517,7 @@ macro_rules! canvas_jni {
                 flag(waiting || with(|h| h.animating()).unwrap_or(false))
             }
 
-            /// One request of the agent API (`canvas/agent.rs`), a
+            /// One request of the agent API (LLP 1012; `canvas/agent.rs`), a
             /// JSON line as UTF-8, and its answer the same way: the Linux
             /// host's own handler, on the host's thread. A driver's carrier
             /// calls it (`scripts/agent.mjs android --reader`).
@@ -578,8 +578,8 @@ macro_rules! canvas_jni {
             }
 
             /// What is under a point of the view (pixels), for the reader
-            /// deciding what a drag from there is and
-            /// whose a touch there is: the presenter's own claims, a
+            /// deciding what a drag from there is (LLP 1115.001 D7.3) and
+            /// whose a touch there is (D8): the presenter's own claims, a
             /// count, the hosted text field the touch is for, and eleven
             /// words a scroller, innermost first
             /// (`Presenter::reader_under`).
@@ -594,8 +594,9 @@ macro_rules! canvas_jni {
                 ints(env, &words)
             }
 
-            /// What the reader is told of the text fields it hosts, when that is not what this last
-            /// returned (else null): `Presenter::reader_fields` has the words.
+            /// What the reader is told of the text fields it hosts (LLP
+            /// 1115.001 D8), when that is not what this last returned
+            /// (else null): `Presenter::reader_fields` has the words.
             #[no_mangle]
             pub unsafe extern "system" fn Java_dev_exact_canvas_Native_fields(
                 env: *mut JNIEnv,
@@ -749,9 +750,9 @@ macro_rules! canvas_jni {
 
             /// A touch (0 down, 1 up, 2 move, 3 cancel) at the view's
             /// pixels, and what touched: Android's tool type (1 a finger,
-            /// 2 a stylus, 3 a mouse, 4 an eraser).
+            /// 2 a stylus, 3 a mouse, 4 an eraser; LLP 1115.001 D7.4).
             /// Action 4: the touch that is down was held for the system's
-            /// long-press time (a context menu opens).
+            /// long-press time (a context menu opens, D10).
             #[no_mangle]
             pub unsafe extern "system" fn Java_dev_exact_canvas_Native_touch(
                 _env: *mut JNIEnv,
@@ -764,11 +765,13 @@ macro_rules! canvas_jni {
                 with(|h| h.touch(action, x, y, tool));
             }
 
-            /// What happened in the window the reader made for surface `serial` of the top layer
-            /// (`presenter::top::event`): a touch (0 down, 1 up, 2 move, 3 cancel) at (`x`, `y`),
-            /// pixels from the window's top left; the system dismissed the window (8: a tap outside
-            /// a menu, Back, Escape); the reader could not make it (9); a key (16 Enter, 17 Tab, 18
-            /// Shift+Tab, 19 to 22 the arrows, 23 Space).
+            /// What happened in the window the reader made for surface
+            /// `serial` of the top layer (LLP 1115.001 D10;
+            /// `presenter::top::event`): a touch (0 down, 1 up, 2 move, 3
+            /// cancel) at (`x`, `y`), pixels from the window's top left;
+            /// the system dismissed the window (8: a tap outside a menu,
+            /// Back, Escape); the reader could not make it (9); a key (16
+            /// Enter, 17 Tab, 18 Shift+Tab, 19 to 22 the arrows, 23 Space).
             #[no_mangle]
             pub unsafe extern "system" fn Java_dev_exact_canvas_Native_surface(
                 _env: *mut JNIEnv,
@@ -781,8 +784,9 @@ macro_rules! canvas_jni {
                 with(|h| h.surface(serial as u32, what, x, y));
             }
 
-            /// What the reader is told of the app's bars, when that is not
-            /// what this last returned (else null): `Presenter::reader_bars` has the words.
+            /// What the reader is told of the app's bars (LLP 1115.001
+            /// D11), when that is not what this last returned (else
+            /// null): `Presenter::reader_bars` has the words.
             #[no_mangle]
             pub unsafe extern "system" fn Java_dev_exact_canvas_Native_bars(
                 env: *mut JNIEnv,
@@ -809,10 +813,11 @@ macro_rules! canvas_jni {
                 with(|h| h.bar(which, what, x, y));
             }
 
-            /// What the reader is told of the accessibility tree, when that is not what this last
-            /// returned (else null): `Presenter::reader_access` has the words. The reader calls it
-            /// only while an accessibility service is on; `again` when it holds nothing of the
-            /// tree.
+            /// What the reader is told of the accessibility tree (LLP
+            /// 1115.001 D13), when that is not what this last returned
+            /// (else null): `Presenter::reader_access` has the words. The
+            /// reader calls it only while an accessibility service is on;
+            /// `again` when it holds nothing of the tree.
             #[no_mangle]
             pub unsafe extern "system" fn Java_dev_exact_canvas_Native_access(
                 env: *mut JNIEnv,
@@ -841,7 +846,7 @@ macro_rules! canvas_jni {
             }
 
             /// What the reader's hatches ask for node `node`, 0 for their
-            /// module (`hatches::reader::act` names
+            /// module (LLP 1115.001.000 D4; `hatches::reader::act` names
             /// each kind): its answer, a ticket for a registration, -1
             /// when refused.
             #[no_mangle]
@@ -1155,7 +1160,7 @@ macro_rules! canvas_jni {
                 with(|h| h.feed().map_or(0, |v| v as jint)).unwrap_or(0)
             }
 
-            /// What `ExactTamber(view)` asks, a JSON request,
+            /// What `ExactTamber(view)` asks (LLP 1121 D12), a JSON request,
             /// and its answer (`Host::tamber_json`, `host/linux/src/tamber.rs`),
             /// on the host's thread; both by UTF-16, so a name crosses whole.
             #[no_mangle]
@@ -1179,8 +1184,8 @@ use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicU8, Ordering};
 
 /// An app's allocator: mimalloc (2.x), which spends less per call than
-/// Android's scudo (half of a cold boot's CPU; heavy's cold start went from
-/// 98 to 69 ms on a Pixel 10 Pro XL); the reader sets
+/// Android's scudo (half of a cold boot's CPU, LLP 1076: heavy's cold start
+/// 98 -> 69 ms on a Pixel 10 Pro XL); the reader sets
 /// `MIMALLOC_PURGE_DELAY=0` before the library loads (mimalloc reads its
 /// options from a constructor as it loads), so freed memory goes back at once
 /// (decoded pictures otherwise stay held, ~110 MB more on heavy); the system's with

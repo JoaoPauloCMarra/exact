@@ -1,4 +1,4 @@
-//! A grouped list's sections and rows, read from its
+//! A grouped list's sections and rows (LLP 1084 D3, D4), read from its
 //! tree as it now stands, for a host that draws the platform's own list.
 //! Contract shaped the tree: the list's children are sections; a section is
 //! an optional `header`, one group whose children are the rows, an optional
@@ -51,11 +51,11 @@ pub struct GroupedSection {
     /// The space above it, in points, when the author wrote a margin at
     /// that boundary (its `margin-top`, or the previous section's
     /// `margin-bottom`): the web's, the two margins collapsed. `None` keeps
-    /// the platform's own gap, which Contract's sheet stands in for.
+    /// the platform's own gap, which Contract's sheet stands in for (§2).
     pub space_above: Option<f32>,
 }
 
-/// What a row shows at its trailing edge.
+/// What a row shows at its trailing edge (D4).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum Accessory {
     /// Nothing.
@@ -69,7 +69,7 @@ pub enum Accessory {
     Toggle(ViewId),
     /// An `input type="radio"` at either end of the row, and whether it is
     /// checked: the platform's checkmark on the chosen row, and a tap on
-    /// the row checks that radio.
+    /// the row checks that radio (LLP 1115.000 D13.2).
     Radio(ViewId, bool),
     /// A trailing button holding only an `info.circle` symbol: the detail
     /// button, which presses that button.
@@ -88,7 +88,7 @@ pub struct GroupedRow {
     pub symbol: Option<String>,
     /// The leading symbol's icon token form (after `symbol:`) when it has
     /// no Apple name but a template path, which the host draws as the
-    /// cell's template image; `None` otherwise.
+    /// cell's template image (LLP 1121 D10, stage 9 A2); `None` otherwise.
     pub icon: Option<String>,
     /// The title.
     pub title: Option<String>,
@@ -102,7 +102,7 @@ pub struct GroupedRow {
     pub pressable: bool,
     /// Whether it is an action cell: a `button` (no `href`) of a title, a
     /// symbol before it at most, and nothing at its trailing edge, whose
-    /// title the platform's list draws in the tint, as
+    /// title the platform's list draws in the tint (LLP 1116.019 D6), as
     /// the sheet's `grouped-action-color` does (`contract/lower/src/grouped.rs`).
     /// A row with `aria-selected` is a choice, never one.
     pub action: bool,
@@ -125,9 +125,9 @@ pub struct GroupedRow {
 }
 
 /// How a text the platform's list draws is set where its author said so
-/// Author > platform). The defaults are the
+/// (LLP 1116.003 D7: author > platform, LLP 1115). The defaults are the
 /// platform's: every line, wrapped, in the platform's colour and font.
-/// "Said" is the row's own fact: the row that gives the
+/// "Said" is the row's own fact (LLP 1115.000 D2): the row that gives the
 /// text its value was written by the author, on the text or on a box it
 /// inherits from. Contract's sheet stands in for the platform there and
 /// writes nothing, so its rows, like a value no one set, are unsaid.
@@ -161,7 +161,7 @@ pub struct TextFont {
     /// `font-variant-numeric`'s bits (1: `tabular-nums`).
     pub numeric: u8,
     /// Which of the five its author said, by [`TextFont::SAID`]'s bits: the
-    /// host keeps the platform's own for the rest, so a
+    /// host keeps the platform's own for the rest (LLP 1115.000 D2), so a
     /// family written on the page leaves a cell's size and weight UIKit's.
     pub said: u8,
 }
@@ -235,15 +235,15 @@ fn apple_symbol(node: &NodeRef<'_>) -> Option<String> {
         .str(PropId::ImageSource)?
         .strip_prefix("symbol:")?;
     // An icon token's SF Symbol too, or "" for one whose path the host
-    // draws; an empty name is no symbol, as an empty `sf/`
-    // one is.
+    // draws (LLP 1121 D10); an empty name is no symbol, as an empty `sf/`
+    // one is (stage 9 H).
     let name = crate::apple_symbol_name(role);
     (!name.is_empty() || role.is_empty() || role.starts_with("sf/") || drawn_icon(role).is_some())
         .then(|| name.to_owned())
 }
 
 /// The icon token form `role` is when it has no SF Symbol and a template
-/// path: the host draws that path where Apple has no symbol.
+/// path: the host draws that path where Apple has no symbol (stage 9 A2).
 fn drawn_icon(role: &str) -> Option<&str> {
     let icon = crate::Icon::parse(role)?;
     (icon.sf.is_empty() && !icon.path.is_empty()).then_some(role)
@@ -259,7 +259,7 @@ fn icon_of(node: &NodeRef<'_>) -> Option<String> {
 }
 
 /// A text node's text, its white space collapsed as its `white-space` has
-/// the web collapse it: `normal` makes a line feed a
+/// the web collapse it (LLP 1116.004 D2): `normal` makes a line feed a
 /// space, and `pre-line` keeps it, so a footer the author set `pre-line` is
 /// two lines in UIKit's cell as on the page. `None` when blank.
 pub(crate) fn text_of(node: &NodeRef<'_>) -> Option<String> {
@@ -373,7 +373,7 @@ impl Kernel {
                 .collect()
         };
         let parts = shown(row);
-        // A row that lays out as a column (a `column`) stacks
+        // A row that lays out as a column (a `column`, LLP 1116 D2) stacks
         // its parts: one or two texts are the subtitle cell's lines, and
         // anything else is its own layout.
         if row.style.display == Display::Flex
@@ -478,7 +478,7 @@ impl Kernel {
         }
         // UIKit's content configuration draws none of the row's box: a row
         // whose author wrote an edge of it, or its background image, is its
-        // own views, carried, as every other host draws it.
+        // own views, carried, as every other host draws it (LLP 1084 D7).
         let w = &row.style.written;
         if out.authored_edge
             || [
@@ -646,7 +646,7 @@ pub(crate) fn apply_margins(arena: &NodeArena, slot: u32, s: &mut taffy::style::
     }
 }
 
-/// Whether the margins of a grouped list, or a cells list's,
+/// Whether the margins of a grouped list, or a cells list's (LLP 1138),
 /// reach `slot` where it stands: a list four boxes up at most has them (a
 /// `delete=` row's content is the deepest box `apply_margins` moves).
 pub(crate) fn reached(arena: &NodeArena, slot: u32) -> bool {
@@ -691,13 +691,13 @@ fn sheet(name: &str) -> f32 {
 
 impl NodeArena {
     /// Whether `slot` is a native text field (an unsaid `input` or
-    /// `textarea`) in a grouped list's row, at any depth: the
-    /// field a platform draws in a list's cell, which on
+    /// `textarea`, LLP 1104 D2) in a grouped list's row, at any depth: the
+    /// field a platform draws in a list's cell (LLP 1116.005 D2), which on
     /// iOS is borderless, the cell being the field. A search field keeps its
     /// own chrome, and so does a field in a section drawn with no card (a
     /// transparent `background-color`), where no cell is drawn around it:
-    /// a custom amount field would otherwise be placeholder text alone on the
-    /// grouped background. Read from the tree as it stands: a
+    /// water-tracker's custom amount was placeholder text alone on the
+    /// grouped background (round 33). Read from the tree as it stands: a
     /// list with `listStyle`, a section, its rows' group (not its `header` or
     /// `footer`), a row.
     pub(crate) fn is_cell_field(&self, slot: u32) -> bool {
@@ -731,7 +731,7 @@ impl NodeArena {
 impl NodeRef<'_> {
     /// Whether this is a native text field in a grouped list's row, which a
     /// host draws as its platform draws a field in a list's cell
-    /// (`NodeArena::is_cell_field`).
+    /// (`NodeArena::is_cell_field`, LLP 1116.005 D2).
     pub fn is_cell_field(&self) -> bool {
         self.arena.is_cell_field(self.slot)
     }
@@ -744,9 +744,9 @@ fn collapse(a: f32, b: f32) -> f32 {
 }
 
 /// Each boundary where the author wrote a margin takes the web's space: the
-/// margins that meet there collapsed, as block margins do. A margin
-/// is the author's when its row says so, whatever its
-/// number; the sheet's stands in for the platform's gap.
+/// margins that meet there collapsed, as block margins do (§6.4). A margin
+/// is the author's when its row says so (LLP 1115.000 D2), whatever its
+/// number; the sheet's (LLP 1084 §2) stands in for the platform's gap.
 fn authored_space(list: &mut GroupedList, shown: &[NodeRef<'_>], env: &Env, basis: f32) {
     use crate::style::Dimension;
     let mut below: Option<(f32, bool)> = None;

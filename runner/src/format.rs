@@ -1,7 +1,9 @@
 //! The linked capability `format`: `formatDate`, `formatDay`, `formatNumber`,
-//! `toFixed` and `formatDecimal`: dates, a day's label, compact numbers,
-//! and decimal, currency and percent numbers, over bounded input. It is
-//! linked by use, as the router is.
+//! `toFixed` and `formatDecimal` (LLP 1102 §3.2, decided (c)).
+//!
+//! @ref LLP 1054.000.003 D2 (dates), D3 (compact numbers), D7 (bounded
+//! input), D8 (linked by use, the router's way); LLP 1116 D8 (decimal,
+//! currency and percent numbers); LLP 1116.020 D8 (a day's label)
 //!
 //! Nothing outside [`crate::RunnerLinks`] names this module: `ALL` fills
 //! `format` with [`formatting`], and the web registers it from
@@ -60,14 +62,14 @@ enum Style {
 }
 
 /// `Sep 26, 2026` (`{ dateStyle: "medium" }`), `September 2026`
-/// (`{ month: "long", year: "numeric" }`) or `2026-09-26` (the
+/// (`{ month: "long", year: "numeric" }`) or `2026-09-26` (LLP 1102 §3.4: the
 /// date part of `toISOString`) of a wall time in range. `en-US`'s short months are the first three letters of
 /// the long ones.
 fn date(wall: f64, style: Style) -> String {
     let (year, month, day) = civil((wall / 86_400_000.0).floor() as i64);
     let mut out = String::with_capacity(16);
     if style == Style::Iso {
-        // `wall_ms` admits years 1–9999 only, so four digits always.
+        // `wall_ms` admits years 1–9999 only (D7), so four digits always.
         let pad = |out: &mut String, n: f64, width: usize| {
             let mut digits = String::new();
             push_number(n, &mut digits);
@@ -103,7 +105,7 @@ enum DayMode {
     List,
 }
 
-/// `formatDay(thenMs, nowMs, utcOffset, mode)`: `then`'s
+/// `formatDay(thenMs, nowMs, utcOffset, mode)` (LLP 1116.020 D8): `then`'s
 /// day counted from `now`'s in the offset's calendar days, as Foundation's
 /// relative date formatting (`doesRelativeDateFormatting`) and Mail's list
 /// name them in `en-US`:
@@ -114,7 +116,7 @@ enum DayMode {
 ///   back (seven back is today's weekday, so a date), else `M/D/YY`, as
 ///   `{ dateStyle: "short" }` prints it, a later day's too.
 ///
-/// `""` when either instant is invalid.
+/// `""` when either instant is invalid (D7).
 fn day_label(then: f64, now: f64, offset: f64, mode: DayMode) -> Value {
     let (Some(wall), Some(today)) = (wall_ms(then, offset), wall_ms(now, offset)) else {
         return Value::str("");
@@ -163,7 +165,7 @@ fn day_label(then: f64, now: f64, offset: f64, mode: DayMode) -> Value {
 /// - Compact's default precision keeps every integer digit and, below 10,
 ///   two significant digits; truncation never carries, so the suffix stands.
 /// - Grouping is `min2`: only an integer part of five digits or more.
-/// - A non-finite value is `""` (Intl prints `NaN` and `∞`).
+/// - A non-finite value is `""` (Intl prints `NaN` and `∞`; D7).
 fn compact(n: f64) -> Value {
     if !n.is_finite() {
         return Value::str("");
@@ -221,8 +223,8 @@ fn compact(n: f64) -> Value {
     Value::str(&out)
 }
 
-/// The ISO 4217 codes `formatNumber(n, "currency", code)` takes,
-/// each with its `en-US` symbol and fraction digits, as Bun 1.4.2's
+/// The ISO 4217 codes `formatNumber(n, "currency", code)` takes (LLP 1116
+/// D8), each with its `en-US` symbol and fraction digits, as Bun 1.4.2's
 /// `Intl.NumberFormat("en-US", { style: "currency", currency })` (ICU 78.1)
 /// prints them. A symbol that ends in a letter is set apart from the number
 /// by a no-break space (`CHF 5.00`), as ICU's currency spacing does.
@@ -253,7 +255,7 @@ const CURRENCIES: [(&str, &str, u32); 24] = [
     ("VND", "₫", 0),
 ];
 
-/// `formatNumber(n, "decimal" | "currency" | "percent")`:
+/// `formatNumber(n, "decimal" | "currency" | "percent")` (LLP 1116 D8):
 /// `Intl.NumberFormat("en-US")` with `{}`, `{ style: "currency", currency }`
 /// or `{ style: "percent" }`, from the value's shortest decimal digits as
 /// ICU reads them ([`js_digits`]: `1.005` is `$1.01`, where `toFixed` says
@@ -266,7 +268,7 @@ const CURRENCIES: [(&str, &str, u32); 24] = [
 /// - the integer part is grouped by threes from four digits;
 /// - a negative value, `-0` and one that rounds to zero included, is signed
 ///   before the symbol: `-0`, `-$5.00`, `-0%`;
-/// - a non-finite value is `""`, as every format's is.
+/// - a non-finite value is `""`, as every format's is (D7).
 ///
 /// `None` for a style or code the compiler would have refused.
 fn styled(n: f64, style: &str, code: &str) -> Option<Value> {
@@ -364,7 +366,7 @@ fn digits(d: f64, max: u32) -> Option<u32> {
 /// the exact binary value: the integer `n` nearest `|x| × 10^digits`, the
 /// larger of two (a tie away from zero), so `1.005` at 2 is `1.00`; the
 /// sign of any `x < 0` (`-0.001` is `-0.00`, `-0` is `0.00`); `|x| ≥ 10^21`
-/// as `toString` prints it. A non-finite `x` is `""`, where JavaScript
+/// as `toString` prints it. A non-finite `x` is `""` (D7), where JavaScript
 /// prints `NaN` or `Infinity`.
 fn to_fixed(x: f64, digits: u32) -> Value {
     if !x.is_finite() {
@@ -403,7 +405,7 @@ fn to_fixed(x: f64, digits: u32) -> Value {
     Value::str(&out)
 }
 
-/// `formatDecimal(units, digits)`: the integer `units` of a
+/// `formatDecimal(units, digits)` (LLP 1102 §3.2): the integer `units` of a
 /// smallest unit as a decimal with `digits` places, exactly; `-0` is `0`;
 /// `""` for a count that is not an integer or not finite.
 fn format_decimal(units: f64, digits: u32) -> Value {

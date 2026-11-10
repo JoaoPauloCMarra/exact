@@ -363,7 +363,7 @@ internal class Layers(
             // straight, its text was rasterized again at every scale (a dialog's 0.9 -> 1 entrance left ~5 MB of glyph
             // images in Skia's caches). The layer goes when the scale settles. Not for a layer whose drawing could not
             // be bounded (it holds another layer): its node is 16384 px square, and an offscreen layer that size cost
-            // a Vulkan allocation of over 400 ms at each start (Expo Services' login mark).
+            // a Vulkan allocation of over 400 ms at each start (Expo Services' login mark, LLP 1115.003).
             val offscreen = scaling && !l.flat && l.bounded
             if (offscreen != l.composited) { l.composited = offscreen; l.node.setUseCompositingLayer(offscreen, null) }
         }

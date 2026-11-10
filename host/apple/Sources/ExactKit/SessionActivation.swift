@@ -1,6 +1,6 @@
 // What follows first pixel: the app module, the data source, native views.
-// App logic loads after first pixel.
-// Native views attach after the paint gate.
+// @ref LLP 1027 D4 — app logic loads after first pixel.
+// @ref LLP 1024 D3 — native views attach after the paint gate.
 import Foundation
 import QuartzCore
 import ExactCore
@@ -15,12 +15,12 @@ extension ExactSession {
         activatedGeneration = drawnGeneration
         DispatchQueue.main.async { [weak self] in
             guard let self, state != .destroyed, generation == drawnGeneration else { return }
-            // Prepare before any source calls the module.
+            // Prepare before any source calls the module (LLP 1067.000 D8).
             let started = CACurrentMediaTime()
             natives.prepareAppModule()
             ExactLaunch.shared.modulePrepared(self, seconds: CACurrentMediaTime() - started)
             presenter.releaseLaunchAutofocus() // the next turn, never waiting on a loading source
-            restoreKeptDocuments() // before any answer reads a kept document
+            restoreKeptDocuments() // before any answer reads a kept document (LLP 1069.010.000 D4)
             if preparedGeneration != drawnGeneration { prepareData(drawnGeneration, token: token) } else { activateData(drawnGeneration, token: token) }
         }
     }
@@ -78,7 +78,7 @@ extension ExactSession {
         }
         storeRefresh.record(batch)
         retryStoreActivation()
-        deliverModuleEvents() // a launching activation, once the module and the data are up
+        deliverModuleEvents() // a launching activation, once the module and the data are up (LLP 1133.004 D6)
         NotificationCenter.default.post(name: Self.dataActivated, object: self)
         canvases.loadIfNeeded()
         openNativeViews(drawnGeneration)
@@ -98,7 +98,8 @@ extension ExactSession {
 
 extension ExactSession {
     /// Posted, with the session, when its data module's first commit has
-    /// been applied (a host decides then what its first pixel could not).
+    /// been applied (a host decides then what its first pixel could not:
+    /// LLP 1133.025 D6).
     public static let dataActivated = Notification.Name("ExactSessionDataActivated")
 
     /// The scene became active (iOS): the canvases follow, and a background
@@ -112,8 +113,8 @@ extension ExactSession {
     /// runner then holds each event to its own bound).
     static let heldModuleEventBound = 256
 
-    /// A module event the platform reported for this session: held from
-    /// launch until first pixel and the data's activation,
+    /// A module event the platform reported for this session (LLP 1133.004
+    /// D6): held from launch until first pixel and the data's activation,
     /// then raised into the runner and heard in order, once. `activation` is
     /// true only for a platform callback that reports a person's act on its
     /// own UI.
@@ -141,7 +142,7 @@ extension ExactSession {
         apply(runtime.moduleEvent("{}"))
     }
 
-    /// The session ends: each event no handler heard is journaled.
+    /// The session ends: each event no handler heard is journaled (D6).
     func endModuleEvents() {
         for json in heldModuleEvents {
             let v = (try? JSONSerialization.jsonObject(with: Data(json.utf8))) as? [String: Any] ?? [:]

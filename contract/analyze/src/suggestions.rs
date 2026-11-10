@@ -1,4 +1,4 @@
-//! Code consistency for observed suggestions, not a proof.
+//! Code consistency for observed suggestions, not a proof (LLP 1151 D6, D9).
 
 mod values;
 

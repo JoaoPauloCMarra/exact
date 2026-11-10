@@ -1,13 +1,13 @@
-// The Tamber binding's sample: `apps/tamber-host`'s
+// The Tamber binding's sample (LLP 1121 D12, stage 5): `apps/tamber-host`'s
 // native module fills itself through `ExactTamber(view).color(…)` and says
 // each colour it applies, which the app shows with a count. The window's
 // swatch follows `setMode`; the pinned one keeps its pin's (`tone=cool`); both
 // follow the scheme; a root font size (what Dynamic Type sets) fires their
-// observations. A live edit is the dev loop's, and not driven here.
+// observations. A live edit is the dev loop's (the stage 5 gate drives it).
 const said = async (s, id) => (await s.tree()).nodes.find(n => n.props?.testId === id)?.props?.text ?? '';
 const colour = (text) => text.match(/#[0-9a-f]{8}/)?.[0] ?? null;
 const times = (text) => Number(text.match(/×(\d+)/)?.[1] ?? 0);
-// The module's own params (`component Swatch`), said last.
+// Stage 7 D: the module's own params (`component Swatch`), said last.
 const ring = (text) => text.match(/ring (#[0-9a-f]{8}) (\d+)/)?.slice(1) ?? [null, null];
 
 export async function tamberSmoke({ host, open, check }) {
@@ -33,7 +33,7 @@ export async function tamberSmoke({ host, open, check }) {
     await s.prefer({ 'root-font-size': '22' }); await settle();
     const font = await at();
     check(times(font.window) > times(dark.window) && times(font.pinned) > times(dark.pinned), `${host} tamber: a root font size fires both observations: ${font.window} | ${font.pinned}`);
-    // The label's font and the inset follow the text size, the
+    // Stage 6 G: the label's font and the inset follow the text size, the
     // font Bold Text too (`length(…)`, `font(…)`).
     const inset = (text) => Number(text.match(/inset (\d+)/)?.[1] ?? 0);
     const size = (text) => Number(text.match(/font (\d+)/)?.[1] ?? 0);

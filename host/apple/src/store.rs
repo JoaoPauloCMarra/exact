@@ -1,11 +1,11 @@
-//! The app's kept secrets on Apple platforms: `ibex2::host`'s
-//! `Secrets` — the Keychain — read into a snapshot before the
+//! The app's kept secrets on Apple platforms (LLP 1018 D6): `ibex2::host`'s
+//! `Secrets` — the Keychain (ibex LLP 0069) — read into a snapshot before the
 //! runner boots and written after each commit, on the main thread, never
-//! through Swift. The runner's kept answers go through
+//! through Swift. The runner's kept answers (LLP 1027 D4) go through
 //! `ibex2`'s kv store, a file per answer, written on a thread of their own
 //! (`flush_kept`).
 //!
-//! Agent mode (`EXACT_AGENT=1`) gets memory stores unless
+//! Agent mode (`EXACT_AGENT=1`, LLP 1012) gets memory stores unless
 //! `EXACT_STORE=real` says otherwise: a scripted drive starts from nothing
 //! and leaves nothing in a developer's keychain. A drive that names a scratch
 //! store (`EXACT_AGENT_STORAGE`) keeps secrets in that tree instead, so a
@@ -20,16 +20,16 @@ use ibex2::host::{Bindings, Host, Kv, Secrets};
 mod shared_secrets;
 use shared_secrets::{secret_directory, secret_namespace, SecretBackend};
 
-/// The kv scope the runner's kept answers live in: beside the
+/// The kv scope the runner's kept answers live in (LLP 1027 D4): beside the
 /// Keychain, not in it — a cache of settled data, any resource's name a
 /// key, read in one listing at launch.
 pub(crate) const KEPT: &str = "exact.kept";
 
 /// The kv scope persisted states live in where they are not the app's
-/// `UserDefaults` ([`Prefs`]).
+/// `UserDefaults` (LLP 1116 D5, [`Prefs`]).
 const STATE: &str = "exact.state";
 
-/// Where persisted states live: the app's `UserDefaults`
+/// Where persisted states live (LLP 1116 D5): the app's `UserDefaults`
 /// domain, or — in agent mode (a nameless drive's memory, a named drive's
 /// scratch tree), a test, an app with no id — the kv store beside the kept
 /// answers, under [`STATE`].
@@ -98,7 +98,7 @@ impl Prefs {
     }
 }
 
-/// The app's bindings from its grants, and the scope the
+/// The app's bindings from its grants (LLP 1016 D6), and the scope the
 /// runner keeps answers in. Grants that do not parse are the error, which
 /// the host journals; every request is then refused, naming it. An empty
 /// app id, as a test that stands a platform store in, stays in memory.
@@ -213,8 +213,8 @@ fn endow_in(host: Host, grants: &str) -> Result<Bindings, String> {
     Ok(host.endow(set))
 }
 
-/// Where a commit's kept secrets and answers go: the
-/// platform's stores, behind the I/O link, so an archive that
+/// Where a commit's kept secrets and answers go (LLP 1018 D6): the
+/// platform's stores, behind the I/O link (LLP 1047.001), so an archive that
 /// links no I/O names neither them nor the Keychain and files under them.
 pub trait KeptStore {
     /// Re-read endowed stores, retaining previous values for failed reads.
@@ -347,7 +347,7 @@ impl KeptStore for Platform {
     }
 }
 
-/// The app's I/O as a boot finds it: its
+/// The app's I/O as a boot finds it (LLP 1016 D6; LLP 1018 D6): its
 /// bindings, the secrets and answers they kept, where commits keep more,
 /// and why there are none when the grants did not bind.
 pub struct Endowed {
@@ -359,7 +359,7 @@ pub struct Endowed {
     pub secrets: Option<Box<dyn KeptStore>>,
     /// Why the grants bound nothing.
     pub unbound: Option<String>,
-    /// The presence backend, reconciled before boot, and
+    /// The presence backend, reconciled before boot (LLP 1133.010 D4), and
     /// the keychain service the host reads its items from (none under the
     /// agent): the host installs it in the runner it boots. Its occupancy
     /// is in the snapshot.
@@ -420,7 +420,7 @@ pub fn endowed(grants: &str, app_id: &str, fresh: bool) -> Endowed {
     }
 }
 
-/// Where a commit's store writes go: the app's secrets to the
+/// Where a commit's store writes go (LLP 1018 D6): the app's secrets to the
 /// platform's secret store, the runner's kept answers to its kv store.
 #[derive(Clone)]
 pub struct Platform {
@@ -430,7 +430,7 @@ pub struct Platform {
     namespace: Option<exact_data::secrets::Namespace>,
     secrets: Secrets,
     kv: Kv,
-    /// Where persisted states go.
+    /// Where persisted states go (LLP 1116 D5).
     prefs: Prefs,
     /// Kept answers the writer failed to write, for the journal.
     failed: std::sync::Arc<Failures>,
@@ -548,7 +548,7 @@ impl Drop for Failures {
     }
 }
 
-/// The runner's kept answers are a cache of settled data, and
+/// The runner's kept answers are a cache of settled data (LLP 1027 D4), and
 /// a commit wrote each one to disk before it returned: a file, a rename and
 /// a sync per answer, while the main thread waited on the commit (62 ms of
 /// a chat's opening frame on the Signal clone). One thread writes them
@@ -685,7 +685,7 @@ pub fn snapshot_of(bindings: Option<&Bindings>) -> Vec<(String, Vec<u8>)> {
     snapshot_in(bindings, &Prefs::Kv)
 }
 
-/// [`snapshot_of`], with the persisted states `prefs` holds.
+/// [`snapshot_of`], with the persisted states `prefs` holds (LLP 1116 D5).
 pub fn snapshot_in(bindings: Option<&Bindings>, prefs: &Prefs) -> Vec<(String, Vec<u8>)> {
     let Some(b) = bindings else {
         return Vec::new();
@@ -834,7 +834,7 @@ pub(crate) fn group_root(app_id: &str) -> Option<std::path::PathBuf> {
         .filter(|p| p.is_absolute())
 }
 
-/// The app is the store's one writer. Publish only a counter and a Darwin ping;
+/// Stage 1 has one writer: the app. Publish only a counter and a Darwin ping;
 /// another process re-reads the store, never a payload in the notification.
 pub(crate) fn widget_changed(app: &str) {
     if std::env::var("EXACT_WIDGET_WRITER").ok().as_deref() != Some(app) {
@@ -884,9 +884,9 @@ fn publish_widget_change(root: std::path::PathBuf, app: String) {
         let _ = std::fs::remove_file(&temporary);
         return;
     };
-    // An extension writer must put both app and extension counter increments
-    // under the shared lock; it posts this ping after releasing its store
-    // transaction lock, and reloads its written kinds itself.
+    // WP11 must put both app and extension counter increments under its shared lock.
+    // WP11's extension writer (Q1 B) posts this ping after releasing its
+    // store transaction lock, and reloads its written kinds itself.
     #[cfg(target_vendor = "apple")]
     if let Ok(name) = std::ffi::CString::new(format!("{app}.widget-store")) {
         unsafe extern "C" {

@@ -1,5 +1,5 @@
-//! `lower-symbol-tint`: `-exact-tint-color` on a `symbol:` image warns, naming `color=`. A symbol draws in its
-//! `color` on every host; the tint colours a raster or a native control's face.
+//! `lower-symbol-tint`: `-exact-tint-color` on a `symbol:` image warns, naming `color=` (theme2's 17:23Z ruling,
+//! 2026-10-23). A symbol draws in its `color` on every host; the tint colours a raster or a native control's face.
 
 use crate::warnings::warned;
 
@@ -46,7 +46,7 @@ fn a_symbol_by_template_or_choice_warns_and_a_raster_or_an_unknown_source_does_n
     ] {
         assert_eq!(warned(&app(image)), [(TINT.to_string(), 4)], "{image}");
     }
-    // A raster's tint is a template's; a source that may be either has the benefit of the doubt;
+    // A raster's tint is a template's (LLP 1011 §3); a source that may be either has the benefit of the doubt;
     // `color` alone is the repair, not a warning.
     for image in [
         "image \"https://example.com/a.png\" -exact-tint-color=\"-exact-secondary-label\"",
@@ -65,7 +65,7 @@ fn a_native_buttons_face_keeps_its_tint_and_a_drawn_buttons_symbol_warns() {
     let button = |appearance: &str| {
         format!("component App\n  action go\n  view\n    column\n      button{appearance} press=go\n        image \"symbol:lock\" -exact-tint-color=\"-exact-secondary-label\"\n        text \"Lock\"\n")
     };
-    // The platform's button (its default, or `appearance="auto"`) gives its face its tint.
+    // The platform's button (its default, or `appearance="auto"`) gives its face its tint (LLP 1115 D4).
     for appearance in ["", " appearance=\"auto\""] {
         assert!(
             !warned(&button(appearance)).iter().any(|(id, _)| id == TINT),

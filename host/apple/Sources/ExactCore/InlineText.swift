@@ -1,4 +1,4 @@
-// Textual descendants are paragraph values.
+// @ref LLP 1044.000 §6 S1 — textual descendants are paragraph values.
 import Foundation
 import CoreText
 
@@ -21,10 +21,10 @@ package struct InlineText {
     /// CSS `user-select: all` on the run: a selection that takes part of its
     /// text takes all of it (`TextSelection.atom`).
     package let selectsAll: Bool
-    /// CSS `outline: none` on the run: a focused link or
+    /// CSS `outline: none` on the run (LLP 1104 D6): a focused link or
     /// `tabindex` run draws no ring.
     package let outlineNone: Bool
-    /// An image's box not `visibility: hidden`: its label is
+    /// An image's box (LLP 1011.002) not `visibility: hidden`: its label is
     /// read. The box itself draws no ink either way.
     package let boxShown: Bool
     /// Its computed `visibility: hidden`: its text is no target
@@ -39,7 +39,7 @@ package struct InlineText {
         value.text = props["text"] ?? ""
         if value.background != nil || style.backgroundRef != nil { value.backgroundBox = id } else { value.backgroundRadii = [] }
         value.href = props["href"] ?? ""
-        // An image in the text is its box, with no ink or paint of its own.
+        // An image in the text is its box, with no ink or paint of its own (LLP 1011.002).
         boxShown = props["inlineBoxHidden"] != "true"
         if let box = InlineBox(prop: props["inlineBox"]) {
             value.box = box; value.hidden = true
@@ -97,12 +97,12 @@ package struct InlineStyle {
     package var run = Run(text: "", size: 16, weight: 400, family: 0, italic: false, lineHeight: nil, letterSpacing: 0)
     package var darkColor: [Double]?
     package var darkBackground: [Double]?
-    /// A platform colour by name, resolved when the run is read.
+    /// A platform colour by name, resolved when the run is read (LLP 1095 D5).
     package var colorRef: BatchValue?
     package var backgroundRef: BatchValue?
     /// Whether `color` is one its author fixed, not a platform colour by name.
     package var fixedInk = false
-    /// `text-shadow` and `-webkit-text-stroke`, computed for the run.
+    /// `text-shadow` and `-webkit-text-stroke`, computed for the run (LLP 1077).
     package var paint = RunPaintRows()
     package var paired = false
     /// `user-select: all` (`InlineText.selectsAll`).

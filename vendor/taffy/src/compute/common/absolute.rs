@@ -1,4 +1,4 @@
-//! EXACT PATCH 18: one solver for an absolutely positioned box,
+//! EXACT PATCH 18 (LLP 1074): one solver for an absolutely positioned box,
 //! shared by the block, flex and grid algorithms, as CSS 2.1 §10.3.7 and
 //! §10.6.4 and Chrome size and place it.
 //!
@@ -76,7 +76,7 @@ struct Placed {
     output: LayoutOutput,
 }
 
-/// EXACT PATCH 20: a container's pass over the absolutely
+/// EXACT PATCH 20 (LLP 1074 T1): a container's pass over the absolutely
 /// positioned boxes it is the containing block of. Its own children are
 /// given by its algorithm, each with its [`StaticPosition`]; the descendants
 /// whose parents are `Static` come from the tree

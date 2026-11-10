@@ -174,7 +174,7 @@ test.skipIf(process.platform !== 'darwin')('iOS distribution assets retain the i
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }, 60000);
 
-test('device grants derive the plists, their translations and the release entitlements', async () => {
+test('device grants derive the plists, their translations and the release entitlements (LLP 1069.008)', async () => {
   const { readManifest } = await import('./app.mjs');
   // The bake's `reach` for `device.microphone purpose.mic` and
   // `device.speech-recognition purpose.speech`, with en and fr tables.
@@ -205,12 +205,12 @@ test('device grants derive the plists, their translations and the release entitl
     // The hand-written keys are gone, and the refusal names the grant form.
     for (const platform of ['ios', 'macos']) {
       writeFileSync(resolve(dir, 'app.json'), JSON.stringify({ app: { id: 'com.example.fixture', name: 'Fixture' }, host: { [platform]: { permissions: { NSMicrophoneUsageDescription: 'x' } } } }));
-      assert.throws(() => readManifest(dir, 'fixture'), new RegExp(`host\\.${platform}\\.permissions: deleted; declare the device .*device\\.microphone purpose\\.microphone`));
+      assert.throws(() => readManifest(dir, 'fixture'), new RegExp(`host\\.${platform}\\.permissions: deleted \\(LLP 1069\\.008\\); declare the device .*device\\.microphone purpose\\.microphone`));
     }
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }, 60_000);
 
-test('`device.local-network` writes the Local Network prompt on both Apple hosts, over the dev client\'s default', () => {
+test('`device.local-network` writes the Local Network prompt on both Apple hosts, over the dev client\'s default (LLP 1069.008 D2, D4)', () => {
   const reach = { base: 'en', locales: ['en', 'fr'], usage: { NSLocalNetworkUsageDescription: { en: 'Finds servers nearby.', fr: 'Trouve les serveurs.' } } };
   const app = (host) => ({ id: 'com.example.fixture', displayName: 'Fixture', manifest: { host } });
   const flat = (plist) => plist.replace(/>\s+</g, '><');
@@ -241,7 +241,7 @@ test('`host.macos.oneTimeCodeAutofill: "marked"` keeps codes to marked fields; a
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('`appTransportSecurity` writes ATS for web content only; absent, no key', async () => {
+test('`appTransportSecurity` writes ATS for web content only; absent, no key (#106)', async () => {
   const { readManifest } = await import('./app.mjs');
   const ats = { appTransportSecurity: { allowsArbitraryLoadsInWebContent: true } };
   const app = (host) => ({ id: 'com.example.fixture', displayName: 'Fixture', manifest: { host } });
@@ -323,7 +323,7 @@ test('a manifest `start_url` other than the root bakes `ExactStartURL` on iOS an
   }
 });
 
-test('the launch handler bakes `ExactLaunchMode` with or without documents', async () => {
+test('the launch handler bakes `ExactLaunchMode` with or without documents (LLP 1069.010 D4)', async () => {
   const { readManifest } = await import('./app.mjs');
   const app = (manifest) => ({ id: 'com.example.fixture', displayName: 'Fixture', name: 'fixture', manifest: { host: {}, ...manifest } });
   // An app that opens nothing still gets File ▸ New Window from `navigate-new`.
@@ -338,14 +338,14 @@ test('the launch handler bakes `ExactLaunchMode` with or without documents', asy
   const plain = macInfoPlist(app({}));
   assert.match(plain, /<key>ExactLaunchMode<\/key><string>navigate-existing<\/string>/);
   assert.doesNotMatch(plain, /CFBundleDocumentTypes/);
-  // The common document and image types each name their system type (CSV
-  // included); only Markdown, which iOS does not declare, is imported.
+  // The common document and image types each name their system type (ledger
+  // diary F9: CSV); only Markdown, which iOS does not declare, is imported.
   const common = { 'text/plain': 'public.plain-text', 'application/json': 'public.json', 'text/csv': 'public.comma-separated-values-text', 'text/tab-separated-values': 'public.tab-separated-values-text', 'text/markdown': 'net.daringfireball.markdown', 'text/html': 'public.html', 'application/pdf': 'com.adobe.pdf', 'image/png': 'public.png', 'image/jpeg': 'public.jpeg', 'image/gif': 'com.compuserve.gif', 'image/webp': 'org.webmproject.webp', 'image/svg+xml': 'public.svg-image', 'application/zip': 'public.zip-archive' };
   const every = app({ file_handlers: [{ action: '/', accept: Object.fromEntries(Object.keys(common).map(m => [m, []])) }] });
   assert.deepEqual(documentTypes(every)[0].LSItemContentTypes, Object.values(common));
   assert.deepEqual(importedTypes(every).map(t => t.UTTypeIdentifier), ['net.daringfireball.markdown']);
   // An unmapped type is refused when any build reads the manifest, the
-  // web's included; IANA's generic binary is mapped.
+  // web's included (files diary F12); IANA's generic binary is mapped.
   const dir = mkdtempSync(resolve(tmpdir(), 'exact-types-'));
   try {
     const write = (accept) => writeFileSync(resolve(dir, 'app.json'), JSON.stringify({ name: 'Types', app: { id: 'com.example.types', name: 'Types' }, file_handlers: [{ action: '/', accept }] }));
@@ -353,7 +353,7 @@ test('the launch handler bakes `ExactLaunchMode` with or without documents', asy
     assert.throws(() => readManifest(dir, 'types'), /file_handlers\[0\]\.accept: audio\/mpeg names no type the Apple hosts map \(they map .*text\/csv/);
     write({ 'application/octet-stream': ['.bin', '.dat'] });
     assert.deepEqual(documentTypes(app(readManifest(dir, 'types')))[0].LSItemContentTypes, ['public.data']);
-    // An app's own format: a vendor or `x-` type is
+    // An app's own format (studio diary R13): a vendor or `x-` type is
     // exported as the app's, its editor and owner, beside the system types
     // it only views; `+json` makes it JSON. It must name its extension.
     write({ 'application/x-studio-board+json': ['.board'], 'application/json': ['.json'] });
@@ -400,7 +400,7 @@ test('simulator signing gives each app and embedded host a distinct Keychain ide
   const app = {id:'com.exact.test',manifest:{host:{ios:{}}}};
   const simulator = {simulator:true};
   const sim = entitlements(app, null, true, null, simulator), host = entitlements({...app,id:app.id+'.host'}, null, true, null, simulator);
-  // A Team ID's ten characters before the id, the bare id it had kept as a Keychain group.
+  // A Team ID's ten characters before the id (LLP 1069.008.000 D3), the bare id it had kept as a Keychain group.
   assert.match(sim, /<key>application-identifier<\/key><string>SIMULATORX.com.exact.test<\/string>/);
   assert.match(sim, /<key>keychain-access-groups<\/key><array><string>SIMULATORX.com.exact.test<\/string><string>com.exact.test<\/string><\/array>/);
   assert.match(host, /<key>application-identifier<\/key><string>SIMULATORX.com.exact.test.host<\/string>/);
@@ -411,7 +411,7 @@ test('simulator signing gives each app and embedded host a distinct Keychain ide
   assert.match(device, /<key>get-task-allow<\/key><false\/>/);
 });
 
-test('an App Clip is its parent\'s app under a second identity: NSAppClip, the parent identifier and appclips: domains', async () => {
+test('an App Clip is its parent\'s app under a second identity: NSAppClip, the parent identifier and appclips: domains (LLP 1126 D12)', async () => {
   const { appClip, entitlements, infoPlist } = await import('../host/apple/build.mjs');
   const flat = (s) => s.replace(/\s+/g, '');
   const base = { id: 'com.exact.test', displayName: 'Test', manifest: { host: { ios: { associatedDomains: ['applinks:exact.test', 'webcredentials:exact.test'], urlSchemes: ['exacttest'] } } } };
@@ -470,7 +470,7 @@ test('widgets share the owner Keychain groups and leave the host sample outside 
   assert.doesNotMatch(entitlements(app,null,true,null,{simulator:true}), /aps-environment/);
 });
 
-test('Live Activities alone gate the group, the Keychain group and the plist keys, and a pushed one signs aps-environment', async () => {
+test('Live Activities alone gate the group, the Keychain group and the plist keys, and a pushed one signs aps-environment (LLP 1126.001 WP13)', async () => {
   const {entitlements, infoPlist} = await import('../host/apple/build.mjs');
   const {hasEntries} = await import('../host/apple/widgets.mjs');
   const app = {id:'com.exact.test',displayName:'Test',manifest:{live_activities:[{kind:'departure',push:true},{kind:'alert',frequent:true}],host:{ios:{}}}};
@@ -489,7 +489,7 @@ test('Live Activities alone gate the group, the Keychain group and the plist key
   assert.doesNotMatch(entitlements({...app,manifest:{...app.manifest,live_activities:[{kind:'departure'}]}},'TEAM',true), /aps-environment/);
 });
 
-test('a device build with entries takes the app\'s and the extension\'s profiles that grant the shared groups, or names what each close profile lacked or failed', async () => {
+test('a device build with entries takes the app\'s and the extension\'s profiles that grant the shared groups, or names what each close profile lacked or failed (LLP 1126.001 WP13)', async () => {
   const {entryProfiles} = await import('../host/apple/widgets.mjs');
   const app = {id:'com.exact.test',manifest:{live_activities:[{kind:'departure',push:true}],host:{ios:{}}}};
   const day = 8.64e7;
@@ -581,6 +581,7 @@ test('a device build takes the App Clip\'s profile for its own App ID, of the ap
 });
 
 test('a HealthKit grant signs with its entitlement, tvOS drops it, and a device build takes only a profile that allows it', async () => {
+  // LLP 1069.008.000 D2, D4, D5.
   const {entitlements, tvReach} = await import('../host/apple/build.mjs');
   const {allows} = await import('../host/apple/devices.mjs');
   const app = {id:'com.exact.test',manifest:{host:{ios:{}}}};
@@ -652,7 +653,7 @@ test('watch entries keep accessory families and omit TypeScript pending the Herm
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('Mac widgets omit accessory-only entries and require a provisioned pair for shared secrets', async () => {
+test('Mac widgets omit accessory-only entries and require a provisioned pair for shared secrets (LLP 1126.001 WP16)', async () => {
   const { platformWidgetEntries, macWidgetGroup, macWidgetProfiles, macWidgetEntitlements } = await import('../host/apple/widgets.mjs');
   const app = { id: 'com.exact.test', manifest: { widgets: [
     { kind: 'home', families: ['systemSmall', 'systemMedium', 'systemLarge', 'systemExtraLarge', 'accessoryRectangular'] },
@@ -769,7 +770,7 @@ test('Mac signing preflight falls back without a development identity and reads 
   const ios = { ...base, name: 'iPhone development', platforms: ['iOS'] };
   for (const installed of [[], [ios], [{ ...base, team: 'OTHER' }]]) {
     assert.equal(macWidgetProfiles({ app, team: base.team, installed, named: ios, hardwareID: noHardware, log: text => messages.push(text) }), null);
-    assert.match(messages.at(-1), /ignoring EXACT_PROFILE \(iPhone development\).*iOS.*macOS profiles/);
+    assert.match(messages.at(-1), /ignoring EXACT_PROFILE \(iPhone development\).*iOS.*§5 Q5/);
   }
   let reads = 0;
   const development = installed.map(p => ({ ...p, dev: true, method: 'development', devices: ['MAC'] }));
@@ -779,7 +780,7 @@ test('Mac signing preflight falls back without a development identity and reads 
   assert.throws(() => profile('PHONE', app.id, [], { installed, named: installed[0] }), /EXACT_PROFILE \(Mac distribution\) is not an iOS profile/);
 });
 
-test('Mac versioned runtime publication serves both bare products', async () => {
+test('Mac versioned runtime publication serves both bare products (LLP 1126.001 WP16)', async () => {
   if (process.platform !== 'darwin') return;
   const { wrapFramework } = await import('../host/apple/assets.mjs');
   const { publishMacFramework } = await import('../host/apple/build.mjs');

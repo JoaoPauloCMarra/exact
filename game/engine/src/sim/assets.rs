@@ -169,8 +169,8 @@ impl<G: Game> Sim<G> {
     /// A model's state follows its textures': re-derive only the model
     /// `touched` (a delivered or prepared name) is, and the models naming it
     /// as a texture (`Assets::dependents`). Re-deriving every model on every
-    /// delivery made a world of hundreds of models quadratic to load (202
-    /// models: ~4 s of a web load).
+    /// delivery made a world of hundreds of models quadratic to load (garden's
+    /// 202: ~4 s of a web load).
     fn finish_assets(&mut self, touched: &str) {
         use crate::asset::AssetState;
         let assets = &mut *self.world.assets;

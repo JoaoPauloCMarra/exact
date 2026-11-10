@@ -1,4 +1,4 @@
-// ActivityKit stays outside the app's load commands.
+// @ref LLP 1126.001 WP9 — ActivityKit stays outside the app's load commands.
 import { resolve } from 'node:path';
 import { copyFileSync, existsSync, readdirSync, readFileSync } from 'node:fs';
 import { wrapFramework } from './assets.mjs';
@@ -16,7 +16,7 @@ export function packageActivityArm({ app, bundle, directory, triple, sdk, device
 }
 
 /** The activity update-token ruling admits neither push-to-start nor ordinary remote notifications.
- * Run on archives and on a built iOS app and its extension. */
+ * Run on archives and the async lane's built iOS app and extension. */
 export function assertActivityRefusals(bundle, runApple, app) {
   if (!activityEntries(app).length) return 0;
   const forbidden = ['pushToStartTokenUpdates', 'registerForRemoteNotifications'];
@@ -25,7 +25,7 @@ export function assertActivityRefusals(bundle, runApple, app) {
     const plist = resolve(directory, 'Info.plist');
     if (existsSync(plist)) {
       const info = JSON.parse(runApple('plutil', ['-convert', 'json', '-o', '-', plist], { cargoMessages: true }).stdout);
-      if (info.UIBackgroundModes?.includes('remote-notification')) throw new Error(`${directory}: remote-notification background mode is refused`);
+      if (info.UIBackgroundModes?.includes('remote-notification')) throw new Error(`${directory}: remote-notification background mode is refused (LLP 1126.001 WP9)`);
       if (info.CFBundleExecutable) executables.push(resolve(directory, info.CFBundleExecutable));
     }
     for (const tree of ['PlugIns', 'Frameworks']) {
@@ -41,7 +41,7 @@ export function assertActivityRefusals(bundle, runApple, app) {
     const bytes = readFileSync(binary);
     const symbols = runApple('xcrun', ['nm', '-u', binary], { cargoMessages: true }).stdout;
     const found = forbidden.filter(name => bytes.includes(Buffer.from(name)) || symbols.includes(name));
-    if (found.length) throw new Error(`${binary}: ${found.join(', ')} refused`);
+    if (found.length) throw new Error(`${binary}: ${found.join(', ')} refused (LLP 1126.001 WP9)`);
   }
   return executables.length;
 }

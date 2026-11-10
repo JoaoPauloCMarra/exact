@@ -1,7 +1,7 @@
-// @exact/calendar's conformance suite on Apple: the fixture app built for
-// an iOS simulator or macOS and driven by the agent with the
-// implementation bound (`--bind calendar`), so EventKit answers and not
-// the agent's store. It never reads this Mac's calendars:
+// @exact/calendar's conformance suite on Apple (LLP 1133.018 §11, §14 stage
+// 2): the fixture app built for an iOS simulator or macOS and driven by the
+// agent with the implementation bound (`--bind calendar`), so EventKit
+// answers and not the agent's store. It never reads this Mac's calendars:
 //
 // - iOS: the simulator's own event store, its access set by `xcrun simctl
 //   privacy`, the host's own means: full, revoked and undetermined;
@@ -98,7 +98,7 @@ for (const host of hosts.length ? hosts : ['ios', 'macos']) {
       await s.tap('too-long');
       const long = await until(s, 'walk', (t) => /^error/.test(t ?? ''));
       check(where, 'more than four years fails calendar-range-too-long', /^error TypeError .*calendar-range-too-long/.test(long ?? ''), long);
-      // The page measurements: each read's time off the main thread.
+      // D6's page measurements: each read's time off the main thread.
       const lines = (await s.logs())?.lines ?? [];
       console.log(`NOTE ${where}: ${lines.filter((l) => /page calendarEvents .* in \d+ ms/.test(l)).map((l) => l.replace(/^.*page /, '')).join('; ')}`);
     } finally {

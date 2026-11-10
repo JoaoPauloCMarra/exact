@@ -1,4 +1,4 @@
-//! Optional Linux delivery composition.
+//! Optional Linux delivery composition (LLP 1030 D4).
 //! A binary-only app calls `exact_linux::run`; an update-capable app calls this crate.
 #![deny(missing_docs)]
 mod store;
@@ -12,7 +12,7 @@ pub fn run<D: DataSource + Default>(baked: &[u8], compat: &str) -> i32 {
     run_composed::<D>(baked, compat, Default::default())
 }
 
-/// [`run`] with the app's hatches, as
+/// [`run`] with the app's hatches (LLP 1075.003.000.001 §5), as
 /// `exact_linux::run_with_hatches` takes them.
 pub fn run_with_hatches<D: DataSource + Default, H: exact_linux::Hatches>(
     baked: &[u8],

@@ -1,4 +1,4 @@
-// @exact/passkeys on Apple:
+// @exact/passkeys on Apple (LLP 1133.011 D1, D3-D6, D10, D11, D13):
 // AuthenticationServices' platform and security-key providers, one
 // `ASAuthorizationController` per ceremony, in WebAuthn's JSON forms. The
 // app's composed module calls it outside the agent; under the agent the
@@ -8,18 +8,18 @@
 //   `…RequestOptionsJSON`; the answers `RegistrationResponseJSON` and
 //   `AuthenticationResponseJSON`, every buffer base64url. Apple gives a
 //   registration's attestation object, not its authenticator data or key,
-//   so both are read from it (WebAuthn §5.2.1.1's `getAuthenticatorData()`,
+//   so both are read from it (§5.2.1.1's `getAuthenticatorData()`,
 //   `getPublicKey()`, `getPublicKeyAlgorithm()`).
-// - Security keys join the sheet only when asked for: `apple.securityKey`,
+// - Security keys join the sheet only when asked for (D4): `apple.securityKey`,
 //   `authenticatorAttachment: "cross-platform"`, `hints` naming
 //   `security-key`, or an `allowCredentials` entry with a usb, nfc or ble
 //   transport.
-// - No answer carries a PRF output: only `prf.enabled` is answered.
-//   A lock's user handle (beginning `exact-lock:`) is never
+// - No answer carries a PRF output (D10): only `prf.enabled` is answered.
+//   A lock's user handle (§7 item 3, beginning `exact-lock:`) is never
 //   registered, delivered or signalled from here.
-// - One ceremony at a time: a newer one cancels a pending conditional
+// - One ceremony at a time (D9): a newer one cancels a pending conditional
 //   `get` (iOS's AutoFill-assisted request), which ends `AbortError`.
-// - The hatches see each request after its words are set; the module
+// - The hatches (D5) see each request after its words are set; the module
 //   sets the fields it owns again after they return.
 // - The sheet anchors to the key window. The package context names no
 //   session window, so a host showing two sessions anchors to whichever
@@ -52,7 +52,7 @@ private func unb64(_ value: Any?) -> Data? {
 private func marked(_ handle: Data?) -> Bool { handle.map { $0.starts(with: mark) } ?? false }
 
 public final class PasskeysModule: NSObject, ExactPackage {
-    /// The app's access hatches: each registration or assertion
+    /// The app's access hatches (D5): each registration or assertion
     /// request, after the module's words are set and before the controller
     /// is made.
     public static var registrationRequest: ((ASAuthorizationRequest) -> Void)?
@@ -62,7 +62,7 @@ public final class PasskeysModule: NSObject, ExactPackage {
     /// The ceremony whose sheet is up, and the conditional one a newer ends.
     private var running: [ObjectIdentifier: Ceremony] = [:]
     private var conditional: Ceremony?
-    /// Each registration's RP ID by credential id, for `dispose`.
+    /// Each registration's RP ID by credential id, for `dispose` (D11).
     private var made: [String: String] = [:]
 
     public init(context: ExactPackageContext) { self.context = context }
@@ -114,9 +114,9 @@ public final class PasskeysModule: NSObject, ExactPackage {
         done()
     }
 
-    // MARK: capabilities
+    // MARK: capabilities (D13)
 
-    /// A Mac signs `webcredentials:` only with a profile; iOS always
+    /// A Mac signs `webcredentials:` only with a profile (D6); iOS always
     /// can, and the platform refuses an RP ID the app is not associated with.
     private var associated: Bool {
         #if os(macOS)
@@ -151,7 +151,7 @@ public final class PasskeysModule: NSObject, ExactPackage {
 
     private func create(_ args: [String: Any], _ reply: @escaping ([String: Any]) -> Void) {
         guard context.origin == "app" else { return reply(["error": "NotAllowedError", "message": "person-required"]) }
-        guard associated else { return reply(["error": "NotSupportedError", "message": "a Mac build signs no associated domain without a provisioning profile"]) }
+        guard associated else { return reply(["error": "NotSupportedError", "message": "a Mac build signs no associated domain without a provisioning profile (LLP 1133.011 D6)"]) }
         let o = args["publicKey"] as? [String: Any] ?? [:]
         let user = o["user"] as? [String: Any] ?? [:]
         guard let rp = (o["rp"] as? [String: Any])?["id"] as? String, let challenge = unb64(o["challenge"]),
@@ -199,7 +199,7 @@ public final class PasskeysModule: NSObject, ExactPackage {
         if let hatch = Self.registrationRequest {
             for r in requests { hatch(r) }
             if platform.challenge != challenge || platform.userID != userID || platform.name != name {
-                context.log("passkeys: the registration hatch changed a field the module owns; set again")
+                context.log("passkeys: the registration hatch changed a field the module owns; set again (LLP 1133.011 D5)")
             }
             own(platform)
         }
@@ -216,7 +216,7 @@ public final class PasskeysModule: NSObject, ExactPackage {
 
     private func get(_ args: [String: Any], _ reply: @escaping ([String: Any]) -> Void) {
         guard context.origin == "app" else { return reply(["error": "NotAllowedError", "message": "person-required"]) }
-        guard associated else { return reply(["error": "NotSupportedError", "message": "a Mac build signs no associated domain without a provisioning profile"]) }
+        guard associated else { return reply(["error": "NotSupportedError", "message": "a Mac build signs no associated domain without a provisioning profile (LLP 1133.011 D6)"]) }
         let o = args["publicKey"] as? [String: Any] ?? [:]
         guard let rp = o["rpId"] as? String, let challenge = unb64(o["challenge"])
         else { return reply(["error": "TypeError", "message": "publicKey needs rpId and challenge"]) }
@@ -264,7 +264,7 @@ public final class PasskeysModule: NSObject, ExactPackage {
         if let hatch = Self.assertionRequest {
             for r in requests { hatch(r) }
             if platform.challenge != challenge || platform.relyingPartyIdentifier != rp {
-                context.log("passkeys: the assertion hatch changed a field the module owns; set again")
+                context.log("passkeys: the assertion hatch changed a field the module owns; set again (LLP 1133.011 D5)")
             }
             own(platform)
         }
@@ -274,7 +274,7 @@ public final class PasskeysModule: NSObject, ExactPackage {
             case .failure(let failure): reply(failure)
             case .success(let credential):
                 guard let assertion = credential as? ASAuthorizationPublicKeyCredentialAssertion else { return reply(["error": "UnknownError"]) }
-                // A lock's assertion, or a discoverable one with no user handle, is never delivered.
+                // A lock's assertion, or a discoverable one with no user handle, is never delivered (§7 item 3).
                 if marked(assertion.userID) || (ids.isEmpty && assertion.userID.isEmpty) { return reply(["error": "NotAllowedError"]) }
                 reply(Self.assertion(assertion))
             }
@@ -361,7 +361,7 @@ public final class PasskeysModule: NSObject, ExactPackage {
         if immediate { c.controller.performRequests(options: .preferImmediatelyAvailableCredentials) } else { c.controller.performRequests() }
     }
 
-    /// The code for an `ASAuthorizationError`, with Apple's own beside it.
+    /// D1's code for an `ASAuthorizationError`, with Apple's own beside it (D4).
     fileprivate static func failure(_ error: Error) -> [String: Any] {
         let ns = error as NSError
         let words: [Int: String] = [1000: "unknown", 1001: "canceled", 1002: "invalidResponse", 1003: "notHandled", 1004: "failed",
@@ -374,7 +374,7 @@ public final class PasskeysModule: NSObject, ExactPackage {
         case 1006: name = "InvalidStateError"
         case 1005: return ["error": "NotAllowedError", "message": "person-required", "apple": apple]
         // An RP ID the app is not associated with, or whose association the
-        // device could not verify (no file at the domain yet), fails here.
+        // device could not verify (no file at the domain yet), fails here (D6).
         case 1004 where ["not associated", "webcredentials association"].contains(where: "\(ns.localizedDescription) \(underlying?.localizedDescription ?? "")".contains):
             name = "SecurityError"
         default: name = "NotAllowedError"
@@ -382,7 +382,7 @@ public final class PasskeysModule: NSObject, ExactPackage {
         return ["error": name, "message": "\(ns.localizedDescription) (\(ns.domain) \(ns.code))", "apple": apple]
     }
 
-    // MARK: the JSON forms (WebAuthn §5.1.10)
+    // MARK: the JSON forms (§5.1.10)
 
     private func registration(_ credential: ASAuthorizationCredential) -> [String: Any]? {
         guard let r = credential as? ASAuthorizationPublicKeyCredentialRegistration, let object = r.rawAttestationObject,
@@ -425,7 +425,7 @@ public final class PasskeysModule: NSObject, ExactPackage {
     }
 
     /// The attested credential's COSE algorithm and, for an EC2 P-256 or
-    /// RSA key, its SubjectPublicKeyInfo (WebAuthn §6.5.1.1, RFC 5480, RFC 8017).
+    /// RSA key, its SubjectPublicKeyInfo (§6.5.1.1, RFC 5480, RFC 8017).
     private static func publicKey(_ authData: Data) -> (Int, Data?)? {
         let d = [UInt8](authData)
         guard d.count > 55, d[32] & 0x40 != 0 else { return nil }

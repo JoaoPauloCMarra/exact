@@ -1,5 +1,5 @@
-//! The Linux host's integration test that reports the platform's colours,
-//! a binary of its own: the reported table is the
+//! The Linux host's integration test that reports the platform's colours
+//! (LLP 1115.001 D4), a binary of its own: the reported table is the
 //! process's, and a reported accent is never withdrawn, so no test that
 //! pins this host's own look (`tests/it`, `tests/pinned`) may share a
 //! process with it. One test, so that what it sees before the first report
@@ -146,7 +146,7 @@ fn a_reported_palette_is_what_the_roles_and_the_controls_paint_in() {
     assert_eq!(pixel(&mut p, "authored", 8, 14), [0xff, 0xff, 0xff]);
     p.set_system_scheme(false);
 
-    // The material table, row by row.
+    // D4's table, row by row.
     let whole = |m: Material, dark: bool| {
         let table = if dark { &device.dark } else { &device.light };
         Color(table[m as usize] << 8 | 0xff)
@@ -202,7 +202,7 @@ fn a_reported_palette_is_what_the_roles_and_the_controls_paint_in() {
         );
     }
     // A role the device's palette has no tone for is the schema table's
-    // (UIKit's iOS 27 orange since dd9ab2dd51).
+    // (UIKit's iOS 27 orange since dd9ab2dd51, LLP 1115.000 D4).
     assert_eq!(role("-exact-system-orange", false), Color(0xff8d_28ff));
 
     // Told the same again, nothing is painted again; a new wallpaper's

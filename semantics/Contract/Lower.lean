@@ -140,7 +140,7 @@ def rosterTy (f : String) (args : List STy) : STy :=
   else if f = "toString" ∨ f = "trim" ∨ f = "encodeURIComponent" ∨ f = "join"
     ∨ f = "replaceAll" ∨ f = "toLowerCase" ∨ f = "toUpperCase" ∨ f = "formatTime" ∨ f = "formatDate" ∨ f = "formatNumber"
     ∨ f = "t" ∨ f = "toFixed" ∨ f = "formatDecimal" ∨ f = "formatDay" then .string
-  -- Text's, or a list's own type.
+  -- Text's, or a list's own type (LLP 1088 §9.1).
   else if f = "slice" then
     match args with
     | .string :: _ => .string
@@ -280,7 +280,7 @@ def compile : Nat → Program → Nat → Scope → Nat → Expr → Except Stri
         let item := tl.item
         let (cb, _) ← compile fuel p depth (bindScope ps n item sc) (n + 2) body
         .ok (cl ++ [.filter cb.length] ++ cb, .list item)
-      -- As `contract/lower`'s `sort_by`: the list bound as
+      -- LLP 1116.016 §5, as `contract/lower`'s `sort_by`: the list bound as
       -- local `n`, a `Map` of the key over it, then the roster's sort of the
       -- list by its keys.
       | "sortBy", l :: .arrow ps body :: dir =>
@@ -488,7 +488,7 @@ def compileStmt : Nat → Program → Layout → Scope → Nat → Stmt → Exce
       let cnn ← compileBlock fuel p L sc n nn
       .ok (cs ++ [.jumpIfNone (csm.length + 4), .unwrap, .bindLocal] ++ csm ++
            [.dropLocal, .jump (cnn.length + 1), .pop] ++ cnn)
-    -- A call, expanded as the Rust compiler expands it, with
+    -- A call (LLP 1089 D9), expanded as the Rust compiler expands it, with
     -- no call opcode: each argument bound as the next local, at the type
     -- its code has (a `let`'s), then the callee's body in a scope of those
     -- locals and the component's names alone (the caller's locals are

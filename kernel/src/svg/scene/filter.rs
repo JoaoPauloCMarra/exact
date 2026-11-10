@@ -1,8 +1,8 @@
-//! `filter` on an SVG element: references to `filter`
+//! `filter` on an SVG element (LLP 1055.000 D14): references to `filter`
 //! elements and CSS filter functions, resolved into one chain in the
 //! element's user space.
 //!
-//! Filter Effects 1 §9 (regions, units, inputs),
+//! @ref LLP 1055.000 D14; Filter Effects 1 §9 (regions, units, inputs),
 //! §12 (the functions' equivalent primitives, run in sRGB)
 //!
 //! Each entry's `SourceGraphic` is the previous entry's result, so `url(#a)
@@ -171,7 +171,7 @@ fn function(
             grow(&mut *chain, (-g, -g, 2.0 * g, 2.0 * g));
         }
         FilterFn::DropShadow(dx, dy, blur, color) => {
-            // A reference resolves as the host reported it.
+            // A reference resolves as the host reported it (LLP 1095 D1).
             let color = color.map_or(text_color, |c| c.resolve(dark));
             // The third length is the standard deviation itself (Filter
             // Effects 1 §10.9: `feGaussianBlur stdDeviation="[radius]"`),

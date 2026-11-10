@@ -1,4 +1,4 @@
-//! `background-image` on the web: the kernel's gradient grammar,
+//! `background-image` on the web (LLP 1066): the kernel's gradient grammar,
 //! linked when a plan binds the row, so an app that paints no gradient
 //! carries none of it.
 

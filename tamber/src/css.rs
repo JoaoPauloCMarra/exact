@@ -1,4 +1,4 @@
-//! CSS value text: what follows a token's `=`, read into
+//! CSS value text (LLP 1121 §3): what follows a token's `=`, read into
 //! items, with dotted token names where CSS would write `var()`.
 
 /// One component of a CSS value.

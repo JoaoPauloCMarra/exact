@@ -9,7 +9,7 @@ import AppKit
 #endif
 
 /// The card's charts and its shared picture, drawn by hand on one opaque surface in a context whose
-/// y axis points down. Shared by iOS and macOS.
+/// y axis points down (LLP 1079.000 §7.2). Shared by iOS and macOS.
 enum FrameHealthCardDrawing {
     /// Opaque colors: the translucent system roles composited over the card's background ahead of
     /// time, as Exact's roles are on the card's web design.
@@ -66,7 +66,8 @@ enum FrameHealthCardDrawing {
         var rateTop: Double
         /// The time chart's top, four whole refreshes or a multiple of four that reaches twice the target frame time
         var timeTop: Double
-        /// The charts show the screen's frames, which have work against their deadlines and no frame times
+        /// The charts show the screen's frames, which have work against their deadlines and no frame times (LLP 1079.000
+        /// §7.4)
         var screen = false
 
         init(reader: FrameHealthCardReader, rates: FrameHealthCardText.Rates, displayMaximumHz: Double, screen: Bool = false) {

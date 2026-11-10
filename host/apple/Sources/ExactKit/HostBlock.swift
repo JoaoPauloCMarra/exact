@@ -1,4 +1,4 @@
-// The containing block a host gives a subtree it
+// @ref LLP 1115.002 D8.2 — the containing block a host gives a subtree it
 // shows in a view of its own: a pane or a sheet (BlockHostMac.swift).
 import CoreGraphics
 import Foundation
@@ -31,7 +31,7 @@ struct HostBlock: Equatable {
     static func region(_ size: CGSize) -> HostBlock { HostBlock(width: .region(size.width), height: .region(size.height)) }
 }
 
-/// Where a host shows a block in place: its rectangle in the
+/// Where a host shows a block in place (LLP 1123 D2): its rectangle in the
 /// local coordinates of `within`, a node that holds it in the host's
 /// hierarchy as in the document.
 struct BlockPlacement: Equatable {
@@ -46,8 +46,8 @@ extension Runtime {
     /// through the door the covers use (`exact_host_covers`, kinds 4 and 5),
     /// and where the blocks are shown when the host shows them in place
     /// (kinds 6 and 13; kind 7 forgets one), which only the runner's geometry
-    /// reads. `shows` shows a split's own placeholder, or hides
-    /// it again (kinds 14 and 15), in the same layout.
+    /// reads (LLP 1123 D2). `shows` shows a split's own placeholder, or hides
+    /// it again (kinds 14 and 15, LLP 1116.006 D2), in the same layout.
     func blocks(_ blocks: [(UInt32, HostBlock?)], placements: [(UInt32, BlockPlacement?)] = [], shows: [(UInt32, Bool)] = []) -> Batch {
         return on {
             var bytes = Data(capacity: (blocks.count + placements.count + shows.count) * 36)

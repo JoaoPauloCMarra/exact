@@ -1,4 +1,4 @@
-// The transfer carrier: two background
+// The transfer carrier (LLP 1133.017 D8, D10): two background
 // `URLSession`s, `<bundle id>.transfers` and
 // `<bundle id>.transfers.discretionary`, their delegate, and a durable
 // record per registration. A session the system relaunches the app for must
@@ -14,7 +14,7 @@
 // `{package, id}` as a registration's bytes move, at most once a second,
 // and when it ends.
 //
-// The record is the truth and the event a notice of it: a
+// The record is the truth and the event a notice of it (D10): a
 // registration whose requests have all ended is offered to its package as
 // a wake of kind `transfer`, its key the registration's id, at once while
 // the app runs; after a relaunch for the session's events, at
@@ -297,7 +297,7 @@ public enum TransferCarrier {
         offer(ended, completion: completion)
     }
 
-    /// The ended registrations not yet retired, once a module is ready at a launch.
+    /// The ended registrations not yet retired, once a module is ready at a launch (D10).
     static func ready() {
         let held = records.values.filter { $0.ended && !offering.contains($0.id) }.map(\.id)
         if !held.isEmpty { offer(held) }
@@ -336,7 +336,7 @@ public enum TransferCarrier {
 
 extension ExactApp {
     /// `application(_:handleEventsForBackgroundURLSession:completionHandler:)`:
-    /// the carrier's session made again before it returns.
+    /// the carrier's session made again before it returns (LLP 1133.017 D10).
     public func handleTransferEvents(_ identifier: String, completion: @escaping () -> Void) {
         TransferCarrier.events(identifier, completion)
     }

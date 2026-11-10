@@ -1,4 +1,4 @@
-// All branch selectors are flat per primitive.
+// @ref LLP 1149 D1.1, D2, D6.1. All branch selectors are flat per primitive.
 
 struct Viewport { size: vec2<f32>, pad: vec2<f32> }
 @group(0) @binding(0) var<uniform> viewport: Viewport;

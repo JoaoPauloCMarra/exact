@@ -1,4 +1,4 @@
-//! Type and family tokens: `font` names
+//! @ref LLP 1121 D3, D6 (stage 6 C) — type and family tokens: `font` names
 //! a type token and writes only the longhands it names, so a text style's
 //! own weight applies where it writes none; `font-family` names a family
 //! token; a token that varies by an app axis is the text's own, refused on
@@ -61,7 +61,7 @@ fn a_type_token_writes_only_its_longhands() {
     let mut r = booted(plan);
     let body = node(&r, "body");
     // The size, the leading and the family, written; the weight and the
-    // style unsaid: the text style's weight applies.
+    // style unsaid: the text style's weight applies (D12.2).
     assert!(body.style.mask.has(StyleId::FontSize));
     assert!(body.style.mask.has(StyleId::LineHeight));
     assert!(body.style.mask.has(StyleId::FontFamily));
@@ -102,7 +102,7 @@ fn a_type_token_writes_only_its_longhands() {
         "LineHeight(Number(1.5))"
     );
     // Bold Text: a system family under a type token steps, an authored
-    // weight included; a named family is left alone.
+    // weight included; a named family is left alone (D12.3).
     let weight = |r: &Runner<NoData>, id: &str| node(r, id).text_style().font_weight;
     let (system, title) = (weight(&r, "system"), weight(&r, "title"));
     r.set_bold_text(true).unwrap();

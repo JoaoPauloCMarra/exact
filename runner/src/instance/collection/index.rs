@@ -22,7 +22,7 @@ use std::rc::Rc;
 /// A row remeasured within this of the height it already has keeps that
 /// height: a translated row reads float32 ulps off (58 as 57.99997), and a
 /// revision bumped by that would refuse the drop a gap was certified for
-/// (list.js `MEASURE_NOISE`).
+/// (LLP 1094 D7; list.js `MEASURE_NOISE`).
 pub(crate) const MEASURE_NOISE: f64 = 0.01;
 mod gaps;
 
@@ -107,8 +107,8 @@ pub(crate) struct SizeIndex {
     estimate: f64,
     epoch: u64,
     next_generation: u64,
-    /// The list's main-axis padding after its last row: the scroll range
-    /// runs this far past the rows' end.
+    /// The list's main-axis padding after its last row (@ref LLP 1010
+    /// §6.9): the scroll range runs this far past the rows' end.
     trailing: f64,
     /// And before its first row: the range starts this far before the
     /// rows' start, so a short list's end can be there.
@@ -460,7 +460,7 @@ impl SizeIndex {
 
     /// Add `delta` over the rows in `range` whose heights are estimates, in
     /// equal parts, none below zero: a restored position's items above it
-    /// keep the start they had. O(k log N).
+    /// (LLP 1070 §4.2) keep the start they had. O(k log N).
     pub(crate) fn spread_estimates(
         &mut self,
         range: Range<usize>,
@@ -599,7 +599,7 @@ impl SizeIndex {
     /// (even if it shrinks), unless the offset is at the start: there, as CSS
     /// scroll anchoring selects no anchor at a zero offset (Chrome's
     /// `ScrollAnchor`), the list stays at its start and rows inserted above
-    /// show (a mail list's newest message, a row Undo puts back).
+    /// show (mail F8: a mail list's newest message, a row Undo puts back).
     pub(crate) fn capture_anchor(
         &self,
         raw: f64,
@@ -621,7 +621,7 @@ impl SizeIndex {
     ) -> Result<Anchor, IndexError> {
         let offset = self.clamp_offset(raw, viewport)?;
         // The end is judged where the port is, padding before the rows
-        // included: a short list's end is in it.
+        // included: a short list's end is in it (LLP 1010 §6.9).
         let max = self.max_offset(viewport);
         let at = raw.min(max).max(-self.leading);
         let follows_end = follow_end && viewport > 0.0 && max - at < END_SLACK;
@@ -678,7 +678,7 @@ impl SizeIndex {
     }
 
     /// An anchor at `key`'s item, `within` into it, however that compares
-    /// with the item's estimate: a restored position, held
+    /// with the item's estimate: a restored position (LLP 1070 §4.2), held
     /// until the item is measured.
     pub(crate) fn anchor_at(&self, key: &str, within: f64) -> Option<Anchor> {
         Some(Anchor {
@@ -751,13 +751,13 @@ impl SizeIndex {
     /// The farthest a port of `viewport` scrolls: the rows and the padding
     /// after them, less the port (offsets count from the first row's start).
     /// A list shorter than that ends in the padding before its first row,
-    /// down to `scrollTop` 0.
+    /// down to `scrollTop` 0 (LLP 1010 §6.9).
     pub(crate) fn max_offset(&self, viewport: f64) -> f64 {
         (self.total_height() + self.trailing - viewport).max(-self.leading)
     }
 
-    /// A port in the padding before the first row (a negative offset) is at
-    /// the rows' start.
+    /// A port in the padding before the first row (a negative offset, LLP
+    /// 1010 §6.9) is at the rows' start.
     fn clamp_offset(&self, offset: f64, viewport: f64) -> Result<f64, IndexError> {
         if !offset.is_finite() {
             return Err(IndexError::InvalidGeometry);

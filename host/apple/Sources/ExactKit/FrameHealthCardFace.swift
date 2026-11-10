@@ -3,7 +3,7 @@ import CoreText
 import Foundation
 
 /// The card's face above its chart area, drawn by hand on one opaque surface so nothing in it
-/// blends. iOS and macOS share this layout and drawing; each maps its own
+/// blends (LLP 1079.000 §7.2). iOS and macOS share this layout and drawing; each maps its own
 /// touches or clicks to `Layout`'s regions and gives each region an accessibility element.
 enum FrameHealthCardFace {
     enum Status { case live, paused, idle }

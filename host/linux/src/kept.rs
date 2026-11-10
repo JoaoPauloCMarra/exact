@@ -1,4 +1,4 @@
-//! Documents kept across launches on Linux.
+//! Documents kept across launches on Linux (@ref LLP 1069.010.000 D3–D6).
 //!
 //! An app granted `doc.keep` keeps what the person chose in a desktop
 //! session, and only there: the list the person can clear from outside the
@@ -6,13 +6,13 @@
 //! `$XDG_DATA_HOME` (the [Desktop Bookmark
 //! Specification](https://www.freedesktop.org/wiki/Specifications/desktop-bookmark-spec/)),
 //! each entry marked with the app's id as its `bookmark:application`. A
-//! headless run, the DRM kiosk and a drive keep nothing.
+//! headless run, the DRM kiosk and a drive keep nothing (D6).
 //!
 //! The kept set is the library's (`exact_data::documents::kept`), in
 //! `kept-documents.json` beside the app's `app:/` roots. On Linux the
 //! path is the handle: an entry is restored only where the object recorded
 //! (its device and inode) still is at the path it was last found at, so a
-//! moved or replaced document is forgotten, never followed.
+//! moved or replaced document is forgotten, never followed (D4).
 
 use exact_data::documents::kept::{self, Identity};
 use std::path::{Path, PathBuf};
@@ -27,7 +27,7 @@ const MIME_NS: &str = "http://www.freedesktop.org/standards/shared-mime-info";
 /// a session of an app that keeps documents has activated.
 static RECENTS: Mutex<Option<Arc<Recents>>> = Mutex::new(None);
 
-/// Whether this run is in a desktop session, from its environment: a
+/// Whether this run is in a desktop session (D6), from its environment: a
 /// display server's session (`XDG_SESSION_TYPE` `x11` or `wayland`, or a
 /// desktop named by `XDG_CURRENT_DESKTOP`), and not a run without a
 /// display (a drive, a smoke run, a screenshot, `EXACT_DISPLAY=headless`).
@@ -108,7 +108,7 @@ fn recents() -> Option<Arc<Recents>> {
     RECENTS.lock().unwrap_or_else(|e| e.into_inner()).clone()
 }
 
-/// What the person chose, at `real`, kept for `owner`'s app and noted
+/// What the person chose (D3), at `real`, kept for `owner`'s app and noted
 /// in the recent-files store: its `doc:` path, or `None` when the app keeps
 /// nothing here. A choice grants reading and writing, as the desktop's
 /// file chooser does; a write still needs `fs.write doc:/`.
@@ -265,7 +265,7 @@ impl Recents {
     }
 
     /// Take this app's mark off the entries for a document it forgot
-    /// (`forgetDocument`): the object `identity` wherever it is now, and
+    /// (`forgetDocument`, D5): the object `identity` wherever it is now, and
     /// whatever is at `path`, where it was last found (it may be gone, or
     /// another program's file may stand there). An entry no other app marks
     /// goes with it.

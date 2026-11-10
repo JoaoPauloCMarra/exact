@@ -1,15 +1,15 @@
-//! Desktop processes, natively: the process requests an
+//! Desktop processes, natively (LLP 1133.007): the process requests an
 //! `@exact/child-process` call makes, run by the executor core Apple and
 //! Linux share. Each runs on a thread of its own, as a stream does: a
 //! `spawn` is supervised there for as long as its resource holds it
 //! (`supervise.rs`); `execFile`, `execPath` and the environment reads answer
 //! once.
 //!
-//! Admission comes first, as for a fetch: the program against the
+//! Admission comes first, as for a fetch (D12): the program against the
 //! `process.spawn` lines of the source's grant scope, a stdin file against
-//! `fs.read`, the readiness URL against `net.fetch`; then the origin (only
-//! a person's turn starts, writes to, ends or signals a child); then,
-//! under the agent, the drive's substitute, without which nothing runs.
+//! `fs.read`, the readiness URL against `net.fetch`; then the origin (D13:
+//! only a person's turn starts, writes to, ends or signals a child); then,
+//! under the agent, the drive's substitute (§7), without which nothing runs.
 use super::{complete, failed, has_ready, wake, Completed, Core, Shared};
 use exact_runner::{
     CallOrigin, FailureKind, Message, Outcome, ProcessOp, Request, Response, SocketOp,
@@ -30,21 +30,21 @@ mod supervise;
 use clock::Clock;
 use script::Script;
 
-/// A child's stdin queue's bound. Past 64 KiB its handle's `write`
+/// A child's stdin queue's bound (D2). Past 64 KiB its handle's `write`
 /// answers `false` (js/src/process.js), and `drain` follows once it is empty.
 const STDIN_BYTES: u64 = 1 << 20;
 /// What a child's undelivered output may hold before the host stops
-/// reading its pipes.
+/// reading its pipes (D2).
 const RECEIVE_CHUNKS: usize = 256;
 const RECEIVE_BYTES: usize = 1 << 20;
 /// The longest chunk one event carries.
 pub(crate) const CHUNK: usize = 64 << 10;
-/// How long a quit waits for children to end before `SIGKILL`.
+/// How long a quit waits for children to end before `SIGKILL` (D2, D9).
 const QUIT_GRACE_MS: f64 = 5000.0;
 /// What one-shots (`execFile`, `execPath`, the environment reads) may hold
 /// at once: 16 runs and 64 MiB of reply ceilings, one alone always fitting.
 /// They hold no count or bytes of their lane, as an upload waiting does
-/// not, so slow ones leave the app's requests their room.
+/// not, so slow ones leave the app's requests their room (D3).
 const ONE_SHOTS: usize = 16;
 const ONE_SHOT_BYTES: usize = 64 << 20;
 
@@ -63,11 +63,11 @@ pub(crate) struct Processes {
     clock: Arc<Clock>,
     /// The drive's launch facts, under the agent.
     agent: Option<AgentFacts>,
-    /// The host starts programs. Off, every process request answers
+    /// The host starts programs (§8). Off, every process request answers
     /// `Unsupported` (the render host).
     enabled: AtomicBool,
     /// The login variables captured for the app's origin, which later
-    /// reads answer for any origin.
+    /// reads answer for any origin (D13).
     login_captured: Mutex<std::collections::HashSet<String>>,
     /// The one-shots running: each ticket's reply ceiling.
     one_shots: Mutex<HashMap<u64, usize>>,
@@ -75,7 +75,7 @@ pub(crate) struct Processes {
 
 impl Processes {
     /// Whether `origin` may read login variables `names` now: the app's
-    /// always, any other once the app's origin has captured them.
+    /// always, any other once the app's origin has captured them (D13).
     fn login_readable(&self, origin: CallOrigin, names: &[String]) -> bool {
         let captured = self.login_captured.lock().unwrap();
         origin == CallOrigin::App || names.iter().all(|n| captured.contains(n))
@@ -124,7 +124,7 @@ pub(crate) fn release_one_shot(shared: &Shared, ticket: u64) {
     shared.processes.one_shots.lock().unwrap().remove(&ticket);
 }
 
-/// The drive's launch facts: `--process <target>=<file>|script:<file>|real`,
+/// The drive's launch facts (§7): `--process <target>=<file>|script:<file>|real`,
 /// `--login-env NAME=value` and `--home <dir>`, as `EXACT_AGENT_PROCESS`,
 /// `EXACT_AGENT_LOGIN_ENV` and `EXACT_AGENT_HOME`, one per line, read only
 /// under the agent (`EXACT_AGENT=1`).
@@ -160,8 +160,8 @@ impl AgentFacts {
     }
 }
 
-/// The person's home directory as this launch sees it: under the agent
-/// the drive's `--home`, or an empty scratch directory; else the
+/// The person's home directory as this launch sees it (D6): under the agent
+/// the drive's `--home`, or an empty scratch directory (§7); else the
 /// password database's, not `$HOME`, which a launcher may set.
 pub(crate) fn home(processes: &Processes) -> Option<std::path::PathBuf> {
     match &processes.agent {
@@ -225,7 +225,7 @@ pub(crate) struct Spec {
     pub(crate) native: Option<std::path::PathBuf>,
 }
 
-/// `exactRestart`.
+/// `exactRestart` (D4).
 pub(crate) struct Restart {
     pub(crate) always: bool,
     pub(crate) delay: f64,
@@ -233,7 +233,7 @@ pub(crate) struct Restart {
     pub(crate) prevent: Vec<i64>,
 }
 
-/// `exactReady`.
+/// `exactReady` (D4).
 pub(crate) struct Ready {
     pub(crate) url: String,
     pub(crate) interval: f64,
@@ -242,7 +242,7 @@ pub(crate) struct Ready {
     pub(crate) fail: bool,
 }
 
-/// The signals `kill` and `killSignal` take.
+/// The signals `kill` and `killSignal` take (D2).
 const SIGNALS: [&str; 9] = [
     "SIGTERM", "SIGINT", "SIGHUP", "SIGQUIT", "SIGUSR1", "SIGUSR2", "SIGSTOP", "SIGCONT", "SIGKILL",
 ];
@@ -250,7 +250,7 @@ const SIGNALS: [&str; 9] = [
 impl Spec {
     /// The call, held to what the binding writes (js/src/process.js), since
     /// data code can write a request's body itself: a key, a type or a bound
-    /// the binding would not send is refused. `deadline`: the
+    /// the binding would not send is refused (D12). `deadline`: the
     /// request's `timeout_ms`, an `AbortSignal.timeout` on a one-shot.
     fn parse(body: &[u8], deadline: Option<u32>) -> Result<Spec, String> {
         let j: Json = serde_json::from_slice(body).map_err(|e| format!("process: {e}"))?;
@@ -585,7 +585,10 @@ fn answer(
     leave: &mut Option<clock::Leave>,
 ) -> Outcome {
     if !shared.processes.enabled.load(Ordering::Acquire) {
-        return failed(FailureKind::Unsupported, "this host starts no programs");
+        return failed(
+            FailureKind::Unsupported,
+            "this host starts no programs (LLP 1133.007 §8)",
+        );
     }
     let mut spec = match Spec::parse(&request.body, request.timeout_ms) {
         Ok(spec) => spec,
@@ -617,7 +620,7 @@ fn answer(
             )
         }
     };
-    // The runner admitted the kind and a start by its origin; a
+    // The runner admitted the kind and a start by its origin (D13); a
     // first capture of the login environment is the host's to know, so it
     // is held here.
     if exact_runner::process::declared_name(&spec.kind).is_none() {
@@ -647,13 +650,13 @@ fn answer(
         let why = format!("outside the app's grants (process.spawn {})", spec.program);
         return failed(FailureKind::Refused, why);
     }
-    // The runner refuses a start from any origin but the app's; the
+    // The runner refuses a start from any origin but the app's (D13); the
     // host holds it too. A `path:` name reads the login shell's `PATH`,
-    // which only the app's origin captures first; once captured,
+    // which only the app's origin captures first (D5, D13); once captured,
     // it answers any origin.
     if spec.kind != "execPath" && origin != CallOrigin::App {
         let why = format!(
-            "person-required: {} from a {} origin starts no program",
+            "person-required: {} from a {} origin starts no program (LLP 1133.007 D13)",
             spec.kind,
             origin.word()
         );
@@ -715,7 +718,7 @@ fn answer(
         return exec_path(shared, scoped, grants, &spec, &ran);
     }
     // A real program's native path, checked against its grant once its
-    // links are followed.
+    // links are followed (D6, D7).
     if !matches!(ran, Ran::Script(_)) {
         match real::program(shared, scoped, grants, &spec, &ran) {
             Ok(path) => spec.native = Some(path),
@@ -763,7 +766,7 @@ fn person_required(api: &str, origin: CallOrigin) -> Outcome {
     failed(
         FailureKind::Refused,
         format!(
-            "person-required: {api} from a {} origin: only a person's input or the app's own code captures the login environment first",
+            "person-required: {api} from a {} origin: only a person's input or the app's own code captures the login environment first (LLP 1133.007 D13)",
             origin.word()
         ),
     )
@@ -788,7 +791,7 @@ fn exec_path(shared: &Shared, grants: &str, app: &str, spec: &Spec, ran: &Ran) -
 }
 
 /// `appEnvironment()` or `loginShellEnvironment()`: the variables the
-/// grants name, `env.read NAME` or `env.read login:NAME`.
+/// grants name, `env.read NAME` or `env.read login:NAME` (D5).
 fn environment(
     shared: &Shared,
     scoped: &str,
@@ -809,9 +812,9 @@ fn environment(
     reply(json!(values))
 }
 
-/// The login shell's variables `names`: captured once a launch; under
+/// The login shell's variables `names` (D5): captured once a launch; under
 /// the agent the drive's `--login-env`, else the app's own, so a drive
-/// never runs the person's shell.
+/// never runs the person's shell (§7).
 pub(crate) fn login_variables(shared: &Shared, names: &[&str]) -> HashMap<String, String> {
     match &shared.processes.agent {
         Some(facts) if !facts.login_env.is_empty() => (names.iter())
@@ -832,7 +835,7 @@ pub(crate) fn login_variables(shared: &Shared, names: &[&str]) -> HashMap<String
 /// Queue one event of stream `ticket` behind the ones the runner has not
 /// taken, never coalesced. Output counts against the receive bound: while
 /// the queue is full, `wait` holds the caller until the runner takes some,
-/// so a child's pipe fills and the child waits. False once nobody
+/// so a child's pipe fills and the child waits (D2). False once nobody
 /// wants more.
 pub(crate) fn deliver(shared: &Shared, ticket: u64, message: Message, wait: bool) -> bool {
     let output = matches!(message.event.as_str(), "stdout" | "stderr");
@@ -896,9 +899,9 @@ pub(crate) fn event(name: &str, data: Json) -> Message {
     }
 }
 
-/// Check a batch's child operations whole: each child still running
+/// Check a batch's child operations whole (D2): each child still running
 /// the incarnation the handle named, and a write before its stdin's end
-/// within its 1 MiB queue. The runner admitted their origin.
+/// within its 1 MiB queue. The runner admitted their origin (D13).
 pub(crate) fn check(shared: &Shared, ops: &[(u64, &SocketOp)]) -> Result<(), String> {
     if ops.is_empty() {
         return Ok(());
@@ -985,7 +988,7 @@ pub(crate) fn queued(shared: &Shared, ticket: u64) -> Option<u64> {
         .map(|c| c.queued.load(Ordering::Acquire))
 }
 
-/// The app quits: every child is released at once, each group's
+/// The app quits (D2, D9): every child is released at once, each group's
 /// escalation at its grace or 5 s, whichever is shorter, so a quit waits at
 /// most 5 s.
 pub(crate) fn quit(shared: &Shared) {
@@ -999,7 +1002,7 @@ pub(crate) fn quit(shared: &Shared) {
 }
 
 /// The app's directories are known: a launch after a crash ends what its
-/// children left, off the host's thread.
+/// children left (D9), off the host's thread.
 pub(crate) fn launched(shared: &Arc<Shared>) {
     if !shared.processes.enabled.load(Ordering::Acquire) {
         return;
@@ -1038,8 +1041,8 @@ impl Core {
 }
 
 impl Core {
-    /// Start programs for data code: a desktop host's executor. Its
-    /// `home:` and `bundle:` directories are storage's too.
+    /// Start programs for data code: a desktop host's executor (§8). Its
+    /// `home:` and `bundle:` directories are storage's too (D6).
     pub(crate) fn allow_processes(&self) {
         self.shared.processes.enabled.store(true, Ordering::Release);
         ibex2::stdlib::fs::set_roots(ibex2::stdlib::fs::Roots {
@@ -1049,7 +1052,7 @@ impl Core {
     }
 
     /// The clock the host's process work keeps, for the runner under the
-    /// agent; `None` on the wall.
+    /// agent (LLP 1133.007 §7); `None` on the wall.
     pub(crate) fn work_clock(&self) -> Option<Arc<dyn exact_runner::WorkClock>> {
         let processes = &self.shared.processes;
         processes.clock.is_agent().then(|| {
@@ -1089,7 +1092,7 @@ impl exact_runner::WorkClock for Work {
     }
 }
 
-// Only the desktops start programs: iOS, tvOS and Android link none of it.
+// Only the desktops start programs (§8): iOS, tvOS and Android link none of it.
 #[path = "executor_process_groups.rs"]
 mod groups;
 #[path = "executor_process_real.rs"]

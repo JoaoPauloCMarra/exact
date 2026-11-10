@@ -1,4 +1,4 @@
-// The design tool's commit against a real design server (split from design-tool.test.mjs, so it runs in parallel with
+// The design tool's commit against a real design server (split from design-tool.test.mjs, so a lane runs it beside
 // the others): the session's writes committed, history and revert, and the refusals that say why.
 import { expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';

@@ -24,7 +24,7 @@ def pathTy (p : Program) (args : List Expr) (ts? : Option (List Ty)) : Option Ty
     | .none => .none
   | _, _ => .none
 
-/-- How deep a value of `t` can nest: 0 for a scalar, one
+/-- How deep a value of `t` can nest (LLP 1090 D2): 0 for a scalar, one
 more than what it holds for an option, list or record; `?` is 0. Shapes are
 acyclic, so `fuel` (their number, plus one) is never what stops the walk. -/
 def Ty.depthIn (shapes : List Shape) : Nat → Ty → Nat
@@ -46,7 +46,7 @@ def Ty.optionInOption : Ty → Bool
   | _ => false
 
 /-- `t` bounds its values as the runner does, the Rust checker's
-`Shapes::bounded`: no option directly inside an option
+`Shapes::bounded` (LLP 1090 D2): no option directly inside an option
 (`type-option-option`) and at most 64 deep (`type-too-deep`). -/
 def Ty.bounded (p : Program) (t : Ty) : Bool :=
   !t.optionInOption && decide (t.depthIn p.shapes (p.shapes.length + 1) ≤ 64)
@@ -362,7 +362,7 @@ def checkTypes (p : Program) : Bool :=
     p.resources.all (·.ty.complete) && p.mutations.all (·.ty.complete) &&
     p.actions.all (fun a => a.params.all (·.2.complete))
 
-/-- Every declared type bounds its values; a mutation holds
+/-- Every declared type bounds its values (LLP 1090 D2); a mutation holds
 `option<T>` of its answer. -/
 def checkBounds (p : Program) : Bool :=
   p.shapes.all (fun sh => (Ty.record sh.name).bounded p && sh.fields.all (·.ty.bounded p)) &&
@@ -415,7 +415,7 @@ def taskAction (p : Program) (t : TaskDecl) : Bool :=
   | .some a => a.params.isEmpty
   | .none => false
 /-- A gated task's gate is a bool and its key a string, number or bool
-(the compiler's `type-task-gate`, `type-task-key`). -/
+(the compiler's `type-task-gate`, `type-task-key`; LLP 1092 D9). -/
 def taskGate (p : Program) (t : TaskDecl) : Bool :=
   (match t.gate with
     | .some g => inferLe p (compScope p) [] g .bool

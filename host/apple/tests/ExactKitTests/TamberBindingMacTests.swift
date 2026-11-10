@@ -3,7 +3,7 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// On AppKit, `ExactTamber` in the process resolves a
+/// LLP 1121 D12 (stage 5) on AppKit: `ExactTamber` in the process resolves a
 /// token for a place (a view under a pin answers its own tuple), as a
 /// dynamic colour, and `observe` hears `setMode`, which moves the window's.
 final class TamberBindingMacTests: XCTestCase {
@@ -69,7 +69,7 @@ final class TamberBindingMacTests: XCTestCase {
         return try Data(contentsOf: dir.appendingPathComponent("app.plan"))
     }
 
-    /// A length, a number and a font for a place (a pin's tuple
+    /// Stage 6 G: a length, a number and a font for a place (a pin's tuple
     /// its own), the font at the person's text size and Bold Text's step,
     /// and `observe` hearing both move.
     func testALengthNumberAndFontResolveAndObserveHearsTextSizeAndBoldText() throws {
@@ -100,7 +100,7 @@ final class TamberBindingMacTests: XCTestCase {
         observation.stop()
     }
 
-    /// A colour kept across a batch reads the new answer, a
+    /// Review round 2: a colour kept across a batch reads the new answer, a
     /// moved place's view is redrawn, and a view observed before it is
     /// mounted hears the node it is mounted in.
     func testAKeptColourFollowsAndAnUnmountedViewHearsOnceMounted() throws {
@@ -127,7 +127,7 @@ final class TamberBindingMacTests: XCTestCase {
         observation.stop()
     }
 
-    /// A session's first binding, observed unmounted, hears
+    /// Review round 3: a session's first binding, observed unmounted, hears
     /// its node once mounted.
     func testAFirstObserverMadeUnmountedHearsOnceMounted() throws {
         _ = NSApplication.shared

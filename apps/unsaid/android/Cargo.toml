@@ -1,4 +1,4 @@
-# The Unsaid fixture on Android's Canvas host, as
+# The Unsaid fixture on Android's Canvas host (LLP 1076 §3.3), as
 # apps/caltrain/android is Caltrain: one library with the runner, the kernel,
 # the baked plan (written by build.rs, never committed) and the host's JNI,
 # which the reader (host/android) loads as libexactcanvas.so. It asks nothing

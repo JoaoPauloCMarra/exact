@@ -1,7 +1,7 @@
-// What Apple's platforms draw and feel that CSS has no name
-// for, declared as rows: an SF Symbol's rendering mode, palette,
-// variable value and effects, and the feedback a press makes and
-// `haptic()` plays. The iOS-only ones (scroll edge, pointer hover,
+// LLP 1077 §5: what Apple's platforms draw and feel that CSS has no name
+// for, declared as rows (LLP 1001): an SF Symbol's rendering mode, palette,
+// variable value and effects (D10–D12), and the feedback a press makes and
+// `haptic()` plays (D14). The iOS-only ones (scroll edge, pointer hover,
 // Smart Invert, numerals that roll) are `IOS/AffordancesIOS.swift`.
 import ObjectiveC
 #if os(iOS) || os(tvOS)
@@ -15,7 +15,7 @@ typealias SymbolConfig = NSImage.SymbolConfiguration
 #endif
 
 extension NodeView {
-    /// A page symbol takes its presented computed color.
+    /// A page symbol takes its presented computed color (LLP 1081 stage 2).
     var symbolInk: PlatformColor? {
         #if os(macOS)
         return channels("text_color").map(TextEngine.color) ?? .textColor
@@ -100,7 +100,7 @@ extension NodeView {
     }
 
     /// The symbol's configuration: its size and weight, then its rendering
-    /// mode — hierarchical in the tint, a palette, or multicolor.
+    /// mode (D10) — hierarchical in the tint, a palette, or multicolor.
     /// `face`: as a native control's face draws it, without the page's ink.
     func symbolConfiguration(_ base: SymbolConfig, face: Bool = false) -> SymbolConfig {
         #if os(iOS) || os(tvOS)
@@ -136,7 +136,7 @@ extension NodeView {
         return points > 0 ? symbolImage(name, symbolConfiguration(SymbolMeasure.configuration(points: points, weight: weight), face: true)) : nil
     }
 
-    /// A symbol by name in that configuration, at its variable value
+    /// A symbol by name in that configuration, at its variable value (D11)
     /// when it has one.
     func symbolImage(_ name: String, _ config: SymbolConfig) -> SymbolImage? {
         let value = number("symbol_value", -1)
@@ -152,7 +152,7 @@ extension NodeView {
     }
 
     /// A new symbol on its view: with `-exact-symbol-effect: replace`, the
-    /// platform's replace transition; else at once.
+    /// platform's replace transition (D12); else at once.
     func showSymbol(_ image: SymbolImage?, on leaf: SymbolLeaf) {
         if style["symbol_effect"]?.string == "replace", let image, leaf.image != nil {
             leaf.setSymbolImage(image, contentTransition: .replace)
@@ -162,7 +162,7 @@ extension NodeView {
     }
 
     /// A continuing effect plays while set; a discrete one plays each time
-    /// `symbolEffectValue` changes.
+    /// `symbolEffectValue` changes (D12).
     func applySymbolEffect(_ leaf: SymbolLeaf) {
         let effect = style["symbol_effect"]?.string ?? "none"
         let state = SymbolEffectState.of(leaf)
@@ -188,7 +188,7 @@ extension NodeView {
         }
     }
 
-    /// `-exact-press-haptic`: host-owned, at the press, as `-exact-press-scale`.
+    /// `-exact-press-haptic` (D14): host-owned, at the press, as `-exact-press-scale`.
     func pressHaptic() {
         guard let kind = style["press_haptic"]?.string, kind != "none" else { return }
         Haptics.play(kind)
@@ -215,7 +215,7 @@ final class SymbolEffectState {
     }
 }
 
-/// The platform's haptics: `-exact-press-haptic`'s kinds and
+/// The platform's haptics (LLP 1077 D14): `-exact-press-haptic`'s kinds and
 /// `haptic()`'s, which adds success, warning and error. macOS plays on a
 /// Force Touch trackpad.
 enum Haptics {

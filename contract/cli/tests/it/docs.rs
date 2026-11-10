@@ -1,11 +1,12 @@
-//! Every example in the guides compiles: each fenced `contract` block in
-//! `docs/*.md`, the recipes (`docs/recipes/*.md`) and `README.md` compiles with
-//! no diagnostics, and each `contract-test` block parses. A deliberately
-//! partial block is fenced `text`. A `tamber` block is checked as a design, and
-//! is the design of the `contract` blocks after it in its section. Every
-//! failure is reported in one run. So does every starter pattern
-//! (`docs/patterns/<name>/`), and an ignored test runs each one's tests in an
-//! app `exact new` made.
+//! Every example in the guides compiles (LLP 1086 D10): each fenced
+//! `contract` block in `docs/*.md`, the recipes (`docs/recipes/*.md`, LLP
+//! 1116 D3) and `README.md` compiles with no diagnostics, and each
+//! `contract-test` block parses. A deliberately partial block is fenced
+//! `text`. A `tamber` block is checked as a design, and is the design of
+//! the `contract` blocks after it in its section (LLP 1121 D2). Every
+//! failure is reported in one run. So does every starter
+//! pattern (`docs/patterns/<name>/`, LLP 1116.001 D3), and the async lane
+//! runs each one's tests in an app `exact new` made.
 
 use std::path::{Path, PathBuf};
 
@@ -19,7 +20,7 @@ pub(crate) struct Block {
     pub(crate) body: String,
     pub(crate) contract: Option<String>,
     /// The nearest `tamber` block before it in the same section: the app's
-    /// design (`app.tamber`), which a `contract` block names.
+    /// design (`app.tamber`, LLP 1121 D2), which a `contract` block names.
     pub(crate) design: Option<String>,
     /// The `<!-- check: … -->` marker on the line before the fence, if any:
     /// `app`, `route <name>` or `file`. Marked blocks are parts of one app
@@ -201,7 +202,7 @@ fn every_contract_example_in_the_guides_compiles_and_every_test_parses() {
             "contract" => {
                 compiled += 1;
                 // A declared sound the example names is a short WAV here
-                // (the compiler reads it).
+                // (LLP 1096 D1: the compiler reads it).
                 for line in block.body.lines() {
                     if let Some(src) = line
                         .strip_prefix("sound \"")
@@ -264,10 +265,10 @@ fn every_contract_example_in_the_guides_compiles_and_every_test_parses() {
 }
 
 /// Blocks marked `<!-- check: app -->`, `<!-- check: route <name> -->` and
-/// `<!-- check: file -->` are one app split across a guide
-/// (docs/recipes/navigation-stack.md): the `app` blocks in order, each `route`
-/// block in place of the placeholder under `if e.name == "<name>"`, and each
-/// `file` block appended. The assembled app compiles with no diagnostics.
+/// `<!-- check: file -->` are one app split across a guide (LLP 1115 D7;
+/// docs/recipes/navigation-stack.md): the `app` blocks in order, each `route` block in
+/// place of the placeholder under `if e.name == "<name>"`, and each `file`
+/// block appended. The assembled app compiles with no diagnostics.
 #[test]
 fn every_split_app_in_the_guides_compiles_assembled() {
     let dir = std::env::temp_dir().join(format!("exact-docs-app-{}", std::process::id()));
@@ -324,7 +325,7 @@ fn every_split_app_in_the_guides_compiles_assembled() {
     );
 }
 
-/// The starter patterns: each directory under
+/// The starter patterns (LLP 1116.001 D3): each directory under
 /// `docs/patterns` holding an `app.contract`, by path from the repo root.
 pub(crate) fn patterns() -> Vec<PathBuf> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/patterns");
@@ -386,7 +387,7 @@ fn every_pattern_compiles_with_expected_diagnostics_and_its_tests_parse() {
 /// `exact new` made, passes its own tests on the web: `test web`, which
 /// runs the pattern's server (rest's, site's) for them.
 #[test]
-#[ignore = "makes an app with Bun and Cargo and drives every pattern's tests in Chrome; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: makes an app with Bun and Cargo and drives every pattern's tests in Chrome; bun scripts/async.mjs runs it"]
 fn every_pattern_passes_its_tests_on_the_web() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let parent = std::env::temp_dir().join(format!("exact-patterns-{}", std::process::id()));
@@ -430,12 +431,12 @@ fn every_pattern_passes_its_tests_on_the_web() {
     assert!(failures.is_empty(), "{}", failures.join("\n\n"));
 }
 
-/// A recipe builders copy carries no tells: `no-tells`
+/// A recipe builders copy carries no tells (LLP 1116 D3 §6.5): `no-tells`
 /// passes over every recipe's `contract` blocks and start-here's, over
-/// every pattern's, and over `README.md`'s, the first
-/// Contract a reader meets.
+/// every pattern's (LLP 1116.001 D3), and over `README.md`'s, the first
+/// Contract a reader meets (Charlie, 2026-10-12).
 #[test]
-#[ignore = "launches Bun for scripts/no-tells.mjs; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: launches Bun for scripts/no-tells.mjs; bun scripts/async.mjs runs it"]
 fn the_readme_the_recipes_and_start_here_say_no_literal_colour_size_or_weight() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let readme = root.join("README.md");

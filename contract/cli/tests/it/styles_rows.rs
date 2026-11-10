@@ -265,10 +265,11 @@ fn popover_flip_fallbacks_compile_in_authored_order() {
     assert!(error.contains("on a `popover` only"), "{error}");
 }
 
-/// "Written" is a fact each row carries, from where the compiler emits it to
-/// the node the kernel keeps. An attribute and a class's row are the author's;
-/// a tag's fixed row, a heading's style, a link run's colour, `hr`'s rows and a
-/// sheet's are not, and where two set one property the node has the winner's.
+/// LLP 1115.000 D2: "written" is a fact each row carries, from where the
+/// compiler emits it to the node the kernel keeps. An attribute and a
+/// class's row are the author's; a tag's fixed row, a heading's style, a
+/// link run's colour, `hr`'s rows and a sheet's are not, and where two set
+/// one property the node has the winner's.
 #[test]
 fn a_node_knows_which_of_its_rows_its_author_wrote() {
     use exact_kernel::StyleId::{
@@ -386,7 +387,7 @@ component A
     assert_eq!(row(&r, "bound", Width), written);
 }
 
-/// CSS `user-select`: `text` and `all` are honoured
+/// CSS `user-select` (LLP 1115.000 D11.6): `text` and `all` are honoured
 /// where a host has text selection (the web, macOS, iOS) and are on the
 /// node that says them, not inherited on the wire, since each host resolves
 /// `auto` from what is above. `contain`, which no native presenter has, is
@@ -419,7 +420,7 @@ fn user_select_text_and_all_compile_and_contain_is_refused_by_name() {
     assert!(!error.contains("unknown attribute"), "{error}");
 }
 
-/// Every platform material by name, and `none`; others refused.
+/// @ref LLP 1053.000 D4 — every platform material by name, and `none`; others refused.
 #[test]
 fn a_material_is_a_name_in_the_table_or_none() {
     for name in [

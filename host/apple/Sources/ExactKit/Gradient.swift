@@ -1,4 +1,4 @@
-// CSS `background-image` gradients, shared by UIKit and AppKit.
+// CSS `background-image` gradients (LLP 1066), shared by UIKit and AppKit.
 // The host's Rust side sends the shape and stops (`style.rs` gradient_json),
 // stops already expanded to mix as CSS's premultiplied ones do. Length and
 // repeating stops cross as CSS and resolve through the kernel once the
@@ -15,7 +15,7 @@ struct Gradient {
         /// `at`: x%, xpx, y%, ypx. `extent`: closest-side, closest-corner,
         /// farthest-side, farthest-corner.
         case radial(circle: Bool, extent: Int, at: [CGFloat])
-        /// `conic-gradient()`: `from` CSS degrees (0 up,
+        /// `conic-gradient()` (LLP 1077 D5): `from` CSS degrees (0 up,
         /// clockwise), `at` x%, xpx, y%, ypx.
         case conic(from: CGFloat, at: [CGFloat])
     }
@@ -33,7 +33,7 @@ struct Gradient {
     let shape: Shape
     private let light: [CGFloat]
     private let dark: [CGFloat]?
-    /// Stops CSS interpolated outside sRGB: already dense, in
+    /// Stops CSS interpolated outside sRGB (LLP 1100 D2): already dense, in
     /// extended linear sRGB with alpha 0–1.
     private let lightLinear: Bool
     private let darkLinear: Bool
@@ -87,7 +87,7 @@ struct Gradient {
         }
     }
 
-    /// A `background-image`'s layers: one gradient's object,
+    /// A `background-image`'s layers (LLP 1077 D5): one gradient's object,
     /// or an array of them, the first on top.
     static func layers(_ value: BatchValue?) -> [Gradient] {
         if let list = value?.array { return list.compactMap { Gradient($0) } }
@@ -95,7 +95,7 @@ struct Gradient {
     }
 
     /// The gradient's alpha as pixels `size` points at `scale`, placed in
-    /// the whole picture: a conic or repeating mask, which Core
+    /// the whole picture: a conic or repeating mask (LLP 1077 D2, D5), which Core
     /// Animation's gradient layer cannot say.
     func image(size: CGSize, scale: CGFloat, dark: Bool) -> CGImage? {
         let w = Int((size.width * scale).rounded(.up)), h = Int((size.height * scale).rounded(.up))
@@ -338,7 +338,7 @@ struct Gradient {
     }
 }
 
-/// A drawn `mask-image`'s pixels as a layer's mask.
+/// A drawn `mask-image`'s pixels as a layer's mask (LLP 1077 D5).
 final class GradientImageMaskLayer: CALayer {}
 
 extension BatchValue {
@@ -346,8 +346,8 @@ extension BatchValue {
     /// is something to the view that shows it.
     ///
     /// Nested too: a layer list, a shadow list's or a text shadow's colour,
-    /// a symbol palette, and a box filter with a dark program
-    /// (`pd`).
+    /// a symbol palette (LLP 1077), and a box filter with a dark program
+    /// (`pd`, LLP 1095 D9).
     var isSchemeGradient: Bool {
         switch self {
         case .object(let o): return o["css"] != nil || o["dark"] != nil || o["pd"] != nil || o.values.contains { $0.isSchemeColor || $0.isSchemeGradient }
@@ -358,12 +358,12 @@ extension BatchValue {
 }
 
 extension NodeView {
-    /// `background-attachment: fixed`.
+    /// `background-attachment: fixed` (LLP 1066 D7).
     var gradientFixed: Bool { style["background_attachment"]?.string == "fixed" }
 
     /// The padding box: CSS's gradient box under the initial `background-origin`;
     /// under `background-attachment: fixed`, the viewport, in this view's
-    /// coordinates, so every node with it shows its part of one
+    /// coordinates (LLP 1066 D7), so every node with it shows its part of one
     /// gradient and the gradient stays as they scroll.
     var gradientBox: CGRect {
         if gradientFixed, let port = fixedGradientPort { return port }
@@ -377,17 +377,17 @@ extension NodeView {
     func paintGradient(_ ctx: CGContext, clip: CGPath) {
         guard surface == nil, !cssVisibilityHidden else { return }
         #if os(iOS)
-        // A fixed gradient is the layer's.
+        // A fixed gradient is the layer's (LLP 1066 D7).
         if gradientLayered && boxGradient != nil { return }
         #endif
-        // The last layer first, so the first is on top.
+        // The last layer first, so the first is on top (LLP 1077 D5).
         for g in Gradient.layers(style["background_image"]).reversed() {
             g.paint(ctx, clip: clip, box: gradientBox, dark: drawsDark)
         }
     }
 
     /// Whether the background's gradients need `draw(_:)`: several layers,
-    /// or a conic or repeating one.
+    /// or a conic or repeating one (LLP 1077 D5, LLP 1066).
     var gradientDraws: Bool {
         let layers = Gradient.layers(style["background_image"])
         return layers.count > 1 || layers.contains { $0.needsDrawing }

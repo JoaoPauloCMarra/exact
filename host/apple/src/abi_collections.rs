@@ -3,25 +3,27 @@ use super::*;
 use crate::host::Restyle;
 
 impl<D: DataSource> Bridge<D> {
-    /// What native containers cover of boxes, from the input buffer's first
-    /// `len` bytes: LE records of (u32 view, u32 kind — 0 clears, 1 edges, 2
-    /// whole, 3 a scroller's platform inset (top and bottom) — and f32 top,
-    /// right, bottom, left), one layout. And the containing blocks they give
-    /// subtrees: kind 4 with f32 width, height and, for each, 0 for a size, 1
-    /// for a maximum, 2 for a content-fit limit that an authored size may
-    /// exceed, or 3 for a position-area's region (`BlockAxis::Region`); kind 5
-    /// takes a block back. Kinds 6 and 13 place a block: f32 x, y, width,
-    /// height, then the u32 containing view and f32 content offsets x and y
-    /// (36 bytes). Kind 6 is a fixed allocation and ignores the offsets; kind
-    /// 13 is a scrollport, including at offset zero. Kind 7 forgets either
-    /// placement. Kind 8 reports UIKit's grouped-list card and cell margins:
-    /// f32 the card's left and right insets, then the cell's left and right
-    /// margins; kind 9 clears them. Kind 12 reports scrollbar gutters in the
-    /// right and bottom fields. Kind 14 shows a split's own placeholder
-    /// (`Runner::show_split_placeholder`) and kind 15 hides it again; their
-    /// four floats are unused. Kind 16 is the border box a person dragged the
-    /// box's `resize` grip to (`Runner::resize_box`): f32 width and height, a
-    /// NaN keeping that axis, and two unused.
+    /// What native containers cover of boxes (LLP 1075.003 §3.5), from the
+    /// input buffer's first `len` bytes: LE records of (u32 view, u32 kind —
+    /// 0 clears, 1 edges, 2 whole, 3 a scroller's platform inset (top and
+    /// bottom) — and f32 top, right, bottom, left), one layout. And the
+    /// containing blocks they give subtrees (LLP 1115.002 D8.2): kind 4
+    /// with f32 width, height and, for each, 0 for a size, 1 for a maximum,
+    /// 2 for a content-fit limit that an authored size may exceed, or 3 for a
+    /// position-area's region (`BlockAxis::Region`);
+    /// kind 5 takes a block back. Kinds 6 and 13 place a block (LLP 1123 D2):
+    /// f32 x, y, width, height, then the u32 containing view and f32 content
+    /// offsets x and y (36 bytes). Kind 6 is a fixed allocation and ignores
+    /// the offsets; kind 13 is a scrollport, including at offset zero.
+    /// Kind 7 forgets either placement. Kind 8 reports UIKit's grouped-list
+    /// card and cell margins: f32 the card's left and right
+    /// insets, then the cell's left and right margins; kind 9 clears them.
+    /// Kind 12 reports scrollbar gutters in the right and bottom fields.
+    /// Kind 14 shows a split's own placeholder (LLP 1116.006 D2,
+    /// `Runner::show_split_placeholder`) and kind 15 hides it again; their
+    /// four floats are unused. Kind 16 is the border box a person dragged
+    /// the box's `resize` grip to (`Runner::resize_box`): f32 width and
+    /// height, a NaN keeping that axis, and two unused.
     pub fn covers(&mut self, len: usize) -> u32 {
         let bytes = self.input.get(..len).unwrap_or(&[]);
         let mut records = Vec::new();
@@ -268,7 +270,7 @@ impl<D: DataSource> Bridge<D> {
         }
     }
 
-    /// `key\nblock\ninline` in the input buffer; the key may hold a newline.
+    /// `key\nblock\ninline` in the input buffer (LLP 1070.000 §5); the key may hold a newline.
     pub fn into_view(&mut self, view: u32, len: usize) -> u32 {
         let text = String::from_utf8_lossy(self.input.get(..len).unwrap_or(&[])).into_owned();
         let mut parts = text.rsplitn(3, '\n');

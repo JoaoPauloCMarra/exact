@@ -1,4 +1,4 @@
-//! Siblings' ranks for the walk, kept across paints. The
+//! Siblings' ranks for the walk (LLP 1083.000), kept across paints. The
 //! kernel decides every node's place from its own facts and what its
 //! subtree lets escape; a kept row that nothing changed since its recording
 //! has the same subtree, so its potentials stand in for walking it (the

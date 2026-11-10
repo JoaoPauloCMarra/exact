@@ -33,12 +33,12 @@ package enum TextStyle {
         let align = alignment(style), rtl = style["direction"]?.string == "rtl"
         func number(_ name: String) -> Double { style[name]?.number ?? 0 }
         // A fitted paragraph is drawn at the scale the kernel's layout chose
-        // for it, as it was measured (`-exact-fit`).
+        // for it, as it was measured (`-exact-fit`, LLP 1116.001 D1.4).
         let fit = props["fitScale"].flatMap(Float.init) ?? 1
         if fit != 1 { runs = runs.map { $0.scaled(fit) } }
         let whiteSpace = ["pre-wrap": 1, "nowrap": 2, "pre-line": 3, "pre": 4][style["white_space"]?.string ?? ""] ?? 0
         // CSS collapses white space before shaping, as the measurer does in
-        // Rust with the same function; Markdown keeps its lines.
+        // Rust with the same function (LLP 1053 G5); Markdown keeps its lines.
         let source = whiteSpace == 1 || whiteSpace == 4 || props["markup"] == "markdown" ? SourceMap() : SourceMap.collapse(&runs, whiteSpace: whiteSpace)
         let lineClamp = Int(number("line_clamp"))
         // `text-overflow: ellipsis` applies to a box that clips its inline overflow.

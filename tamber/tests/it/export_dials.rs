@@ -1,4 +1,4 @@
-//! Re-import's dials: a changed value
+//! Re-import's dials (LLP 1121 D14; §5 stage 10b's gate): a changed value
 //! whose line is one dial alone is that dial's change, every token it moves
 //! listed; one whose line followed others by an expression is a marked pin.
 

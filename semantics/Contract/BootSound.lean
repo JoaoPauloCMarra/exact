@@ -353,7 +353,7 @@ theorem boot_sound {p : Program} (hp : WellTyped p) (o : Oracle) : OutcomeOK (bo
     obtain ⟨t, htk, ha, hg, hk⟩ := startTimers_tasks ht tm htm
     refine ⟨by rw [ha]; exact hp.taskActions t htk, ?_⟩
     rw [hg, hk]; exact hp.taskGates t htk
-  -- The gate step at boot: a key that is no key refuses it.
+  -- The gate step at boot (LLP 1092 D8): a key that is no key refuses it.
   split
   · next e he =>
     exact ofW (gateStep_good hp

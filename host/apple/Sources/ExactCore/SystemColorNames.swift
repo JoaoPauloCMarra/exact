@@ -1,4 +1,4 @@
-// the platform colours a row may name: the documented
+// @ref LLP 1095 D3 — the platform colours a row may name: the documented
 // class colours of `UIColor` and `NSColor` that are not deprecated, by their
 // Objective-C names (`systemTealColor`), each where its SDK declares it.
 // Apple's lists: UIKit's "UI element colors" and "Standard colors"

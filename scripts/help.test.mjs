@@ -1,4 +1,4 @@
-// Every verb of an app's exact.mjs answers `--help` at once and starts nothing; the scripts it
+// LLP 1116 D4: every verb of an app's exact.mjs answers `--help` at once and starts nothing; the scripts it
 // runs answer `--help` and refuse a flag they do not take; and each verb's help names exactly the flags its
 // script parses (so it never names one that does not exist). `bun test ./scripts/help.test.mjs`.
 import { test } from 'bun:test';
@@ -51,9 +51,8 @@ test('each verb of a new app\'s exact.mjs, and no verb, answers help from exact2
       for (const verb of [...APP_VERBS, 'seed']) assert.match(r.stdout, new RegExp(`^  ${verb} +\\S`, 'm'), `the index names ${verb}`);
       assert.match(r.stdout, /seed +app\.json commands: bun seed\.mjs/);
     }
-    // Every help form the index and
-    // the helps name runs as written, and `all` with no verb is the index, never a verb (`help --help all` and
-    // `--help all` are the index, not "no verb all").
+    // LLP 1116.010 D2 (weather, round 12: `help --help all` and `--help all` reported "no verb all"): every help form the index and
+    // the helps name runs as written, and `all` with no verb is the index, never a verb.
     const own = { seed: ['bun', 'seed.mjs'] }, index = indexText({ verbs: APP_VERBS, own }), forms = new Set();
     for (const text of [index, ...APP_VERBS.map((v) => helpText(v))]) for (const [, form] of text.matchAll(/bun exact\.mjs ((?:[\w<>-]+ )?(?:--help|-h)(?: all)?|help(?: all)?)(?=[:\s]|$)/g)) forms.add(form);
     assert.ok(forms.has('<verb> --help') && forms.has('<verb> --help all'), `the forms named: ${[...forms]}`);
@@ -107,7 +106,7 @@ test('each verb\'s help names exactly the flags its script parses, in a short te
   }
 });
 
-// The helps a small web app reads first (web, test, agent) say what a first build
+// LLP 1116.003 D5: the helps a small web app reads first (web, test, agent) say what a first build
 // needs; `--help all` names every flag the short text leaves out, and the ports.
 test('a first build\'s helps are short, and --help all has every flag', () => {
   for (const verb of ['web', 'test', 'agent']) {
@@ -120,16 +119,16 @@ test('a first build\'s helps are short, and --help all has every flag', () => {
     assert.match(all, /^Ports {4}/m, `${verb} --help all says its ports`);
     assert.doesNotMatch(all, /^More /m);
   }
-  // Web's help does not teach a background dev server (builders followed it into five steps).
+  // LLP 1116.008 D2: web's help does not teach a background dev server (builders followed it into five steps).
   assert.match(helpText('web', { all: true }), /The dev loop is for a person watching\n\s+the app change: verify, test and agent build and serve their own copy, so checking\n\s+the app needs no dev server\./);
   assert.doesNotMatch(helpText('web', { all: true }), /web\.log| &\s|background|\$!/);
-  // A builder parses `agent` output, so the short text says --json is one object per line.
+  // LLP 1116.007 D2: a builder parses `agent` output, so the short text says --json is one object per line.
   assert.match(helpText('agent'), /^ {2}--json +one compact JSON object per op reply, one per line/m);
-  // `state <name>` is a state or resource read down a dotted path; a big one prints its sizes.
+  // LLP 1116.007 D3.9: `state <name>` is a state or resource read down a dotted path; a big one prints its sizes.
   assert.match(helpText('agent'), /^ {2}state \[<name>\] \[--full\] +a state, resource or field, dotted: groceries\.0\.done; >8 KB: sizes/m);
 });
 
-// Builders read `help` and then four or five verbs' `--help`, each a step carried to the end of the build.
+// LLP 1116.009 D6: builders read `help` and then four or five verbs' `--help`, each a step carried to the end of the build.
 // The index is the one read: each verb, then the forms a build uses, in one screen, and every flag a form names is one its
 // verb's script parses (a form never names a flag that does not exist).
 test('help is the one read: the verbs and the forms a build uses, in one screen, naming only flags the verbs parse', () => {

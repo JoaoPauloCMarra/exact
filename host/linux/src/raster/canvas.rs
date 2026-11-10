@@ -1,5 +1,5 @@
 //! Exact full-target opaque canvas copy; every other canvas uses tiny-skia.
-//! No retained opacity promise or cache, and no epsilon geometry.
+//! LLP 1015.001: no retained opacity promise or cache, and no epsilon geometry.
 use super::*;
 
 impl Raster {

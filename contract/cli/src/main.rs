@@ -50,7 +50,7 @@ const USAGE: &str = "usage:
 
 #[cfg(windows)]
 fn main() -> ExitCode {
-    // The Windows executable's default 1 MiB stack
+    // @ref LLP 1035.005 D2 — the Windows executable's default 1 MiB stack
     // cannot compile the supported 256-site depth in a debug build.
     std::thread::Builder::new()
         .name("contract-cli".into())
@@ -84,7 +84,7 @@ fn run() -> ExitCode {
         Some("vocab") => vocab::run(&args[1..]),
         Some("gallery") => gallery(&args[1..]),
         Some("tamber") => tamber::run(&args[1..]),
-        // The union of tokens a binding may name follows the design's `exports`.
+        // The union of tokens a binding may name follows the design's `exports` (LLP 1121 D7).
         Some("types") => types(&args[1..], "types", "app.d.ts", |plan, path| {
             contract::typescript_exporting(plan, contract::design_exports(path).as_deref())
         }),
@@ -183,7 +183,7 @@ fn symbols(args: &[String]) -> ExitCode {
 }
 
 /// `contract sources`: every file compiling the root reads, as JSON, even
-/// when loading stops — what a capture, a watch and a deploy
+/// when loading stops (LLP 1091 D10) — what a capture, a watch and a deploy
 /// take with the app. Exits 1 when the loader refused.
 fn sources(args: &[String]) -> ExitCode {
     const USAGE: &str = "usage: contract sources <file.contract>";
@@ -293,7 +293,7 @@ fn types(
         return ExitCode::from(2);
     }
     // Shapes are all a declaration file needs: a game's surface arguments
-    // never stop it, and are named as warnings.
+    // never stop it, and are named as warnings (the platformer's diary, R4).
     let path = std::path::Path::new(&args[0]);
     if let Ok(surfaces) = contract::surface_findings(path) {
         surface_warnings(&surfaces);
@@ -326,7 +326,7 @@ fn types(
                     eprintln!("{output}: {error}");
                     return ExitCode::from(1);
                 }
-                // Silence reads as "did it run?"; stdout stays empty.
+                // Silence read as "did it run?" (app farm wave 2: 100); stdout stays empty.
                 eprintln!("{command}: wrote {output}");
             } else {
                 print!("{declarations}");
@@ -406,7 +406,7 @@ fn tests(args: &[String]) -> ExitCode {
 }
 
 /// Explicit formatting, with read-only preview and check modes; `--uses`
-/// writes the `use` lines each file of the program lacks.
+/// writes the `use` lines each file of the program lacks (LLP 1091 D1).
 fn fmt(args: &[String]) -> ExitCode {
     const USAGE: &str = "usage: contract fmt [--check | --stdout] <file.contract>\n       contract fmt --uses <file.contract>";
     if matches!(args, [flag] if flag == "--help" || flag == "-h") {

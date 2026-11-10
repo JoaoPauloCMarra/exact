@@ -1,4 +1,4 @@
-// `clock held` (scripts/agent-held.mjs) over a stand-in session: it waits for each held target's
+// `clock held` (scripts/agent-held.mjs, LLP 1016.000 D9) over a stand-in session: it waits for each held target's
 // count of replies to rise, never takes a request let go (or no longer counted held) for a reply, and says who had
 // none past its bound. `clock until state` (the same file) over a stand-in whose state changes on the wall clock.
 import { test, expect } from 'bun:test';

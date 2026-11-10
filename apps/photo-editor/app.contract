@@ -1,23 +1,23 @@
-// Photo Editor — the first consumer of native modules. The main
+// Photo Editor — the first consumer of native modules (LLP 1024). The main
 // surface is `<photo-editor>`, a native module in the app's own module crate
 // (`modules/`): UIKit gestures on iOS, AppKit on macOS, Pointer Events on
 // the web. The edit lives in the module; it reports its state when a gesture
 // ends, and the Contract shows it. The two buttons are the way to edit
 // without gestures: they change the module's props, never its internals.
 //
-// Take Photo opens the camera: the standard packages'
+// Take Photo opens the camera (LLP 1133.008 §10): the standard packages'
 // viewfinder in a sheet over the editor, whose shutter's photo becomes the
 // one edited. A sheet dismissed by a swipe hides the viewfinder, which lets
 // the camera go; Take Photo shows the same track again.
 //
-// Save to Photos and Recents are @exact/photos's. The
+// Save to Photos and Recents are @exact/photos's (LLP 1133.019 §11). The
 // editor reports its edit in the photo's terms (`edit {"rotate", "crop"}`),
 // which app.ts's `savePhoto` applies with `transformImage` and adds to the
 // library. The strip of recent photos is read only once the person shows it
 // or the read is granted; a photo opened from it is a copy in app:/tmp, and
 // its picture stays in the header for as long as the app may read it.
 //
-// Order a Print is @exact/payments's: shown while the
+// Order a Print is @exact/payments's (LLP 1133.034 §10): shown while the
 // wallet can pay, a sheet of sizes over the editor whose payment button opens
 // the wallet's sheet. app.ts's `tools` answer the sheet while it is up;
 // leaving the print sheet lets the payment go. Orders is the lab's record.
@@ -104,7 +104,7 @@ component PhotoEditor
   derive canFlip = devices.devices.map(d => d.facingMode == some("user")).includes(true) and devices.devices.map(d => d.facingMode == some("environment")).includes(true)
   derive hasTorch = match live.capabilities { case some(c) => c.torch == some(true), case none => false }
   derive torchOn = live.settings.torch == some(true)
-  // The camera that faces `facing`; every other constraint the platform's.
+  // The camera that faces `facing`; every other constraint the platform's (LLP 1133.008 D2).
   derive facingOnly = MediaTrackConstraints(deviceId=none, groupId=none, facingMode=some(facing), width=none, height=none, aspectRatio=none, frameRate=none, resizeMode=none, zoom=none, torch=none, sampleRate=none, sampleSize=none, channelCount=none, echoCancellation=none, autoGainControl=none, noiseSuppression=none, latency=none)
   derive shotError = match failure(shot) { case some(f) => f.code, case none => "" }
   // A failed send runs no `then`, so its failure is read here; a cancel is no failure to the person.

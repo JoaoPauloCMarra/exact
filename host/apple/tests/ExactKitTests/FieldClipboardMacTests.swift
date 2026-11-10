@@ -3,7 +3,7 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// On AppKit, ⌘V, ⌘C and ⌘X in a textarea or an input — the Edit
+/// #125 on AppKit: ⌘V, ⌘C and ⌘X in a textarea or an input — the Edit
 /// menu's paste:, copy: and cut: through the responder chain — are DOM's
 /// `paste`, `copy` and `cut` at the nearest handler, before the editor's
 /// own, which an action's `preventDefault()` cancels.

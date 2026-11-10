@@ -1,7 +1,7 @@
-// The absent-implementation drive for @exact/age-range's fixture app
+// LLP 1133.028 §8.4 drive 11 for @exact/age-range's fixture app
 // (test/fixture), on a target with no implementation: the status reads its
 // declared default and the request refuses NotSupportedError before any
-// ticket. The consuming app's part is drives.mjs's.
+// ticket. Excord's part of drive 11 is drives.mjs's.
 //
 // usage: bun packages/age-range/test/absent.mjs <web|linux> [--keep]
 import { checker } from '../../camera/test/fixture.mjs';

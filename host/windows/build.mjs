@@ -4,7 +4,7 @@
 //   bun host/windows/build.mjs <app> [--run] [--release] [--out <dir>]
 //
 // `--run` opens it. From SSH, which has no display a window can show on (docs/testing.md, "Windows: the
-// test machine"), it opens on the desktop of the user signed in at the console, through a one-off scheduled task, as
+// NucBox"), it opens on the desktop of the user signed in at the console, through a one-off scheduled task, as
 // host/windows/reference/draw.mjs opens WinUI's, and returns once the window is up.
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

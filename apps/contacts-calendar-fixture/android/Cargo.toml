@@ -1,5 +1,5 @@
 # @exact/contacts' and @exact/calendar's fixture on Android's Canvas host
-# A library with no GPU module, so both
+# (LLP 1133.018 stage 3): a library with no GPU module, so both
 # implementations compile into an APK and can be driven on an emulator. Off
 # Android the library is empty.
 [package]

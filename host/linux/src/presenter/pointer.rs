@@ -1,12 +1,16 @@
-//! `pointerdown`, `pointerup` and `pointermove`: DOM's events beside the contact, which they never
-//! take from. The down and the up bubble: every enabled node from the press up that hears either
-//! holds the pointer until it lifts (a cancel is an up), innermost first, and the innermost hearing
-//! any of the three also hears its moves; a free pointer's moves go to the innermost node under it
-//! that hears them. Each carries the `PointerEvent` record from the node's content box. The pointer
-//! is a mouse (evdev, VNC, the agent: id 1) unless the device's shell says what touched the screen
-//! ([`Presenter::set_pointer_kind`]: Android's reader names a finger or a pen with each touch, id 2
-//! as on iOS); DOM's 0.5 of pressure while down either way. A wheel over a node is DOM's `wheel`
-//! first.
+//! `pointerdown`, `pointerup` and `pointermove` (LLP 1005 §3; LLP 1056 §3
+//! stage 3): DOM's events beside the contact, which they never take from.
+//! The down and the up bubble (Charlie, 2026-10-15): every enabled node
+//! from the press up that hears either holds the pointer until it lifts (a
+//! cancel is an up), innermost first, and the innermost hearing any of the
+//! three also hears its moves; a free pointer's moves go to the innermost
+//! node under it that hears them. Each carries the
+//! `PointerEvent` record from the node's content box. The pointer is a mouse
+//! (evdev, VNC, the agent: id 1) unless the device's shell says what touched
+//! the screen ([`Presenter::set_pointer_kind`]: Android's reader names a
+//! finger or a pen with each touch, id 2 as on iOS); DOM's 0.5 of pressure
+//! while down either way. A wheel over a node is DOM's `wheel` first (studio
+//! diary R3).
 use super::*;
 use exact_runner::PointerEvent;
 
@@ -40,7 +44,7 @@ const KINDS: [EventKind; 3] = [
 ];
 
 impl<D: DataSource> Presenter<D> {
-    /// What the pointer is from now on: told by a shell
+    /// What the pointer is from now on (LLP 1115.001 D7.4): told by a shell
     /// that knows, with each contact. A finger or a pen touches the screen
     /// directly: it is reported as itself, hovers nothing ([`Presenter::direct`]),
     /// and leaves no focus ring on what it presses.
@@ -80,7 +84,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// The record of a viewport point as `view` sees it, from its content
-    /// box, and the viewport point itself (`clientX`): the
+    /// box, and the viewport point itself (`clientX`, LLP 1094 D11): the
     /// button that changed (DOM's number, -1 for none) and those held.
     fn pointer_record(
         &mut self,
@@ -101,7 +105,7 @@ impl<D: DataSource> Presenter<D> {
             buttons,
             if buttons != 0 { 0.5 } else { 0.0 }
         ))?;
-        // The modifiers held, as a `MouseEvent` has them.
+        // The modifiers held (gallery F20), as a `MouseEvent` has them.
         record.held = self.modifiers();
         Some(record)
     }
@@ -136,7 +140,7 @@ impl<D: DataSource> Presenter<D> {
         buttons: u8,
         now_ms: f64,
     ) -> Option<String> {
-        // A press on a held node lets its hold go.
+        // A press on a held node lets its hold go (LLP 1122 D8).
         let hit = self.hit(x, y);
         self.hold_input(hit);
         let held = hit.and_then(|hit| self.pointer_node(hit, &KINDS))?;
@@ -228,7 +232,7 @@ impl<D: DataSource> Presenter<D> {
     /// down with none held is a `pointerdown`, the last up a `pointerup`,
     /// and a chord changes the held buttons the moves report. True when a
     /// `pointerup` handler prevented its default (a back or forward
-    /// button's history step).
+    /// button's history step, LLP 1115.000 D5.5).
     pub(crate) fn aux_pointer(
         &mut self,
         before: u32,
@@ -316,7 +320,7 @@ impl<D: DataSource> Presenter<D> {
         (error, prevents(self) > earlier)
     }
 
-    /// DOM's `wheel` at a viewport point: every enabled
+    /// DOM's `wheel` at a viewport point (studio diary R3): every enabled
     /// node from the hit up that hears it, innermost first, as it bubbles,
     /// each with its `WheelEvent` (pixels, the web's sign), until one calls
     /// `stopPropagation()`. True when one called `preventDefault()`: the

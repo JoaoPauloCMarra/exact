@@ -1,5 +1,5 @@
-//! `keyframes Name`: CSS `@keyframes` in Contract's indented form.
-//! Each line is one or more selectors — `from`, `to`, or a
+//! `keyframes Name`: CSS `@keyframes` in Contract's indented form
+//! (LLP 1055 D5). Each line is one or more selectors — `from`, `to`, or a
 //! percentage, separated by commas — then `attr=literal` values.
 
 use super::*;
@@ -75,7 +75,7 @@ impl Parser {
                 p.unquoted_unit(&aname, &value)?;
                 // A palette function (`color=accent()`, `color=tone("strong",
                 // 0.4)`) is constant too: lowering folds it to its literal
-                // from its arguments.
+                // from its arguments (LLP 1062 D9).
                 if !matches!(value, Expr::Number(..) | Expr::Str(..) | Expr::Call(..)) {
                     return Err(SyntaxError {
                         id: "contract-keyframe-literal",

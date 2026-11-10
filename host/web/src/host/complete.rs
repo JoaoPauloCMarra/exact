@@ -13,7 +13,7 @@ impl<D: DataSource> Host<D> {
 
     /// Hand the last commit's requests to the page and finish the batch. A
     /// continuation is dispatched here, on this thread, with the store as
-    /// committed; one a source holds is parked and
+    /// committed (LLP 1027.002 D3); one a source holds is parked and
     /// released after a later commit. Work a source answers at once — a
     /// main member's turn in an ordered set — is fulfilled here, and the
     /// commits it makes join the batch.

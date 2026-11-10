@@ -1,11 +1,11 @@
-//! The gamepad's JNI method, expanded by `canvas_jni!`
+//! The gamepad's JNI method (LLP 1127.003 D2), expanded by `canvas_jni!`
 //! inside its module, where `with` reaches the thread's host.
 
 #[doc(hidden)]
 #[macro_export]
 macro_rules! canvas_jni_pad {
     () => {
-        /// A gamepad's state: `values` its 17 standard
+        /// A gamepad's state (LLP 1127.003 D2): `values` its 17 standard
         /// buttons, then its 4 axes.
         #[no_mangle]
         pub unsafe extern "system" fn Java_dev_exact_canvas_Native_pad(

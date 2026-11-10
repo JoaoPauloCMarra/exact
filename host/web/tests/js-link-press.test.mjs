@@ -2,7 +2,8 @@
 // without a router: a plain click on an in-app link is the press and the
 // browser's navigation is prevented; a `_blank` target, a `download` or a
 // modified click is the browser's alone and the press does not run, as
-// `router()` and the wasm host's input-glue.js say. rt.js (with the roster and router it re-exports) runs beside
+// `router()` and the wasm host's input-glue.js say (Astra's batch 2
+// review). rt.js (with the roster and router it re-exports) runs beside
 // stand-ins for the modules it imports.
 import { test, expect } from 'bun:test';
 import { copyFileSync, mkdtempSync, writeFileSync } from 'node:fs';
@@ -45,7 +46,7 @@ test('a link press is the app navigation; a browser-owned one is the browser alo
   }
 });
 
-// An `href` that turns out empty is no link (the kernel's `Props::link`): the `<a>` keeps no `href`, so it
+// An `href` that turns out empty is no link (the kernel's `Props::link`; LLP 1115 §3): the `<a>` keeps no `href`, so it
 // has no link role, pointer or target, where `href=""` would be a link to the page itself. A bound `href` is written as
 // it arrives and taken off as it empties (rt.js `P`).
 test('an href that turns out empty is not written', async () => {

@@ -1,7 +1,7 @@
-// A source's Web Crypto, the same on every executor. Each
+// LLP 1069.005: a source's Web Crypto, the same on every executor. Each
 // draw of randomness inside an answer counts as a device read; a draw
-// during module initialization refuses. A digest is pure and
-// allowed anywhere; every other `subtle` member refuses by name.
+// during module initialization refuses (D2, D3). A digest is pure and
+// allowed anywhere; every other `subtle` member refuses by name (D1).
 const draws: Record<string, () => unknown> = {
   uuid: () => crypto.randomUUID(),
   bytes: () => crypto.getRandomValues(new Uint8Array(4)).length,

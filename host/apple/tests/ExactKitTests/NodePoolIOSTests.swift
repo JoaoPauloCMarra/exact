@@ -10,7 +10,7 @@ import XCTest
 /// presentation. UIKit, so a simulator runs it:
 ///   bun host/apple/build.mjs --test --ios
 final class NodePoolIOSTests: XCTestCase {
-    override class func setUp() { super.setUp(); ExactSurfaces.install() }
+    override class func setUp() { super.setUp(); ExactSurfaces.install() } // LLP 1047.001 D4
     private var window: UIWindow!
 
     private func collections(_ rows: [(view: Int, root: Int)]) -> [String: Any] {
@@ -69,7 +69,7 @@ final class NodePoolIOSTests: XCTestCase {
         }
     }
 
-    /// A hover held on a row's descendant (the hold puts a look
+    /// A hover held on a row's descendant (stage 9 G3: the hold put a look
     /// recognizer on it): the row is not pooled with it, the hold goes once
     /// (`gone`), and nothing of it survives the next row of that shape.
     @MainActor func testAHoverHeldOnARowsDescendantGoesWithTheRow() throws {
@@ -306,7 +306,7 @@ final class NodePoolIOSTests: XCTestCase {
         XCTAssertTrue(button.superview === p.views[1]?.scroll)
     }
 
-    // A row that holds an inner virtualized list pools with
+    // LLP 1068 §4.2.1: a row that holds an inner virtualized list pools with
     // it, its scroll view reset and its cards reused.
 
     /// Outer list 1's collection and inner list `inner`'s, `cards` its rows.
@@ -436,7 +436,7 @@ final class NodePoolIOSTests: XCTestCase {
         XCTAssertEqual(p.pool.count, 0)
     }
 
-    // A row pools around its heavy leaves.
+    // LLP 1068 stage 1: a row pools around its heavy leaves.
 
     /// A row (`base`) holding a symbol (`base + 1`), a heavy leaf of `kind`
     /// (`base + 2`) and a button (`base + 3`).
@@ -494,7 +494,7 @@ final class NodePoolIOSTests: XCTestCase {
         }
     }
 
-    /// A row holding controls pools around a switch,
+    /// LLP 1069.011.000 D8: a row holding controls pools around a switch,
     /// a new node with a new `UIControl` under the next row's id; its native
     /// button, which holds no value, parks with its `UIButton`, and the
     /// next row's press reaches the next row's id.
@@ -578,7 +578,7 @@ final class NodePoolIOSTests: XCTestCase {
         XCTAssertTrue(opener.popover === p.views[22])
     }
 
-    /// A 2D canvas row: the canvas is a new
+    /// A 2D canvas row (LLP 1056 D10, LLP 1068 §4.0): the canvas is a new
     /// view with no bitmap of the old row's, a late list for the old canvas
     /// lands nowhere, and the new canvas draws its own lifetime's lists.
     func testA2DCanvasRowPoolsAroundAFreshCanvasAndDropsStaleLists() throws {
@@ -588,7 +588,7 @@ final class NodePoolIOSTests: XCTestCase {
              "w": 300, "h": 200, "scale": 2.0, "stretch": false, "lists": [String]()]
         }
         p.apply(wireBatch([draw(12, 1)]))
-        p.canvas2d.waitForReplays()  // replay runs off the main thread
+        p.canvas2d.waitForReplays()  // replay runs off the main thread (LLP 1056 §8.3)
         let old = try XCTUnwrap(p.views[12])
         XCTAssertEqual(old.layer.sublayers?.filter { $0.contents != nil }.count, 1, "the old canvas shows its bitmap")
         p.apply(wireBatch([collections([(20, 20)])] + destroy([10, 11, 12, 13]) + heavyRowOps(20, kind: "canvas2d", y: 0)
@@ -651,7 +651,7 @@ final class NodePoolIOSTests: XCTestCase {
         }
     }
 
-    /// A glass group is the row's own view; parked, it
+    /// LLP 1053.000.000 D2: a glass group is the row's own view; parked, it
     /// goes, and the next row's props make a new one.
     func testAGroupRowPoolsWithANewGroupView() throws {
         guard #available(iOS 26.0, *) else { throw XCTSkip("Liquid Glass is iOS 26") }
@@ -671,8 +671,8 @@ final class NodePoolIOSTests: XCTestCase {
         XCTAssertTrue(glyph.superview === fresh.contentView)
     }
 
-    /// A row recycled from an auto group onto a numeric one does not
-    /// report the old `auto`.
+    /// LLP 1053.000.000.000 (grok's code review): a row recycled from an
+    /// auto group onto a numeric one does not report the old `auto`.
     func testAnAutoGroupRowRecycledOntoANumericGroupIsNotAuto() throws {
         guard #available(iOS 26.0, *) else { throw XCTSkip("Liquid Glass is iOS 26") }
         let p = listFixture(rowOps(10, y: 0, label: "Save 10").enumerated().map { i, op in
@@ -726,7 +726,7 @@ final class NodePoolIOSTests: XCTestCase {
         for root in roots.dropFirst() { XCTAssertTrue(p.pool.isParked(root)) }
     }
 
-    /// A native-module tag that opts into reuse: a
+    /// A native-module tag that opts into reuse (LLP 1068 §4.8, §4.9): a
     /// retired node's instance is reset and parked out of the window, the
     /// next node of the tag takes it with its props as a first mount, the
     /// view transparent until `load`; a callback the instance issues while

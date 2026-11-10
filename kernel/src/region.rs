@@ -279,7 +279,7 @@ pub struct RegionFrame {
     pub frame: Frame,
     /// Local scrollable content extent from the same pass.
     pub content: (f32, f32),
-    // Proof from the engine that produced this frame.
+    // LLP 1043.000 D3: proof from the engine that produced this frame.
     pub(crate) height_measured: bool,
 }
 

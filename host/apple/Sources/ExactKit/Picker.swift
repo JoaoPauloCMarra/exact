@@ -1,12 +1,12 @@
-// The file picker on Apple. `showPicker(id)` presents
+// @ref LLP 1069.002 — the file picker on Apple. `showPicker(id)` presents
 // PHPicker on iOS (no permission, no usage string; the `ExactMediaPicker`
-// module's) or a document picker for non-media or
-// unrestricted input, and an NSOpenPanel sheet on macOS. Native hosts don't enforce user activation. Each chosen
-// file is copied into `app:/tmp/picked/` before `change` fires, a HEIC
-// photo becoming a JPEG when `accept` names images but not HEIC
-// (Safari's rule), with its pixel size and a video's duration. Under
-// the agent the request is held for `type @t <path>…` / `tap @t cancel`,
-// whose files take the same path.
+// module's, LLP 1047.001.000 E) or a document picker for non-media or
+// unrestricted input, and an NSOpenPanel sheet on macOS (D8). Native hosts don't enforce user activation (ruled, Q2). Each chosen
+// file is copied into `app:/tmp/picked/` before `change` fires (D4), a HEIC
+// photo becoming a JPEG when `accept` names images but not HEIC (D6,
+// Safari's rule), with its pixel size and a video's duration (D3). Under
+// the agent the request is held for `type @t <path>…` / `tap @t cancel`
+// (D9), whose files take the same path.
 import Foundation
 import ImageIO
 import CoreImage
@@ -36,9 +36,9 @@ package enum MediaPickerLink {
 #endif
 
 /// The app's directories behind `app:/`, so an `image` source can read the
-/// app's own file: told by the library at boot and with each picked
+/// app's own file (D7): told by the library at boot and with each picked
 /// name, so a photo kept in `app:/data` shows after a relaunch with nothing
-/// picked.
+/// picked (recipes F18).
 enum AppFiles {
     private static let lock = NSLock()
     private static var roots: [String: URL] = [:]
@@ -70,7 +70,7 @@ final class Picker: NSObject {
     /// Inputs whose picker is showing: a second `showPicker` does nothing.
     private var open: Set<UInt32> = []
     /// Chosen documents under `startAccessingSecurityScopedResource`, until
-    /// the session ends.
+    /// the session ends (LLP 1069.010 D1).
     var scoped: [URL] = []
     /// The holds of document pickers a drive shows for real (`--touch
     /// platform`), by element: what the person's choice answers.
@@ -79,10 +79,10 @@ final class Picker: NSObject {
     /// Those pickers, by element: what `back` or the agent's answer closes.
     var documentShown: [UInt32: UIViewController] = [:]
     private var requests: [ObjectIdentifier: Request] = [:]
-    /// Exporting document pickers showing: the element
+    /// Exporting document pickers showing (LLP 1069.010 D3): the element
     /// the outcome goes to, and the scratch directory to remove.
     var exports: [ObjectIdentifier: (UInt32, URL)] = [:]
-    /// Document pickers showing: the element, the command.
+    /// Document pickers showing (LLP 1069.010 D2): the element, the command.
     var documentRequests: [ObjectIdentifier: (UInt32, String)] = [:]
     #endif
     init(session: ExactSession) { self.session = session }
@@ -97,7 +97,7 @@ final class Picker: NSObject {
         return String(String(decoding: d, as: UTF8.self).dropFirst().dropLast())
     }
 
-    /// `showPicker(id)`, from any action.
+    /// `showPicker(id)`, from any action (D2).
     func show(_ args: [Any]) {
         guard let id = args.first as? String else { session.log("picker: refused: showPicker names an element id"); return }
         if ExactEnv.agentMode {
@@ -114,7 +114,7 @@ final class Picker: NSObject {
         present(Request(view: view, id: id, accept: r["accept"] as? [String] ?? [], multiple: r["multiple"] as? Bool ?? false))
     }
 
-    /// The agent's answer, after the library consumed the hold: `reply`
+    /// The agent's answer, after the library consumed the hold (D9): `reply`
     /// is the library's, `request` the driver's (its paths, never journalled).
     func answered(_ reply: [String: Any], request: [String: Any]) {
         guard reply["capability"] as? String == "pick", let view = (reply["node"] as? NSNumber)?.uint32Value else { return }
@@ -132,7 +132,7 @@ final class Picker: NSObject {
         session.apply(session.runtime.pickerCancel(view, now: session.now()))
     }
 
-    /// Copy each file in, converting a HEIC photo as above, describe it, fire `change`.
+    /// Copy each file in, converting per D6, describe it (D3), fire `change`.
     func deliver(_ view: UInt32, accept: [String], files: [(url: URL, name: String)]) {
         open.remove(view)
         var lines: [String] = []
@@ -200,11 +200,11 @@ final class Picker: NSObject {
         return out
     }
 
-    /// JPEG at quality 0.9, orientation applied, with no metadata copied
+    /// D6: JPEG at quality 0.9, orientation applied, with no metadata copied
     /// (so no location). An HDR photo is written with an ISO 21496-1 gain
     /// map where ImageIO can encode it, preserving the color profile.
     /// A rejected HDR encode retries ImageIO's SDR rendition, then Core
-    /// Image's Display P3 tone map if ImageIO still writes HDR.
+    /// Image's Display P3 tone map if ImageIO still writes HDR (LLP 1100 D13).
     static func jpeg(from: URL, to: URL,
                      thumbnail: (CGImageSource, Int, CFDictionary?) -> CGImage? = CGImageSourceCreateThumbnailAtIndex,
                      finalize: (CGImageDestination) -> Bool = CGImageDestinationFinalize) throws {
@@ -285,7 +285,7 @@ final class Picker: NSObject {
         return (decode, encode)
     }
 
-    /// A gain map of either kind, or a PQ or HLG transfer.
+    /// A gain map of either kind, or a PQ or HLG transfer (LLP 1100 D4).
     static func isHDR(_ source: CGImageSource) -> Bool {
         if CGImageSourceCopyAuxiliaryDataInfoAtIndex(source, 0, kCGImageAuxiliaryDataTypeHDRGainMap) != nil { return true }
         if #available(iOS 18, macOS 15, tvOS 18, *),

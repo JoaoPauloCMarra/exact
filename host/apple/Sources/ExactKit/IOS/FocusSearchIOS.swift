@@ -1,4 +1,4 @@
-// UIKit's focus search, answered for exact2's own views.
+// UIKit's focus search, answered for exact2's own views (LLP 1008 §9).
 // On an iPad with a hardware keyboard UIKit runs a focus system. While no
 // item holds UIKit focus — exact2's keyboard focus is the first responder's
 // (Tab is its own key command) and none of its views is a UIKit focus item
@@ -34,7 +34,7 @@ enum FocusSearch {
         // whose own foreign views join the nodes themselves.
         if view is NodeView || view is PlainView || view is ScrollView || view is MetalView
             || view is UIImageView || view is UIVisualEffectView || view.next is UINavigationController || view.next is HeldStack
-            || view is NativeButtonIOS { return } // a native button's node keeps the focus
+            || view is NativeButtonIOS { return } // a native button's node keeps the focus (LLP 1069.011 D4)
         candidates.add(view)
     }
 
@@ -54,9 +54,9 @@ enum FocusSearch {
 final class Viewport: ScrollView {
     /// The route whose document this viewport scrolls; the session's viewport has no route.
     weak var documentNode: NodeView?
-    /// Its bands past the page's area (`Presenter.pageMargins`).
+    /// Its bands past the page's area (`Presenter.pageMargins`, LLP 1130 D1).
     var pageMargins = UIEdgeInsets.zero
-    /// The control bars over its page's scrollers, each by its edge (`ControlBars.sync`).
+    /// The control bars over its page's scrollers, each by its edge (`ControlBars.sync`, LLP 1131).
     var controlBars: [ObjectIdentifier: ControlBars.Weak] = [:]
     /// Its tint as UIKit last gave it undimmed (its window's, or an embedder's), which a dimmed
     /// view cannot read (`NodeView.carriedTint`)
@@ -70,7 +70,7 @@ final class Viewport: ScrollView {
         #if os(iOS)
         // The page's own scroller takes the keyboard down with a drag that
         // reaches it, as a scroller's unsaid `keyboardDismissMode` does
-        // (`NodeView.keyboardDismissal`).
+        // (`NodeView.keyboardDismissal`, LLP 1115.000 D9.1).
         keyboardDismissMode = .interactive
         #endif
     }
@@ -95,7 +95,7 @@ final class Viewport: ScrollView {
     #endif
 }
 /// Bound focus search to a native route or modal presentation, as the
-/// document viewport does.
+/// document viewport does (LLP 1123 D2).
 final class PresentationMount: UIView {
     #if os(iOS)
     /// Relay a modal presentation's events to its logical ancestors (`MountRelay`).

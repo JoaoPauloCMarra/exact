@@ -1,4 +1,4 @@
-//! This host's part in multi-column layout. The
+//! @ref LLP 1093 D7, D8, D12 — this host's part in multi-column layout. The
 //! kernel publishes every box in a flow at its column's place and, for a box
 //! that straddles columns, its union frame and fragments. A paragraph is laid
 //! out once, at its unfragmented width, and painted in each fragment at the
@@ -35,14 +35,14 @@ impl Painter {
         let build = || {
             let computed = node.computed_style(StyleMask::INHERITED);
             let mut spec = text_spec(&computed, "");
-            // A fitted paragraph's line box is at its runs' scale.
+            // A fitted paragraph's line box is at its runs' scale (LLP 1116.001 D1.4).
             let strut = exact_kernel::TextStyle::from_style(&computed).scaled(node.fit_scale());
             spec.strut = Run::from_style("", strut);
             spec.runs = node.text_runs().iter().map(Run::from_kernel).collect();
             spec.shown(node.props.str(PropId::Markup) == Some("markdown"))
         };
         let paragraph = if let Some(stamp) = node.paragraph_stamp() {
-            // Ordinary text takes the same
+            // @ref LLP 1043.000 §3 D7 — ordinary text takes the same
             // retained identity path; flow only adds exclusion geometry.
             self.text.borrow_mut().flow_identified(
                 &stamp,
@@ -91,7 +91,7 @@ impl Painter {
         // The canvas recorder leases the same paragraph the paint drew.
         self.row_text(node.key, &paragraph);
         // CSS `text-overflow: ellipsis` in a clipping box: an over-wide line
-        // ends in "…" (paint only).
+        // ends in "…" (LLP 1053 G5; paint only).
         let shown = (s.text_overflow == exact_kernel::TextOverflow::Ellipsis
             && effective_overflow(node).0 != Overflow::Visible)
             .then(|| paragraph.ellipsized(width))
@@ -158,7 +158,7 @@ impl Painter {
 
     /// A multi-column container's `column-rule`: centred in each gap between
     /// two columns that both hold a box, as tall as the columns, under the
-    /// columns' contents. A rule wider than its gap moves no column.
+    /// columns' contents (D7). A rule wider than its gap moves no column.
     pub(super) fn column_rules(
         &mut self,
         kernel: &Kernel,
@@ -197,7 +197,7 @@ impl Painter {
 }
 
 /// Whether a point (viewport points) inside a painted box hits it: a box
-/// with fragments only inside one, never in its union's gap.
+/// with fragments only inside one, never in its union's gap (D8).
 pub(crate) fn hits(kernel: &Kernel, b: &PaintedBox, x: f32, y: f32) -> bool {
     let Some(node) = kernel.node(b.id) else {
         return true;
@@ -208,7 +208,7 @@ pub(crate) fn hits(kernel: &Kernel, b: &PaintedBox, x: f32, y: f32) -> bool {
 }
 
 /// Where the agent's `tap` aims on a box with fragments: its first
-/// fragment's centre, not the union's, which may be a gap.
+/// fragment's centre, not the union's, which may be a gap (D12).
 pub(crate) fn center(kernel: &Kernel, b: &PaintedBox) -> Option<(f32, f32)> {
     let g = kernel.fragments(kernel.node(b.id)?.key)?.first()?;
     Some((

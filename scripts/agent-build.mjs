@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
-// A native drive's build, before the drive. The driver
+// A native drive's build, before the drive (LLP 1116.002 D4). The driver
 // refuses a build its own record shows is missing or stale, and never builds
-// (a cold build in `agent macos tree` would be minutes unexplained). An app's `exact.mjs` runs this first for `test` and `agent` on
+// (LLP 1012.001.000 D1: a cold build in `agent macos tree` would be minutes
+// unexplained). An app's `exact.mjs` runs this first for `test` and `agent` on
 // ios and macos, as it runs web-build before a web drive: a fresh build costs
 // the check and says nothing; a missing or stale one is built by the command
 // `bun exact.mjs ios|mac` runs, said in one stderr line. The build's output
@@ -9,7 +10,7 @@
 // when it fails. stdout stays the drive's (`--json`).
 //
 // A build stale only in what its plan is made of — the Contract and what
-// app.ts imports, which nothing native reads — is not rebuilt:
+// app.ts imports, which nothing native reads — is not rebuilt (LLP 1116.003):
 // the bake alone runs (`exact-js-bake`, the web dev loop's producer, about a
 // second), its plan, module and source map are kept beside the build, and the
 // driver launches the build with them as its launch generation (EXACT_PLAN),
@@ -42,7 +43,7 @@ const shown = file => relative(process.cwd(), file).startsWith('..') ? file : re
  * or when a macOS binary has no receipt). `sample` is the sample host's.
  * `checked` is the digest of a receipt whose inputs this drive's own check
  * (`buildFirst`, run first by an app's exact.mjs) has just hashed: the same
- * receipt's are not hashed twice: once a drive. */
+ * receipt's are not hashed twice (LLP 1012.001.000 D1: once a drive). */
 export function nativeBuild(host, app, { sample = false, checked = null } = {}) {
   const ios = host === 'ios';
   const built = ios ? appleArtifacts(app, { destination: 'ios-simulator', host: sample }).bundle : appleRunBinary(app, sample);
@@ -82,7 +83,7 @@ export function rebuildCommand(app, verb) {
   const command = ownVerb(app, verb);
   if (!command) return `bun host/apple/build.mjs${verb === 'ios' ? ' --ios' : ''} ${app.crate('apple')}`;
   const runner = readFileSync(resolve(app.dir, 'exact.mjs'), 'utf8');
-  // A launcher runs this checkout's app-cli.mjs, which builds first.
+  // A launcher (LLP 1116.006 D7) runs this checkout's app-cli.mjs, which builds first.
   return runner.includes('agent-build.mjs') || runner.includes('scripts/app-cli.mjs') ? command
     : `${command} (after bun exact.mjs update, test and agent build it themselves)`;
 }
@@ -99,7 +100,7 @@ export function ownVerb(app, verb) {
 /** The command that builds `app`'s Linux host for a drive: an `exact new` app's own verb, else exact2's build. */
 export const linuxRebuild = (app) => ownVerb(app, 'linux') ?? linuxBuild(app).join(' ');
 
-/** The driver's refusal on what `nativeBuild` found. */
+/** The driver's refusal (LLP 1012.001.000 D1) on what `nativeBuild` found. */
 export function refuseBuild(host, state, app, { sample = false } = {}) {
   const ios = host === 'ios';
   const command = sample ? `bun host/apple/build.mjs${ios ? ' --ios' : ''} ${app.crate('apple')} --host` : rebuildCommand(app, ios ? 'ios' : 'mac');
@@ -154,7 +155,7 @@ function logged(command, args, log, { cwd, env, append = false } = {}) {
 /** host/apple/build.mjs with `args`, its output into `log`; its exit code and output. */
 const appleBuild = (args, log) => logged(process.execPath, [resolve(ROOT, 'host/apple/build.mjs'), ...args], log);
 
-// ---------------------------------------------------------------- a plan-only edit
+// ---------------------------------------------------------------- a plan-only edit (LLP 1116.003)
 
 // What a plan is made of and nothing native reads: the Contract, and the
 // TypeScript and JSON app.ts imports (agent-launch.mjs `moduleGraph`; every
@@ -376,7 +377,7 @@ export async function buildFirst(host, app, { say = line => console.error(line),
   // Another build took the claim between the check and this one (two started together): wait for it, then decide again.
   if (code && retries > 0 && /Apple build busy for/.test(output)) return buildFirst(host, app, { say, build, wait, bake, retries: retries - 1 });
   if (code) say(failureSummary(output, { host, code, log: shown(log) }));
-  // The compiler's warnings, which Cargo said for the bake's build script: the new ones in full.
+  // The compiler's warnings, which Cargo said for the bake's build script (LLP 1116.004 D7): the new ones in full.
   else for (const line of warningLines(app.dir, host, compilerWarnings(output))) say(line);
   return code;
 }
@@ -394,7 +395,7 @@ export function windowsBuild(app) {
 
 /** `buildFirst` for Windows: host/windows/build.mjs when the packaged build is missing or stale, said in one line, its
  * output in the app's `.exact/windows-build.log`; the exit code. The plan is in the executable, so an edit to the
- * Contract alone rebuilds too (incremental: about 30 s on a desktop machine). */
+ * Contract alone rebuilds too (incremental: about 30 s on the NucBox). */
 export async function windowsBuildFirst(app, { say = line => console.error(line) } = {}) {
   if (process.env.EXACT_WINDOWS_BIN) return 0; // the caller's own binary: the driver says it did not check
   const { changed } = windowsBuild(app);
@@ -407,10 +408,10 @@ export async function windowsBuildFirst(app, { say = line => console.error(line)
   return code;
 }
 
-/** `bun exact.mjs ios --prebuild`: the build host/apple/build.mjs's `args` name,
+/** `bun exact.mjs ios --prebuild` (LLP 1116.003 D1.2): the build host/apple/build.mjs's `args` name,
  * then the bake tool a plan-only edit needs, started in a session of their own, so a shell that ends
- * what it started when a command returns (as a first build put in the background with & would be
- * lost) cannot reach them; their output in the app's `.exact/<host>-build.log`. Back
+ * what it started when a command returns (round 5: seven builders lost a first build put in the
+ * background with &) cannot reach them; their output in the app's `.exact/<host>-build.log`. Back
  * once the build holds the app's build claim, so a `test` or `agent` started next waits for it
  * (`waitForBuild`) instead of building beside it. */
 export async function prebuild(app, args, { timeout = 30_000, say = line => console.error(line) } = {}) {

@@ -1,7 +1,7 @@
 import XCTest
 @testable import ExactKit
 
-/// Every row of the schema's `materials` table reaches this
+/// LLP 1053.000 D4: every row of the schema's `materials` table reaches this
 /// platform as the name the table gives, and that name is one this platform
 /// draws (a glass effect, or a `UIBlurEffect.Style` / `NSVisualEffectView.Material`).
 enum MaterialTable {
@@ -28,7 +28,7 @@ enum MaterialTable {
         // A table name drawn as a stand-in is silent; the agent's state shows it.
         let standIn = try XCTUnwrap(rows.first { $0[column].hasPrefix("~") }?[0])
         XCTAssertNotNil(Materials.resolve(standIn) { logged.append($0) })
-        XCTAssertEqual(logged.count, 1, "a stand-in is not logged")
+        XCTAssertEqual(logged.count, 1, "a stand-in is not logged (Charlie: \"ok, (b)\")")
         XCTAssertEqual(Materials.agentMaterial(standIn)["standIn"] as? Bool, true)
         XCTAssertEqual(Materials.agentMaterial("not-a-material")["unknown"] as? Bool, true)
     }

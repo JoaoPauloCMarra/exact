@@ -1,4 +1,4 @@
-//! Pictures of a package's `img` scheme: a
+//! Pictures of a package's `img` scheme (LLP 1133.019 D2, D11 item 1): a
 //! source such as `photos:<id>` is never a file. Each image node that shows
 //! one is asked of the package's implementation at its box's device pixels
 //! and fit, through admission ([`Images::package_asks`] is the outbox the

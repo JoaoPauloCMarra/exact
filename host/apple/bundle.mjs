@@ -1,5 +1,5 @@
 // Apple bundle assembly. The build owns compilation and artifact publication.
-// An extension is packaged inside its app's cohort.
+// @ref LLP 1126 D2/D8 — an extension is packaged inside its app's cohort.
 import { packageActivityArm, assertActivityRefusals } from './activities.mjs';
 import { packageWidgets, packageAlarmExtension, widgetId, entryProfiles, activityEntries, platformWidgetEntries, macWidgetGroup, macWidgetEntitlements, widgetGroup, widgetSigningTeam } from './widgets.mjs';
 import { packageShareExtension, shareInfo, shareId, macShareEntitlements } from './extensions.mjs';
@@ -13,7 +13,7 @@ import { listAssets } from '../web/serve.mjs';
 import { appIcon, buildInfo, iosAssets, appleAssets, copyMacResources, signingOrder, helperEntitlements, wrapFramework, assertArchiveFrameworks } from './assets.mjs';
 import { allows, profile, identity, embeddedProfile } from './devices.mjs';
 import { placeLibrary } from '../../scripts/package-libraries.mjs';
-// The App Intents module the bundle places, built before the executable links it.
+// The App Intents module the bundle places, built before the executable links it (LLP 1133.023 D8).
 export { buildIntents, shortcutKeys } from './intents.mjs';
 const root = resolve(new URL('../..', import.meta.url).pathname);
 const run = (cmd, args, opts = {}) => {
@@ -24,12 +24,12 @@ const run = (cmd, args, opts = {}) => {
 export function assembleMac({intents, shared, library, serviceDylibs, macWidgets, triple, appleReach, hasWeb, webLoadName, args, app, paths, binDir, libDir, bin, loadName, hasGpu, dylib, moduleDylibs, looseArms, hasSvg, svgLoadName, modulesLoadName, modulesBuilt, svgBuilt, canvasGpuLoadName, canvasGpuBuilt, sha1, linkRoot, swiftc, buildReceipt, development, bakedCompat, rosterKeys, production, distribution, stampSdk, products, composition, sdk, bakedPlan, cleanup}, {runApple, appleArtifacts, macInfoPlist, copyAppleStaticTrees, writeUsageStrings, receipt, shippedReceipt, assertAppleIdentity, placeAppleArtifact, infoPlist, distributionKeys, copyAppleGpuProducts, entitlements}) {
     // `--bundle`'s assembled `.app`, when one was asked for: what `--run`
     // then launches, so the running process has the app's bundle identity —
-    // its Info.plist, its document types, its Dock tile.
+    // its Info.plist, its document types, its Dock tile (LLP 1033 D2).
     let bundlePath = null;
     const { team: widgetTeam = null, profiles = null } = macWidgets ?? {};
-    // The share extension's group is the team's, as the widgets' is: ad hoc, the app has no inbox.
+    // The share extension's group is the team's, as the widgets' is (LLP 1133.024 D4): ad hoc, the app has no inbox.
     const team = widgetTeam ?? (app.manifest.share_target && sha1 && sha1 !== '-' ? (() => { try { return widgetSigningTeam(sha1); } catch (e) { console.log(`Mac share extension: ${e.message}`); return null; } })() : null);
-    if (app.manifest.share_target && !team) console.log('Mac share extension: no Apple Development identity; building without it (EXACT_IDENTITY names one).');
+    if (app.manifest.share_target && !team) console.log('Mac share extension: no Apple Development identity; building without it (EXACT_IDENTITY names one, LLP 1133.024 D4).');
     const shareGroup = app.manifest.share_target && team ? macWidgetGroup(app, team) : null;
     const widgetKeys = { ...shareInfo(app, shareGroup), ...(shared ? {
       ExactAppGroup: macWidgetGroup(app, team), ExactAppIdentifier: app.id,
@@ -39,7 +39,7 @@ export function assembleMac({intents, shared, library, serviceDylibs, macWidgets
       ExactWidgetGeneration: createHash('sha256').update(JSON.stringify([bakedCompat.id, buildReceipt.graph.artifacts])).digest('hex'),
       ...(profiles ? { ExactKeychainAccessGroup: profiles.keychain } : {}),
     } : {}) };
-    if (shared && !profiles) console.log('Mac widgets: no shared Keychain profiles; entries with requiresSecrets show the placeholder.');
+    if (shared && !profiles) console.log('Mac widgets: no shared Keychain profiles; entries with requiresSecrets show the placeholder (LLP 1126.001 §5 Q5).');
     const ent = shared || shareGroup ? resolve(linkRoot, 'mac-entitlements.plist') : null;
     if (ent) writeFileSync(ent, macWidgetEntitlements({ app, team, profiles }));
     // Replace the dylib, never overwrite it in place: a running app may still
@@ -63,16 +63,18 @@ export function assembleMac({intents, shared, library, serviceDylibs, macWidgets
       run('codesign', ['--force', '--sign', sha1 ?? '-', '--timestamp=none', resolve(binDir, canvasGpuLoadName)], { stdio: 'ignore' });
     }
     // The app's kept secrets live in the login keychain, whose ACL trusts the
-    // creating app by its code signature: signed with the team's
+    // creating app by its code signature (LLP 1018 D7): signed with the team's
     // identity a rebuild keeps them; ad-hoc, every rebuild is a new app and
     // the keychain asks again — before the first frame.
 
-    // The bundle's plist — what a `.app` would carry when one is assembled — is written beside the bare
-    // executable under its product's name, never as `Info.plist`: codesign treats an `Info.plist` adjacent to
-    // a bare Mach-O as a bundle's and seals the whole directory (169 files), so the next write there — the
-    // receipt, another product, another app's plist — fails verification and the binary is killed at launch.
-    // The signing identifier is the app's id, explicit, so two apps built here are two identities to the
-    // keychain.
+    // The bundle's plist — what a `.app` would carry when one is assembled —
+    // is written beside the bare executable under its product's name, never
+    // as `Info.plist`: codesign treats an `Info.plist` adjacent to a bare
+    // Mach-O as a bundle's and seals the whole directory (169 files), so the
+    // next write there — the receipt, another product, another app's plist —
+    // fails verification and the binary is killed at launch (Weird Castle's
+    // manifest found it). The signing identifier is the app's id, explicit,
+    // so two apps built here are two identities to the keychain (LLP 1018 D7).
     rmSync(resolve(binDir, 'Info.plist'), { force: true });
     rmSync(resolve(binDir, '_CodeSignature'), { recursive: true, force: true });
     const assetKeys = appleAssets(app, binDir, { platform: 'macos', kept: { dir: resolve(linkRoot, 'assets'), stamp: swiftc }, expected: buildReceipt.binary.metadata.appleAssetCatalogs ?? [] });
@@ -82,14 +84,14 @@ export function assembleMac({intents, shared, library, serviceDylibs, macWidgets
     if (hasSvg) run('codesign', ['--force', '--sign', sha1 ?? '-', '--timestamp=none', resolve(binDir, svgLoadName)], { stdio: 'ignore' });
     run('codesign', ['--force', '--sign', sha1 ?? '-', '--timestamp=none', '--identifier', app.id, bin], { stdio: 'ignore' });
     for (const p of products.slice(1)) run('codesign', ['--force', '--sign', sha1 ?? '-', '--timestamp=none', '--identifier', `${app.id}.${p.toLowerCase()}`, resolve(binDir, p)], { stdio: 'ignore' });
-    // The receipt beside it.
+    // The receipt beside it (LLP 1030 D2).
     writeFileSync(resolve(binDir, 'receipt.json'), receipt(app, { compatibilityId:bakedCompat.id, build:buildReceipt, composition, platform: 'macos', target: process.arch === 'arm64' ? 'aarch64-apple-darwin' : 'x86_64-apple-darwin', sdk, identity: sha1 ?? 'ad-hoc', profile: profiles ? { name: profiles.app.name, team, expires: profiles.app.expires } : null, entitlements: ent ? readFileSync(ent, 'utf8') : null, gpu: hasGpu ? dylib : null, development }));
     // A local .app gives Launch Services an owner for development links, and is what `--run` launches (a bare executable has no Info.plist).
     if (shared || args.includes('--bundle') || args.includes('--run') || buildReceipt.binary.metadata.appleAssetCatalogs?.length) {
       const bundleDestination = appleArtifacts(app).bundle;
       const output = resolve(bundleDestination, '..');
       mkdirSync(output, { recursive: true });
-      // Assemble beside the stable app path, then replace atomically.
+      // Assemble beside the stable app path, then replace atomically (LLP 1033 D2).
       const stage = mkdtempSync(resolve(output, '.build-'));
       cleanup.push(stage);
       const bundle = resolve(stage, basename(bundleDestination)), contents = resolve(bundle, 'Contents');
@@ -103,13 +105,13 @@ export function assembleMac({intents, shared, library, serviceDylibs, macWidgets
       verifyBakeFiles(bakedCompat, bakedPlan, listAssets(resources, true, ['typescript']));
       writeFileSync(resolve(contents, 'Info.plist'), macInfoPlist(app, { development, distributed: distribution, reach: appleReach, icon: { ...widgetKeys, ...rosterKeys, ...appIcon(app, resources, 'macos'), ...assetKeys, ...buildInfo(app, { root, production: production || distribution, ...stampSdk }) } }));
       writeUsageStrings(appleReach, resources);
-      intents?.place(resources); // the faces' App Intents metadata
+      intents?.place(resources); // LLP 1133.023 D8: the faces' App Intents metadata
       const whole = readFileSync(resolve(binDir, 'receipt.json'), 'utf8');
       writeFileSync(resolve(resources, 'receipt.json'), distribution ? shippedReceipt(whole) : whole);
       // Preserve the GPU artifact signatures that the baked receipt names.
       for (const file of [...loaded, ...(canvasGpuBuilt ? [canvasGpuLoadName] : []), ...(modulesBuilt ? [modulesLoadName] : []), ...serviceDylibs.map(svc => svc.load)]) run('codesign', ['--force', '--sign', sha1 ?? '-', '--timestamp=none', resolve(executables, file)], { stdio: 'ignore' });
       copyMacResources(app, contents, buildReceipt.binary.metadata.nativeResources ?? []);
-      // A package's framework, where the executable's run path finds it, signed before the bundle.
+      // A package's framework (LLP 1154 D3), where the executable's run path finds it, signed before the bundle.
       if (library) run('codesign', ['--force', '--sign', sha1 ?? '-', '--timestamp=none', placeLibrary(library, resolve(contents, 'Frameworks'))], { stdio: 'ignore' });
       if (shared) {
         const frameworks = resolve(contents, 'Frameworks');
@@ -125,7 +127,7 @@ export function assembleMac({intents, shared, library, serviceDylibs, macWidgets
       if (shareGroup) packageShareExtension({ app, bundle, directory: linkRoot, sdk, triple, platform: 'macos', group: shareGroup, runApple, entitlements: macShareEntitlements(shareGroup),
         sign: (extension, path) => run('codesign', ['--force', '--sign', sha1, '--timestamp=none', '--entitlements', path, extension], { stdio: 'ignore' }) });
       const nativeRoots = (app.manifest.host?.macos?.resources ?? []).map(({to}) => resolve(contents, to)), order = signingOrder(bundle, bakedCompat);
-      // A runtime exception's target is checked here, not first at release; a development build signs without the hardened runtime, so with no entitlements.
+      // A runtime exception's target is checked here, not first at release (LLP 1069.008 D9); a development build signs without the hardened runtime, so with no entitlements.
       helperEntitlements(bundle, app.manifest, bakedCompat, order);
       for (const file of order.filter(file => nativeRoots.some(root => file === root || file.startsWith(root + '/')))) run('codesign', ['--force', '--sign', sha1 ?? '-', '--timestamp=none', file], { stdio: 'ignore' });
       run('codesign', ['--force', '--sign', sha1 ?? '-', '--timestamp=none', ...(ent ? ['--entitlements', ent] : []), bundle], { stdio: 'ignore' });
@@ -151,7 +153,7 @@ export function assembleIOS({intents, shared, library, serviceDylibs, triple, ap
   writeFileSync(resolve(bundle, 'Info.plist'), infoPlist(app, device, { development, distributed: distribution, reach: appleReach, tv }));
   const refused = webRefusal(app, distribution, tv);
   if (refused) console.log(refused);
-  // The GPU crate's shaders: files the presenter registers
+  // The GPU crate's shaders (LLP 1030 D8): files the presenter registers
   // with the module before a surface is created, never strings in the dylib.
   copyAppleStaticTrees(paths.capture, bundle);
   verifyBakeFiles(bakedCompat, bakedPlan, listAssets(bundle, true, ['typescript']));
@@ -160,19 +162,19 @@ export function assembleIOS({intents, shared, library, serviceDylibs, triple, ap
   writeFileSync(resolve(bundle, 'Info.plist'), infoPlist(app, device, { development, distributed: distribution, reach: appleReach, icon: assetKeys, distribution: stamp, tv }));
   if (shared) run('plutil', ['-insert', 'ExactWidgetGeneration', '-string', createHash('sha256').update(JSON.stringify([bakedCompat.id, buildReceipt.graph.artifacts])).digest('hex'), resolve(bundle, 'Info.plist')]);
   writeUsageStrings(appleReach, bundle);
-  // AlarmKit's countdown is a Live Activity the extension draws.
+  // AlarmKit's countdown is a Live Activity the extension draws (LLP 1133.030 D8 item 2).
   if (alarm && !tv) run('plutil', ['-replace', 'NSSupportsLiveActivities', '-bool', 'YES', resolve(bundle, 'Info.plist')]);
-  intents?.place(bundle); // the faces' App Intents metadata
+  intents?.place(bundle); // LLP 1133.023 D8: the faces' App Intents metadata
   copyAppleGpuProducts(libDir, resolve(bundle, 'Frameworks'), gpuArtifacts, !!ipa);
   for (const [has, built, name] of looseArms) if (has) copyFileSync(built, resolve(bundle, 'Frameworks', name));
-  if (library) placeLibrary(library, resolve(bundle, 'Frameworks')); // a package's framework, signed with the others below
+  if (library) placeLibrary(library, resolve(bundle, 'Frameworks')); // a package's framework (LLP 1154 D3), signed with the others below
   if (modulesBuilt) copyFileSync(modulesBuilt, resolve(bundle, 'Frameworks', modulesLoadName));
   for (const svc of serviceDylibs) copyFileSync(svc.built, resolve(bundle, 'Frameworks', svc.load));
   if (hasSvg) copyFileSync(svgBuilt, resolve(bundle, 'Frameworks', svgLoadName));
   if (svgFilterBuilt) copyFileSync(svgFilterBuilt, resolve(bundle, svgFilterLibraryName));
   if (canvasGpuBuilt) copyFileSync(canvasGpuBuilt, resolve(bundle, 'Frameworks', canvasGpuLoadName));
   // A sibling bundle runs the app's own executable over the app's frameworks, assets and resources from an
-  // Info.plist of its own: the sample host (`--host`) and the App Clip (an App Clip is an app, the
+  // Info.plist of its own: the sample host (`--host`) and the App Clip (LLP 1126 D12: an App Clip is an app, the
   // whole one, under a second identity). `bundles` is signed in order: the clip before the app that holds it.
   const sibling = (path, executable, plist) => {
     mkdirSync(resolve(path, 'Frameworks'), { recursive: true });
@@ -198,9 +200,9 @@ export function assembleIOS({intents, shared, library, serviceDylibs, triple, ap
     bundles.push([hostBundle, 'host']);
   }
   // A grant's signing entitlement needs a profile that allows it, which a
-  // team wildcard never does for HealthKit.
+  // team wildcard never does for HealthKit (LLP 1069.008.000 D4).
   const required = appleReach?.entitlements ?? [], appRequired = [...required, ...browserEntitlements({ ...app, widgetTV: tv }, distribution)];
-  // With entries, the app's and the extension's profiles together, each granting the shared groups.
+  // With entries, the app's and the extension's profiles together, each granting the shared groups (LLP 1126.001 WP13).
   const provisioned = shared && device && !unsigned ? entryProfiles({ app, udid: ph?.udid, required: appRequired }) : null;
   const appProfile = device && !unsigned ? provisioned?.app ?? (allows(prof, appRequired) ? prof : profile(ph?.udid, app.id, appRequired)) : null;
   // The clip's profile is for its own App ID, of the app's profile's team, prefix and method, as the extension's is.
@@ -233,13 +235,13 @@ export function assembleIOS({intents, shared, library, serviceDylibs, triple, ap
       // The extension's identifier and shared Keychain group under its own profile's prefix (entryProfiles refused a pair whose prefixes differ).
       entitlements: entitlements({ ...app, id: widgetId(app), widgetAppId: app.id }, signingProfile?.team, signingProfile?.dev ?? !unsigned, null, { simulator: !device, prefix: provisioned?.extension.prefix ?? signingProfile?.prefix }),
       sign: (extension, ent) => run('codesign', ['--force', '--sign', signingIdentity, '--timestamp=none', ...(device ? ['--entitlements', ent] : []), extension], { stdio: 'ignore' }) });
-    // The share extension: a simulator's group needs no account; a phone's waits for the App Group
+    // The share extension (LLP 1133.024 D4): a simulator's group needs no account; a phone's waits for the App Group
     // and the `.share` App ID on the team, so a device build has no inbox yet and says so.
-    if (kind === 'app' && tv && app.manifest.share_target) console.log('Share extension: not built for tvOS, which has no share sheet.');
+    if (kind === 'app' && tv && app.manifest.share_target) console.log('Share extension: not built for tvOS, which has no share sheet (LLP 1133.024 D4).');
     if (kind === 'app' && !tv && app.manifest.share_target) {
       const group = device ? null : widgetGroup(app);
       for (const [key, value] of Object.entries(shareInfo(app, group))) runApple('plutil', ['-replace', key, '-string', value, resolve(assembled, 'Info.plist')]);
-      if (device) console.log(`Share extension: not built for a device until the team registers the App Group ${widgetGroup(app)} and the App ID ${shareId(app)}.`);
+      if (device) console.log(`Share extension: not built for a device until the team registers the App Group ${widgetGroup(app)} and the App ID ${shareId(app)} (LLP 1133.024 §19).`);
       else packageShareExtension({ app, bundle: assembled, directory: linkRoot, sdk, triple, group, runApple,
         entitlements: entitlements({ ...app, id: shareId(app), widgetAppId: app.id }, signingProfile?.team, signingProfile?.dev ?? !unsigned, null, { simulator: true, prefix: signingProfile?.prefix }),
         sign: (extension) => run('codesign', ['--force', '--sign', signingIdentity, '--timestamp=none', extension], { stdio: 'ignore' }) });

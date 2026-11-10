@@ -1,5 +1,5 @@
 //! Absolutely positioned boxes, a root's own margins and the `aspect-ratio`
-//! paths not covered elsewhere, against literal Chrome.
+//! paths LLP 1053 left (LLP 1074), against literal Chrome.
 //!
 //! Chrome 154, 2026-09-30, by the method of `browser_cases.rs`: each case is
 //! plain HTML/CSS inside an 800px-wide box (the kernel's offer); the case's
@@ -206,7 +206,7 @@ fn failures(fixture: &str, relative: bool) -> Vec<(String, Vec<String>)> {
 
 /// Cases about what else makes a containing block in a browser: a
 /// transform, a filter. The kernel's rule is position alone; the Contract
-/// compiler lowers `position: relative` onto such a box, so a
+/// compiler lowers `position: relative` onto such a box (LLP 1074 T1), so a
 /// plan never holds one that is `static`.
 const NOT_IN_THE_KERNEL: &[&str] = &[
     "inset 0 under translate: the box",
@@ -245,7 +245,7 @@ fn check(all: Vec<(String, Vec<String>)>, owed: &[&str]) {
 #[test]
 fn positioned_boxes_roots_and_ratios_match_chrome() {
     let fixture = include_str!("fixtures/browser_position.tsv");
-    // Known difference: the auto-height column shrinks to 60px instead of its 100px cap.
+    // QUEUE: the auto-height column shrinks to 60px instead of its 100px cap.
     check(
         failures(fixture, true),
         &["Chrome 151 ratio text wrapping column height cap"],
@@ -304,7 +304,7 @@ fn cross_axis_auto_margins_match_chrome() {
 fn block_justify_items_matches_chrome() {
     check(
         failures(include_str!("fixtures/browser_block_justify.tsv"), false),
-        // Known difference: absolute children still use the unaligned static position.
+        // QUEUE: absolute children still use the unaligned static position.
         &["Chrome 151 block justify absolute automatic insets"],
     );
 }
@@ -502,7 +502,7 @@ fn max_content_roots_wrap_at_their_resolved_width() {
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));
 }
 
-/// `position: static` is the default, an absolute box's
+/// LLP 1074 T1: `position: static` is the default, an absolute box's
 /// containing block is its nearest positioned ancestor, and with no inset on
 /// an axis it sits at its static position.
 #[test]

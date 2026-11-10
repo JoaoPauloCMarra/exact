@@ -1,4 +1,4 @@
-//! A default
+//! @ref LLP 1115.000 D6 (amended 2026-10-13, Charlie's ruling) — a default
 //! yields to the author's version of the same state: a disabled custom
 //! pressable dims on the hosts that dim it, unless its author styles its
 //! own disabled state. Decided here, once, from the element as written:

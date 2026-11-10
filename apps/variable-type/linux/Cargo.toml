@@ -1,4 +1,4 @@
-# Variable Type on the Linux host.
+# Variable Type on the Linux host (LLP 1019 §13).
 [package]
 name = "variable-type-linux"
 version.workspace = true

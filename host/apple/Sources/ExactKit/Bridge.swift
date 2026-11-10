@@ -31,14 +31,14 @@ extension Runtime {
         }
     }
     /// A `change`; a text field's carries its selection as the edit left
-    /// it (kind 41), else the value alone (kind 1).
+    /// it (kind 41, x2apps codeedit #2), else the value alone (kind 1).
     func change(_ view: UInt32, _ value: String, selection: FieldSelection? = nil, now: Double) -> Batch {
         return on {
             let n = write(selection?.payload(value) ?? value)
             return read(exact_dispatch(rt, view, selection == nil ? 1 : 41, n, now))
         }
     }
-    /// A text field's value as it moves: HTML's `input`,
+    /// A text field's value as it moves: HTML's `input` (LLP 1069.001 D4),
     /// with its selection when the host has one (kind 40, else 23).
     func input(_ view: UInt32, _ value: String, selection: FieldSelection? = nil, now: Double) -> Batch {
         return on {
@@ -50,14 +50,14 @@ extension Runtime {
     func replacementInput(_ view: UInt32, _ value: String, _ selection: FieldSelection, now: Double) -> Batch {
         on { read(exact_dispatch(rt, view, 48, write(selection.payload(value)), now)) }
     }
-    /// A text field's `select` (kind 42): its value and
+    /// A text field's `select` (kind 42, x2apps codeedit #2): its value and
     /// the selection it now has.
     func fieldSelect(_ view: UInt32, _ value: String, _ selection: FieldSelection, now: Double) -> Batch {
         on { read(exact_dispatch(rt, view, 42, write(selection.payload(value)), now)) }
     }
-    /// The wall clock owns time, or the agent's clock does.
+    /// The wall clock owns time, or the agent's clock does (the timers RFC, D1).
     func liveClock(_ yes: Bool) { setLiveClock(yes ? { ExactEnv.wall() } : nil) }
-    /// The posture and the viewport segments: the rects as `x y w h` floats in the input buffer, none for one segment.
+    /// The posture and the viewport segments (LLP 1078 D4): the rects as `x y w h` floats in the input buffer, none for one segment.
     func segments(_ fold: ViewportFold) -> Batch {
         on {
             var data = Data(capacity: fold.rects.count * 16)
@@ -66,7 +66,7 @@ extension Runtime {
             return read(exact_segments(rt, fold.posture == "folded" ? 1 : 0, UInt32(fold.cols), UInt32(fold.rows), UInt32(fold.rects.count)))
         }
     }
-    /// Every colour reference the kernel resolves itself
+    /// @ref LLP 1095 D1 — every colour reference the kernel resolves itself
     /// (paint motion, gradients, SVG scenes), resolved by the platform in
     /// both appearances under the current contrast and reported, so none of
     /// them is a frozen fallback. A name the platform lacks is left out: the
@@ -93,35 +93,35 @@ extension Runtime {
             return read(exact_colors(rt, write(bytes)))
         }
     }
-    /// A button's face, custom or native.
+    /// A button's face, custom or native (LLP 1069.011.000 D1).
     func buttonFace(_ view: UInt32) -> ButtonFace {
         return on(busy: ButtonFace()) {
             let len = exact_press_face(rt, view)
             return ButtonFace(json: Data(bytes: exact_out(rt), count: Int(len)))
         }
     }
-    /// A select's options and the one it shows.
+    /// A select's options and the one it shows (LLP 1069.001 D5).
     func selectOptions(_ view: UInt32) -> SelectMenu {
         return on(busy: SelectMenu(json: Data())) {
             let len = exact_select_options(rt, view)
             return SelectMenu(json: Data(bytes: exact_out(rt), count: Int(len)))
         }
     }
-    /// A radio's group and the radios its arrows move to.
+    /// A radio's group and the radios its arrows move to (x2apps survey #2).
     func radioGroup(_ view: UInt32) -> RadioGroup {
         return on(busy: RadioGroup(json: Data())) {
             let len = exact_radio_group(rt, view)
             return RadioGroup(json: Data(bytes: exact_out(rt), count: Int(len)))
         }
     }
-    /// A navigation root's tabs by the kernel's rule; nil for one stack.
+    /// A navigation root's tabs by the kernel's rule (LLP 1115.001 D11); nil for one stack.
     func rootTabs(_ view: UInt32) -> RootTabs? {
         return on(busy: nil) {
             let len = exact_root_tabs(rt, view)
             return RootTabs(json: Data(bytes: exact_out(rt), count: Int(len)))
         }
     }
-    /// What native containers cover of boxes, under one
+    /// What native containers cover of boxes (LLP 1075.003 §3.5), under one
     /// layout: `edges` add to a box's padding; `whole` lays it out as
     /// `display: none`; nil clears.
     func covers(_ covers: [(UInt32, HostCover?)]) -> Batch {
@@ -170,7 +170,7 @@ extension Runtime {
         }
     }
     /// The margin UIKit's cell gives each cells list's rows at its left and
-    /// right, under one layout; nil clears it.
+    /// right, under one layout (LLP 1138); nil clears it.
     package func listMargins(_ lists: [(UInt32, [CGFloat]?)]) -> Batch {
         return on {
             var bytes = Data(capacity: lists.count * 24)

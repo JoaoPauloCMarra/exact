@@ -1,4 +1,4 @@
-//! An answer's own timers. A
+//! An answer's own timers (LLP 1027.000 D1 as amended 2026-10-28). A
 //! TypeScript answer that awaits only a timer it armed hands the runner a
 //! continuation due at a time on the runner's clock ([`Request::due_ms`]).
 //! The runner keeps it back from the host until an advance reaches that
@@ -19,7 +19,7 @@
 //! timer of its own armed hands that request out carrying the timer's time
 //! (`wake_ms`, and no continuation). It is I/O, so the clocks wait on it as
 //! on any request; but if an advance reaches that time before its reply,
-//! the request runs on as module work, its reply delivered in
+//! the request runs on as module work (LLP 1146 D2), its reply delivered in
 //! a module turn, and the answer's continuation goes out in its place,
 //! landing as a released wait does ([`DataSource::timer_before_reply`]). So
 //! `Promise.race([fetch, timeout])` gives up on time, as a browser's does.

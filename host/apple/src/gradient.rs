@@ -1,4 +1,4 @@
-//! Box-dependent gradient stops for both Apple presenters.
+//! Box-dependent gradient stops for both Apple presenters (LLP 1066).
 #![allow(unsafe_code)]
 use exact_kernel::gradient::{BackgroundImage, Geometry};
 
@@ -78,19 +78,19 @@ macro_rules! gradient_exports {
 }
 
 use crate::style::num;
-/// A gradient for the presenter: its shape — `linear` degrees,
+/// A gradient for the presenter (LLP 1066): its shape — `linear` degrees,
 /// a `to <corner>` as `[right, bottom]`, or `radial` as `[circle, extent,
 /// x%, xpx, y%, ypx]` (extent: closest-side, closest-corner, farthest-side,
 /// farthest-corner) — and `stops` flat as `t, r, g, b, a`, positions 0–1.
 /// The box, so the placement, is the presenter's. Stops are already expanded
 /// to mix as CSS's premultiplied ones do (Core Graphics and Core Animation
 /// mix unpremultiplied); a `light-dark()` gradient also carries `dark`, and
-/// the view picks by its own appearance.
+/// the view picks by its own appearance (LLP 1034 D2).
 pub(crate) fn gradient_json(g: &exact_kernel::gradient::Gradient) -> String {
     use exact_kernel::gradient::{premultiplied_ramp, Direction, GradientKind, Length};
     if g.needs_box() {
         // Its session's overrides now, while that session is bound: the
-        // presenter resolves the rest later, outside any.
+        // presenter resolves the rest later, outside any (LLP 1121 stage 5).
         let mut g = g.clone();
         for stop in &mut g.stops {
             // A tint role (`LinkText`) the theme's `AccentColor` too.
@@ -102,7 +102,7 @@ pub(crate) fn gradient_json(g: &exact_kernel::gradient::Gradient) -> String {
         exact_runner::agent::quote(&g.wire(), &mut css);
         return format!("{{\"css\":{css}}}");
     }
-    // Interpolated outside sRGB, the ramp crosses as unclipped
+    // LLP 1100 D2: interpolated outside sRGB, the ramp crosses as unclipped
     // extended linear sRGB floats, alpha 0–1.
     let stops = |dark: bool| {
         if let Some(ramp) = g.interpolated(dark) {
@@ -132,7 +132,7 @@ pub(crate) fn gradient_json(g: &exact_kernel::gradient::Gradient) -> String {
         GradientKind::Linear(Direction::Corner { right, bottom }) => {
             format!("\"corner\":[{},{}]", u8::from(right), u8::from(bottom))
         }
-        // `[from, x%, xpx, y%, ypx]`.
+        // @ref LLP 1077 D5 — `[from, x%, xpx, y%, ypx]`.
         GradientKind::Conic { from, at } => {
             let axis = |l: Length| match l {
                 Length::Percent(p) => format!("{},0", num(p)),

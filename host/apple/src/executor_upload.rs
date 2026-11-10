@@ -1,4 +1,4 @@
-//! An upload's place in its executor. Its body, read
+//! An upload's place in its executor (LLP 1016.000 D10). Its body, read
 //! from its file or given inline, and the platform's copy of it are held in
 //! the executor's upload budget from before its file is read until its
 //! exchange ends. An upload waits in a queue, holding no stream's place,
@@ -157,7 +157,7 @@ pub(in super::super) fn start_waiting(shared: &Shared) {
 impl Core {
     /// The uploads let go (no longer `held`) that had begun to go out,
     /// each told once, for the host to hand the runner after it let their
-    /// tickets go (`Runner::uploads_started`).
+    /// tickets go (`Runner::uploads_started`, LLP 1016.000 D10).
     pub(crate) fn let_go_started(&self, held: impl Fn(u64) -> bool) -> Vec<u64> {
         let mut budget = self.shared.uploads.0.lock().unwrap();
         let gone: Vec<u64> = budget
@@ -344,7 +344,7 @@ pub(super) fn timed_out(end: Outcome, passed: bool, ms: u32) -> Outcome {
 
 /// An upload's hooks: each count of the body's bytes sent that the
 /// transport reports is a message, which a newer one replaces while the
-/// runner has not taken it. Its start, when the hop loop has admitted
+/// runner has not taken it (D4). Its start, when the hop loop has admitted
 /// it, goes out only while `signal` has not aborted, and is then recorded
 /// here and a message no other replaces (`exact:sending`). The check and
 /// the record share the lock the host reads them under, after it aborts

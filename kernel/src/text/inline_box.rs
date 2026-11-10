@@ -1,4 +1,4 @@
-//! An image in a paragraph's text: an inline replaced box,
+//! An image in a paragraph's text (LLP 1011.002): an inline replaced box,
 //! as `<img>` in a `<p>` is (CSS 2 §10.3.2, §10.6.2, §10.8). Its run's text is
 //! U+FFFC, where the measurer reserves the box; the kernel places the image
 //! node where the measurer says the box went.
@@ -71,7 +71,7 @@ pub struct InlineImage {
 /// box's, under `box-sizing: border-box`); an `auto` one follows the other by
 /// the ratio (`aspect-ratio`, else the natural one), else is the natural
 /// size, else zero, as an `<img>` is before it loads. Percentages and the
-/// min and max sizes are not read here.
+/// min and max sizes are not read here (LLP 1011.002 §4).
 pub(crate) fn inline_image(arena: &NodeArena, slot: u32) -> InlineImage {
     use taffy::style::CompactLength;
     let style = crate::style::taffy_style(arena, slot);

@@ -89,8 +89,8 @@ struct View {
     /// source changes.
     retries: usize,
     retry_at: Option<Instant>,
-    /// Its source's `load` or `error` has been sent: once a source assignment.
-    /// `errored`: an `error`, after which it is not asked again.
+    /// Its source's `load` or `error` has been sent: once a source assignment
+    /// (LLP 1011 §4). `errored`: an `error`, after which it is not asked again.
     settled: bool,
     errored: bool,
     /// Counts its source's assignments: an event waiting is for one of them.
@@ -204,7 +204,7 @@ pub struct Images {
     pub loaded: Vec<(String, (u32, u32))>,
     /// The views whose source's first picture has landed since the presenter
     /// last took them, with the node (its key, packed) and the source they
-    /// landed for: each hears its `load` if it is still that.
+    /// landed for: each hears its `load` (LLP 1011 §4) if it is still that.
     pub(crate) load_events: Vec<LoadEvent>,
     decode_enabled: bool,
     deferred: usize,
@@ -219,7 +219,7 @@ pub struct Images {
     scale: f32,
     /// The paint thread's text engine, when it is this thread (the
     /// presenter sets it): an SVG picture with text is painted here, with
-    /// the session's fonts.
+    /// the session's fonts (LLP 1011.001 D3).
     painter: Option<crate::text::Shared>,
     /// The image nodes in preorder, as of a kernel epoch: the walk
     /// [`Images::sync_visible`] needs, redone only after a commit.
@@ -412,7 +412,7 @@ impl Images {
             );
             view.fit = plain_box(node.style).then_some(node.style.object_fit);
             view.object_fit = node.style.object_fit;
-            // A symbol is an em square no file fills (the
+            // LLP 1035.004.000: a symbol is an em square no file fills (the
             // paint walk strokes a portable role's path into it, `symbol`),
             // never a file request and never the previously accepted raster.
             if source.starts_with("symbol:") {
@@ -540,7 +540,7 @@ impl Images {
         reports.extend(self.poll());
         reports
     }
-    /// Views a commit renewed: one that shows a picture of a
+    /// Views a commit renewed (LLP 1078): one that shows a picture of a
     /// source its node no longer names starts as a new image does, with no
     /// picture and no natural size; one whose source is the same keeps its
     /// picture, as a new one would find it decoded. A symbol is resolved
@@ -1078,7 +1078,7 @@ impl Drop for Images {
 }
 
 /// The plan for a view's box: a raster's, or an SVG picture's at the box's
-/// own pixels.
+/// own pixels (LLP 1011.001 D1).
 fn plan_view(
     header: png_decode::Header,
     view: &View,

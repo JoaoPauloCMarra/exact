@@ -1,8 +1,8 @@
 //! A JavaScript page written from its runner's instance tree, with no
-//! kernel, and sent as it is written.
+//! kernel, and sent as it is written (LLP 1048.004 D4, Q3).
 //!
-//! The server's navigation path flushes a page's head before its render.
-//! Here the rest follows in the order the page holds it: the
+//! The server's navigation path flushes a page's head before its render
+//! (LLP 1071 D6). Here the rest follows in the order the page holds it: the
 //! head's fields and what else goes before the document — known from the
 //! settled tree before any element is written — then the root, handed on
 //! every [`exact_web::document::STREAM_CHUNK`] as the walk writes it in the
@@ -45,11 +45,13 @@ pub(crate) fn render_js<D: DataSource + 'static, F: Fn() -> D>(
     if !direct_for(plan, Ids::Any, Projection::Auto)? {
         return Ok(None);
     }
-    // A route that paints its boot document first (`paint=boot`): the page with every answer still
-    // to come, its placeholders showing, goes before the render waits on anything — after the
-    // head's fields, which are the boot document's — in an `#exact-root` marked `data-boot`. The
-    // settled page that follows hides it (a style, for a reader without JavaScript) and removes it
-    // (a hashed inline script) before the runtime adopts. A page with nothing to wait for has no
+    // A route that paints its boot document first (`paint=boot`, LLP
+    // 1048.005): the page with every answer still to come, its placeholders
+    // showing, goes before the render waits on anything — after the head's
+    // fields, which are the boot document's — in an `#exact-root` marked
+    // `data-boot`. The settled page that follows hides it (a style, for a
+    // reader without JavaScript) and removes it (a hashed inline script)
+    // before the runtime adopts. A page with nothing to wait for has no
     // boot document: it settles as it boots.
     let paints_boot = route_at(plan, location).is_some_and(|r| r.paint == PaintPolicy::Boot);
     let mut boot: Option<Boot> = None;
@@ -76,7 +78,7 @@ pub(crate) fn render_js<D: DataSource + 'static, F: Fn() -> D>(
             let lead = body_open_js(shell, js, &head, scroll, false, false, Sheet::Whole);
             let open = crate::page::root_open(shell);
             let lead = lead.strip_suffix(open).unwrap_or(&lead);
-            // The shell's root with its attributes, marked.
+            // The shell's root with its attributes (LLP 1096 D7), marked.
             let bytes = format!(
                 "{lead}{} data-boot=\"\">{}</div>",
                 &open[..open.len() - 1],

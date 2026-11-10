@@ -1,4 +1,4 @@
-# The Caltrain app on Android's Canvas host: one library with
+# The Caltrain app on Android's Canvas host (LLP 1076 §3.3): one library with
 # the runner, the kernel, the data crate, the baked plan (written by build.rs,
 # never committed) and the host's JNI, which the reader (host/android) loads as
 # libexactcanvas.so. Off Android the library is empty: the Canvas host is

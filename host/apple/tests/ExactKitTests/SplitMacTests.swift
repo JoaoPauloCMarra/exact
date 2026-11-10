@@ -1,8 +1,9 @@
-// A list and its detail are a split view on the Mac:
+// @ref LLP 1115.002 D4 — a list and its detail are a split view on the Mac:
 // which stack splits (the runner's rule), what each pane holds (the page as
 // the list's column, the detail's routes in a pane of their own through the
 // kernel's containing block), the widths and minimums AppKit gives three
-// columns and two, the selected row, Back, the two headers in one bar, a sheet over the split, and what the driver sees.
+// columns and two, the selected row, Back, the two headers in one bar (§5
+// Q10), a sheet over the split, and what the driver sees.
 #if os(macOS)
 import AppKit
 import XCTest
@@ -518,7 +519,7 @@ final class SplitMacTests: XCTestCase {
         XCTAssertNil(columns.detail.saysNothing)
         XCTAssertEqual(feed.table.selectedRow, 1, "the row whose detail shows stays selected")
         XCTAssertEqual(split.shown?.row, try node("row-b").id)
-        // The list owns the window: its heading is the title, and the detail's stays the first line of its pane.
+        // The list owns the window (§5 Q10): its heading is the title, and the detail's stays the first line of its pane.
         XCTAssertEqual(window.title, "Library")
         let title = try node("title-b")
         XCTAssertFalse(title.isHiddenOrHasHiddenAncestor)
@@ -880,7 +881,8 @@ final class SplitMacTests: XCTestCase {
     /// A popover declared in a route the split shows in its detail pane opens,
     /// painted and as AppKit's: the pane is a block's native container, and
     /// whether the popover is in the page walks out of it to the route's
-    /// authored home (the pane is under no page root).
+    /// authored home (theme2 12:32; it had never opened there, the pane being
+    /// under no page root).
     func testAPopoverInTheDetailPaneOpens() throws {
         for painted in [true, false] {
             let source = app(tabs: false).replacingOccurrences(
@@ -999,11 +1001,11 @@ final class SplitMacTests: XCTestCase {
         }.joined(separator: "\n")
     }
 
-    /// The box the root route marks `navigationSplit="placeholder"` is
-    /// what the empty pane shows, in place of AppKit's "No Selection":
-    /// laid out at the pane's size, its content centred, its size kept
-    /// when the author's rows change, and `display: none` in its route
-    /// again while a detail shows.
+    /// LLP 1116.006 D2: the box the root route marks
+    /// `navigationSplit="placeholder"` is what the empty pane shows, in
+    /// place of AppKit's "No Selection": laid out at the pane's size, its
+    /// content centred, its size kept when the author's rows change, and
+    /// `display: none` in its route again while a detail shows.
     func testTheAuthorsPlaceholderIsTheEmptyPanes() throws {
         let source = replacing("list testId=\"books\"", with: [
             "column navigationSplit=\"placeholder\" width=50 margin-left=(counted > 0 ? 30 : 0) testId=\"own\"",
@@ -1046,8 +1048,8 @@ final class SplitMacTests: XCTestCase {
         XCTAssertEqual(own.style["display"]?.string, "none")
     }
 
-    /// The library with its books in the painted grouped form, as
-    /// a chat app's channels are: a section of rows whose press is an action
+    /// The library with its books in the painted grouped form (D6), as
+    /// Excord's channels are: a section of rows whose press is an action
     /// that pushes the book. A book's Next replaces it with the next.
     private func paintedList() -> String {
         let swapping = app(tabs: false).replacingOccurrences(of: "  action count\n", with: "  action swap(url: string)\n    nav = replace(nav, url)\n  action count\n")
@@ -1072,9 +1074,9 @@ final class SplitMacTests: XCTestCase {
         ], in: bare)
     }
 
-    /// The list's column draws no disclosure chevron, as
+    /// LLP 1115.002 D5: the list's column draws no disclosure chevron, as
     /// a hand-built Mac list beside its detail has none, also where the list
-    /// is no table but the painted grouped form, as a chat app's channels
+    /// is no table but the painted grouped form (D6), as Excord's channels
     /// are. Pushed, the rows draw them again.
     func testAPaintedListBesideItsDetailDrawsNoChevrons() throws {
         let session = try boot(tabs: false, size: CGSize(width: 1000, height: 500), source: paintedList())
@@ -1093,7 +1095,7 @@ final class SplitMacTests: XCTestCase {
         XCTAssertEqual(try drawn("chevron-a"), 0)
     }
 
-    /// The painted list's row whose detail shows is drawn
+    /// LLP 1115.002 D5: the painted list's row whose detail shows is drawn
     /// selected, as a table's row is: AppKit's selection, the separators
     /// beside it not drawn, and while the window is key with the keyboard
     /// in the list or nowhere, emphasized, its text in the selected item's
@@ -1185,7 +1187,7 @@ final class SplitMacTests: XCTestCase {
         XCTAssertEqual(try ink("name-c"), [255, 255, 255, 255])
 
         // A control in the detail replaces its book with another: the route moved where no row's
-        // press or link took it, so no row is selected, and the pane begins where it did.
+        // press or link took it, so no row is selected (LLP 1127 D3), and the pane begins where it did.
         try press("next-c")
         let swapped = try node("route-book-a")
         XCTAssertTrue(swapped.superview === columns.detailPane)

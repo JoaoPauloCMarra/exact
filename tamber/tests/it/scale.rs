@@ -1,5 +1,5 @@
-//! Large legitimate imports finish in time (paths that could be
-//! super-linear): a DTCG file whose types come down a long alias chain, and a
+//! Large legitimate imports finish in time (E23 round 5's super-linear
+//! paths): a DTCG file whose types come down a long alias chain, and a
 //! re-import that changes every value of a large design.
 
 use crate::common::vocab;
@@ -148,7 +148,7 @@ fn exported(src: &str) -> (String, String) {
 
 #[test]
 fn the_budget_takes_a_design_near_its_limit_and_refuses_one_past_it() {
-    // Near the limits (calibrated to the isolate's 1 GiB):
+    // Near the limits (calibrated to the isolate's 1 GiB, LLP 1121 §10):
     // 500 tokens over 64 contexts re-import (about 76% of `REIMPORT`), and
     // 700 import fresh (about 79% of `IMPORT`).
     let src = contexts_64(500);
@@ -181,5 +181,5 @@ fn the_budget_takes_a_design_near_its_limit_and_refuses_one_past_it() {
 }
 
 // A debug build's, with room for a loaded machine; release is far under
-// (0.5 s and 0.4 s near the limits, the refusal in about 1 s).
+// (§10: 0.5 s and 0.4 s near the limits, the refusal in about 1 s).
 const BOUND_NEAR: u64 = 30;

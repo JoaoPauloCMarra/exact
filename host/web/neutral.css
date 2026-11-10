@@ -1,4 +1,4 @@
-  /* The neutral look: what the web draws where the author says nothing, the same in every
+  /* The neutral look (LLP 1115.000 D4 part B): what the web draws where the author says nothing, the same in every
      browser and on every operating system. A web build takes this sheet after the shell's browser resets
      (host/web/look.mjs). The browser keeps its system font, the reader's text size and the focus ring.
      Like the shell's, every rule is `:where()` or sits under one #exact-root, so the author's rows win, except where
@@ -6,7 +6,7 @@
      word).
 
      The rules the look follows:
-     - Colour is Apple's: a build lays Apple's pairs over this sheet's roles (host/web/look.mjs). A
+     - Colour is Apple's: a build lays Apple's pairs over this sheet's roles (host/web/look.mjs, LLP 1115.000 D4). A
        line that marks a control's edge reads at 3:1 (`--exact-line`); a line that only divides is `-exact-separator`.
        The accent is the browser's own hue, and a destructive control's the system red, at a lightness that reads as
        text on the page (an author's `accent-color` is drawn as written); ink on the accent is white or black,
@@ -25,8 +25,8 @@
        UIKit's highlight instead (below).
 
      Every length and ratio below is a row of the schema's `metrics`, in its neutral column: the kernel sizes a control
-     by those rows, and a host that paints its own controls (the Linux desktop, Windows) draws from them.
-     host/web/tests/neutral-look.test.mjs holds this sheet to the table, so a number changes there and here
+     by those rows, and a host that paints its own controls (the Linux desktop, Windows) draws from them (LLP 1115.000
+     D17). host/web/tests/neutral-look.test.mjs holds this sheet to the table, so a number changes there and here
      together. The one exception, which the census names, is the line a bar's level-1 title takes (below): the large
      title's size at iOS's large-title line height.
 
@@ -51,16 +51,16 @@
      or a grey button takes red ink. */
   #exact-root button[data-button-style] { min-height: 2.25em; min-width: 2.25em; border: 1px solid transparent; padding: .4375em 1em; line-height: 1.25; --exact-said-line-height: ; }
   #exact-root button[data-button-style]:has(> img):where(:not(:has(> :not(img, [data-exact-text]:empty)))):not(:is([navigationPresentation="modal"] > header, [navigationPresentation="modal"] > :where([data-exact-list-item]) > header, [navigationPresentation="modal"] > :first-child:where(:not([data-exact-list-item])) > header:first-child, [navigationPresentation="modal"] > :where([data-exact-list-item]:first-child) > :first-child > header:first-child, [navigationPresentation="modal"] > :first-child:where(:not([data-exact-list-item])) > :where([data-exact-list-item]):first-child > header, [navigationPresentation="modal"] > :where([data-exact-list-item]:first-child) > :first-child > :where([data-exact-list-item]):first-child > header):where(:not([data-exact-site], [data-exact-said~="appearance"])) button[aria-label]:not(:is(h1, h2, h3, h4, h5, h6, [role="heading"]) ~ :has(> img[data-symbol-source="symbol:close"]))) { padding-inline: .5em; }
-  /* Mini and small keep their mouse floor on touch devices (`--exact-touch-floor: 0px`).
+  /* Mini and small keep their mouse floor on touch devices (`--exact-touch-floor: 0px`, LLP 1069.011.001 D8).
      Written padding removes the floor, as UIKit's contentInsets do, and can make targets smaller than WCAG 2.5.8's
      24 px minimum. This follows UIKit even when adjacent small targets cannot meet the spacing exception. */
   @media (any-pointer: coarse) { #exact-root button[data-button-style] { min-height: max(2.25em, var(--exact-touch-floor, 44px)); min-width: max(2.25em, var(--exact-touch-floor, 44px)); } }
-  /* Remove the look's minimum and padding on an authored size axis (author > platform).
+  /* Remove the look's minimum and padding on an authored size axis (LLP 1115: author > platform).
      Otherwise CSS minimums and padding can enlarge the requested box. Literal sizes use `data-exact-said`;
      the JS writer marks bound sizes with `data-exact-width` and `data-exact-height`. */
   #exact-root button[data-button-style]:is([data-exact-said~="height"], [data-exact-height]) { min-height: auto; padding-block: 0; }
   #exact-root button[data-button-style]:is([data-exact-said~="width"], [data-exact-width]):not(:is([navigationPresentation="modal"] > header, [navigationPresentation="modal"] > :where([data-exact-list-item]) > header, [navigationPresentation="modal"] > :first-child:where(:not([data-exact-list-item])) > header:first-child, [navigationPresentation="modal"] > :where([data-exact-list-item]:first-child) > :first-child > header:first-child, [navigationPresentation="modal"] > :first-child:where(:not([data-exact-list-item])) > :where([data-exact-list-item]):first-child > header, [navigationPresentation="modal"] > :where([data-exact-list-item]:first-child) > :first-child > :where([data-exact-list-item]):first-child > header):where(:not([data-exact-site], [data-exact-said~="appearance"])) button[aria-label]:not(:is(h1, h2, h3, h4, h5, h6, [role="heading"]) ~ :has(> img[data-symbol-source="symbol:close"])):not(:has(> :not(img[data-symbol-source], [data-exact-text]:empty)))) { min-width: auto; padding-inline: 0; }
-  /* Written padding is UIKit's contentInsets: content plus insets, with no minimum; an
+  /* Written padding is UIKit's contentInsets (LLP 1069.011.001 D15): content plus insets, with no minimum; an
      unsaid side keeps its default inset. Inline, that minimum is 0, not `auto`, which in a flex row is the
      content's own width and would keep a button from its share of the row (an alert's buttons keep the
      minimum they had). Bound sides carry per-side marks from the JS writer. The 1 px edge also
@@ -167,26 +167,26 @@
       & > img { transition: background-color .25s ease-in-out; }
     }
   }
-  /* Disabled, in every style: the grey ink, and the neutral fill where the style filled with the
+  /* Disabled, in every style (LLP 1116.005 D8): the grey ink, and the neutral fill where the style filled with the
      accent; an outline fades to a divider. */
   #exact-root button[data-button-style]:disabled { color: var(--exact-gray-text); background-image: none; }
   #exact-root button[data-button-style="bordered"]:disabled { border-color: var(--exact-separator); }
   #exact-root button:is([data-button-style="filled"], [data-button-style="bordered-prominent"], [data-button-style="tinted"], [data-button-style="bordered-tinted"]):disabled { background-color: var(--exact-tertiary-fill); }
 
-  /* An author's `:hover` look sets this to `none` on its node: it replaces the wash. Each pressable
+  /* An author's `:hover` look (LLP 1121 D8) sets this to `none` on its node: it replaces the wash. Each pressable
      starts unset, so a look's `none` reaches none inside it. */
   :where(#exact-root :is(button, a[data-view][href], [data-exact-on~="press"])) { --exact-hover-wash: initial; --exact-hover-dim: initial; }
-  /* The unsaid hover: a custom `button`, a link or a box with a `press` shows a wash where a
+  /* The unsaid hover (LLP 1115.000 D6): a custom `button`, a link or a box with a `press` shows a wash where a
      pointer hovers, as an image, so it lies over a fill the author gave the box. Only the innermost pressable; not a
-     disabled one, nor one in a box that says `disabled` (which takes no press either; CSS's `:disabled`
+     disabled one, nor one in a box that says `disabled` (which takes no press either, LLP 1121 D8: CSS's `:disabled`
      matches only a form control), nor a native control, which has its own, nor a pressable covering the window, nor a
      link in running text or one that is text (they underline, below). A wash names its color `--exact-wash`, which the
      input glue fades out as the pointer leaves. */
   @media (any-hover: hover) { :where(html:not([data-exact-input="touch"])) {
     #exact-root :is(button, a[data-view][href], [data-exact-on~="press"]):hover:not(:disabled, [disabled]:not([disabled="false"]), [disabled]:not([disabled="false"]) *, [data-button-style], [data-native], input, select, textarea, [data-action], [data-exact-surface], [data-exact-text] a, a[href]:not([role], :has(> :not([data-exact-text], img))), :has(:is(button, a[href], input, select, textarea, [data-exact-on~="press"]):hover)) { background-image: var(--exact-hover-wash, linear-gradient(var(--exact-wash) 0 0)); --exact-wash: var(--exact-quaternary-fill); }
-    /* A button its author filled: the filled button's hover, a wash of its own ink, which shows over any fill. */
+    /* A button its author filled (LLP 1129 D1): the filled button's hover, a wash of its own ink, which shows over any fill. */
     #exact-root :is(button, a[data-view][href], [data-exact-on~="press"])[data-exact-said~="background-color"]:hover:not(:disabled, [disabled]:not([disabled="false"]), [disabled]:not([disabled="false"]) *, [data-button-style], [data-native], input, select, textarea, [data-action], [data-exact-surface], [data-exact-text] a, a[href]:not([role], :has(> :not([data-exact-text], img))), :has(:is(button, a[href], input, select, textarea, [data-exact-on~="press"]):hover)) { background-image: var(--exact-hover-wash, linear-gradient(color-mix(in srgb, currentColor 12%, transparent) 0 0)); }
-    /* A grouped list's row keeps its separator (index.html) under the wash: the wash in the top layer, the
+    /* A grouped list's row keeps its separator (LLP 1084 D7, index.html) under the wash: the wash in the top layer, the
        line in the middle one, a filled row's wash its own. Where the row has no separator a wash above is its one image. */
     #exact-root [data-groupedrowseparator]:is(button, a[data-view][href], [data-exact-on~="press"]):hover:where(:has(~ :not(:is([data-exact-hidden], [style*="display:\20 none"], [style*="display:none"]))):not([aria-hidden="true"], :is([data-exact-said~="border-bottom"], [data-exact-bottom-width], [data-exact-bottom-style]), :is([data-exact-said~="background-image"], [data-exact-background-image]), [swipecontent]:has(> :is([data-exact-said~="border-bottom"], [data-exact-bottom-width], [data-exact-bottom-style])), :has(+ :not(:is([data-exact-hidden], [style*="display:\20 none"], [style*="display:none"])):is([data-exact-said~="border-top"], [data-exact-top-width], [data-exact-top-style])), :has(+ [swipecontent]:not(:is([data-exact-hidden], [style*="display:\20 none"], [style*="display:none"])) > :is([data-exact-said~="border-top"], [data-exact-top-width], [data-exact-top-style])), :has(+ :is([data-exact-hidden], [style*="display:\20 none"], [style*="display:none"]) + :not(:is([data-exact-hidden], [style*="display:\20 none"], [style*="display:none"])):is([data-exact-said~="border-top"], [data-exact-top-width], [data-exact-top-style])), :has(+ :is([data-exact-hidden], [style*="display:\20 none"], [style*="display:none"]) + [swipecontent]:not(:is([data-exact-hidden], [style*="display:\20 none"], [style*="display:none"])) > :is([data-exact-said~="border-top"], [data-exact-top-width], [data-exact-top-style])))):not(:disabled, [disabled]:not([disabled="false"]), [disabled]:not([disabled="false"]) *, [data-button-style], [data-native], input, select, textarea, [data-action], [data-exact-surface], [data-exact-text] a, a[href]:not([role], :has(> :not([data-exact-text], img))), :has(:is(button, a[href], input, select, textarea, [data-exact-on~="press"]):hover)) { background-image: var(--exact-hover-wash, linear-gradient(var(--exact-quaternary-fill) 0 0)), linear-gradient(var(--exact-grouped-separator), var(--exact-grouped-separator)), none; }
     #exact-root [data-groupedrowseparator]:is(button, a[data-view][href], [data-exact-on~="press"])[data-exact-said~="background-color"]:hover:where(:has(~ :not(:is([data-exact-hidden], [style*="display:\20 none"], [style*="display:none"]))):not([aria-hidden="true"], :is([data-exact-said~="border-bottom"], [data-exact-bottom-width], [data-exact-bottom-style]), :is([data-exact-said~="background-image"], [data-exact-background-image]), [swipecontent]:has(> :is([data-exact-said~="border-bottom"], [data-exact-bottom-width], [data-exact-bottom-style])), :has(+ :not(:is([data-exact-hidden], [style*="display:\20 none"], [style*="display:none"])):is([data-exact-said~="border-top"], [data-exact-top-width], [data-exact-top-style])), :has(+ [swipecontent]:not(:is([data-exact-hidden], [style*="display:\20 none"], [style*="display:none"])) > :is([data-exact-said~="border-top"], [data-exact-top-width], [data-exact-top-style])), :has(+ :is([data-exact-hidden], [style*="display:\20 none"], [style*="display:none"]) + :not(:is([data-exact-hidden], [style*="display:\20 none"], [style*="display:none"])):is([data-exact-said~="border-top"], [data-exact-top-width], [data-exact-top-style])), :has(+ :is([data-exact-hidden], [style*="display:\20 none"], [style*="display:none"]) + [swipecontent]:not(:is([data-exact-hidden], [style*="display:\20 none"], [style*="display:none"])) > :is([data-exact-said~="border-top"], [data-exact-top-width], [data-exact-top-style])))):not(:disabled, [disabled]:not([disabled="false"]), [disabled]:not([disabled="false"]) *, [data-button-style], [data-native], input, select, textarea, [data-action], [data-exact-surface], [data-exact-text] a, a[href]:not([role], :has(> :not([data-exact-text], img))), :has(:is(button, a[href], input, select, textarea, [data-exact-on~="press"]):hover)) { background-image: var(--exact-hover-wash, linear-gradient(color-mix(in srgb, currentColor 12%, transparent) 0 0)), linear-gradient(var(--exact-grouped-separator), var(--exact-grouped-separator)), none; }
@@ -196,17 +196,17 @@
   #exact-root [data-exact-text] a[data-view][href]:focus-visible, #exact-root a[data-view][href]:not([role], [data-button-style], [data-listrows] > *, [data-listrows] > :is([data-listitemkey], [data-exact-list-item]) > *):not(:has(> :not([data-exact-text], img))):focus-visible { text-decoration: underline; }
   @media (any-hover: hover) { :where(html:not([data-exact-input="touch"])) { #exact-root [data-exact-text] a[data-view][href]:hover, #exact-root a[data-view][href]:not([role], [data-button-style], [data-listrows] > *, [data-listrows] > :is([data-listitemkey], [data-exact-list-item]) > *):not(:has(> :not([data-exact-text], img))):hover { text-decoration: underline; } } }
 
-  /* A list's rows: the children of a `list` whose rows go down the page and whose author left its
+  /* A list's rows (LLP 1115.000 D16): the children of a `list` whose rows go down the page and whose author left its
      appearance unsaid (`data-listrows`, Contract's mark; a windowed list's rows are in their wrappers). Under each row
      but the last, one line that only divides, drawn inside the row's own box so it takes no room; none beside a row
-     whose author wrote its own top or bottom edge, `none` included (`data-exact-said`: the author's
+     whose author wrote its own top or bottom edge, `none` included (`data-exact-said`, D2's bit: the author's
      separator wins, and so does the author's "no separator here"). A box-shadow the author wrote on a row is the
      author's the same way.
      Something pressable in a row answers as the look's controls do, with a wash over whatever ground it has and
      never the dim the shell gives a pressable that is no row: the hover's (above, and here for a row that is a link
      of text) and a stronger one while it is held. An authored press replaces it, as it replaces the dim. The
      keyboard's ring is drawn inside the row, where the list's own clip cannot cut it. */
-  /* A row's inset: the cell's margin at each end, the row's box the cell, as the kernel's `list-row-inset`
+  /* A row's inset (LLP 1138): the cell's margin at each end, the row's box the cell, as the kernel's `list-row-inset`
      gives every host that lays out itself. The row is the list's child, the one in a windowed row's wrapper, or a
      swipe's content, its first child where the swipe has no leading actions (a `delete=` row's); the swipe itself takes
      none, and a form control keeps its own padding. More specific than a button's own (a row may be one); what the
@@ -217,7 +217,7 @@
     #exact-root :where([data-listrows], [data-listrows] > :is([data-listitemkey], [data-exact-list-item])) > a[data-view][href]:hover:not([disabled]:not([disabled="false"]), [disabled]:not([disabled="false"]) *, [data-button-style], [data-exact-surface], :has(:is(button, a[href], input, select, textarea, [data-exact-on~="press"]):hover)) { background-image: var(--exact-hover-wash, linear-gradient(var(--exact-wash) 0 0)); --exact-wash: var(--exact-quaternary-fill); }
   } }
   #exact-root [data-listrows] :is(button, a[data-view][href], [data-exact-on~="press"])[data-pressed]:not(:disabled, [data-button-style], [data-native], input, select, textarea, [data-action], [style*="--exact-press:"], [style*="--exact-press-opacity:"], [style*="--exact-press-background-color:"], [style*="--exact-press-color:"], [data-exact-on~="pointerdown"], [data-exact-on~="pointerup"], [data-exact-surface], [data-exact-text] a) { background-image: linear-gradient(var(--exact-tertiary-fill) 0 0); }
-  /* Hide the platform separators beside the row's own press, including windowed and swipe content roots.
+  /* Hide the platform separators beside the row's own press (D16), including windowed and swipe content roots.
      Controls inside a row keep their own feedback; authored cards and shadows keep their own ground and edges. */
   #exact-root [data-listrows] > :is(button, a[data-view][href], [data-exact-on~="press"])[data-pressed]:not(:disabled, [data-button-style], [data-native], input, select, textarea, [data-action], [style*="--exact-press:"], [style*="--exact-press-opacity:"], [style*="--exact-press-background-color:"], [style*="--exact-press-color:"], [data-exact-on~="pointerdown"], [data-exact-on~="pointerup"], [data-exact-surface], [data-exact-text] a, [data-exact-said~="background-color"], [data-exact-said~="background-image"]):not([data-exact-said~="box-shadow"]),
   #exact-root [data-listrows] > :is([data-listitemkey], [data-exact-list-item]):has(> :is(button, a[data-view][href], [data-exact-on~="press"])[data-pressed]:not(:disabled, [data-button-style], [data-native], input, select, textarea, [data-action], [style*="--exact-press:"], [style*="--exact-press-opacity:"], [style*="--exact-press-background-color:"], [style*="--exact-press-color:"], [data-exact-on~="pointerdown"], [data-exact-on~="pointerup"], [data-exact-surface], [data-exact-text] a, [data-exact-said~="background-color"], [data-exact-said~="background-image"])):not([data-exact-said~="box-shadow"]),
@@ -226,14 +226,14 @@
   #exact-root [data-listrows] > :not([data-exact-said~="box-shadow"]):has(+ :is(button, a[data-view][href], [data-exact-on~="press"])[data-pressed]:not(:disabled, [data-button-style], [data-native], input, select, textarea, [data-action], [style*="--exact-press:"], [style*="--exact-press-opacity:"], [style*="--exact-press-background-color:"], [style*="--exact-press-color:"], [data-exact-on~="pointerdown"], [data-exact-on~="pointerup"], [data-exact-surface], [data-exact-text] a, [data-exact-said~="background-color"], [data-exact-said~="background-image"]), + :is([data-listitemkey], [data-exact-list-item]) > :is(button, a[data-view][href], [data-exact-on~="press"])[data-pressed]:not(:disabled, [data-button-style], [data-native], input, select, textarea, [data-action], [style*="--exact-press:"], [style*="--exact-press-opacity:"], [style*="--exact-press-background-color:"], [style*="--exact-press-color:"], [data-exact-on~="pointerdown"], [data-exact-on~="pointerup"], [data-exact-surface], [data-exact-text] a, [data-exact-said~="background-color"], [data-exact-said~="background-image"]), + [swipecontent] > :is(button, a[data-view][href], [data-exact-on~="press"])[data-pressed]:not(:disabled, [data-button-style], [data-native], input, select, textarea, [data-action], [style*="--exact-press:"], [style*="--exact-press-opacity:"], [style*="--exact-press-background-color:"], [style*="--exact-press-color:"], [data-exact-on~="pointerdown"], [data-exact-on~="pointerup"], [data-exact-surface], [data-exact-text] a, [data-exact-said~="background-color"], [data-exact-said~="background-image"]):first-child, + :is([data-listitemkey], [data-exact-list-item]) > [swipecontent] > :is(button, a[data-view][href], [data-exact-on~="press"])[data-pressed]:not(:disabled, [data-button-style], [data-native], input, select, textarea, [data-action], [style*="--exact-press:"], [style*="--exact-press-opacity:"], [style*="--exact-press-background-color:"], [style*="--exact-press-color:"], [data-exact-on~="pointerdown"], [data-exact-on~="pointerup"], [data-exact-surface], [data-exact-text] a, [data-exact-said~="background-color"], [data-exact-said~="background-image"]):first-child) { box-shadow: none; &[data-exact-list-item] > :not([data-exact-said~="box-shadow"]) { box-shadow: none; } }
   #exact-root [data-listrows] :is(button:not([data-native]), a[data-view][href], [data-exact-on~="press"]):focus-visible { outline-offset: -2px; }
 
-  /* A row that navigates shows no chevron, as a web app's rows do not, where iOS draws its disclosure
+  /* A row that navigates shows no chevron (D4.16), as a web app's rows do not, where iOS draws its disclosure
      indicator: a forward chevron in a link, a button or another pressable, or in a list's row, is not drawn, unless
      it is all a button's face (a carousel's Next). */
   #exact-root :is(a[href], button, [data-exact-on~="press"], [data-listrows] > *, [data-groupedrowseparator]) img:is([data-symbol-source="symbol:forward-chevron"], [data-symbol-source="symbol:sf/chevron.forward"], [data-symbol-source="symbol:sf/chevron.right"]):not(:is(button, [data-exact-on~="press"]) > :only-child) { display: none !important; }
 
   /* Fields and `select`: 36 px in every engine (a said line height again), the control's line, the field's own ground
      and ink (the page's `color` does not tint a surface the host paints; the node's own, inline or its class's,
-     still wins; the ground and ink are the design's Field and FieldText where it overrides them). */
+     still wins; the ground and ink are the design's Field and FieldText where it overrides them, LLP 1121 D9). */
   #exact-root input[data-native], #exact-root textarea[data-native], #exact-root select:not([multiple]), #exact-root input[data-exact-field] { border-color: var(--exact-line); background-color: var(--exact-field, var(--exact-secondary-grouped-background)); color: var(--exact-field-text); }
   #exact-root input[data-native], #exact-root textarea[data-native] { padding: .4375em .75em; line-height: 1.25; --exact-said-line-height: ; }
   #exact-root input[data-exact-field] { height: 2.25em; }
@@ -243,7 +243,7 @@
   /* The select's caret, in the secondary label's ink, at the inline end. */
   #exact-root select:not([multiple]) { background-image: linear-gradient(45deg, #0000 50%, var(--exact-secondary-label) 50%), linear-gradient(135deg, var(--exact-secondary-label) 50%, #0000 50%); }
 
-  /* Checkbox, radio, range and file, drawn: the line's height, in the accent, where the node's appearance is
+  /* Checkbox, radio, range and file, drawn (D4.9): the line's height, in the accent, where the node's appearance is
      the platform's (`data-exact-control`, which the host writes under this look; `appearance="none"` hands the box
      to the author, unmarked). A checked mark is the accent under the ink that reads on it. */
   #exact-root input[data-exact-control]:is([type="checkbox"], [type="radio"]) { appearance: none; box-sizing: border-box; width: 1.25em; height: 1.25em; border: 1px solid var(--exact-line); border-radius: calc(4px * var(--exact-curve-reach)); corner-shape: var(--exact-curve); background-color: var(--exact-secondary-grouped-background); }
@@ -278,7 +278,7 @@
   #exact-root input[data-exact-switch]:checked::before { background-color: var(--exact-accent, AccentColor); background-position: 1em 0; }
   #exact-root input[data-exact-switch]:checked:dir(rtl)::before { background-position: 0 0; }
   @media (prefers-reduced-motion: reduce) { #exact-root input[data-exact-switch]::before { transition: none; } }
-  /* A switch in a sheet is a checkbox, drawn as the checkbox above and standing before its label: a web
+  /* A switch in a sheet is a checkbox (D4.16), drawn as the checkbox above and standing before its label: a web
      form's choice is checked and kept with the form's Save, where a switch on the web applies at once. */
   #exact-root [navigationPresentation="modal"] input[data-exact-switch] { order: -1; box-sizing: border-box; width: 1.25em; height: 1.25em; border: 1px solid var(--exact-line); border-radius: calc(4px * var(--exact-curve-reach)); corner-shape: var(--exact-curve); background-color: var(--exact-secondary-grouped-background); }
   #exact-root [navigationPresentation="modal"] input[data-exact-switch]::before { width: 100%; height: 100%; border-radius: 0; background: none; transition: none; }
@@ -287,8 +287,8 @@
   #exact-root [navigationPresentation="modal"] input[data-exact-switch]:checked::before { background: currentColor; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
   @media (any-pointer: coarse) { #exact-root [navigationPresentation="modal"] input[data-exact-switch] { width: 1.5em; height: 1.5em; } }
 
-  /* The spinner is not the text's ink around it: its node's own `color`, written, is the author's
-     (`data-exact-said`); else an authored accent (--exact-accent-said): written beside an
+  /* The spinner is not the text's ink around it (LLP 1115 D4): its node's own `color`, written, is the author's
+     (`data-exact-said`, D2's bit); else an authored accent (--exact-accent-said, LLP 1121 D9): written beside an
      authored `accent-color` (css.rs), or on an element that writes --exact-accent inline (the JS target's bound and
      live rows, not `auto`'s AccentColor nor inherit/unset) or takes a mode's (modes.rs), or the design's AccentColor
      at :root; not the page's own accent, which :root keeps in
@@ -309,7 +309,7 @@
   #exact-root :is(:is([role="tablist"], [role="tablist"] > :where([data-exact-list-item])) > button[role="tab"]:not([aria-controls])[aria-selected="true"], :is([role="radiogroup"], [role="radiogroup"] > :where([data-exact-list-item])) > button[role="radio"][aria-checked="true"]):is([data-button-style="bordered"], [data-button-style="gray"]):enabled { color: var(--exact-label); }
   @media (any-hover: hover) { :where(html:not([data-exact-input="touch"])) { #exact-root :is(:is([role="tablist"], [role="tablist"] > :where([data-exact-list-item])) > button[role="tab"]:not([aria-controls]), :is([role="radiogroup"], [role="radiogroup"] > :where([data-exact-list-item])) > button[role="radio"]):is([data-button-style="bordered"], [data-button-style="gray"]):enabled:hover { color: var(--exact-label); } } }
   @media (any-pointer: coarse) { #exact-root :is(:is([role="tablist"], [role="tablist"] > :where([data-exact-list-item])) > button[role="tab"]:not([aria-controls]), :is([role="radiogroup"], [role="radiogroup"] > :where([data-exact-list-item])) > button[role="radio"]):is([data-button-style="bordered"], [data-button-style="gray"]) { min-height: 38px; } }
-  /* A segmented control that is itself a grouped list's row spans the card as the row does, its segments on
+  /* A segmented control that is itself a grouped list's row (D4.16) spans the card as the row does, its segments on
      the card's own ground, the chosen one raised: the track would stand in the row's padding and stop short of its
      separator. */
   #exact-root [data-groupedrowseparator]:is([role="tablist"]:has(> button[data-button-style][role="tab"], > :where([data-exact-list-item]) > button[data-button-style][role="tab"]):not(:has(> [aria-controls], > :where([data-exact-list-item]) > [aria-controls])), [role="radiogroup"]:has(> button[data-button-style][role="radio"], > :where([data-exact-list-item]) > button[data-button-style][role="radio"])) { width: auto; background-color: transparent; border-radius: 0; }
@@ -338,20 +338,20 @@
   /* A route's `header` is a plain bar: the page's ground, opaque, over a 1 px line, in the label's ink whatever the
      page's `color` (its own, written, wins). Its title is the route's heading at its level's size; nothing collapses.
      A button nobody styled is the bar's: no outline, and the Back button the bar draws (navigation.js) is one of
-     them, in the bar's ink. A header drawn as written, a site's (`data-exact-site`) or one that says
-     `appearance: none`, is no bar here or in a sheet. */
+     them, in the bar's ink (D4.14). A header drawn as written, a site's (`data-exact-site`) or one that says
+     `appearance: none`, is no bar here or in a sheet (LLP 1153 D8). */
   :where(#exact-root :is([navigationkey], [navigationkey] > :where([data-exact-list-item])) > header:where(:not([data-exact-site], [data-exact-said~="appearance"]))) { background-color: var(--exact-background); backdrop-filter: none; box-shadow: none; border-bottom: 1px solid var(--exact-separator); color: var(--exact-label); }
   /* A level-1 heading in a route's bar stands where iOS draws its large title, in a bar that collapses as the page
-     scrolls. The web's bar never collapses, so the title keeps its level's size (`title1`) and takes at
+     scrolls. The web's bar never collapses, so the title keeps its level's size (`title1`, LLP 1115 D3) and takes at
      least the large title's line, centred in it by equal margins: the bar is as tall as with the large title, and the
      title stays centred beside the bar's buttons. The line is the large title's size at the web's 16 px root
      (`textStyles`) at iOS's large-title line height, 1.2 (about 41 pt for its 34 pt); on the wasm runtime it is the
-     large title's only at a 16 px root. A title with no text yet keeps the line, and so does a smaller size
+     large title's only at a 16 px root (QUEUE.md). A title with no text yet keeps the line, and so does a smaller size
      or line height the author writes, as on iOS, where the bar reads neither. Margins leave the heading's box to the
      author (its height, its background, what a clamp clips), and an author's margin wins. The heading is found
      roughly as the shared rule finds the bar's title (`kernel/src/bars.rs`): under the route's first child, a
      `header`, outside any top layer, and as a `span` in the title's button. A route in a presented stack has an inline
-     title, as in UIKit: the presented route, a route pushed after it while it is not leaving, and a
+     title, as in UIKit (LLP 1116.020 D2): the presented route, a route pushed after it while it is not leaving, and a
      route leaving with it. Naming `h1`–`h6` gives the rule the specificity of the shell's heading reset (`margin: 0`),
      which it beats by coming later. */
   :where(#exact-root :is([navigationkey]:not(:is([navigationPresentation="modal"], [navigationPresentation="fullscreen"]), :is([navigationPresentation="modal"], [navigationPresentation="fullscreen"]):not([data-exiting]) ~ *, :is([navigationPresentation="modal"], [navigationPresentation="fullscreen"]) ~ [data-exiting], :is([navigationPresentation="modal"], [navigationPresentation="fullscreen"]):not([data-exiting]) ~ :where([data-exact-list-item]) > *, :where([data-exact-list-item]):has(> :is([navigationPresentation="modal"], [navigationPresentation="fullscreen"]):not([data-exiting])) ~ :where([data-exact-list-item]) > *, :where([data-exact-list-item]):has(> :is([navigationPresentation="modal"], [navigationPresentation="fullscreen"])) ~ [data-exiting]) > header:where(:not([data-exact-site], [data-exact-said~="appearance"])):first-child, [navigationkey]:not(:is([navigationPresentation="modal"], [navigationPresentation="fullscreen"]), :is([navigationPresentation="modal"], [navigationPresentation="fullscreen"]):not([data-exiting]) ~ *, :is([navigationPresentation="modal"], [navigationPresentation="fullscreen"]) ~ [data-exiting], :is([navigationPresentation="modal"], [navigationPresentation="fullscreen"]):not([data-exiting]) ~ :where([data-exact-list-item]) > *, :where([data-exact-list-item]):has(> :is([navigationPresentation="modal"], [navigationPresentation="fullscreen"]):not([data-exiting])) ~ :where([data-exact-list-item]) > *, :where([data-exact-list-item]):has(> :is([navigationPresentation="modal"], [navigationPresentation="fullscreen"])) ~ [data-exiting]) > :where([data-exact-list-item]):first-child > header:where(:not([data-exact-site], [data-exact-said~="appearance"])))) :is(h1, h2, h3, h4, h5, h6, span):where([role="heading"][aria-level="1"]:not([popover] *, dialog *)) { min-height: 1lh; margin-block: max(0px, (2.0625rem * 1.2 - 1lh) / 2); }
@@ -361,9 +361,9 @@
   @media (any-hover: hover) { :where(html:not([data-exact-input="touch"])) { #exact-root :is([navigationkey], [navigationkey] > :where([data-exact-list-item])) > header::part(back):hover { background-color: var(--exact-quaternary-fill); } } }
   #exact-root :is([navigationkey], [navigationkey] > :where([data-exact-list-item])) > header::part(back):active { background-color: var(--exact-tertiary-fill); } /* after :hover, which a held pointer matches too */
   @media (any-pointer: coarse) { #exact-root :is([navigationkey], [navigationkey] > :where([data-exact-list-item])) > header::part(back) { min-height: 44px; } }
-  /* A symbol alone on a bar item's face is the bar's symbol size whatever size the app writes on
+  /* LLP 1115.000 D4.15: a symbol alone on a bar item's face is the bar's symbol size whatever size the app writes on
      the symbol or the item, as UIKit draws a bar button item's image (NavigationBarIOS.swift `barItemMade`): at the
-     large scale of the bar's 17-point body, 22 points (measured 21.7), here 22/17 of the web's body, the
+     large scale of the bar's 17-point body, 22 points (measured 21.7, LLP 1121), here 22/17 of the web's body, the
      root's font size. A symbol drawn for an SF Symbol keeps its 1.2em box (above), on a native button's face too,
      since the bar's size is already the large scale `button-symbol-scale` gives a face elsewhere; an icon of the
      app's own has its em. On a native button the symbol overhangs the button's 1em place, as a face's does, so the
@@ -371,9 +371,9 @@
      where iOS makes one; an item is a pressable in it, not a tab of its tablist, nor in a popover, a dialog, a
      readout or another item (the title's pressable, around the heading, is no item; one inside it is), nor what its
      author wrote `appearance: none` on, or anything in it (navigation.js makes no item of it). A symbol
-     beside words (a title's chevron, a chip's) or inside a box of the item's keeps its size, as iOS
-     draws those. Only native face text is ignored when empty; custom text can still draw an authored box. */
-  #exact-root [navigationkey] > header[data-exact-bar] :is(button, [data-exact-on~="press"]):not([data-exact-said~="appearance"], :is([data-exact-said~="appearance"], [role="tablist"], [role="status"], [popover], dialog, :is(button, [data-exact-on~="press"]):not(:has([data-exact-text][role="heading"]))) *, :has(> :not(img[data-symbol-path], :where(button[data-button-style]) > [data-exact-text]:empty))) {
+     beside words (a title's chevron, a chip's) or inside a box of the item's keeps its size (the LLP says how iOS
+     draws those). Only native face text is ignored when empty; custom text can still draw an authored box. */
+  #exact-root :is([navigationkey], [navigationkey] > :where([data-exact-list-item])) > header[data-exact-bar] :is(button, [data-exact-on~="press"]):not([data-exact-said~="appearance"], :is([data-exact-said~="appearance"], [role="tablist"], [role="status"], [popover], dialog, :is(button, [data-exact-on~="press"]):not(:has([data-exact-text][role="heading"]))) *, :has(> :not(img[data-symbol-path], :where(button[data-button-style]) > [data-exact-text]:empty))) {
     & > img[data-symbol-path] { font-size: 1.2941rem !important; width: calc(var(--exact-symbol-scale, 1) * 1em) !important; height: calc(var(--exact-symbol-scale, 1) * 1em) !important; }
     & > img[data-symbol-path]:not([data-symbol-path=""], [data-symbol-source^="symbol:icon||"]) { --exact-symbol-scale: 1.2; }
     &[data-button-style] > img[data-symbol-path] { margin: calc((1rem - var(--exact-symbol-scale, 1) * 1em) / 2); }
@@ -386,7 +386,7 @@
   :where(#exact-root :is([navigationkey], [navigationkey] > :where([data-exact-list-item])) > header:where(:not([data-exact-site], [data-exact-said~="appearance"]))) :is(button, a[data-view][href], [data-exact-on~="press"]):not([data-button-style], [data-native]) { --exact-hover-wash: none; }
   @media (any-hover: hover) { :where(html:not([data-exact-input="touch"])) { button:where(#exact-root :is([navigationkey], [navigationkey] > :where([data-exact-list-item])) > header:where(:not([data-exact-site], [data-exact-said~="appearance"])) :is(button, a[data-view][href], [data-exact-on~="press"]):hover:not(:disabled, [data-button-style], [data-native], input, select, textarea, [data-action], [data-exact-surface], :has(:is(button, a[href], input, select, textarea, [data-exact-on~="press"]):hover))), :where(#exact-root :is([navigationkey], [navigationkey] > :where([data-exact-list-item])) > header:where(:not([data-exact-site], [data-exact-said~="appearance"])) :is(button, a[data-view][href], [data-exact-on~="press"]):hover:not(:disabled, [data-button-style], [data-native], input, select, textarea, [data-action], [data-exact-surface], :has(:is(button, a[href], input, select, textarea, [data-exact-on~="press"]):hover))) { opacity: var(--exact-hover-dim, .65); } } }
 
-  /* A sheet is a web dialog: its title at the start of its top edge, its content, and its bar's
+  /* A sheet is a web dialog (LLP 1115.000 D4.8): its title at the start of its top edge, its content, and its bar's
      buttons as its actions at the end of its foot, in the order written, so a Cancel stands before a Save, each the
      button its author styled (an unstyled one an outline), where iOS puts them in the bar beside a centred title; a
      close symbol after the title stays at the top's end, a web dialog's close button. The dialog's frame is the
@@ -395,7 +395,7 @@
      stays a bar. The header spans the frame's grid, under the content, and lays its children
      on the grid's rows (a subgrid); it comes after the content in the order a keyboard reaches them where the browser
      can (`reading-order`; elsewhere the document's order, the buttons first). A header drawn as written, a site's
-     or one that says `appearance: none`, is no bar. A wide window's dialog is as tall as its content,
+     or one that says `appearance: none`, is no bar (LLP 1153 D8). A wide window's dialog is as tall as its content,
      up to the form sheet's height (below). */
   #exact-root :is([navigationPresentation="modal"], [navigationPresentation="modal"] > :first-child:where(:not([data-exact-list-item])), [navigationPresentation="modal"] > :where([data-exact-list-item]:first-child) > :first-child):has(> header:first-child > :is(h1, h2, h3, h4, h5, h6, [role="heading"]), > :where([data-exact-list-item]):first-child > header > :is(h1, h2, h3, h4, h5, h6, [role="heading"])):has(> header:first-child > button, > :where([data-exact-list-item]):first-child > header > button):not(:has(> header:first-child > :not(h1, h2, h3, h4, h5, h6, [role="heading"], button), > :where([data-exact-list-item]):first-child > header > :not(h1, h2, h3, h4, h5, h6, [role="heading"], button)), :has(> header:first-child:is([data-exact-site], [data-exact-said~="appearance"]), > :where([data-exact-list-item]):first-child > header:is([data-exact-site], [data-exact-said~="appearance"])), :has(> :is(header:first-child, :where([data-exact-list-item]):first-child) ~ :not(dialog, [popover], [data-exact-list-item="layer"]) ~ :not(dialog, [popover], [data-exact-list-item="layer"]))) {
     display: grid !important; grid-template: auto minmax(0, 1fr) auto / minmax(0, 1fr) repeat(6, auto); reading-flow: source-order;
@@ -413,7 +413,7 @@
   /* A sheet's title is one line: it ends in an ellipsis where it does not fit, never spilling over a neighbour.
      Unsaid only: an author's own `white-space`, `overflow` or `text-overflow` wins. */
   :where(#exact-root :is([navigationPresentation="modal"], [navigationPresentation="modal"] > :where([data-exact-list-item])) > header:where(:not([data-exact-site], [data-exact-said~="appearance"]))) :where(h1, h2, h3, h4, h5, h6, [role="heading"]) { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* Replace a sheet bar's symbol-only button with its accessible name, as a web dialog's actions
+  /* Replace a sheet bar's symbol-only button with its accessible name (LLP 1116.020 D2), as a web dialog's actions
      are words, but for a close symbol after the title, which is a web dialog's close button. Size it to that word,
      preserving the look's padding even when the symbol had an authored width. A word that cannot fit ends in an
      ellipsis, including in an authored block display. */
@@ -423,8 +423,8 @@
 
   /* A dialog is a modal surface. An alert reads as a page does, its title and message at the start. Its actions share
      the row equally in the order written, a title too long for its share taking a row of its own, and a destructive
-     one has its red in its edge as well as its ink. (Graded blind against small buttons at the row's end, this row
-     won 17 judgments to 1.) A grouped alert's message box keeps a gutter at
+     one has its red in its edge as well as its ink. (Graded blind against small buttons at the row's end on
+     2026-10-12: 17 judgments to 1 for this row, LLP 1115.000 D4.) A grouped alert's message box keeps a gutter at
      its inline end, where an overlay scroll indicator (iOS, a Mac trackpad) draws beside the words, not over them,
      and its actions keep a flat alert's 16px from a row above them (none under only its label's title). */
   :where(#exact-root dialog) { border: none; border-radius: calc(12px * var(--exact-curve-reach)); corner-shape: var(--exact-curve); background-color: var(--exact-secondary-grouped-background); color: var(--exact-label); box-shadow: var(--exact-modal); }
@@ -444,7 +444,7 @@
      fit, the other way. A menu's rows are rows: the label's ink (red when destructive), a wash under the pointer. A
      context menu opens at the pointer (the runtimes leave it there, `--exact-context-x`, `-y`), and one whose author wrote
      `left` or `top` opens at that point (`--exact-inset-x`, `-y`), each the other way where it does not fit. An `alertdialog`
-     popover stays centred, but a chooser its invoker opened (actions, at most a cancel, no text or field;
+     popover stays centred, but a chooser its invoker opened (LLP 1021: actions, at most a cancel, no text or field;
      navigation.js marks it `data-exact-chooser`) is drawn there as a menu headed by its name, as the Mac draws one,
      with no row for its cancel where Escape and a click outside cancel (any popover but a `manual` one). The page is
      not told the kernel's shape, so one with text stays centred even where the kernel calls it a chooser. */
@@ -488,7 +488,7 @@
   @media not (forced-colors: active) { #exact-root :is([role="menu"], [data-exact-chooser]) button[data-button-style]:enabled:focus-visible { outline: none; } }
   @media (any-pointer: coarse) { #exact-root :is([role="menu"], [data-exact-chooser]) button[data-button-style] { min-height: 44px; } }
 
-  /* A modal route is a sheet: the page's ground over a scrim, above its siblings and the tab bar (`z-index`:
+  /* A modal route is a sheet (D4.8): the page's ground over a scrim, above its siblings and the tab bar (`z-index`:
      WebKit paints a sidebar that scrolls over the scrim otherwise). Narrow, it is iOS's sheet, from 12 px below the
      window's safe area at the top to its bottom, its top corners rounded; wide (900 px, the navigation glue's
      `WIDE`), a card as tall as iPad's form sheet (45rem, less with its 64 px margin in a short window), or, when it
@@ -510,8 +510,8 @@
     #exact-root [navigationPresentation="modal"]:is(:has(> header:first-child > :is(h1, h2, h3, h4, h5, h6, [role="heading"]), > :where([data-exact-list-item]):first-child > header > :is(h1, h2, h3, h4, h5, h6, [role="heading"])):has(> header:first-child > button, > :where([data-exact-list-item]):first-child > header > button):not(:has(> header:first-child > :not(h1, h2, h3, h4, h5, h6, [role="heading"], button), > :where([data-exact-list-item]):first-child > header > :not(h1, h2, h3, h4, h5, h6, [role="heading"], button)), :has(> header:first-child:is([data-exact-site], [data-exact-said~="appearance"]), > :where([data-exact-list-item]):first-child > header:is([data-exact-site], [data-exact-said~="appearance"])), :has(> :is(header:first-child, :where([data-exact-list-item]):first-child) ~ :not(dialog, [popover], [data-exact-list-item="layer"]) ~ :not(dialog, [popover], [data-exact-list-item="layer"]))), :has(> :first-child:where(:not([data-exact-list-item])) > header:first-child > :is(h1, h2, h3, h4, h5, h6, [role="heading"]), > :first-child:where(:not([data-exact-list-item])) > :where([data-exact-list-item]):first-child > header > :is(h1, h2, h3, h4, h5, h6, [role="heading"])):has(> :first-child:where(:not([data-exact-list-item])) > header:first-child > button, > :first-child:where(:not([data-exact-list-item])) > :where([data-exact-list-item]):first-child > header > button):not(:has(> :first-child:where(:not([data-exact-list-item])) > header:first-child > :not(h1, h2, h3, h4, h5, h6, [role="heading"], button), > :first-child:where(:not([data-exact-list-item])) > :where([data-exact-list-item]):first-child > header > :not(h1, h2, h3, h4, h5, h6, [role="heading"], button)), :has(> :first-child:where(:not([data-exact-list-item])) > header:first-child:is([data-exact-site], [data-exact-said~="appearance"]), > :first-child:where(:not([data-exact-list-item])) > :where([data-exact-list-item]):first-child > header:is([data-exact-site], [data-exact-said~="appearance"])), :has(> :first-child:where(:not([data-exact-list-item])) > :is(header:first-child, :where([data-exact-list-item]):first-child) ~ :not(dialog, [popover], [data-exact-list-item="layer"]) ~ :not(dialog, [popover], [data-exact-list-item="layer"]))), :has(> :where([data-exact-list-item]:first-child) > :first-child > header:first-child > :is(h1, h2, h3, h4, h5, h6, [role="heading"]), > :where([data-exact-list-item]:first-child) > :first-child > :where([data-exact-list-item]):first-child > header > :is(h1, h2, h3, h4, h5, h6, [role="heading"])):has(> :where([data-exact-list-item]:first-child) > :first-child > header:first-child > button, > :where([data-exact-list-item]:first-child) > :first-child > :where([data-exact-list-item]):first-child > header > button):not(:has(> :where([data-exact-list-item]:first-child) > :first-child > header:first-child > :not(h1, h2, h3, h4, h5, h6, [role="heading"], button), > :where([data-exact-list-item]:first-child) > :first-child > :where([data-exact-list-item]):first-child > header > :not(h1, h2, h3, h4, h5, h6, [role="heading"], button)), :has(> :where([data-exact-list-item]:first-child) > :first-child > header:first-child:is([data-exact-site], [data-exact-said~="appearance"]), > :where([data-exact-list-item]:first-child) > :first-child > :where([data-exact-list-item]):first-child > header:is([data-exact-site], [data-exact-said~="appearance"])), :has(> :where([data-exact-list-item]:first-child) > :first-child > :is(header:first-child, :where([data-exact-list-item]):first-child) ~ :not(dialog, [popover], [data-exact-list-item="layer"]) ~ :not(dialog, [popover], [data-exact-list-item="layer"])))) { height: fit-content !important; max-height: min(45rem, calc(100vh - 64px)); }
   }
 
-  /* A grouped list's card takes the look's surface corners and curve: the grouped sheet is the compiler's
-    , whose radius is the metric's number alone. Its ground, its card's fill and edge, and its section's
+  /* A grouped list's card takes the look's surface corners and curve (D4.16): the grouped sheet is the compiler's
+     (LLP 1084), whose radius is the metric's number alone. Its ground, its card's fill and edge, and its section's
      width are the metric table's neutral column. A card with no rows draws no edge, as it has no height to show. */
   #exact-root :is([data-liststyle="inset-grouped"], [data-liststyle="inset-grouped"] > :where([data-exact-list-item])) > section > div { border-radius: calc(12px * var(--exact-curve-reach)) !important; corner-shape: var(--exact-curve) !important; }
   #exact-root :is([data-liststyle="inset-grouped"], [data-liststyle="inset-grouped"] > :where([data-exact-list-item])) > section > div:empty { border-style: none !important; }

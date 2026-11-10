@@ -1,5 +1,5 @@
 /-
-The router: a location, a retained stack per tab, and six pure
+The router (LLP 1038): a location, a retained stack per tab, and six pure
 verbs over a route table.
 
 This is `route/src` (the `exact_route` crate) transcribed: `location.rs`'s
@@ -48,7 +48,7 @@ structure Entry where
   url : String
   tab : String
   params : Params
-  /-- What the location that last named this visit had after `#`. -/
+  /-- What the location that last named this visit had after `#` (LLP 1153 D5). -/
   fragment : String := ""
   deriving Inhabited
 
@@ -235,7 +235,7 @@ def fragmentEscape (b : Nat) : Bool :=
   !(0x21 ≤ b && b ≤ 0x7e) || [0x22, 0x3c, 0x3e, 0x60].contains b
 
 /-- What follows a location's first `#`, fragment-encoded; `""` with none
-(`fragment_of`). -/
+(`fragment_of`, LLP 1153 D5). -/
 def fragmentOf (location : String) : String :=
   match splitOnce (clean location) '#' with
   | .some (_, f) => encode f fragmentEscape
@@ -484,7 +484,7 @@ def push (t : Table) (r : Router) (location : String) : Verb :=
   match (r.tabs[index]?).bind (·.stack.getLast?) with
   | .some top =>
     if top.url == d.url then
-      -- The location on top: no new visit, only its fragment.
+      -- The location on top: no new visit, only its fragment (LLP 1153 D5).
       return if top.fragment == fragment then r
         else setStack r index fun s => s.dropLast ++ [{ top with fragment }]
   | .none => pure ()
@@ -528,7 +528,7 @@ def go (t : Table) (r : Router) (location : String) : Verb :=
   let s := stack r
   let fragment := fragmentOf location
   -- The top takes the location's fragment; a visit returned to takes it
-  -- only when the location has one.
+  -- only when the location has one (LLP 1153 D5).
   let withFragment (write : Bool) (s : List Entry) : List Entry :=
     match s.getLast? with
     | .some e => if write then s.dropLast ++ [{ e with fragment }] else s

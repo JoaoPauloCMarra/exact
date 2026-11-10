@@ -1,4 +1,4 @@
-// `clock +N real until <path>` (a test harness's signal): `clock +N real`, ended early once the
+// `clock +N real until <path>` (theme2 2026-10-24, a test harness's signal): `clock +N real`, ended early once the
 // file at <path> exists, the clock moved by exactly the real time gone; met at once when it is there already;
 // refused for a URL, a glob or a directory that does not exist. The driver's actual method, on a stand-in host whose
 // wall clock the test moves (as caps.test.mjs's `clock +N real` test does).

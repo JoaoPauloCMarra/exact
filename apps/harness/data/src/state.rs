@@ -7,7 +7,7 @@ use crate::keys::Keys;
 use crate::providers::Sources;
 use exact_runner::Native;
 
-// The seam's records are the generated ones; the
+// The seam's records are the generated ones (LLP 1101.002 P9); the
 // helpers below are this crate's own.
 pub use crate::shapes::{Approval, Block, Entry, Line, ModelChoice, Run};
 use std::sync::atomic::AtomicBool;
@@ -165,7 +165,7 @@ pub enum Choice {
 pub struct Turn {
     pub id: u64,
     pub cancel: Arc<AtomicBool>,
-    /// The label of the model the turn started with: what its
+    /// The label of the model the turn started with (P12): what its
     /// entries say answered, whatever the picker says later.
     pub model: String,
 }
@@ -222,10 +222,10 @@ pub struct State {
     pub network: bool,
     /// The streaming round's text so far, for an interrupt to keep.
     pub round_text: String,
-    /// Prompts sent while a turn ran, oldest first.
+    /// Prompts sent while a turn ran, oldest first (P16).
     pub queue: std::collections::VecDeque<String>,
     /// Entries retired so far: the host printed them, the session no
-    /// longer answers them.
+    /// longer answers them (P1).
     pub retired: f64,
     /// Which transcript this is: `/clear` starts a new one, and the screen
     /// keys its log by it, so an inline terminal clears too.

@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { presenceLines, macPresence, macPresenceProfile } from './presence.mjs';
 
-// What a macOS build says of its presence lines, and the release build it refuses.
+// LLP 1133.010 D7: what a macOS build says of its presence lines, and the release build it refuses.
 const app = { id: 'com.example.lock' };
 const ceiling = ['net.fetch https://x', 'secret.keep token user-presence optional', 'secret.keep key biometry-any apple.orWatch', 'secret.keep plain'].join('\n');
 const none = () => null;
@@ -61,7 +61,7 @@ test('a development build asks for a passkey domain in developer mode, a release
   expect(associatedDomains(undefined, true)).toEqual([]);
 });
 
-test('App Attest and the age range: a Mac build signs neither, a release is refused; the environment is by build', async () => {
+test('App Attest and the age range: a Mac build signs neither, a release is refused; the environment is by build (LLP 1133.028)', async () => {
   const { macProfileRows, entitlementValue } = await import('./presence.mjs');
   const said = [];
   macProfileRows(app, 'device.attestation\ndevice.age-range\ndevice.tracking purpose.ads', { log: (l) => said.push(l) });

@@ -1,4 +1,4 @@
-// A textarea's decorations: the app's spans painted over the
+// A textarea's decorations (LLP 1114.007): the app's spans painted over the
 // field's TextKit 2 layout, never in its text storage, so the value, typing
 // attributes, undo history, layout and intrinsic size are the undecorated
 // field's. Colours are rendering attributes on the text layout manager

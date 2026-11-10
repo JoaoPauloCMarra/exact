@@ -1,4 +1,4 @@
-//! One band, multiple fragments, logical reading order.
+//! @ref LLP 1043.000 §3 D6 — one band, multiple fragments, logical reading order.
 use crate::{
     bands::{append_intervals, Slot},
     finite, Cursor, FlowShape, Prepared,
@@ -153,7 +153,7 @@ pub fn flow(
         }
         let start = out.len();
         append_intervals(shapes, top, bottom, width, min, out);
-        // Bidi fragments follow the paragraph direction.
+        // @ref LLP 1043.000 §3 D6 — bidi fragments follow the paragraph direction.
         if options.direction == Direction::Rtl {
             out[start..].reverse();
         }

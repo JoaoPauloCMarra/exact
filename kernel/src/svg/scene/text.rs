@@ -1,10 +1,11 @@
 //! SVG `text` and `tspan` resolved into chunks of runs: where each chunk
 //! starts, how it anchors and which baseline sits on its `y`, and per run the
 //! string (white space collapsed), its font and its paint. The host shapes:
-//! only it has the fonts.
+//! only it has the fonts (LLP 1055.000 D11).
 //!
-//! Positioned by a chunk's first `x`/`y` and each run's first `dx`/`dy`;
-//! per-character lists, `rotate`, `textLength` and `textPath` are not read.
+//! Stage 5 positions by a chunk's first `x`/`y` and each run's first
+//! `dx`/`dy`; per-character lists, `rotate`, `textLength` and `textPath` are
+//! later stages.
 
 use super::{cascade, Resolver, ShapePaint};
 use crate::generated::{
@@ -171,7 +172,7 @@ impl Resolver<'_, '_> {
                 pattern: None,
             })
         };
-        // Bold Text, on the run's own weight and family.
+        // Bold Text (LLP 1115.000 D12.3), on the run's own weight and family.
         let mut drawn = TextStyle::from_style(style);
         node.arena.embolden(node.slot, &mut drawn);
         let run = |text: String| TextRun {

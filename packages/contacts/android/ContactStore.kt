@@ -1,13 +1,13 @@
-// @exact/contacts' production path on Android: the system's contact picker, and the person's
+// @exact/contacts' production path on Android (LLP 1133.018 stage 3): the system's contact picker, and the person's
 // contacts through the Contacts Provider under `READ_CONTACTS`.
 //
-// - The picker needs no permission. On Android 17 (API 37) it is the system's,
+// - The picker needs no permission (D4). On Android 17 (API 37) it is the system's,
 //   `ContactsPickerSessionContract.ACTION_PICK_CONTACTS`, asked for the data fields of the properties, several
 //   contacts where `multiple`; its session URI is read once. Below 17 it is `ACTION_PICK` through one data type, the
 //   first of `email`, `tel` and `address` asked, which grants a read of that one row: the answer has `name` and that
 //   property, every other property asked an empty list, and one contact whatever `multiple` says
 //   ([common intents](https://developer.android.com/guide/components/intents-common#Contacts)).
-// - A store read asks the permission while `prompt`, runs on the module's thread and answers a page in the
+// - A store read asks the permission while `prompt`, runs on the module's thread (D6) and answers a page in the
 //   provider's order, `SORT_KEY_PRIMARY` then `_ID`. Its cursor is that key, so a page asked again after a change
 //   starts after the same place whether or not its contact is still there. `id` is the contact's lookup URI
 //   (`CONTENT_LOOKUP_URI`), which outlives the provider's row ids; `ids=` reads by it.
@@ -71,11 +71,11 @@ internal class ContactStore(private val context: ExtensionContext, private val s
         }
     }
 
-    // Access
+    // Access (D5)
 
     fun status(): JSONObject {
         val granted = app.checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
-        // Not granted: the state is the host's history of the request.
+        // Not granted: the state is the host's history of the request (LLP 1133.008 D8 item 7).
         val history = if (declared) context.permission(Manifest.permission.READ_CONTACTS) else null
         val out = JSONObject()
             .put("available", true)
@@ -123,7 +123,7 @@ internal class ContactStore(private val context: ExtensionContext, private val s
         resolver.unregisterContentObserver(observer)
     }
 
-    // The picker
+    // The picker (D4)
 
     private fun pick(args: JSONObject, reply: (JSONObject) -> Unit) {
         val properties = ContactsModule.asked(args) ?: return reply(ContactsModule.error("TypeError", "properties is empty or names one the picker has not"))
@@ -200,7 +200,7 @@ internal class ContactStore(private val context: ExtensionContext, private val s
         return JSONObject().put("contacts", JSONArray().put(person.record(properties, null, icons, 0)))
     }
 
-    // The store
+    // The store (D6)
 
     private fun page(args: JSONObject, reply: (JSONObject) -> Unit) {
         val properties = ContactsModule.asked(args) ?: return reply(ContactsModule.error("TypeError", "properties is empty or names one the store has not"))

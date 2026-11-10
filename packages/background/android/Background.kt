@@ -1,19 +1,19 @@
-// @exact/background on Android: WorkManager, the RFC's mechanism. The build makes
+// @exact/background on Android (LLP 1133.017 D2, D8, D12, D14, D17): WorkManager, the RFC's mechanism. The build makes
 // one per host when the app binds the extension, outside the agent; under the agent the runner's substitute answers,
 // unless the drive binds it (`--bind background`).
 //
 // - Registrations live in the module's preferences, so a tag outlives the process.
-// - A `sync` is a `OneTimeWorkRequest` unique by tag with `NetworkType.CONNECTED`, and fires at once while the
+// - A `sync` is a `OneTimeWorkRequest` unique by tag with `NetworkType.CONNECTED` (D2), and fires at once while the
 //   process runs and the network is up (`ConnectivityManager`'s default network). Each firing is its own wake
-//   (`context.wake`), told its outcome; retrying is the module's, as on Apple, the work enqueued again after the
+//   (`context.wake`), told its outcome; D1's retrying is the module's, as on Apple, the work enqueued again after the
 //   backoff (`setInitialDelay`).
 // - A `periodicsync` is a `PeriodicWorkRequest` unique by tag, its interval `minInterval` and its flex 5 minutes, so
-//   the floor holds.
+//   the floor holds (D12's `flexInterval`).
 // - When WorkManager runs [BackgroundWorker], the live session's module raises the tag's event and the worker returns
 //   once its invocation ended. With no session in the process (the app's activity gone) the worker retries a `sync`
-//   at WorkManager's backoff and skips a `periodicsync`: the headless session is not built, and a `sync`
+//   at WorkManager's backoff and skips a `periodicsync`: the headless session is not built (§14 stage 3), and a `sync`
 //   still fires at the next launch.
-// - The status is `denied` while `ActivityManager.isBackgroundRestricted()` is true, with the standby bucket.
+// - The status is `denied` while `ActivityManager.isBackgroundRestricted()` is true (D14), with the standby bucket.
 package exact.background
 
 import android.app.ActivityManager
@@ -232,7 +232,7 @@ class BackgroundModule(context: ExtensionContext) : ExactExtension(context) {
         }
     }
 
-    /** The rules for an invocation's end. */
+    /** D1's rules for an invocation's end. */
     private fun ended(kind: String, tag: String, outcome: String, registered: Boolean) {
         val r = tags[kind]?.get(tag) ?: return
         if (kind == "periodicsync") {

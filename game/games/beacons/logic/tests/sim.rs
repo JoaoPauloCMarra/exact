@@ -134,7 +134,7 @@ fn a_sprint_ended_while_paused_walks_on_resume() {
     }
 }
 
-/// Tilt to move: the level the app posts, a held tilt at
+/// Tilt to move (LLP 1133.013 §10): the level the app posts, a held tilt at
 /// 60 Hz walking the player along x at the stick the engine's map gives, and
 /// the input's end bringing the player to rest.
 #[test]

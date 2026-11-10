@@ -1,27 +1,27 @@
-// @exact/motion on the web: the Generic Sensor
+// @exact/motion on the web (LLP 1133.013 D2, D11): the Generic Sensor
 // classes where the browser has them (Chromium), else `devicemotion` and
 // `deviceorientation`, answered in the interface's shapes. The page runtime
 // (host/web-js/modules.js) calls it outside the agent; under the agent the
 // runner's substitute answers and this is never loaded.
 //
-// - One acquisition per name for the page: a `Sensor` object, or one
+// - One acquisition per name for the page (D4): a `Sensor` object, or one
 //   listener of an event, at the fastest `frequency` its readers ask; each
 //   reader group (a name with one `frequency`, `referenceFrame` and
 //   `history`) keeps a ring of its own thinned samples, numbered, and is
-//   answered statelessly from the cursor the runner passes as `after`.
+//   answered statelessly from the cursor the runner passes as `after` (D5).
 // - The device frame is the specifications' (Device Orientation §3.1);
 //   `referenceFrame: "screen"` turns x and y by `screen.orientation.angle`
 //   (Accelerometer §7.1), per reader, from the one stream.
 // - WebKit reports `devicemotion`'s accelerations with the opposite sign to
 //   the specification and Chromium (`kGravity` in WebCoreMotionManager.mm);
 //   known by `webkitCompassHeading`, which only WebKit ships, they are
-//   negated, and nothing else is.
+//   negated, and nothing else is (D2).
 // - `requestMotionPermission` calls both events' `requestPermission` in the
 //   turn it is called, before awaiting either, so both stay inside the
-//   press: the runtime calls it synchronously in the input event's
+//   press (D11): the runtime calls it synchronously in the input event's
 //   dispatch (`"gesture": true`).
 // - Acquisition stops while the page is hidden and resumes when it is
-//   shown; the next answer of each reader reads `interrupted`.
+//   shown; the next answer of each reader reads `interrupted` (D8).
 // - A canvas input needs the host's `surfaces.input`, a writer into the
 //   surface's input; where the context has none, `startSensorInput` fails
 //   `NotSupportedError`.
@@ -73,7 +73,7 @@ const finite = v => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 const xyz = v => (v && [v.x, v.y, v.z].every(n => typeof n === 'number') ? [v.x, v.y, v.z] : null);
 
 export function implementation({ changed, now = () => performance.now(), foreground = () => true, log = () => {}, surfaces } = {}) {
-  // The page's time origin to the session clock: a sample's DOMHighResTimeStamp, on the session's.
+  // The page's time origin to the session clock: a sample's DOMHighResTimeStamp, on the session's (D7).
   const offset = () => now() - performance.now();
   const streams = new Map(); // name → { sensor | listener, frequency, groups: Map, latest }
   const inputs = new Map(); // `${surface} ${sensor}` → { writer, name, period, next, dropped }
@@ -82,7 +82,7 @@ export function implementation({ changed, now = () => performance.now(), foregro
   /** The platform's answer for one sample of `name`: `{values, at, fields}` in the device frame. */
   const reading = (name, values, at, extra = {}) => ({ name, values, at, extra });
 
-  // A group's thinned ring: a sample nearest each point of its grid of 1 / frequency.
+  // A group's thinned ring: a sample nearest each point of its grid of 1 / frequency (D4).
   const group = (stream, args) => {
     const key = JSON.stringify([args.frequency ?? null, args.referenceFrame ?? 'device', args.history ?? 0]);
     let g = stream.groups.get(key);
@@ -205,7 +205,7 @@ export function implementation({ changed, now = () => performance.now(), foregro
     return { available, state, sensors, apple: null, android: null };
   };
 
-  /** A reader's answer from its group's ring after `after`. */
+  /** A reader's answer from its group's ring after `after` (D5). */
   const answer = async (name, args) => {
     if (!supported(name)) return { error: 'NotSupportedError' };
     const known = await status();
@@ -258,7 +258,7 @@ export function implementation({ changed, now = () => performance.now(), foregro
     ...sources,
     motionStatus: status,
     motionStatusSync: () => ({ available: hasEvents() || Object.keys(CLASSES).some(hasClass), state: webkit() ? decided ?? 'prompt' : 'granted', sensors: sensorsOf(), apple: null, android: null }),
-    /** Both events' `requestPermission`, called before either is awaited. */
+    /** Both events' `requestPermission`, called before either is awaited (D11). */
     requestMotionPermission(args) {
       const asks = [];
       if (typeof global.DeviceMotionEvent?.requestPermission === 'function') asks.push(global.DeviceMotionEvent.requestPermission());
@@ -297,7 +297,7 @@ export function implementation({ changed, now = () => performance.now(), foregro
       return { surface: args.surface, sensor: args.sensor };
     },
     foreground: visibility,
-    /** A reader group gone. */
+    /** A reader group gone (LLP 1133.009 D10 item 12). */
     releaseArgs(name, args) {
       const s = streams.get(name);
       if (!s) return;

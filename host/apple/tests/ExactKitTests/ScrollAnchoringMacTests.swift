@@ -5,7 +5,7 @@ import XCTest
 
 /// A plain AppKit scroller keeps the reader's content still when a box above
 /// the port changes size or is inserted, as CSS scroll anchoring does in
-/// Chrome: a header folding 48 → 0 above row 20 left row 20 where
+/// Chrome (#138 X23d): a header folding 48 → 0 above row 20 left row 20 where
 /// it was on the web and moved it up 48 points here.
 final class ScrollAnchoringMacTests: XCTestCase {
     /// A 200-point scroller: a 48-point header (id 2), then twenty 30-point
@@ -63,7 +63,7 @@ final class ScrollAnchoringMacTests: XCTestCase {
     }
 
     /// A `scrollFollowEnd` scroller above its end is anchored as a plain one
-    /// (the web leaves it to the browser's anchoring); at its end it
+    /// (the web leaves it to the browser's anchoring, LLP 1001); at its end it
     /// follows the end.
     func testAFollowerAboveItsEndIsAnchoredAndAtItsEndFollows() {
         let (p, clip) = fixture(top: 200, followEnd: true)

@@ -3,10 +3,10 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// "Submenus" on UIKit: a menu row whose `popovertarget` names another menu
-/// is a nested `UIMenu`, its check marks kept, and choosing a nested item
-/// presses its row. UIKit, so a simulator runs it: bun host/apple/build.mjs
-/// --test --ios
+/// LLP 1021 §5, "Submenus" (#141) on UIKit: a menu row whose
+/// `popovertarget` names another menu is a nested `UIMenu`, its check marks
+/// kept, and choosing a nested item presses its row. UIKit, so a simulator
+/// runs it: bun host/apple/build.mjs --test --ios
 final class SubmenuIOSTests: XCTestCase {
     private var window: UIWindow!
 

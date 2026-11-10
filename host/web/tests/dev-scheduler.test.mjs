@@ -206,8 +206,8 @@ test('dev edits clear only their own errors while unrelated failures stay visibl
     console:{error(){}},location:{origin:'http://localhost',href:'http://localhost/',search:''},
     EventSource:class {constructor(){stream=this;}},
     document:{body:{appendChild(el){overlay=el;return el;}},createElement(){return {remove(){overlay=null;}};},querySelector(){return null;}},
-    navigator:{sendBeacon(){}},requestAnimationFrame:callback=>callback(),crypto,addEventListener(){}, // inspect mode's capture gate
-    matchMedia:()=>({matches:false,addEventListener(){}}), // the build channel's facts
+    navigator:{sendBeacon(){}},requestAnimationFrame:callback=>callback(),crypto,addEventListener(){}, // inspect mode's capture gate (LLP 1122 T2b)
+    matchMedia:()=>({matches:false,addEventListener(){}}), // the build channel's facts (LLP 1122 D4)
     localStorage:{getItem:()=>'1',setItem(){}}, // the "Open in native" link was put away; the overlay is all this page shows
     fetch:async url=>new Response(url.endsWith('app.plan')?plan:JSON.stringify(envelope)),
     exact:{ready:Promise.resolve(),compat:{inputs:{app:'fixture'}},reloadGeneration:async()=>{reloaded();return true;},
@@ -248,7 +248,7 @@ test('dev edits clear only their own errors while unrelated failures stay visibl
   await edited();assert.equal(text(),'');
 });
 test('the wasm page sends its build-channel reports one at a time, in order, and none across a reconnect', async () => {
-  // The server binds a refusal to the status after it: a slow
+  // The server binds a refusal to the status after it (LLP 1122 D4): a slow
   // refusal still reaches it first. Each post is "delivered" when its delay
   // ends; a register answers when the test lets it.
   let stream, delivered=[], held=new Map();
@@ -299,7 +299,7 @@ test('the wasm page sends its build-channel reports one at a time, in order, and
   await new Promise(r=>setTimeout(r,250));
   assert.deepEqual(sent('n2'),[],'nothing made on the replaced stream is sent');
   assert.deepEqual(sent('n3'),['status@2'],'the new stream sends its own status, and no report made before it');
-  // (c) A navigation is its stream's: one that is no route is
+  // (c) A navigation is its stream's (LLP 1122 T7): one that is no route is
   // refused on it; one a reconnect replaced before it ran (queued behind a
   // pin) neither routes nor answers, and the new stream's navigation of the
   // same seq is its own.
@@ -348,7 +348,7 @@ test('dev startup rebuilds changed Rust even when the app identity still matches
     identity=true;
     writeFileSync(graphPath,JSON.stringify({...build,trust:'production'}));
     assert.equal(await current(),false);
-    // A build that links only its plan's use-set is not the dev loop's.
+    // A build that links only its plan's use-set is not the dev loop's (LLP 1047 D7).
     writeFileSync(graphPath,JSON.stringify({...build,binary:{...build.binary,configuration:{flags:{}}}}));
     assert.equal(await current(),false);
     writeFileSync(graphPath,'{');
@@ -643,7 +643,7 @@ test('the resident module watcher follows backend selection and the settings fil
     writeFileSync(selection,'http://127.0.0.1:4412');await until();
     writeFileSync(selection,'http://127.0.0.1:4413');await until();
     rmSync(selection);await until();
-    // A setting's file (`import.meta.env`).
+    // A setting's file (`import.meta.env`, LLP 1153 D4).
     writeFileSync(join(dir,'.env'),'API_BASE_URL=http://127.0.0.1:4412\n');await until();
     const before=changes;writeFileSync(join(dir,'.exact/other'),'not an input');
     await new Promise(r=>setTimeout(r,250));assert.equal(changes,before);

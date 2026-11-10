@@ -1,5 +1,5 @@
-// The map drives 1 to 4 on Map Demo, under the agent, where
-// the map is the real package view with plain tiles, and drive 5, the
+// LLP 1133.021 §13's map drives 1 to 4 on Map Demo, under the agent, where
+// the map is the real package view with plain tiles (§12), and drive 5, the
 // web build refused without a tile source.
 //
 // 1. Select on the map: `tap map/ferry`, real input at the marker.

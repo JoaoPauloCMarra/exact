@@ -1,4 +1,4 @@
-//! Linux's synchronous native button look and face layout.
+//! Linux's synchronous native button look and face layout. LLP 1069.011.001 D1–D17.
 use super::{control, look, rgba, Painter, Rect4, Shape};
 use crate::text::{Paragraph, TextEngine};
 use exact_kernel::generated::metric;
@@ -21,7 +21,7 @@ fn active_background(node: &NodeRef<'_>, dark: bool, down: bool) -> Option<[u8; 
     .then(|| rgba(node.style.press_background_color.resolve(dark)))
 }
 
-/// The neutral look's button type, as the page's sheet
+/// The neutral look's button type (LLP 1115.000 D17), as the page's sheet
 /// sets it: the size the button inherits, or the one its `controlSize`
 /// names (what a page writes for it at a 16 px root: the subheadline's 14
 /// for mini and small, the body's 16 for medium, 18 for large), at weight
@@ -47,8 +47,8 @@ fn neutral_typography(style: &StyleProps, size: Option<f32>) -> StyleProps {
     out
 }
 
-/// Whether a button of `style` is Material 3's filled button (`Button`:
-/// `filled` and the prominent styles): under the Material look,
+/// Whether a button of `style` is Material 3's filled button (`Button`; LLP
+/// 1115.001 D9: `filled` and the prominent styles): under the Material look,
 /// a `fill` style. Its metrics are `ButtonDefaults`', the `filled-button-`
 /// rows; its type label-large; its shape a pill.
 pub(crate) fn material_filled(style: Option<&str>) -> bool {
@@ -446,7 +446,7 @@ impl Painter {
         self.feedback.1 == Some(id) || self.held_press == Some(id)
     }
 
-    /// The neutral look's button under its title, and the
+    /// The neutral look's button under its title (LLP 1115.000 D17), and the
     /// ink the title takes: emphasis is a fill, and a state adds one thing.
     /// The unsaid button and `bordered` are an outline in the label's ink and
     /// `gray` a neutral fill; `fill` is the accent under the ink that reads

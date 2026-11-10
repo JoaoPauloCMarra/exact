@@ -1,7 +1,8 @@
-//! CSS's `min()`, `max()` and `clamp()` on a dimension row: over px, the
-//! safe-area insets and the viewport lengths, and `calc()` sums of them,
-//! resolved where every `env()` length is — so a change of the insets moves
-//! what reads them — and refused by name where a form is outside that grammar.
+//! CSS's `min()`, `max()` and `clamp()` on a dimension row (LLP 1001 §2,
+//! 2026-10-07): over px, the safe-area insets and the viewport lengths, and
+//! `calc()` sums of them, resolved where every `env()` length is — so a
+//! change of the insets moves what reads them — and refused by name where a
+//! form is outside that grammar.
 
 use exact_kernel::error::StyleValueError;
 use exact_kernel::{
@@ -426,7 +427,7 @@ fn a_comparison_travels_the_wire_and_marks_its_node_as_reading_the_insets() {
     assert!(other.set_env(Env::new(62.0, 0.0, 34.0, 0.0)).unwrap());
 }
 
-/// The comparisons take what `calc()` takes — a percentage,
+/// LLP 1001 §2: the comparisons take what `calc()` takes — a percentage,
 /// segments, sums of several terms, subtraction and products by a number —
 /// and `clamp()` takes `none`.
 #[test]
@@ -549,7 +550,7 @@ fn a_length_resolves_against_a_basis_whatever_its_form() {
 
 /// A number times a sum of comparisons keeps the sum whole, as written:
 /// spreading it would write more values than the author did, past the 32
-/// CSS Values 4 §10.8 promises.
+/// CSS Values 4 §10.8 promises (Sol's review, stage 4 round 2).
 #[test]
 fn a_scaled_sum_is_written_whole_within_the_author_s_values() {
     let d = text(
@@ -940,7 +941,7 @@ fn env_s_fallback_stands_in_for_an_undefined_segment() {
     assert_eq!(inset.at_basis(&Env::new(20.0, 0.0, 0.0, 0.0), 0.0), 20.0);
 }
 
-/// Edge cases held to the specifications: text that is
+/// What round 10 of review found, held to the specifications: text that is
 /// not ASCII is refused, never a panic; a `-0` as written is the unsigned
 /// zero (CSS Values 4 §10.9.2); an `env()`'s fallback is a
 /// `<declaration-value>`, checked only where it is used, and one unused

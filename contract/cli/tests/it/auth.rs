@@ -1,9 +1,9 @@
-//! `openAuthSession` through the runner, as every host's arm
+//! `openAuthSession` (LLP 1069.006) through the runner, as every host's arm
 //! asks it: the grants refuse (403), Linux has no browser (501), the agent
 //! holds the request by its own ticket and answers it with a checked
 //! callback URL or `cancel`, a second target's sheet is 409, and a
 //! superseded session is forgotten for the host to cancel. Loopback
-//! sessions wait side by side, one per address, and take
+//! sessions (LLP 1133.005 D9) wait side by side, one per address, and take
 //! only a callback with exactly one `code` or `error`.
 
 use exact_kernel::Kernel;
@@ -106,7 +106,7 @@ fn grants_and_hosts_refuse_before_anything_opens() {
         Arm::Settled
     );
     assert_eq!(deliver(&mut r), "501 no system browser on this host");
-    // Under the agent a host with no browser holds it too.
+    // Under the agent a host with no browser holds it too (LLP 1146 D4).
     let out = press(&mut r, "go");
     assert_eq!(
         auth::arm(&mut r, &out, true, Browser::None, None),
@@ -201,7 +201,7 @@ fn settled(r: &mut Runner<Signer>) -> (u64, u16) {
 /// Loopback sign-ins wait at once, each on its own host and port, and
 /// complete independently; a callback with the right `state` and no `code`
 /// or `error` is refused and the hold stays; another on an address in use
-/// is 502; a sheet beside a loopback sign-in opens.
+/// is 502; a sheet beside a loopback sign-in opens (LLP 1133.005 D9).
 #[test]
 fn loopback_sessions_wait_side_by_side_and_take_only_a_code_or_an_error() {
     let mut r = boot();
@@ -273,7 +273,7 @@ fn loopback_sessions_wait_side_by_side_and_take_only_a_code_or_an_error() {
     assert_eq!(settled(&mut r), (a.ticket, 501));
 }
 
-/// A resource over a list: one
+/// A resource over a list (LLP 1017.000 P4c, amended 2026-11-04): one
 /// loopback sign-in for each port, each held on its own address. A port
 /// that joins asks; one that leaves lets only its own session go; the
 /// others take their callbacks independently.
@@ -331,7 +331,7 @@ fn a_resource_over_a_list_holds_a_loopback_sign_in_for_each_element() {
 
 /// `authorize` and `authorize cancel` parse as test steps and reach the driver
 /// as its `authorize` operation; anything else after the word is refused
-///.
+/// (LLP 1146 D4).
 #[test]
 fn authorize_steps_parse_and_reach_the_driver() {
     let tests = contract::tests("test \"sign in\"\n  authorize\n  authorize cancel\n").unwrap();

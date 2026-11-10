@@ -1,4 +1,5 @@
 //! The frame's passes, each reading one resolved frame state.
+//! @ref llp/1046.006.000-render-hooks.rfc.md#d3-optional-services-the-scene-copy
 use super::draw::Resolved;
 use super::probe::{Drew, Probe, Stage};
 use super::*;

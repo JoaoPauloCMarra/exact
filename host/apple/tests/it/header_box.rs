@@ -1,4 +1,4 @@
-//! A drawn face's box (a filled, fixed-size box with one
+//! LLP 1075.003 §9.10: a drawn face's box (a filled, fixed-size box with one
 //! child: a title's avatar) carries its authored points as `faceBoxSize`,
 //! since a header the bar replaces is laid out as `display: none`. The test
 //! reads the box alone, so a box moved into a header, or nine wrappers deep,

@@ -1,4 +1,4 @@
-// Export is a copy the host makes. `saveFile(id,
+// @ref LLP 1069.010 D3 — export is a copy the host makes. `saveFile(id,
 // from, suggestedName)`: the runner rules first (bad data or an ungranted
 // `from` refused into the journal; under the agent the request held as
 // `export`, answered by `type @t <path>` or `tap @t cancel`), then macOS
@@ -7,7 +7,7 @@
 // document picker. The chosen name arrives as `change` on the element `id`
 // names; a dismissed panel is HTML's `cancel` there. `saveFile(id, text=…,
 // suggestedName=…)` saves the text itself: the host writes it to a scratch
-// file and goes on as for a copy.
+// file and goes on as for a copy (x2apps notes #4).
 import Foundation
 import UniformTypeIdentifiers
 #if canImport(UIKit)
@@ -50,7 +50,7 @@ extension Picker {
         presentSave(view: view, file: file, name: name)
     }
 
-    /// The agent's answer to a held export: the copy goes
+    /// The agent's answer to a held export (LLP 1069.007 D4): the copy goes
     /// to the driver's path, as the panel's would go to the chosen URL.
     func saveAnswered(_ reply: [String: Any], request: [String: Any]) {
         guard reply["capability"] as? String == "export", let view = (reply["node"] as? NSNumber)?.uint32Value else { return }

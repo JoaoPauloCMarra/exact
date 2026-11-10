@@ -1,8 +1,8 @@
-// The UIKit walks behind `layout <target> native` and
+// @ref LLP 1080.001 — the UIKit walks behind `layout <target> native` and
 // `layout agree` (the shared half is `AgentNative.swift`). Ownership is by
 // identity, never by class: a subview is accounted for when it is a live
 // node's view, a parked or leaving tree's, or one of the views the presenter
-// and its hosts are known to add (a closed list, `inspectionAccount`).
+// and its hosts are known to add (D3's closed list, `inspectionAccount`).
 // Strays are judged only in a subview list Exact owns (`inspectionJudges`);
 // inside a platform view — a text view, a web view, a control, a
 // controller's view — what is not a node is counted `opaque`, and any node
@@ -66,7 +66,7 @@ extension Agent {
         }
         nodes.append(contentsOf: inlineLayout())
         nodes.sort { ($0["id"] as? Int ?? 0) < ($1["id"] as? Int ?? 0) }
-        // The page's environment: the insets the kernel was
+        // The page's environment (LLP 1012 §1): the insets the kernel was
         // given, and the keyboard's inset on the viewport, by the web's
         // `env()` names.
         let i = presenter.insets
@@ -78,17 +78,17 @@ extension Agent {
         let scaled = presenter.modals.drawnScales.map { ["route": $0.route.props["navigationKey"] ?? "", "presentation": $0.kind, "scale": (Double($0.scale) * 1000).rounded() / 1000] as [String: Any] }
         if !scaled.isEmpty { reply["scaled"] = scaled }
         #if os(iOS)
-        // The status bar's style Exact asks for, and the node that decided it.
+        // The status bar's style Exact asks for (LLP 1105 D7), and the node that decided it.
         let bar = presenter.statusBar
         reply["statusBar"] = ["style": bar.style == .lightContent ? "light-content" : bar.style == .darkContent ? "dark-content" : "default",
                               "source": bar.source.map { Int($0) } ?? NSNull()] as [String: Any]
         #endif
-        // The device's screen, where the viewport sits on it (the `screen`
-        // space) and the scene's interface orientation: what a
-        // real touch's aim is checked against.
+        // The device's screen, where the viewport sits on it (LLP 1035.002
+        // D4's `screen` space) and the scene's interface orientation: what a
+        // real touch's aim is checked against (LLP 1080.000 D4).
         if let w = vp.window, let container = vp.superview {
             let screen = w.screen
-            let origin = container.convert(presenter.pageFrame.origin, to: screen.coordinateSpace) // the page's area
+            let origin = container.convert(presenter.pageFrame.origin, to: screen.coordinateSpace) // the page's area (LLP 1130)
             reply["screen"] = ["w": Agent.r2(screen.bounds.width), "h": Agent.r2(screen.bounds.height), "scale": Agent.r2(screen.scale),
                                "x": Agent.r2(origin.x), "y": Agent.r2(origin.y), "orientation": Agent.orientation(w.windowScene)]
         }
@@ -96,7 +96,7 @@ extension Agent {
     }
 
 
-    // MARK: `layout <target> native`
+    // MARK: D1 — `layout <target> native`
 
     func nativeSubviews(_ id: UInt32, depth: Int, limit: Int, plan: Bool) -> [String: Any] {
         let runner = runnerNode(id, plan: plan)
@@ -132,7 +132,7 @@ extension Agent {
         return reply
     }
 
-    // MARK: `layout agree`
+    // MARK: D2 — `layout agree`
 
     func agreement(limit: Int) -> [String: Any] {
         let vp = presenter.viewport
@@ -154,7 +154,7 @@ extension Agent {
 
 extension Presenter {
     /// Kinds whose view holds a platform object: what they add is UIKit's
-    /// (NodePool's heavy leaves).
+    /// (NodePool's heavy leaves, LLP 1068 §4.0).
     private static let platformKinds: Set<String> = NodePool.leaves
 
     /// The trees the presenter keeps on purpose: parked, leaving.
@@ -207,7 +207,7 @@ extension Presenter {
         // A live flight's layer on the presentation it flies in, and the
         // empty slot it holds open where its view lays out (FlightsIOS.swift).
         if flights.values.contains(where: { $0.container === sub || $0.slot === sub }) { return ("flight", nil) }
-        // A grouped list's background past the viewport's edge, beside it.
+        // A grouped list's background past the viewport's edge, beside it (LLP 1116.004 D2).
         if owner == nil, groupedLists?.inspectionOwns(sub) == true { return ("grouped-list", nil) }
         if sub === viewport { return ("viewport", nil) }
         if sub === documentMount { return ("document mount", nil) }
@@ -222,7 +222,7 @@ extension Presenter {
             if sub === scroll.refreshControl { return ("refresh", owner?.id) }
             #endif
             if String(describing: Swift.type(of: sub)) == "_UIScrollViewScrollIndicator" { return ("indicator", owner?.id) }
-            // iOS 26's scroll edge effect: UIKit hangs each
+            // iOS 26's scroll edge effect (LLP 1077 D16): UIKit hangs each
             // edge's effect in a passthrough container on the scroll view,
             // the root viewport's included under `viewport-fit="cover"`.
             let kinds = sub.subviews.map { String(describing: Swift.type(of: $0)) }
@@ -232,7 +232,7 @@ extension Presenter {
         return nil
     }
 
-    /// The host that hid `n`, when one may (the known hiders).
+    /// The host that hid `n`, when one may (D3's hiders).
     private func inspectionHider(_ n: NodeView) -> String? {
         if n.placementHidden { return "placement" }
         if segments.hides(n) { return "segments" }
@@ -252,7 +252,7 @@ extension Presenter {
         return layer.animationKeys()?.contains { layer.animation(forKey: $0).map(moves) == true } == true
     }
 
-    /// The views and flat-leaf layers under `root`, preorder, bounded;
+    /// D1: the views and flat-leaf layers under `root`, preorder, bounded;
     /// `box` puts a view's region in the viewport's space.
     func inspectionDump(_ root: UIView, kind: String, depth: Int, limit: Int, flatOnly: UInt32?,
                         box: (UIView, CGRect?) -> CGRect) -> [String: Any] {
@@ -313,7 +313,7 @@ extension Presenter {
         return out
     }
 
-    /// Walk `roots` and the kept trees, then compare frames; `box` puts
+    /// D2: walk `roots` and the kept trees, then compare frames; `box` puts
     /// a view in the viewport's space for a disagreement's report.
     func inspectAgreement(roots: [(UIView, String)], kernel: KernelFrames, inFlight: Bool, report: AgreementReport,
                           box: (UIView) -> CGRect) {
@@ -362,7 +362,7 @@ extension Presenter {
                     // UIKit's dismissal ends (`ModalIOS.swift`): kept on purpose.
                     if retiringRoots.contains(where: { n === $0 || n.isDescendant(of: $0) }) { continue }
                     // An unmapped node view is a leak wherever it hangs, an
-                    // opaque controller interior included (nodes there are matched).
+                    // opaque controller interior included (D3: nodes there are matched).
                     do {
                         var fields: [String: Any] = ["class": "NodeView", "retired": Int(n.id), "frame": AgreementReport.rect(box(n))]
                         if let o = owner { fields["under"] = Int(o.id) }
@@ -379,7 +379,7 @@ extension Presenter {
                 stack.append((sub, owner))
             }
         }
-        // The trees kept on purpose must not show or take input.
+        // The trees kept on purpose must not show or take input (D2).
         for root in kept.parked.roots {
             report.parkedRoots += 1
             if !root.isHidden { report.add("parked-visible", ["class": "NodeView", "frame": AgreementReport.rect(box(root))]) }
@@ -409,7 +409,7 @@ extension Presenter {
         }
     }
 
-    /// `frame`: only an ordinary node — in a window, untransformed in
+    /// `frame` (D2): only an ordinary node — in a window, untransformed in
     /// the view and the model, not animating, not placed, projected, held
     /// or reparented — and its origin only where its superview lines up
     /// with its parent's bounds.
@@ -444,7 +444,7 @@ extension Presenter {
                 } else if let sv, [pv.clipBox, pv.materialView?.contentView, pv.glassGroupView?.contentView, pv.glassSlot?.contentView].contains(where: { $0 === sv }) {
                     sizeOnly = !(sv.frame == pv.bounds && sv.bounds.origin == .zero)
                 } else { report.skip("reparented"); continue }
-                // A collection row's origin is the list's.
+                // A collection row's origin is the list's (LLP 1080.001 §5).
                 if collections.owns(parent) { sizeOnly = true }
             } else if sv !== root { report.skip("reparented"); continue }
             report.compare(id, kernel: f.rect, native: v.frame, sizeOnly: sizeOnly)

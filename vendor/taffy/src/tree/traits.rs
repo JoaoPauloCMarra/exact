@@ -199,7 +199,7 @@ pub trait LayoutPartialTree: TraversePartialTree {
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
 
-    /// EXACT PATCH 20: keep the static position of an absolutely positioned
+    /// EXACT PATCH 20 (LLP 1074 T1): keep the static position of an absolutely positioned
     /// child whose parent is [`Position::Static`](crate::Position::Static). The parent does
     /// not lay the child out; its containing block does, through [`Self::hoisted_absolute`].
     /// A tree that never uses `Static` needs none of the three methods.

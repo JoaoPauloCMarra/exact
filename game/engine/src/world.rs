@@ -577,6 +577,7 @@ impl World {
         }
         self.register::<C>();
         // Retire leaked query shapes before `&mut` storage access.
+        // @ref llp/1046.003-game-engine-as-built.explainer.md#row-leases-2026-09-23
         self.leases.restructure();
         self.components
             .entry(C::NAME)

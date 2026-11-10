@@ -1,10 +1,10 @@
-// The web's output for the runner's voice table, one
+// @ref LLP 1096 D6, D7. The web's output for the runner's voice table, one
 // file for the wasm glue and the JS target, loaded after first paint by a
 // plan that declares a sound and never under the agent (whose clock is
-// virtual: nothing plays). Web Audio's model in its smallest form: one
+// virtual: nothing plays, D10). Web Audio's model in its smallest form: one
 // decoded `AudioBuffer` per declared sound, a one-shot `AudioBufferSourceNode`
 // and a `GainNode` per voice, started at `start(when)` on the context's clock.
-// A voice's `playbackRate` is its source node's, and a voice
+// A voice's `playbackRate` is its source node's (LLP 1125 D10), and a voice
 // with a `pan` other than 0 goes through a `StereoPannerNode`; one centred
 // takes none, so a mono sound keeps the level it had (the panner's
 // equal-power law puts a centred mono input 3 dB down, cos(π/4) a side).
@@ -21,8 +21,8 @@
 // timer). An `End` for a held voice only sets its `stopAt`: `stop()` on a
 // node never started throws InvalidStateError in all three engines.
 //
-// A sequence's voices are the same voices, issued a second ahead:
-// an `End` at or before a voice's start that has not started (an edit,
+// A sequence's voices are the same voices, issued a second ahead (LLP 1125
+// D3): an `End` at or before a voice's start that has not started (an edit,
 // a stop) lets its node go at once. A step's haptic is `navigator.vibrate`
 // on a timer at its time, cancelled by `unhaptic`; one more than 10 ms late
 // (a blocked main thread) is counted.
@@ -30,7 +30,7 @@
 // A voice before the page's first user activation is dropped and journaled,
 // never queued (a queue would burst on the first tap): a capture-phase
 // `pointerdown`, `keydown` or `touchend` resumes the context, so the press
-// that runs a commit plays that commit's sound.
+// that runs a commit plays that commit's sound (trivia F5).
 const ACTIVATING = ['pointerdown', 'keydown', 'touchend'];
 
 /** Where every browser measured has `getOutputTimestamp`, the pair it gives;
@@ -145,7 +145,7 @@ function installSound({ files, log, origin, root = document.getElementById('exac
     haptics.set(id, setTimeout(() => {
       haptics.delete(id);
       if (now() - (origin() + at) > 10) counts.hapticsLate++;
-      navigator.vibrate?.(kind === 'selection' ? 5 : 12); // rt.js `Hosts.haptic`'s
+      navigator.vibrate?.(kind === 'selection' ? 5 : 12); // rt.js `Hosts.haptic`'s (LLP 1077 D14)
     }, Math.max(0, origin() + at - now())));
   }
   function unhaptic({ id }) { clearTimeout(haptics.get(id)); haptics.delete(id); }
@@ -163,7 +163,7 @@ function installSound({ files, log, origin, root = document.getElementById('exac
     },
     /** The files this output decodes (a host compares a boot's against them). */
     get files() { return sources; },
-    /** `state.sounds.output` outside the agent. */
+    /** `state.sounds.output` outside the agent (D10). */
     state: () => ({ kind: 'web-audio', state: ctx.state, decoded: `${decoded}/${sources.length}`, voices: voices.size, ...counts }),
     context: ctx,
   };

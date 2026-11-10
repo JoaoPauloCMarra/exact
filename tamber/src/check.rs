@@ -1,4 +1,4 @@
-//! The checker: names, kinds, ranges, cycles, the
+//! The checker (LLP 1121 D3–D5, D7): names, kinds, ranges, cycles, the
 //! mode key, the `under scheme=dark` rules and completeness, folding every
 //! token for every full app tuple as it goes.
 
@@ -14,7 +14,7 @@ use crate::{css, Diagnostic, Vocab};
 use exact_color::Rgba8;
 use std::collections::{BTreeSet, HashMap, HashSet};
 
-/// A design's tuples are capped.
+/// A design's tuples are capped (LLP 1121 D5).
 pub const MAX_TUPLES: usize = 64;
 
 /// A checked token: its values, one per full app tuple.
@@ -25,7 +25,7 @@ pub struct Checked {
     pub name: String,
     /// The role it overrides, by the schema's name, if it does.
     pub role: Option<String>,
-    /// Its kind: written, or inferred from its value.
+    /// Its kind (D3): written, or inferred from its value.
     pub kind: Kind,
     /// Its value for each full app tuple, in tuple order.
     pub values: Vec<Value>,
@@ -40,16 +40,16 @@ pub struct Checked {
     pub names: Vec<String>,
     /// The base names its own values read unset, bare (a length, a type's
     /// size), the default's and every `when` line's, a value no tuple
-    /// selects included, first time each.
+    /// selects included, first time each (stage 11 D's `bases`).
     pub bases: Vec<String>,
     /// What its value names in each full app tuple, as it folds there
-    /// (`explain`'s `bases_by_tuple`), in a [`crate::traced`] check;
+    /// (stage 13 D4, `explain`'s `bases_by_tuple`), in a [`crate::traced`] check;
     /// empty when no value names anything, and in any other check.
     pub by_tuple: crate::ByTuple,
     /// Marked `scheme=fixed`: one colour in every scheme by design, which the
     /// one-scheme warning leaves alone.
     pub fixed: bool,
-    /// What it is drawn on (`pair=`): colour tokens by their names here,
+    /// What it is drawn on (`pair=`, D3): colour tokens by their names here,
     /// or roles by their rows, in the order written.
     pub pairs: Vec<String>,
 }
@@ -102,7 +102,7 @@ struct Checker<'a> {
     /// Per token and tuple, the tokens and unset base names its value
     /// there named as it folded ([`Checked::by_tuple`]).
     tuple_refs: HashMap<(usize, usize), (Vec<u32>, Vec<String>)>,
-    /// The icons' names, each a row's `symbol:`, no value's.
+    /// The icons' names (D10), each a row's `symbol:`, no value's.
     icons: HashSet<&'a str>,
     /// Tokens refused as declared, which are not folded.
     refused: Vec<bool>,
@@ -119,7 +119,7 @@ type CheckResult = Result<(Vec<Checked>, usize, Vec<DialValue>), (Vec<Diagnostic
 /// Check `design` against the schema's vocabulary.
 pub(crate) fn check(design: &Design, vocab: &Vocab) -> CheckResult {
     // A base name the design leaves unset, bare, is a named length too:
-    // kept as written, each host's. One the design sets is its
+    // kept as written, each host's (stage 11 B). One the design sets is its
     // token, folded as any is, so its value wins everywhere and its edits
     // re-fold what reads it.
     let unset_bases: Vec<&str> = vocab
@@ -375,7 +375,7 @@ impl<'a> Checker<'a> {
     }
 
     /// The role a token's key overrides: its schema name and its row
-    /// spelling. `-exact-secondary-label`, its bare
+    /// spelling. `-exact-secondary-label`, LLP 1095 D4's bare
     /// `secondary-label`, or a CSS system colour's name.
     fn role_key(&self, key: &str) -> Option<(String, String)> {
         let lower = key.to_ascii_lowercase();
@@ -415,7 +415,7 @@ impl<'a> Checker<'a> {
                 axis.name.value.as_str(),
                 "scheme" | "contrast" | "color-scheme"
             ) {
-                self.at(&axis.name, "tamber-axis-host", format!("`{}` is the host's trait, not an app axis: a token varies by it through `light-dark()` or a role", axis.name.value));
+                self.at(&axis.name, "tamber-axis-host", format!("`{}` is the host's trait, not an app axis: a token varies by it through `light-dark()` or a role (D5)", axis.name.value));
             }
             let mut values = HashMap::new();
             for (j, v) in axis.values.iter().enumerate() {
@@ -628,7 +628,7 @@ impl<'a> Checker<'a> {
                     );
                     continue;
                 }
-                // A motion token is substituted at build: one value.
+                // A motion token is substituted at build: one value (D3).
                 Some("duration" | "easing") if !t.whens.is_empty() => {
                     self.at(&t.name, "tamber-motion-axis", "a duration or an easing is written into its `transition` or `animation` at build, so it has one value: no `when` (vary the row instead)");
                     continue;
@@ -679,8 +679,8 @@ impl<'a> Checker<'a> {
         }
     }
 
-    /// Each token's kind: written, else inferred from its default value,
-    /// a lone name taking the kind of what it names; else a colour.
+    /// Each token's kind: written, else inferred from its default value
+    /// (§3), a lone name taking the kind of what it names; else a colour.
     fn kinds(&mut self) -> Option<usize> {
         let design = self.design;
         let mut walk = Walk {
@@ -1047,7 +1047,7 @@ impl<'a> Checker<'a> {
         }
     }
 
-    /// Which dials move which tokens (the design's completeness, the IR's per-token
+    /// Which dials move which tokens (D4's completeness, the IR's per-token
     /// list): each dial set to other values, every token refolded, and a
     /// token that changes is moved by it. A dial read only where nothing
     /// shows (a discarded `light-dark()` side) moves nothing.
@@ -1067,7 +1067,7 @@ impl<'a> Checker<'a> {
             self.reads[i].iter().for_each(|&d| readers[d].push(i));
         }
         // (each dial's visit marked by its number, so nothing is cleared per
-        // dial)
+        // dial: round 1 of the counts' review)
         let mut moving = vec![usize::MAX; n];
         for (d, dial) in design.dials.iter().enumerate() {
             #[cfg(test)]
@@ -1081,8 +1081,8 @@ impl<'a> Checker<'a> {
                 }
             }
             // Refolded in the design's order, as every token was: a token's
-            // names folded before it (a chain read from its far end would pass
-            // the depth bound).
+            // names folded before it (Astra's round 1: a chain read from its
+            // far end passed the depth bound).
             reach.sort_unstable();
             let Some((_, value)) = self.dials.get(dial.name.value.as_str()).cloned() else {
                 continue;
@@ -1197,8 +1197,8 @@ impl<'a> Checker<'a> {
         match folded {
             Ok(v) => {
                 // An unset base name it reads bare, noted on the token folding.
-                // And each an expression over base names reads, and a
-                // shadow's lengths.
+                // And each an expression over base names reads (stage 12 B2),
+                // and a shadow's lengths (B3).
                 let named: Vec<&str> = match &v {
                     Value::Length(Length::Named(n)) => vec![n],
                     Value::Length(Length::Base(r)) => r.bases(),
@@ -1251,7 +1251,7 @@ impl<'a> Checker<'a> {
         }
     }
 
-    /// A value under a `when` naming an axis `under scheme=dark`: the
+    /// A value under a `when` naming an axis `under scheme=dark` (D5): the
     /// light side is the value's without such axes, the dark side the
     /// `when`'s.
     fn under_value(
@@ -1300,7 +1300,7 @@ impl<'a> Checker<'a> {
         };
         let role = |f: &Folded| matches!(f, Folded::Host(_)).then(|| f.css());
         if let Some(host) = role(&light).or_else(|| role(&dark)) {
-            self.at(&at, "tamber-under-role", format!("`{host}` has no light side to keep under an axis `under scheme=dark`, and a `light-dark()` with a role as a side is refused: write the light and dark colours"));
+            self.at(&at, "tamber-under-role", format!("`{host}` has no light side to keep under an axis `under scheme=dark`, and a `light-dark()` with a role as a side is refused until LLP 1095 D10: write the light and dark colours"));
             return None;
         }
         let keep = light.side(false).ok()?;
@@ -1328,7 +1328,7 @@ impl<'a> Checker<'a> {
                     &d.name,
                     "tamber-dial-inert",
                     format!(
-                        "`{}` moves no token; every dial moves at least one",
+                        "`{}` moves no token; every dial moves at least one (D4)",
                         d.name.value
                     ),
                 );
@@ -1344,7 +1344,7 @@ impl<'a> Checker<'a> {
             let key = self
                 .role_key(&e.value)
                 .map_or(e.value.clone(), |(_, row)| row.to_ascii_lowercase());
-            // An icon may be exported too: generated bindings name it.
+            // An icon may be exported too: generated bindings name it (D12).
             let icon = self.icons.contains(e.value.as_str());
             if !self.names.contains_key(&key) && !icon {
                 self.at(
@@ -1476,7 +1476,7 @@ impl Names for Scope<'_, '_> {
         if c.refused_names.contains(name) || c.refused_names.contains(&lower) {
             return Err(quiet());
         }
-        // An icon is a row's `symbol:`, no value's.
+        // An icon (D10) is a row's `symbol:`, no value's.
         if c.icons.contains(name) {
             return Err(FoldError {
                 id: "tamber-kind",

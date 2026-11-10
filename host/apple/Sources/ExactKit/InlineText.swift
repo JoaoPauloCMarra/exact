@@ -3,12 +3,12 @@ import Foundation
 import CoreText
 
 extension InlineText {
-    /// What it reads as: its text, or an image's `aria-label`.
+    /// What it reads as: its text, or an image's `aria-label` (LLP 1011.002 D4).
     var spoken: String { lightRun.box == nil ? text : boxShown ? props["accessibilityLabel"] ?? "" : "" }
-    /// Whether a colour here is the view's tint.
+    /// Whether a colour here is the view's tint (LLP 1095 D8).
     var namesTint: Bool { colorRef?.namesTint == true || backgroundRef?.namesTint == true || paint.namesTint }
     /// The run in its paragraph owner's traits: `contrast` and `elevated`
-    /// as `BatchValue.channels` takes them.
+    /// as `BatchValue.channels` takes them (LLP 1095 D5).
     func run(dark: Bool, contrast: Bool? = nil, elevated: Bool = false, tint: PlatformColor? = nil) -> Run {
         var value = lightRun
         if dark { value.color = darkColor; value.background = darkBackground }
@@ -48,7 +48,7 @@ extension Run {
     /// Whether it is drawn underlined: written, or a link run with no
     /// decoration written where the platform underlines links. AppKit's
     /// `NSTextView.linkTextAttributes` does; UIKit's text links are the tint
-    /// alone, so iOS invents none.
+    /// alone (LLP 1115 §3), so iOS invents none.
     var underlined: Bool {
         decoration.contains("underline") || (Run.linksUnderlined && decoration.isEmpty && !href.isEmpty)
     }
@@ -139,7 +139,7 @@ extension NodeView {
         #if os(macOS)
         if let readerParagraph { return readerParagraph.offset(at: point, node: self) }
         #endif
-        // A fragmented paragraph's point, in its unfragmented box.
+        // A fragmented paragraph's point, in its unfragmented box (LLP 1093 D8).
         let box = paragraphBox()
         guard let point = paragraphPoint(point), box.contains(point), let paragraph = paragraphLayout() else { return nil }
         let spec = paragraphSpec()
@@ -151,7 +151,7 @@ extension NodeView {
         return offset == kCFNotFound ? nil : offset
     }
     func inlineTarget(at point: CGPoint, handler: String? = nil) -> InlineText? {
-        // Runs' ranges address the source; the hit, the shaped text.
+        // Runs' ranges address the source; the hit, the shaped text (LLP 1053 G5).
         guard let offset = textOffset(at: point).map(sourceOffset) else { return nil }
         // Leaf lookup is logarithmic even in a paragraph with thousands of runs.
         var lo = 0, hi = inlineText.count

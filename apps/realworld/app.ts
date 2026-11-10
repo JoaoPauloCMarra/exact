@@ -1,7 +1,7 @@
 import type { Answer, Overlay, Sources, Result } from './app.contract.d.ts';
 
-// RealWorld's hosted API (docs.realworld.show). The token is a store secret:
-// localStorage on the web, the Keychain on Apple.
+// RealWorld's hosted API (docs.realworld.show). The token is a store secret
+// (LLP 1018): localStorage on the web, the Keychain on Apple.
 export const appId = 'com.exact.realworld';
 export const grants = 'net.fetch https://api.realworld.show\nsecret.keep realworld.jwt';
 const API = 'https://api.realworld.show/api';
@@ -97,8 +97,8 @@ async function api(store: Store, path: string, method = 'GET', body?: unknown, f
   if (token) headers.Authorization = `Token ${token}`;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   // A read needs no FIFO order, so natively (the render server, Apple,
-  // Linux) a page's sources fetch together, as a browser's do. A mutation
-  // stays on the ordered lane.
+  // Linux) a page's sources fetch together, as a browser's do (LLP 1041
+  // §8.4). A mutation stays on the ordered lane.
   const read = method === 'GET' ? { exactIndependentHttp: { maxResponseBytes: 4 << 20 } } : {};
   if (method !== 'GET') wrote(favorite);
   let response: Response;

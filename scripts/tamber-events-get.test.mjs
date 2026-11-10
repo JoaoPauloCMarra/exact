@@ -1,7 +1,7 @@
-// `GET /__tamber/events` (tamber/1.17): the change stream's long poll for a client that re-asks
+// `GET /__tamber/events` (tamber/1.17, LLP 1122 stage 14 D): the change stream's long poll for a client that re-asks
 // by cursor (`exactLongPoll`), beside the POST form: an opaque cursor in each answer, a 204 heartbeat after the wait,
 // the query bounded as the body's fields are, the same scope as the POST read, a client present 90 s after its
-// answer, and never a `Retry-After` past 30 s.
+// answer (LLP 1122 D4), and never a `Retry-After` past 30 s.
 import { expect, test } from 'bun:test';
 import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';

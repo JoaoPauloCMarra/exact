@@ -1,8 +1,10 @@
-//! `add-param` and `remove-param`: a line of a component's `params` section in
-//! the app's own Contract, the section made before the component's `view` where
-//! it has none and taken out with its last line. A param no row reads is
-//! refused by the compile, so each goes in one transaction with the `set-row`
-//! that starts or stops reading it (a promote or a detach).
+//! `add-param` and `remove-param` (LLP 1121 D15, stage 7 C's, landed with
+//! stage 9 D3): a line of a component's `params` section in the app's own
+//! Contract, the section made before the component's `view` where it has
+//! none and taken out with its last line. A param no row reads is refused
+//! by the compile (D15), so each goes in one transaction with the
+//! `set-row` that starts or stops reading it (LLP 1122 D6's promote and
+//! detach).
 
 use contract_syntax::params::ATTRIBUTES;
 
@@ -14,7 +16,7 @@ pub(crate) struct ParamLine {
     pub kind: String,
     /// A token value, written as a Contract string.
     pub default: String,
-    /// `range`, `step`, … in the `params` grammar's order, each written as Contract writes it.
+    /// `range`, `step`, … in D15's order, each written as Contract writes it.
     pub attrs: Vec<(String, String)>,
 }
 

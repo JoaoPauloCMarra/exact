@@ -1,4 +1,4 @@
-//! Look frames' requests and answers: the agent's
+//! Look frames' requests and answers (LLP 1127.000 D1, D3, D4): the agent's
 //! `screenshot … world from …`, the tells at `clock settle` and `screenshot`,
 //! `state world draws` and `state world:<entity> visible`. Each is answered
 //! from one look frame, the current tick drawn offscreen (`surface/look.rs`),

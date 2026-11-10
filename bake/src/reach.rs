@@ -2,11 +2,11 @@
 //! purpose read from the strings tables and every host's spelling derived
 //! from the runner's one table.
 //!
-//! A missing purpose key refuses the bake, every one in one run. The
-//! derived `Info.plist` keys and entitlements, `grantPurposes` in the
-//! compatibility id, the reach table with an "enforced by" column, and
-//! runtime exceptions, each scoped to one helper executable, all come from
-//! here.
+//! @ref LLP 1069.008 D1 (a missing purpose key refuses the bake, every one
+//! in one run) / D4 (the derived `Info.plist` keys and entitlements) / D5
+//! (`grantPurposes` in the compatibility id) / D7 (the reach table, with an
+//! "enforced by" column) / D9 (runtime exceptions, each scoped to one helper
+//! executable)
 //!
 //! The result rides beside the id in `compat.json` as `reach`, never in it:
 //! `host/apple/build.mjs` writes the plists from it, `exact release` signs
@@ -49,10 +49,11 @@ pub(crate) fn derive(
     privacy_policy(app_dir, platform, &devices)?;
     // No call transport exists yet, so a call is a test call, and App Review
     // reads one with no real calls beside it as no intended use of the
-    // `audio` mode (2.5.4): it stays in development builds.
+    // `audio` mode (2.5.4): it stays in development builds (LLP 1133.033
+    // §13 question 4).
     if compat.embedded["trust"] == "production" && devices.iter().any(|g| g.device.name == "calls")
     {
-        return Err("grant-device: `device.calls` stays out of production builds until exact2 has a call transport: a call is a test call until then; begin the line in app.ts with `development` (`development device.calls purpose.calls`), which a production bake leaves out".into());
+        return Err("grant-device: `device.calls` stays out of production builds until exact2 has a call transport: a call is a test call until then (LLP 1133.033 §13 question 4); begin the line in app.ts with `development` (`development device.calls purpose.calls`), which a production bake leaves out".into());
     }
     let strings = if devices.iter().all(|g| !g.device.purpose) {
         None
@@ -73,7 +74,7 @@ pub(crate) fn derive(
                 |s| format!("strings/{}.json has no \"{}\": add `\"{}\": \"…\"`, the text the person is shown when asked", s.base, grant.purpose, grant.purpose),
             );
             errors.push(format!(
-                "grant-purpose: `device.{} {}` names its purpose by strings key, and {table}",
+                "grant-purpose: `device.{} {}` names its purpose by strings key (LLP 1060), and {table}",
                 grant.device.name, grant.purpose
             ));
             continue;
@@ -157,17 +158,18 @@ pub(crate) fn derive(
     // entitlements the platform's signature must carry.
     let mut usage = Map::new();
     let mut entitlements = Vec::new();
-    // An entitlement whose value is no boolean.
+    // An entitlement whose value is no boolean (LLP 1133.035 D16 item 2).
     let mut values = Map::new();
     let mut flags: Vec<&str> = Vec::new();
-    // iOS's background modes and task identifiers.
+    // iOS's background modes and task identifiers (LLP 1133.017 D14).
     let (mut modes, mut tasks): (Vec<&str>, Vec<&str>) = (Vec::new(), Vec::new());
     // Android's permissions: the Canvas host on Android bakes as Linux.
     let mut android: Vec<&str> = Vec::new();
     let mut features: Vec<&str> = Vec::new();
     // The reader's foreground services the lines declare, each with every
     // type its lines give it and the base locale's purpose text of the first
-    // line naming it, its notification's title and channel name.
+    // line naming it, its notification's title and channel name (LLP
+    // 1133.033 D2, D4).
     let mut services = Map::new();
     let keys_of = |device: &Device| match platform {
         "ios" => device.ios,
@@ -175,7 +177,7 @@ pub(crate) fn derive(
         _ => &[],
     };
     // A key two granted rows write takes the text of the row whose own
-    // prompt it is, the one listing it first (on macOS both
+    // prompt it is, the one listing it first (LLP 1133.019 D4: on macOS both
     // photo lines write `NSPhotoLibraryUsageDescription`, which takes
     // `device.photos`'s purpose), never whichever line came last; `shared`
     // names the line each such key took its text from.
@@ -194,8 +196,8 @@ pub(crate) fn derive(
             usage.insert((*key).into(), json!(purposes[grant.purpose]));
         }
         // The platform's signing entitlements: macOS's hardened-runtime ones,
-        // iOS's capability ones (push's `aps-environment`
-        // is not derived yet). `auth.*`'s associated domains are
+        // iOS's capability ones (LLP 1069.008.000 D2; push's `aps-environment`
+        // joins when LLP 1069 §5 #9 lands). `auth.*`'s associated domains are
         // `reach.auth` (below).
         match platform {
             "macos" => entitlements.extend(grant.device.hardened),
@@ -226,7 +228,7 @@ pub(crate) fn derive(
         }
     }
     // A key a granted row needs beside its own, written with that row's text
-    // when no granted row writes it (one HealthKit direction still
+    // when no granted row writes it (D1: one HealthKit direction still
     // carries both keys). Only where the row writes keys at all.
     for grant in &devices {
         if let Some(key) = grant
@@ -239,8 +241,8 @@ pub(crate) fn derive(
                 .or_insert_with(|| json!(purposes[grant.purpose]));
         }
     }
-    // A usage key the app's use of a module name derives (`derives`:
-    // `NSMotionUsageDescription` for a pedometer or an
+    // A usage key the app's use of a module name derives (`derives`, LLP
+    // 1133.026 D19 item 4: `NSMotionUsageDescription` for a pedometer or an
     // altimeter name), written with its grant line's purpose; a line not on
     // TV drops it there.
     let mut derived_off_tv: Vec<String> = Vec::new();
@@ -259,7 +261,7 @@ pub(crate) fn derive(
             }
         }
     }
-    // A runtime exception is macOS's alone, signed onto the one helper
+    // A runtime exception (D9) is macOS's alone, signed onto the one helper
     // it names and never joining the app's own entitlements.
     let mut helpers: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
     for grant in exceptions.iter().filter(|_| platform == "macos") {
@@ -278,7 +280,7 @@ pub(crate) fn derive(
         list.dedup();
     }
     // tvOS bakes the iOS plan; what a row not on TV derives there, the tvOS
-    // build drops: every key and entitlement no TV row also needs.
+    // build drops (D5): every key and entitlement no TV row also needs.
     let tv_omits = if platform == "ios" {
         let on_tv = |key: &str| {
             devices
@@ -358,8 +360,8 @@ pub(crate) fn derive(
     Ok(())
 }
 
-/// An app granting Health names its privacy policy (`privacy_policy`):
-/// HealthKit requires one, and Health Connect shows its
+/// An app granting Health names its privacy policy (`privacy_policy`, LLP
+/// 1133.026 D4): HealthKit requires one, and Health Connect shows its
 /// permission screen only beside one. Refused where Android bakes (as
 /// `linux`); a warning on iOS, where App Store review asks for it.
 fn privacy_policy(
@@ -378,7 +380,7 @@ fn privacy_policy(
     if (manifest["privacy_policy"].as_str()).is_some_and(|u| u.starts_with("https://")) {
         return Ok(());
     }
-    let why = "grant-privacy-policy: an app granting `device.health-read` or `device.health-write` names its privacy policy in app.json, `\"privacy_policy\": \"https://…\"`";
+    let why = "grant-privacy-policy: an app granting `device.health-read` or `device.health-write` names its privacy policy in app.json, `\"privacy_policy\": \"https://…\"` (LLP 1133.026 D4)";
     if platform == "linux" {
         return Err(why.into());
     }
@@ -431,7 +433,7 @@ pub(crate) fn parsed(
         })
         .chain(presence(app_dir, &sources))
         .chain(local_network(&sources, production))
-        // An auth.session line that is not an origin admits no sign-in, whichever source declares it.
+        // An auth.session line that is not an origin admits no sign-in (LLP 1146 D4), whichever source declares it.
         .chain(sources.iter().filter_map(|(spec, source)| {
             Some(format!(
                 "{source}: {}",
@@ -446,7 +448,7 @@ pub(crate) fn parsed(
     }
 }
 
-/// A presence line's refusals: a name whose sources
+/// A presence line's refusals (LLP 1133.010 D4, D13): a name whose sources
 /// keep it under two policies (`grant-policy-conflict`); a presence line in
 /// an app that grants no `device.local-auth`, which Face ID will not run
 /// without (`grant-missing`); and one in an app that does not depend on
@@ -496,7 +498,7 @@ fn presence(app_dir: &Path, sources: &[(Option<&str>, &str); 2]) -> Vec<String> 
     errors
 }
 
-/// The local network's lines: a `net.dns-sd` type
+/// The local network's lines (LLP 1133.036 D5, D7): a `net.dns-sd` type
 /// RFC 6335 does not allow (`grant-parse`); `net.dns-sd` or a
 /// `local-network` source without `device.local-network`, since on Apple a
 /// browse or a reach under them can show the Local Network prompt
@@ -539,7 +541,7 @@ fn local_network(sources: &[(Option<&str>, &str); 2], production: bool) -> Vec<S
     errors
 }
 
-/// What the local network's lines derive: each
+/// What the local network's lines derive (LLP 1133.036 D7): each
 /// `net.dns-sd` type, for `NSBonjourServices` on Apple; whether a
 /// `local-network` source lets `URLSession` load `http:` from local hosts
 /// (`NSAllowsLocalNetworking`); and on Android, with a type, the permission
@@ -569,9 +571,9 @@ fn local_network_reach(ceiling: &str) -> (Vec<String>, bool, bool) {
     (types, source, multicast)
 }
 
-/// `auth.*` through the same table (its `auth` rows): every callback, for the
-/// web build's two client-metadata documents (one per `application_type`);
-/// and on Apple the
+/// `auth.*` through the same table (LLP 1069.006 D2; LLP 1069.008 D2's
+/// `auth` rows): every callback, for the web build's two client-metadata
+/// documents (one per `application_type`, ruled); and on Apple the
 /// `webcredentials:<host>` associated domain each claimed https callback
 /// needs (`ASWebAuthenticationSession.Callback.https`), which the build
 /// signs with and the web build's AASA answers. A private-use scheme needs
@@ -583,7 +585,7 @@ fn auth(ceiling: &str, platform: &str, compat: &Compat) -> Result<Value, String>
     let sessions = ceiling
         .lines()
         .any(|l| l.trim().starts_with("auth.session "));
-    // `@exact/sign-in`'s lines open the same popup.
+    // `@exact/sign-in`'s lines open the same popup (LLP 1133.014 D5).
     let typescript = compat.inputs["javascriptGrants"]
         .as_str()
         .or(compat.inputs["grantCeiling"].as_str())
@@ -599,7 +601,7 @@ fn auth(ceiling: &str, platform: &str, compat: &Compat) -> Result<Value, String>
         && typescript
         && compat.inputs["typescriptPlacement"].as_str() == Some("worker")
     {
-        return Err("grant-auth: `auth.session`, `auth.apple` or `auth.google` in a worker-placed TypeScript source: on the web the sign-in popup opens in the press's call stack, which a worker is not in; place the source on main (`typescript.placement`)".into());
+        return Err("grant-auth: `auth.session`, `auth.apple` or `auth.google` in a worker-placed TypeScript source: on the web the sign-in popup opens in the press's call stack, which a worker is not in (LLP 1069.006, LLP 1133.014 D5); place the source on main (`typescript.placement`)".into());
     }
     let webcredentials: Vec<String> = callbacks
         .iter()
@@ -630,8 +632,8 @@ fn auth(ceiling: &str, platform: &str, compat: &Compat) -> Result<Value, String>
     }))
 }
 
-/// What `auth.apple <client id>` and `auth.google <client id>` derive: the
-/// clients, the audiences a token from this target
+/// What `auth.apple <client id>` and `auth.google <client id>` derive (LLP
+/// 1133.014 D8): the clients, the audiences a token from this target
 /// carries, which the app's server must accept, and the build's notes: on
 /// the web each provider's web client registers the server's return route;
 /// on Apple a build with Google and no Apple prints App Review 4.8, never a
@@ -648,9 +650,7 @@ fn sign_in(ceiling: &str, platform: &str) -> Result<Value, String> {
             _ => continue,
         };
         let (Some(id), None) = (words.next(), words.next()) else {
-            return Err(format!(
-                "grant-auth: `{line}`: `auth.apple` and `auth.google` take one client id each"
-            ));
+            return Err(format!("grant-auth: `{line}`: `auth.apple` and `auth.google` take one client id each (LLP 1133.014 D8)"));
         };
         if !into.iter().any(|i| i == id) {
             into.push(id.to_owned());
@@ -658,7 +658,7 @@ fn sign_in(ceiling: &str, platform: &str) -> Result<Value, String> {
     }
     let mut notes: Vec<String> = Vec::new();
     if platform == "web" && !(apple.is_empty() && google.is_empty()) {
-        notes.push("sign-in: each provider's web client registers the app server's return route (`web.redirectURI`) as its redirect URI, never the page".into());
+        notes.push("sign-in: each provider's web client registers the app server's return route (`web.redirectURI`) as its redirect URI, never the page (LLP 1133.014 D3)".into());
     }
     if matches!(platform, "ios" | "macos") && apple.is_empty() && !google.is_empty() {
         notes.push("sign-in: App Review 4.8: an app whose primary account is a third-party login also offers an equivalent that limits data to name and email, keeps the email private if the person asks, and does not track; Sign in with Apple meets it. Exceptions: the company's own accounts, education and enterprise apps, a client for a specific third-party service".into());
@@ -671,7 +671,7 @@ fn sign_in(ceiling: &str, platform: &str) -> Result<Value, String> {
     Ok(json!({ "apple": apple, "google": google, "audiences": audiences, "notes": notes }))
 }
 
-/// The RP IDs `auth.passkey <rp id>` grants: each a
+/// The RP IDs `auth.passkey <rp id>` grants (LLP 1133.011 D6): each a
 /// domain (`example.com`, `login.example.com`) or `localhost`, which only the
 /// web admits. A scheme, port, path, IP address or uppercase letter refuses,
 /// since WebAuthn compares the RP ID with the origin's effective domain as
@@ -684,7 +684,7 @@ fn passkey_rp_ids(ceiling: &str) -> Result<Vec<String>, String> {
             continue;
         }
         let (Some(rp), None) = (words.next(), words.next()) else {
-            return Err(format!("grant-auth: `{line}`: `auth.passkey` takes one RP ID, a domain such as `example.com`, or `localhost`"));
+            return Err(format!("grant-auth: `{line}`: `auth.passkey` takes one RP ID, a domain such as `example.com`, or `localhost` (LLP 1133.011 D6)"));
         };
         let label = |l: &str| {
             !l.is_empty()
@@ -699,7 +699,7 @@ fn passkey_rp_ids(ceiling: &str) -> Result<Vec<String>, String> {
             .last()
             .is_some_and(|l| l.bytes().all(|b| b.is_ascii_digit()));
         if rp != "localhost" && (labels.len() < 2 || numeric || !labels.iter().all(|l| label(l))) {
-            return Err(format!("grant-auth: `{line}`: an RP ID is a domain in lowercase with no scheme, port or path (`example.com`, `login.example.com`), or `localhost`; an IP address is not one"));
+            return Err(format!("grant-auth: `{line}`: an RP ID is a domain in lowercase with no scheme, port or path (`example.com`, `login.example.com`), or `localhost`; an IP address is not one (LLP 1133.011 D6)"));
         }
         if !ids.iter().any(|i| i == rp) {
             ids.push(rp.to_owned());
@@ -708,7 +708,7 @@ fn passkey_rp_ids(ceiling: &str) -> Result<Vec<String>, String> {
     Ok(ids)
 }
 
-/// The wallets `payment.*` grants: each Apple Pay
+/// The wallets `payment.*` grants (LLP 1133.034 D13): each Apple Pay
 /// merchant ID (`payment.apple-pay merchant.com.example.app`), which the
 /// Apple build lists in `com.apple.developer.in-app-payments`, and whether
 /// Google Pay is granted (`payment.google-pay`, no target), which derives
@@ -721,7 +721,7 @@ fn payment_lines(ceiling: &str) -> Result<Value, String> {
         match (words.next(), words.next(), words.next()) {
             (Some("payment.google-pay"), None, _) => google = true,
             (Some("payment.google-pay"), Some(_), _) => {
-                return Err(format!("grant-payment: `{line}`: `payment.google-pay` names no target"))
+                return Err(format!("grant-payment: `{line}`: `payment.google-pay` names no target (LLP 1133.034 D13)"))
             }
             (Some("payment.apple-pay"), Some(id), None)
                 if id.starts_with("merchant.")
@@ -734,7 +734,7 @@ fn payment_lines(ceiling: &str) -> Result<Value, String> {
                 }
             }
             (Some("payment.apple-pay"), _, _) => {
-                return Err(format!("grant-payment: `{line}`: `payment.apple-pay` takes one merchant ID, `merchant.` and a reverse domain, such as `merchant.com.example.app`"))
+                return Err(format!("grant-payment: `{line}`: `payment.apple-pay` takes one merchant ID, `merchant.` and a reverse domain, such as `merchant.com.example.app` (LLP 1133.034 D13)"))
             }
             _ => {}
         }
@@ -772,10 +772,10 @@ fn family_enforcement(line: &str) -> &'static str {
         "payment.apple-pay" | "payment.google-pay" => {
             "the runner's admission (the merchant ID); the wallet's own merchant check (Apple, Google)"
         }
-        // The program, not what it is told; a shell, an
+        // LLP 1133.007 D7: the program, not what it is told; a shell, an
         // interpreter or `ssh` named here runs any program it is given.
         "process.spawn" => "the executor starts it (macOS, Linux): a path: name is the first program of that name on the login shell's PATH, never one where an fs.write line lets the app write; its arguments are free, and a shell, interpreter or ssh runs any program",
-        "secret.hold" => "the runner's volatile store: in no event, state or snapshot",
+        "secret.hold" => "the runner's volatile store: in no event, state or snapshot (LLP 1133.007 D8)",
         _ => "runtime",
     }
 }
@@ -916,7 +916,7 @@ mod tests {
 
     #[test]
     fn background_lines_derive_ios_modes_and_the_task_identifiers() {
-        // `fetch` and the refresh identifier for a periodic
+        // LLP 1133.017 D14: `fetch` and the refresh identifier for a periodic
         // line, `processing` and two processing identifiers too for a sync
         // one, each once; the Mac needs none.
         let dir = app(&[("en", "{}")]);
@@ -938,7 +938,7 @@ mod tests {
         assert!(mac.reach.get("backgroundModes").is_none());
     }
 
-    /// One line derives iOS's `audio` mode with the key the
+    /// LLP 1133.033 D3: one line derives iOS's `audio` mode with the key the
     /// capture reads, and Android's normal permissions with the `capture`
     /// service named by its purpose's text.
     #[test]
@@ -993,7 +993,7 @@ mod tests {
         let mut production = compat(grants);
         production.embedded = json!({ "trust": "production" });
         let refused = derive(&dir.0, "ios", None, &mut production).unwrap_err();
-        assert!(refused.contains("a call is a test call"), "{refused}");
+        assert!(refused.contains("§13 question 4"), "{refused}");
     }
 
     #[test]
@@ -1020,6 +1020,7 @@ mod tests {
 
     #[test]
     fn health_writes_both_keys_signs_on_ios_only_and_leaves_tvos_out() {
+        // LLP 1069.008.000 D1, D2, D5.
         let dir = app(&[
             (
                 "en",
@@ -1085,6 +1086,7 @@ mod tests {
 
     #[test]
     fn health_on_android_names_a_privacy_policy() {
+        // LLP 1133.026 D4.
         let dir = app(&[("en", r#"{"read": "Reads your steps."}"#)]);
         let mut android = compat("device.health-read read");
         let refused = derive(&dir.0, "linux", None, &mut android).unwrap_err();
@@ -1099,6 +1101,7 @@ mod tests {
 
     #[test]
     fn both_photo_lines_write_the_read_key_once_with_the_read_purpose() {
+        // LLP 1133.019 D4.
         let dir = app(&[(
             "en",
             r#"{"recents": "Shows recent photos.", "save": "Saves edits."}"#,
@@ -1179,6 +1182,7 @@ mod tests {
 
     #[test]
     fn nfc_signs_its_formats_array_on_ios_and_leaves_tvos_out() {
+        // LLP 1133.035 D15, D16 item 2.
         let dir = app(&[("en", r#"{"nfc": "Reads the tags on your books."}"#)]);
         let derive_for = |platform: &str| {
             let mut c = compat("device.nfc nfc");
@@ -1275,6 +1279,7 @@ mod tests {
 
     #[test]
     fn the_local_network_s_lines_need_their_permission_and_derive_apple_s_and_android_s_keys() {
+        // LLP 1133.036 D5, D7.
         let dir = app(&[("en", r#"{"lan": "Finds your lights."}"#)]);
         let lines = "net.dns-sd _wled._tcp\nnet.fetch local-network";
         let refused = parsed(&dir.0, Some(lines), None, false).unwrap_err();
@@ -1324,6 +1329,7 @@ mod tests {
 
     #[test]
     fn runtime_exceptions_sign_their_own_executable_on_macos_only() {
+        // LLP 1069.008 D9.
         let grants = "runtime.allow-jit Helpers/node/bin/node\nruntime.disable-library-validation Helpers/node/bin/node\nruntime.allow-unsigned-executable-memory Helpers/tool/run\nnet.fetch https://x/";
         let dir = tempdir::Dir::new();
         let mut mac = compat(grants);

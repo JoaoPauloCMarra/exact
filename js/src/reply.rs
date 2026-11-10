@@ -108,7 +108,7 @@ impl Module {
                     {
                         DataError::DeferredAtBake(message)
                     }
-                    // What it let through, by class (prelude.js `failureCode`).
+                    // What it let through, by class (LLP 1109 D3; prelude.js `failureCode`).
                     _ => FailureCode::seam_error(
                         reply.get("failure").and_then(Json::as_str),
                         message,

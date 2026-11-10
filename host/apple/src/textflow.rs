@@ -1,4 +1,4 @@
-//! CoreText advances into the shared walker.
+//! @ref LLP 1043.000 §3 D5–D7 — CoreText advances into the shared walker.
 //! Handles are thread-confined, never reused; stale/null handles are harmless.
 //! Pointer buffers are borrowed only during a call. Non-null pointers must name
 //! valid, aligned buffers of the stated length, as with the measure callback.
@@ -103,7 +103,7 @@ struct Source {
     fragments: Vec<Fragment>,
     intervals: Vec<(f32, f32)>,
 }
-// Process-wide, not per thread: a source prepared while the
+// Process-wide, not per thread (LLP 1072 §2.3): a source prepared while the
 // owner thread measures is flowed and freed by whichever thread paints it.
 static SOURCES: std::sync::Mutex<Option<HashMap<u64, Source>>> = std::sync::Mutex::new(None);
 fn with_sources<R>(f: impl FnOnce(&mut HashMap<u64, Source>) -> R) -> R {

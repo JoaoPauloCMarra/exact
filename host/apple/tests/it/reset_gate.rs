@@ -1,7 +1,7 @@
 //! ExactKit's ResetGate names, by `#function`, every Runtime call held over a
 //! restart's reset (ExactCore `Runtime.holds`), and drops or replays each.
-//! A renamed call would fall out of its table and be dropped by default (as
-//! `tickAsync`, `advanceAsync` and `frame` were): every held call is
+//! A renamed call fell out of its table and was dropped by default (#1141 and
+//! #1144 renamed `tickAsync`, `advanceAsync` and `frame`): every held call is
 //! in one table, every table key names a held call that exists, and the
 //! known losses only shrink.
 

@@ -1,4 +1,4 @@
-//! The crash breadcrumb. A Rust panic
+//! The crash breadcrumb (@ref LLP 1075.003.000.001 §4.4). A Rust panic
 //! aborts in every shipped profile and cannot be caught, so the host leaves
 //! a record of the hatch calls that were open, which the next launch reads:
 //! "the last run ended while inside hatch element avatar (built, call

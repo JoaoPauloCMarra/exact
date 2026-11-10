@@ -1,4 +1,4 @@
-// The simulator drives: ShelfReachUITests.swift, built as
+// LLP 1133.023 stage 2's simulator drives: ShelfReachUITests.swift, built as
 // an XCUITest bundle with swiftc and run through an .xctestrun on a simulator
 // that already has Shelf installed (`bun host/apple/build.mjs --ios shelf-apple
 // --sim <udid> --run`), with no Xcode project:

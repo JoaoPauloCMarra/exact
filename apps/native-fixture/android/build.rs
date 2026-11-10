@@ -19,7 +19,7 @@ fn main() {
         .unwrap_or_else(|e| panic!("bake: {e:?}"));
     let out_dir = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
     std::fs::write(out_dir.join("app.plan"), baked.encode()).unwrap();
-    // The compatibility id as `../linux/build.rs` computes it
+    // The compatibility id (LLP 1030 D3a) as `../linux/build.rs` computes it
     // for this target: the Canvas host is the Linux host's presenter under
     // Android's own Canvas. That host has no update store and replaces no
     // Rust module, whatever the record says of either (host/android/README.md).
@@ -33,7 +33,7 @@ fn main() {
     let compat = exact_bake::compatibility_id(&app_dir, "linux", &target, &manifest, Some(grants))
         .unwrap_or_else(|e| panic!("compatibility id: {e}"));
     std::fs::write(out_dir.join("compat.json"), compat.to_json()).unwrap();
-    // The app's hatches and what its plan links.
+    // The app's hatches and what its plan links (LLP 1115.001.000 D2, D4).
     contract::native::android_entry(&app_dir, &manifest, &baked, &out_dir)
         .unwrap_or_else(|e| panic!("android: {e}"));
 }

@@ -1,4 +1,4 @@
-// The share target's Android activity: the derived filters and the member the reader reads.
+// The share target's Android activity (LLP 1133.024 D5): the derived filters and the member the reader reads.
 import { test } from 'bun:test';
 import assert from 'node:assert/strict';
 import { androidShareActivity } from './share-target.mjs';

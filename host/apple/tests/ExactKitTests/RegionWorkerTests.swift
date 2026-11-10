@@ -558,7 +558,7 @@ import CoreText
         }
     }
 
-    /// A request whose selection colour carries a colour
+    /// LLP 1115.000 D7.9: a request whose selection colour carries a colour
     /// for the selected glyphs paints them in it, over the fill, as the
     /// ordinary paragraph does on the Mac; with the fill alone the glyphs
     /// keep their ink over it. What is not selected keeps its ink either way.

@@ -1,5 +1,5 @@
-// Synthetic conformance plan: the document's head
-// (runner/src/head.rs). The innermost active `head` wins field by field: a
+// Synthetic conformance plan: the document's head (LLP 1048.003 D1;
+// runner/src/head.rs). The innermost active `head` wins field by field: a
 // deeper head over a shallower one wherever each stands in document order,
 // the later of two at one depth whichever changed last, and none inside a
 // route its navigation root has not selected (a pushed route covers the

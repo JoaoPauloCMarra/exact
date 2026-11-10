@@ -1,5 +1,5 @@
-//! `contract tamber import <kind> <source> [--app <dir>] [--prefix <p>]`:
-//! another system's theme as a proposal, printed as
+//! `contract tamber import <kind> <source> [--app <dir>] [--prefix <p>]`
+//! (LLP 1121 D14, stage 3): another system's theme as a proposal, printed as
 //! JSON for the wire (`bun exact.mjs tamber import` holds it on the design
 //! server): the transaction's operations in `tamber/1`'s shape, each role
 //! override offered apart, the unmapped report and the count it was checked
@@ -24,7 +24,8 @@ pub(crate) fn marks_only(request: &Value) -> bool {
             .all(|k| request[*k].is_null())
 }
 
-/// One import planned in a process of its own: a paired client's file is read here, never in the shared
+/// One import planned in a process of its own (stage 10b; the lead's
+/// 12:31Z ruling): a paired client's file is read here, never in the shared
 /// `tamber serve`, so whatever it costs, the wire's watchdog can stop it.
 /// Stdin is `{request, design}` (the design's text, null with none), the
 /// argument the design file (its kept exports beside it); stdout `{ok}` or
@@ -156,7 +157,7 @@ pub fn run(args: &[String]) -> ExitCode {
 /// The importer `kind` over the source's files, planned against `design`
 /// (`current`'s text); `None` when there is no such importer. A Tamber DTCG
 /// export of its own is compared with the baseline it came from, one of
-/// `kept` or a fresh export of the design as it is.
+/// `kept` or a fresh export of the design as it is (LLP 1121 D14).
 fn import_with(
     kind: &str,
     files: &[(String, String)],
@@ -188,7 +189,7 @@ fn import_with(
         "tailwind" => tailwind::import_with(text, prefix.unwrap_or("tw"), design, &vocab),
         "dtcg" => dtcg::import_with(files, prefix.unwrap_or("dtcg"), design, &vocab),
         "astryx" => astryx::import(text, prefix.unwrap_or("astryx"), design, &vocab),
-        // Pencil's `.pen`: no Tamber export to compare against, so
+        // Pencil's `.pen` (stage 13 B): no Tamber export to compare against, so
         // its re-import's dials and pins are marked against the design as it is.
         "pen" => {
             let name = files.first().map_or("source.pen", |(n, _)| n.as_str());
@@ -280,7 +281,7 @@ pub fn plan(request: &Value, design: Option<&str>, kept: &[String]) -> Result<Va
             files.len()
         )));
     }
-    // A baseline the client carries (`import`'s `baseline`): an
+    // A baseline the client carries (stage 10b, `import`'s `baseline`): an
     // export this server gave out (`recognised`, by digest), a kept one, or
     // the design's own; else refused, so a client pulls first. It decides
     // only which of the file's values are the client's edits: the operations
@@ -416,7 +417,7 @@ fn import_json(kind: &str, import: &Import) -> Value {
             "mapped": import.counted.mapped,
             "reported": import.counted.reported,
         },
-        // A re-import's dial changes and marked pins.
+        // A re-import's dial changes and marked pins (LLP 1121 D14, stage 10b).
         "dials": dials_json(&import.dials),
         "pins": pins_json(&import.pins),
     });
@@ -516,7 +517,7 @@ mod tests {
     /// checks it against the design's own export, built inside the
     /// re-import's budget: a design too large for one re-import (3,000
     /// tokens over 64 contexts) is refused with the budget's message, not
-    /// exported whole first, nor told to pull.
+    /// exported whole first, nor told to pull (LLP 1121 §10).
     #[test]
     fn a_baseline_too_large_to_check_is_refused_by_the_budget() {
         let mut design = String::from("tamber t\n\naxes\n");

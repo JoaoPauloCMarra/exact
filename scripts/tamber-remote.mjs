@@ -1,8 +1,8 @@
-// The Tamber wire's remote doors.
+// The Tamber wire's remote doors (LLP 1121 D13, LLP 1122 D12; stage 10 B).
 // Off unless asked: `--remote <host:port>` opens a listener that speaks TLS
 // only, with a certificate made for this run in memory (its SHA-256
 // fingerprint printed, for the client to pin); `--trust-tunnel <port>` opens
-// a plain listener on loopback for a tunnel the developer runs.
+// a plain listener on loopback for a tunnel the developer runs (stage 10 B2).
 // On either, only the wire's paths (and the design tool's own files) are served, every request is told it is remote (never
 // `access.local`, so the local token's routes stay closed), its peer is its
 // socket's, no Cookie reaches the wire, and a page of another origin is
@@ -85,7 +85,7 @@ export function selfSignedCertificate(names, { days = 7, now = Date.now() } = {}
 
 /** `--remote <host:port>` and `--trust-tunnel <port>` in argv (each once):
  * `{remote: {host, port} | null, tunnel: port | null, plugin, hosts}`, with
- * `--allow-plugin-origin` and the `--allow-host` names, which a
+ * `--allow-plugin-origin` (stage 10b) and the `--allow-host` names, which a
  * tunnel's door answers to as well (a tunnel with a real certificate of its
  * own). A malformed value throws, or with `exit` is said and exits 2. */
 export function remoteArgs(argv, { exit = false } = {}) {
@@ -134,7 +134,7 @@ function stripCookies(req) {
   for (let i = raw.length - 2; i >= 0; i -= 2) if (String(raw[i]).toLowerCase() === 'cookie') raw.splice(i, 2);
 }
 
-/** A sandboxed page's request on the main loopback port (with
+/** A sandboxed page's request on the main loopback port (stage 10b, with
  * `--allow-plugin-origin`): `Origin: null`, from this machine, naming a
  * loopback host, on the wire's paths. It is no local request: the wire
  * takes it as a remote one (a paired token, never the local one), its
@@ -177,8 +177,9 @@ function hostOf(req, scheme) {
 /** An origin-form target, on the admitted host, routed exactly as written:
  * no `//` anywhere in its path, no backslash, no dot segment, no encoded
  * dot, slash or backslash, so the path checked is the path every handler
- * reads; its query, which no route reads as a path, only as written (the
- * events' GET: a client name may hold a slash). Null when it is not one. */
+ * reads (the lead's 05:05Z note from C's round 1); its query, which no
+ * route reads as a path, only as written (the events' GET: a client name
+ * may hold a slash). Null when it is not one. */
 function targetOf(req, scheme, host) {
   const target = req.url, path = target.split('?', 1)[0];
   if (!path.startsWith('/') || path.includes('//') || target.includes('\\') || /%(2e|2f|5c)/i.test(path)) return null;
@@ -228,7 +229,7 @@ export function remoteHandler(wire, { tunnel, scheme, admits, toolDir = TOOL_DIS
     }
     if (url.pathname === '/__tamber/tool' || url.pathname.startsWith('/__tamber/tool/')) {
       // The tool's own files send their origin, and only that, as a referrer
-      // (one place, no per-form policy in the tool);
+      // (the lead's 08:22Z ruling: one place, no per-form policy in the tool);
       // everything else here sends none.
       res.setHeader('referrer-policy', 'strict-origin');
       return serveToolFiles(req, res, url, toolDir, { 'content-security-policy': "frame-ancestors 'none'" }).catch(toolFilesFailed(res));
@@ -295,13 +296,13 @@ const listen = (server, port, host) => new Promise((ok, fail) => { server.once('
 
 /** The remote doors `remoteArgs` asked for, on `wire` (tamberServer's
  * `handle`): `{info(), addPort({host, port, handler}), close()}`, or null
- * when neither was asked for. A trusted tunnel is a plain listener of its
- * own on 127.0.0.1, since a tunnel's requests arrive on
+ * when neither was asked for. A trusted tunnel (ruling 3) is a plain
+ * listener of its own on 127.0.0.1, since a tunnel's requests arrive on
  * loopback looking local: there they are `{remote: true, tunnel: true}`,
  * so only a paired token works through it, never the local one. `info()` is `{origin, fingerprint}` while the
  * TLS listener is on. `addPort` opens another TLS listener with the same
  * certificate, its requests given to `handler(req, res, url, access)` as
- * they come (the canvas gateway: its cookies are its own). */
+ * they come (C's canvas: its cookies are its own). */
 export async function openRemote(wire, { remote, tunnel = null, plugin = false, hosts = [], relay = null }, { say = console.log, warn = console.error, interfaces, toolDir, timeoutMs = 10_000, connect, acme = null, acmeOptions = {} } = {}) {
   if (!remote && tunnel == null && !relay) return null;
   const servers = [];
@@ -344,7 +345,7 @@ export async function openRemote(wire, { remote, tunnel = null, plugin = false, 
     tunnelOrigin = `http://127.0.0.1:${port}`;
     warn(`TRUSTED TUNNEL ON: http://127.0.0.1:${port} takes a tunnel's requests (--trust-tunnel). Only paired tokens work through it, never this machine's local token; point only a tunnel you run at it.`);
   }
-  // The relay: dialled out, its clients' TLS ended here on the
+  // The relay (stage 10c): dialled out, its clients' TLS ended here on the
   // certificate for its names, routed as the TLS door's (the names the relay
   // serves this session by, or the developer's own). Every relayed request's
   // peer is the session's (its pairing limit, `relay:<name>`); the address the
@@ -355,7 +356,7 @@ export async function openRemote(wire, { remote, tunnel = null, plugin = false, 
   const waiting = [];
   if (relay) {
     // The certificate the relayed TLS ends on: the developer's own, or one
-    // got here by ACME once the relay names the session, kept and got
+    // got here by ACME (R2) once the relay names the session, kept and got
     // again before it ends (`held` swapped whole: a stream already open
     // keeps the one it began with).
     let held = relay.cert ? hold(relay.cert, relay.key) : null;
@@ -367,7 +368,7 @@ export async function openRemote(wire, { remote, tunnel = null, plugin = false, 
     const front = () => Object.assign(new EventEmitter(), { close: done => done() });
     const door = guard(front(), timeoutMs, http);
     servers.push(door);
-    // The canvas's name: its own HTTP server and guard, given the
+    // The canvas's name (R1b): its own HTTP server and guard, given the
     // relay's canvas gateway once `relayCanvas` names its handler; until
     // then, and for any Host that is not the canvas's name, nothing.
     let canvasHandler = null;
@@ -453,7 +454,7 @@ export async function openRemote(wire, { remote, tunnel = null, plugin = false, 
       // With names of their own, the CAA records that keep the relay's operator from getting one by another
       // method (TLS-ALPN-01 or HTTP-01 at the relay's own port): `issue` for each host and `issuewild` for the
       // wildcard (RFC 8659: neither covers the other's), said with the account and CA they name, and checked at
-      // start and before each renewal: not set, said plainly and shown beside the fingerprint
+      // start and before each renewal (theme2's 09:57): not set, said plainly and shown beside the fingerprint
       // (`caa: false`), or, with --require-caa, refused before any order.
       const parent = parentOf(names.tool);
       const caaNames = [`*.${parent}`, names.tool, names.canvas];
@@ -515,7 +516,7 @@ export async function openRemote(wire, { remote, tunnel = null, plugin = false, 
     relay: () => relayed,
     /** `f({tool, canvas})` once the relay names this run's one session (at once if it has). */
     onRelay: f => { if (session) f(session); else if (relay) waiting.push(f); },
-    /** The relay canvas's gateway handler: its name's requests go to it from now on. */
+    /** The relay canvas's gateway handler (R1b): its name's requests go to it from now on. */
     relayCanvas: handler => relayCanvas(handler),
     async addPort({ host, port, handler }) {
       if (!certificate) throw new Error('addPort needs the TLS listener (--remote)');

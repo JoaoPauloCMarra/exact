@@ -1,4 +1,4 @@
-//! A large public record (a garden game's whole backpack):
+//! A large public record (Grow a Garden's whole backpack, diary 004 limit 2):
 //! a change to one small field re-encodes only that field, and the journal
 //! keeps a bounded line for a large one.
 use exact_game::*;
@@ -70,7 +70,7 @@ fn a_large_field_is_journaled_bounded_and_the_record_stays_exact() {
 }
 
 /// `cargo test --release -p exact-game --test published -- --ignored --nocapture`:
-/// a garden game's 69,327-fruit backpack (~6.4 MB) published beside a status
+/// the garden's 69,327-fruit backpack (~6.4 MB) published beside a status
 /// line that changes once a garden second; the time to take the record after
 /// one status change.
 #[test]

@@ -1,4 +1,4 @@
-//! System Back, in order ("Back is always
+//! System Back, in order (LLP 1115.001 D6; LLP 1115 D5, "Back is always
 //! there"): the route's part of it, which is the rule the iOS host follows
 //! (`NavigationBack.way`), over the same runner.
 //!
@@ -19,18 +19,18 @@
 //! `id="back"` is not a Back control: the root names it.
 //!
 //! Who asks: Android's system Back (`canvas/keys.rs`), and on a desktop
-//! a mouse's back button and the keys a desktop goes
+//! (LLP 1115.000 D5.4) a mouse's back button and the keys a desktop goes
 //! Back by ([`Presenter::back_key`]), whose default action it is. A mouse's
-//! forward button goes Forward ([`Presenter::system_forward`]).
+//! forward button goes Forward ([`Presenter::system_forward`], D5.5).
 //!
 //! Before the route come the soft keyboard, which Android closes itself, and
-//! the top layer: an open menu or alert closes first
-//! (`top.rs`), at the head of [`Presenter::system_back`]. On Android the
+//! the top layer: an open menu or alert closes first (D6 step 2, D10;
+//! `top.rs`), at the head of [`Presenter::system_back`]. On Android the
 //! surface is a window of its own, so the system sends Back to it and the
 //! shell says it was dismissed; this is the same step for a Back that
 //! reaches the presenter. [`Presenter::back_goes`] is what the shell's
 //! back callback is enabled by: the presenter tells the shell whenever it
-//! changes (`requests.rs`), so Back at the first screen is the system's.
+//! changes (`requests.rs`, D5), so Back at the first screen is the system's.
 use super::*;
 
 /// How Back goes from the selected route.
@@ -134,7 +134,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// Whether the key `name` (`KeyboardEvent.key`), with the modifiers held
-    /// now, is one a desktop goes Back by: Alt+Left, as a
+    /// now, is one a desktop goes Back by (LLP 1115.000 D5.4): Alt+Left, as a
     /// browser and GTK's and Qt's apps take it, or a keyboard's own Back key
     /// (the web's `BrowserBack`, evdev's `KEY_BACK`) whatever is held.
     pub(crate) fn back_key(&self, name: &str) -> bool {
@@ -143,7 +143,7 @@ impl<D: DataSource> Presenter<D> {
             || name == "ArrowLeft" && held.alt && !(held.shift || held.ctrl || held.meta)
     }
 
-    /// The same for Forward: Alt+Right, or a keyboard's
+    /// The same for Forward (LLP 1115.000 D5.5): Alt+Right, or a keyboard's
     /// Forward key (`BrowserForward`, evdev's `KEY_FORWARD`).
     pub(crate) fn forward_key(&self, name: &str) -> bool {
         let held = self.modifiers();
@@ -184,7 +184,7 @@ impl<D: DataSource> Presenter<D> {
 
     /// Whether system Back would be taken now: what a shell's back callback
     /// is enabled by, so that Back with nowhere to go leaves the app with
-    /// the system's own animation.
+    /// the system's own animation (D6).
     pub fn back_goes(&mut self) -> bool {
         self.surface_takes_back() || self.back().is_some() || self.remote_back_target().is_some()
     }
@@ -195,7 +195,7 @@ impl<D: DataSource> Presenter<D> {
         self.shape_surface_open() || self.alert_takes_back()
     }
 
-    /// The agent's `back`: system Back, as a desktop's
+    /// The agent's `back` (LLP 1116.006 D4): system Back, as a desktop's
     /// Back key takes it, answered with what it went to: `dialog` while a
     /// surface of the top layer is open (the web driver's word), else
     /// `route`, and why, when the surface stayed open or the route's Back
@@ -225,13 +225,13 @@ impl<D: DataSource> Presenter<D> {
     /// System Back at `now_ms`: whether the app took it. `false` is the
     /// shell's to act on (Android finishes the activity).
     pub fn system_back(&mut self, now_ms: f64) -> bool {
-        // An open surface of the top layer closes before
+        // D6 step 2: an open surface of the top layer (D10) closes before
         // any route is asked, where its own rule lets Back close it.
         if self.dismiss_surface(now_ms) {
             return true;
         }
         let Some(back) = self.back() else {
-            // A TV's remote has no Escape key: its Back is one.
+            // A TV's remote has no Escape key: its Back is one (LLP 1115.001.003 D3).
             return self.remote_back(now_ms);
         };
         let error = match back {
@@ -258,9 +258,9 @@ impl<D: DataSource> Presenter<D> {
         true
     }
 
-    /// The platform's Forward: to the location Back
+    /// The platform's Forward (LLP 1115.000 D5.5): to the location Back
     /// left on the selected stack ([`Runner::location_ahead`]), delivered
-    /// as the web host delivers a browser's Forward: to the
+    /// as the web host delivers a browser's Forward (LLP 1038 D7): to the
     /// navigation root's `navigate`, else by the runner's own `go`. Whether
     /// it went: not with nothing ahead, nor while a surface of the top
     /// layer is open, which Forward does not close.

@@ -151,7 +151,7 @@ def resourceFlag (h : LHost) (op : Op) (i : U64) (pc : Usize) :
       | _ => (lookup h.env.pendingResources i).getD false))
   | _ => ok (.Err (.Pending pc))
 
-/-- `failure(x)`: known once settled, as `resourceFlag`. -/
+/-- `failure(x)` (LLP 1109 D3): known once settled, as `resourceFlag`. -/
 def resourceFailure (h : LHost) (i : U64) (pc : Usize) :
     Result ((core.result.Result Value Trap) × LHost) :=
   match lookup h.env.resources i with

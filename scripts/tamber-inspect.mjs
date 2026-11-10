@@ -1,4 +1,4 @@
-// The server's half of inspect: a build's
+// The server's half of inspect (LLP 1122 D5; T2b step 5): a build's
 // `selected` report joined to source.
 //
 // - **Currency.** A report whose plan, design or pin revision is not the
@@ -9,16 +9,16 @@
 //   line, column and the component call sites above it, and each row's
 //   origin. Each file the join reads is checked against the digest the map
 //   says it was compiled from: one that moved since makes the selection
-//   read-only, with its reason (it fails closed).
-// - **What is editable.** The rungs: a row that reads one component param,
-//   the param rung (the param named in full, never by the IR token the plan
-//   names it by); else a row its author wrote, where the map
+//   read-only, with its reason (D6's fail-closed rule).
+// - **What is editable.** D6's rungs: a row that reads one component param,
+//   the param rung (LLP 1122 T3, the param named in full, never by the IR
+//   token the plan names it by); else a row its author wrote, where the map
 //   places it, the template rung (on the node) or the style rung (in its
-//   class's `style`), edited by `set-row`, the token its whole value is
-//   offered beside; a style's state part, the state rung; a row reached
+//   class's `style`), edited by `set-row` (T5), the token its whole value is
+//   offered beside; a style's state part, the state rung (T4); a row reached
 //   by inheritance is a link to its token, never this node's edit; anything
 //   else is read-only, with its reason.
-// - **Library** (*1.15*). A node of an exported library
+// - **Library** (*1.15*, LLP 1139 D5). A node of an exported library
 //   component's own view names its declaring identity and part
 //   (`source.library`, and each row with a map origin, a held state's rows
 //   the held node's), from the map only: one the host's report carries is
@@ -33,7 +33,7 @@ import { pathName } from './tamber-paths.mjs';
 
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 
-/** The source map a resident dev loop said it made: its
+/** The source map a resident dev loop said it made (LLP 1122 T2c): its
  * parent read `card` (`{plan, sha256, bytes, url}`) from the pipe it gave
  * the child for that alone, and fetches the bytes from the child's loopback
  * `port`, naming the `host` the child's gate answers. Only the child's map
@@ -138,8 +138,8 @@ const CSS_PARAM = /var\(--x-param-f[0-9a-f]{8}-[\w-]+\)/g;
 const roleKey = name => String(name).toLowerCase().replace(/^-exact-/, '');
 
 /** Each IR param token's param, from `describe`'s `components` (tamber/1.10):
- * its full and short names, and the token it aliases directly (its
- * value as the app has it, the line's or the default, when that names
+ * its full and short names, and the token it aliases directly (LLP 1122 D6:
+ * its value as the app has it, the line's or the default, when that names
  * one declared token, a role override by any spelling of its role). A param
  * with `when` lines aliases none: which branch wins is the copy's. */
 export function paramsOf(ir) {
@@ -201,7 +201,7 @@ export function published(selected, params) {
 const bare = ({ library: _host, ...r }) => (r.source && typeof r.source === 'object' ? { ...r, source: (({ library: _said, ...at }) => at)(r.source) } : r);
 // (`fromSite`, a page's word to the server, never leaves: the join names it as `fromAt`.)
 const scrubbed = (rows, params) => (rows ?? []).map(bare).map(({ fromSite: _site, ...r }) => (r.token ? { ...r, token: named(r.token, params).token } : r));
-// A held state's rows, scrubbed as the selection's.
+// A held state's rows (LLP 1121 stage 8 E), scrubbed as the selection's.
 const heldOf = ({ library: _host, ...held }, params) => ({ ...held, rows: scrubbed(held.rows, params) });
 
 // A row by the name its author wrote: an `:active` part's as the press paint carries it (AUTHORED, below).
@@ -219,7 +219,7 @@ const writtenAs = (lines, at, name) => {
   return said === 'border-color' || said === `border-${side}-color` ? said : null;
 };
 
-/** A state part's row as `set-state` addresses it (tamber/1.12):
+/** A state part's row as `set-state` addresses it (LLP 1122 T4, tamber/1.12):
  * the style whose part writes it, by the name its file declares it with
  * (the compiler may rename a second `style Card` in another file), the
  * state, the row as written, the style's file relative to the app, and the
@@ -270,15 +270,16 @@ const ownFile = (file, app, own) => {
   return !rel || file.includes('/node_modules/') || (own && !own.has(rel)) ? null : rel;
 };
 
-/** A row its author wrote, as `set-row` addresses it (tamber/1.12): at the node's place, the template rung (origin `own`: every
+/** A row its author wrote, as `set-row` addresses it (LLP 1122 T5, D6,
+ * tamber/1.12): at the node's place, the template rung (origin `own`: every
  * copy of this source node, `instances` of them), or on its style (origin a
  * single `class:<Name>`, by the name its file declares it with: every node
  * using it). `row` is the attribute as written (a shorthand's for a longhand
  * of it: `set-row` edits the shorthand whole), `text` its value. Only a
  * plain value, one string or number as `set-row` replaces, is offered; an
  * expression or a name in scope is the source's, said so. Null where the
- * map gives the row no place, or a style's state part
- * (`set-state`'s). */
+ * map gives the row no place (D1's address), or a style's state part
+ * (`set-state`'s, T4). */
 export function rowRung(row, b, map, app, instances = 1, read = readFileSync, own = null) {
   if (!b?.at?.file) return null;
   const style = /^class:([A-Za-z_][\w-]*)$/.exec(b.origin ?? '')?.[1] ?? null;
@@ -287,8 +288,8 @@ export function rowRung(row, b, map, app, instances = 1, read = readFileSync, ow
   // (The attribute as written, below: the map's `attr`, or, for a state row under the node (which has none), its
   // authored name at its place: `background-color` for the press paint's `press_background_color`.)
   if (!b.attr && !b.state) return null;
-  // A layout row (the map's `layout`): the author's, as `set-row` says; a token or param it reads is offered.
-  if (b.layout) return { rung: null, layout: true, reason: `\`${b.attr}\` is a layout row: layout is the author's; edit it in the source, or at a param's or token's rung where it reads one` };
+  // A layout row (D14, the map's `layout`): the author's, as `set-row` says; a token or param it reads is offered.
+  if (b.layout) return { rung: null, layout: true, reason: `\`${b.attr}\` is a layout row: layout is the author's (LLP 1122 D14); edit it in the source, or at a param's or token's rung where it reads one` };
   const rel = ownFile(b.at.file, app, own);
   if (galleryFile(b.at.file)) return { rung: null, reason: GALLERY };
   if (!rel) return { rung: null, reason: style ? `a package's style (${style}): read-only here` : 'a package\'s component: read-only here' };
@@ -360,7 +361,7 @@ export function plainAt(line, col, attr) {
   return /^(\s*$|\s*\/\/|\s+[\w-]+\s*=|\s*["`(]|\s+(?!(and|or|not|in|is)\b)[A-Za-z_][\w.]*\s*($|\/\/|["`(]|[\w-]+\s*=|[A-Za-z_]))/.test(rest) ? text : null;
 }
 
-/** Each row's editability: the token or param rung, or why not. Fails
+/** Each row's editability: the token or param rung, or why not (D5, D6). Fails
  * closed: the rung only for a row the node itself sets (`authored`, its own
  * attribute in the map) whose whole value is one token; every other row
  * says why, and links the tokens it reads. */
@@ -376,7 +377,7 @@ export function editable(row, origin, params = new Map(), unread = false, state 
   if (row.source !== 'authored') return { rung: null, reason: `a row whose source is ${row.source ?? 'not known'}: read-only here`, link };
   if (row.token?.implied) return { rung: null, reason: 'a mode boundary sets it: read-only here', link };
   if (origin == null) return { rung: null, reason: 'the source map does not say where this row is set: read-only', link };
-  // A style's state part row: the state rung, the default; the
+  // A style's state part row (T4): the state rung, the default (D6); the
   // token its whole value is, offered beside it, never the default.
   if (state) {
     if (!state.rung) return { ...state, link };
@@ -388,29 +389,29 @@ export function editable(row, origin, params = new Map(), unread = false, state 
   // resolved to it (`-exact-secondary-label` for `secondary-label`).
   const text = String(row.token?.text ?? '').trim();
   const one = names.length === 1 && declared(names[0]) && (text === names[0] || text.replace(/^-exact-/, '') === names[0]);
-  // A component's param, its whole value (the default rung).
+  // A component's param, its whole value (exact1's default rung, D6).
   const param = names.length === 1 && text === names[0] ? [...params.values()].find(p => p.param === names[0]) : null;
-  // (Its template's address too, where the map places the row: a detach writes there.)
+  // (Its template's address too, where the map places the row: a detach writes there, T5.)
   if (param) return { rung: 'param', param: param.param, short: param.short, ...(param.token ? { token: param.token } : {}), modes: row.token.modes ?? '', ...(written?.rung === 'template' ? { template: written } : {}) };
-  // Else the template or style rung, where the map places the row: the
-  // default, the token its whole value is offered beside it.
+  // Else the template or style rung, where the map places the row (T5): the
+  // default (D6), the token its whole value is offered beside it.
   if (written?.rung) return one ? { ...written, token: names[0], modes: row.token.modes ?? '' } : written;
   // (A row set-row can't take, a layout row or one written otherwise, still offers the token it reads, whole.)
   if (written && one) return { rung: 'token', token: names[0], modes: row.token.modes ?? '' };
   if (written) { const { layout, ...why } = written; return { ...why, link }; }
   if (origin.startsWith('class:')) return { rung: null, reason: `a style's row (${origin.slice(6)}) the map gives no place for: the source's to edit`, link };
   if (origin !== 'own') return { rung: null, reason: 'the tag\'s own row: the source\'s to edit', link };
-  // An `:active` row lowered to the press paint: its part's to edit.
+  // @ref LLP 1121 D8 — an `:active` row lowered to the press paint: its part's to edit.
   if (!names.length && row.state) return { rung: null, reason: `an inline \`:${row.state}\` row on the node the map gives no place for: the source's to edit` };
   if (!names.length) return { rung: null, reason: 'a value the map gives no place for: the source\'s to edit' };
   if (!one) return { rung: null, reason: `an expression over tokens (${names.join(', ')}): edit a token itself`, link };
   return { rung: 'token', token: names[0], modes: row.token.modes ?? '' };
 }
 
-// The press rows `:active` lowers to (contract/lower/src/states.rs ACTIVE_ROWS), each by
+// The press rows `:active` lowers to (LLP 1121 D8 as amended; contract/lower/src/states.rs ACTIVE_ROWS), each by
 // the row its author wrote under `:active`.
 const AUTHORED = { press_background_color: 'background-color', press_color: 'color', press_opacity_to: 'opacity', press_scale: '-exact-press-scale' };
-// A map binding as the rungs read it: one row's base value, its `origin`, `at`, `attr`
+// A map binding as the rungs read it (theme2's 02:46 and 03:18 rulings): one row's base value, its `origin`, `at`, `attr`
 // and `layout`, absent where no base row writes it; and `states`, each state part writing it. `asPart` gives a part's
 // as `{row, origin, state, at}`, `asBase` the base's: never one for the other.
 const asPart = (b, state) => { const p = b?.states?.find(s => s.state === state); return p ? { row: b.row, origin: p.origin, state: p.state, at: p.at } : null; };
@@ -428,19 +429,19 @@ export function join(build, selected, map, { read = readFileSync, served = null,
   const node = map.nodes[selected.site];
   if (!node) return { ...base, source: null, rows: rows.map(({ unread, fromSite: _site, ...r }) => ({ ...r, editable: { rung: null, reason: 'the site is not in the source map' } })), readOnly: 'the site is not in the source map' };
   const bound = new Map((node.bindings ?? []).map(b => [b.row, b]));
-  // The node a state is held on, named on this one inside it: its rows' places are its own.
+  // The node a state is held on, named on this one inside it (stage 9 E): its rows' places are its own.
   const owner = base.held && Number.isSafeInteger(base.held.site) ? map.nodes[base.held.site] ?? null : node;
   // Its chain as the page's walk up its tree takes it (the map's `walks` of `walk_steps`, by the node's `walk`, a slot's host a step with
-  // `slot: true`, tamber/1.18), else the call-site chain; a copy is still keyed by the call-site chain
+  // `slot: true`, tamber/1.18, stage 15 D3), else the call-site chain; a copy is still keyed by the call-site chain
   // (`copiesOf`, `key`).
   // (Only for a page that walks by `copies`, 1.17's: an older one still moves by call-site levels, `levelsUp`.)
   const walked = n => (build?.capabilities?.includes('copies') && Number.isSafeInteger(n?.walk) && Array.isArray(map.walks?.[n.walk]) ? map.walks[n.walk].map(i => map.walk_steps?.[i]).filter(Boolean) : n?.chain) ?? [];
-  // An `:active` row is written in its part: its file counts too, and the held node's; each file its walk names (a
+  // An `:active` row is written in its part (LLP 1121 D8): its file counts too, and the held node's; each file its walk names (a
   // slot's host's call) too.
   const placed = n => n ? [n.file, ...(n.chain ?? []).map(c => c.file), ...walked(n).map(c => c.file), ...(n.bindings ?? []).flatMap(b => [b.at, ...(b.states ?? []).map(p => p.at)].flatMap(at => at ? [at.file] : []))] : [];
   const files = [...new Set([...placed(node), ...(owner !== node ? placed(owner) : [])])];
   const readOnly = files.map(f => moved(map, f, read, app)).find(Boolean) || designMoved(map, build, served, design, read, app) || null;
-  // The exported library component whose own view the node is of, and its part (*1.15*): from the map
+  // The exported library component whose own view the node is of, and its part (LLP 1139 D5, *1.15*): from the map
   // (`part=` never reaches a host), beside `component`, the map's bare declared name (two packages can share one; an
   // alias the app imports it by is in neither); absent outside one (a slot's fill is the caller's).
   const libraryOf = n => (typeof n?.library === 'string' ? { identity: n.library, part: typeof n.part === 'string' ? n.part : null } : null);
@@ -450,19 +451,19 @@ export function join(build, selected, map, { read = readFileSync, served = null,
   // counts them (a `button "…"`'s label shares its span and chain, and is no second copy).
   const copiesOf = n => Math.max(1, new Set(sitesAt(map, n).filter(i => same(map.nodes[i], n)).map(i => JSON.stringify((map.nodes[i].chain ?? []).map(c => [c.file, c.line, c.col])))).size);
   const copies = copiesOf(node);
-  // What is held: each row where it is written, its part's place (the map's `states`, keyed by row and
-  // state): an `:active` row lowered to the press paint, a `:hover` or `:focus-visible` look's row. Its node is the one it is held on
-  // (the press it resolved to, named on a node inside it), its site's map node.
+  // What is held (LLP 1122 D8): each row where it is written, its part's place (the map's `states`, keyed by row and
+  // state): an `:active` row lowered to the press paint, a `:hover` or `:focus-visible` look's row (queue item (1)). Its node is the one it is held on
+  // (the press it resolved to, named on a node inside it: stage 9 E), its site's map node.
   if (base.held) {
     const ownerBound = owner === node ? bound : new Map((owner?.bindings ?? []).map(b => [b.row, b]));
     // (the held node's own library and part, where it is of a library component's view)
     const ownerLibrary = owner === node ? library : libraryOf(owner);
     const ownerSource = owner === node ? source : owner && { file: owner.file, line: owner.line, col: owner.col, end_col: owner.end_col, component: owner.component, chain: walked(owner), ...(ownerLibrary ? { library: ownerLibrary } : {}) };
-    // Edited where it is held: only where the build names that node (its held site); else shown, not offered.
+    // Edited where it is held (T4): only where the build names that node (its held site); else shown, not offered.
     const heldHere = Number.isSafeInteger(base.held.site) && !!owner;
     base.held = { ...base.held, rows: (base.held.rows ?? []).map((r, i) => {
       const b = asPart(ownerBound.get(r.name), base.held.state) ?? asBase(ownerBound.get(r.name));
-      // An `:active` row is named as its author wrote it, under its part, the press row it
+      // An `:active` row is named as its author wrote it, under its part (theme2's 16:13 (2)), the press row it
       // lowered to beside it (`row`).
       const authored = b?.state ? AUTHORED[r.name] ?? null : null;
       // (A held look's row is its part's, never its base row's: a row the map gives no part in the held state is
@@ -480,7 +481,7 @@ export function join(build, selected, map, { read = readFileSync, served = null,
       const origin = b?.origin ?? null;
       // A state part's row, where it is written (the map's `state` and `at`); an
       // own or class row, the attribute it came from and that file's digest as
-      // compiled: `set-row`'s address (tamber/1.12).
+      // compiled: `set-row`'s address (LLP 1122 D6, tamber/1.12).
       const sha = f => (map.sources ?? []).find(s => s.file === f)?.sha256;
       const written = b?.at && !b.state ? { at: { ...b.at, ...(sha(b.at.file) ? { sha256: sha(b.at.file) } : {}) }, attr: b.attr, ...(b.layout ? { layout: true } : {}) } : {};
       const part = b?.state ? { state: b.state, ...(b.at ? { at: b.at } : {}) } : written;
@@ -488,9 +489,9 @@ export function join(build, selected, map, { read = readFileSync, served = null,
       const { unread, fromSite, ...given } = r;
       const fromNode = given.source === 'inherited' && Number.isSafeInteger(fromSite) ? map.nodes?.[fromSite] : null;
       const row = fromNode?.file ? { ...given, fromAt: { file: fromNode.file, line: fromNode.line, component: fromNode.component ?? null } } : given;
-      // A folded `:disabled` or `:checked` row is the runtime's choice over its base and its parts,
+      // A folded `:disabled` or `:checked` row (queue item (2)) is the runtime's choice over its base and its parts,
       // so `dynamic`: where the map says both, it is read as its base, its rung the base's, each part beside it in
-      // `states` with its own. One the map can't explain stays dynamic, read-only.
+      // `states` with its own (theme2's and review2's 04:24). One the map can't explain stays dynamic, read-only.
       const folds = asBase(bound.get(r.name)) && row.source === 'dynamic' ? (bound.get(r.name).states ?? []).filter(p => p.state === 'disabled' || p.state === 'checked') : [];
       const rung = rowRung(row, b, map, app, copies, read, own);
       // (Its base's token, from the base as written, whichever branch the runtime shows now.)
@@ -564,7 +565,7 @@ export function sitesAt(map, source) {
 }
 
 /** The one site of plan map `to` that is site `site` of plan map `from`
- * (a held node across a rebuild), by the node's copies: the
+ * (a held node across a rebuild, LLP 1122 D8), by the node's copies: the
  * sites at its source location, one copy a call-site chain (a `button
  * "…"` and its label, or a slot at two outlets, are several sites of one
  * copy, told apart by their order). The same calls in both plans: the copy
@@ -636,7 +637,7 @@ const cmp = (a, b) => { for (let k = 0; k < Math.min(a.length, b.length); k++) {
 /** Whether a report is the build's latest: its plan, design and pin
  * revision those of its latest status. */
 export function current(build, report) {
-  // (And its plan digest, when both say one.)
+  // (And its plan digest, when both say one: T2c.)
   const digest = report.selected?.planDigest ?? null;
   return (report.plan ?? null) === (build.plan ?? null) && (report.design ?? null) === (build.design ?? null)
     && (report.revision ?? null) === (build.status?.revision ?? null) && (!digest || !build.planDigest || digest === build.planDigest);
@@ -679,7 +680,7 @@ export function levelsUp(map, site, n) {
  * around it. A plan past either has none, and a select there is unsupported (tamber-builds.mjs `selectUp`). */
 export const COPIED_SITES = 1 << 20, COPIES_BYTES = 512 * 1024;
 
-/** Each plan site's copy (tamber/1.17 `inspect`'s `copies`): an integer, equal for every
+/** Each plan site's copy (tamber/1.17 `inspect`'s `copies`, the third hands-on pass's #4): an integer, equal for every
  * node whose call-site chain is the same (one component call's template nodes), numbered by first appearance. A page
  * walking up its own tree counts each new copy that owns an ancestor as one step of a `select`. Sent once per plan per
  * build, encoded as runs: `r1:` and base64 of LEB128 varints, `[copy, run length]` pairs in site order. */

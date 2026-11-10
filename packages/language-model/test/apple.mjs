@@ -1,7 +1,7 @@
-// @exact/language-model's conformance suite on Apple: the fixture app
-// (`test/fixture`) made with `exact new` outside the repo, depending on
-// this package by `file:`, built for macOS or an iOS simulator and driven
-// by `exact.mjs agent`.
+// @exact/language-model's conformance suite on Apple (LLP 1133.016 §10, §13
+// stage 2): the fixture app (`test/fixture`) made with `exact new` outside
+// the repo, depending on this package by `file:`, built for macOS or an iOS
+// simulator and driven by `exact.mjs agent`.
 //
 // By default the Apple implementation is bound as in production (`--bind
 // language-model`) and talks to Foundation Models on this machine. What the
@@ -12,7 +12,7 @@
 // Never a reply's wording.
 //
 // `--agent` drives the fixture under the agent instead: the Swift agent
-// model and drives 7 and 8 on the device's runtime (`agentDrives`).
+// model and §10's drives 7 and 8 on the device's runtime (`agentDrives`).
 //
 // usage: bun packages/language-model/test/apple.mjs [--agent] [macos|ios] [--sim <udid>]
 import { rmSync } from 'node:fs';

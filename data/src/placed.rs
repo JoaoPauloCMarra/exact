@@ -1,8 +1,8 @@
-//! A source on an owner of its own. `Placed` runs its
+//! A source on an owner of its own (LLP 1027.002 D1/D2). `Placed` runs its
 //! source on a host-owned thread from activation on, answers every call
 //! `Later`, runs each turn there against a scoped snapshot — staying on the
 //! owner through the source's own continuation waits — and hands the turn's
-//! envelope back for the runner to commit. With `Placement::Main` it
+//! envelope back for the runner to commit (D3). With `Placement::Main` it
 //! is the source, inline, and costs nothing. The same proxy serves a Rust
 //! source that can be moved to the thread and a TypeScript module that must
 //! be built there.
@@ -234,7 +234,7 @@ pub struct Placed<D> {
     interrupt: Option<Interrupt>,
     /// Taken at construction too: the instance on the owner fills it.
     native: Option<exact_runner::Native>,
-    /// The Canvas 2D roster, read at construction.
+    /// The Canvas 2D roster, read at construction (LLP 1056 D1).
     canvas_surfaces: Vec<(String, usize)>,
     owner: Option<Arc<Mutex<OwnerQueue>>>,
     recorded: BTreeMap<u64, Recorded>,
@@ -444,7 +444,7 @@ impl<D: DataSource + 'static> Placed<D> {
         }
     }
 
-    /// Start the owner: it obtains its instance, then runs
+    /// Start the owner (LLP 1027.002 D2): it obtains its instance, then runs
     /// turns in order until this proxy drops its end of the channel.
     fn spawn_owner(&mut self, obtain: Obtain<D>) -> Result<(), DataError> {
         let (jobs, rx) = channel::<Job>();
@@ -590,7 +590,7 @@ fn forget<D: DataSource>(
     source.forgotten(store, &view);
 }
 
-/// One turn (change 3): begin or resume; stay on the owner
+/// One turn (LLP 1027.002 D3, change 3): begin or resume; stay on the owner
 /// through every wait the source runs itself (its storage, its own worker
 /// closures); end at an answer, an error, or a request only the host can run
 /// (`fetch`, the portable storage protocol) — a yield.
@@ -608,7 +608,7 @@ fn turn<D: DataSource>(
     };
     loop {
         match result {
-            // A long poll on the worker's own work: refused before that work runs.
+            // A long poll on the worker's own work (LLP 1016.000 D8): refused before that work runs.
             Ok(Answer::Later(request)) if request.long_poll_refusal().is_some() => {
                 if let Some(token) = request.continuation {
                     source.discard(token);
@@ -616,7 +616,7 @@ fn turn<D: DataSource>(
                 return Err(unavailable(request.long_poll_refusal().unwrap_or_default()));
             }
             // A wait for the answer's own timer is the runner's to keep
-            // until due: it yields, as a fetch does.
+            // until due (LLP 1027.000 D1): it yields, as a fetch does.
             Ok(Answer::Later(request))
                 if request.continuation.is_some()
                     && request.due_ms.is_none()
@@ -667,7 +667,7 @@ impl<D: DataSource + 'static> DataSource for Placed<D> {
     }
 
     /// The wrapper's envelope lines, plus the inline module's journal.
-    /// A worker owner keeps the module's journal: nothing of
+    /// A worker owner keeps the module's journal (LLP 1097 D6): nothing of
     /// it is forwarded while the owner holds it.
     fn take_logs(&mut self) -> Vec<String> {
         if self.owner.is_none() {
@@ -733,7 +733,7 @@ impl<D: DataSource + 'static> DataSource for Placed<D> {
         self.canvas_surfaces.clone()
     }
 
-    /// A worker-placed module does not draw yet:
+    /// A worker-placed module does not draw yet (LLP 1056 stage 1; QUEUE):
     /// its canvases report the error through `state`.
     fn draw(
         &mut self,
@@ -776,7 +776,7 @@ impl<D: DataSource + 'static> DataSource for Placed<D> {
     }
 
     /// A source on a worker is not told: a value reaches it only as a copy,
-    /// which is what adopting saves.
+    /// which is what adopting saves (LLP 1027 D11).
     fn adopt(&mut self, source: &str, args: &[Value], value: &Value) {
         if let Some(inner) = self.inner.as_mut() {
             inner.adopt(source, args, value);
@@ -902,8 +902,8 @@ impl<D: DataSource + 'static> DataSource for Placed<D> {
         self.parse_with(Some(target), store, source, args, outcome)
     }
 
-    /// What the runner still has in flight, in this proxy's tokens.
-    /// A recorded call whose token isn't in flight was replaced or let
+    /// What the runner still has in flight, in this proxy's tokens (LLP 1016
+    /// D5). A recorded call whose token isn't in flight was replaced or let
     /// go, and is dropped. A key no longer in flight loses its stages; one
     /// whose in-flight request is a newer recorded call (a refresh with
     /// equal arguments) keeps that call's stage alone. A turn already running
@@ -1120,7 +1120,7 @@ impl<D: DataSource + 'static> DataSource for Placed<D> {
         self.inner.as_mut()?.continuation(token)
     }
 
-    /// Background work is the inline module's alone: a
+    /// Background work is the inline module's alone (LLP 1097 D6): a
     /// worker's answers wait for their storage, so nothing is forwarded
     /// while an owner holds the module.
     fn background(&mut self, store: &Store) -> Option<Request> {
@@ -1236,7 +1236,7 @@ impl<D: DataSource + 'static> DataSource for Placed<D> {
         }
     }
 
-    /// A replacement keeps its placement. A moved source
+    /// A replacement keeps its placement (LLP 1027.002 §6). A moved source
     /// has no `Self` left here to pair; a built one is replaced through its
     /// template.
     fn replacement(&self, plan: &[u8], receipt: &str, module: Vec<u8>) -> Result<Self, DataError> {
@@ -1261,7 +1261,7 @@ impl<D: DataSource + 'static> DataSource for Placed<D> {
 impl<D> Drop for Placed<D> {
     fn drop(&mut self) {
         // Closing the channel ends the owner after its current turn; the
-        // runner's thread never waits on it.
+        // runner's thread never waits on it (LLP 1027.002 D5).
         self.owner.take();
     }
 }

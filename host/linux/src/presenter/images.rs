@@ -48,7 +48,7 @@ impl<D: DataSource> Presenter<D> {
 
     /// A source's first picture sends its `load`, and a failure for good its
     /// `error` with the reason, to an image that hears it
-    /// and is still that node showing that source, assigned
+    /// (LLP 1011 §4) and is still that node showing that source, assigned
     /// that time, as it is sent: since it landed, input, a timer or an
     /// earlier load's action may have changed any of them. It is sent with
     /// nothing run before its handler (`Host::dispatch_now`), so the handler

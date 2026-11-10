@@ -11,7 +11,7 @@ impl DataSource for NoData {
 }
 
 /// The handle with `event` bound to `handler`, and its partner (a transform
-/// drag needs both) bound to a well-formed `partner`.
+/// drag needs both, LLP 1057.003 C6) bound to a well-formed `partner`.
 fn source(event: &str, params: &str, handler: &str, idref: &str) -> String {
     let (other, other_params) = partner(event);
     format!("component App\n  state value = 0\n  action receive({params})\n    value = 1\n  action partner({other_params})\n    value = 2\n  view\n    column overflow=\"hidden\"\n      column id=\"photo\" width=\"100%\" height=\"100%\" box-sizing=\"border-box\"\n        column testId=\"handle\" transformDragFor={idref} {event}={handler} {other}=partner\n")

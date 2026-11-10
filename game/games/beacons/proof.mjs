@@ -209,7 +209,7 @@ if (import.meta.main) await proof(import.meta, async ({open, check, equal, out, 
   const held = await speed();
   await world(restored).key_up('ShiftLeft'); await world(restored).run(50);
   check('a 200 ms Shift hold runs and its release walks', equal([early, held, await speed()], [4, 7, 4]), [early, held]);
-  // From one checkpoint, a held key and the agent's full pad
+  // LLP 1127.003 §4: from one checkpoint, a held key and the agent's full pad
   // stick reach the same world; a partial stick (the negative control) another.
   await world(restored).settle();
   const base = resolve(out, 'pad-base.world');
@@ -231,12 +231,12 @@ if (import.meta.main) await proof(import.meta, async ({open, check, equal, out, 
     stick.delivery === 'synthesized' && stick.tick === keyed.tick && stick.hash === keyed.hash, {keyed, stick});
   check('and a partial stick reaches another (the negative control)', partial.tick === keyed.tick && partial.hash !== keyed.hash, {keyed, partial});
   // The wasm web host has no extension modules yet, the agent's substitute
-  // included: tilt is driven where they run.
+  // included (QUEUE.md): tilt is driven where they run.
   if (host !== 'web') await tiltLeg({open, check, node, world});
   else say('SKIP tilt on web: the wasm host has no extension modules; run this proof on linux, macos or ios.');
 });
 
-/// The map, as `exact_game::tilt_stick` computes it (game/engine/src/input/sensor.rs).
+/// D6's map, as `exact_game::tilt_stick` computes it (game/engine/src/input/sensor.rs).
 export function tiltStick(g, n, max = 20, dead = 2) {
   const deg = (v, i) => Math.asin(v[i] / Math.hypot(...v)) * 180 / Math.PI;
   const raw = [-(deg(g, 0) - deg(n, 0)) / max, -(deg(g, 1) - deg(n, 1)) / max];
@@ -252,7 +252,7 @@ export function rampFromRest(speed, ticks) {
   return Array.from({length:ticks}, (_, k) => Math.min(speed, 0.2 * (k + 1)) / 60).reduce((a, b) => a + b, 0);
 }
 
-/// Tilt to move under the agent's substitute.
+/// LLP 1133.013 §10, drives 1–5: tilt to move under the agent's substitute.
 async function tiltLeg({open, check, node, world}) {
   const t = await open({fresh:true});
   const motion = async () => (await t.state()).extensions?.motion ?? {};
@@ -266,7 +266,7 @@ async function tiltLeg({open, check, node, world}) {
   await t.tap(`@${pending[0]?.ticket}`, {choice:'allow'});
   await t.clock('settle');
   check('tilt 1: allowed, the level reads flat', await angles() === '0° · 0°', await angles());
-  // Tilt on: the world's canvas holds `current`.
+  // LLP 1133.029 §9.1 drive 1: tilt on, the world's canvas holds `current`.
   const lock = async () => (await t.state()).orientationlock;
   const held = await lock();
   check('orientation 1: tilt on, the canvas holds the orientation as it is',

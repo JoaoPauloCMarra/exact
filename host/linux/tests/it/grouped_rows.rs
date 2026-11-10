@@ -1,4 +1,4 @@
-//! A grouped list's row spans its card with its insets inside
+//! LLP 1084 D7: a grouped list's row spans its card with its insets inside
 //! it, and the separator under it is decoration the kernel places
 //! (`Kernel::grouped_separator`): drawn over the row's ground and under its
 //! children, from its content edge to the card's trailing edge, not under

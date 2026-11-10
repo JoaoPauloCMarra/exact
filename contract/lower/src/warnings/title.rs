@@ -1,8 +1,9 @@
-//! `lower-title-twice`: a heading in a route's content
+//! `lower-title-twice` (LLP 1116.005 D6): a heading in a route's content
 //! that says what its `header`'s heading says. On iOS that header is the
 //! navigation bar and its heading the bar's title, so the title shows
 //! twice, once in the bar and once in the page; on the web the content
-//! heading sits under the header that says it, as "Trivia Quiz" in both.
+//! heading sits under the header that says it. Trivia, in rounds 6 and 7,
+//! put "Trivia Quiz" in both (round 5's said "Timed Trivia" under it).
 
 use super::{computed, has, literal};
 use crate::LowerError;
@@ -43,7 +44,7 @@ fn says(node: &Node) -> Option<Says> {
 }
 
 /// A heading is a `text` whose role says so; an `aria-level` alone is not
-/// one (`lower-level-without-heading`).
+/// one (LLP 1115.000 D12.5, `lower-level-without-heading`).
 fn heading(tag: &str, attrs: &[contract_syntax::Attr]) -> bool {
     tag == "text" && literal(attrs, "role") == Some("heading")
 }

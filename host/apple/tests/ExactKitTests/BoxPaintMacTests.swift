@@ -88,7 +88,7 @@ final class BoxPaintMacTests: XCTestCase {
     }
 
     /// A translucent fill is painted once into a capture, not by the
-    /// layer and again by `draw(_:)` (so 12 % never comes out 20 %).
+    /// layer and again by `draw(_:)` (spreadsheet F18: 12 % came out 20 %).
     func testATranslucentFillIsCapturedOnce() throws {
         let p = presenter()
         p.apply(wireBatch([
@@ -110,7 +110,7 @@ final class BoxPaintMacTests: XCTestCase {
 
     /// An image whose pixels are a sublayer is captured once: `draw(_:)`
     /// paints the bitmap for the shot, and the sublayer is hidden for it,
-    /// so half-transparent red over white stays pink.
+    /// so half-transparent red over white stays pink (Grok's batch 2 review).
     func testATranslucentLayerImageIsCapturedOnce() throws {
         let (page, image) = try imageOnPage(red: 0.5, style: ["object_fit": .string("fill")])
         let sub = try XCTUnwrap(image.imageLayer, "the image took the layer path")
@@ -122,7 +122,7 @@ final class BoxPaintMacTests: XCTestCase {
 
     /// An image's own background is captured behind its picture, as CSS
     /// paints it and the window shows it: with a radius the fill is a
-    /// sublayer, which the shot drew over the picture.
+    /// sublayer, which the shot drew over the picture (podcast F7).
     func testARoundedImageBackgroundIsCapturedUnderThePicture() throws {
         let (page, image) = try imageOnPage(red: 1, style: [
             "object_fit": .string("cover"), "background_color": [0, 0, 255, 255], "border_radius": 8])
@@ -166,19 +166,19 @@ final class BoxPaintMacTests: XCTestCase {
 
     /// A capture shows what the window does: siblings in `z-index` order
     /// (`zPosition`), not the order `cacheDisplay` draws subviews in — a
-    /// sticky header over the rows under it, a raised
-    /// dropdown over what follows it — and a lowered animation at
-    /// what it presents, not its model value.
+    /// sticky header over the rows under it (spreadsheet F13), a raised
+    /// dropdown over what follows it (shop F18) — and a lowered animation at
+    /// what it presents, not its model value (shop F25).
     func testACaptureShowsTheZOrderAndTheAnimationsTheWindowShows() throws {
         let p = presenter()
         p.apply(wireBatch([
             ["op": "create", "id": 1, "kind": "view", "style": ["display": "flex", "background_color": [255.0, 255.0, 255.0, 255.0]]],
             ["op": "create", "id": 2, "kind": "view", "style": ["background_color": [255.0, 0.0, 0.0, 255.0]]],
-            // `z-index: 3`, as the kernel sends it: the rank, doubled.
+            // `z-index: 3`, as the kernel sends it: the rank, doubled (LLP 1083.000 D4).
             ["op": "rank", "id": 2, "rank": 6],
             ["op": "create", "id": 3, "kind": "view", "style": ["background_color": [0.0, 0.0, 255.0, 255.0]]],
             ["op": "create", "id": 4, "kind": "view", "style": ["background_color": [0.0, 0.0, 0.0, 255.0]]],
-            // The kernel sends paint rank separately from style.
+            // LLP 1083: the kernel sends paint rank separately from style.
             ["op": "rank", "id": 2, "rank": 6],
             ["op": "children", "id": 1, "ids": [2, 3, 4]],
             ["op": "roots", "ids": [1]],

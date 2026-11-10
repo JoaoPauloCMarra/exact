@@ -8,10 +8,10 @@ import XCTest
 import ExactCore
 @testable import ExactKit
 
-/// An icon token with no `sf` source and a template SVG draws its own path
-/// on Apple, from the commands the Rust side sends (`symbolPath`,
-/// `symbolViewBox`), as a template image that takes the node's computed
-/// `color`; an `sf` still draws its symbol.
+/// Stage 9 A (LLP 1121 D10): an icon token with no `sf` source and a
+/// template SVG draws its own path on Apple, from the commands the Rust side
+/// sends (`symbolPath`, `symbolViewBox`), as a template image that takes the
+/// node's computed `color`; an `sf` still draws its symbol.
 ///   bun host/apple/build.mjs --test --ios   (and --test for the Mac)
 final class IconPathTests: XCTestCase {
     #if os(iOS)
@@ -67,7 +67,7 @@ final class IconPathTests: XCTestCase {
         #if os(iOS)
         return (v?.symbolView as? UIImageView)?.tintColor
         #else
-        // A path icon fills its paths in its tint (IconShapeMac.swift).
+        // A path icon fills its paths in its tint (stage 14 C1, IconShapeMac.swift).
         if let fill = v?.symbolShape?.shapes.first?.fillColor { return NSColor(cgColor: fill) }
         return (v?.symbolView as? NSImageView)?.contentTintColor
         #endif
@@ -145,7 +145,7 @@ final class IconPathTests: XCTestCase {
         XCTAssertEqual(try inked(two, at: [12]), [true], "the overlap is filled, not cut")
     }
 
-    /// An even-odd icon (`symbolFillRule`) leaves the hole of
+    /// Stage 14 C2: an even-odd icon (`symbolFillRule`) leaves the hole of
     /// two squares wound the same way clear, as one path; nonzero fills it.
     func testAnEvenOddIconLeavesItsSameWoundHoleClear() throws {
         XCTAssertEqual(IconPath.rule("evenodd"), .evenOdd)

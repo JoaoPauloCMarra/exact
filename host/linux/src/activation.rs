@@ -11,11 +11,11 @@ impl<D: DataSource> Host<D> {
         // An authored test's store starts empty every run (`agent --test`):
         // emptied at the boot that read it, so this is a no-op unless that failed.
         crate::picker::empty_fresh_tree(&app_id)?;
-        // What `app:/` names for the picker and an image's source; the last
-        // launch's picks go.
+        // What `app:/` names for the picker and an image's source (LLP
+        // 1069.002 D4, D7); the last launch's picks go.
         crate::picker::set_roots(data.clone(), cache.clone(), temporary.clone());
-        // What the app keeps resolves again before any answer reads it;
-        // the host's one session is owner 0.
+        // What the app keeps resolves again before any answer reads it
+        // (LLP 1069.010.000 D4); the host's one session is owner 0.
         crate::kept::activate(0, &self.runner);
         self.runner.data().configure_storage(data, cache, temporary)
     }

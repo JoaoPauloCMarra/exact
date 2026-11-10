@@ -1,4 +1,4 @@
-//! Real batches carry geometry independently of frames.
+//! @ref LLP 1043.000 §3 D4, D7 — real batches carry geometry independently of frames.
 use exact_apple::{content_region::ContentRegionRegistration, Host};
 use exact_kernel::{MonospaceMeasurer, TextMeasurer};
 use exact_runner::{DataError, DataSource, Event, Value};
@@ -231,7 +231,7 @@ fn list_settlement_publishes_final_mounted_flow_and_clears_disappearing_shapes()
     );
 }
 
-// The Reader's drop cap: an auto-height paragraph is
+// @ref LLP 1043.000 §8 — the Reader's drop cap: an auto-height paragraph is
 // measured through the seam around the shape it is painted around.
 #[test]
 fn a_drop_cap_measures_its_auto_height_paragraph_around_the_shape() {

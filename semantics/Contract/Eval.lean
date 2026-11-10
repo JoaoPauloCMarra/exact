@@ -63,13 +63,13 @@ def fieldIndex (env : Env) (s field : String) : Option Nat :=
 end Env
 
 /-- `includes`: text in text, or by SameValueZero a string, number or bool
-in a list, as JavaScript's `includes` of each. -/
+in a list (LLP 1088 §9.1), as JavaScript's `includes` of each. -/
 def includesOf : Value → Value → Result Value
   | .str a, .str b => .ok (.bool (Str.includes a b))
   | .list xs, x => .ok (.bool (xs.any (Value.sameValueZero · x)))
   | _, _ => .error (.type "`includes` of arguments it does not take")
 
-/-- `slice`: text's code units, or a list's items,
+/-- `slice`: text's code units (LLP 1088 D2), or a list's items (§9.1),
 each index clamped as JavaScript's `slice` clamps it. -/
 def sliceOf : Value → F64 → F64 → Result Value
   | .str s, a, b => .ok (.str (Str.slice s a b))
@@ -84,7 +84,7 @@ def positionOf : Option Nat → F64
   | .none => -(F64.ofNat 1)
 
 /-- `indexOf`: text in text, in UTF-16 code units, or by IsStrictlyEqual a
-string, number or bool in a list, as JavaScript's
+string, number or bool in a list (LLP 1088 §9.1), as JavaScript's
 `indexOf` of each. -/
 def indexOfOf : Value → Value → Result Value
   | .str a, .str b => .ok (.num (positionOf (Str.indexOf a b)))
@@ -99,17 +99,17 @@ def formatting (f : String) (args : List Value) : Result Value :=
   | "formatDate", [.num e, .num o, .str "medium"] => .ok (.str (Format.formatDate e o false))
   | "formatDate", [.num e, .num o, .str "month-year"] => .ok (.str (Format.formatDate e o true))
   | "formatDate", [.num e, .num o, .str "iso"] => .ok (.str (Format.formatIsoDate e o))
-  -- A day's label, relative to the `now` the app passes.
+  -- LLP 1116.020 D8: a day's label, relative to the `now` the app passes.
   | "formatDay", [.num t, .num n, .num o, .str "day"] => .ok (.str (Format.formatDay t n o "day"))
   | "formatDay", [.num t, .num n, .num o, .str "day-time"] => .ok (.str (Format.formatDay t n o "day-time"))
   | "formatDay", [.num t, .num n, .num o, .str "list"] => .ok (.str (Format.formatDay t n o "list"))
   | "formatNumber", [.num n, .str "compact", _] => .ok (.str (Format.compact n))
-  -- `decimal`, `percent`, and `currency` with its code.
+  -- LLP 1116 D8: `decimal`, `percent`, and `currency` with its code.
   | "formatNumber", [.num n, .str style, .str code] =>
     match Format.styled n style code with
     | .some s => .ok (.str s)
     | .none => .error (.unsupported "`formatNumber` of a style or code it does not take")
-  -- `digits` a whole-number literal the compiler admitted.
+  -- LLP 1102 §3.2: `digits` a whole-number literal the compiler admitted.
   | "toFixed", [.num x, .num d] =>
     match Format.digitsOf d 100 with
     | .some k => .ok (.str (Format.toFixed x k))
@@ -183,7 +183,7 @@ def stdlib (env : Env) (f : String) (args : List Value) : Result Value :=
   | "endsWith", [.str a, .str b] => .ok (.bool (Str.endsWith a b))
   | "trim", [.str s] => .ok (.str (Str.trim s))
   | "encodeURIComponent", [.str s] => .ok (.str (encodeURIComponent s))
-  -- The router (`Contract.Route`): verbs and reads over the
+  -- The router (LLP 1038, `Contract.Route`): verbs and reads over the
   -- program's table.
   | "open", [r, .str l] => Route.verb env.prog.routes r (Route.open env.prog.routes · l)
   | "push", [r, .str l] => Route.verb env.prog.routes r (Route.push env.prog.routes · l)
@@ -218,13 +218,13 @@ def stdlib (env : Env) (f : String) (args : List Value) : Result Value :=
         | v@(.str _) | v@(.num _) | v@(.bool _) => v.display
         | _ => .error (.type "join of an item that is not a string, number or bool")
       .ok (.str (sep.intercalate parts))
-  -- Over UTF-16 code units, well formed. `toLowerCase` and
+  -- LLP 1088 D2: over UTF-16 code units, well formed. `toLowerCase` and
   -- `toUpperCase` are left out (their case tables are Unicode's).
   | "slice", [v, .num a, .num b] => sliceOf v a b
   | "replaceAll", [.str s, .str find, .str w] => .ok (.str (Str.replaceAll s find w))
-  -- JavaScript's `Array.prototype.concat`.
+  -- LLP 1088 §9.1: JavaScript's `Array.prototype.concat`.
   | "concat", [.list xs, .list ys] => .ok (.list (xs ++ ys))
-  -- `indexOf` and `split` as JavaScript's.
+  -- LLP 1088 §9.1 (2026-10-04 note): `indexOf` and `split` as JavaScript's.
   | "indexOf", [a, b] => indexOfOf a b
   | "split", [.str s, .str sep] => .ok (.list ((Str.split s sep).map .str))
   -- Formatting and localized text (`Contract.Format`).
@@ -233,10 +233,10 @@ def stdlib (env : Env) (f : String) (args : List Value) : Result Value :=
   | "formatDay", vs => formatting "formatDay" vs
   | "formatNumber", vs => formatting "formatNumber" vs
   | "t", vs => text env.prog.strings vs
-  -- `round` is JavaScript's `Math.round`, a half up.
+  -- LLP 1102 §3.2: `round` is JavaScript's `Math.round`, a half up.
   | "ceil", [.num x] => .ok (.num x.ceil)
   | "round", [.num x] => .ok (.num x.jsRound)
-  -- A number or a date difference read from text.
+  -- LLP 1102 §3.1, §3.4: a number or a date difference read from text.
   | "parseNumber", [.str s] => .ok (match Str.parseNumber s with | .some n => .some (.num n) | .none => .none)
   | "calendarDiff", [.str a, .str b, .str u] =>
     if u = "years" ∨ u = "months" then
@@ -252,19 +252,19 @@ def stdlib (env : Env) (f : String) (args : List Value) : Result Value :=
     match Value.sum xs with
     | .some n => .ok (.num n)
     | .none => .error (.type "`sum` of an item that is not a number")
-  -- The roster's half of `sortBy`, on the items, their keys
+  -- LLP 1116.016 §5: the roster's half of `sortBy`, on the items, their keys
   -- (a `map` of the callback) and whether it is descending.
   | "sortBy", [.list xs, .list ks, .bool d] => sortByKeys xs ks d
-  -- The whole numbers below `n`. Any
+  -- LLP 1017.003 §Refused (2026-10-17): the whole numbers below `n`. Any
   -- other count does not fit, which the runner traps; a count past the
-  -- runner's list bound is outside the semantics, so none
+  -- runner's list bound is outside the semantics (LLP 1090 D8), so none
   -- is built here.
   | "range", [.num n] =>
     if n.isFinite && n.floor == n && F64.le 0 n then
       if n.toNat ≤ 65536 then .ok (.list ((List.range n.toNat).map fun i => .num (F64.ofNat i)))
       else .error (.unsupported "`range` past the list bound")
     else .error (.refused "`range` of a count that is not a whole number at least 0")
-  -- `Array.prototype.flat()`, depth 1.
+  -- LLP 1017.003 §Refused (2026-10-17): `Array.prototype.flat()`, depth 1.
   | "flat", [.list xss] =>
     match Value.flat xss with
     | .some ys => .ok (.list ys)
@@ -295,7 +295,7 @@ def binop (op : BinOp) (a b : Value) : Result Value :=
   | .mul => num2 fun x y => .num (x * y)
   | .div => num2 fun x y => .num (x / y)
   | .rem => num2 fun x y => .num (Number.fmod x y)
-  -- Two strings compare by UTF-16 code units.
+  -- Two strings compare by UTF-16 code units (LLP 1088 D1).
   | .lt => match a, b with | .str x, .str y => .ok (.bool (Str.lt x y)) | _, _ => num2 fun x y => .bool (x < y)
   | .le => match a, b with | .str x, .str y => .ok (.bool !(Str.lt y x)) | _, _ => num2 fun x y => .bool (x ≤ y)
   | .gt => match a, b with | .str x, .str y => .ok (.bool (Str.lt y x)) | _, _ => num2 fun x y => .bool (x > y)
@@ -329,7 +329,7 @@ def outOfFuel : Err := .refused "out of fuel"
 
 /-- A prop binding's value, or `none` when its evaluation is refused (other
 than for fuel): the runner unsets a prop or style binding that traps and
-goes on. -/
+goes on (LLP 1017.003 D3). -/
 def unsetRefused {α} : Result α → Result (Option α)
   | .ok a => .ok (.some a)
   | .error (.refused w) => if w == "out of fuel" then .error (.refused w) else .ok .none
@@ -341,7 +341,7 @@ def fuel : Nat := 1 <<< 24
 mutual
 
 /-- Evaluate an expression. `inFn` hides the component's names: a `fn`
-body sees only its parameters. -/
+body sees only its parameters (LLP 1017 P5). -/
 def eval : Nat → Env → Bool → Locals → Expr → Result Value
   | 0, _, _, _, _ => .error outOfFuel
   | fuel + 1, env, inFn, ls, e =>
@@ -382,7 +382,7 @@ def eval : Nat → Env → Bool → Locals → Expr → Result Value
         let xs ← (← eval fuel env inFn ls l).asList
         let ys ← evalFilter fuel env inFn ls ps body xs 0
         .ok (.list ys)
-      -- Each key once, by `map`'s callback, then the sort.
+      -- LLP 1116.016 §5: each key once, by `map`'s callback, then the sort.
       | "sortBy", l :: .arrow ps body :: dir => do
         let xs ← (← eval fuel env inFn ls l).asList
         let ks ← evalMap fuel env inFn ls ps body xs 0
@@ -400,7 +400,7 @@ def eval : Nat → Env → Bool → Locals → Expr → Result Value
           (lookup x env.resources).elim (.error .pending) (fun _ => .ok (.bool false))
         else .ok (.bool false)
       | "failure", [.var x] =>
-        -- Nor says why.
+        -- Nor says why (LLP 1109 D3).
         if env.prog.resources.any (·.name == x) then
           (lookup x env.resources).elim (.error .pending) (fun _ => .ok .none)
         else .ok .none

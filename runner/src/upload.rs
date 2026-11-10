@@ -1,4 +1,4 @@
-//! An upload's progress: a stream's request
+//! An upload's progress (LLP 1016.000 D10): a stream's request
 //! ([`Request::upload_progress`]) whose host delivers the body's bytes sent
 //! as they go, each a [`Message::upload_progress`], then the reply, read
 //! whole within the ceiling, as the one answer that ends it. It is in flight

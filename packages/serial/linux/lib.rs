@@ -1,14 +1,15 @@
-//! @exact/serial on the Linux host: `/dev/tty*` with termios, the ports enumerated from
+//! @exact/serial on the Linux host (LLP 1133.037 D7–D9, D21): `/dev/tty*` with termios, the ports enumerated from
 //! sysfs (`/sys/class/tty/*/device`, with the USB device's `idVendor`, `idProduct` and `product` above it), each
 //! connection read by a thread of its own into the bytes not yet delivered.
 //!
-//! - Opened `O_NOCTTY | O_NONBLOCK`, then `TIOCEXCL`, so another process's open fails `EBUSY`; termios raw at
+//! - Opened `O_NOCTTY | O_NONBLOCK`, then `TIOCEXCL`, so another process's open fails `EBUSY` (D5); termios raw at
 //!   the call's line settings.
-//! - Reading loses nothing: the thread stops reading while the undelivered bytes reach the retained bound, so
+//! - Reading loses nothing (D8): the thread stops reading while the undelivered bytes reach the retained bound, so
 //!   the rest waits in the kernel's and the device's buffers; each `serialInput` answer takes every byte since the
 //!   last. End of file or `EIO` is the port gone (`NetworkError`, `done`).
-//! - A node the process cannot open (`EACCES`) reads `granted` false.
-//! - Under the agent's driver it also offers the ports `EXACT_DEVICE_FIXTURE` names (a pseudo-terminal a drive made); the Linux host runs headless on a Mac too, where the same POSIX calls drive the pty.
+//! - A node the process cannot open (`EACCES`) reads `granted` false (D17).
+//! - Under the agent's driver it also offers the ports `EXACT_DEVICE_FIXTURE` names (a pseudo-terminal a drive made,
+//!   D19 item 3); the Linux host runs headless on a Mac too, where the same POSIX calls drive the pty.
 //!
 //! The package names only `exact_linux` and `std`, so the C library's termios and ioctl calls are declared here,
 //! with their structures and constants for each OS the host runs on.
@@ -281,7 +282,7 @@ fn read_loop(file: Arc<File>, stream: Arc<(Mutex<Stream>, Condvar)>, stop: Arc<A
     while !stop.load(Ordering::Relaxed) {
         {
             let mut s = lock.lock().unwrap_or_else(|e| e.into_inner());
-            // Backpressure: nothing more is read until a delivery makes room.
+            // Backpressure (D8): nothing more is read until a delivery makes room.
             while s.pending.len() >= bound && !stop.load(Ordering::Relaxed) {
                 s = room.wait_timeout(s, std::time::Duration::from_millis(100)).unwrap_or_else(|e| e.into_inner()).0;
             }
@@ -302,7 +303,7 @@ fn read_loop(file: Arc<File>, stream: Arc<(Mutex<Stream>, Condvar)>, stop: Arc<A
             }
             Ok(n) => lock.lock().unwrap_or_else(|e| e.into_inner()).pending.extend_from_slice(&buf[..n]),
             Err(e) if e.kind() == ErrorKind::WouldBlock || e.kind() == ErrorKind::Interrupted => continue,
-            // EIO or ENXIO: the port went away.
+            // EIO or ENXIO: the port went away (D9).
             Err(_) => {
                 finish(&stream, "NetworkError");
                 break;
@@ -459,7 +460,7 @@ impl Package for Serial {
                     None => json!({ "id": id, "name": id, "connected": false, "granted": true, "usbVendorId": null, "usbProductId": null }),
                 }).collect::<Vec<_>>())
             }
-            // The painted presenter draws no chooser yet: the app lists `attachedPorts` itself.
+            // The painted presenter draws no chooser yet (D2): the app lists `attachedPorts` itself.
             "requestPort" => json!({ "error": "NotSupportedError" }),
             "open" => self.open(args),
             "serialConnection" => match self.connections.get(args["connection"].as_str().unwrap_or_default()) {

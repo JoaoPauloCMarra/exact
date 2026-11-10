@@ -1,5 +1,5 @@
-//! The visits a native host's Forward goes to. A browser keeps them in
-//! session history, and
+//! The visits a native host's Forward goes to (LLP 1115.000 D5.5; LLP 1038
+//! D7 as amended 2026-11-01). A browser keeps them in session history, and
 //! the web host's mirror of the router finds them there; a native host has
 //! no session history, so the runner keeps the same list beside the value.
 //!
@@ -8,8 +8,8 @@
 //! visits drops them, as a new entry truncates session history's forward
 //! tail (HTML, "Session history"). A `replace` keeps its visit, and so what
 //! is ahead, as `replaceState` keeps the tail. Only the selected tab's stack
-//! is history; a tab switch is a navigation of its own, kept out of native
-//! history.
+//! is history; a tab switch is a navigation of its own (D12 keeps it out of
+//! native history).
 
 use exact_route::{Entry, Router};
 

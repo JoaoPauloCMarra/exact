@@ -21,8 +21,8 @@ tags, events and host commands come from `contract/lower/src/tags.rs`,
 `contract/analyze/src/lib.rs` (`HANDLERS`) and `contract/syntax/src/lib.rs`
 (`HOST_COMMANDS`), all three listed by `contract vocab --json`; `cargo test -p
 contract --test it vscode_grammar` compares the grammar's lists with them and
-names any word missing or no longer the compiler's. `docs/contract-grammar.md`
-describes the language. Attribute names match structurally, including hyphens,
+names any word missing or no longer the compiler's. See LLP 1006 §2 and LLP
+1017.000 P1/P9 for the language and CSS names. Attribute names match structurally, including hyphens,
 so adding a CSS property needs no grammar update. The compiler validates names
 and values; highlighting is not validation.
 

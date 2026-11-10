@@ -1,4 +1,4 @@
-// The server's half of inspect: currency, the join
+// The server's half of inspect (LLP 1122 D5; T2b step 5): currency, the join
 // to source with each file checked against its compiled digest, each row's
 // editability, and the sites to outline.
 import { expect, test } from 'bun:test';
@@ -35,7 +35,7 @@ test('a selection is joined to its site\'s source, each row\'s origin and editab
       ['padding', 'class:Panel', null, null],
       ['text_color', null, null, 'text.primary'],
     ]);
-    // (Bindings with no place: the source's to edit.)
+    // (Bindings with no place, D1's address: the source's to edit.)
     expect(s.rows[1].editable.reason).toContain('the map gives no place');
     expect(s.rows[2].editable.reason).toContain('inherited from #3');
     // Every copy of the node: the sites at that source location.
@@ -71,7 +71,7 @@ test('a selection is joined to its site\'s source, each row\'s origin and editab
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('a folded `:disabled` or `:checked` row is read as its base, its parts beside it in `states`, where the map says both; one it can\'t explain stays dynamic', () => {
+test('a folded `:disabled` or `:checked` row is read as its base, its parts beside it in `states`, where the map says both; one it can\'t explain stays dynamic (LLP 1122 queue item (2))', () => {
   const dir = mkdtempSync(joinPath(tmpdir(), 'exact-inspect-folds-'));
   try {
     const app = joinPath(dir, 'app.contract');
@@ -166,7 +166,7 @@ test('a folded `:disabled` or `:checked` row is read as its base, its parts besi
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('a held `:hover` or `:focus-visible` row is joined at its part, keyed by row and state: the template rung on the node\'s own part, the state rung on a style\'s, never the base row\'s place', () => {
+test('a held `:hover` or `:focus-visible` row is joined at its part, keyed by row and state: the template rung on the node\'s own part, the state rung on a style\'s, never the base row\'s place (LLP 1122 queue item (1))', () => {
   const dir = mkdtempSync(joinPath(tmpdir(), 'exact-inspect-looks-'));
   try {
     const app = joinPath(dir, 'app.contract');
@@ -190,7 +190,7 @@ test('a held `:hover` or `:focus-visible` row is joined at its part, keyed by ro
     const hover = hold('hover', ['background_color', 'border_color_top', 'border_color_right', 'border_color_left', 'opacity'].map(name => ({ name, value: '#000000' })));
     // Each at its part's place, in the held state; the base row's own place never stands in for it.
     expect(hover.held.rows.map(r => [r.name, r.state, r.source?.line])).toEqual([['background_color', 'hover', 11], ['border_color_top', 'hover', 5], ['border_color_right', 'hover', 4], ['border_color_left', 'hover', 12], ['opacity', 'hover', 9]]);
-    // The node's own part: set-row at its place with its state (the template rung).
+    // The node's own part: set-row at its place with its state (T5's template rung).
     expect(hover.held.rows[0].editable).toEqual({ rung: 'template', file: 'app.contract', at: { line: 11, col: hoverAt.col }, sha256: sha(text), row: 'background-color', state: 'hover', instances: 1, text: '#dddddd', component: 'App' });
     // A style's part: set-state on the style, a border side as written there: its own longhand, or the shorthand whole.
     expect(hover.held.rows[1].editable).toEqual({ rung: 'state', style: 'Card', state: 'hover', row: 'border-top-color', file: 'app.contract', text: '#444444' });
@@ -216,7 +216,7 @@ test('a held `:hover` or `:focus-visible` row is joined at its part, keyed by ro
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('an `:active` row lowered to the press paint is joined at its part, read-only but by token, and outlines its node', () => {
+test('an `:active` row lowered to the press paint is joined at its part, read-only but by token, and outlines its node (LLP 1121 D8)', () => {
   const dir = mkdtempSync(joinPath(tmpdir(), 'exact-inspect-active-'));
   try {
     const app = joinPath(dir, 'app.contract');
@@ -235,18 +235,18 @@ test('an `:active` row lowered to the press paint is joined at its part, read-on
       ['press_background_color', 'active', 9, 'template'],
       ['press_color', 'active', 10, 'template'],
     ]);
-    // Written on the node itself (no style): set-row at its place, with its state, the row as its author wrote it.
+    // Written on the node itself (no style): set-row at its place, with its state, the row as its author wrote it (T5).
     expect(s.rows[0].editable).toEqual({ rung: 'template', file: 'app.contract', at: { line: 9, col: 9 }, sha256: sha(text), row: 'background-color', state: 'active', instances: 1, text: 'accent.soft', component: 'App', token: 'accent.soft', modes: '' });
     expect(s.rows[1].editable).toMatchObject({ row: 'color', state: 'active', text: '#f00' });
     // With no app named, the join can't tell its files from a package's: read-only, its token still offered.
     expect(join({ id: 'web-1' }, selected, map).rows[0].editable).toEqual({ rung: 'token', token: 'accent.soft', modes: '' });
     // `uses` names the part's own place; outlining it finds the node.
     expect(sitesAt(map, part)).toEqual([0]);
-    // What is held: an `:active` row at its part, named by its state.
+    // What is held (LLP 1122 D8): an `:active` row at its part, named by its state.
     const held = join({ id: 'web-1' }, { ...selected, held: { state: 'active', rows: [{ name: 'press_background_color', value: '#00f' }, { name: 'press_scale', value: '0.95' }] } }, map);
-    // (Named as its author wrote it, under its part; the press row beside it.)
+    // (Named as its author wrote it, under its part: theme2's 16:13 (2); the press row beside it.)
     expect(held.held.rows.map(r => [r.name, r.row, r.state, r.source?.line])).toEqual([['background-color', 'press_background_color', 'active', 9], ['press_scale', undefined, 'active', 7]]);
-    // Named on a node inside the press: joined at the press's own site, its rows' tokens kept.
+    // Named on a node inside the press (stage 9 E): joined at the press's own site, its rows' tokens kept.
     const inner = { ...map, nodes: [...map.nodes, { file: app, line: 12, col: 7, end_col: 11, component: 'App', chain: [], bindings: [] }] };
     const label = { node: 2, site: 1, instance: [], rows: [], held: { state: 'active', node: 1, site: 0, instance: [], rows: [{ name: 'press_background_color', value: '#00f', token: { names: ['accent.soft'], text: 'accent.soft', modes: '', implied: false } }] } };
     const named = join({ id: 'web-1' }, label, inner);
@@ -276,7 +276,7 @@ test('an `:active` row lowered to the press paint is joined at its part, read-on
   }
 });
 
-test('a row that reads a component param joins on the param rung, by its full name and the token it aliases; no IR param token reaches a client', () => {
+test('a row that reads a component param joins on the param rung, by its full name and the token it aliases; no IR param token reaches a client (LLP 1122 T3)', () => {
   const ir = { tokens: [{ name: 'primary_500', role: null }, { name: 'radius.md', role: null }, { name: '-exact-label', role: 'label' }], components: [{ identity: 'post.contract#PostButton', name: 'PostButton', params: [
     { name: 'post.contract#PostButton.fill', short: 'PostButton.fill', token: 'param.f1a2b3c4d.PostButton.fill', default: 'primary_500', set: null },
     { name: 'post.contract#PostButton.radius', short: 'PostButton.radius', token: 'param.f1a2b3c4d.PostButton.radius', default: 'radius.md', set: { value: '6px', whens: 0 } },
@@ -345,7 +345,7 @@ test('a row that reads a component param joins on the param rung, by its full na
   rmSync(dir, { recursive: true, force: true });
 });
 
-test('a style\'s state part row joins on the state rung for set-state, the default: its style as its file declares it, the row as written, its file and text; a token it reads offered beside; a held one where the build names the held node; a package\'s refused', () => {
+test('a style\'s state part row joins on the state rung for set-state, the default: its style as its file declares it, the row as written, its file and text; a token it reads offered beside; a held one where the build names the held node; a package\'s refused (LLP 1122 T4)', () => {
   const dir = mkdtempSync(joinPath(tmpdir(), 'exact-inspect-state-'));
   try {
     const post = joinPath(dir, 'post.contract');
@@ -381,7 +381,7 @@ test('a style\'s state part row joins on the state rung for set-state, the defau
     expect([s.rows[2].state, 'at' in s.rows[2]]).toEqual(['active', false]);
     // A package's style: read-only, said so.
     expect(s.rows[3].editable).toMatchObject({ rung: null, reason: expect.stringContaining("a package's style") });
-    // Held, where the build names the held node (its held site): offered there; else shown only.
+    // Held, where the build names the held node (stage 9 E's site): offered there; else shown only.
     const heldAt = { state: 'active', site: 1, rows: [{ name: 'press_opacity_to', value: '0.8' }] };
     expect(join({ id: 'web-1' }, { ...selected, held: heldAt }, map, { app: dir }).held.rows[0].editable).toEqual({ ...state, row: 'opacity', text: '0.8' });
     expect(join({ id: 'web-1' }, { ...selected, held: { state: 'active', rows: heldAt.rows } }, map, { app: dir }).held.rows[0].editable).toBe(undefined);
@@ -420,7 +420,8 @@ test('a style\'s state part row joins on the state rung for set-state, the defau
   }
 });
 
-// A held site corresponds in a new plan by its place and its call-site chain.
+// LLP 1122 D8 (the lead's 18:30, amending theme2's 07:48 (a)): a held site
+// corresponds in a new plan by its place and its call-site chain.
 test('a held site corresponds in a new plan by its place and call-site chain: each copy of a component called twice its own, a moved call still, an ambiguous one none', () => {
   const def = { file: '/a/screens.contract', line: 20, col: 5, end_col: 9, component: 'PostButton' };
   const call = (line, col = 7) => ({ file: '/a/home.contract', line, col, end_col: col + 10, component: 'Home' });
@@ -480,7 +481,7 @@ test('a held site corresponds in a new plan by its place and call-site chain: ea
   expect(correspondingSite(was, { nodes: [...plan(5).nodes, { ...def, chain: [{ ...call(10), file: '/a/other.contract' }] }] }, 2)).toBe(null);
 });
 
-test('a row its author wrote joins on the template or style rung for set-row, the default: at its place with the file\'s digest, or on its style by its declared name; its plain value as written; the token beside; an expression, a package or a moved file read-only', () => {
+test('a row its author wrote joins on the template or style rung for set-row, the default: at its place with the file\'s digest, or on its style by its declared name; its plain value as written; the token beside; an expression, a package or a moved file read-only (LLP 1122 T5)', () => {
   const dir = mkdtempSync(joinPath(tmpdir(), 'exact-inspect-row-'));
   try {
     const card = joinPath(dir, 'card.contract');
@@ -527,7 +528,7 @@ test('a row its author wrote joins on the template or style rung for set-row, th
     expect(s.rows[4].editable).toEqual({ rung: 'style', style: 'Panel', row: 'color', file: 'card.contract', text: 'red' });
     expect(s.rows[5].editable).toMatchObject({ rung: null, reason: expect.stringContaining('layout row') });
     expect(s.rows[6].editable).toMatchObject({ rung: null, reason: expect.stringContaining("package") });
-    // A layout row (the map's `layout`): set-row's reason, up front; the token it reads, offered.
+    // A layout row (the map's `layout`, D14): set-row's reason, up front; the token it reads, offered.
     expect(s.rows[7].editable).toEqual({ rung: null, reason: expect.stringContaining('layout row'), link: null });
     expect(s.rows[8].editable).toEqual({ rung: 'token', token: 'space.md', modes: '' });
     // A file the server does not count as the app's own: a package's.
@@ -535,7 +536,7 @@ test('a row its author wrote joins on the template or style rung for set-row, th
     expect(outside.rows[2].editable).toMatchObject({ rung: null, reason: expect.stringContaining('package') });
     // (Its token, whole, still offered: a design edit, not the package's file.)
     expect(outside.rows[0].editable).toEqual({ rung: 'token', token: 'surface.card', modes: '' });
-    // A row that reads a param keeps the param rung, the default, with its template's address for a detach.
+    // A row that reads a param keeps the param rung, the default (T3), with its template's address for a detach.
     const params = new Map([['f1', { param: 'card.contract#Card.fill', short: 'Card.fill', token: null }]]);
     const tpl = { rung: 'template', file: 'card.contract', at: { line: 3, col: 9 }, sha256: 'x', row: 'background-color', instances: 1, text: 'Card.fill' };
     expect(editable({ source: 'authored', token: { names: ['card.contract#Card.fill'], text: 'card.contract#Card.fill', modes: '', implied: false } }, 'own', params, false, null, tpl)).toEqual({ rung: 'param', param: 'card.contract#Card.fill', short: 'Card.fill', modes: '', template: tpl });
@@ -681,7 +682,7 @@ test('an own or class row carries the attribute it came from, with that file\'s 
   }
 });
 
-test('a library node\'s selection names its exported component and part, apart from the call site\'s component; a fill\'s does not (*1.15*)', () => {
+test('a library node\'s selection names its exported component and part, apart from the call site\'s component; a fill\'s does not (LLP 1139 D5, *1.15*)', () => {
   const map = { digest: 'p1', sources: [], nodes: [
     { file: 'node_modules/@acme/lib/index.contract', line: 4, col: 5, end_col: 11, component: 'Card', library: '@acme/lib/index.contract#Card', part: 'body', chain: [{ file: 'app.contract', line: 5, col: 5, component: 'App' }], bindings: [{ row: 'padding', origin: 'own' }] },
     { file: 'node_modules/@acme/lib/index.contract', line: 3, col: 5, end_col: 11, component: 'Card', library: '@acme/lib/index.contract#Card', chain: [], bindings: [] },
@@ -702,7 +703,7 @@ test('a library node\'s selection names its exported component and part, apart f
   expect(fill.rows[0].library).toBeUndefined();
 });
 
-test('end to end: a compiled library app\'s own source map names a package component\'s part and identity, and the join publishes them; the app\'s fill has none (*1.15*)', async () => {
+test('end to end: a compiled library app\'s own source map names a package component\'s part and identity, and the join publishes them; the app\'s fill has none (LLP 1139 D5, *1.15*)', async () => {
   // A private library package `@acme/lib` with a design, its `Card` declaring parts and a slot; an app filling it.
   const dir = mkdtempSync(joinPath(tmpdir(), 'exact-inspect-library-'));
   try {
@@ -745,7 +746,7 @@ test('end to end: a compiled library app\'s own source map names a package compo
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }, 600_000);
 
-test('a held state on a library node gives its rows and its source the held node\'s library; a library the host report carries is never published', async () => {
+test('round 1: a held state on a library node gives its rows and its source the held node\'s library; a library the host report carries is never published', async () => {
   const map = { digest: 'p1', sources: [], nodes: [
     { file: 'node_modules/@acme/lib/index.contract', line: 4, col: 5, end_col: 11, component: 'Card', library: '@acme/lib/index.contract#Card', part: 'face', chain: [], bindings: [{ row: 'background_color', origin: 'own', states: [{ state: 'active', origin: 'own' }] }] },
     { file: 'app.contract', line: 6, col: 7, end_col: 11, component: 'App', chain: [], bindings: [{ row: 'color', origin: 'own' }] },
@@ -767,7 +768,7 @@ test('a held state on a library node gives its rows and its source the held node
     expect(out.held.library).toBeUndefined();
     expect(out.held.rows[0].library).toBeUndefined();
   }
-  // A held row's own `source` with a library in it: dropped too, joined or not.
+  // A held row's own `source` with a library in it (round 3): dropped too, joined or not.
   const sourced = { ...forged, site: 1, held: { ...forged.held, rows: [{ name: 'background_color', value: '#00f', source: { file: 'x', library: 'forged' } }] } };
   for (const m of [null, map]) expect(join({ id: 'web-1' }, sourced, m, { read }).held.rows[0].source?.library).not.toBe('forged');
   expect(join({ id: 'web-1' }, sourced, null, { read }).held.rows[0].source).toEqual({ file: 'x' });
@@ -894,7 +895,7 @@ test('tamber/1.16: inspect select moves only the inspecting client\'s selection,
   channel.inspect('tool', 'web-1', { on: true });
   expect(selectRequest(channel, { client: 'tool', build: 'web-1', select: { up: 1 } }, () => null).status).toBe(409);
   expect(selectRequest(channel, { client: 'other', build: 'web-1', select: { up: 1 } }, () => at).status).toBe(409);
-  // No selection reported yet: stale (the chain read from none), 409 with stale: true.
+  // No selection reported yet: stale (the chain read from none), 409 with stale: true (theme2 15:02).
   const none = selectRequest(channel, { client: 'tool', build: 'web-1', select: { up: 2 } }, () => ({ levels: [[0, 4], [1]], plan: 'g1', from: 2, instance: [] }));
   expect([none.status, none.error.stale]).toEqual([409, true]);
   // The page's selection, as it reported it (under inspect's command).
@@ -1031,7 +1032,7 @@ test('tamber/1.17: a polled stream keeps a plan\'s copies past the inspect frame
   expect(got.every(f => !(f.copies && 'on' in f))).toBe(true);
 });
 
-test("a selection's chain is its walk where the map writes one (a slot's host, tamber/1.18), and a file only its walk names moving makes it read-only", () => {
+test("a selection's chain is its walk where the map writes one (a slot's host, tamber/1.18), and a file only its walk names moving makes it read-only (stage 15 D3)", () => {
   const dir = mkdtempSync(joinPath(tmpdir(), 'exact-inspect-walk-'));
   try {
     const app = joinPath(dir, 'app.contract'), panel = joinPath(dir, 'panel.contract');

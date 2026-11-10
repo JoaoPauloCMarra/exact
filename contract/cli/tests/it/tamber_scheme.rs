@@ -1,4 +1,4 @@
-//! A design may mark a token `scheme=fixed`, one colour in every
+//! LLP 1121 D3: a design may mark a token `scheme=fixed`, one colour in every
 //! scheme by design (an ink on a fixed fill, a ground under media), which
 //! `lower-colour-one-scheme` then leaves alone; an unmarked one-scheme token
 //! is reported once, at its declaration, however many rows name it; the mark

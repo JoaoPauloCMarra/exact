@@ -1,4 +1,4 @@
-//! A scroller under a hidden route keeps its offset (an Android picture's dismiss):
+//! A scroller under a hidden route keeps its offset (Excord's Android picture dismiss, theme2 2026-10-28 07:39):
 //! a full-screen route over a list hides the list's route, whose layout then has no travel, and the clamp put
 //! the list at 0, so the list showed its first rows when the route came back. On Linux and Android alike.
 use super::*;
@@ -271,9 +271,9 @@ impl DataSource for Rows {
 
 #[test]
 fn a_virtualized_list_keeps_its_row_when_rows_arrive_while_hidden() {
-    // A chat app's transcript: a virtualized list (collection feedback and corrections) under the
-    // picture, rows arriving below (the gateway) or a page above (older history) while it is
-    // hidden; on dismiss the same row shows at the same place, from the first frame.
+    // Excord's transcript: a virtualized list (collection feedback and corrections) under the picture, rows
+    // arriving below (the gateway) or a page above (older history) while it is hidden; on dismiss the same row
+    // shows at the same place, from the first frame.
     let source = r#"routes nav
   home "/"
     photo "/photo"
@@ -443,9 +443,9 @@ component App
     nav = push(nav, "/photo")
   action close
     nav = back(nav)
-  action shed
+  action astra
     lo = 40
-  action narrow
+  action grok
     lo = 15
     hi = 60
   view
@@ -454,8 +454,8 @@ component App
         column navigationKey=`${e.id}` navigationPresentation=(e.name == "photo" ? "fullscreen" : "push") position="absolute" inset=0
           if e.name == "home"
             button "Open" testId="open" press=open
-            button "Shed" testId="shed" press=shed
-            button "Narrow" testId="narrow" press=narrow
+            button "Astra" testId="astra" press=astra
+            button "Grok" testId="grok" press=grok
             scroll testId="port" width=400 height=300
 ROWS
           if e.name == "photo"
@@ -484,14 +484,14 @@ fn boot_kept() -> Presenter<()> {
 fn rows_removed_above_while_hidden_keep_the_anchor_row_over_a_stale_offset() {
     // At 1600 (row80 on top), the first 40 rows removed while
     // the picture covers the list; the anchor staged while hidden (800, row80 on top) wins over the stale input
-    // offset 1600, whose clamp would be 900: the first frame shows row80 on top, not the end.
+    // offset 1600, whose clamp would be 900: the first frame shows row80 on top, not the end (theme2 10:42).
     let mut p = boot_kept();
     let port = named(&p, "port");
     assert_eq!(p.scroll_to(port, (0., 1600.)), Some((0., 1600.)));
     attach(&mut p);
     let top = p.boxes().iter().find(|b| b.id == port).unwrap().rect.1;
     press(&mut p, "open");
-    press(&mut p, "shed");
+    press(&mut p, "astra");
     commit(&mut p, "close");
     assert_eq!(
         p.collection_paint_scroll()
@@ -514,7 +514,7 @@ fn an_anchor_past_the_new_travel_is_clamped_not_the_stale_offset() {
     assert_eq!(p.scroll_to(port, (0., 800.)), Some((0., 800.)));
     attach(&mut p);
     press(&mut p, "open");
-    press(&mut p, "narrow");
+    press(&mut p, "grok");
     commit(&mut p, "close");
     assert_eq!(
         p.collection_paint_scroll()

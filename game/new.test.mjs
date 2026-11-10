@@ -91,7 +91,7 @@ test('generated commands run from an external author directory with quoted paths
   try {
     const created=spawnSync(process.execPath,[resolve(import.meta.dir,'new.mjs'),'.'],{cwd:app,encoding:'utf8'});
     assert.equal(created.status,0,created.stderr);
-    // Its commands are its own runner's verbs, as an app's are.
+    // Its commands are its own runner's verbs, as an app's are (LLP 1086; the platformer's diary, R1).
     const verbs=created.stdout.split('\n').filter(line=>line.startsWith('  bun exact.mjs ')).map(line=>line.trim().split(/\s+/)[2]);
     assert.deepEqual(verbs,['test-rust','web','test','agent','mac','windows','prove'],created.stdout);
     const usage=spawnSync(process.execPath,['exact.mjs','nope'],{cwd:app,encoding:'utf8'}).stderr;
@@ -413,7 +413,7 @@ function treeHash(root, excluded) {
 }
 
 
-test('tree hash detects outside bytes and empty directories, excluding only the new game',()=>{
+test('R12 tree hash detects outside bytes and empty directories, excluding only the new game',()=>{
   const root=mkdtempSync(resolve(tmpdir(),'r12-tree-')),app=resolve(root,'new-game'),file=resolve(root,'outside');
   try {
     mkdirSync(app);writeFileSync(file,'before');
@@ -427,7 +427,7 @@ test('tree hash detects outside bytes and empty directories, excluding only the 
 });
 
 
-test('generation hash ignores touch but sees modes and symlink targets; writes through directory symlinks are not seen',()=>{
+test('R13 generation hash ignores touch but sees modes and symlink targets; writes through directory symlinks are not seen',()=>{
   const root=mkdtempSync(resolve(tmpdir(),'r13-tree-')), outside=mkdtempSync(resolve(tmpdir(),'r13-outside-'));
   try {
     const file=resolve(root,'source');writeFileSync(file,'same');const before=treeHash(root);
@@ -659,7 +659,7 @@ test('game/dev.mjs takes the next free port unless --port names a busy one', asy
   } finally {await new Promise(ok=>held.close(ok));}
 });
 
-test('compact authored manifest survives two bakes byte for byte', async () => {
+test('E10 compact authored manifest survives two bakes byte for byte', async () => {
   const {gameDefaults,gameShells}=await import('./app/shells.mjs');
   const parent=realpathSync(mkdtempSync(resolve(tmpdir(),'e10-manifest-'))), app=resolve(parent,'my-game');
   try {
@@ -681,7 +681,7 @@ test('compact authored manifest survives two bakes byte for byte', async () => {
 });
 
 
-test('an app.json edited after its shells: the compiler says the copy is stale, and the bake the builds run consumes the edit', async () => {
+test('an app.json edited after its shells: the compiler says the copy is stale, and the bake the builds run consumes the edit (LLP 1139.004 D2)', async () => {
   const {gameDefaults,gameShells}=await import('./app/shells.mjs');
   const root=resolve(import.meta.dir,'..'), built=spawnSync('cargo',['build','-q','-p','contract','--bin','contract'],{cwd:root,encoding:'utf8'});
   assert.equal(built.status,0,built.stderr);
@@ -704,7 +704,7 @@ test('an app.json edited after its shells: the compiler says the copy is stale, 
 }, 300000);
 
 
-test('host shells discover arguments without an engine build dependency', () => {
+test('D6 host shells discover arguments without an engine build dependency', () => {
   const parent=realpathSync(mkdtempSync(resolve(tmpdir(),'d6-shells-'))), app=resolve(parent,'my-game');
   try {
     createGame(app);
@@ -742,7 +742,7 @@ test('Beacons is the files its author writes and survives two shell bakes', asyn
     assert.deepEqual(untracked,[],'bakes write only ignored files');
   }
 });
-test('explicit crate and type without an inferred declaration require identity',async()=>{
+test('R15 explicit crate and type without an inferred declaration require identity',async()=>{
   const {gameDefaults}=await import('./app/shells.mjs');
   const parent=realpathSync(mkdtempSync(resolve(tmpdir(),'r15-identity-'))),app=resolve(parent,'odd-game');
   try {
@@ -827,7 +827,7 @@ test('--render scaffolds a render crate with an explicit shader root', async () 
   } finally { rmSync(root, {recursive:true, force:true}); }
 });
 
-// Run each test binary the way a fresh clone would, from another
+// LLP 1132 D6: run each test binary the way a fresh clone would, from another
 // directory, with no assets/ written and no environment variable naming the game.
 test('the --assets scaffold\'s tests bake art in memory under both manifest layouts', async () => {
   const {gameDefaults, prepareGame} = await import('./app/shells.mjs');
@@ -841,7 +841,7 @@ test('the --assets scaffold\'s tests bake art in memory under both manifest layo
     assert.deepEqual(JSON.parse(readFileSync(resolve(app, 'app.json'), 'utf8')), {game:{assets:true}});
     for (const file of ['art/crate.gltf', 'logic/tests/model.rs']) assert.ok(existsSync(resolve(app, file)), file);
     assert.match(readFileSync(resolve(app, 'logic/src/lib.rs'), 'utf8'), /const ASSETS: &'static \[&'static str\] = &\["crate\.model"\];[^]*Mesh::asset\("crate\.model"\)/);
-    // The negative control: without the macro the same world cannot save.
+    // The negative control: without the macro the same world cannot save (F5).
     writeFileSync(resolve(app, 'logic/tests/control.rs'), `use exact_game::Sim;
 use model_game_logic::{ModelGame, Options};
 #[test]
@@ -900,7 +900,7 @@ exact-game-bake.workspace = true
   } finally { rmSync(root, {recursive:true, force:true}); }
 }, 1800000);
 
-// An agent looks names up before it reads engine source.
+// LLP 1132 D8: an agent looks names up before it reads engine source.
 test('a game\'s AGENTS.md lists vocab, the recipes and the name table first, and every path it names exists', () => {
   const root = realpathSync(mkdtempSync(resolve(tmpdir(), 'game-notes-'))), app = resolve(root, 'reading-order');
   try {
@@ -917,7 +917,7 @@ test('a game\'s AGENTS.md lists vocab, the recipes and the name table first, and
   } finally { rmSync(root, {recursive:true, force:true}); }
 });
 
-// A test file added after the shells were written is a target at
+// LLP 1132.000 F17: a test file added after the shells were written is a target at
 // the next `test-rust` (`shells.mjs <game> --test`), with no `shells` in between.
 test('test-rust makes a new logic/tests file a test target before Cargo runs', () => {
   const root = realpathSync(mkdtempSync(resolve(tmpdir(), 'new-test-target-'))), app = resolve(root, 'tidal');
@@ -941,7 +941,7 @@ if (args[0] === 'test') appendFileSync(process.env.TARGETS_CALLS, JSON.stringify
   } finally { rmSync(root, {recursive:true, force:true}); }
 });
 
-test('SDK graph drift is repaired by a lock refresh before locked consumers', async () => {
+test('SDK graph drift is repaired by the async lock refresh before locked consumers', async () => {
   const {sdkLock} = await import('./app/shells.mjs');
   const root = mkdtempSync(resolve(tmpdir(), 'sdk-drift-')), sdk = resolve(root, 'sdk'), dep = resolve(root, 'dep');
   mkdirSync(resolve(sdk, 'app'), {recursive:true}); mkdirSync(dep);
@@ -954,6 +954,9 @@ test('SDK graph drift is repaired by a lock refresh before locked consumers', as
     assert.throws(() => sdkLock(sdk), /stale for the SDK/);
     sdkLock(sdk, {update:true}); sdkLock(sdk);
     assert.match(readFileSync(resolve(sdk, 'app/shells.lock'), 'utf8'), /name = "sdk-drift-dependency"\nversion = "0.2.0"/);
+    const {checks} = await import('../scripts/async.mjs');
+    const steps = checks('head', 'base', {lane:[],glue:[]});
+    assert.ok(steps.findIndex(s => s[0] === 'game-lock') < steps.findIndex(s => s[0] === 'game'));
   } finally { rmSync(root, {recursive:true, force:true}); }
 }, 120000);
 

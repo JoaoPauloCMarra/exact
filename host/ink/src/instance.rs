@@ -1,4 +1,4 @@
-//! Paint order, batching and clip assignment.
+//! Paint order, batching and clip assignment. @ref LLP 1149 D1.1, D2.4.
 
 use bytemuck::{Pod, Zeroable};
 use std::ops::Range;
@@ -38,7 +38,7 @@ pub mod flags {
     pub const RADIAL: u32 = 1 << 9;
     pub const CONIC: u32 = 2 << 9;
     /// CSS blend index (0 source-over, 1 multiply, ... 15 luminosity).
-    /// A nonzero blend needs a compose target in the layer renderer.
+    /// A nonzero blend needs a compose target in the layer renderer (D2.5).
     pub const BLEND_SHIFT: u32 = 11;
     pub const BLEND_MASK: u32 = 15 << BLEND_SHIFT;
     pub const RAMP_SHIFT: u32 = 16;
@@ -51,7 +51,7 @@ pub mod flags {
 
 /// Twelve 16-byte vertex attributes, with no storage-buffer dependency.
 ///
-/// The unpacked field table totals 224 bytes. To meet the 192-byte stride,
+/// D1.1's unpacked field table totals 224 bytes. To meet its 192-byte stride,
 /// the affine has no padding, kind/brush share a word, and clip radii use u16
 /// at 1/16 device pixel (maximum error 1/32 px). Larger radii require a layer.
 /// All positions, shape radii, colours and brush parameters remain f32.
@@ -68,7 +68,7 @@ pub struct Instance {
     pub flags: u32,
     /// Top-left, top-right, bottom-right, bottom-left; CSS-reduced by the caller.
     pub radii: [f32; 4],
-    /// Encoded-sRGB premultiplied RGBA.
+    /// Encoded-sRGB premultiplied RGBA. @ref LLP 1149 D2.7.
     pub color: [f32; 4],
     pub clip0: [f32; 4],
     pub clip1: [f32; 4],
@@ -351,7 +351,7 @@ impl Encoder {
         self.state = self.stack.pop().expect("balanced clip stack");
     }
 
-    /// Re-clips an instance, including clips recorded inside a kept row.
+    /// Re-clips an instance, including clips recorded inside a kept row (D4).
     pub fn push(
         &mut self,
         mut instance: Instance,

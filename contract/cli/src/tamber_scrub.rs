@@ -1,4 +1,4 @@
-//! A scrub's frames: `scrub-fold`, the wire's
+//! A scrub's frames (LLP 1121 D13, LLP 1122 D6): `scrub-fold`, the wire's
 //! own request for each update of an open scrub (`scripts/tamber-scrub.mjs`).
 //!
 //! - **The base** is taken once, when the scrub opens (`open: true`), or
@@ -38,7 +38,7 @@ pub(super) struct Base {
     /// The retention key it opened under: a frame is `rebuild` once the
     /// background whole build says a build under it fails.
     key: String,
-    /// The app's params when it opened.
+    /// The app's params (D15) when it opened.
     params: std::rc::Rc<contract::tamber_params::AppParams>,
 }
 
@@ -87,7 +87,7 @@ impl Server {
             );
         }
         crate::tamber_ops::param_names(&mut ops, &base.snap, &base.params)?;
-        // A package's or base token's first set is the app's override, as a write's is (*1.14*).
+        // A package's or base token's first set is the app's override, as a write's is (*1.14*, D11).
         let design = base
             .snap
             .iter()
@@ -145,10 +145,10 @@ impl Server {
 
     /// What the build refuses beyond the crate's check, a write refuses too,
     /// so nothing is written that the app cannot build: a role override
-    /// that comes to vary by an app axis (the compiler's
-    /// `tamber-role-axis`), and a param's value out of its range.
+    /// that comes to vary by an app axis (LLP 1121 D5, the compiler's
+    /// `tamber-role-axis`), and a param's value out of its range (D15).
     /// `texts` are the files as planned over.
-    /// The rows a write breaks: the compiler's
+    /// The rows a write breaks (theme2's 14:19 ruling): the compiler's
     /// own check of just the literal rows that name a token the write
     /// touches (`contract_lower::rows::check`), under the design before and
     /// after; a row that passed and fails is refused, in the compiler's
@@ -176,7 +176,8 @@ impl Server {
         // A file a whole build under this retention failed (before the
         // write, for a reason of its own: an element lowering refuses
         // before its rows, say) is refused in the build's own words, and
-        // no row's refusal could be them: the rows are the build's.
+        // no row's refusal could be them: the rows are the build's (stage
+        // 13 D, the reviews' rounds 2 and 3).
         if self.checker.seen_failed(retention) {
             return Ok(());
         }
@@ -264,7 +265,7 @@ impl Server {
     ) -> Result<(), Value> {
         // A role that varied before this write is the file's own,
         // already refused by the build; only what the write makes vary.
-        // Folded beside its packages' tokens, which an app token may name.
+        // Folded beside its packages' tokens (LLP 1121 D11), which an app token may name.
         let (joined, joined_icons) = contract::tamber_params::joined_all(&self.app_params());
         let joined = exact_tamber::params::Params {
             joined,
@@ -299,7 +300,7 @@ impl Server {
                 });
             for (name, line, col) in varies(text) {
                 if !before.contains(&name) {
-                    axis.push(diagnostic(path, &exact_tamber::Diagnostic { id: "tamber-role-axis", message: format!("`{name}` overrides a role and varies by an app axis: a role has one value, which the hosts' own surfaces read; vary a token the rows name instead"), line, col }));
+                    axis.push(diagnostic(path, &exact_tamber::Diagnostic { id: "tamber-role-axis", message: format!("`{name}` overrides a role and varies by an app axis: a role has one value, which the hosts' own surfaces read; vary a token the rows name instead (LLP 1121 D5)"), line, col }));
                 }
             }
         }
@@ -307,12 +308,12 @@ impl Server {
             return Err(json!({"message": "refused", "diagnostics": axis}));
         }
         // A param's value folds with the params where it lands, inside
-        // its range, as the build checks it.
+        // its range (D15), as the build checks it.
         // Any write: an unset, a token's or an axis's edit can take a
         // param out of its range or its `when` out of the design too.
         let app = self.app_params();
         // The app's design as planned, folded as the build folds it with its
-        // packages' designs: an edit that leaves a package
+        // packages' designs (LLP 1121 D11): an edit that leaves a package
         // token naming what isn't its own (an override removed) is refused.
         // (the fold kept for the slot and row checks below: one fold a write)
         let chains = self.slot_chains();
@@ -330,7 +331,7 @@ impl Server {
                 }
             }
         }
-        // The library's slot chains: the candidate
+        // The library's slot chains (LLP 1139 D4, stage 12 D2): the candidate
         // fold, with its packages and params, checked by the compiler's own
         // checker, only on the chains the write's tokens reach (closed over
         // aliases and expressions by the checker), refused in its words.

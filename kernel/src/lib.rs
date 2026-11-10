@@ -1,7 +1,8 @@
 //! Exact kernel.
 //!
 //! A copied-in, borrow-parsed binary command stream with transactional apply,
-//! Taffy layout, and columnar binary exports. The design:
+//! Taffy layout, and columnar binary exports. The design is RFC 0491's
+//! (`llp/research/0491-kernel-refresh-program.rfc.md`), built fresh:
 //!
 //! - **One declaration authority.** `tables/schema.json` generates every node
 //!   type, prop id and kind, style row, enum vocabulary, opcode, and the schema
@@ -118,7 +119,7 @@ pub use region::{
     RegionPublication, RegionSelection, RegionTextRequest, RegionTextSource, RegionTicket,
 };
 
-/// CSS authored and resolved exclusion geometry.
+/// CSS authored and resolved exclusion geometry (LLP 1043.000).
 pub use exact_textflow::{FlowShape, ShapeOutside};
 pub use flow::FlowRefusal;
 

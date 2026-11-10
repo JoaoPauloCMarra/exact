@@ -1,4 +1,4 @@
-//! A native absolute path (Exact patch 24): admitted
+//! A native absolute path (Exact patch 24: exact2 LLP 1133.007 D6a): admitted
 //! as spelt, then walked from the directory its grant line reaches without
 //! following a link this user can have made or one below a directory the
 //! app may write (`reach`), every component below that opened `O_NOFOLLOW`,

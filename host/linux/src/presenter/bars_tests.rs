@@ -1,4 +1,4 @@
-//! A shell's bars: what each shows for Shelf's routes,
+//! A shell's bars (LLP 1115.001 D11): what each shows for Shelf's routes,
 //! the room they take of the page, what a touch in one does, how a driver
 //! addresses what they stand for, and a host with no such shell unchanged.
 use super::look::{nav_height, top_height};
@@ -397,7 +397,7 @@ fn a_route_with_no_header_or_that_says_no_bar_has_none() {
 }
 
 /// `appearance="none"` written on a header or the root's tablist keeps the
-/// author's bar: no Material bar is made of
+/// author's bar (LLP 1075.003 §9.10, #393): no Material bar is made of
 /// either, and both paint in the page.
 #[test]
 fn a_header_or_tablist_that_writes_appearance_none_stays_the_pages() {
@@ -622,7 +622,7 @@ fn a_host_with_no_such_shell_paints_the_header_and_the_tablist_in_the_page() {
     assert!(near(header.1, 0.0) && near(list.1, header.3));
 }
 
-/// A TV's device facts: no pointer.
+/// A TV's device facts: no pointer (LLP 1115.001.003 D2).
 fn tv() -> Device {
     Device {
         night: false,
@@ -654,7 +654,7 @@ fn remote(p: &mut Presenter<Nothing>, code: &str, key: &str) {
     p.hardware_key(code, key, false, false);
 }
 
-/// A TV's remote reaches what the bars stand for: Up
+/// A TV's remote reaches what the bars stand for (LLP 1115.001.003 D4): Up
 /// from the list's first button is the header's More, lit in its bar and
 /// opened by Select; Down from the list's last button is a destination.
 #[test]
@@ -687,7 +687,7 @@ fn a_tvs_remote_reaches_the_bars_targets() {
 
 /// The focus on a bar's target outlives a commit, though its node is inert
 /// under its route; Select opens its menu with the first row focused, and
-/// a held Select chooses nothing more.
+/// a held Select chooses nothing more (LLP 1115.001.003 D3, D4).
 #[test]
 fn a_bar_targets_focus_outlives_a_commit_and_a_held_select_opens_once() {
     let mut p = barred_tv(APP);
@@ -722,8 +722,9 @@ fn from_no_focus_the_remote_reaches_a_bars_only_screen() {
     assert_eq!(p.focus(), Some(id(&p, "tab-home")));
 }
 
-/// A TV's bars keep inside its overscan margin, as the page does: 5% of a 1920 × 1080 page is 96 at
-/// the sides and 54 above and below.
+/// A TV's bars keep inside its overscan margin, as the page does (LLP
+/// 1115.001.003 D7): 5% of a 1920 × 1080 page is 96 at the sides and 54
+/// above and below.
 #[test]
 fn a_tvs_bars_keep_inside_its_overscan_margin() {
     let mut p = barred_tv(APP);
@@ -788,7 +789,7 @@ fn a_root_with_a_key_handler_does_not_hold_the_remote_from_the_bars() {
     assert_eq!(p.focus(), Some(id(&p, "tab-other")));
 }
 
-/// A header button the shell's bar draws carries no point, so a
+/// LLP 1021 D2: a header button the shell's bar draws carries no point, so a
 /// popover it opens hangs from the item, and never the point of a click on
 /// the page before it.
 #[test]
@@ -897,7 +898,7 @@ fn settle(p: &mut Presenter<Nothing>) {
     }
 }
 
-/// The selected tab tapped again scrolls its screen's
+/// LLP 1070.000 §2.6: the selected tab tapped again scrolls its screen's
 /// list to the top, unless the tab's press asked for a row there: the
 /// author's `scrollIntoView` wins over the platform's scroll, whether it
 /// lands or the port already shows its row, and whether or not the list

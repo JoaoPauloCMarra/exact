@@ -1,4 +1,4 @@
-// A focused field and what follows it in its
+// @ref LLP 1116.003 D2.1 — a focused field and what follows it in its
 // section stay above the keyboard, as in a UIKit table or a SwiftUI `Form`:
 // the nearest scroller (a `scroll`, a list, a grouped list's collection
 // view) scrolls by the least that shows them, in the keyboard's own
@@ -8,7 +8,7 @@
 // over the field. Under `resizes-content`, the editing route's layout block
 // ends at the keyboard; an ordinary page resizes its viewport instead.
 //
-// And above content pinned over the scroller's bottom
+// @ref LLP 1116.008 D8 — and above content pinned over the scroller's bottom
 // edge (an absolute bar riding the keyboard): what a pinned bar hides of the
 // port is not the field's to be shown in, as a UIKit table whose bottom inset
 // takes in its toolbar scrolls the field above it.
@@ -228,7 +228,7 @@ extension Presenter {
 }
 
 /// The room below a scroller's content that lets a field at its end be shown
-/// above content pinned over its bottom edge: what a hand-
+/// above content pinned over its bottom edge (LLP 1116.008 D8): what a hand-
 /// built screen's bottom inset does for its toolbar. Taken as the field is
 /// revealed and given back when the keyboard goes, never at rest. The active
 /// scroll backend keeps this room alongside native content padding.
@@ -241,7 +241,7 @@ final class PinnedRoom {
 
     /// `extra` more points below the content, on top of what it already took.
     /// Only its own share of the inset is added and taken back: a page band
-    /// may change the rest meanwhile.
+    /// may change the rest meanwhile (LLP 1130 D3).
     func grow(_ sv: UIScrollView, by extra: CGFloat) {
         let id = ObjectIdentifier(sv)
         var room = grown[id] ?? Grown(scroll: sv, added: 0)
@@ -263,7 +263,7 @@ final class PinnedRoom {
     }
 }
 
-// How a drag puts the keyboard away.
+// @ref LLP 1115.000 D9.1 — how a drag puts the keyboard away.
 extension NodeView {
     /// What a drag on this node's scroller does to the keyboard. Unsaid, on
     /// a scroller that scrolls vertically, the keyboard follows a drag that

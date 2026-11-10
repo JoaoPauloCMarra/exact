@@ -1,4 +1,4 @@
-//! State carried across a restart.
+//! State carried across a restart (LLP 1007 §6, LLP 1027 D5).
 use exact_plan::Value;
 
 /// What survives a reload: slots whose names/types still fit, settled
@@ -7,7 +7,7 @@ use exact_plan::Value;
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Carried {
     /// Router slot name and its value decoded through the old plan's shapes.
-    /// Preserves named params when their field order changes.
+    /// @ref LLP 1038 D5 — preserves named params when their field order changes.
     pub router: Option<(String, exact_route::Router)>,
     /// The replaceable data module that produced these resource answers.
     pub data_revision: Option<String>,
@@ -15,7 +15,7 @@ pub struct Carried {
     pub keeps_answers: bool,
     /// Slot name → value.
     pub slots: Vec<(String, Value)>,
-    /// Tab panels' state: (panel `id`, slot name, value).
+    /// Tab panels' state (LLP 1075.003 §9.14): (panel `id`, slot name, value).
     pub panels: crate::instance::tabs::CarriedPanels,
     /// Resource name → (source name, arguments, value).
     pub resources: Vec<(String, String, Vec<Value>, Value)>,
@@ -23,18 +23,18 @@ pub struct Carried {
     pub store_readers: Vec<(String, String)>,
     /// The clock, milliseconds.
     pub now_ms: f64,
-    /// The store's kept values: what the host has persisted.
+    /// The store's kept values (LLP 1018): what the host has persisted.
     pub store: Vec<(String, Vec<u8>)>,
     /// Each queue's waiting sends, by mutation name: never carried, only
-    /// said once the new runner boots.
+    /// said once the new runner boots (LLP 1092 D4).
     pub forgot_waiting: Vec<(String, usize)>,
-    /// The driver's fetch faults as they are (`Faults::spec`),
+    /// The driver's fetch faults as they are (LLP 1103 D3, `Faults::spec`),
     /// so a replacement neither revives a spent fault nor loses an armed one.
     pub faults: Option<String>,
-    /// The window's app modes, (axis, value): an app's
+    /// The window's app modes, (axis, value) (LLP 1121 D5): an app's
     /// `setMode` or the agent's `prefer mode` outlives a reload.
     pub modes: Vec<(String, String)>,
-    /// The uploads asked and how each stands, whatever
+    /// The uploads asked and how each stands (LLP 1016.000 D10), whatever
     /// the data module: none is sent again at its resource and arguments,
     /// and one still on its way is cut off.
     pub uploads: Vec<crate::UploadMark>,
@@ -251,7 +251,7 @@ mod tests {
         let mut original_plan = plan("remember", false);
         original_plan.resources[0].reader = true;
         // A module not ready at boot shows the resource's zero, and its answer
-        // at `data_ready` is kept.
+        // at `data_ready` is kept (LLP 1054.000.002 D1).
         let mut original = Runner::boot_stored(
             original_plan,
             Source {

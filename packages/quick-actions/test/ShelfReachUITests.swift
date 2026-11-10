@@ -1,4 +1,4 @@
-// The simulator drives of Shelf, as a person reaches it
+// LLP 1133.023 stage 2's simulator drives of Shelf, as a person reaches it
 // from outside the app: the Home Screen quick action, Spotlight, and the
 // Shortcuts app's Log Pages. Each test leaves a screenshot and the
 // accessibility hierarchy of each step in REACH_OUT. `apple-ui.mjs` builds

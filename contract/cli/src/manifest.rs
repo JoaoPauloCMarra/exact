@@ -1,7 +1,7 @@
-//! The app manifest (`app.json`): the identity and policy every platform
-//! derives from, read and validated here because the compiler checks a plan's
-//! app identity against it. The compatibility id and the embedded receipt that
-//! also read it are the bake's (`exact-bake`).
+//! The app manifest (`app.json`, LLP 1030 D2; 1030.000 D7): the identity and
+//! policy every platform derives from, read and validated here because the
+//! compiler checks a plan's app identity against it. The compatibility id
+//! and the embedded receipt that also read it are the bake's (`exact-bake`).
 
 use std::path::Path;
 
@@ -12,9 +12,9 @@ pub use activities::Activity;
 mod watch;
 pub use watch::{WatchEntry, WATCH_KIND};
 
-/// The app manifest (`app.json`) as the bake reads it — the JSON, and the
-/// identity every platform derives from it. An app without one gets the
-/// defaults `scripts/app.mjs` gives it.
+/// The app manifest (`app.json`, LLP 1030 D2; 1030.000 D7) as the bake
+/// reads it — the JSON, and the identity every platform derives from it.
+/// An app without one gets the defaults `scripts/app.mjs` gives it.
 #[derive(Debug, Clone)]
 pub struct Manifest {
     /// The manifest's JSON (an object; empty when the app declares none).
@@ -29,7 +29,7 @@ pub struct Manifest {
 
 impl Manifest {
     /// Resolve the replacement executor baked into a platform/environment.
-    /// Matches `scripts/app.mjs::rustPolicy`: global,
+    /// Matches `scripts/app.mjs::rustPolicy` (LLP 1029.000 §2): global,
     /// environment, platform, then platform environment; true means auto.
     pub fn rust_mode(&self, platform: &str, development: bool) -> Result<&'static str, String> {
         if !matches!(
@@ -79,7 +79,7 @@ impl Manifest {
         }
     }
 
-    /// Where a language's module runs on `platform`:
+    /// Where a language's module runs on `platform` (LLP 1027.002 D1, §6):
     /// `typescript.placement` or `rust.placement`, overridden by
     /// `platforms.<platform>.placement`; `main` unless declared. The
     /// environment (`EXACT_TYPESCRIPT_PLACEMENT`, `EXACT_RUST_PLACEMENT`)
@@ -211,7 +211,7 @@ impl Manifest {
             .unwrap_or_default()
     }
 
-    /// The painter explicitly selected for this platform.
+    /// The painter explicitly selected for this platform (LLP 1149 D12).
     pub fn painter(&self, platform: &str) -> Result<Option<&'static str>, String> {
         match self.host(platform).get("painter") {
             None => Ok(None),
@@ -300,7 +300,7 @@ impl Manifest {
     /// The channel this build bakes in (`deploy.channel`; else the only key
     /// of `deploy.channels`; else `prod`) and its origin (`deploy.channels.
     /// <channel>`, else `app.origin`): where the binary's update store checks
-    /// A stream is `(channel, compatibility id)`; the
+    /// (LLP 1030.000 D4). A stream is `(channel, compatibility id)`; the
     /// channel is not part of the id. The origin `"appdrop"` is AppDrop's
     /// origin for the signing key (`appdrop_origin`).
     pub fn channel(&self) -> Result<(String, Option<String>), String> {
@@ -371,7 +371,7 @@ impl Manifest {
         Ok(format!("{}/u/{id}", base.trim_end_matches('/')))
     }
 
-    /// `deploy.activate`: when a staged bundle applies —
+    /// `deploy.activate` (LLP 1030.000 D4): when a staged bundle applies —
     /// `next-launch` (the default; `deliveryActivate` applies it sooner),
     /// `app-decides` (only `deliveryActivate` does) or `immediate` (as soon
     /// as a check stages it). Policy, not identity:
@@ -386,7 +386,7 @@ impl Manifest {
     }
 
     /// `deploy.store.<platform>`: `"A"` (an update store) or `"0"` (none);
-    /// Native defaults to `"A"`; the web host links no updater.
+    /// Native defaults to `"A"`; the web host links no updater (LLP 1030 D4).
     pub fn store(&self, platform: &str) -> String {
         self.json
             .get("deploy")
@@ -485,8 +485,8 @@ fn validate_rust_policy(value: &serde_json::Value, depth: u8) -> Result<(), Stri
     }
 }
 
-/// `typescript`: `{ placement?, platforms?: { <platform>: { placement? } } }`,
-/// nothing else.
+/// `typescript`: `{ placement?, platforms?: { <platform>: { placement? } } }`
+/// (LLP 1027.002 §6), nothing else.
 fn validate_placement_policy(value: &serde_json::Value) -> Result<(), String> {
     let object = value.as_object().ok_or("typescript must be an object")?;
     let placement = |v: &serde_json::Value, at: &str| -> Result<(), String> {

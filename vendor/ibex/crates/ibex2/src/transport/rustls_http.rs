@@ -1,6 +1,6 @@
 //! HTTP/1.1 over rustls off Apple. HTTP framing and TLS remain ureq's; the
 //! adapter supplies cancellable sockets and exclusive leases of pooled agents.
-//! The platform transport off Apple.
+//! @ref LLP 0068#5-open-questions — the platform transport off Apple
 
 use crate::boundary::HostError;
 use crate::stdlib::abort::{AbortRegistration, AbortSignal};
@@ -115,7 +115,7 @@ impl RustlsHttpTransport {
         }
     }
 
-    // Proxy routing is transport policy; an unsupported route must fail before DNS or a socket.
+    // @ref LLP 0059.000#35-fetch--delegating-capability-bearing — proxy routing is transport policy; an unsupported route must fail before DNS or a socket
     fn proxy_for(&self, target: &ureq::http::Uri) -> Result<Option<&ureq::Proxy>, HostError> {
         let Some(proxy) = self.proxy.as_ref() else {
             return Ok(None);
@@ -170,7 +170,7 @@ fn agent_config(tls: bool, proxy: Option<ureq::Proxy>) -> ureq::config::Config {
 
 // Every transport in the process shares the one trust-store read. Keeping the
 // config out of `new` also keeps constructing an unused host endowment cheap.
-// Native roots are loaded lazily and once per process.
+// @ref LLP 0068#5-open-questions — native roots are loaded lazily and once per process
 fn tls_config() -> &'static (ureq::tls::TlsConfig, Roots) {
     static TLS_CONFIG: OnceLock<(ureq::tls::TlsConfig, Roots)> = OnceLock::new();
     TLS_CONFIG.get_or_init(|| {
@@ -471,7 +471,8 @@ pub(crate) fn connect_socket(
 }
 
 /// Wait for a connecting socket to become writable. A `poll(2)` returns when
-/// the connection completes instead of imposing a sleep on every connection.
+/// the connection completes instead of imposing a sleep on every connection
+/// (LLP 0068.002 §2).
 #[cfg(not(windows))]
 fn wait_writable(socket: &socket2::Socket, timeout: Duration) {
     #[cfg(unix)]
@@ -568,7 +569,7 @@ fn failed(error: impl std::fmt::Display) -> HostError {
 /// `req` on the lease's agent, its body a slice or a counted reader (Exact
 /// patch 23), within `left` of the request's time. A request's own `timeout`
 /// replaces every agent default: no shorter internal phase limit may win before
-/// it. Without one, the agent's phase limits stand, within
+/// it (LLP 0068.000 §4). Without one, the agent's phase limits stand, within
 /// `left` of its global limit.
 fn run<S: ureq::AsSendBody>(
     lease: &Lease,

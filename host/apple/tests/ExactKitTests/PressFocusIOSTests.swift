@@ -5,13 +5,13 @@ import XCTest
 
 /// A press and the focus it takes on UIKit. A tap focuses only a node that
 /// asked for focus (`focusesOnPress`), as UIKit's buttons take none from a
-/// touch; a plain button's press ends the editing, so the field it ends lowers
-/// the keyboard, and under `resizes-content` the button moves at once, yet the
-/// press is the finger's where it went down and came up. A later autofocus
-/// takes no focus a node holds, however it came, except the press's own work's:
-/// a field it mounts, or a sheet's it presents, takes the focus the press gave
-/// its control. UIKit, so a simulator runs it: bun host/apple/build.mjs --test
-/// --ios
+/// touch; a plain button's press ends the editing, so the field it ends
+/// lowers the keyboard, and under `resizes-content` the button moves at
+/// once, yet the press is the finger's where it went down and came up. A later
+/// autofocus takes no focus a node holds, however it came (Charlie,
+/// 2026-10-17), except the press's own work's: a field it mounts, or a
+/// sheet's it presents, takes the focus the press gave its control.
+/// UIKit, so a simulator runs it: bun host/apple/build.mjs --test --ios
 final class PressFocusIOSTests: XCTestCase {
     private var window: UIWindow!
     private var session: ExactSession?
@@ -81,7 +81,7 @@ final class PressFocusIOSTests: XCTestCase {
         }
         return PointTouch(point, on: hit)
     }
-    /// A press held inside a box whose material comes or goes
+    /// euxy's capsule: a press held inside a box whose material comes or goes
     /// for another reason (a timer's state) is still the finger's. The swap
     /// moves the children between the effect's content view and the box,
     /// which is no change of authored parent: a button's own press and a
@@ -569,7 +569,7 @@ final class PressFocusIOSTests: XCTestCase {
 
     /// A field its autofocus focused, then taken out of the window in the
     /// same turn (a sheet's route going into the controller UIKit presents,
-    /// a grouped row into a cell not yet in one):
+    /// a grouped row into a cell not yet in one; grocery-list, round 24):
     /// its autofocus runs again where it lands. Taken out a turn later, it
     /// has had its autofocus, and coming back takes nothing.
     func testAnAutofocusMovedOutOfTheWindowInItsTurnRunsWhereItLands() throws {

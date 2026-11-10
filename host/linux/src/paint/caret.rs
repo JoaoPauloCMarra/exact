@@ -38,7 +38,7 @@ impl super::Painter {
     }
 
     /// A field's painted focus: a two-point ring in the accent
-    /// colour over its chrome or bare outer edge.
+    /// colour over its chrome or bare outer edge (LLP 1104 D6–D7).
     pub(super) fn field_ring(&mut self, outer: &Shape, accent: [u8; 4], ts: Transform) {
         for part in super::border::border_fills(outer, [2.0; 4], [accent; 4]) {
             self.backend.fill_border(&part, ts);

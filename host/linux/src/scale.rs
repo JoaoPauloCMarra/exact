@@ -1,6 +1,6 @@
 //! The two lengths the presenter tells the host that no row of the tree
-//! says: the root font size `rem` follows, and the
-//! display's scale, the pixels a point this host draws
+//! says: the root font size `rem` follows (LLP 1069.000 D3), and the
+//! display's scale (LLP 1115.000 D10.3), the pixels a point this host draws
 //! at, which a hairline (`-exact-hairline`) is one device pixel of. The
 //! presenter says the scale at boot and whenever it changes
 //! (`Presenter::resize_scaled`): a desktop's `EXACT_SCALE` (1 when unset),
@@ -8,12 +8,12 @@
 use super::*;
 
 impl<D: DataSource> Host<D> {
-    /// A live design batch or snapshot frame from the dev server, set in
-    /// place in one commit: `None` when applied or
+    /// A live design batch or snapshot frame from the dev server (LLP 1121
+    /// D13, stage 4), set in place in one commit: `None` when applied or
     /// already this build's design, else why not (`stale`: fetch the
     /// snapshot); whether the wide colour table refused a colour, which
-    /// the presenter reports `unsupported`; and whether the
-    /// session's role overrides moved: what was painted
+    /// the presenter reports `unsupported` (LLP 1122 D4); and whether the
+    /// session's role overrides moved (LLP 1121 stage 5): what was painted
     /// from them re-targets and is painted again.
     pub fn apply_live(&mut self, frame: &str) -> (Option<String>, bool, bool) {
         let Some(edit) = exact_runner::design::Edit::parse(frame) else {
@@ -25,7 +25,7 @@ impl<D: DataSource> Host<D> {
         };
         match self.runner.apply_live(&edit) {
             Ok(applied) => {
-                // A scrub's frame shows with no transition.
+                // A scrub's frame shows with no transition (LLP 1121 D13).
                 let _still = edit.scrub.is_some().then(exact_kernel::motion::still);
                 let error = self.commit(
                     &[Timed {
@@ -47,7 +47,7 @@ impl<D: DataSource> Host<D> {
         }
     }
 
-    /// The root font size `rem` follows: a relayout in one
+    /// The root font size `rem` follows (LLP 1069.000 D3): a relayout in one
     /// commit, no resource asked again.
     pub fn set_root_font_size(&mut self, px: f64) -> Option<String> {
         match self.runner.set_root_font_size(px) {
@@ -85,7 +85,7 @@ impl<D: DataSource> Host<D> {
         }
     }
 
-    /// App modes (the agent's `prefer mode`): the window's
+    /// App modes (LLP 1121 D5, the agent's `prefer mode`): the window's
     /// slice set again in one commit, which paints.
     pub fn set_modes(&mut self, pins: &[(&str, &str)]) -> Option<String> {
         match self.runner.set_modes(pins) {

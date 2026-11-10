@@ -582,7 +582,7 @@ test('a development server answers only to its printed names; its token and phon
   assert.deepEqual(local.check(request('rebound.example:8879','127.0.0.1')),{allowed:false,local:false});
   assert.deepEqual(local.check(request('192.168.1.20:8879','127.0.0.1')),{allowed:false,local:false});
   assert.deepEqual(local.check(request(undefined,'127.0.0.1')),{allowed:false,local:false});
-  // The design tool's live copies: exact-copy-<n>.localhost at this port, admitted, never local; no other name under localhost.
+  // The design tool's live copies (LLP 1122 T7): exact-copy-<n>.localhost at this port, admitted, never local; no other name under localhost.
   assert.deepEqual(local.check(request('exact-copy-3.localhost:8879','127.0.0.1')),{allowed:true,local:false});
   for (const host of ['exact-copy-0.localhost:8879','exact-copy-100.localhost:8879','exact-copy-3.localhost:8880','evil.localhost:8879','exact-copy-3.localhost.example:8879']) assert.deepEqual(local.check(request(host,'127.0.0.1')),{allowed:false,local:false},host);
   assert.deepEqual(shared.check(request('192.168.1.20:8879','192.168.1.33')),{allowed:true,local:false});
@@ -601,18 +601,18 @@ test('--allow-host admits a tunnel name to every request but never makes it loca
   const request=(host,peer='127.0.0.1')=>({headers:{host},socket:{remoteAddress:peer}});
   const loopback=installBrowserOrigins({host:'127.0.0.1',port:8879,interfaces});
   // The default is unchanged: a tunnel forwarding to loopback is refused (421).
-  assert.equal(developmentGate(loopback,8879).check(request('abc.tunnel.example')).allowed,false);
-  const names=allowHostArgs(['--app','beacons','--allow-host','ABC.tunnel.example','--port','8879','--allow-host','pinned.example:8443']);
-  assert.deepEqual(names,['abc.tunnel.example','pinned.example:8443']);
+  assert.equal(developmentGate(loopback,8879).check(request('abc.tuft.dev')).allowed,false);
+  const names=allowHostArgs(['--app','beacons','--allow-host','ABC.tuft.dev','--port','8879','--allow-host','pinned.example:8443']);
+  assert.deepEqual(names,['abc.tuft.dev','pinned.example:8443']);
   const gate=developmentGate(loopback,8879,names);
   // A tunnel's Host has no port (https), or the public one; the name admits any port.
-  assert.deepEqual(gate.check(request('abc.tunnel.example')),{allowed:true,local:false});
-  assert.deepEqual(gate.check(request('ABC.tunnel.example:443')),{allowed:true,local:false});
+  assert.deepEqual(gate.check(request('abc.tuft.dev')),{allowed:true,local:false});
+  assert.deepEqual(gate.check(request('ABC.tuft.dev:443')),{allowed:true,local:false});
   assert.deepEqual(gate.check(request('pinned.example:8443')),{allowed:true,local:false});
   assert.equal(gate.check(request('pinned.example')).allowed,false,'name:port admits that port only');
   assert.equal(gate.check(request('pinned.example:80')).allowed,false);
   // DNS rebinding under any other name is still refused; loopback is still local.
-  assert.equal(gate.check(request('evil.abc.tunnel.example')).allowed,false);
+  assert.equal(gate.check(request('evil.abc.tuft.dev')).allowed,false);
   assert.equal(gate.check(request('rebound.example:8879')).allowed,false);
   assert.deepEqual(gate.check(request('127.0.0.1:8879')),{allowed:true,local:true});
   // A tunnel that rewrites Host to loopback still carries the internet: not local.
@@ -628,8 +628,8 @@ test('--allow-host admits a tunnel name to every request but never makes it loca
   assert.deepEqual(post('null'),{allowed:false,local:false});
   assert.deepEqual(post('http://127.0.0.1:8879'),{allowed:true,local:true});
   assert.deepEqual(post(undefined),{allowed:true,local:true});
-  assert.deepEqual(post('https://abc.tunnel.example','abc.tunnel.example'),{allowed:true,local:false});
-  for (const bad of [undefined,'','https://abc.tunnel.example','*.tunnel.example','abc.tunnel.example/','-abc.example','a b'])
+  assert.deepEqual(post('https://abc.tuft.dev','abc.tuft.dev'),{allowed:true,local:false});
+  for (const bad of [undefined,'','https://abc.tuft.dev','*.tuft.dev','abc.tuft.dev/','-abc.example','a b'])
     assert.throws(()=>allowHostName(bad),/--allow-host takes a host name/);
   assert.throws(()=>allowHostArgs(['--allow-host']),/--allow-host/);
 });
@@ -707,7 +707,7 @@ test('the production server sends warm bodies compressed, with validators', asyn
 });
 
 
-test('the install page lists what the app can reach, escaped, and only when the bake says', () => {
+test('the install page lists what the app can reach, escaped, and only when the bake says (LLP 1069.008 D7)', () => {
   const reach = [{ grant: 'device.microphone purpose.mic', purpose: 'Records <your> takes.', enforced: 'OS prompt (iOS, macOS); declared by app.ts' }];
   const page = installPage(manifest, { build: { reach } });
   assert.match(page, /<h2 id="heading-reach">What this app can reach<\/h2>/);

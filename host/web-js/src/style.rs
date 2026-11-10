@@ -16,8 +16,8 @@ use exact_runner::bridge;
 use exact_runner::vm::instructions;
 use exact_web::host::template::{self, Parts};
 
-/// A canvas's explicit bitmap size and getContext settings
-/// as the attributes canvas2d.js reads, as the runner reads
+/// A canvas's explicit bitmap size (LLP 1056 D6 r3) and getContext settings
+/// (LLP 1100 D12a) as the attributes canvas2d.js reads, as the runner reads
 /// the node's props; a dynamic one is refused.
 pub fn canvas_bitmap(
     plan: &Plan,
@@ -70,77 +70,11 @@ pub fn can_be(plan: &Plan, code: &[u8], used: &dyn Fn(&str) -> bool) -> bool {
     })
 }
 
-/// A bound `-exact-layout-transition`'s values: each string its
-/// code pushes that the row holds, with the declaration the kernel's own CSS
-/// writes for it (css.rs `layout_transition_css`), `None` where it writes none
-/// (`none`, or no transition covering layout); and the strings that clear the
-/// row unjournaled, as the runner clears one (`StyleValue::text_unsets`: a
-/// blank, `unset`). A string the kernel refuses is in neither. The JS target
-/// has no transition grammar of its own: a value its code computes, not one of
-/// these, is unset (`layout_transition_map`).
-pub struct LayoutTransitions {
-    pub held: std::collections::BTreeMap<String, Option<String>>,
-    pub unsets: Vec<String>,
-}
-
-pub fn layout_transitions(plan: &Plan, code: &[u8]) -> LayoutTransitions {
-    let mut out = LayoutTransitions {
-        held: Default::default(),
-        unsets: Vec::new(),
-    };
-    let strings = instructions(code)
-        .filter_map(|i| i.ok().filter(|i| i.op == Opcode::Str))
-        .map(|i| plan.str(exact_plan::StrId(i.args[0] as u32)));
-    for v in strings {
-        if layout_unsets(v) {
-            out.unsets.push(v.to_string());
-        } else if let Some(css) = layout_transition(v) {
-            out.held.insert(v.to_string(), css);
-        }
-    }
-    out
-}
-
-/// The map of a bound `-exact-layout-transition` over `values`: the kernel's
-/// declaration for each value the code names that the row holds, none for one
-/// that clears it. Another (one it computed) is unset with a journal line for
-/// the view `view` names, in the runner's words for an invalid value
-/// (`instance.rs` `invalid`) but saying why: the kernel may take it, and this
-/// target can't tell.
-pub fn layout_transition_map(values: &LayoutTransitions, view: &str, say: &str) -> String {
-    let held = serde_json::to_string(&values.held).unwrap();
-    let unsets = serde_json::to_string(&values.unsets).unwrap();
-    format!("v=>{{if(v==null||/^\\s*(unset)?\\s*$/i.test(v)||{unsets}.includes(v))return null;const T={held};if(typeof v===\"string\"&&Object.hasOwn(T,v))return T[v];{say}(`view ${{{view}}}: invalid layout-transition value ${{JSON.stringify(v)}}; unset (the JS target writes only the values the code names)`);return null}}")
-}
-
-/// Whether the runner clears the row for `v` before parsing it, unjournaled
-/// (`instance.rs`, `bridge::unsets`).
-pub fn layout_unsets(v: &str) -> bool {
-    exact_kernel::StyleValue::text_unsets(v, StyleId::LayoutTransition)
-}
-
-/// The kernel's `--exact-layout-transition` for one bound value it parses:
-/// `None` where it refuses the value, `Some(None)` where it declares nothing.
-pub fn layout_transition(v: &str) -> Option<Option<String>> {
-    let mut p = exact_kernel::StyleProps::default();
-    p.set_dynamic(
-        StyleId::LayoutTransition,
-        &exact_kernel::StyleValue::Text(v.into()),
-    )
-    .ok()?;
-    let (text, _) = exact_web::css::css_text(&p, &[]);
-    Some(
-        text.split(';')
-            .find_map(|d| d.strip_prefix("--exact-layout-transition:"))
-            .map(str::to_string),
-    )
-}
-
 /// Props whose presence decides the element's tag: a dynamic one is given a
 /// sample value when the tag is computed (the live host fixes the tag from
 /// the value at creation; the JS target from its presence). A `progress`'s
 /// `value` is one: with it HTML's `<progress>` bar, without it the drawn
-/// ring.
+/// ring (LLP 1116 D8).
 fn decides_tag(plan: &Plan, node: &exact_plan::NodesRow, p: PropId) -> bool {
     matches!(
         p,
@@ -244,7 +178,7 @@ pub fn static_tree(
                     }
                 }
                 // With what the binding says of the row (the author wrote it, or the compiler
-                // implied it), which the page's marks read (`data-exact-said`).
+                // implied it: LLP 1115.000 D2), which the page's marks read (`data-exact-said`).
                 (BindingKind::Style, Some(v)) => {
                     bridge::set_binding_style(&mut patch, &row, &v, plan)
                         .map_err(|e| format!("node {i}: {e:?}"))?;
@@ -275,7 +209,7 @@ pub fn static_tree(
                 patch: Box::new(patch),
             });
         }
-        // Its host-known state looks: literal rows, tokens
+        // Its host-known state looks (LLP 1121 D8): literal rows, tokens
         // kept by name, as its own static rows are.
         let at = plan.looks.partition_point(|l| (l.node.0 as usize) < i);
         let mut looks = Vec::new();
@@ -328,7 +262,7 @@ pub fn project(
 ) -> Result<Vec<Option<Parts>>, String> {
     let (kernel, tree) = static_tree(plan, sites)?;
     let view = |i: usize| -> ViewId { i as u32 + 1 };
-    // A text folds into its box's content only when the
+    // A text folds into its box's content (LLP 1007.001) only when the
     // template holds all of it: no bound row or prop but its text, no
     // handler, and not a repeated row (copies would join one block). A box
     // with a bound row keeps its text too: the row may make it lay out
@@ -401,7 +335,7 @@ pub fn project(
                 }
             }
         }
-        // A grouped row (a native button's too) its
+        // @ref LLP 1084 D7 — a grouped row (a native button's too) its
         // author hid is no row the page's sheet counts (index.html); a bound
         // `display` says so as it runs (rows.rs).
         if (parts.props.contains_key("data-groupedrowseparator")
@@ -454,8 +388,8 @@ pub fn project(
     Ok(out)
 }
 
-/// Whether image `i` draws a symbol in its author's `color`
-/// (`NodeRef::symbol_color_said`), as far as the static tree says:
+/// Whether image `i` draws a symbol in its author's `color` (LLP 1121 stage
+/// 9 B; `NodeRef::symbol_color_said`), as far as the static tree says:
 /// `None` where it can't be a symbol (a literal source that is none) or is
 /// a native button's face; else the nodes between it and the nearest node
 /// whose static rows decide that decide at run time ([`Ink`]: a bound
@@ -500,7 +434,7 @@ fn symbol_color(
     if !symbol || face {
         return None;
     }
-    // A mode boundary (a pin or a scheme) writes again a row
+    // A mode boundary (a pin or a scheme, LLP 1121 D7) writes again a row
     // it does not set when the one around read a token: an implied row, no
     // author's, which `says` stops at (modes.js `apply`, `$xs`).
     let mut writers = Vec::new();
@@ -666,7 +600,7 @@ pub struct Write {
     pub map: Option<&'static str>,
 }
 
-/// A bound value naming a colour role as the role's CSS: each
+/// A bound value naming a colour role (LLP 1095 D2) as the role's CSS: each
 /// whole ident token that is a role's name or its WebKit `-apple-system-*`
 /// alias, so a role inside a gradient, a shadow or a shorthand is one too;
 /// the kernel's table, so literal and bound values agree. A `url()`, a
@@ -679,8 +613,8 @@ pub static SYSTEM_COLOR_MAP: std::sync::LazyLock<String> = std::sync::LazyLock::
     for (i, r) in COLOR_ROLES.iter().enumerate() {
         let mut css = String::new();
         exact_kernel::gradient::color_css(&mut css, ColorValue::Role(i as u8));
-        // A CSS colour by its name; an Exact role as `-exact-<role>`,
-        // so a bare role name stays as written and is no colour.
+        // A CSS colour by its name; an Exact role as `-exact-<role>` (LLP
+        // 1081 D2), so a bare role name stays as written and is no colour.
         let name = if exact_kernel::style::roles::is_css_system(r) {
             r.name.to_ascii_lowercase()
         } else {
@@ -698,7 +632,7 @@ pub static SYSTEM_COLOR_MAP: std::sync::LazyLock<String> = std::sync::LazyLock::
 });
 
 /// [`SYSTEM_COLOR_MAP`] for a binding of `plan`, gated as the runner's
-/// `set_plan_style` is: a value with a `-exact-platform-color()` is
+/// `set_plan_style` is (LLP 1095 D3): a value with a `-exact-platform-color()` is
 /// admitted only as one of the plan's own string literals, and writes what
 /// the literal path writes for each of its functions; any other is refused
 /// (an invalid computed declaration: CSS unset, with a diagnostic). A site
@@ -712,7 +646,7 @@ pub fn color_map(plan: &Plan) -> String {
     }
 }
 
-/// A bound colour that names a theme entry, or a role the
+/// @ref LLP 1095 D4 — a bound colour that names a theme entry, or a role the
 /// theme overrides, writes what the literal path writes for the entry: the
 /// kernel's CSS for the colour it stands for. `None` without a theme.
 fn theme_map(plan: &Plan) -> Option<String> {
@@ -742,7 +676,7 @@ fn theme_map(plan: &Plan) -> Option<String> {
         }
         let mut css = String::new();
         exact_kernel::gradient::color_css(&mut css, colour);
-        // A token that varies by an app axis is its property.
+        // A token that varies by an app axis is its property (LLP 1121 D7).
         if let Some((_, prop)) = varying.iter().find(|(n, _)| n == plan.str(row.name)) {
             css = format!("var({prop})");
         }
@@ -760,8 +694,8 @@ fn theme_map(plan: &Plan) -> Option<String> {
         }
     }
     // A colour function's own text is left whole, as the kernel reads no
-    // name inside one (a `light-dark()` half), unless it is a
-    // synthetic token's, which is named by that text; a
+    // name inside one (a `light-dark()` half, LLP 1095 D1), unless it is a
+    // synthetic token's, which is named by that text (LLP 1121 D3); a
     // gradient's stops and a shadow's colour are components, read as names.
     // A comment, a `url()` or a quoted string is copied through whole.
     Some(format!(
@@ -803,7 +737,7 @@ fn platform_map(plan: &Plan) -> String {
 
 const PLATFORM: &str = "-exact-platform-color(";
 
-/// A bound row whose code can push a metric's name (a
+/// A bound row whose code can push a metric's name (LLP 1115.002 D6: a
 /// sheet the compiler wrote, choosing between two by a flag) reads each as
 /// its value in the neutral column this build draws, which is what
 /// the kernel reads a literal one as: a number, the row's own CSS text, or
@@ -817,7 +751,7 @@ pub fn metric_map(plan: &Plan, code: &[u8]) -> Option<String> {
             continue;
         }
         let name = plan.str(exact_plan::StrId(i.args[0] as u32));
-        // A length ramp the code names itself: its length at CSS's `medium`.
+        // A length ramp the code names itself (LLP 1137): its length at CSS's `medium`.
         if let Some(rem) = ramp_rem(name) {
             let pair = format!("{}:{}", serde_json::json!(name), serde_json::json!(rem));
             if !pairs.contains(&pair) {
@@ -848,7 +782,7 @@ pub fn metric_map(plan: &Plan, code: &[u8]) -> Option<String> {
     })
 }
 
-/// A length ramp's text as the JS target writes it: its length at
+/// A length ramp's text (LLP 1137) as the JS target writes it: its length at
 /// CSS's `medium` in `rem`, as a literal one is (`exact_web::css`).
 fn ramp_rem(text: &str) -> Option<String> {
     use exact_kernel::style::relative::{named_length, Unit, MEDIUM};
@@ -861,7 +795,7 @@ fn ramp_rem(text: &str) -> Option<String> {
     ))
 }
 
-/// A computed `transition`'s entries as an author's, shared by
+/// A computed `transition`'s entries as an author's (LLP 1081 D5), shared by
 /// the ordinary and the pressed mappers: comments go (CSS removes them, so a
 /// check must too); springs on non-physics properties become `linear()`;
 /// an entry naming the host's `--exact-*` or an old spelling is dropped,
@@ -948,7 +882,7 @@ fn platform_css(text: &str) -> String {
     out
 }
 
-/// A bound `font-size` naming a platform text style as css.rs
+/// A bound `font-size` naming a platform text style (LLP 1115 D3) as css.rs
 /// writes a literal one: the ramp's size at CSS's `medium`, in `rem`. Any
 /// other value is written as it is (a number takes the row's `px`).
 pub static TEXT_STYLE_MAP: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
@@ -968,7 +902,7 @@ pub static TEXT_STYLE_MAP: std::sync::LazyLock<String> = std::sync::LazyLock::ne
     )
 });
 
-/// A bound `font` shorthand's text style, the weight
+/// A bound `font` shorthand's text style (LLP 1115.000 D12.2), the weight
 /// and the leading the web's column gives it, as the template writes a
 /// literal one's: `[weight, line-height]` maps, `null` for any other value.
 pub static TEXT_STYLE_ROWS: std::sync::LazyLock<[String; 2]> = std::sync::LazyLock::new(|| {
@@ -995,8 +929,8 @@ pub static TEXT_STYLE_ROWS: std::sync::LazyLock<[String; 2]> = std::sync::LazyLo
 });
 
 /// The custom property a bound `font` shorthand writes its style's
-/// `font-weight` or `line-height` to when that longhand is bound as well:
-/// the longhand's binding falls back on it.
+/// `font-weight` or `line-height` to when that longhand is bound as well
+/// (LLP 1115.000 D12.2): the longhand's binding falls back on it.
 pub fn style_fallback(name: &str) -> String {
     format!("--exact-style-{name}")
 }
@@ -1008,7 +942,7 @@ const NONE: &str = "v=>v==null||/^\\s*none\\s*$/i.test(v)?null:v";
 /// A bound corner's map: a list (white space outside parentheses, or a
 /// `/`) is the elliptical radius no row holds, refused whole with the
 /// journal line rt.js `css` writes for a value a row does not take, as the
-/// kernel refuses it; one value is the row's. `say` is rt.js's.
+/// kernel refuses it (LLP 1001 §1); one value is the row's. `say` is rt.js's.
 pub fn corner_list(id: StyleId) -> String {
     format!(
         r#"v=>{{if(typeof v!=="string")return v;let t=v;while(t!==(t=t.replace(/\([^()]*\)/g,"()")));return /\S[ \t\n\r\f]+\S|\//.test(t.trim())?(say(`unset {}: ${{JSON.stringify(v)}} is not a value it takes`),"unset"):v}}"#,
@@ -1084,7 +1018,7 @@ fn one(name: impl Into<String>, unit: impl Into<String>) -> Vec<Write> {
 
 /// A dynamic style row's writes (see [`style_row`]), with what css.rs
 /// writes beside a row that is not one declaration of its own: the
-/// timeline rows' custom properties, which the drag
+/// timeline rows' custom properties (LLP 1057.003 D2, D4), which the drag
 /// code reads, and a paused play state under a bound `animation-timeline`.
 /// `timeline` says the node has an `animation-timeline` row, so a dynamic
 /// `animation` (whose shorthand resets the play state) is paused again;
@@ -1096,7 +1030,7 @@ pub fn style_writes(id: u16, timeline: bool, written: bool) -> Result<Vec<Write>
         map: Some(map),
     };
     Ok(match row {
-        // A mode boundary's tuple: its rows are set in it.
+        // A mode boundary's tuple: its rows are set in it (LLP 1121 D7).
         StyleId::Mode => Vec::new(),
         StyleId::FontSize => vec![Write {
             name: "font-size".into(),
@@ -1133,7 +1067,7 @@ pub fn style_writes(id: u16, timeline: bool, written: bool) -> Result<Vec<Write>
             with("--exact-button-space", "v=>v==null?v:v.startsWith('column')?'var(--exact-button-row-space)':'var(--exact-button-column-space)'"),
             with("--exact-button-stacked", "v=>v==null?v:v.startsWith('column')?'1':null"),
         ],
-        // A native button's title truncates only when the
+        // @ref LLP 1116 D1 — a native button's title truncates only when the
         // author keeps it to one line (exact_web's button_css.rs `rows`).
         StyleId::WhiteSpace => {
             let (name, unit) = style_row(id, written)?;
@@ -1144,7 +1078,7 @@ pub fn style_writes(id: u16, timeline: bool, written: bool) -> Result<Vec<Write>
         StyleId::TextAlign => vec![with("text-align", "v=>v"), with("--exact-button-align", "v=>v==null?v:({left:'start',start:'start',right:'end',end:'end'})[v]??'center'")],
         StyleId::Cursor => vec![with("cursor", &CURSOR_MAP)],
         StyleId::ZIndex => vec![with("z-index", crate::paint::Z_INDEX)],
-        // The browser runs it; its `@keyframes` are in
+        // @ref LLP 1055 D5/D7 — the browser runs it; its `@keyframes` are in
         // the stylesheet (emit.rs), under the author's names.
         StyleId::Animation if timeline => vec![
             with("animation", NONE),
@@ -1153,7 +1087,8 @@ pub fn style_writes(id: u16, timeline: bool, written: bool) -> Result<Vec<Write>
                 "v=>v==null||/^\\s*none\\s*$/i.test(v)?null:\"paused\"",
             ),
         ],
-        // Apple's affordances: no declaration on the web.
+        // @ref LLP 1077 §5 — Apple's affordances: no declaration on the web
+        // (its forms are declared in LLP 1001).
         StyleId::SymbolRendering
         | StyleId::TintAdjustment
         | StyleId::SymbolPalette
@@ -1163,11 +1098,11 @@ pub fn style_writes(id: u16, timeline: bool, written: bool) -> Result<Vec<Write>
         | StyleId::ScrollEdgeEffect
         | StyleId::HoverEffect
         | StyleId::SmartInvert => vec![],
-        // The browser starts an animation at insertion;
+        // @ref LLP 1055 D13 — the browser starts an animation at insertion;
         // this target does not hold one for its row (a declared deviation).
         StyleId::AnimationTrigger => vec![],
         StyleId::Animation => vec![with("animation", NONE)],
-        // And the custom property a native button reads.
+        // @ref LLP 1069.011 D8 — and the custom property a native button reads.
         // The accent role must inherit, never write a self-reference.
         StyleId::AccentColor => vec![
             with("accent-color", "v=>v"),
@@ -1178,7 +1113,7 @@ pub fn style_writes(id: u16, timeline: bool, written: bool) -> Result<Vec<Write>
             r#"v=>v==null||/^\s*none\s*$/i.test(v)||String(v).split(",").every(a=>{const w=a.replace(/[A-Z]/g,c=>c.toLowerCase()).split(/[\t\n\f\r ]+/).filter(Boolean);return w.length>0&&new Set(w).size===w.length&&w.every(t=>/^flip-(?:block|inline|start)$/.test(t))})?v:"invalid""#,
         )],
         StyleId::DragTimeline => vec![with("--exact-drag-timeline", NONE)],
-        // `-exact-clock(Name)` is css.rs's clock property and
+        // @ref LLP 1055.002 — `-exact-clock(Name)` is css.rs's clock property and
         // leaves the play state alone; a drag timeline pauses.
         StyleId::AnimationTimeline => vec![
             with(
@@ -1230,10 +1165,10 @@ pub fn style_writes(id: u16, timeline: bool, written: bool) -> Result<Vec<Write>
             "clip-path",
             &CLIP_MAP,
         )],
-        // Apple's curve as the web's stand-in. A bound
+        // @ref LLP 1077 D1 — Apple's curve as the web's stand-in. A bound
         // radius is not rescaled here, as css.rs scales a static one: a
         // dynamic `-exact-continuous` reaches less far on the web.
-        // `light` and `dark`; a bound `normal` follows
+        // @ref LLP 1034 §8 — `light` and `dark`; a bound `normal` follows
         // the surrounding scheme (an explicit clear), as the kernel unsets
         // it; anything else is no value it takes.
         StyleId::ColorScheme => vec![with(
@@ -1241,7 +1176,7 @@ pub fn style_writes(id: u16, timeline: bool, written: bool) -> Result<Vec<Write>
             &SCHEME_MAP,
         )],
         StyleId::TextWrapStyle => one("text-wrap-style", ""),
-        // css.rs writes Firefox's Mac spelling too.
+        // @ref LLP 1019 D12 — css.rs writes Firefox's Mac spelling too.
         StyleId::FontSmoothing => vec![
             Write {
                 name: "-webkit-font-smoothing".into(),
@@ -1348,7 +1283,7 @@ pub fn style_row(id: u16, written: bool) -> Result<(String, String), String> {
             | StyleId::PressScale
             | StyleId::FontVariantNumeric
             | StyleId::FontVariantLigatures
-            // One `vertical-align`, a keyword or a length.
+            // One `vertical-align`, a keyword or a length (LLP 1011.002 D3).
             | StyleId::VerticalAlign
             | StyleId::BaselineShift
     ) {
@@ -1393,7 +1328,7 @@ pub(crate) fn css_property(id: StyleId) -> String {
     let name = match id {
         StyleId::TextColor => return "color".into(),
         StyleId::TintColor => return "--exact-tint".into(),
-        // css.rs's `spell_property`.
+        // @ref LLP 1104 D3 — css.rs's `spell_property`.
         StyleId::PlaceholderColor => return "--exact-placeholder-color".into(),
         StyleId::PositionType => return "position".into(),
         StyleId::BackdropFilter => return "backdrop-filter".into(),

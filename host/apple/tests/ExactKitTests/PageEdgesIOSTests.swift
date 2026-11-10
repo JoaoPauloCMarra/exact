@@ -4,7 +4,7 @@ import XCTest
 @testable import ExactKit
 import ExactGroupedLists
 
-/// A page with no native container keeps the area it is laid out
+/// LLP 1130: a page with no native container keeps the area it is laid out
 /// in, the view less its safe area, and is drawn in a viewport that takes
 /// the whole view, so it scrolls under the status bar and the home
 /// indicator; a scroller at the area's top and foot reaches into those bands
@@ -208,7 +208,7 @@ final class PageEdgesIOSTests: XCTestCase {
         XCTAssertEqual(cv.layer.animationKeys() ?? [], [], "one shown again since the last frame is at its offset at once")
     }
 
-    /// A route's list under its control bars, drawn through them and the route's cover.
+    /// LLP 1131: a route's list under its control bars, drawn through them and the route's cover.
     func testAListRunsUnderItsControlBarsAndKeepsItsPlace() throws {
         guard UIApplication.shared.connectedScenes.first is UIWindowScene else { throw missing("scene", "the bars and the safe area are a scene window's") }
         guard #available(iOS 26.0, *) else { throw XCTSkip("control bars are iOS 26's, where UIKit draws the edge effect over them") }
@@ -238,7 +238,7 @@ final class PageEdgesIOSTests: XCTestCase {
 
     /// A transcript in a box over a composer its author filled: the composer is no bar, so
     /// the rows stop above it, and the top still runs under the inline bar, as a hand-built
-    /// table under its navigation bar does whatever is pinned under it.
+    /// table under its navigation bar does whatever is pinned under it (bake-off r28's chat).
     func testAListOverAFilledComposerStillRunsUnderTheBar() throws {
         guard UIApplication.shared.connectedScenes.first is UIWindowScene else { throw missing("scene", "the bars and the safe area are a scene window's") }
         guard #available(iOS 26.0, *) else { throw XCTSkip("control bars are iOS 26's, where UIKit draws the edge effect over them") }

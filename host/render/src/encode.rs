@@ -1,4 +1,4 @@
-//! Compression: brotli, else gzip, as `Accept-Encoding`
+//! Compression (LLP 1048.000 D11): brotli, else gzip, as `Accept-Encoding`
 //! allows, for text, scripts, the wasm and SVG, with `Vary:
 //! Accept-Encoding` and the encoding in the ETag. A page is compressed as it
 //! is sent (brotli at quality 5: a 57 KB document in about a millisecond),
@@ -185,7 +185,7 @@ pub(crate) fn against_at(
 }
 
 /// A cached page's bodies at brotli's and gzip's best, each only when it's
-/// smaller, made once off the request path.
+/// smaller, made once off the request path (D11).
 #[derive(Default)]
 pub(crate) struct Best {
     br: Option<Vec<u8>>,

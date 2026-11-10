@@ -1,21 +1,23 @@
 // The rules UIKit's navigation, sheet, keyboard and focus projection
-// follows, as pure functions of what the
+// follows (LLP 1035.001 D1–D5, D8), as pure functions of what the
 // presenter knows — no controller, no window, no run loop, no clock — so
 // the macOS test target can hold every one of them and a reader finds the
 // contract in one place. `NavigationIOS.swift`, `ModalIOS.swift` and
 // `PresenterIOS.swift` apply them; nothing here decides what UIKit owns
 // (recognition, progress, cancellation, animation).
+//
+// @ref LLP 1035.001 §3; LLP 1008 §9
 import CExact
 import Foundation
 
 enum NavigationRules {
-    /// Controller identities, not URLs: animate a
+    /// @ref LLP 1038 D6 — controller identities, not URLs: animate a
     /// push/pop only when either complete list is a prefix of the other.
     static func isPushOrPop<T: Equatable>(from: [T], to: [T]) -> Bool {
         from.starts(with: to) || to.starts(with: from)
     }
 
-    /// The routes are the first root's children carrying a
+    /// D1: the routes are the first root's children carrying a
     /// `navigationKey`, in tree order, and the stack is the prefix through
     /// the one whose key is the root's. `nil` when the root's key matches
     /// no route: the stack is left alone and the refusal is journaled.
@@ -24,7 +26,7 @@ enum NavigationRules {
         return 0..<(index + 1)
     }
 
-    /// When the root's key matches no route, the stack is left alone,
+    /// D1, when the root's key matches no route: the stack is left alone,
     /// less the routes that have left the tree. The deepest route of the
     /// stack last shown (`shown`, its keys through its selected route) that
     /// is still declared in one of the stacks is the selected one, so a
@@ -34,7 +36,7 @@ enum NavigationRules {
         shown.last { key in declared.contains { $0.contains(key) } }
     }
 
-    /// Presentation boundaries split the selected prefix into retained
+    /// D4: presentation boundaries split the selected prefix into retained
     /// owners. A later push stays in the most recent presentation's stack.
     static func segments(presentations: [String?]) -> [Range<Int>] {
         var starts = [0]
@@ -44,7 +46,7 @@ enum NavigationRules {
         return zip(starts, starts.dropFirst() + [presentations.count]).map { $0..<$1 }
     }
 
-    /// A completed transition presses the Back control exactly once —
+    /// D2: a completed transition presses the Back control exactly once —
     /// only for a native pop whose live source is still selected. A swipe
     /// captures its source; a Back-button pop removes it from our last write.
     /// A stack change Exact writes has no departed source; its completion
@@ -82,7 +84,7 @@ enum NavigationRules {
         case hidden
     }
 
-    /// The bar is decided route by route, never
+    /// LLP 1115.000 D5.2, D5.3: the bar is decided route by route, never
     /// once for a stack, and Back is always there. A route that says
     /// `navigationBar="none"` has no bar (a full-bleed screen; the edge
     /// swipe still pops it): no bar is something the author says, never
@@ -94,7 +96,7 @@ enum NavigationRules {
     /// first route of a stack, with nothing to go back to and no such
     /// header, has nothing to show.
     /// The rule itself is the kernel's (`exact_kernel::Bar::of`), which
-    /// the Android host reads too.
+    /// the Android host reads too (LLP 1115.001 D11).
     static func bar(asked: String?, header: Bool, pushed: Bool, backButton: Bool = true) -> Bar {
         switch exact_route_bar((asked == "none" ? 1 : 0) | (header ? 2 : 0) | (pushed ? 4 : 0) | (backButton ? 8 : 0)) {
         case 0: return .header
@@ -103,21 +105,21 @@ enum NavigationRules {
         }
     }
 
-    /// Whether an interactive pop may begin at all — a stack to pop, no
+    /// D1: whether an interactive pop may begin at all — a stack to pop, no
     /// transition in flight, no sheet, a way back (`back`), and no
     /// context preview anywhere in the session.
     static func popMayBegin(depth: Int, changing: Bool, modalActive: Bool, hasBackControl: Bool, contextPreviewActive: Bool) -> Bool {
         depth > 1 && !changing && !modalActive && hasBackControl && !contextPreviewActive
     }
 
-    /// The arbitration for a pan: past the 20-point edge a pan that starts
+    /// D1's arbitration for a pan: past the 20-point edge a pan that starts
     /// over a `swiperight` node is that node's; otherwise the pan must be
     /// more horizontal than vertical. The edge itself stays navigation's.
     /// No motion yet is no evidence against: UIKit's pop recognizers ask
     /// before the finger has moved (a real swipe read zero velocity and zero
     /// travel there), having judged the direction themselves.
     /// The direction a pop's `shouldBegin` judges: the pan's velocity, or
-    /// its travel so far when the velocity is still zero.
+    /// its travel so far when the velocity is still zero (LLP 1057.001 §7).
     static func popDirection(velocity: CGPoint, travel: CGPoint) -> CGPoint {
         velocity == .zero ? travel : velocity
     }
@@ -128,14 +130,14 @@ enum NavigationRules {
         return velocity.x > abs(velocity.y)
     }
 
-    /// `closedby="none"` refuses the platform's dismissal gesture and
+    /// D1: `closedby="none"` refuses the platform's dismissal gesture and
     /// Escape; anything else (`closerequest`, absent) permits them. Explicit
     /// Close is the app's own control either way.
     static func modalRefusesDismissal(closedby: String?) -> Bool {
         closedby == "none"
     }
 
-    /// Why a `focus(id)` command cannot be delivered now,
+    /// D3 (as it stands): why a `focus(id)` command cannot be delivered now,
     /// or `nil` when it can. The reason is journaled, never silent.
     static func focusRefusal(mounted: Bool, disabled: Bool, zeroSize: Bool, hiddenAncestor: Bool, inertAncestor: Bool) -> String? {
         if !mounted { return "not mounted" }

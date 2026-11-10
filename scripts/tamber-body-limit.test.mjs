@@ -1,6 +1,7 @@
 // A design server request over its 1 MiB is answered 413, not cut: the server's own wire and `tamber tool --via`'s
 // proxy (scripts/tamber-server.mjs `forward`) answer first and close the connection after (tamber-request.mjs
-// `refuseBody`, the canvas gateway's too), rather than cut it and write the answer to nobody.
+// `refuseBody`, the canvas gateway's too), where they once cut it and wrote the answer to nobody (QUEUE "`tamber tool
+// --via`'s proxy drops a 413 before it is sent").
 import { afterAll, beforeAll, expect, jest, test } from 'bun:test';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';

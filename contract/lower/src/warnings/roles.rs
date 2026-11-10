@@ -1,7 +1,7 @@
 //! What a button or a role promises a person and VoiceOver, and the
-//! element does not keep: a button with nothing to say,
+//! element does not keep (LLP 1116.004 D4): a button with nothing to say,
 //! a button in a button, and a dialog's role on a box; and a heading's
-//! level with no heading.
+//! level with no heading (LLP 1115.000 D12.5).
 
 use super::{computed, has, literal, BOXES};
 use crate::LowerError;
@@ -93,8 +93,8 @@ pub(super) fn button(
 }
 
 /// `lower-button-unlabelled`: a `button` with no text anywhere in it, no
-/// `aria-label` or `aria-labelledby`, and no image with an `alt`.
-/// It is blank: water-tracker's `button press=drink(500)`
+/// `aria-label` or `aria-labelledby`, and no image with an `alt` (LLP
+/// 1116.004 D4). It is blank: water-tracker's `button press=drink(500)`
 /// with no child drew an empty button, and VoiceOver reads one as
 /// "button". A text of any expression, a symbol image with a name, and a
 /// button hidden from assistive technology are not named.
@@ -159,7 +159,7 @@ fn nested_button(children: &[Node]) -> Option<LowerError> {
 }
 
 /// `lower-dialog-role`: `role="dialog"` or `role="alertdialog"` on an
-/// element that is not a `dialog`. The role is a label:
+/// element that is not a `dialog` (LLP 1116.004 D4). The role is a label:
 /// the box is drawn as written, with no Escape, no focus kept inside and
 /// no iOS sheet (flashcards' editor, a `column role="dialog"
 /// aria-modal=true`). A popover (light dismiss and Escape; with
@@ -185,7 +185,7 @@ pub(super) fn dialog_role(tag: &str, attrs: &[Attr], span: Span) -> Option<Lower
 }
 
 /// `lower-level-without-heading`: an `aria-level` on an element that
-/// writes no `role`. A level alone is not a heading:
+/// writes no `role` (LLP 1115.000 D12.5). A level alone is not a heading:
 /// no host tells assistive technology it is one (`Props::heading`),
 /// lowering gives it no heading style (`heading_style` reads the role), and
 /// the iOS navigation bar does not take it for the route's title, so a

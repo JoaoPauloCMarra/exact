@@ -1,11 +1,11 @@
-// @exact/usb on macOS: IOUSBHost. The devices come from IOKit's `IOUSBHostDevice` services,
+// @exact/usb on macOS (LLP 1133.037 D13, D14): IOUSBHost. The devices come from IOKit's `IOUSBHostDevice` services,
 // their configurations from the configuration descriptors; `open` makes an `IOUSBHostDevice` the process shares among
-// its connections; `claimInterface` opens that interface's `IOUSBHostInterface`, never capturing one a kernel
+// its connections (D5); `claimInterface` opens that interface's `IOUSBHostInterface`, never capturing one a kernel
 // driver holds (a CDC port's `AppleUSBCDCACM`: `NetworkError`); transfers are the device's and the pipes' requests.
 //
-// - Filters are required and the attached list carries only the devices they match.
-// - WebUSB's protected interface classes cannot be claimed (`SecurityError`).
-// - `requestDevice` is a sheet listing the matching devices; chosen ones are remembered in the app's defaults.
+// - Filters are required and the attached list carries only the devices they match (D3).
+// - WebUSB's protected interface classes cannot be claimed (`SecurityError`, D6).
+// - `requestDevice` is a sheet listing the matching devices (D2); chosen ones are remembered in the app's defaults.
 import AppKit
 import ExactPackage
 import Foundation
@@ -234,7 +234,7 @@ public final class USBModule: ExactPackage {
         }
     }
 
-    /// Interface `n` of the device, opened for this process; a kernel driver's interface refuses.
+    /// Interface `n` of the device, opened for this process; a kernel driver's interface refuses (D14).
     private func interface(_ device: io_service_t, _ n: Int) throws -> IOUSBHostInterface {
         var iterator: io_iterator_t = 0
         guard IORegistryEntryCreateIterator(device, kIOServicePlane, IOOptionBits(kIORegistryIterateRecursively), &iterator) == KERN_SUCCESS else { throw NSError(domain: "usb", code: 1) }
@@ -285,7 +285,7 @@ public final class USBModule: ExactPackage {
         return incoming ? ["status": "ok", "data": Data(data.prefix(transferred)).base64EncodedString()] : ["status": "ok", "bytesWritten": transferred]
     }
 
-    /// The module's own sheet: the matching devices by name; Cancel fails `NotFoundError`, as WebUSB's does.
+    /// The module's own sheet (D2): the matching devices by name; Cancel fails `NotFoundError`, as WebUSB's does.
     private func choose(_ args: [String: Any], reply: @escaping ([String: Any]) -> Void) {
         let all = found()
         for f in all { IOObjectRelease(f.service) }

@@ -2,7 +2,7 @@
 import XCTest
 @testable import ExactKit
 
-/// The content index's mirror and the door's answers with no session.
+/// The content index's mirror and the door's answers with no session (LLP 1133.023 D4, D9, D7).
 final class ContentIndexTests: XCTestCase {
     private var directory: URL!
 
@@ -67,7 +67,7 @@ final class ContentIndexTests: XCTestCase {
     }
 
     #if os(macOS)
-    /// The Dock menu: the app's list after the manifest's (none in a test bundle), each opening its location.
+    /// The Dock menu: the app's list after the manifest's (none in a test bundle), each opening its location (D3, D17).
     func testTheDockMenuHasTheAppsList() {
         let kept = UserDefaults.standard.data(forKey: "exact.shortcuts")
         defer { UserDefaults.standard.set(kept, forKey: "exact.shortcuts") }

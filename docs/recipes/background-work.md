@@ -1,6 +1,6 @@
 # Recipe: work that runs while the app is unseen
 
-`@exact/background` has Background Sync's and Periodic
+`@exact/background` (LLP 1133.017) has Background Sync's and Periodic
 Background Sync's names. The app registers a tag; the platform later runs the
 root's `sync` or `periodicsync` handler in a **wake**: a session that may have
 no window, with a 30 s budget. Nothing is shown to the person while it runs.

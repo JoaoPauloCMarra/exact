@@ -1,4 +1,4 @@
-// Chrome's `position-area` box, the table the Apple hosts'
+// Chrome's `position-area` box (LLP 1021 D2), the table the Apple hosts'
 // painted popovers are held to (PositionAreaRegionIOSTests, …MacTests): in a
 // 400×600 viewport, a 40×20 anchor and a popover of twelve 50×18 boxes in a
 // wrapping row, so no font decides a width. Each option's box is sized in its

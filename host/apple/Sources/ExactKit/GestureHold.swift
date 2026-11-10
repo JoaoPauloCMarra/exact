@@ -2,8 +2,8 @@
 import CExact
 import Foundation
 
-/// The thresholds exact2 defines itself, read from `exact_motion::gesture`:
-/// the swipe knee, its resistance, the edge a swipe yields.
+/// The thresholds exact2 defines itself, read from `exact_motion::gesture`
+/// (LLP 1057.001 §3): the swipe knee, its resistance, the edge a swipe yields.
 package enum Gesture {
     static let knee = exact_gesture_constant(0)
     static let resistance = exact_gesture_constant(1)
@@ -69,7 +69,7 @@ package enum SwipeInput {
             if parent.isHidden || (parent as? NodeView)?.disabled == true { return false }
             #if os(iOS) || os(tvOS)
             if !parent.isUserInteractionEnabled { return false }
-            // Through a presented route's logical parents
+            // Through a presented route's logical parents (LLP 1123 D2)
             ancestor = view.presenter?.eventParent(of: parent) ?? parent.superview
             #else
             ancestor = parent.superview

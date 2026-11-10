@@ -1,4 +1,4 @@
-//! A popover opened at the press. The button's `press` hears
+//! LLP 1021 D2: a popover opened at the press. The button's `press` hears
 //! where the pointer was and writes it as the popover's `left`/`top`; the
 //! neutral surface opens there, held in the window near its edge, and a
 //! key's press (at 0, 0) leaves it at its invoker. Each press reads its own

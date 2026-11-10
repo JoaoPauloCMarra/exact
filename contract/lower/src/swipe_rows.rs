@@ -1,4 +1,4 @@
-//! `delete=action` on a row of a `list` (a grouped
+//! @ref LLP 1116.020 D1 — `delete=action` on a row of a `list` (a grouped
 //! list's section row, or a row of a list whose rows are cells) is the
 //! row's swipe to delete, written once. The compiler expands it to the
 //! swipe form `docs/recipes/list-rows.md` once taught by hand: a sideways
@@ -495,20 +495,20 @@ struct Walk {
 /// each list's attributes after its class's rows, as lowering reads them
 /// (`class::rows`, over `styles`).
 ///
-/// `lower-row-delete-button`: a `button
+/// @ref LLP 1116.021 D5 — `lower-row-delete-button`: a `button
 /// destructive=true` inside the row a `for` repeats, which says no
 /// `delete=`. Advice, keyed on structure alone: `destructive` can mean
 /// revoke, cancel or reset, so it asks rather than tells. A detail screen's
 /// section is no repeated row, and an action in a row's dialog, popover,
-/// menu or swipe is that surface's. Across the repo's contracts and the
-/// docs' blocks, it is found on no row but a per-row delete.
+/// menu or swipe is that surface's. Round 19's census found it on no row
+/// but a per-row delete across the repo's contracts and the docs' blocks.
 ///
 /// `lower-list-section`: a `list` that would be a list of cells but for its
 /// `section`s (no `appearance` and not `virtualized`) is neither form,
 /// grouped or cells, and draws its rows as written: no separators, and a
 /// hand-written swipe that is no row stacks its actions under the content.
 /// A windowed list's section rows, sticky headers and all, are the
-/// author's.
+/// author's (LLP 1083 D5).
 pub(crate) fn unplaced(view: &[Node], styles: &[StyleDecl]) -> Vec<LowerError> {
     fn walk(nodes: &[Node], w: Walk, styles: &[StyleDecl], out: &mut Vec<LowerError>) {
         for node in nodes {

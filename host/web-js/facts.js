@@ -2,15 +2,15 @@
 // app's (`data.reserved`, as the entry answers `exactTime`) by the declared
 // fields' names, and re-answered in one commit when the fact changes.
 // Imported by an app's module only for the sources its plan declares.
-// - `exactViewport` (runner/src/viewport.rs): the
+// - `exactViewport` (LLP 1039 D1–D4, 1061 D4; runner/src/viewport.rs): the
 //   page's own readings (`navigation.js`), on every resize (glue.js
 //   `mediaChanged`).
-// - `exactPage` (runner/src/page.rs): visibility, online,
+// - `exactPage` (LLP 1069.000 D2; runner/src/page.rs): visibility, online,
 //   share sheet, pickers, focus, from the web host's own `pageReporter`;
 //   under the agent the drive's (`prefer page`).
-// - `exactDelivery` (runner/src/delivery.rs): what the build
+// - `exactDelivery` (LLP 1030 D7; runner/src/delivery.rs): what the build
 //   baked; a JS build links no update store, so nothing is ever staged.
-// - `exactSurface` (runner/src/surface_record.rs): a GPU
+// - `exactSurface` (LLP 1047 D3; runner/src/surface_record.rs): a GPU
 //   surface's published record, decoded against each reader's shape.
 import { data, Resources, commit, R, Refusal } from "./rt.js";
 import { displayMode, preferences, onPreferences, pageReporter, fold, foldEnv, onFold, preferFold } from "./navigation.js";
@@ -27,11 +27,11 @@ export function viewportFacts() {
   return { width: innerWidth, height: innerHeight, prefersReducedMotion: !!(p & 1), prefersReducedTransparency: !!(p & 2),
     displayMode: displayMode(),
     prefersContrast: CONTRAST[(p >> 2) & 3], prefersColorScheme: p & 16 ? "dark" : "light",
-    devicePosture: f.posture, horizontalViewportSegments: f.cols, verticalViewportSegments: f.rows,
-    colorGamut: GAMUT[(p >>> 26) & 3], dynamicRange: p & (1 << 28) ? "high" : "standard",
+    devicePosture: f.posture, horizontalViewportSegments: f.cols, verticalViewportSegments: f.rows, // @ref LLP 1078 D2, D6
+    colorGamut: GAMUT[(p >>> 26) & 3], dynamicRange: p & (1 << 28) ? "high" : "standard", // @ref LLP 1100 D9
     pointer: p & 64 ? "none" : p & 32 ? "coarse" : "fine", hover: p & 128 ? "none" : "hover",
     accessibilityTextSize: false, // a browser has no accessibility text sizes (runner/src/runner/root_font.rs)
-    gpuTier: reporter()?.read()["gpu-tier"] ?? "high" }; // The page facts' tier; this target has no GPU module, so the screen's class, or the agent's
+    gpuTier: reporter()?.read()["gpu-tier"] ?? "high" }; // @ref LLP 1139.003 D2: the page facts' tier; this target has no GPU module, so the screen's class, or the agent's
 }
 export function viewport(readers) {
   (data.reserved ??= {}).exactViewport = (_, a, name) => byName(readers, name, viewportFacts());
@@ -42,14 +42,14 @@ export function viewport(readers) {
   onFold(changed);
   viewportChanged = changed;
   shareReporter();
-  // The agent's `prefer` fold group: an empty one re-reads the browser, a filled one is the substitute.
+  // The agent's `prefer` fold group (LLP 1078 D7): an empty one re-reads the browser, a filled one is the substitute.
   (globalThis.exact ??= {}).fold = { prefer: (f) => { const env = preferFold(f && Object.keys(f).length ? f : null); changed(); return env; }, env: foldEnv };
 }
 
-// A release admits no agent mode: its build writes this false.
+// A release admits no agent mode (LLP 1069.007 D2): its build writes this false.
 const AGENT_ADMITTED = true;
 // One reporter per session for both sources (`exactViewport().gpuTier` is a
-// page fact), and the agent's `prefer` page group sets it,
+// page fact), and the agent's `prefer` page group (LLP 1069.000 D6) sets it,
 // whichever of them the plan reads.
 let pageFacts, viewportChanged = () => {}, pageChanged = () => {};
 const reporter = () => pageFacts !== undefined ? pageFacts : (pageFacts = typeof document === "object" && document.createElement

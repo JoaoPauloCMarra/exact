@@ -1,9 +1,9 @@
-//! A prop or style binding that traps: invalid at
+//! A prop or style binding that traps (LLP 1017.003 D3): invalid at
 //! computed-value time, as a value its row's grammar refuses is (CSS Custom
 //! Properties §3.1). Its row is unset, one journal line names the binding's
 //! site and the trap, and the update goes on. The trap stays inside the one
-//! evaluation, so nothing else needs undoing. Other traps still fail the
-//! update.
+//! evaluation, so nothing else needs undoing. The traps that still fail the
+//! update are LLP 1017.003 D3's.
 use super::*;
 use exact_plan::{BindingsId, BindingsRow};
 

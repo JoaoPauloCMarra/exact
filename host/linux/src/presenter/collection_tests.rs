@@ -232,8 +232,8 @@ fn an_edge_before_activation_commits_and_activation_asks_once() {
             let _ = p.frame();
         }
     }
-    // The compiled placeholder stands until activation: the source is not asked, so the edge's
-    // action commits.
+    // The compiled placeholder stands until activation (LLP 1038 D5, LLP
+    // 1027 D4): the source is not asked, so the edge's action commits.
     assert_eq!(p.host.runner().slot("next"), Some(&Value::Number(1.)));
     let before = p.host.collections()[0].count;
     p.first_pixel();
@@ -476,7 +476,7 @@ fn ordinary_authored_scroll_events_wait_for_ack_and_coalesce_with_reader_input()
     assert!(p.pump(p.host.now()).is_none());
     assert_eq!(observed(&p), Some(Value::Number(300.)));
     assert_eq!(count(&p), Some(Value::Number(1.)));
-    // The `ScrollEvent`'s extents: what is left below the port.
+    // The `ScrollEvent`'s extents: what is left below the port (chat F4).
     let away = p.host.runner().slot("away").cloned();
     assert_eq!(away, Some(Value::Number(1000. - 300. - 100.)));
     p.tap(named(&p, "jump")).unwrap();
@@ -598,7 +598,7 @@ fn fractional_high_extent_end_follow_needs_one_wheel_without_false_origin_change
     assert!(!p.dirty(), "bounded refinement eventually becomes idle");
 }
 
-/// A padding change that keeps the list's size and offset (a
+/// LLP 1010 §6.9: a padding change that keeps the list's size and offset (a
 /// fixed border-box list) is still reported, so a followed end follows it.
 #[test]
 fn a_padding_only_change_reaches_the_runner_and_the_end_follows_it() {
@@ -893,7 +893,7 @@ fn height_projection_refines_real_25k_port_through_hold_ticks_resize_and_typing(
     assert!(!p.height_end(old.token, HoldEnd::Cancel, f64::NAN).unwrap());
 }
 
-// A `display="flex"` list scrolls on x. Cards are 90 wide
+// LLP 1070 stage 3: a `display="flex"` list scrolls on x. Cards are 90 wide
 // with a 4 margin (the wrapper encloses it: 94), estimated at 100.
 fn strip(list_attrs: &str, card: &str) -> String {
     format!(
@@ -947,8 +947,8 @@ fn horizontal_collection_measures_widths_and_feeds_its_x_geometry() {
     p.wheel(c.view, 5_000., 0.).unwrap();
     settle(&mut p);
     let c = strip_port(&p);
-    // Cards left of the port measured at 94 for 100 estimated: each
-    // first measurement is anchored, whole cards of 6 each.
+    // Cards left of the port measured at 94 for 100 estimated: Q3 (a)
+    // anchors those first measurements, whole cards of 6 each.
     let (x, y) = p.scroll_of(c.view);
     assert!(y == 0. && x <= 5_000. && (5_000. - x) % 6. == 0., "{x}");
     assert!(c.rows.iter().all(|r| r.measured) && c.rows.len() < 30);
@@ -994,7 +994,7 @@ fn horizontal_first_measurements_correct_x_and_scroll_left_builds_before_it_move
     covers(&p, &c);
     let left = p.scroll_of(view).0;
     // Cards left of the target were estimated at 100 and measured at 94:
-    // Each first measurement is anchored, so x moved by whole cards' 6.
+    // Q3 (a) anchors each first measurement, so x moved by whole cards' 6.
     assert_ne!(left, 50_000.);
     assert_eq!((50_000. - left) % 6., 0., "{left}");
     // What shows at the port's left edge is the card the request reached.
@@ -1134,8 +1134,8 @@ fn overflow_auto_accepts_reader_scrolling() {
     assert_eq!(p.scroll_of(port).1, 120.);
 }
 
-/// An app's `scrollIntoView("element-id", …)` on any element:
-/// the scroller above it aligns it by CSSOM View's rules.
+/// An app's `scrollIntoView("element-id", …)` on any element (minesweeper
+/// F3): the scroller above it aligns it by CSSOM View's rules.
 #[test]
 fn scroll_into_view_aligns_any_element_in_its_scroller() {
     let cells: String = (0..20)
@@ -1299,7 +1299,7 @@ fn into_view(p: &Presenter<Rows>) -> String {
     p.host.runner().into_view_json()
 }
 
-/// A request's moves are its own until the reader moves
+/// LLP 1070.000 §2.5: a request's moves are its own until the reader moves
 /// the port, and its reports carry no travel. Android's reader keeps its
 /// lead for 100 ms after its last step; that lead, sampled before the
 /// request's jump, does not lead the window the request builds.
@@ -1328,7 +1328,7 @@ fn a_lead_sampled_before_a_keyed_request_is_not_reported_while_it_runs() {
     assert_eq!(p.scroll_of(feed).1, 3000.);
 }
 
-/// Once a request has moved the port, the reader's own
+/// LLP 1070.000 §2.5: once a request has moved the port, the reader's own
 /// scroll ends it where the reader is, and its corrections do not pull the
 /// port back. Android slices its passes while the port moves fast and holds
 /// them while a frame draws, so the reader's drag can come while a request

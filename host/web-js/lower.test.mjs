@@ -1,4 +1,4 @@
-// Lowering's runtime pieces without a browser (lower.js `Pc`'s arm rules; the readers that find a lowered node's rows:
+// B5's runtime pieces without a browser (lower.js `Pc`'s arm rules; the readers that find a lowered node's rows:
 // inspect-dev.js `written`, flow.js `classHeightOf`), over a stand-in sheet that holds rules as Chrome's CSSOM does.
 import { expect, mock, test } from 'bun:test';
 

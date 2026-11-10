@@ -54,9 +54,9 @@ pub(super) fn keys(app_root: &Path) -> BTreeMap<String, BTreeMap<String, Vec<Str
 }
 
 /// The game Rust newer than `.shells/surfaces.json`, when some is: the
-/// declaration is the last GPU build's, so it may predate an `Options` edit.
-/// Content-stable writes keep an unchanged declaration's time, so newer Rust
-/// only says it may be stale.
+/// declaration is the last GPU build's, so it may predate an `Options` edit
+/// (the platformer's diary, R4). Content-stable writes keep an unchanged
+/// declaration's time, so newer Rust only says it may be stale.
 pub(super) fn newer_rust(app_root: &Path) -> Option<std::path::PathBuf> {
     newer_rust_than(app_root, ".shells/surfaces.json")
 }

@@ -1,10 +1,10 @@
-//! The views packages serve. A tag is declared, not imported: the bake finds
-//! it in the `exact.json` of each package the app depends on directly, as it
-//! finds the app's own in `app.json` `modules`. An interface declares each
-//! view, its props and events, whether it hears that it is displayed
-//! (`"displayed": true`) and which props bind a device (`"binds": true`); an
-//! implementation lists the tags it serves, or declares a view of its own
-//! the same way.
+//! The views packages serve (LLP 1133.001 D1, LLP 1133.008 D8 item 1). A
+//! tag is declared, not imported: the bake finds it in the `exact.json` of
+//! each package the app depends on directly, as it finds the app's own in
+//! `app.json` `modules`. An interface declares each view, its props and
+//! events, whether it hears that it is displayed (`"displayed": true`) and
+//! which props bind a device (`"binds": true`); an implementation lists the
+//! tags it serves, or declares a view of its own the same way.
 //!
 //! The app's direct dependencies are the `dependencies` of the nearest
 //! `package.json` above it: its own for an app `exact new` made, the
@@ -26,7 +26,7 @@ pub struct PackageView {
     pub displayed: bool,
     pub binds: Vec<String>,
     /// Its declared props' types and its events beyond the nine, which the
-    /// lowering holds the tag's attributes to.
+    /// lowering holds the tag's attributes to (LLP 1133.021 §9 items 1, 2).
     pub declared: contract_lower::DeclaredView,
 }
 

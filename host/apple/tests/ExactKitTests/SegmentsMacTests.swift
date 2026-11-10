@@ -3,7 +3,7 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// On AppKit, a tablist projected to `NSSegmentedControl`
+/// LLP 1059 D2a on AppKit: a tablist projected to `NSSegmentedControl`
 /// reports the control's height as its automatic minimum, as on iOS, so an
 /// unsized row of text tabs does not squash the control.
 final class SegmentsMacTests: XCTestCase {

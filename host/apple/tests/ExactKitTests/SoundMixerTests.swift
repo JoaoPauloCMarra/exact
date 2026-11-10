@@ -1,13 +1,13 @@
-// The sound arm's C mixer, rendered offline. Given a
+// @ref LLP 1096 D6, D8, §5: the sound arm's C mixer, rendered offline. Given a
 // buffer's host time and the source's presentation latency, a voice's first
-// frame and its cut land on the frames the mixer computes; voices sum; a slot frees
+// frame and its cut land on the frames D6 computes; voices sum; a slot frees
 // at its end; an End for a freed slot is ignored; a full ring counts its drop.
 // A voice's playback rate reads its sound by linear interpolation and moves
-// its end; its pan places it by Web Audio's equal-power law.
+// its end; its pan places it by Web Audio's equal-power law (LLP 1125 D10).
 // A second's lookahead fits: 288 slots (32 sounding, 256 waiting) and a ring
 // of 1024 ops; a voice retracted before it starts frees its slot at once, and
 // a Play with no free slot takes one whose voice ends inside the buffer, its
-// tail mixed first.
+// tail mixed first (LLP 1125 D3).
 import AudioToolbox
 import ExactSoundRender
 import XCTest

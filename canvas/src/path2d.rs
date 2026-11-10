@@ -1,11 +1,11 @@
-//! `Path2D`: a path built in its own coordinates,
+//! `Path2D` (LLP 1056 D9, §3 stage 2): a path built in its own coordinates,
 //! painted under the matrix current at the paint.
 //!
 //! A `Path2D` lives in the recorder. At `fill(path)`, `stroke(path)` or
 //! `clip(path)` its segments are transformed by the current matrix and cross
 //! as the list's path-segment records, followed by the paint; the context's
 //! own current path is untouched. So a replayer holds no live path objects:
-//! a declared difference from holding paths by id, with the same result (a path's later
+//! a declared difference from D3's ids, with the same result (a path's later
 //! mutations never reach an earlier paint).
 //!
 //! `new Path2D(d)` reads SVG path data: every command, relative and

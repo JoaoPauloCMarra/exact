@@ -1,7 +1,8 @@
 //! The element a node is on the web: its tag, its attributes and the CSS
 //! the host adds to the kernel's — one projection, which the live host
-//! creates imperatively and [`super::document`] writes as HTML. A bare node
-//! is a bare `<div>`.
+//! creates imperatively and [`super::document`] writes as HTML.
+//!
+//! @ref LLP 1007 §1 (a bare node is a bare `<div>`) / LLP 1048 D1
 
 #[path = "button_css.rs"]
 mod button_css;
@@ -16,11 +17,11 @@ use exact_kernel::SortedMap;
 use exact_kernel::{Kernel, NodeFacts, NodeRef, NodeType, ObjectFit, PropId, PropValue, StyleId};
 
 /// How a projection finds the element an SVG reference names: the kernel's
-/// `resolve_id`, or a tree's own.
+/// `resolve_id`, or a tree's own (LLP 1055.000 D3).
 pub type Resolve<'r> = &'r dyn Fn(exact_kernel::ViewId, &str) -> Option<exact_kernel::ViewId>;
 
 /// A canvas's element hosts its surface element under its children
-/// (`glue.js`): a containing block for it, unless the author
+/// (`glue.js`, LLP 1014 D2): a containing block for it, unless the author
 /// positioned the canvas, and a stacking context of its own — the
 /// `isolation: isolate` the web's `drawable` implies — so the surface paints
 /// above the canvas's background and below its children. A container a
@@ -32,7 +33,7 @@ pub(super) fn host_css(kernel: &Kernel, node: &NodeRef<'_>, css: String, tag: &s
 }
 
 /// Whether a text is its box's text content on the web, not an element box of
-/// its own: the only child of a box or a button, with no style
+/// its own (LLP 1007.001): the only child of a box or a button, with no style
 /// row, no prop but its text and no handler — nothing a box of its own could
 /// show or hear. Its element stays (the runtime writes its text, the agent
 /// reads its node) as `display: contents`, so it makes no box (an inline
@@ -114,7 +115,7 @@ fn lays_out_as_block(b: &NodeFacts<'_>) -> bool {
 /// [`folds`] for a node of `kernel`, as its tree stands.
 pub(super) fn folded(kernel: &Kernel, node: &NodeRef<'_>, handled: bool) -> bool {
     node.node_type == NodeType::Text
-        && node.looks().is_empty() // a look paints its own box
+        && node.looks().is_empty() // a look paints its own box (LLP 1121 D8)
         && node.parent.and_then(|p| kernel.node(p)).is_some_and(|p| {
             let outer = p.parent.and_then(|o| kernel.node(o)).map(|o| o.facts());
             folds(
@@ -169,7 +170,7 @@ pub fn blocks(mut css: String, holds_folded: bool, node: &NodeFacts<'_>) -> Stri
 /// keeps no effective `touch-action`, so a touch that starts on its glyphs
 /// under a `touch-action: none` pan is the browser's, cancelled after its
 /// first move (smoke step 11b); an inline box keeps its ancestors' touch
-/// action, at one more layout object.
+/// action, at one more layout object (LLP 1007.001 §5).
 pub fn contents(css: String, folded: bool, touch_scoped: bool) -> String {
     if !folded {
         return css;
@@ -244,7 +245,7 @@ pub fn host_css_of(
         css.push_str("display:block;");
     }
     css = button_css::face(node, css);
-    // A grouped row's separator, which the page's sheet
+    // @ref LLP 1084 D7 — a grouped row's separator, which the page's sheet
     // draws (index.html) in the platform's colour at the foot of its
     // padding box, below its bottom padding.
     if node.props.bool(PropId::GroupedRowSeparator) == Some(true) {
@@ -291,8 +292,8 @@ pub fn host_css_of(
     // A root is a block formatting context in the kernel, as CSS's root
     // element is: its first child's top margin stays inside it. On the web a
     // root is an element inside `#exact-root`, and the margin would collapse
-    // through it to the page, so a block root establishes its own context.
-    // The last `display` wins, as it does in `cssText`.
+    // through it to the page, so a block root establishes its own context
+    // (LLP 1001 §1). The last `display` wins, as it does in `cssText`.
     if node.is_root
         && css
             .split(';')
@@ -302,17 +303,17 @@ pub fn host_css_of(
     {
         css.push_str("display:flow-root;");
     }
-    // A root is the containing block of every absolutely
+    // @ref LLP 1074 T1 — a root is the containing block of every absolutely
     // positioned box no positioned ancestor holds, as the kernel's is.
     if node.is_root && node.style.position_type == exact_kernel::PositionType::Static {
         css.push_str("position:relative;");
     }
-    // A raster image with a `-exact-tint-color` is a template: its
+    // A raster image with a `-exact-tint-color` is a template (LLP 1011 §3): its
     // alpha masks the tint, fitted and centered in the content box as
     // `object-fit` fits the picture, which moves out of the box, where the
     // replaced element's own clip hides it. `scale-down` needs the natural
     // size, which only the page knows: the glue sets `--exact-tint-fit`.
-    // This masks the box paint too. An img cannot
+    // This masks the box paint too (declared in LLP 1001 §1). An img cannot
     // paint a ::before/::after layer; keep its replaced-element sizing.
     if node.node_type == NodeType::Image && node.style.mask.has(StyleId::TintColor) {
         if let Some(source) = node
@@ -334,7 +335,7 @@ pub fn host_css_of(
             css.push_str(";mask-repeat:no-repeat;mask-position:center;mask-origin:content-box;mask-clip:content-box;object-position:-100000px 0;");
         }
     }
-    // Linked when the plan names a material.
+    // @ref LLP 1053.000 D4 — linked when the plan names a material.
     if let (Some(name), Some(material)) = (
         node.props.str(PropId::BackgroundMaterial),
         crate::link::linked().materials,
@@ -344,14 +345,14 @@ pub fn host_css_of(
     css
 }
 
-/// Whether the node is an indeterminate `progress`, which the page draws as a
-/// ring in a box.
+/// Whether the node is an indeterminate `progress` (LLP 1069.001, amended
+/// 2026-10-07), which the page draws as a ring in a box.
 fn is_progress(node: &NodeFacts<'_>) -> bool {
     exact_kernel::ControlKind::of(node.node_type, node.props)
         == Some(exact_kernel::ControlKind::Progress)
 }
 
-/// Whether the node is a determinate `progress`: HTML's own
+/// Whether the node is a determinate `progress` (LLP 1116 D8): HTML's own
 /// `<progress value max>`, which the browser draws and sizes (its UA
 /// sheet's `10em` by `1em`, as the kernel's `control::progress_box`).
 fn is_progress_bar(node: &NodeFacts<'_>) -> bool {
@@ -361,14 +362,14 @@ fn is_progress_bar(node: &NodeFacts<'_>) -> bool {
 
 /// The element for a node: its type, refined by `semanticTag`. A `<button>`
 /// holds only phrasing content, so there a container — a box, a paragraph,
-/// a heading, a landmark — is a `<span>` with the same style.
+/// a heading, a landmark — is a `<span>` with the same style (LLP 1007 §1).
 pub(super) fn tag_for<'a>(node: &NodeRef<'a>, in_button: bool) -> &'a str {
     tag_of(&node.facts(), in_button)
 }
 
 /// [`tag_for`], from a node's facts.
 pub fn tag_of<'a>(node: &NodeFacts<'a>, in_button: bool) -> &'a str {
-    // A module node is its custom element, by the name
+    // @ref LLP 1024 D2 — a module node is its custom element, by the name
     // the plan carries, checked again: plan bytes are network bytes.
     if let Some(name) = node
         .props
@@ -388,7 +389,7 @@ pub fn tag_of<'a>(node: &NodeFacts<'a>, in_button: bool) -> &'a str {
     }
 }
 
-/// HTML's potential custom element name, lowercase: the
+/// HTML's potential custom element name, lowercase (LLP 1024 D1): the
 /// compiler's admission, repeated where plan bytes become a DOM tag.
 pub(super) fn module_name(name: &str) -> bool {
     const RESERVED: [&str; 8] = [
@@ -449,7 +450,7 @@ fn element(node: &NodeFacts<'_>) -> &'static str {
     }
     match node.node_type {
         NodeType::View | NodeType::List | NodeType::NativeView => "div",
-        // Real inline SVG, created in the SVG namespace.
+        // @ref LLP 1055 D4 — real inline SVG, created in the SVG namespace.
         NodeType::Svg => "svg",
         NodeType::SvgGroup => "g",
         NodeType::SvgPath => "path",
@@ -472,7 +473,7 @@ fn element(node: &NodeFacts<'_>) -> &'static str {
         NodeType::SvgPattern => "pattern",
         NodeType::SvgForeignObject => "foreignObject",
         NodeType::SvgFilter => "filter",
-        // A primitive's tag is its `fe` prop.
+        // @ref LLP 1055.000 D14 — a primitive's tag is its `fe` prop.
         NodeType::SvgFe => {
             let fe = node.props.str(PropId::Fe).unwrap_or("");
             FE_TAGS
@@ -488,7 +489,7 @@ fn element(node: &NodeFacts<'_>) -> &'static str {
             if node.is_inline_run() {
                 "span"
             } else if exact_kernel::control::is_option_node(node.node_type, node.props) {
-                // The select's own options.
+                // @ref LLP 1069.001 D2 — the select's own options.
                 "option"
             } else {
                 match heading_level(node) {
@@ -506,25 +507,25 @@ fn element(node: &NodeFacts<'_>) -> &'static str {
         NodeType::TextInput => "input",
         NodeType::Pressable => "button",
         NodeType::Control if node.props.str(PropId::Type) == Some("select") => "select",
-        // A native button is the browser's own.
+        // @ref LLP 1069.011 D8 — a native button is the browser's own.
         NodeType::Control if node.props.str(PropId::Type) == Some("button") => "button",
         // An indeterminate progress is a box the page draws a ring in
-        //: HTML's own draws a bar.
+        // (LLP 1069.001, amended 2026-10-07): HTML's own draws a bar.
         NodeType::Control if is_progress(node) => "div",
         NodeType::Control if is_progress_bar(node) => "progress",
         NodeType::Control => "input",
         NodeType::Canvas => "canvas",
         NodeType::WebView => "iframe",
-        // HTML's `audio` is the media node marked so.
+        // @ref LLP 1042 §8 — HTML's `audio` is the media node marked so.
         NodeType::Video if node.props.str(PropId::SemanticTag) == Some("audio") => "audio",
         NodeType::Video => "video",
-        // Never created: a head is the page's `<head>`.
+        // Never created: a head is the page's `<head>` (LLP 1048.003 D1).
         NodeType::Head => "template",
     }
 }
 
 /// A text block's heading level, when it is a heading: `role="heading"`,
-/// by the kernel's `Props::heading`. An `aria-level`
+/// by the kernel's `Props::heading` (LLP 1115.000 D12.5). An `aria-level`
 /// alone makes none, here as on every host: the block stays a `div`, where
 /// Chrome's accessibility tree ignores the level. HTML's `h1`–`h6` carry
 /// levels 1–6 into that tree; a deeper level is a `div` with its
@@ -538,7 +539,7 @@ fn heading_level(node: &NodeFacts<'_>) -> Option<i64> {
     node.props.heading()
 }
 
-/// The filter primitives' tags, as `fe` holds them.
+/// The filter primitives' tags (LLP 1055.000 D14), as `fe` holds them.
 const FE_TAGS: [&str; 24] = [
     "feBlend",
     "feColorMatrix",
@@ -569,7 +570,8 @@ const FE_TAGS: [&str; 24] = [
 /// Props as DOM attributes/properties. Names are the DOM's.
 /// The rows a node's `cssText` carries. A nested `svg` takes `x`, `y`,
 /// `width` and `height` as attributes instead ([`props_for`]): Chrome 154
-/// lays one out from its attributes and ignores those CSS properties.
+/// lays one out from its attributes and ignores those CSS properties
+/// (LLP 1055.000 D4).
 pub(super) fn css_style<'a>(
     kernel: &Kernel,
     node: &NodeRef<'a>,
@@ -578,8 +580,8 @@ pub(super) fn css_style<'a>(
     with_style_rows(style, node)
 }
 
-/// `style` with the weight and leading a text style named on `node` gives it,
-/// for a writer that declares them where it is named.
+/// `style` with the weight and leading a text style named on `node` gives it
+/// (LLP 1115.000 D12.2), for a writer that declares them where it is named.
 pub(super) fn with_style_rows<'a>(
     mut style: std::borrow::Cow<'a, exact_kernel::StyleProps>,
     node: &NodeRef<'_>,
@@ -605,7 +607,7 @@ pub fn css_style_of<'a>(
 ) -> std::borrow::Cow<'a, exact_kernel::StyleProps> {
     let as_attributes = attribute_rows(node.node_type);
     let url = |p: &Paint| matches!(p, Paint::Url(..));
-    // An option is `display: none` to layout, never
+    // @ref LLP 1069.001 D2 — an option is `display: none` to layout, never
     // to the browser's menu, which a hidden `<option>` leaves out.
     if exact_kernel::control::is_option_node(node.node_type, node.props) {
         let mut style = node.style.clone();
@@ -636,7 +638,7 @@ pub fn css_style_of<'a>(
         mask.set(row.0);
     }
     style.clear(mask);
-    // A clipPath by the id the page gives it.
+    // @ref LLP 1055.000 D10 — a clipPath by the id the page gives it.
     if let Some(target) = style
         .rare
         .clip_path
@@ -647,7 +649,7 @@ pub fn css_style_of<'a>(
             style.rare.clip_path = c;
         }
     }
-    // A filter by the id the page gives it.
+    // @ref LLP 1055.000 D14 — a filter by the id the page gives it.
     for f in style.filter.0.iter_mut() {
         if let exact_kernel::svg::filter::FilterFn::Url(id) = f {
             if let Some(target) = resolve(node.id, id) {
@@ -655,7 +657,7 @@ pub fn css_style_of<'a>(
             }
         }
     }
-    // A mask by the id the page gives it.
+    // @ref LLP 1055.000 D10 — a mask by the id the page gives it.
     if let Some(target) = style
         .rare
         .svg_mask
@@ -664,7 +666,7 @@ pub fn css_style_of<'a>(
     {
         style.rare.svg_mask = exact_kernel::svg::MarkerRef(Some(dom_id(target).into()));
     }
-    // A marker by the id the page gives it.
+    // @ref LLP 1055.000 D9 — a marker by the id the page gives it.
     for marker in [
         &mut style.marker_start,
         &mut style.marker_mid,
@@ -674,7 +676,7 @@ pub fn css_style_of<'a>(
             *marker = exact_kernel::svg::MarkerRef(Some(dom_id(target).into()));
         }
     }
-    // A paint server by the id the page gives it.
+    // @ref LLP 1055.000 D3 — a paint server by the id the page gives it.
     for paint in [&mut style.fill, &mut style.stroke] {
         if let Paint::Url(id, fallback) = paint {
             if let Some(target) = resolve(node.id, id) {
@@ -686,7 +688,7 @@ pub fn css_style_of<'a>(
 }
 
 /// The DOM id of an SVG element: unique by construction, so forty
-/// instances of one component's `id="fade"` are forty ids.
+/// instances of one component's `id="fade"` are forty ids (LLP 1055.000 D3).
 fn dom_id(view: exact_kernel::ViewId) -> String {
     format!("x{view}")
 }
@@ -695,7 +697,7 @@ fn dom_id(view: exact_kernel::ViewId) -> String {
 /// and places a `use` from their attributes and ignores those CSS
 /// properties; a `mask`'s and a `pattern`'s region is attributes only, as
 /// is a radial gradient's `cx`, `cy` and `r` are attributes
-/// only.
+/// only (LLP 1055.000 D4, D7).
 pub fn attribute_rows(t: NodeType) -> &'static [(exact_kernel::StyleId, &'static str)] {
     use exact_kernel::StyleId::*;
     match t {
@@ -793,14 +795,14 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
     if node.node_type == NodeType::List {
         out.insert("data-exact-list".into(), String::new());
     }
-    // Shared by live wasm batches, server documents and
+    // @ref LLP 1104 D8 — shared by live wasm batches, server documents and
     // the JS target's templates. Lowering keeps excluded editors bare.
     if node.node_type == NodeType::TextInput
         && node.style.appearance != exact_kernel::Appearance::None
     {
         out.insert("data-native".into(), String::new());
     }
-    // `appearance: textfield` drops a number input's
+    // @ref LLP 1116.007 D4 — `appearance: textfield` drops a number input's
     // spin buttons: Firefox reads the CSS, Chrome and Safari need their
     // pseudo-elements told (index.html).
     if node.node_type == NodeType::TextInput
@@ -808,7 +810,7 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
     {
         out.insert("data-exact-textfield".into(), String::new());
     }
-    // A frame's guest may take the screen, as a
+    // @ref LLP 1020.002 D5 — a frame's guest may take the screen, as a
     // top-level page may. `*`, not the bare feature: Firefox and WebKit grant
     // `allow="fullscreen"` (the `src` origin) to no opaque sandboxed guest.
     if node.node_type == NodeType::WebView {
@@ -824,16 +826,16 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
         out.insert("data-exact-text".into(), String::new());
     }
     // A `markup="markdown"` text node paints its source as pieces the page
-    // builds into spans: the same expansion the native
+    // builds into spans (LLP 1045 D3, D4): the same expansion the native
     // hosts measure and paint, as one JSON value, never as HTML. Markdown is
-    // a linked capability: boot admitted this plan only if the
+    // a linked capability (LLP 1047 D3): boot admitted this plan only if the
     // artifact links it.
     let markup = (node.node_type == NodeType::Text
         && node.props.str(PropId::Markup) == Some("markdown")
         && !node.is_inline_run())
     .then_some(crate::link::linked().markup)
     .flatten();
-    // The faces with their paint as the CSS a pill takes.
+    // LLP 1045.000 D2: the faces with their paint as the CSS a pill takes.
     let faces = crate::css::atom_faces(node.props.str(PropId::AtomFaces).unwrap_or(""));
     if let (Some(pieces), Some(source)) = (markup, node.props.str(PropId::Text)) {
         let atoms = node.props.str(PropId::Atoms).unwrap_or("");
@@ -850,7 +852,7 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
             );
             continue;
         }
-        // The app's words are real attributes.
+        // @ref LLP 1075.003 §3.3 — the app's words are real attributes.
         if let (PropId::Dataset, PropValue::Str(json)) = (id, value) {
             if let Some(dataset) = crate::link::linked().dataset {
                 for (word, value) in dataset(json) {
@@ -870,7 +872,7 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
             PropValue::Str(s) => s.to_string(),
             PropValue::Bool(b) => b.to_string(),
             PropValue::Int(i) => i.to_string(),
-            // The reserved `-1` is written as `auto`.
+            // LLP 1053.000.000.000 D3: the reserved `-1` is written as `auto`.
             PropValue::Float(f) if id == PropId::GlassGroup && *f == -1.0 => "auto".into(),
             PropValue::Float(f) if matches!(id, PropId::Start | PropId::End) => exact_num::js(*f),
             PropValue::Float(f) => crate::css::num(*f as f32),
@@ -882,11 +884,11 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
             PropId::Markup => "markup",
             PropId::Decorations => "data-decorations",
             PropId::DecorationStyles => "data-decoration-styles",
-            // A Markdown node's atom kinds, paint and faces.
+            // LLP 1045.000: a Markdown node's atom kinds, paint and faces.
             PropId::Atoms => "data-atoms",
             PropId::AtomStyles => "data-atom-styles",
             PropId::AtomFaces => "data-atom-faces",
-            // The editor's line directions, read by markup-editor.js.
+            // LLP 1045 D11: the editor's line directions, read by markup-editor.js.
             PropId::ParagraphDirs => "data-paragraph-dirs",
             PropId::TestId => "data-testid",
             // An image's label is its `alt`: the replaced element's text
@@ -905,7 +907,7 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
             PropId::AccessibilityHeadingLevel => "aria-level",
             PropId::AccessibilityPosInSet => "aria-posinset",
             PropId::AccessibilitySetSize => "aria-setsize",
-            // A range role's value, ARIA's own attributes.
+            // @ref LLP 1116 D8 — a range role's value, ARIA's own attributes.
             PropId::AccessibilityValueNow => "aria-valuenow",
             PropId::AccessibilityValueMin => "aria-valuemin",
             PropId::AccessibilityValueMax => "aria-valuemax",
@@ -930,7 +932,7 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
             PropId::NavigationSource => "navigationSource",
             PropId::NavigationSplit => "navigationSplit",
             PropId::EstimatedItemWidth => "data-exact-estimated-item-width",
-            // The shared-element name the JS target's view
+            // LLP 1013.000 D7: the shared-element name the JS target's view
             // transitions pair by.
             PropId::SharedElement => "data-shared-element",
             PropId::Closedby => "closedby",
@@ -942,20 +944,20 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
             PropId::Destructive => "data-destructive",
             PropId::EmojiPicker => "emojiPicker",
             PropId::BackgroundMaterial => "backgroundMaterial",
-            // Written, read by no rule, drawn nowhere.
+            // LLP 1053.000.000 D1: written, read by no rule, drawn nowhere.
             PropId::GlassGroup => "glassGroup",
             PropId::RetainFocus => "retainFocus",
             // tvOS's focus guide; a browser's Tab order is sequential.
             PropId::FocusGuide => continue,
             // The kernel's word from the grouped sheet; the page's sheet has the ink already.
             PropId::GroupedAction => continue,
-            // A page cannot style the phone's status bar.
+            // A page cannot style the phone's status bar (LLP 1105 D7).
             PropId::StatusBarStyle | PropId::StatusBarAnimation => continue,
-            // Read by wakelock-glue.js.
+            // Read by wakelock-glue.js (LLP 1125 D11).
             PropId::Wakelock => "data-exact-wakelock",
-            // Read by orientationlock-glue.js.
+            // Read by orientationlock-glue.js (LLP 1133.029 D7).
             PropId::Orientationlock => "data-exact-orientationlock",
-            // Read by the JS target's midi.js: the inputs, newline-joined.
+            // Read by the JS target's midi.js (LLP 1125 D8): the inputs, newline-joined.
             PropId::MidiInputs => "data-exact-midiinputs",
             PropId::SwipeIndicator => "swipeIndicator",
             PropId::Href if node.props.link().is_none() => continue,
@@ -1006,7 +1008,7 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
             PropId::PreventsDisplaySleepDuringVideoPlayback => {
                 "preventsDisplaySleepDuringVideoPlayback"
             }
-            // The media session's, which media-glue.js reads.
+            // @ref LLP 1098 D6 — the media session's, which media-glue.js reads.
             PropId::MediaTitle => "mediaTitle",
             PropId::MediaArtist => "mediaArtist",
             PropId::MediaAlbum => "mediaAlbum",
@@ -1015,7 +1017,7 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
             PropId::SeekforwardOffset => "seekforwardOffset",
 
             PropId::Sandbox => "sandbox",
-            // Not honoured on the web. The glue
+            // @ref LLP 1020.002 D1, §9 — not honoured on the web. The glue
             // keeps `partition` on the element for the agent's tree, never as a
             // DOM attribute; the Apple words do not reach the page.
             PropId::Partition => "partition",
@@ -1024,22 +1026,22 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
             | PropId::AppleInactiveSchedulingPolicy => continue,
             PropId::SemanticTag => continue,
             PropId::Checked => "checked",
-            // A radio's group: the browser's own exclusivity and arrows.
+            // A radio's group (x2apps survey #2): the browser's own exclusivity and arrows.
             PropId::Name => "name",
             PropId::Rows => "rows",
             PropId::Maxlength => "maxlength",
-            // A file input's own attributes, so the
-            // browser's picker takes the types and the count.
+            // A file input's own attributes (LLP 1069.002 D1), so the
+            // browser's picker takes the types and the count (gallery F6).
             PropId::Accept => "accept",
             PropId::Multiple => "multiple",
-            // The Popover API by identity: the browser owns
+            // The Popover API by identity (LLP 1021 D5): the browser owns
             // the top layer, light dismiss, and Escape once these land on
             // the real elements.
             PropId::Id => "id",
             PropId::Popover => "popover",
             PropId::Popovertarget => "popovertarget",
             PropId::Popovertargetaction => "popovertargetaction",
-            // The context menu's popover and its preview row,
+            // LLP 1021 §5.1: the context menu's popover and its preview row,
             // which the glue opens on `contextmenu` (glue.js).
             PropId::ContextPopover => "contextpopover",
             PropId::ContextPreview => "data-context-preview",
@@ -1055,20 +1057,20 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
             PropId::AccessibilityInvalid => "aria-invalid",
             PropId::AccessibilityDescribedBy => "aria-describedby",
             PropId::AccessibilityLabelledBy => "aria-labelledby",
-            // HTML's own attribute, so the browser makes the box focusable;
-            // `data-tabindex` would be ignored.
+            // HTML's own attribute, so the browser makes the box focusable
+            // (LLP 1088 D7.3); `data-tabindex` would be ignored.
             PropId::TabIndex => "tabindex",
             PropId::AccessibilityRequired => "aria-required",
             PropId::AccessibilityHasPopup => "aria-haspopup",
             PropId::AccessibilityCurrent => "aria-current",
             PropId::AccessibilitySort => "aria-sort",
-            // A table cell's own attributes.
+            // @ref LLP 1153 D7 — a table cell's own attributes.
             PropId::ColSpan => "colspan",
             PropId::RowSpan => "rowspan",
             PropId::Scope => "scope",
-            // HTML's global `title`: the browser's own tooltip.
+            // HTML's global `title`: the browser's own tooltip (studio diary R24).
             PropId::Title => "title",
-            // SVG 2 attributes by their exact (case-sensitive) names.
+            // SVG 2 attributes by their exact (case-sensitive) names (LLP 1055 D1).
             PropId::ViewBox => "viewBox",
             PropId::PreserveAspectRatio => "preserveAspectRatio",
             PropId::Points => "points",
@@ -1101,7 +1103,7 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
             PropId::TextY => "y",
             PropId::TextDx => "dx",
             PropId::TextDy => "dy",
-            // A primitive's attributes by their SVG
+            // @ref LLP 1055.000 D14 — a primitive's attributes by their SVG
             // names; `fe` is the tag itself.
             PropId::Fe => continue,
             PropId::FeDx => "dx",
@@ -1137,14 +1139,14 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
         out.insert("data-exact-progress".into(), String::new());
     } else if node.node_type == NodeType::Control {
         out.get_or_insert_with("type".into(), || "checkbox".into());
-        // WebKit's `switch`, else drawn by index.html.
+        // @ref LLP 1069.001 D1 — WebKit's `switch`, else drawn by index.html (LLP 1116 D1).
         if node.props.str(PropId::AccessibilityRole) == Some("switch") {
             out.insert("switch".into(), String::new());
             if node.style.appearance == exact_kernel::Appearance::Auto {
                 out.insert("data-exact-switch".into(), String::new());
             }
         }
-        // A date, time or local date-time control takes the
+        // LLP 1116.001 D1: a date, time or local date-time control takes the
         // page's field look (index.html) while its appearance is the platform's.
         if node.style.appearance == exact_kernel::Appearance::Auto
             && matches!(
@@ -1159,11 +1161,11 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
             out.insert("data-exact-field".into(), String::new());
         }
     }
-    // A sheet's bar centres its title (index.html) unless the
+    // @ref LLP 1116.009 D4 — a sheet's bar centres its title (index.html) unless the
     // author flows its items: a header whose author wrote `justify-content` is named,
-    // as the `written` bit names a written row to the neutral look's sheet
-    // below. So is one whose author wrote `appearance: none`, which keeps its
-    // authored bar: iOS makes no bar of it, nor does navigation.js.
+    // as D2's bit names a written row to the neutral look's sheet below. So is one
+    // whose author wrote `appearance: none`, which keeps its authored bar
+    // (LLP 1075.003 §9.10): iOS makes no bar of it, nor does navigation.js.
     if element(node) == "header" {
         let written = &node.style.written;
         let said: Vec<&str> = [
@@ -1184,14 +1186,14 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
             out.insert("data-exact-said".into(), said.join(" "));
         }
     }
-    // The neutral sheet draws these marks
+    // @ref LLP 1115.000 D4 part B — the neutral sheet draws these marks
     // itself (neutral.css), and reads here what CSS cannot say. A checkbox,
     // radio, range or file control whose appearance is the platform's is
     // marked, as a switch and a date field are above: `appearance="none"`
     // hands the box to the author. And a row the author wrote where the
-    // sheet would draw over an inherited or implied one (its `written` bit) is named:
+    // sheet would draw over an inherited or implied one (D2's bit) is named:
     // a spinner's own `color`, a grouped list's own ground, and a button's
-    // fill, which hovers in its own ink (a fill computed at run
+    // fill, which hovers in its own ink (LLP 1129 D1; a fill computed at run
     // time is not seen here).
     use exact_kernel::{ControlKind, StyleId};
     let kind = ControlKind::of(node.node_type, node.props);
@@ -1222,7 +1224,7 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
     if let Some((_, name)) = said.filter(|(id, _)| node.style.written.has(*id)) {
         out.insert("data-exact-said".into(), name.into());
     }
-    // A box whose author wrote its top or its
+    // @ref LLP 1115.000 D16 — a box whose author wrote its top or its
     // bottom edge (a width or a style, `none` included) has drawn its
     // own separator there, or said it has none: where it is a list's
     // row the sheet draws no line of its own at that edge. It is told
@@ -1243,7 +1245,7 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
                 "border-bottom",
             ),
             // A grouped row's own background image is where the sheet draws
-            // its separator.
+            // its separator (LLP 1084 D7).
             (
                 StyleId::BackgroundImage,
                 StyleId::BackgroundImage,
@@ -1293,7 +1295,7 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
         };
         out.insert("data-exact-said".into(), words);
     }
-    // What else its author wrote `appearance: none`
+    // @ref LLP 1075.003 §9.10 — what else its author wrote `appearance: none`
     // on says so too: in a route's header it is no bar item (navigation.js),
     // as iOS projects none of it, and a Back control so written is the
     // route's Back, with none of the bar's beside it.
@@ -1311,7 +1313,7 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
     if element(node) == "button" {
         out.get_or_insert_with("type".into(), || "button".into());
     }
-    // A native button's look, its default named too.
+    // A native button's look, its default named too (LLP 1069.011 D8).
     if node.node_type == NodeType::Control && node.props.str(PropId::Type) == Some("button") {
         out.get_or_insert_with("data-button-style".into(), || "bordered".into());
         out.insert("data-native".into(), String::new());
@@ -1322,7 +1324,7 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
             .str(PropId::ImageSource)
             .and_then(|s| s.strip_prefix("symbol:"))
         {
-            // A role, an icon token's form, or `sf/` a role's Apple name.
+            // A role, an icon token's form, or `sf/` a role's Apple name (LLP 1121 D10).
             let symbol = exact_kernel::symbol_path(role);
             out.insert("data-symbol-source".into(), format!("symbol:{role}"));
             match exact_kernel::Icon::parse(role).filter(|i| i.path.is_empty() && !i.svg.is_empty())
@@ -1341,7 +1343,7 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
             }
             // How it is filled, and by which rule (element_symbol.rs).
             symbol::fill_marks(&mut out, role, symbol);
-            // Its author's `color` it draws in, untinted (glue.js).
+            // Its author's `color` it draws in, untinted (LLP 1121 stage 9 B; glue.js).
             if node.symbol_color {
                 out.insert("data-symbol-color".into(), String::new());
             }
@@ -1352,8 +1354,8 @@ pub fn props_of(node: &NodeFacts<'_>) -> SortedMap<String, String> {
         }
     }
     // A link to an absolute URL leaves the app, as natively (the system
-    // browser): a new browsing context, unless the author named a `target`.
-    // `external` marks the default, which the JS
+    // browser): a new browsing context, unless the author named a `target`
+    // (chat F11, hn-reader F3). `external` marks the default, which the JS
     // target's runtime recomputes as a bound `href` changes (rt.js `P`).
     if element(node) == "a" {
         match out.get("target").map(String::as_str) {
@@ -1381,7 +1383,7 @@ mod name_tests;
 
 impl<D: exact_runner::DataSource> super::Host<D> {
     /// A view's CSS as the page has it: the rows, the host's additions, a
-    /// folded text's and its paint isolation.
+    /// folded text's (LLP 1007.001) and its paint isolation.
     pub(crate) fn view_css(&self, node: &exact_kernel::NodeRef<'_>) -> String {
         let kernel = self.runner.kernel();
         let m = self.mirror.get(&node.id);
@@ -1411,7 +1413,7 @@ impl<D: exact_runner::DataSource> super::Host<D> {
         super::layers::with_isolation(css, self.layers.isolated(node.id))
     }
 
-    /// Refresh child dependencies: text folds, button metrics
+    /// Refresh child dependencies: text folds (LLP 1007.001), button metrics
     /// and a progress's or canvas's width in block flow.
     pub(super) fn refold(&mut self, id: exact_kernel::ViewId, batch: &mut crate::batch::Batch) {
         let kernel = self.runner.kernel();

@@ -1,5 +1,5 @@
-//! The three forms the compiler accepts, each compiled to the plan of the form
-//! it means, byte for byte.
+//! LLP 1116.017: the three forms the compiler accepts, each compiled to the
+//! plan of the form it means, byte for byte.
 
 fn same(written: &str, means: &str) {
     let a = contract::compile(written).unwrap_or_else(|e| panic!("{e}\n{written}"));

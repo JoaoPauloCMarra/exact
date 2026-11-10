@@ -39,7 +39,7 @@ final class SessionClockTimerTests: XCTestCase {
         XCTAssertEqual(custom.locale, "fr-CA")
         XCTAssertEqual(custom.timeZone, "America/Toronto")
         XCTAssertEqual(custom.seed, (1 << 32) - 1)
-        // The launch seed is below 2^32 on every host: a
+        // The launch seed is below 2^32 on every host (LLP 1116.005 D5): a
         // drawn one, and a given one past it is 1, as the agent's stream takes it.
         for _ in 0..<64 { XCTAssertLessThan(LaunchPlace(environment: [:]).seed, 1 << 32) }
         XCTAssertEqual(LaunchPlace(environment: ["EXACT_AGENT": "1", "EXACT_AGENT_SEED": "4294967296"]).seed, 1)

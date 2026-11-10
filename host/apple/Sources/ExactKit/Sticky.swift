@@ -1,4 +1,4 @@
-// `position: sticky`: the kernel lays a sticky box out where it
+// `position: sticky` (LLP 1083 D4): the kernel lays a sticky box out where it
 // would be unscrolled and sends its constraint (`StickyConstraint` in
 // kernel/src/kernel/sticky.rs); here, each time its scroller scrolls, the box
 // moves by the constraint's offset, as a browser's does. The move folds into
@@ -125,7 +125,7 @@ final class StickyHost {
         let page = presenter.viewport.contentView.bounds.origin
         #else
         // CSS's scrollTop: past the inset UIKit gives it under a bar, or a
-        // page band, so `top: 0` sticks at the bar's bottom, as
+        // page band (LLP 1130 D3), so `top: 0` sticks at the bar's bottom, as
         // under a web page's header in flow and as UIKit pins a header.
         if let sv = v.scrollView { return CGPoint(x: sv.contentOffset.x, y: sv.contentOffset.y + v.scrollTopInset(sv)) }
         // A block its host scrolls (a dialog in its sheet's scroller): how far

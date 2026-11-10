@@ -1,4 +1,4 @@
-//! A path's `d` under `transition`, held to Chrome: a
+//! A path's `d` under `transition` (LLP 1055.000 D15), held to Chrome: a
 //! matched pair moves number by number, any other pair changes at once, and
 //! a change back reverses from where the path is.
 

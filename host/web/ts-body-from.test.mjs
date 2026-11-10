@@ -21,7 +21,7 @@ test('an exactBodyFrom fetch captures its options before loading the file-body m
     const first = appFetch('https://x.test/up', options);
     options.method = 'PUT'; options.exactBodyFrom = 'app:/data/b'; options.exactTimeout = 1000;
     const second = appFetch('https://x.test/up', options);
-    // Beside an `AbortSignal.timeout` as long, the `exactTimeout` gives way to the signal's deadline
+    // Beside an `AbortSignal.timeout` as long, the `exactTimeout` gives way to the signal's deadline (LLP 1146 §2.1)
     answering.page = { clock: { now: 0, timers: [], agent: true }, journal: [], drive() {} };
     answering.call = {};
     const signal = AppAbortSignal.timeout(5000);
@@ -54,7 +54,7 @@ test('an exactBodyFrom fetch times out and aborts while its module is loading', 
     timed = appFetch('https://x.test/up', { method: 'POST', exactBodyFrom: 'app:/data/a', exactTimeout: 10 }).catch(e => e);
     const controller = new AbortController(); aborted = appFetch('https://x.test/up', { method: 'POST', exactBodyFrom: 'app:/data/b', signal: controller.signal }).catch(e => e);
     controller.abort(new Error('stopped'));
-    // An `AbortSignal.timeout`'s deadline holds too, and beside an `exactTimeout` as long it is the request's
+    // An `AbortSignal.timeout`'s deadline holds too, and beside an `exactTimeout` as long it is the request's (LLP 1146 §2.1)
     answering.page = { clock: { now: 0, timers: [], agent: true }, journal: [], drive() {} };
     answering.call = {};
     const signal = AppAbortSignal.timeout(10), tiedSignal = AppAbortSignal.timeout(10), stoppedSignal = AppAbortSignal.timeout(10);

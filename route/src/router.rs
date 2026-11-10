@@ -1,6 +1,6 @@
 //! The six verbs spend ids only when they make visits.
 //!
-//! Router, Reads, Verbs and Laws.
+//! @ref LLP 1038 §3 — Router, Reads, Verbs and Laws; LLP 1153 D5.
 //!
 //! Open builds the declaration's chain on its declared tab. Push and replace
 //! stay on the selected tab, because a person opened from Search belongs to
@@ -162,8 +162,8 @@ pub fn push(table: &Table, r: Router, location: &str) -> (Router, Option<Refusal
         let index = selected(&r)?;
         let fragment = fragment_of(location);
         // A push of the location already on top is no new visit: as HTML
-        // replaces the entry for a same-URL navigation, and
-        // navigates within the document for a new fragment.
+        // replaces the entry for a same-URL navigation (LLP 1038), and
+        // navigates within the document for a new fragment (LLP 1153 D5).
         if let Some(top) = r.tabs[index].stack.last().filter(|top| top.url == d.url) {
             if top.fragment == fragment {
                 return Ok(r.clone());

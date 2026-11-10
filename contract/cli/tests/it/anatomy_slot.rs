@@ -1,9 +1,10 @@
-//! An exported library component's slot: `children` placed once,
-//! unconditionally, never forwarded; and no node of the slot's chain (the
-//! view's root down to the node holding it) hiding the fill, by a row of any
-//! class branch or state layer, an attribute, or a token's value in any tuple.
-//! A component of an app, or a package's that isn't a library (not private, no
-//! design), is not held to it.
+//! @ref LLP 1139 D0, D4 (stage 12 C2) — an exported library component's
+//! slot: `children` placed once, unconditionally, never forwarded; and no
+//! node of the slot's chain (the view's root down to the node holding it)
+//! hiding the fill, by a row of any class branch or state layer, an
+//! attribute, or a token's value in any tuple. A component of an app, or a
+//! package's that isn't a library (not private, no design), is not held to
+//! it.
 
 use contract::CompileError;
 use std::path::{Path, PathBuf};
@@ -279,7 +280,7 @@ fn a_re_export_font_and_svg_transform_count() {
 
 /// The Tamber IR file records an exported library component's slot chain:
 /// each node's deny-list rows with their values as written, what the design
-/// server asks the one checker of on a candidate fold.
+/// server asks the one checker of on a candidate fold (LLP 1139 D4, D5).
 #[test]
 fn the_ir_records_the_slot_chain() {
     let dir = Dir::new("ir");
@@ -312,10 +313,11 @@ fn the_ir_records_the_slot_chain() {
     );
 }
 
-/// A param's folded value; a base name in every column (the terminal's
-/// `radius.sm` is 0); a math function the kernel folds to 0; `0em`; the node's
-/// own row over its class's in one layer; and the one checker is the whole rule
-/// (`font`, attributes, transforms, a computation).
+/// Round 1 (Astra, Grok): a param's folded value; a base name in every
+/// column (the terminal's `radius.sm` is 0); a math function the kernel
+/// folds to 0; `0em`; the node's own row over its class's in one layer; and
+/// the one checker is the whole rule (`font`, attributes, transforms, a
+/// computation).
 #[test]
 fn round_1_values() {
     let id = "lower-anatomy-slot";
@@ -372,9 +374,9 @@ fn round_1_values() {
     }
 }
 
-/// An export through a barrel and a rename, one an app reaches by a subpath
-/// past the entry, and a package nested inside a library (its own
-/// `node_modules`), which is not the library's.
+/// Round 1 (Astra, Grok): an export through a barrel and a rename, one an
+/// app reaches by a subpath past the entry, and a package nested inside a
+/// library (its own `node_modules`), which is not the library's.
 #[test]
 fn round_1_exports() {
     let dir = Dir::new("barrel");
@@ -420,11 +422,12 @@ fn round_1_exports() {
     );
 }
 
-/// A base name the design sets is its token (its `0px` refused, its `8px` not
-/// the scale's terminal `0`); SVG `text` on the chain inside an `svg` has its
-/// `transform` checked; a determinant that overflows is no pass; a text style
-/// is a font size; an unknown `display` is unreadable; an export through the
-/// package's own name and from an entry under `src/`.
+/// Round 2 (Astra, Grok): a base name the design sets is its token (its
+/// `0px` refused, its `8px` not the scale's terminal `0`); SVG `text` on
+/// the chain inside an `svg` has its `transform` checked; a determinant
+/// that overflows is no pass; a text style is a font size; an unknown
+/// `display` is unreadable; an export through the package's own name and
+/// from an entry under `src/`.
 #[test]
 fn round_2_edges() {
     let id = "lower-anatomy-slot";
@@ -516,9 +519,10 @@ fn round_2_edges() {
     );
 }
 
-/// The one checker as the design server calls it: chains read once from the IR,
-/// a candidate fold asked in-process, the refusal in the compiler's words at
-/// the token's line, only the chains a touched token reaches.
+/// The one checker as stage 12 D's server calls it (rt1's shape): chains
+/// read once from the IR, a candidate fold asked in-process, the refusal in
+/// the compiler's words at the token's line, only the chains a touched
+/// token reaches.
 #[test]
 fn check_slots_judges_a_candidate_fold() {
     use contract_lower::anatomy::slot::{check_slots, SlotChains};
@@ -566,8 +570,8 @@ fn check_slots_judges_a_candidate_fold() {
     assert!(check_slots(&broke, None, &chains, &["lib.pad"]).is_empty());
 }
 
-/// `touched` is closed over references, so a write to a base name reaches a
-/// chain whose row reads a token over it.
+/// theme2's D2 condition: `touched` is closed over references, so a write
+/// to a base name reaches a chain whose row reads a token over it.
 #[test]
 fn check_slots_touched_reaches_through_aliases() {
     use contract_lower::anatomy::slot::{check_slots, SlotChains};
@@ -613,7 +617,8 @@ fn check_slots_touched_reaches_through_aliases() {
     let got = check_slots(&broke, None, &chains, &["space.md"]);
     assert_eq!(got.len(), 1, "{got:?}");
     assert!(got[0].message.contains("lib.w"), "{got:?}");
-    // Said at the app's line the package token reaches, not the design's start.
+    // Said at the app's line the package token reaches (rt1's ask), not
+    // the design's start.
     assert_eq!((got[0].line, got[0].col), (4, 3), "{got:?}");
 }
 
@@ -664,8 +669,8 @@ fn check_slots_reads_a_bare_base_name() {
     // The line removed: the scale's own `radius.sm`, 0 in a column.
     let got = check_slots(&fold("tamber app\n"), None, &chains, &["radius.sm"]);
     assert_eq!(got.len(), 1, "{got:?}");
-    // Said at the removed override's line in the fold the write replaces,
-    // never the design's start.
+    // Said at the removed override's line in the fold the write replaces
+    // (the lead, from rt1's D2 review), never the design's start.
     let before = fold(set);
     let got = check_slots(
         &fold("tamber app\n"),
@@ -737,10 +742,11 @@ fn check_slots_says_a_removed_override_at_its_line() {
     }
 }
 
-/// A chain row whose value is an expression over a package token is one the
-/// compiler can't fold, and refuses (the check folds or refuses); `check_slots`
-/// judges it the same, so the server and the build agree, and the IR lists the
-/// token so a write to it reaches the chain.
+/// A chain row whose value is an expression over a package token is one
+/// the compiler can't fold, and refuses (theme2's D4: the check folds or
+/// refuses); `check_slots` judges it the same, so the server and the build
+/// agree (rt1's D2 round 1), and the IR lists the token so a write to it
+/// reaches the chain.
 #[test]
 fn check_slots_judges_an_expression_as_the_compiler_does() {
     use contract_lower::anatomy::slot::{check_slots, SlotChains};
@@ -805,8 +811,9 @@ fn check_slots_judges_an_expression_as_the_compiler_does() {
     assert_eq!((got[0].line, got[0].col), (4, 3), "{got:?}");
 }
 
-/// The server's check and the build agree, id and words byte for byte: a write
-/// that removes an app-only token a library row names, and an expression row
+/// The server's check and the build agree, id and words byte for byte
+/// (theme2's re-confirm conditions, from rt1's D2 reviews): a write that
+/// removes an app-only token a library row names, and an expression row
 /// whose token a write makes `0px`.
 #[test]
 fn check_slots_and_the_build_refuse_in_the_same_words() {
@@ -879,9 +886,9 @@ fn check_slots_and_the_build_refuse_in_the_same_words() {
     }
 }
 
-/// For the design tool's selection report, each source-map node of an exported
-/// library component's own view names its declaring identity; the slot's fill,
-/// the caller's, does not.
+/// LLP 1139 D5, for stage D's selection report (rt1): each source-map node
+/// of an exported library component's own view names its declaring
+/// identity; the slot's fill, the caller's, does not.
 #[test]
 fn the_source_map_names_a_library_nodes_identity() {
     let dir = Dir::new("map-library");
@@ -916,9 +923,9 @@ fn the_source_map_names_a_library_nodes_identity() {
     assert!(libs.contains(&None), "the fill is the caller's: {libs:?}");
 }
 
-/// A re-export through the package's own name and its `exports` mapping; and a
-/// class's `font` naming a type token whose leading is 0 stays checked whatever
-/// longhands the node sets.
+/// Round 3 (Astra, Grok): a re-export through the package's own name and
+/// its `exports` mapping; and a class's `font` naming a type token whose
+/// leading is 0 stays checked whatever longhands the node sets.
 #[test]
 fn round_3_edges() {
     let dir = Dir::new("exports-map");

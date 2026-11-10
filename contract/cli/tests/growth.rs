@@ -101,17 +101,8 @@ fn four_times_the_uses_compile_in_about_four_times_as_long() {
     let ratio = large.as_secs_f64() / small.as_secs_f64();
     // Linear measures 3.9-4.3 (debug and host-dev); the least of the scans
     // put back, a handler's action found by `position`, measures 4.8-5.2.
-    // A hosted CI runner measured linear at 4.7: the larger compile stalls
-    // more in its memory hierarchy, and CPU time counts the stalls. There the
-    // bound catches only the larger regressions; the gate on a workstation
-    // holds the finer one. GitHub Actions sets `CI`.
-    let bound = if std::env::var_os("CI").is_some() {
-        5.5
-    } else {
-        4.6
-    };
     assert!(
-        ratio <= bound,
+        ratio <= 4.6,
         "{uses} uses took {small:?} and {} took {large:?}: {ratio:.1}x for 4x the uses",
         uses * 4
     );

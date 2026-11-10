@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
-// Measure the control-role table's fidelity on one host: the fixture (scripts/fixtures/control-roles) built twice, once
+// Measure the control-role table's fidelity on one host (LLP 1121 D9, stage
+// 8 C): the fixture (scripts/fixtures/control-roles) built twice, once
 // as written (an authored accent and field roles) and once with neither,
 // each control's frame read from both screenshots and compared.
 //
@@ -15,12 +16,12 @@
 //   authored colour yet nearer it than the plain build's pixel there (moved
 //   by more than ΔE00 1, of its hue (within 30°, chroma 10 or more; an
 //   authored grey by ΔE00 alone), and not another colour the fixture asks for,
-//   blended over the pixel or the control's ground);
+//   blended over the pixel or the control's ground): theme2's ruling;
 // - none: else (the platform's own colour stands);
 // - unmeasured: fewer than 16 pixels in the frame, or frames that differ
 //   between the builds (the run fails, naming it).
 // Pixels that move between two looks in either build, the app's clock
-// held (an animation the clock does not drive), are left out first, as is the hue.
+// held (an animation the clock does not drive), are left out first (theme2's 08:42 ruling, as is the hue).
 // Run each host's prerequisites first (a web dist, a native build of the
 // host fixture, a simulator or emulator of your own, Android's reader APK:
 // with --scratch for the reader), as agent.mjs says.
@@ -111,7 +112,7 @@ function build(dir, authored) {
 }
 
 /** Each control's frame (view points) and the screenshot, on `host`.
- * Android is its reader (the APK's Canvas reader, not the
+ * Android is its reader (D9's column: the APK's Canvas reader, not the
  * Linux host under adb), which boots the plan its APK bakes: the fixture
  * goes in as the app of a scratch checkout (`--scratch <worktree>`, whose
  * `apps/tamber-host` it overwrites) and the APK is built there. */
@@ -156,7 +157,7 @@ function capture(plan, png, dir) {
   }
   // The Mac draws a control's accent only in a key window, which an agent's window never is (it takes no focus):
   // EXACT_AGENT_ACTIVATE=1, for this run only, activates the app; it puts back the app in front when it quits, and
-  // so does this, however the run ends.
+  // so does this, however the run ends (LLP 1121 stage 9 F2).
   const front = host === 'macos' ? frontApp() : null;
   let r;
   try {
@@ -232,7 +233,7 @@ export function judge(authoredPx, plainPx, target, others = []) {
   const close = near.filter((d, i) => d <= 3 && was[i] > 3).length;
   const best = Math.min(...near);
   if (close >= 4) return { fidelity: 'exact', deltaE: best, pixels: close };
-  // Best-effort: further than ΔE00 3 from the authored
+  // Best-effort (theme2's ruling): further than ΔE00 3 from the authored
   // colour, yet nearer it than the platform's pixel there.
   let nearer = 0, nearest = Infinity;
   for (let i = 0; i < n; i++) {

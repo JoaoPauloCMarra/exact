@@ -1,4 +1,4 @@
-# The Canvas gallery on the web: one wasm with the runner, the
+# The Canvas gallery on the web (LLP 1056 §4): one wasm with the runner, the
 # kernel and the baked plan; its TypeScript module runs in the page's realm.
 [package]
 name = "canvas-gallery-web"

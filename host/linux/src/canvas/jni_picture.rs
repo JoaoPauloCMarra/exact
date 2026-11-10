@@ -1,5 +1,5 @@
-//! A package's picture from the reader: the `Bitmap` an extension answered
-//! with, copied into the host's pixels.
+//! A package's picture from the reader (LLP 1133.019 D11 item 1): the
+//! `Bitmap` an extension answered with, copied into the host's pixels.
 use jni_sys::{jobject, JNIEnv};
 use std::ffi::c_void;
 

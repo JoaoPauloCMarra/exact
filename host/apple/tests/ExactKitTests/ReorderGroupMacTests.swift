@@ -4,11 +4,11 @@ import XCTest
 @testable import ExactKit
 @testable import ExactDrag
 
-/// A grouped grip on a Mac: a ghost that follows a drag
+/// A grouped grip on a Mac (LLP 1094 stage 4): a ghost that follows a drag
 /// in any direction into another grouped list, a drop that holds with the
 /// ghost kept, the hold's end landing it, and the keys.
 final class ReorderGroupMacTests: XCTestCase {
-    override class func setUp() { super.setUp(); ExactDrag.install() }
+    override class func setUp() { super.setUp(); ExactDrag.install() } // LLP 1047.001 D4
     private var window: NSWindow?
     override func tearDown() { window?.close(); window = nil }
 

@@ -1,4 +1,4 @@
-//! Composition stays on the device; only finish reads pixels.
+//! Composition stays on the device; only finish reads pixels. @ref LLP 1149 D2.5, D2.7.
 use super::*;
 
 impl Ink {

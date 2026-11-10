@@ -1,10 +1,10 @@
-// @exact/speech-recognition's conformance suite on Apple: th// te fixture app
-// made as the web suite makes it, built for macOS or an iOS simulator, and
-// driven by the agent with both implementations bound (`--bind
-// media-capture,speech-recognition`), so the platform's recognizer hears the
-// spoken file, placed in the app's data before it opens. A track recognition
-// needs a microphone that answers, which this suite cannot count on: that is
-// test/device.md's.
+// @exact/speech-recognition's conformance suite on Apple (LLP 1133.001 D7,
+// LLP 1133.012 §10, stage 2): the fixture app made as the web suite makes it,
+// built for macOS or an iOS simulator, and driven by the agent with both
+// implementations bound (`--bind media-capture,speech-recognition`), so the
+// platform's recognizer hears the spoken file, placed in the app's data before
+// it opens. A track recognition needs a microphone that answers, which this
+// suite cannot count on: that is test/device.md's.
 //
 // usage: bun packages/speech-recognition/test/apple.mjs [macos] [ios] [--sim <name|udid>]
 import { cpSync, existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
@@ -68,12 +68,12 @@ for (const host of hosts.length ? hosts : ['macos', 'ios']) {
   cpSync(spokenFile(), join(data, 'spoken.wav'));
   const plistAt = readdirSync(resolve(app, 'target'), { recursive: true }).find((f) => host === 'ios' ? /iphonesimulator|ios-sim/.test(f) && f.endsWith('.app/Info.plist') : /macos/.test(f) && f.endsWith('-Info.plist'));
   const plist = plistAt ? JSON.parse(run('plutil', ['-convert', 'json', '-o', '-', resolve(app, 'target', plistAt)])) : {};
-  check(where, 'Info.plist carries the recognizer\'s purpose', plist.NSSpeechRecognitionUsageDescription === 'The conformance suite recognises what the track says.', plistAt ?? 'no Info.plist under target/');
+  check(where, 'Info.plist carries the recognizer\'s purpose (D11)', plist.NSSpeechRecognitionUsageDescription === 'The conformance suite recognises what the track says.', plistAt ?? 'no Info.plist under target/');
   const s = await open({ host, app: name, bind: 'media-capture,speech-recognition', storage });
   try {
     const state = await s.state();
     check(where, 'the extension is bound, not substituted', state.extensions?.['speech-recognition']?.bound === true, JSON.stringify(state.extensions));
-    // The SpeechAnalyzer engines need no authorization and run on the device; the inputs are a track and a file.
+    // The SpeechAnalyzer engines need no authorization and run on the device; the inputs are a track and a file (D8).
     const status = await until(s, 'status', (t) => /^(true|false) /.test(t), 5000);
     check(where, 'the status: available, granted, a track or a file, local', status === 'true granted track,file true', status);
     await s.tap('on-nothing');

@@ -1,6 +1,6 @@
 //! Formatting commands as text replacements.
 //!
-//! A command never restyles anything: it edits the
+//! @ref LLP 1045 D2, D6 — a command never restyles anything: it edits the
 //! source the way a person would type it, and the styler draws the result.
 //! A host applies the replacements as ordinary, undoable edits.
 

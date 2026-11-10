@@ -1,4 +1,5 @@
 //! GPU frustum culling: per-view compacted slot lists and indirect draws.
+//! @ref llp/1046.003-game-engine-as-built.explainer.md#culling-and-environment-lighting-2026-09-23
 //!
 //! Transforms live on the GPU, so the test runs there too: three compute passes after
 //! skinning test every opaque item's interpolation-swept sphere against the camera

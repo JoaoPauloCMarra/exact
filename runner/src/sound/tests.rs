@@ -1,6 +1,7 @@
-//! The voice table through a runner: retrigger, past starts,
+//! The voice table through a runner (LLP 1096 §5): retrigger, past starts,
 //! groups by start time, stops, the bound, drops, a refused commit, reload,
-//! the seek rule, no wake, and the record; a voice's playback rate and pan.
+//! the seek rule, no wake, and the record; a voice's playback rate and pan
+//! (LLP 1125 D10).
 
 use crate::sound::{By, SoundOp, Voice};
 use crate::{DataError, DataSource, Runner};
@@ -82,7 +83,7 @@ impl DataSource for Kit {
             Some(Value::Number(n)) => *n,
             _ => 0.0,
         };
-        // A tape: the kit's hit with a rate and a pan, 2 and 0.5.
+        // A tape: the kit's hit with a rate and a pan, 2 and 0.5 (LLP 1125 D10).
         if source == "tapes" {
             return Ok(Value::list(
                 (0..n as usize)

@@ -8,8 +8,9 @@ place is marked `EXACT (EXACT-PATCHES.md, n)` in the source.
 - Exact release archive: https://static.crates.io/crates/wgpu-hal/wgpu-hal-30.0.1.crate
 - Archive SHA256: b6b7fb58561a792bc237628ba0792e332de418fefe145f13b5ed8201e6d52f58
 - Upstream VCS revision: 40f4a34ebaf56f9a046231f54125ad046239d3f3
-- Implemented: 2026-09-30.
-- Only `exact-gpu` links this version; the 2D canvas's vello
+- Implemented: 2026-09-30, the rest lane of the performance program; vendoring
+  ruled by the orchestrator the same day (LLP 1009 D7).
+- Only `exact-gpu` links this version (LLP 1009 D1); the 2D canvas's vello
   uses wgpu-hal 29 from crates.io, untouched.
 
 ## Why
@@ -46,7 +47,7 @@ the residency-set code walks the same subset. `raw_command_buffer()` is
 `None` until an encoder has been opened.
 
 Nothing a caller can observe changes except the count of command buffers.
-**Upstreamable as it stands.**
+**Upstreamable as it stands** (QUEUE.md has the line).
 
 ## 2. A frame's presentations can ride its submit
 
@@ -59,7 +60,7 @@ marked, and a later `Queue::present` of it commits nothing.
 
 Opt-in, per submit, per queue, because it is wrong in general: a frame drawn
 over several submits would be shown after the first. `exact-gpu` draws each
-canvas's frame in one submit and asks for it in `Module::flush`
+canvas's frame in one submit (LLP 1009 D7) and asks for it in `Module::flush`
 unless a surface failed after recording (its drawable is in the submit and
 must not be shown). It then lets the texture go rather than calling
 `present`, because wgpu-core's `present` allocates a submission of its own,
@@ -93,7 +94,7 @@ called at once. One submit consumes it.
 
 `exact-gpu` uses it for a canvas's first frame: a presenter that reuses a
 `CAMetalLayer` keeps it hidden until the new canvas's picture is with the
-compositor ("a presentation signal before unhiding"), because
+compositor (LLP 1068 §4.5, "a presentation signal before unhiding"), because
 the layer still shows the last picture presented to it. Not proposed
 upstream: wgpu has no presentation callbacks, and a general one would belong
 on the surface.

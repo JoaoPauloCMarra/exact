@@ -19,11 +19,11 @@ use exact_motion::{
 /// Bound on any string field on the wire.
 pub const MAX_STRING_BYTES: u32 = 1 << 24;
 
-/// A `transition` row's `border-color` shorthand: the code after
+/// A `transition` row's `border-color` shorthand (LLP 1062): the code after
 /// every property's (grammar: `schema.json` `_transitions`).
 const BORDER_COLOR: u8 = Property::COUNT as u8 + 1;
 
-/// A path's `d`: its property's code, past the wire's.
+/// A path's `d` (LLP 1055.000 D15): its property's code, past the wire's.
 const PATH_D: u8 = Property::D as u8 + 1;
 
 /// Round `n` up to a multiple of 8.
@@ -161,8 +161,9 @@ impl<'a> Reader<'a> {
     /// calculation tree) then `f32` (the points added to an inset or a
     /// segment length); a `calc()` carries its percent first and a second
     /// `f32`; a segment length carries its two index bytes, `x` then `y`,
-    /// after the `f32`; a calculation tree the other forms do
-    /// not hold carries itself after a zero `f32` (`style::calc`).
+    /// after the `f32` (LLP 1078 D3); a calculation tree the other forms do
+    /// not hold carries itself after a zero `f32` (`style::calc`, LLP 1116
+    /// D5).
     pub fn dimension(
         &mut self,
         style: StyleId,
@@ -181,7 +182,7 @@ impl<'a> Reader<'a> {
             2 => Dimension::Percent(value),
             3..=6 => Dimension::Env(Edge::from_index(kind - 3).expect("3..=6 is an edge"), value),
             7 => Dimension::Calc(value, self.f32()?),
-            // Linked by use: unknown to an artifact whose plan names no segment.
+            // Linked by use (LLP 1078 D3): unknown to an artifact whose plan names no segment.
             8..=13 => {
                 let (x, y) = (self.u8()?, self.u8()?);
                 crate::style::env::decode(kind, value, x, y)
@@ -190,7 +191,7 @@ impl<'a> Reader<'a> {
             14..=23 => {
                 Dimension::Viewport(crate::style::ViewportUnit::ALL[(kind - 14) as usize], value)
             }
-            // A layout region's inset: its region and edge follow.
+            // A layout region's inset (LLP 1123 D10): its region and edge follow.
             25 => {
                 let (region, edge) = (self.u8()?, self.u8()?);
                 match (
@@ -230,12 +231,12 @@ impl<'a> Reader<'a> {
     /// Read a colour as a row holds it: a tag byte, then one colour
     /// (`0`) or a light/dark pair (`1`). Tagged the way `dimension` is —
     /// a kind byte then its payload — because a colour row may now hold
-    /// either.
+    /// either. @ref LLP 1034 D1
     pub fn color_value(&mut self) -> Result<ColorValue, DecodeError> {
         match self.u8()? {
             0 => Ok(ColorValue::Fixed(self.color()?)),
             1 => Ok(ColorValue::LightDark(self.color()?, self.color()?)),
-            // A role by id, a `-exact-platform-color()` as written.
+            // @ref LLP 1095 D1 — a role by id, a `-exact-platform-color()` as written.
             2 => match self.u8()? {
                 i if (i as usize) < crate::generated::COLOR_ROLES.len() => Ok(ColorValue::Role(i)),
                 _ => Err(DecodeError::BadColorValue(2)),
@@ -728,7 +729,7 @@ mod tests {
         // schema. The literal makes an accidental removal of that coupling a
         // test failure whenever the byte snapshot above is intentionally moved.
         // Recomputed when the schema changes; the digest test prints the value.
-        assert_eq!(SCHEMA_DIGEST, 0x95ca_f0e4_6952_981a);
+        assert_eq!(SCHEMA_DIGEST, 0x135f_3268_3c5c_0688);
     }
 
     #[test]

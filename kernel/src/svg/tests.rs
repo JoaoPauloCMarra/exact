@@ -258,7 +258,7 @@ fn lengths_take_units_and_percentages() {
     assert_eq!(Length::parse("1e1"), Some(Length::Units(10.0)));
     assert_eq!(Length::parse("50%"), Some(Length::Percent(50.0)));
     assert_eq!(Length::Percent(50.0).resolve(30.0), 15.0);
-    // Font-relative and viewport units wait for a consumer.
+    // Font-relative and viewport units wait for a consumer (LLP 1055.000 D4).
     for refused in ["2em", "1ex", "3vw", "px", ""] {
         assert_eq!(Length::parse(refused), None, "{refused}");
     }
@@ -358,7 +358,7 @@ fn a_boxs_css_filter_is_the_functions_chain_over_a_box_of_no_size() {
         (-36.0, -36.0, 72.0, 82.0),
         "the offset and three standard deviations past the box"
     );
-    // A drop-shadow's colour may name a platform colour: the
+    // A drop-shadow's colour may name a platform colour (LLP 1095 D1): the
     // browser reads it as the role, the box resolves it (here, its fallback).
     let role = FilterList::parse("drop-shadow(0 2px 4px -exact-system-orange)").unwrap();
     assert_eq!(FilterList::parse(&role.css()), Some(role.clone()));

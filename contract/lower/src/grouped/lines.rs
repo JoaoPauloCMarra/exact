@@ -1,15 +1,15 @@
-//! A row's lines drawn as the platform's subtitle cell draws them:
-//! a title in the row's size and colour, a later line the
+//! A row's lines drawn as the platform's subtitle cell draws them (LLP
+//! 1116.000 D3.2): a title in the row's size and colour, a later line the
 //! subheadline in the secondary colour.
 
 use super::{attr, hidden, m, n, s, with, Count, BODY, MARK, SECONDARY, SUBHEADLINE};
 use contract_syntax::{Attr, Expr, Node};
 
 /// A stack of lines in a row that is not the subtitle cell, with `sheet`
-/// (its margins): its texts are drawn as the subtitle cell draws its lines,
-/// the first a title in the row's size and colour, a
+/// (its margins): its texts are drawn as the subtitle cell draws its lines
+/// (LLP 1116.000 D3.2), the first a title in the row's size and colour, a
 /// later one the subheadline in the secondary colour. It is presentation left
-/// unsaid, which is the platform's: a text's own `font`,
+/// unsaid, which is the platform's (LLP 1115): a text's own `font`,
 /// `font-size` or `color` replaces the row it names, as the author's rows
 /// replace the sheet's, and so does the stack's own (`stack_lines`).
 pub(super) fn stack_of_lines(node: &Node, sheet: Vec<Attr>) -> Node {

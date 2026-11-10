@@ -1,5 +1,5 @@
 //! Asking one resource of its source: the runner's own sources, then the
-//! data seam.
+//! data seam (LLP 1030 D7, LLP 1039 D1, LLP 1038 D5).
 
 use super::{lines, DataError, DataSource, Runner, RunnerError};
 use crate::request::Answer;
@@ -27,7 +27,7 @@ impl<D: DataSource> Runner<D> {
         let row = &self.plan.resources[i];
         let source = self.plan.str(row.source).to_string();
         let resource = self.plan.str(row.name).to_string();
-        // Delivery is the runner's own: the data seam never
+        // Delivery is the runner's own (LLP 1030 D7): the data seam never
         // sees it, and a data crate could not answer it if it did.
         if source == "exactActivities" {
             return self
@@ -41,7 +41,7 @@ impl<D: DataSource> Runner<D> {
                 .map(Answer::Now)
                 .map_err(|error| RunnerError::Data { resource, error });
         }
-        // Host facts never reach the app data source.
+        // @ref LLP 1039 D1 — host facts never reach the app data source.
         if source == crate::viewport::SOURCE {
             return self
                 .viewport_answer(i)
@@ -81,11 +81,12 @@ impl<D: DataSource> Runner<D> {
                 .map(Answer::Now)
                 .map_err(|error| RunnerError::Data { resource, error });
         }
-        // A native module's source is the module's, never the app data's.
+        // A native module's source is the module's, never the app data's
+        // (LLP 1133.002 D13).
         if self.plan.module_named(&source).is_some() {
             return self.module_answer(i, &source, args);
         }
-        // Distinguish asked sources from compiled boot values.
+        // @ref LLP 1038 D5 / §8 — distinguish asked sources from compiled boot values.
         self.log(lines::query(&resource, &source));
         self.count_ask(i);
         if self.live.admitted {
@@ -97,8 +98,8 @@ impl<D: DataSource> Runner<D> {
             self.data
                 .answer_for(super::Target::Resource(i), &mut self.store, &source, args);
         let answer = self.refuse_locked(answer);
-        // What its turn sent on its module's sockets,
-        // whatever it answered.
+        // What its turn sent on its module's sockets (LLP 1016.000 D7, the
+        // amendment of 2026-10-18), whatever it answered.
         self.stage_answer(super::Target::Resource(i));
         self.hear_aborted();
         for line in self.data.take_logs() {
@@ -109,7 +110,7 @@ impl<D: DataSource> Runner<D> {
 
     /// Say once, in a development build, that resource `i` is asked again
     /// and again, its arguments new each time: [`CHURN_ASKS`] in a second.
-    /// An alert, so it reaches the platform's log.
+    /// An alert, so it reaches the platform's log (LLP 1146 D4).
     fn count_churn(&mut self, i: usize, args: &[Value], resource: &str) {
         let (now, answering) = (self.now_ms, self.churn.answering);
         let row = self
@@ -233,7 +234,7 @@ mod tests {
         assert!(said(&r).is_empty());
     }
 
-    // While measuring, `perf` counts each resource's asks,
+    // LLP 1146 D3 and D4: while measuring, `perf` counts each resource's asks,
     // and the churn line is an alert the host writes to its platform's log.
     #[test]
     fn asks_are_counted_for_perf_and_churn_is_an_alert_while_measuring() {

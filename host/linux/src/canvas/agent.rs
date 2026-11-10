@@ -1,9 +1,9 @@
-//! The agent API in the reader's own process (`--reader`): `scripts/agent.mjs
-//! android --reader` drives the app the reader shows, on a phone, by the Linux
-//! host's own protocol. A request is one JSON line and its answer another, as
-//! on stdio ([`crate::agent`]); here they cross by `Native.agent`, on the
-//! thread that holds the host, from a socket the shell opens for adb
-//! (`host/android`, `AgentDrive`).
+//! The agent API in the reader's own process (LLP 1012; LLP 1107 D1's
+//! `--reader`): `scripts/agent.mjs android --reader` drives the app the
+//! reader shows, on a phone, by the Linux host's own protocol. A request is
+//! one JSON line and its answer another, as on stdio ([`crate::agent`]);
+//! here they cross by `Native.agent`, on the thread that holds the host,
+//! from a socket the shell opens for adb (`host/android`, `AgentDrive`).
 //!
 //! Nothing is a second protocol: [`CanvasHost::agent`] hands the line to
 //! [`crate::agent::handle`]. What this host adds is what that handler
@@ -31,15 +31,13 @@
 //!
 //! Only a launch that is a driver's is answered: one whose environment
 //! says `EXACT_AGENT=1`, as the stdio carrier's does. A production bake
-//! drops that variable before anything reads it, so it
+//! drops that variable before anything reads it (LLP 1069.007 D2), so it
 //! answers no request whatever its shell attaches.
 
 use super::{CanvasHost, FINISHED};
 use exact_runner::agent::{error, field_str};
 use exact_runner::DataSource;
-use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Mutex, MutexGuard};
 
 /// A driver has asked: the host's turns run at the runner's clock.
 static DRIVEN: AtomicBool = AtomicBool::new(false);
@@ -57,7 +55,7 @@ pub(crate) fn driven() -> bool {
 /// epoch, and no frame before the driver's first request moves it (a live
 /// clock there fired every boot timer due in the time since `started`, a
 /// plan fetched from a URL included). Any other launch: the display's wall
-/// from `started`.
+/// from `started` (the timers RFC, D1).
 pub(crate) fn own_time<D: DataSource + Default>(
     p: &mut crate::presenter::Presenter<D>,
     started: std::time::Instant,
@@ -107,7 +105,7 @@ impl<D: DataSource + Default> CanvasHost<D> {
         if std::env::var("EXACT_AGENT").as_deref() != Ok("1") {
             return error("this launch is not a driver's: EXACT_AGENT is not 1");
         }
-        // The driver's clock owns time from its first request
+        // The driver's clock owns time from its first request (the timers RFC, D1)
         if !DRIVEN.swap(true, Ordering::Relaxed) {
             self.p.set_live_clock(None);
         }

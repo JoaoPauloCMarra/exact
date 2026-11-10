@@ -1,11 +1,11 @@
 // The data seam's bytes, and the store's presence calls (below), for
 // prelude.js: base64 for what crosses the seam
 // as JSON, a string's UTF-8 length, a stream message's data, a long
-// poll's terms as the seam carries them, an upload's
+// poll's terms as the seam carries them (LLP 1016.000 D8), an upload's
 // option and events, a fetch's file
 // options, an image call's options and an answer's timers (here, beside the
 // prelude, under its line cap). Natively a
-// binary message (a byte stream's bytes, a socket's frame)
+// binary message (a byte stream's bytes, a socket's frame; LLP 1016.000)
 // names only its size, and the host fills an ArrayBuffer of it through the
 // bytes door (op 9, js/src/crypto.rs): base64 decoded byte by byte in the
 // interpreter cost 1.8 ms a 12 KB message. Evaluated just before prelude.js,
@@ -53,13 +53,13 @@
     }
     return message.binary !== undefined ? fromBase64(message.binary).buffer : message.data;
   }
-  // The video gate's stub decode, until `VideoDecoder`: a chunk's bytes copied
+  // LLP 1133.003 §9's gate, until `VideoDecoder`: a chunk's bytes copied
   // into the host and dropped (bytes door op 8). prelude.js installs it as
   // `__exact_gate_decode` under the agent only.
   function gateDecode(track, type, timestamp, data) {
     door(8, data.byteOffset + " " + data.byteLength, data.buffer);
   }
-  // `exactLongPoll`, checked as the web's ts-stream.js checks it (names in code points, `from` a member
+  // `exactLongPoll` (LLP 1016.000 D8), checked as the web's ts-stream.js checks it (names in code points, `from` a member
   // or two joined by one `.`): the op's `long_poll`, nothing when there is none, or why it is refused.
   function longPollOf(init, stream, method, url) {
     var poll = init ? init.exactLongPoll : undefined, name = function (k) { var v = poll[k], n = typeof v === "string" ? Array.from(v).length : 0; return n > 0 && n <= 256 ? v : null; };
@@ -74,7 +74,7 @@
     if (poll.sameCursor !== undefined && poll.sameCursor !== "heartbeat" && poll.sameCursor !== "event") return "exactLongPoll.sameCursor is \"heartbeat\" (the default) or \"event\"";
     return { cursor: poll.cursor, from: poll.from, same_cursor_event: poll.sameCursor === "event" ? true : undefined };
   }
-  // `exactUploadProgress`, checked as the runner and the web's
+  // `exactUploadProgress` (LLP 1016.000 D10), checked as the runner and the web's
   // ts-stream.js check it: true for an upload whose stream reports its progress, nothing, or why it is refused.
   function uploadOf(init, stream, method, url) {
     var upload = init ? init.exactUploadProgress : undefined;
@@ -94,7 +94,7 @@
     var sent = JSON.parse(o.message.data);
     return { type: "progress", loaded: sent.loaded, total: sent.total, lengthComputable: true, data: "", lastEventId: "", coalesced: o.message.coalesced };
   }
-  // The store's presence calls, for prelude.js's `store`,
+  // The store's presence calls (LLP 1133.010 D5), for prelude.js's `store`,
   // over its host door: a name's occupancy (op 18 kept, 19 locked or
   // pending, 20 this device keeps locked secrets now), and a call that waits
   // on the host's backend as a request of its own, whose reply carries an
@@ -146,9 +146,9 @@
   }
   // The image calls' options (prelude.js `imageCall`), checked before
   // anything is queued, as the host's arguments after `from` and `to`:
-  // `compressImage`'s two numbers and type, then its
+  // `compressImage`'s two numbers and type (LLP 1069.002 A1, A1.11), then its
   // edit, and `transformImage`'s all, each as the one JSON value the codec
-  // reads.
+  // reads (LLP 1133.019 D17).
   var IMAGE_WORDS = { flip: ["horizontal", "vertical"], resizeQuality: ["pixelated", "low", "medium", "high"], metadata: ["keep", "no-location", "none"] };
   function imageOptions(api, options, transform) {
     var out = {}, crop;
@@ -186,7 +186,7 @@
     word("metadata");
     return [JSON.stringify(out)];
   }
-  // `exactBodyFrom` and `exactBodyTo`, checked as the web's
+  // `exactBodyFrom` and `exactBodyTo` (LLP 1108 D6 R2), checked as the web's
   // ts-body-from.js checks them: a refusal's words, or undefined.
   function filePath(name, path) {
     if (typeof path !== "string" || path.slice(0, 5) !== "app:/") return name + " must be an app:/ path";
@@ -215,15 +215,15 @@
       if (reply.headers[i][0] === ":exact-body-to") return Number(reply.headers.splice(i, 1)[0][1]);
   }
 
-  // A resource's two-way socket: the handle its mapper
+  // A resource's two-way socket (LLP 1016.000 D7): the handle its mapper
   // receives. Its state is what the mapper has seen: CONNECTING until
   // `open`, OPEN until the end, CLOSED once the stream ends or its answer
   // is let go. A mutation's synchronous source and the socket's own mapper
   // answering `open` or a `message` may send or close: each operation is
   // copied now, handed over with that turn's answer (`settle`,
   // `__exact_message`) and published once the commit that settles it stands.
-  // An answer in flight's go to the host as each is made, in any turn of it.
-  // A local listener's connections take the same rules, each
+  // An answer in flight's go to the host as each is made, in any turn of it (amendment of 2026-10-18).
+  // A local listener's connections (LLP 1133.005 D6) take the same rules, each
   // connection a target of its own: its mapper sends only on the connection
   // whose `connection` or `message` event it answers. `env` is the prelude's
   // door and turn: the answer running, the mapper call, and any mapper call.
@@ -234,7 +234,7 @@
     // The transport's bytes as this turn began, earlier turns' unsent ones and
     // an answer's this turn (door op 15; none on wasm, whose handle never
     // opens), as WHATWG's `bufferedAmount` counts them at a task's start. A
-    // listener's connections are bounded by the host.
+    // listener's connections are bounded by the host (D3).
     function buffered(owner) { if (owner.listen) return 0; try { return Number(host(15, String(owner.ticket), "")) || 0; } catch (e) { return 0; } }
     function turn(owner) { var m = env.mapping(); return m && m.owner === owner ? m : env.current(); } // its own mapper's call, else the turn's
     // Stage `op` on `target` (the socket, or one connection of a listener),
@@ -262,7 +262,7 @@
       op.owner = owner; op.target = target;
       ops.push(op);
     }
-    // An answer's operation goes to the host now; the socket bounds count over all its turns.
+    // An answer's operation goes to the host now; D7's bounds count over all its turns.
     function sendNow(owner, target, call, op) {
       var sent = call.socketSent || (call.socketSent = { ops: 0, bytes: 0, closed: [] });
       if (sent.closed.indexOf(target) >= 0) throw closed(owner.listen ? "connection" : "socket");
@@ -303,7 +303,7 @@
       });
       return owner;
     }
-    // A listener: its state is the stream's (OPEN from
+    // A listener (LLP 1133.005 D1): its state is the stream's (OPEN from
     // `listening`), and each connection's handle is OPEN from its
     // `connection` event to its `end`, CLOSED once the stream ends.
     function listenOwner(ticket) {
@@ -346,7 +346,7 @@
     }
     return { socketOwner: socketOwner, listenOwner: listenOwner, listenEvent: listenEvent, hand: hand };
   }
-  // An answer's own timers, for
+  // An answer's own timers (LLP 1027.000 D1 as amended 2026-10-28), for
   // prelude.js, here under its line cap. `setTimeout` arms one due on the
   // runner's clock as the call began (`clock`, host door op 21), owned by the
   // answer running (`owner`, which refuses one outside an answer). An answer
@@ -433,7 +433,7 @@
       // An `AbortSignal.timeout` still to fire, or one composed of it: the ms
       // left, the deadline a fetch carrying it gives the host; `expire` aborts
       // it when that passes, its timer dropped or not, as a browser's fires:
-      // a fetch its answer let go runs to its end, and another
+      // a fetch its answer let go runs to its end (LLP 1146 D2), and another
       // answer may carry the same signal.
       left: function (signal) { var s = deadline(signal); return s && !signal.aborted ? Math.max(1, s.due - time()) : undefined; },
       expire: function (signal) { var s = deadline(signal); if (s && !signal.aborted) { armed.delete(s.id); s.abort(); } },
@@ -447,7 +447,7 @@
   }
   // An answer's reply as JSON (prelude.js `ok`), where a list element that is plain data frozen to its leaves
   // keeps its JSON by identity and is spliced back, never walked again: a transcript's window holds its last
-  // page's rows. Frozen plain data, no Proxy in it, can't change once its prototypes
+  // page's rows (rt1's crossing plan). Frozen plain data, no Proxy in it, can't change once its prototypes
   // are frozen, which hardening does natively; only the native runtime (its byte door) keeps anything, since
   // the web's module realm is unhardened.
   // `step(holder, key, item)` is the prelude's own replacer (its large-string capture), run as JSON would.
@@ -801,7 +801,7 @@
   });
 })(globalThis);
 
-// Work that outlives its answer: a fetch with effects whose
+// Work that outlives its answer (LLP 1146 D2): a fetch with effects whose
 // answer was let go is adopted, not rejected (`__exact_adopt`), and its reply
 // reaches the let-go answer's continuation in a module turn, which the
 // executor runs outside every answer and commit (js/src/module_work.rs), so

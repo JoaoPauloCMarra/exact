@@ -1,9 +1,9 @@
-//! The camera's admission in the runner, through this checkout's
-//! `@exact/camera` and `@exact/media-capture`, installed beside the app, their
-//! implementations played by the test as the host's native slot under the
-//! agent: `video=` asks the camera's permission and `audio=` the microphone's,
-//! one after the other; a tool's capture start is refused before anything is
-//! asked.
+//! The camera's admission in the runner (LLP 1133.008 D6, §10 drive 6),
+//! through this checkout's `@exact/camera` and `@exact/media-capture`,
+//! installed beside the app, their implementations played by the test as the
+//! host's native slot under the agent: `video=` asks the camera's permission
+//! and `audio=` the microphone's, one after the other; a tool's capture
+//! start is refused before anything is asked.
 
 use exact_runner::{CallOrigin, Dispatch, Outcome, Reply, Response, Runner, Work};
 use serde_json::{json, Value as Json};
@@ -175,7 +175,7 @@ fn allow(r: &mut Runner<Granted>, parked: &mut Vec<(u64, u64)>) -> String {
 
 /// `video=` asks the camera's permission, and `cameraStatus` reads it; a
 /// call with both kinds asks each in turn before the implementation hears
-/// of it.
+/// of it (LLP 1133.008 D6, LLP 1133.009 D3).
 #[test]
 fn video_asks_the_camera_and_audio_the_microphone_in_turn() {
     let (_app, mut r, calls) = boot("permissions");
@@ -208,7 +208,7 @@ fn video_asks_the_camera_and_audio_the_microphone_in_turn() {
 
 /// Drive 6's admission: a tool's `takePhoto`, and a tool's `getUserMedia`
 /// while the camera is `prompt`, are refused `person-required` before the
-/// implementation hears of them; the app's own reaches it.
+/// implementation hears of them; the app's own reaches it (§14).
 #[test]
 fn a_tool_s_capture_start_is_refused() {
     let (_app, mut r, calls) = boot("tool");
@@ -230,7 +230,7 @@ fn a_tool_s_capture_start_is_refused() {
     assert_eq!(sent(&calls, "takePhoto"), 1, "{}", logs(&r));
 }
 
-/// An implementation's disclosure: what it says through its
+/// An implementation's disclosure (D8 item 9): what it says through its
 /// `changed` is listed as its extension's `implementation`, each field
 /// replacing the one of its name said before.
 #[test]

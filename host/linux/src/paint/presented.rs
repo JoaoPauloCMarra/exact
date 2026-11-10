@@ -1,7 +1,7 @@
 //! What the motion engine says to paint over a node's style rows: the four
-//! compositor values, an SVG shape's geometry, paint
-//! motion's colours and shadow while they move,
-//! and a layout transition's box.
+//! compositor values, an SVG shape's geometry (LLP 1055.000 D15), paint
+//! motion's colours and shadow while they move (LLP 1055.000 D6, LLP 1062),
+//! and a layout transition's box (LLP 1063).
 
 use super::shadow::ShadowPaint;
 use super::BoxPaint;
@@ -16,14 +16,14 @@ pub struct Presented {
     pub dark: Option<bool>,
     /// `translate`'s lengths, points.
     pub translate: (f32, f32),
-    /// `translate`'s percentages of the border box,
+    /// `translate`'s percentages of the border box (chess diary #4),
     /// resolved where the box is painted ([`Presented::translate_at`]).
     pub translate_percent: (f32, f32),
     /// Uniform.
     pub scale: f32,
     /// Host feedback, multiplied into scale without entering the motion engine.
     pub press: f32,
-    /// How far a press shows its pressed paint, 0 to 1: the
+    /// How far a press shows its pressed paint, 0 to 1 (LLP 1061 D7): the
     /// painter mixes the node's background and its subtree's text toward
     /// its press colours by it.
     pub press_paint: f32,
@@ -33,16 +33,17 @@ pub struct Presented {
     pub opacity: f32,
     /// An SVG shape's presented `r`, `stroke-dashoffset`, `cx`, `cy`, `x`, `y`, `rx`, `ry`.
     pub svg: [Option<f32>; 8],
-    /// Presented paint while it moves: one slot
+    /// Presented paint while it moves (LLP 1055.000 D6, LLP 1062): one slot
     /// per [`Property::PAINT`]; `None` paints the row.
     pub colors: PaintValues,
     /// A layout transition's offset from the laid-out origin and its
-    /// surface's difference from the laid-out size, `[dx, dy, dw, dh]`.
+    /// surface's difference from the laid-out size, `[dx, dy, dw, dh]`
+    /// (LLP 1063).
     pub layout: [f32; 4],
     /// What the reader plays instead of the engine (`crate::host::lower`'s
     /// bits): painted at the underlying values, in a layer it moves.
     pub lowered: u8,
-    /// Whether its `:hover` and `:focus-visible` looks hold.
+    /// Whether its `:hover` and `:focus-visible` looks hold (LLP 1121 D8).
     pub looks: [bool; 2],
 }
 
@@ -104,7 +105,7 @@ impl Presented {
 
     /// The box `(x, y, w, h)` painted through its presentation: CSS's
     /// individual transforms about `origin`, then outermost the layout
-    /// transition's offset; its size is the surface's alone
+    /// transition's offset (LLP 1063); its size is the surface's alone
     /// ([`Presented::surface`]).
     pub(crate) fn transform(
         &self,
@@ -212,7 +213,7 @@ impl BoxPaint {
         self
     }
 
-    /// The box with its pressed background `progress` of the
+    /// The box with its pressed background (LLP 1061 D7) `progress` of the
     /// way over its own.
     pub(super) fn pressed(mut self, style: &StyleProps, progress: f32, dark: bool) -> BoxPaint {
         if progress > 0.0 && style.mask.has(exact_kernel::StyleId::PressBackgroundColor) {
@@ -224,9 +225,9 @@ impl BoxPaint {
 }
 
 impl BoxPaint {
-    /// The box in its states: its `:hover` then its
+    /// The box in its states (LLP 1121 D8): its `:hover` then its
     /// `:focus-visible` look while they hold (`shown.looks`), at once, then
-    /// the press's paint at its progress (which `:active`
+    /// the press's paint at its progress (LLP 1061 D7, which `:active`
     /// lowers to).
     pub(super) fn states(
         self,

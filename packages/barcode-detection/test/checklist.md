@@ -1,8 +1,8 @@
 # @exact/barcode-detection on devices, by hand
 
-The hand checks: a real camera reading a real book's
+LLP 1133.027 §12 stage 2's hand checks: a real camera reading a real book's
 barcode, which neither a simulator nor the agent's picture shows, and the cost
-of scanning. Each step says what to see; a step that shows something
+of scanning (D19). Each step says what to see; a step that shows something
 else is a failure to report with a screenshot. Use any printed book with an
 ISBN barcode on its back cover (an EAN-13 starting 978 or 979).
 
@@ -30,7 +30,7 @@ Build: `bun host/apple/build.mjs shelf-apple --ios --device --run`.
 6. Scan a book Open Library does not know (a recent small-press title):
    "No book found for ISBN 978…", with Try Again. Try Again returns to
    the hint, and the same book is not read again.
-7. Cost: attach Xcode to Shelf (Debug → Attach to Process) and
+7. Cost (D19): attach Xcode to Shelf (Debug → Attach to Process) and
    read the Debug navigator's CPU and Energy Impact for one minute with the
    viewfinder open on a page with no barcode, then for one minute on the
    barcode. Report the model, the iOS version and the four readings; the
@@ -49,10 +49,11 @@ Build: `bun host/apple/build.mjs shelf-apple --run`, on a Mac with a camera
 2. With Continuity Camera, choose the iPhone in the camera menu if one is
    offered: the scan reads as on the phone.
 
-## Android phone (not built)
+## Android phone (stage 4, not built)
 
-The Kotlin implementation over ML Kit is not built. When it lands: build the
-APK (`bun scripts/agent-android.mjs build shelf --apk`; the NDK and JDK 17 as
+The Kotlin implementation over ML Kit is not built (LLP 1133.027 §12, stage
+4's as-built note). When it lands: build the APK (`bun
+scripts/agent-android.mjs build shelf --apk`; the NDK and JDK 17 as
 `host/android/README.md` says), install it, and repeat the iPhone steps on a
 Pixel. Step 8 is Settings → Apps → Shelf → Permissions → Camera → Don't allow.
 

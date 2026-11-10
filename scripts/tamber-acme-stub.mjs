@@ -1,4 +1,4 @@
-// An ACME stand-in for the relay's tests: RFC
+// An ACME stand-in for the relay's tests (LLP 1121 §5 stage 10c R2): RFC
 // 8555's one-order path, every JWS checked, DNS-01 read from `dns` (a Map
 // of record → values, or a function of the record), certificates issued by
 // a CA of its own (`caPem`, for a client to trust as WebPKI would a real

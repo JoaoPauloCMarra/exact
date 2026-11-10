@@ -1,4 +1,4 @@
-//! Whether a navigation bar shows is something a route says.
+//! LLP 1115.000 D5.2: no navigation bar is something a route says.
 //! `navigationBar` is a route's prop, `"none"` or `"auto"`; a literal with
 //! any other word is refused, and so is the attribute anywhere but on a
 //! route, where no host would read it.

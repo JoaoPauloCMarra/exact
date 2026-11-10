@@ -1,4 +1,4 @@
-//! Named timeline lookup (Scroll-driven Animations 1 §4.2).
+//! Named timeline lookup (LLP 1057.003 D4; Scroll-driven Animations 1 §4.2).
 //!
 //! A named timeline is referenceable by the node that declares it and its
 //! descendants; `timeline-scope: <name>` on a node declares the name in
@@ -46,7 +46,7 @@ impl Registry {
 
 impl crate::kernel::Kernel {
     /// What `consumer`'s `animation-timeline` name resolved to at the last
-    /// commit; `None` for a node that follows no name, or
+    /// commit (LLP 1057.003 D4); `None` for a node that follows no name, or
     /// while the lookup is unlinked.
     pub fn timeline_of(&self, consumer: NodeKey) -> Option<NamedTimeline> {
         self.arena().timelines.resolved(consumer)

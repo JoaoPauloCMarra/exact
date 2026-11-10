@@ -1,4 +1,4 @@
-// A native drive's build first (agent-build.mjs): the decision an app's exact.mjs makes before
+// A native drive's build first (agent-build.mjs, LLP 1116.002 D4): the decision an app's exact.mjs makes before
 // `test ios|macos` and `agent ios|macos`, on the driver's own record, with no simulator and no build run.
 import { afterEach, beforeEach, test } from 'bun:test';
 import assert from 'node:assert/strict';
@@ -252,7 +252,7 @@ test('a missing or stale build is built first, said in one line; a fresh one run
 
     // An exact.mjs from before test and agent built first is told how to get that.
     assert.equal(rebuildCommand(app, 'ios'), `(cd '${dir}' && bun exact.mjs ios)`);
-    write('exact.mjs', "const cli = resolve(EXACT2, 'scripts/app-cli.mjs');\n"); // the launcher
+    write('exact.mjs', "const cli = resolve(EXACT2, 'scripts/app-cli.mjs');\n"); // the launcher (LLP 1116.006 D7)
     assert.equal(rebuildCommand(app, 'ios'), `(cd '${dir}' && bun exact.mjs ios)`);
     write('exact.mjs', '// an older one\n');
     assert.equal(rebuildCommand(app, 'mac'), `(cd '${dir}' && bun exact.mjs mac) (after bun exact.mjs update, test and agent build it themselves)`);
@@ -263,8 +263,8 @@ test('a missing or stale build is built first, said in one line; a fresh one run
   }
 });
 
-// Never a stale build. The receipt is written at the build's end, so a file edited while the build ran
-// is older than it, though the build read the file before the edit (a prebuild would test the old UI); the receipt's
+// LLP 1116.008 D2: never a stale build. The receipt is written at the build's end, so a file edited while the build ran
+// is older than it, though the build read the file before the edit (polls: a prebuild tested the old UI); the receipt's
 // `started` bounds it. And a build another process claims between the check and this one is waited for, not failed on.
 test('a source edited while the build ran is stale; a build claimed meanwhile is waited for, then the check is made again', async () => {
   const previous = process.env.EXACT_APP_DIR, macBin = process.env.EXACT_MAC_BIN;
@@ -446,7 +446,7 @@ test('a plan-only edit runs its bake on the existing build; any other edit, or a
     const reset = () => { said.length = builds.length = bakes.length = 0; };
     const kept = () => planOverride('ios', app, nativeBuild('ios', app));
 
-    // What app.ts imports is the plan's; what it does not import is no input at all.
+    // What app.ts imports is the plan's; what it does not import is no input at all (LLP 1116.003 D1.1).
     assert.deepEqual([...moduleGraph(dir, app.manifest)].map(p => p.slice(dir.length + 1)).sort(), ['app.ts', 'lib/digits.mjs', 'lib/format.mjs', 'lib/model.ts', 'lib/seed.json', 'types.ts']);
     // A script app.ts never imports is no input, a `.mjs` as a `.ts`; one it imports, through another, is.
     const input = notBuildInput(dir);
@@ -460,7 +460,7 @@ test('a plan-only edit runs its bake on the existing build; any other edit, or a
     rmSync(resolve(dir, 'data'), { recursive: true });
 
     // A fresh build: nothing runs, nothing is kept, the driver runs the build's own plan. An edit to the backend,
-    // or to the declarations a web build writes beside app.ts, leaves it fresh (a rebuild for server/index.ts is wasted).
+    // or to the declarations a web build writes beside app.ts, leaves it fresh (round 5's book-club rebuilt for server/index.ts).
     write('server/index.ts', "import { Database } from 'bun:sqlite';\nimport { routes } from './routes';\nexport const port = 9610;\n");
     write('app.contract.d.ts', 'export type Answer = unknown;\n');
     write('seed.json', '[{"table":"owners","row":{"person":"dev:alice"}}]\n');
@@ -618,11 +618,11 @@ test('a drive says the web-only symbol warnings in one line and lists each in it
   }
 });
 
-test('a drive counts a warning that is information apart (tamber-unreachable)', async () => {
+test('a drive counts a warning that is information apart (tamber-unreachable, LLP 1121 D9)', async () => {
   const { warningLines } = await import('./app-cli.mjs');
   const dir = realpathSync(mkdtempSync(resolve(tmpdir(), 'exact-warning-notes-')));
   try {
-    const note = 'app.contract:3:5 warning [tamber-unreachable] accent-color on macOS switches: NSSwitch draws the system accent (the first at line 4)';
+    const note = 'app.contract:3:5 warning [tamber-unreachable] accent-color on macOS switches: NSSwitch draws the system accent (the first at line 4; LLP 1121 D9)';
     const header = 'app.contract:9:3 warning [lower-header-unplaced] this `button` in this route\'s `header` is not shown on iOS';
     assert.match(warningLines(dir, 'web', [note]).at(-1), /^compiler: 1 note \(not counted\); /);
     assert.match(warningLines(dir, 'web', [header, note]).at(-1), /^compiler: 1 warning and 1 note \(not counted\), 1 new \(above\); /);

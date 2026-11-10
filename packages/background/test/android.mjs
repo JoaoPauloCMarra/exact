@@ -1,7 +1,7 @@
-// @exact/background on Android: the fixture app (`test/fixture`) built as the Canvas
-// reader's APK, which compiles the package's Kotlin, with WorkManager in the one locked, verified Gradle
-// graph: a graph with no lock is refused, `--write-locks` writes the lock and checksums beside the app's other
-// locks, and a build checks against both. The roster binds the implementation, and WorkManager's library
+// @exact/background on Android (LLP 1133.017 §14 stage 3): the fixture app (`test/fixture`) built as the Canvas
+// reader's APK, which compiles the package's Kotlin, with WorkManager in the one locked, verified Gradle graph (LLP
+// 1133.008 D8 item 5): a graph with no lock is refused, `--write-locks` writes the lock and checksums beside the app's
+// other locks, and a build checks against both. The roster binds the implementation, and WorkManager's library
 // manifest merges its job service and the permissions it uses, so the package declares none. With `--emulator
 // <serial>` it drives the APK on that running emulator under the agent with the implementation bound (`--bind
 // background`): the status, a tag fired at once as the implementation's own wake, and `registerPeriodicSync`.

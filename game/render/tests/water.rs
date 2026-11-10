@@ -1,5 +1,5 @@
-//! Water: the surface, caustics and shafts, each measured in
-//! look frames of one pool under `Environment::underwater()`,
+//! Water (LLP 1139.002): the surface, caustics and shafts, each measured in
+//! look frames (LLP 1127.000) of one pool under `Environment::underwater()`,
 //! and each beside a fixture that must fail its oracle for the stated reason:
 //! a flat quad in place of the surface, a constant in place of the caustics,
 //! no shafts. The pool's surface is 6 m up; the camera is 2 m under it (or

@@ -1,27 +1,27 @@
-// @exact/recording on the web: the browser's
+// @exact/recording on the web (LLP 1133.009 D1, D6, §10): the browser's
 // `MediaRecorder` over a track `@exact/media-capture` opened, reached through
 // the session's track table, and a level computed from an `AnalyserNode`.
 //
 // - A recorder is a consumer of its stream's audio track, so it holds the
-//   track's lease while it is not `inactive`; its start is a start, which
+//   track's lease while it is not `inactive`; its start is a start (D6), which
 //   reopens an idle track. A level reader is a consumer too, and never a start.
 // - A recording is a file at the admitted `app:/` path, in the store
 //   `storage.fs` reads (`context.files`): each slice the browser delivers,
 //   asked every second, is appended as it arrives, and at `pagehide` the rest
-//   is asked for ("the web promises less").
-// - A recorder's state is a value, sticky once `inactive`; an
-//   interruption pauses it, and a track that ends stops it.
-// - `audioLevel`: `audioLevel` is the RMS of the last `interval`, linear
+//   is asked for (D6, "the web promises less").
+// - A recorder's state is a value, sticky once `inactive` (D1); an
+//   interruption pauses it (D8), and a track that ends stops it.
+// - `audioLevel` (D1): `audioLevel` is the RMS of the last `interval`, linear
 //   from 0 to 1; `totalAudioEnergy` and `totalSamplesDuration` integrate it;
 //   `levels` holds the last `history` intervals, one entry per interval since
 //   the last answer, however many polls were skipped.
-// - `<audio-waveform>` draws a track's level each animation frame from
+// - `<audio-waveform>` (D13) draws a track's level each animation frame from
 //   a meter of its own, so no level crosses into Contract.
-// - Under the agent no browser API is used: the level is the synthetic
+// - Under the agent (§10) no browser API is used: the level is the synthetic
 //   signal on the session clock, and a stopped recorder's file is WAV, 16-bit
 //   PCM, of a tone that follows the signal, answered as `audio/wav`.
 
-/** The synthetic signal at step `i` (one step a 50 ms of the session clock): the recorder's formula. */
+/** The synthetic signal at step `i` (one step a 50 ms of the session clock): the recorder's formula (§10). */
 export const synthetic = i => Math.min(1, 0.12 + 0.75 * Math.abs(Math.sin(i * 0.37)) * (0.55 + 0.45 * Math.sin(i * 0.05)));
 const STEP = 50;
 // What a read of no handle (`""`) answers: an app reads before it holds one, and a poll does not ask it again.
@@ -86,7 +86,7 @@ export function implementation({ changed, agent, now, log, tracks, files }) {
     }).catch(e => { if (!r.failed) { r.failed = true; say(`${r.path}: not written: ${e.message}`); } });
     return r.writing;
   };
-  /** Stop `r` for `reason` and finish its file; its result is sticky. */
+  /** Stop `r` for `reason` and finish its file; its result is sticky (D1). */
   function finish(r, reason, error = null) {
     if (r.done) return r.done;
     r.recorded = elapsed(r); r.since = null;
@@ -122,7 +122,7 @@ export function implementation({ changed, agent, now, log, tracks, files }) {
     r.media.start(1000);
     if (r.state === 'paused') r.media.pause();
   }
-  // The rest of every recording, asked for as the page goes: what the store receives is kept.
+  // The rest of every recording, asked for as the page goes (D6): what the store receives is kept.
   if (!agent && typeof addEventListener === 'function') addEventListener('pagehide', () => { for (const r of recorders.values()) if (r.media?.state === 'recording') r.media.requestData(); });
 
   /** The type to write: the written one if the browser writes it, else MP4, WebM or Ogg, the first it writes. */
@@ -131,7 +131,7 @@ export function implementation({ changed, agent, now, log, tracks, files }) {
     if (typeof MediaRecorder !== 'function') return { error: 'NotSupportedError' };
     if (asked) return MediaRecorder.isTypeSupported(asked) ? { type: asked } : { error: 'NotSupportedError' };
     // MP4 first where the browser writes it: its duration is in the file, where Chrome's WebM has none until played
-    // through. Unwritten, the browser's own order would be WebM or Ogg; a declared deviation.
+    // through. Unwritten, the browser's own order would be WebM or Ogg (D2); a declared deviation.
     for (const t of ['audio/mp4', 'audio/webm', 'audio/ogg']) if (MediaRecorder.isTypeSupported(t)) return { type: t };
     return { error: 'NotSupportedError' };
   }
@@ -188,7 +188,7 @@ export function implementation({ changed, agent, now, log, tracks, files }) {
     meters.set(key, m);
     return m;
   }
-  /** Every interval since the last answer, as levels. */
+  /** Every interval since the last answer, as levels (D1). */
   function read(m) {
     const t = now(), steps = Math.floor((t - m.at) / m.interval);
     let fresh = [];
@@ -270,13 +270,13 @@ export function implementation({ changed, agent, now, log, tracks, files }) {
       const m = meter({ track: args.track, interval: args.interval ?? null, history: args.history ?? null });
       return m.error ? m : read(m);
     },
-    /** The waveform view's own meter of `track`: its levels, the last `fit`, at each frame. */
+    /** The waveform view's own meter of `track` (D13): its levels, the last `fit`, at each frame. */
     waveform(track) {
       const m = meter({ track, interval: STEP, history: 1000, view: ++views });
       if (m.error) return { error: m.error, levels: () => [], stop() {} };
       return { levels: fit => read(m).levels.slice(-fit), stop: () => { m.stop(); meters.delete(m.key); } };
     },
-    /** A level's argument group has no reader left: its meter goes. */
+    /** A level's argument group has no reader left: its meter goes (D10 item 12). */
     releaseArgs(name, args) {
       if (name !== 'audioLevel') return;
       const key = JSON.stringify({ track: args.track, interval: args.interval ?? null, history: args.history ?? null });
@@ -288,14 +288,14 @@ export function implementation({ changed, agent, now, log, tracks, files }) {
       // A waveform view's meter is the view's, not a reader's.
       for (const [key, m] of meters) if (!key.includes('"view":')) { m.stop(); meters.delete(key); }
     },
-    /** A recorder whose reply was dropped: stopped, its file finished, never the app's. */
+    /** A recorder whose reply was dropped: stopped, its file finished, never the app's (D6). */
     dispose(ids) {
       for (const id of ids) { const r = recorders.get(id); if (r) finish(r, 'requested'); }
     },
   };
 }
 
-// ---------------------------------------------------------------- the waveform
+// ---------------------------------------------------------------- the waveform (D13)
 /** `<audio-waveform track=…>`: the track's levels as bars, newest at the right, drawn each animation frame from a
  * meter of its own below the runner, so no level crosses into Contract. A reader of the track, never a start: an idle
  * track draws silence. Its colour is `tint=`, else the element's `color`. */

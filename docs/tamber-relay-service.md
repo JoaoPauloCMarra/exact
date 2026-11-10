@@ -1,6 +1,6 @@
 # The tamber relay service
 
-The relay is what `tamber serve --relay <host> --relay-account <label>` dials out to. A design server behind a NAT holds a few idle connections to it, and the relay hands each client's TCP stream down one of them unopened. The client's TLS ends in the developer's own `tamber` process, so the relay never sees a token, a design or a canvas. `docs/tamber-protocol.md` covers the server's side: the connector, the certificate by ACME, and CAA.
+The relay is what `tamber serve --relay <host> --relay-account <label>` dials out to (LLP 1121 §5 stage 10c). A design server behind a NAT holds a few idle connections to it, and the relay hands each client's TCP stream down one of them unopened. The client's TLS ends in the developer's own `tamber` process, so the relay never sees a token, a design or a canvas. `docs/tamber-protocol.md` covers the server's side: the connector, the certificate by ACME, and CAA.
 
 This page covers the relay itself: `scripts/tamber-relay-server.mjs`, one Bun file. For self-hosting, `bun build --compile` turns it into one binary.
 
@@ -78,13 +78,13 @@ relay:     CLIENT <name> <address>\n              then the client's bytes, both 
 
 Paths are relative to the config file.
 
-## The security checks, on loopback
+## R4's lines, on loopback
 
-`bun scripts/tamber-relay-gate.mjs` runs the relay, two accounts' design servers (the real connector, each wildcard by ACME through the relay's TXT records, against the ACME stand-in) and a client on loopback, and prints each line MET or FAILED with its evidence: a paired propose client reads and can't write; revocation cuts its long poll and its next request; plain HTTP is closed at the relay; a capture at the relay holds no token, code or design text; one account's names reach only its own server and its TXT records are refused to another; one account's canvas cookie opens its own canvas only (not the other's, not a tool); one session's pairing flood leaves another's untouched. The same checks run against a deployed relay.
+`bun scripts/tamber-relay-gate.mjs` runs the relay, two accounts' design servers (the real connector, each wildcard by ACME through the relay's TXT records, against the ACME stand-in) and a client on loopback, and prints each line MET or FAILED with its evidence: a paired propose client reads and can't write; revocation cuts its long poll and its next request; plain HTTP is closed at the relay; a capture at the relay holds no token, code or design text; one account's names reach only its own server and its TXT records are refused to another; one account's canvas cookie opens its own canvas only (not the other's, not a tool); one session's pairing flood leaves another's untouched. The deployed R4 runs the same lines against the real host.
 
 ## Deploying it
 
-`relay/deploy/deploy.sh <host> provision <domain>`, then `release`, run from a checkout over SSH: one Ubuntu or Debian host, firewalled to 22 and 443, the relay under a sandboxed systemd unit, released as one compiled file with a health check that switches back on failure; `rollback`, `install-cert`, `accounts-add`, `accounts-revoke`, `health`, `status` and `check` beside them (the script's header says each). The relay is outward-facing: it is deployed only to a host the operator provides for it. `bun scripts/tamber-relay-gate.mjs` with `RELAY_GATE_DOMAIN` set runs the same checks against the deployed relay (the file's header names the rest).
+`relay/deploy/deploy.sh <host> provision <domain>`, then `release`, run from a checkout over SSH: one Ubuntu or Debian host, firewalled to 22 and 443, the relay under a sandboxed systemd unit, released as one compiled file with a health check that switches back on failure; `rollback`, `install-cert`, `accounts-add`, `accounts-revoke`, `health`, `status` and `check` beside them (the script's header says each). The relay is outward-facing: it is deployed only to a host Charlie provides for it. `bun scripts/tamber-relay-gate.mjs` with `RELAY_GATE_DOMAIN` set runs R4's lines against the deployed relay (the file's header names the rest).
 
 ## What waits on hosting (the seams)
 
@@ -93,4 +93,4 @@ Paths are relative to the config file.
 - **Accounts:** `accounts add` and `accounts revoke` at first. A sign-in flow comes later.
 - **Hosting:** raw TCP on 443, so a VM or Fly.io; plain HTTP platforms can't do SNI pass-through.
 - **The Public Suffix List:** submit `<domain>` the day it exists. Add its `_psl` TXT record, then open a PR to publicsuffix/list giving the reason: each account's names must not be same-site with another's. It takes weeks to reach browsers. Until then, `tamber serve --relay` says the limit at start.
-- **Rust:** a Rust relay behind the same protocol is an option for when the hosted one needs it, measured by sessions or memory per session.
+- **Rust:** a Rust relay behind the same protocol is queued for when the hosted one needs it, measured by sessions or memory per session.

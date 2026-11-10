@@ -1,4 +1,4 @@
-//! The instanced painter's adapter.
+//! The instanced painter's adapter. @ref LLP 1149 D1.2, D2, D3.1.
 use crate::image::Bitmap;
 use crate::paint::border::BorderFill;
 use crate::paint::{Backend, FrameTarget, GradientPaint, Rect4, Shape, POINTER};
@@ -853,7 +853,7 @@ impl Backend for Ink {
     fn layer_begin(&mut self, key: u64, ts: Transform, pivot: (f32, f32), base: [f32; 7]) -> bool {
         self.observe_transform(ts);
         // Transforming a rasterized group would move the stationary outer clips.
-        // Let the walk apply motion before clipping.
+        // @ref LLP 1149 D4: let the walk apply motion before clipping.
         if base[0] != 0. || base[1] != 0. || base[2] != 1. || base[3] != 0. {
             return false;
         }

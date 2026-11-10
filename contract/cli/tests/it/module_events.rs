@@ -1,9 +1,10 @@
-//! Through a module outside the tree (`tests/bell`, copied out of the checkout
-//! as an installed package is): a send that answers nothing is a statement; an
-//! event is heard on the root and delivered once, in order, as its own commit;
-//! an emitted event carries the device's origin, so the request its handler
-//! makes while `prompt` fails; and the declared list, value and admission forms
-//! answer under the agent, the value app-wide.
+//! LLP 1133.004 stage 0, through a module outside the tree (`tests/bell`,
+//! copied out of the checkout as an installed package is): a send that
+//! answers nothing is a statement; an event is heard on the root and
+//! delivered once, in order, as its own commit; an emitted event carries
+//! the device's origin, so the request its handler makes while `prompt`
+//! fails; and the declared list, value and admission forms answer under
+//! the agent, the value app-wide.
 
 use exact_runner::{agent, CallOrigin, Runner, Value};
 use std::path::{Path, PathBuf};
@@ -242,11 +243,11 @@ fn a_send_that_answers_nothing_and_an_event_are_refused_where_they_do_not_belong
     );
 }
 
-/// A statement lists the post (held first on the permission ticket while
-/// `prompt`), a newer one replacing its tag; a value is set app-wide;
-/// `tap @ref` raises the activation event, heard once by the root's action with
-/// the entry's data; a not-yet-delivered entry is refused until the agent clock
-/// passes its time.
+/// D5 and §7: a statement lists the post (held first on the permission
+/// ticket while `prompt`), a newer one replacing its tag; a value is set
+/// app-wide; `tap @ref` raises the activation event, heard once by the
+/// root's action with the entry's data; a not-yet-delivered entry is
+/// refused until the agent clock passes its time.
 #[test]
 fn the_declared_substitute_lists_sets_and_taps() {
     let app = App::new("substitute");
@@ -311,7 +312,7 @@ fn the_declared_substitute_lists_sets_and_taps() {
     assert_eq!(state(&r)["count"], serde_json::Value::Null);
 }
 
-/// The origin rule: an event a package emits runs its handler with the
+/// D6's origin rule: an event a package emits runs its handler with the
 /// device's origin, so the request it makes while `prompt` fails, reason
 /// `person-required`, where an activation's would hold a ticket.
 #[test]
@@ -344,8 +345,8 @@ fn an_emitted_event_carries_the_device_s_origin() {
     permission_ticket(&r);
 }
 
-/// Events are held up to their bound, the oldest dropped and journaled, and the
-/// rest delivered in order, one commit each.
+/// D6: events are held up to their bound, the oldest dropped and
+/// journaled, and the rest delivered in order, one commit each.
 #[test]
 fn events_are_held_in_order_and_bounded() {
     let app = App::new("hold");
@@ -368,7 +369,7 @@ fn events_are_held_in_order_and_bounded() {
     assert!(slot(&r, "heard").contains("chime c5"));
 }
 
-/// A relaunched app's `--notification '<entry>'` delivers the entry's data to
+/// §7: a relaunched app's `--notification '<entry>'` delivers the entry's data to
 /// the handler, from nothing the session that posted it kept.
 #[test]
 fn a_launch_entry_carries_its_data_to_the_handler() {
@@ -384,8 +385,8 @@ fn a_launch_entry_carries_its_data_to_the_handler() {
     assert!(slot(&r, "heard").contains("t1 thread-1"), "{}", logs(&r));
 }
 
-/// `"scope": "app"` keeps a value in the host's app-wide state, so a second
-/// session reads what the first set and clears it for both.
+/// §7: `"scope": "app"` keeps a value in the host's app-wide state, so a
+/// second session reads what the first set and clears it for both.
 #[test]
 fn an_app_scoped_value_is_one_value_across_sessions() {
     let app = App::new("app");
@@ -434,11 +435,11 @@ impl exact_runner::DataSource for Later {
 
 const LATER: &str = "use requestBell, chime, BellStatus from \"@fixture/bell\"\n\nshape Done\n  done: bool\n\ncomponent App\n  state heard = \"\"\n  mutation hushed as shape Done then afterHush\n  mutation answered as shape BellStatus\n  action chimed(tag: string)\n    heard = tag\n    send hushed = quiet()\n  action afterHush\n    send answered = requestBell()\n  action press\n    send answered = requestBell()\n  view\n    column chime=chimed\n      text heard\n";
 
-/// Origin follows causation: an emitted event's request, its answer's commit
-/// and the `then` that arms are the device's, so the request there is refused
-/// while `prompt`; a data-code call while that request is in flight is the
-/// device's too (least privileged), and once it lands a person's own request
-/// asks again.
+/// LLP 1133.002 D12, origin follows causation: an emitted event's request,
+/// its answer's commit and the `then` that arms are the device's, so the
+/// request there is refused while `prompt`; a data-code call while that
+/// request is in flight is the device's too (least privileged), and once it
+/// lands a person's own request asks again.
 #[test]
 fn the_device_s_origin_follows_its_requests_answers_and_thens() {
     let app = App::new("later");
@@ -493,8 +494,8 @@ fn the_device_s_origin_follows_its_requests_answers_and_thens() {
     );
 }
 
-/// Each event keeps its own bound; one kind's flood drops none of another's,
-/// and each drop is journaled under its own event.
+/// D6: each event keeps its own bound; one kind's flood drops none of
+/// another's, and each drop is journaled under its own event.
 #[test]
 fn each_event_keeps_its_own_bound() {
     let app = App::new("mixed");
@@ -532,7 +533,8 @@ fn each_event_keeps_its_own_bound() {
     );
 }
 
-/// A declared state name is one module's and never one of the agent's own keys.
+/// §7: a declared state name is one module's and never one of the agent's
+/// own keys.
 #[test]
 fn a_declared_state_name_is_one_module_s_and_not_the_agent_s() {
     let app = App::new("reserved");
@@ -564,8 +566,8 @@ impl exact_runner::DataSource for Named {
     }
 }
 
-/// An app-wide value is the app's, so two apps one embedder hosts, which share
-/// the process's state, each keep their own.
+/// §7: an app-wide value is the app's, so two apps one embedder hosts, which
+/// share the process's state, each keep their own.
 #[test]
 fn an_app_wide_value_is_one_app_s() {
     let app = App::new("apps");

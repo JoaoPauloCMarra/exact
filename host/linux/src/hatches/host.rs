@@ -1,4 +1,4 @@
-//! The host's part of a hatch's overlay:
+//! The host's part of a hatch's overlay (@ref LLP 1075.003.000.001 §2.2.1):
 //! its recording replayed whole by the replayer the 2D canvases use, into a
 //! bitmap the painter composites over the node.
 use super::Host;

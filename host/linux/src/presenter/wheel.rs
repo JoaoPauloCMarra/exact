@@ -102,8 +102,8 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// A wheel at a point (the web's sign: a positive `dy` scrolls down).
-    /// A phase-less tick is its own gesture and is not split
-    /// (Chrome's measured tick): the innermost scroll container under the point
+    /// A phase-less tick is its own gesture and is not split (LLP 1070 G2,
+    /// Chrome's measured tick): the innermost scroll container under the point
     /// that can take ANY of its components takes those it can, clamped, and
     /// the rest is dropped. One that can take none chains to the next scroller
     /// up, then the page, unless its `overscroll-behavior` is `contain` or

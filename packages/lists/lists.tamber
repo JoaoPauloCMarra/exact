@@ -1,4 +1,4 @@
-// The design of @exact/lists: the tokens its components'
+// The design of @exact/lists (LLP 1139 D1): the tokens its components'
 // params default to. A row is the platform's list cell, so it has no
 // spacing of its own; its symbol's tint is the accent, as a UIKit cell
 // tints its image, and its switch the platform's on colour. A menu's items

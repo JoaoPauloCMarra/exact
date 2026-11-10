@@ -1,4 +1,4 @@
-//! A component's members files: each is loaded as a `use`d
+//! A component's members files (LLP 1091.002): each is loaded as a `use`d
 //! file is, scoped through its own `use` lines with every member of the
 //! component bound, and spliced into the component at its line.
 

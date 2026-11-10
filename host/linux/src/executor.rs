@@ -76,14 +76,14 @@ impl Executor {
             },
         );
         // Linux starts programs for data code, and so does this host where it
-        // runs on a Mac; Android and Windows do not yet.
+        // runs on a Mac; Android and Windows do not yet (LLP 1133.007 §8).
         if cfg!(any(target_os = "linux", target_os = "macos")) {
             core.allow_processes();
         }
         Self { core, wake, note }
     }
-    /// Where the app's files are, for a request whose body is one of them:
-    /// set before the first request.
+    /// Where the app's files are, for a request whose body is one of them
+    /// (LLP 1108 D6 R2): set before the first request.
     pub fn set_app_roots(&self, roots: [std::path::PathBuf; 3]) {
         self.core.set_app_roots(roots);
     }
@@ -112,7 +112,7 @@ impl Executor {
         self.core.forget(held);
     }
     /// The uploads let go that had begun to go out, for
-    /// `Runner::uploads_started`.
+    /// `Runner::uploads_started` (LLP 1016.000 D10).
     pub fn let_go_started(&self, held: impl Fn(u64) -> bool) -> Vec<u64> {
         self.core.let_go_started(held)
     }
@@ -121,7 +121,8 @@ impl Executor {
         self.core.cancel(tickets);
     }
     /// Settle a re-ask (`Dispatch::Again`) in its ordered place, with no
-    /// work; kept pending while the window is full. An error is terminal, for the host to record.
+    /// work (LLP 1041 §8.4, amended 2026-10-09); kept pending while the
+    /// window is full. An error is terminal, for the host to record.
     pub fn again(&self, request: &RequestOut) -> Result<(), &'static str> {
         self.core.again(request.ticket)
     }
@@ -155,7 +156,8 @@ impl Executor {
     pub fn waker(&self) -> std::sync::Arc<dyn Fn() + Send + Sync> {
         self.core.waker()
     }
-    /// Send a mutation's or mapper call's socket batch whose commit stood.
+    /// Send a mutation's or mapper call's socket batch whose commit stood
+    /// (LLP 1016.000 D7).
     pub fn socket(&self, batch: &exact_runner::SocketSend) -> Result<Vec<(u64, u64, u64)>, String> {
         self.core.socket(batch)
     }
@@ -163,7 +165,7 @@ impl Executor {
     pub fn socket_reader(&self) -> exact_runner::SocketReader {
         self.core.socket_reader()
     }
-    /// Each long poll's backoff wait, by its stream ticket, live.
+    /// Each long poll's backoff wait, by its stream ticket, live (D8).
     pub fn retry_reader(&self) -> exact_runner::RetryReader {
         self.core.retry_reader()
     }
@@ -171,14 +173,14 @@ impl Executor {
     pub fn listen_reader(&self) -> exact_runner::listen::ListenReader {
         self.core.listen_reader()
     }
-    /// The clock its process work keeps under the agent.
+    /// The clock its process work keeps under the agent (LLP 1133.007 §7).
     pub fn work_clock(&self) -> Option<std::sync::Arc<dyn exact_runner::WorkClock>> {
         self.core.work_clock()
     }
 }
 
-/// The listener this host links (a plain dependency here, as the SVG island
-/// rasterizer is).
+/// The listener this host links (LLP 1133.005 D13: a plain dependency here,
+/// as the SVG island rasterizer is).
 #[cfg(unix)]
 fn listen_module() -> core::stream::listen::Module {
     use exact_listen::abi::*;

@@ -71,7 +71,7 @@ test('an aborted fetch rejects with its signal\'s reason; an exactTimeout is sti
     const first = await rejection({ signal: beside.signal, exactTimeout: 30 });
     expect([first.name, first.kind]).toEqual(['FetchError', 'Timeout']);
     // The request arms the deadline its `AbortSignal.timeout` gives it (ts-fetch.js) with the signal it reads, reading
-    // it once, and ends the deadline when it is done.
+    // it once, and ends the deadline when it is done (LLP 1146 §2.1).
     const { signalDeadline } = await import(resolve(dir, 'admission.js'));
     const seen = [], carried = new AbortController();
     let reads = 0, armedWith;

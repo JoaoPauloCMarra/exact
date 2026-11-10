@@ -1,5 +1,5 @@
 //! The v1 app end to end: `app.contract` → plan → bake → runner → kernel.
-//! The v1 bar, on the one surface that exists so far.
+//! `rules/DEFERRED.md`'s bar, on the one surface that exists so far.
 
 use exact_kernel::{Kernel, PropId};
 use exact_plan::{Plan, Value};
@@ -46,18 +46,18 @@ fn the_app_compiles_deterministically_and_bakes_its_first_frame() {
     let b = caltrain::compile().unwrap();
     assert_eq!(a.encode(), b.encode(), "compiling twice is byte-identical");
     assert_eq!(a.kernel_schema_digest, exact_kernel::SCHEMA_DIGEST);
-    // seededEpoch, nowMs, screen, stationId, query; material, deck, focus (the
+    // seededEpoch, nowMs, screen, stationId, query; material, deck, focus (LLP 1014: the
     // sky's material, the card deck and its focus); sky (whether the app is
     // inside the aurora canvas at all — a phone's frame-rate switch);
     // hoverId, hoverOn, searchFocused, lastKey (the events beyond press and
-    // change); deckLoaded, deckLoads, and deckMessage (the
-    // iframe fixture); and `nav`, the routes table's
-    // location, there for `render=build`;
+    // change, LLP 1005 §3); deckLoaded, deckLoads, and deckMessage (the
+    // iframe fixture, @ref LLP 1020 M1); and `nav`, the routes table's
+    // location (LLP 1038 D2), there for `render=build` (LLP 1048.003 D5);
     // and the activity's delay, whether one is followed, and the mutation
-    // replies, and whether a service alert is followed.
+    // replies, and whether a service alert is followed (LLP 1126.001 WP9, WP14).
     assert_eq!(a.slots.len(), 22);
     // Seven data-crate resources, `delivery` — the runner's own
-    // `exactDelivery`, read by the update banner — and
+    // `exactDelivery` (LLP 1030 D7), read by the update banner — and
     // `viewport`, whose `pointer` says a TV, and `exactActivities`.
     assert_eq!(a.resources.len(), 10);
     // …and `activateUpdate`, the banner's `deliveryActivate`, and
@@ -329,7 +329,7 @@ fn a_reload_keeps_its_place_and_re_requests_only_what_changed() {
     );
 }
 
-/// The events beyond press and change: a hover carries
+/// The events beyond press and change (LLP 1005 §3): a hover carries
 /// whether the pointer is over, a key its name, focus and blur nothing —
 /// each reaching the slot its action writes, and the view following.
 #[test]

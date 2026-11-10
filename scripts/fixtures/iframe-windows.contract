@@ -1,4 +1,4 @@
-// A partitioned iframe's window requests and downloads reaching actions, driven by IframeWindowsSessionTests.
+// A partitioned iframe's window requests and downloads reaching actions, driven by IframeWindowsSessionTests (LLP 1020.002 D5).
 component App
   state opened = ""
   state saved = ""

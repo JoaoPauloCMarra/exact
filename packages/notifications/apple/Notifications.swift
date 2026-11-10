@@ -1,18 +1,18 @@
-// @exact/notifications on Apple: UserNotifications
+// @exact/notifications on Apple (LLP 1133.004 D1–D3, D7): UserNotifications
 // for posts, the status and the request; the Dock tile's label on macOS and
 // `setBadgeCount` on iOS for the badge. The app's composed module calls it
 // outside the agent, through `ExactPackage`'s shape; under the agent the
 // runner's substitute answers, unless the drive binds it (`--bind
 // notifications`).
 //
-// - The host keeps the one notification delegate. A post's `userInfo`
+// - The host keeps the one notification delegate (D7). A post's `userInfo`
 //   is the host's activation entry, so a person's click raises
 //   `notificationclick` on the session that posted it, or opens `navigate`.
 // - `silent` leaves `sound` nil; the host's foreground presentation then
 //   omits `.sound` too (it reads the content's sound).
-// - A post while `notDetermined` asks first: `.alert`, `.sound` and
+// - A post while `notDetermined` asks first (Q4): `.alert`, `.sound` and
 //   `.badge`, the options a post and a badge use.
-// - The state is a fact: `getNotificationSettings`, read again when
+// - The state is a fact (D8): `getNotificationSettings`, read again when
 //   the app becomes active, announced when it changes.
 // - An unbundled process has no notification centre (`current()` traps), so
 //   there `available` is false and every call refuses `NotSupportedError`.
@@ -96,14 +96,14 @@ public final class NotificationsModule: NSObject, ExactPackage {
         content.title = title
         if let body = args["body"] as? String { content.body = body }
         let silent = args["silent"] as? Bool == true
-        // The platform's sound unless `silent`: a hand-built app sets it, as this does.
+        // The platform's sound unless `silent` (D2): a hand-built app sets it, as this does.
         content.sound = silent ? nil : .default
         let event: [String: Any] = ["tag": tag, "data": args["data"] ?? NSNull(), "title": title, "body": args["body"] ?? NSNull()]
         content.userInfo = context.activation("notificationclick", [tag, event], navigate: args["navigate"] as? String)
         if let words = args["apple"] as? [String: Any] { apply(words, to: content) }
         let at = (args["showTrigger"] as? NSNumber)?.doubleValue
         let center = UNUserNotificationCenter.current()
-        // While `notDetermined` a post asks first; while denied it refuses.
+        // While `notDetermined` a post asks first (Q4); while denied it refuses.
         // A refusal is journaled once, by the runner, from the reply.
         center.requestAuthorization(options: [.alert, .sound, .badge]) { [self] granted, _ in
             status { status in DispatchQueue.main.async { self.announce(status) } }
@@ -121,7 +121,7 @@ public final class NotificationsModule: NSObject, ExactPackage {
         }
     }
 
-    /// The platform's words, each where the content has it.
+    /// The platform's words (D3), each where the content has it.
     private func apply(_ words: [String: Any], to content: UNMutableNotificationContent) {
         if let subtitle = words["subtitle"] as? String { content.subtitle = subtitle }
         if let thread = words["threadIdentifier"] as? String { content.threadIdentifier = thread }
@@ -135,7 +135,7 @@ public final class NotificationsModule: NSObject, ExactPackage {
         }
     }
 
-    /// The badge: the Dock tile's label on macOS, `•` for a flag;
+    /// The badge (D1, Q5): the Dock tile's label on macOS, `•` for a flag;
     /// `setBadgeCount` on iOS, 1 for a flag. Zero clears.
     private func badge(_ contents: NSNumber?, flag: Bool, _ reply: @escaping ([String: Any]) -> Void) {
         // Admission refuses a negative count; truncated and kept within `Int` whatever reaches here.
@@ -150,7 +150,7 @@ public final class NotificationsModule: NSObject, ExactPackage {
         #endif
     }
 
-    /// The permission fact, in the interface's shape.
+    /// The permission fact (D8, §6), in the interface's shape.
     private func status(_ answer: @escaping ([String: Any]) -> Void) {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             let authorization: String, state: String

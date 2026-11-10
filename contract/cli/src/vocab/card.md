@@ -1,7 +1,7 @@
 <!--
-`contract vocab` with no name prints the card: what a builder looks up one call at a
+`contract vocab` with no name prints the card (LLP 1116.010 D1): what a builder looks up one call at a
 time, in one read, at most 12 KB (`contract/cli/tests/it/vocab.rs` holds it). `docs/card.md` is the same
-text checked in for builders that read files (a test keeps the two identical). `card.rs` generates it from
+text checked in for builders that read files (LLP 1116.011 D1; a test keeps the two identical). `card.rs` generates it from
 the tables: the functions from the roster and the grammar, the parts from `exact:content`'s calls, the
 steps from docs/recipes/tests.md, the agent's operations from scripts/help.mjs, the symbols from the
 schema. This file holds what no table says, and a test checks it against them: every tag, attribute and

@@ -1,4 +1,4 @@
-//! Canvas 2D on the web, the wasm half: the browser lays
+//! Canvas 2D on the web, the wasm half (LLP 1056 D4, D7): the browser lays
 //! a canvas out, so `canvas2d-glue.js` watches each 2D canvas with a
 //! `ResizeObserver` and reports its content box and device scale
 //! (`exact_canvas_geometry`); the runner draws, and the stamped lists go to
@@ -53,7 +53,7 @@ impl<D: DataSource> Host<D> {
             self.canvas2d.kept.swap(0, 1);
             self.canvas2d.kept[1] = lists;
         }
-        // Handles a Rust draw asked for: the page loads them.
+        // Handles a Rust draw asked for: the page loads them (LLP 1056 D9).
         let images = self.runner.take_canvas_image_requests();
         if !images.is_empty() {
             batch.canvas2d_images(&images);
@@ -86,7 +86,7 @@ impl<D: DataSource> Host<D> {
 }
 
 impl<D: DataSource> Host<D> {
-    /// The page decoded (or failed) an image handle: `payload`
+    /// The page decoded (or failed) an image handle (LLP 1056 D9): `payload`
     /// is `src\0width\0height\0ok\0lifetimes`, the lifetimes a JSON array of
     /// the canvases whose TypeScript draw asked for it on the page. The
     /// canvases that asked draw again, cause `"image"`.
@@ -114,7 +114,7 @@ impl<D: DataSource> Host<D> {
         self.finish(batch, None)
     }
 
-    /// A font finished loading on the page: canvases that drew
+    /// A font finished loading on the page (LLP 1056 D8): canvases that drew
     /// text draw again, cause `"font"`.
     pub fn canvas_fonts(&mut self) -> String {
         self.runner.canvas_fonts_loaded();

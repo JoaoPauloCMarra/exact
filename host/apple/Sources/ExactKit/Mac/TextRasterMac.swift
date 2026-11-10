@@ -1,4 +1,4 @@
-// Paragraph text rasterized off the main thread.
+// Paragraph text rasterized off the main thread. @ref LLP 1044 F4, LLP 1008 §3
 //
 // AppKit paints a layer-backed view only where it is visible, so a paragraph
 // scrolling into view is painted in strips: a backing buffer, a display-list
@@ -211,7 +211,7 @@ extension NodeView {
     /// Too few pixels to repay a surface. Such text draws whole rather than in
     /// bands admitted as it scrolls: bands, and their visit per frame, are for
     /// paragraphs too large to paint at once. HDR text is never small: only a
-    /// raster's layers follow `dynamic-range-limit`.
+    /// raster's layers follow `dynamic-range-limit` (LLP 1100 D8).
     var textIsSmall: Bool {
         let scale = pixelScale ?? 2
         guard bounds.width * bounds.height * scale * scale < TextRasterizer.minPixels else { return false }
@@ -293,9 +293,9 @@ extension NodeView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         // A `text-shadow` is cast by a sublayer of its own: the view's layer
-        // would cast its box too.
+        // would cast its box too (LLP 1077 D3).
         let shadow = textRasterKey.flatMap { $0.spec.hdrShadow == nil ? $0.spec.shadow : nil }
-        // HDR ink too needs its own layer, for its range.
+        // HDR ink too needs its own layer, for its range (LLP 1100 D8).
         let headroom = TextRasterJob.headroom(of: surface)
         if textRasterFrame == CGRect(origin: .zero, size: bounds.size), shadow == nil, headroom <= 1, textRasterCast == nil {
             textRasterOverflowLayer?.dropTextCast(); textRasterOverflowLayer?.removeFromSuperlayer()

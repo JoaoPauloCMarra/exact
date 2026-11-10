@@ -1,4 +1,4 @@
-// One stack, no tabs, whose first screen has a large
+// LLP 1115.000 D11.1: one stack, no tabs, whose first screen has a large
 // title over a scroller it does not name, the shape `exact new` makes. The
 // title opens expanded and collapses as the content scrolls
 // (NavigationCollapseIOSTests). UIKit opens it when the stack has its first

@@ -1,5 +1,5 @@
 //! Standalone time reserves its measured box, without adding painted runs.
-//! Only standalone time reserves; inline time does not.
+//! @ref LLP 1126 D6; LLP 1126.000 WP3 (inline reservation descoped).
 use super::*;
 use exact_kernel::{Kernel, NodeType, Offer, Op, PropId, StyleProps};
 

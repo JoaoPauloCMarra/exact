@@ -4,7 +4,7 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// A `playback` app's session is held while something has sound
+/// LLP 1096 D8: a `playback` app's session is held while something has sound
 /// and goes back to ambient when nothing does, as Bluesky's player drops to
 /// ambient on re-mute so other apps' audio resumes.
 final class AudioSessionIOSTests: XCTestCase {
@@ -64,7 +64,7 @@ final class AudioSessionIOSTests: XCTestCase {
         XCTAssertEqual(AVAudioSession.sharedInstance().category, .ambient)
     }
 
-    /// A capture's claim takes `.playAndRecord` from the
+    /// LLP 1133.009 D7: a capture's claim takes `.playAndRecord` from the
     /// first claim to the last, whatever the app's sound holds meanwhile,
     /// and the session goes back to what the sound wants after.
     func testACaptureClaimsPlayAndRecordUntilItsLastClaimEnds() throws {
@@ -107,7 +107,7 @@ final class AudioSessionIOSTests: XCTestCase {
         XCTAssertEqual(AVAudioSession.sharedInstance().category, .ambient)
     }
 
-    /// The owner observes the session once for the process
+    /// LLP 1133.009 D7: the owner observes the session once for the process
     /// and tells each listening holder of sound before the claims.
     func testAListeningHolderHearsAResetAndTheAppBecomingActiveThroughTheOwner() {
         final class Holder {}

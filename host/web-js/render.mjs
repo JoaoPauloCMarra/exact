@@ -1,5 +1,5 @@
-// Pages rendered by the JavaScript runtime itself, under Bun (`--render js`):
-// the app's generated module runs against a small DOM
+// Pages rendered by the JavaScript runtime itself, under Bun (`--render js`,
+// LLP 1071): the app's generated module runs against a small DOM
 // (`dom.js`), in a fresh VM context per render, with the app's own data
 // source (TypeScript, or the Rust module's wasm), until nothing is in flight
 // or the deadline passes. Its fetches share an HTTP cache (`http-cache.mjs`). Its document, head and checkpoint are composed
@@ -39,7 +39,7 @@ const utcIntl = new vm.Script(`{
   });
 }`);
 
-/** An undeclared route's activation, as the render host
+/** An undeclared route's activation (LLP 1048.007 D1), as the render host
  * infers it (`exact_runner::activation`, whose rules the build wrote in
  * `out.activation`): `interaction` when the render left the runtime nothing
  * to do before the reader acts — nothing in the plan only the runtime
@@ -51,12 +51,12 @@ const utcIntl = new vm.Script(`{
 function infer(out) {
   const { waits: kinds, kept } = out.activation;
   const on = [...out.root.matchAll(/ data-exact-on="([^"]*)"/g)].flatMap(m => m[1].split(' '));
-  const waits = !kept && !out.pending.length && !out.outstanding && !out.continuing && !out.due && !out.zoned && on.every(k => kinds.includes(k));
+  const waits = !kept && !out.pending.length && !out.outstanding && !out.continuing && !out.open.length && !out.due && !out.zoned && on.every(k => kinds.includes(k));
   return waits ? 'interaction' : 'eager';
 }
 
 /** The renderer for one built dist: its server bundle compiled once. */
-/** The answers a waiting page names rather than holds, by their hash: kept for the reader's first
+/** The answers a waiting page names rather than holds (LLP 1048.007 D10), by their hash: kept for the reader's first
  * act, most recently made or asked last, within 512 checkpoints and 64 MB. A checkpoint no longer kept is a 404, and
  * the runtime then builds the page afresh. One store for the process, whichever build made them. */
 const Deferred = new Map();
@@ -104,15 +104,15 @@ export function renderer(dist, { closed = false } = {}) {
   // comes before anything the render decides (the head a server flushes as
   // a request arrives), then the head's fields, the document and its
   // checkpoint.
-  // The root carries what the build wrote on it: `data-audio-session`.
+  // The root carries what the build wrote on it: `data-audio-session` (LLP 1096 D7).
   const ROOT = /<div id="exact-root"( data-audio-session="[a-z-]+")?><\/div>/.exec(shell), ENTRY = '<script type="module" src="./app.js"></script>';
   const title = shell.indexOf('<title>'), stop = shell.indexOf('>\n', shell.indexOf('<meta name="viewport"', title)) + 2;
   const root = ROOT?.index ?? -1, entry = shell.indexOf(ENTRY), rootAttrs = ROOT?.[1] ?? '';
   const viewportMeta = esc(/<meta name="viewport" content="([^"]*)"/.exec(shell)?.[1] ?? 'width=device-width, initial-scale=1');
-  // The document's language is the shell's, which the build wrote from the manifest's `lang`.
+  // The document's language is the shell's, which the build wrote from the manifest's `lang` (LLP 1115.000 D4.6).
   const language = /<html[^>]* lang="([^"]*)"/.exec(shell)?.[1] || 'en-US';
   // The shell's sheet as rules, when the build analyzed it: a page then carries only those its document can match, after
-  // its render, and the head sent before the render carries none (page-style.mjs).
+  // its render, and the head sent before the render carries none (page-style.mjs, LLP 1048.007 D4).
   const rules = existsSync(resolve(dist, '.gen/page-style.json')) ? JSON.parse(readFileSync(resolve(dist, '.gen/page-style.json'), 'utf8')) : null;
   const sheet = rules ? /<style>[\s\S]*?<\/style>\n?/ : /(?!)/;
   // A rendered page paints without the runtime, which only adopts it, so its preloads are low priority (page.rs `push_low`).
@@ -121,7 +121,7 @@ export function renderer(dist, { closed = false } = {}) {
   const preloads = (shell.slice(stop, root).match(/<link rel="modulepreload" href="[^"]*">\n/g) ?? []).map(l => l.replace('>', ' fetchpriority="low">')).join('');
   // A realm for one render: a document, a context with the server bundle run in it, and its location, which `begin`
   // fills in. Nothing has run in it but the bundle's own loading, so making it ahead takes that off a request's path
-  // and every render still has a realm of its own (as the render host's `make_realm`).
+  // and every render still has a realm of its own (LLP 1048.000 D10, as the render host's `make_realm`).
   const realm = () => {
     const document = createDocument(shell);
     // The bake's page facts (runner/src/page.rs): visible, online, focused, no share sheet or pickers. The
@@ -206,11 +206,11 @@ export function renderer(dist, { closed = false } = {}) {
         const wake = activate === 'interaction' && out.wake.length ? ` data-wake="${esc(JSON.stringify(out.wake))}"` : '';
         const fields = `<title>${esc(out.title || name)}</title><meta name="viewport" content="${viewportMeta}">${crawled(out, url.pathname + url.search)}`;
         const revalidate = info.activate !== 'never' && (out.outstanding || out.continuing);
-        const checkpoint = `{"location":${JSON.stringify(url.pathname + url.search)},"time":${JSON.stringify(out.time)},"logic":null,"answers":${out.answers},"pending":${JSON.stringify(out.pending)}${revalidate ? ',"revalidate":true' : ''}}`;
+        const checkpoint = `{"location":${JSON.stringify(url.pathname + url.search)},"time":${JSON.stringify(out.time)},"logic":null,"answers":${out.answers},"pending":${JSON.stringify(out.pending)}${out.open.length ? `,"open":${JSON.stringify(out.open)}` : ''}${revalidate ? ',"revalidate":true' : ''}}`;
         const digest = createHash('sha256').update(out.root).digest('hex').slice(0, 16);
         const style = rules ? `<style data-exact-page>${select(rules, tokens(out.root + shell.slice(root)))}</style>\n` : '';
         // A page made per request that waits for the reader names its answers past 1 KB rather than holding them: they
-        // are needed only once the reader acts, and the capture script fetches them with the runtime.
+        // are needed only once the reader acts, and the capture script fetches them with the runtime (LLP 1048.007 D10).
         const deferred = activate === 'interaction' && (info.policy === 'request' || info.policy === 'cached') && checkpoint.length > 1024;
         const src = deferred ? ` data-src="/.exact/checkpoint/${deferAnswers(checkpoint)}.json"` : '';
         const body = late => `${fields}\n${late}${style}${hero}<div id="exact-root"${rootAttrs}>${out.root}</div>${shell.slice(root + ROOT[0].length, entry)}`
@@ -221,14 +221,14 @@ export function renderer(dist, { closed = false } = {}) {
         const markedHead = out.scrollDocument ? whole.replace('<html ', '<html data-scrolldocument ') : whole;
         const mark = out.scrollDocument ? '<script>document.documentElement.setAttribute("data-scrolldocument","")</script>\n' : '';
         makeAhead();
-        // The HTTP status, as the render host gives it (lib.rs `Rendered::status`): a location the router
+        // The HTTP status, as the render host gives it (lib.rs `Rendered::status`, LLP 1048.000 D11): a location the router
         // sends to its notfound route is 404, or 410 if its head says so; a render at its deadline 503; else the head's own.
         const settled = !out.pending.length && !out.outstanding;
         const status = info.notfound ? (out.status === 410 ? 410 : 404) : !settled ? 503 : out.status ?? 200;
         // A page made only of answers any reader may still be given (one at least), by a render that drew nothing at
         // random and read no clock or reader's device (the plan's `kept`), from TypeScript sources alone, is the page
         // another render would make until the first of those answers goes stale: it may be given again until then, for
-        // at most 60 s.
+        // at most 60 s (LLP 1048.007 D8).
         const keep = status === 200 && settled && !out.failed?.length && out.activation?.kept === false && !out.rust && !read.random && read.fresh > 0 && read.fresh < Infinity ? Math.min(read.fresh, 60000) : 0;
         return { html: markedHead + body(''), rest: mark + body(late), status, settled, failed: out.failed ?? [], render: out.render, location, policy: info.policy, activate, keep };
       } finally { made.dispose(); }
@@ -244,7 +244,7 @@ export function renderer(dist, { closed = false } = {}) {
   return render;
 }
 
-/** A rendered page's first image, when it loads with the page (no `for` repeats it), is likely its
+/** A rendered page's first image, when it loads with the page (no `for` repeats it, LLP 1048.007 D5), is likely its
  * largest paint: it is fetched at high priority and preloaded ahead of the document, as web.dev's LCP guidance has a
  * hero image (HTML's `fetchpriority` and `<link rel="preload" as="image">`). A page whose first image is a lazy row's
  * opens with a list, and has none. The first shown: a route the stack covers is `inert` and hidden, and what it holds
@@ -279,7 +279,7 @@ const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'applic
  * for the render; others get the head at once. `render.mjs --serve` and `host/web/serve.mjs` answer with it. */
 // runner/src/viewport.rs's page viewport, and a desktop's that sends no width (host/render/src/viewport.rs `DESKTOP`).
 const PAGE = { width: 390, height: 844 }, DESKTOP = { width: 1280, height: 800 };
-/** The viewport a request is rendered at, as the render host chooses it (viewport.rs `Hints`): its client
+/** The viewport a request is rendered at, as the render host chooses it (LLP 1048.006 D2, viewport.rs `Hints`): its client
  * hints, else the class its user agent names — a desktop browser's 1280×800, a phone's or a client that says nothing the
  * page viewport. */
 export function viewportOf(header) {
@@ -291,7 +291,7 @@ export function viewportOf(header) {
   return { width: size(get('sec-ch-viewport-width') ?? get('viewport-width')) ?? at.width, height: size(get('sec-ch-viewport-height')) ?? at.height,
     dark: get('sec-ch-prefers-color-scheme') === 'dark', reducedMotion: get('sec-ch-prefers-reduced-motion') === 'reduce', reducedTransparency: get('sec-ch-prefers-reduced-transparency') === 'reduce' };
 }
-// What a page laid out by the viewport asks for and varies by.
+// What a page laid out by the viewport asks for and varies by (LLP 1048.006 D3).
 const HINTS = 'Sec-CH-Viewport-Width, Sec-CH-Viewport-Height, Sec-CH-Prefers-Color-Scheme, Sec-CH-Prefers-Reduced-Motion, Sec-CH-Prefers-Reduced-Transparency';
 
 export function pageServer(dist, render = renderer(dist), log = console.log) {
@@ -307,7 +307,7 @@ export function pageServer(dist, render = renderer(dist), log = console.log) {
     return { status, headers, body: brotliCompressSync(html, { params: { [constants.BROTLI_PARAM_QUALITY]: 5 } }) };
   };
   return async function page(location, header) {
-    // Laid out for the reader's viewport, and kept per viewport.
+    // Laid out for the reader's viewport (LLP 1048.006), and kept per viewport.
     const viewport = viewportOf(header), key = `${location} ${JSON.stringify(viewport)}`;
     const t = performance.now(), hit = cache.get(key);
     const revalidate = /no-cache|no-store|max-age=0/.test(header('cache-control') ?? '');
@@ -371,7 +371,7 @@ if (import.meta.main) {
         return new Response(Bun.file(file), { headers: { 'content-type': type, 'cache-control': 'no-cache' } });
       }
       // A route drawn in the browser (`render=client`) gets the shell and one rendered at build its page, as
-      // `serve` gives them; the rest are rendered here.
+      // `serve` gives them (LLP 1153.001 D1); the rest are rendered here.
       const answers = deferredPath(url.pathname);
       if (answers) { const checkpoint = deferredAnswers(answers); return new Response(checkpoint ?? 'These answers are no longer kept; the page builds itself afresh.\n', { status: checkpoint ? 200 : 404, headers: checkpoint ? { 'content-type': 'application/json', 'cache-control': 'private, max-age=3600, immutable' } : { 'content-type': 'text/plain', 'cache-control': 'no-store' } }); }
       const at = matchPattern(routes, canonical(url.pathname)), built = resolve(file, 'index.html');

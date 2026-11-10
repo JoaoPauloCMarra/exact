@@ -1,4 +1,4 @@
-// `panrelease` end to end on the web, nothing mocked: the
+// `panrelease` end to end on the web (LLP 1057.001 §6), nothing mocked: the
 // compiled wasm's tracker (motion ops 13/14), the glue, and real touch input
 // through the agent's contact phases. A flick at a known speed releases at
 // about that speed; the same distance dragged slowly releases near rest, and
@@ -90,7 +90,7 @@ check(`a flick releases at its speed; a slow drag and a pause before lifting nea
     slots = await drag(150, 60, 200);
     expect(slots.releases).toBe(3);
     expect(Math.abs(slots.vx)).toBeLessThan(1);
-    // The flick as one whole gesture (`tap card drag 150 0 over 60`): the same release.
+    // The flick as one whole gesture (`tap card drag 150 0 over 60`, LLP 1080.000 §11): the same release.
     const whole = await s.tap('card', { drag: { dx: 150, dy: 0, over: 60 } });
     expect(whole.delivery).toBe('platform');
     slots = (await s.state()).slots;

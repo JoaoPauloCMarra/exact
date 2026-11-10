@@ -1,8 +1,7 @@
-//! A resource's listener through the executor, with the
+//! A resource's listener through the executor (LLP 1133.005), with the
 //! linked module installed: its grant, its events as messages, sends by
 //! connection, `state.streams`' view, and the file gone once it is let go.
-//! A real `unix:` socket and wall-clock waits, so the tests are ignored:
-//! `cargo test -p exact-apple -- --ignored` runs them.
+//! A real `unix:` socket and wall-clock waits: the async lane.
 use super::super::super::Core;
 use exact_runner::listen::Listen;
 use exact_runner::{FailureKind, Outcome, Request, RequestOut, SocketOp, SocketOrigin, SocketSend};
@@ -77,7 +76,7 @@ fn dir(name: &str) -> std::path::PathBuf {
 }
 
 #[test]
-#[ignore = "binds a real unix socket; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: binds a real unix socket"]
 fn a_listener_queues_its_events_and_sends_by_connection() {
     let d = dir("echo");
     let path = d.join("a.sock");

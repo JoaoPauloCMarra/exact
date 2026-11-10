@@ -3,10 +3,10 @@
 //! The receive-only API (`open`, `MessageSource::next`, and `Incoming`) stays
 //! source-compatible. Sending and event watching are additive: transports
 //! expose a clonable sender, while a watch publishes the WHATWG lifecycle over
-//! the executor-independent `Receiver`/`Subscription` pair.
+//! L3's executor-independent `Receiver`/`Subscription` pair.
 //!
-//! One WebSocket contract for Rust consumers and the bindings.
-//! Apple keeps its platform task; portable framing stays in Rust.
+//! @ref LLP 0059.000#312-websocket--delegating-capability-bearing-author-required — one WebSocket contract on both doors
+//! @ref LLP 0057.000#l4--websocket--completed-2026-10-04 — Apple keeps its platform task; portable framing stays in Rust
 
 use crate::boundary::HostError;
 use crate::grant::{GrantSet, Operation, Origin};
@@ -247,7 +247,7 @@ pub fn open(
 }
 
 /// [`open`], with the host's `gate` checked after the grant and before the
-/// transport connects (Exact patch). A handshake follows no
+/// transport connects (Exact patch, LLP 1133.036 D6). A handshake follows no
 /// redirect, so the open is the one hop.
 pub fn open_gated(
     transport: &dyn SocketTransport,

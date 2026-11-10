@@ -1,4 +1,4 @@
-//! Real children: `/bin/sh` started in a group of its
+//! Real children (LLP 1133.007 D9): `/bin/sh` started in a group of its
 //! own, its stdin and output, a grandchild that the release and the quit
 //! end with it, a leader that exits first, the record a crash leaves and the
 //! next launch's reaping, `execFile`'s limits, and a program's grant checked
@@ -385,7 +385,7 @@ fn a_program_the_app_wrote_does_not_run_by_its_name() {
     let (core, woke, dir) = core("process.spawn path:sh");
     // The app writes its own `sh` under `app:/data/bin` and puts that
     // directory first on its child's `PATH`: `path:sh` is still the login
-    // shell's `PATH`'s, so `exit 7` runs, not the app's `exit 42`.
+    // shell's `PATH`'s (D7), so `exit 7` runs, not the app's `exit 42`.
     let bin = dir.join("data/bin");
     std::fs::create_dir_all(&bin).unwrap();
     std::fs::write(bin.join("sh"), "#!/bin/sh\nexit 42\n").unwrap();
@@ -514,7 +514,7 @@ fn the_login_shell_answers_the_named_variables_between_markers() {
         "{found:?}"
     );
     assert!(!found.contains_key("EXACT_NOT_SET_ANYWHERE"));
-    // A name that is not a variable's never reaches the shell.
+    // A name that is not a variable's never reaches the shell (D5).
     let marker = std::env::temp_dir().join(format!("exact-injected-{}", std::process::id()));
     let bad = format!("X;touch {}", marker.display());
     let found = super::capture_with(

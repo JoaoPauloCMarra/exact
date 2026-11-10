@@ -1,5 +1,5 @@
-// A tap addressed by id presses what it names. The agent aims a plain
-// `tap <target>` at the middle of the
+// A tap addressed by id presses what it names (LLP 1012 §1 `tap`; LLP
+// 1035.003 D2). The agent aims a plain `tap <target>` at the middle of the
 // target's box, and a finger there reaches the deepest node with a press of
 // its own: for a composite row — a post that opens its thread, holding a link
 // card, a quoted post and Like and Repost — the middle is often one of those,
@@ -182,12 +182,12 @@ extension Agent {
     /// nearest node from the hit one up that takes a press — or a disabled
     /// one on the way, which stops it.
     func pressReach(_ v: NodeView, at p: CGPoint, in win: NSWindow) -> PressReach? {
-        // What is under the point, a table's row included: the table takes a row's click and presses its root.
+        // What is under the point, a table's row included: the table takes a row's click and presses its root (LLP 1115.002 D5).
         guard let hit = TableRowCell.whatIsThere({ win.contentView?.hitTest(p) }), hit === v || hit.isDescendant(of: v) else { return nil }
         var at: NSView? = hit, node: NodeView?
         while let cur = at {
             if let n = cur as? NodeView { node = n; break }
-            // A native button's control stands for its node;
+            // A native button's control stands for its node (LLP 1069.011 D4);
             // any other enabled control takes the click itself.
             if let button = cur as? NativeButtonMac, let owner = button.owner { node = owner; break }
             // A text editor takes the click itself, as an enabled control does.

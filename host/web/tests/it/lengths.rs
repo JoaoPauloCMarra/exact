@@ -1,7 +1,7 @@
-//! CSS's own spellings reach the DOM as CSS. An unbounded
+//! LLP 1102 §3.10–§3.11: CSS's own spellings reach the DOM as CSS. An unbounded
 //! maximum is `none` (`max-width: auto` is no value), whether it was written
 //! `none` or `auto`, and a pixel row's `14px` is its number in pixels. And
-//! `autocomplete` is HTML's attribute on a field.
+//! §3.6: `autocomplete` is HTML's attribute on a field.
 
 use exact_runner::{DataError, DataSource, Value};
 use exact_web::Host;

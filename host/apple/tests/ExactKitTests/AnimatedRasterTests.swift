@@ -6,7 +6,7 @@ import UIKit
 #endif
 @testable import ExactKit
 
-/// Chrome's schedule for an animated image, its clock across
+/// LLP 1011.000: Chrome's schedule for an animated image, its clock across
 /// visibility, and the frames decoded at the display size.
 final class AnimatedRasterTests: XCTestCase {
     func testTenMillisecondsOrLessShowsForOneHundred() {

@@ -1,11 +1,11 @@
-// The design tool's fixture design: dials of each kind a
+// The design tool's fixture design (LLP 1122 D7): dials of each kind a
 // colour can follow and two length dials (a slider and a stepper, in px),
 // each with its metadata or none, groups and priorities (declared out of
 // priority order), a select with an option that is no
 // literal, a range in scientific notation, two axes, a role override and a
 // fixed-scheme token, declared pairs (one below 4.5:1), and a token of
 // each kind the branch editor has typed fields for, motion tokens and an
-// icon. Components: the stub app's Card (its Contract params, two set
+// icon. Components (T3): the stub app's Card (its Contract params, two set
 // here, one of them pinning a literal) and a native MapCard declared here.
 tamber dials
 

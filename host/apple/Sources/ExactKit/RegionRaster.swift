@@ -32,7 +32,7 @@ struct RegionRasterRequest: Sendable {
     let format: UInt32
     let background: [CGFloat]
     /// A selection's fill, as four components. With four more, the colour
-    /// its glyphs are painted in over that fill (the Mac),
+    /// its glyphs are painted in over that fill (the Mac, LLP 1115.000 D7.9),
     /// and with a ninth that is 1, a glyph whose colour its author fixed
     /// keeps it (`Run.fixedInk`; the Mac's light appearance). With four, the
     /// fill is under the ink and the ink is the text's own.

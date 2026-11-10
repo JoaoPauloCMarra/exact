@@ -1,4 +1,4 @@
-// In a real browser, the definition every host follows (PreventFocusMacTests,
+// LLP 1005 §3 in a real browser, the definition every host follows (PreventFocusMacTests,
 // PreventFocusIOSTests): a `pointerdown` action that calls `preventDefault()` keeps the focus where it
 // is, places no caret and starts no selection, and the press still fires, by mouse and by touch, as
 // Chrome does for a prevented pointerdown. scripts/fixtures/prevent-focus.contract, built for the JS target.

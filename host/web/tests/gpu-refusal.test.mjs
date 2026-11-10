@@ -130,7 +130,7 @@ test('a Rust-edit candidate trap leaves the committed world driveable and skips 
   expect(f.order.includes('old destroy') || f.order.includes('old unload') || f.order.includes('replace')).toBe(false);
 });
 
-// In a real browser with no WebGPU, `install` is how the page's install data answers.
+// LLP 1139.003 D1 in a real browser with no WebGPU: `install` is how the page's install data answers.
 async function noWebGPU(install, run) {
   const {cdpBrowser} = await import('../../../scripts/agent-launch.mjs');
   const web = resolve(import.meta.dir,'..');

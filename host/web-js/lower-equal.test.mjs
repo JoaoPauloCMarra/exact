@@ -1,4 +1,4 @@
-// Lowering (host/web-js/src/lower.rs, lower.js): a lowered node's computed
+// B5 (LLP 1071.001 part B; host/web-js/src/lower.rs, lower.js; theme2 07:30 and 07:33): a lowered node's computed
 // style is the inline build's, property by property, at every arm. Each page is built twice, the second with
 // EXACT_JS_NO_LOWER (the test-only comparison build: no flag, nothing in build.mjs's usage), and driven alike.
 //   - b5-edges (conformance/b5-edges.contract): every lowered kind and every refusal, through every arm, at rest
@@ -160,7 +160,7 @@ test('b5-edges: every lowered node and every refusal computes as inline, at ever
       await Promise.all([low, inline].map(p => p.evaluate(() => document.activeElement?.blur())));
     }
     expect(checks).toBe(13);
-    // A rule a site an arm, never an instance (the feed's seven runs share one site).
+    // Condition (8) and x2-perf4's ask: a rule a site an arm, never an instance (the feed's seven runs share one site).
     const rules = await low.evaluate(() => window.__armRules);
     const names = rules.map(r => /\.(xa[\w-]+)/.exec(r)[1]);
     expect(new Set(names).size).toBe(names.length);

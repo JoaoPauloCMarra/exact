@@ -298,7 +298,7 @@ impl Geometry {
         }
     }
 
-    /// `rangeFrame`'s boxes, field-local, as Chrome's
+    /// `rangeFrame`'s boxes (LLP 1114.007), field-local, as Chrome's
     /// `Range.getClientRects()` gives them for a textarea: each a text box,
     /// its glyphs across and its font's content area down. Collapsed, the
     /// caret's at width 0, upstream at a wrap (the line it ends); wider,

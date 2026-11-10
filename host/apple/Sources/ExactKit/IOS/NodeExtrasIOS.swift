@@ -1,5 +1,5 @@
-// The fields a node's view rarely sets, apart from the view (a list's
-// memory is its rows'). Every accessor reads and writes as the
+// The fields a node's view rarely sets, apart from the view (LLP 1010 §6:
+// a list's memory is its rows'). Every accessor reads and writes as the
 // stored property it replaces did.
 #if os(iOS) || os(tvOS)
 import UIKit
@@ -63,16 +63,16 @@ final class NodeAside {
 
 /// A box's gradient and shadows, apart from `NodeExtras`: most nodes that
 /// have one need none of its other fields, and an extras object is 1.5 KB
-/// (in one app's launch 43 of its 47 extras held only these).
+/// (euxy's launch: 43 of its 47 extras held only these).
 final class NodePaintExtras {
     var boxFill: CALayer?
-    /// A `background-image` gradient Core Animation paints.
+    /// A `background-image` gradient Core Animation paints (LLP 1066).
     var boxGradient: CAGradientLayer?
     /// What a fixed gradient was last aimed with (`reaimFixedGradient`).
     var aimedGradient: AimedGradient?
     /// `box-shadow` and the clip it casts outside (`BoxShadow.swift`).
     var shadowCaster: ShadowCaster?
-    /// Inset `box-shadow`s.
+    /// Inset `box-shadow`s (LLP 1077 D4).
     var insetCaster: InsetShadowCaster?
 }
 
@@ -88,12 +88,12 @@ final class NodeExtras {
     var clipPath: CGPath?
     var clipRule: CGPathFillRule = .winding
     var clipBox: PlainView?
-    /// The box layout moved it from.
+    /// The box layout moved it from (LLP 1063).
     var layoutOffset: CGPoint = .zero
-    /// How far its scroller's scroll moves a sticky box (`Sticky.swift`).
+    /// How far its scroller's scroll moves a sticky box (LLP 1083, `Sticky.swift`).
     var stickyOffset: CGPoint = .zero
     var keyboardLift: CGFloat = 0
-    /// How far its surface's size stands from the laid-out size.
+    /// How far its surface's size stands from the laid-out size (LLP 1063).
     var layoutResize: CGSize = .zero
     /// Its surface at a layout transition's size (`Surface.swift`).
     var surface: SurfaceLayer?
@@ -176,7 +176,7 @@ final class NodeExtras {
     var pendingScrollLeft: Double?
     var pendingScrollTop: Double?
     var pendingScrollTransfer = false
-    /// A collapsing title's scroller: its expanded
+    /// A collapsing title's scroller (LLP 1075.003 Stage 3): its expanded
     /// title's inset, where `scrollTop` 0 rests; 0 for every other scroller.
     var controlRide: CGFloat = 0
     var scrollOrigin: CGFloat = 0
@@ -188,19 +188,19 @@ final class NodeExtras {
     /// Content room implemented as native insets, not a smaller CSS viewport.
     var nativeScrollContentInsets = UIEdgeInsets.zero
     /// The status bar's and the home indicator's bands its scroll view
-    /// reaches into past its box, inset by as much.
+    /// reaches into past its box, inset by as much (LLP 1130 D3).
     var pageBand = UIEdgeInsets.zero
-    /// The part of the band its scroll view's `contentInset` holds.
+    /// The part of the band its scroll view's `contentInset` holds (LLP 1131 D2).
     var bandInset = UIEdgeInsets.zero
     /// The bottom inset a keyboard toolbar gives its scroll view (`KeyboardToolbarIOS.swift`).
     var keyboardInset: CGFloat = 0
-    /// A control bar over a scroller's content: the scroller's paint rank, which it is placed
+    /// A control bar over a scroller's content (LLP 1131 D3, D4): the scroller's paint rank, which it is placed
     /// above, and UIKit's edge effect.
     var bandOver: Int64?
     var edgeInteraction: AnyObject?
     var scrollWritten: String?
     /// A hatched node whose hatch undoes its own additions: its row may be
-    /// reused.
+    /// reused (LLP 1075.003.000.000 §8).
     var hatchReusable = false
     var readingAnchors: [(node: NodeView, y: CGFloat)] = []
     weak var activeReadingAnchor: NodeView?
@@ -235,7 +235,7 @@ extension NodeView {
         let made = NodeAside(); aside = made
         return made
     }
-    /// `translate`: its lengths, and its percentages of the box.
+    /// `translate`: its lengths, and its percentages of the box (chess diary #4).
     var translatePx: CGPoint { get { aside?.translatePx ?? .zero } set { if newValue != .zero || aside != nil { asideMade.translatePx = newValue } } }
     var translatePercent: CGPoint { get { aside?.translatePercent ?? .zero } set { if newValue != .zero || aside != nil { asideMade.translatePercent = newValue } } }
     package var scale: CGFloat { get { aside?.scale ?? 1 } set { if newValue != 1 || aside != nil { asideMade.scale = newValue } } }
@@ -320,9 +320,9 @@ extension NodeView {
             if newValue.isIdentity { presenter?.contextNodes.remove(id) } else { presenter?.contextNodes.insert(id) }
         }
     }
-    /// While it flies as a shared element: where its image is drawn.
+    /// While it flies as a shared element (LLP 1013.000 D4): where its image is drawn.
     var flightLook: FlightLook? { get { extras?.flightLook } set { if newValue != nil || extras != nil { more.flightLook = newValue } } }
-    /// Fragments or columns.
+    /// LLP 1093 D7: fragments or columns.
     var columnRecord: ColumnRecord? { get { extras?.columnRecord } set { if newValue != nil || extras != nil { more.columnRecord = newValue } } }
     var liveText: String? { get { extras?.liveText } set { if newValue != nil || extras != nil { more.liveText = newValue } } }
     var swipeOrigin: Double { get { extras?.swipeOrigin ?? 0 } set { if newValue != 0 || extras != nil { more.swipeOrigin = newValue } } }
@@ -443,7 +443,7 @@ extension NodeView {
     }
     /// The least content height UIKit takes: the box, or for a scroller
     /// UIKit insets, the port between the insets the kernel lays its content
-    /// out in, so a page shorter than that port does not
+    /// out in (LLP 1116.000 D1.2), so a page shorter than that port does not
     /// scroll by the bar and the home indicator, as a table view's does not.
     /// A keyboard toolbar's inset leaves the port too: a short transcript
     /// rises only by what the keyboard would cover of its rows, as a
@@ -455,10 +455,10 @@ extension NodeView {
     }
 }
 extension UIColor {
-    /// What an unset background is, the platform's —
+    /// LLP 1115 D2: what an unset background is, the platform's —
     /// `systemBackground` (tvOS has none; white stands in) — or the theme's
-    /// where it replaces the page's ground.
-    /// `view`'s presenter's theme.
+    /// where it replaces the page's ground (LLP 1095 D4).
+    /// `view`'s presenter's theme (LLP 1121 stage 5).
     package static func platformBackground(in view: UIView?) -> UIColor {
         #if os(tvOS)
         return ThemeRoles.color("background", in: view) ?? ThemeRoles.color("Canvas", in: view, or: .white)
@@ -469,10 +469,10 @@ extension UIColor {
 }
 extension NodeView {
     /// Whether this is a modal route on the system background the compiler
-    /// gave it, its author having said none: on iOS that
+    /// gave it (LLP 1116.009 D3), its author having said none: on iOS that
     /// ground is its sheet's surface, which the presentation paints
     /// (`ModalController.paintSurface`), so that below its large detent the
-    /// sheet is UIKit's glass.
+    /// sheet is UIKit's glass (LLP 1141.001 D3).
     var groundIsSheets: Bool {
         #if os(iOS)
         guard props["navigationPresentation"] == "modal", !wrote("background_color"),
@@ -482,7 +482,7 @@ extension NodeView {
         return false
         #endif
     }
-    /// Whether the author wrote the row `key` on this node,
+    /// LLP 1115.000 D2: whether the author wrote the row `key` on this node,
     /// as an attribute or a row of its class. The style says so row by row
     /// (`written`); it is false of a value the node only inherits and of a
     /// row the compiler implied (a sheet's, a heading's, a tag's own).
@@ -490,12 +490,13 @@ extension NodeView {
         guard case .array(let rows)? = style["written"] else { return false }
         return rows.contains(.string(key))
     }
-    /// What the author writes wins: the colour row `key` when
+    /// LLP 1115 §2, "what the author writes wins": the colour row `key` when
     /// its author wrote it on this node, a platform colour and one equal to
-    /// its parent's included. Nil leaves the control the platform's.
+    /// its parent's included. Nil leaves the control the platform's (D4).
     func ownColor(_ key: String) -> BatchValue? { wrote(key) ? style[key] : nil }
     /// A field's text: its own `color`, else the design's `FieldText`, else
-    /// the platform's; an inherited colour never tints a field.
+    /// the platform's; an inherited colour never tints a field (LLP 1115 D4,
+    /// LLP 1121 D9).
     /// A field of the author's own (`appearance="none"`) is their box, and
     /// inherits as text does.
     var fieldInk: UIColor {

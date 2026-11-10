@@ -13,9 +13,9 @@ const GRANTS = {version:1,entries:[[1,'net.fetch https://api.castle.test',['fetc
 
 // An answer's storage operation queued behind another answer's parks; when
 // that answer delivers its own (after its fetch came back), the parked one's
-// operation is in flight and it is asked again (prelude.js `settle`). Were
-// only a background delivery to ask parked answers again, the Bluesky
-// clone's device settings would never answer on the web.
+// operation is in flight and it is asked again (prelude.js `settle`, LLP 1097
+// D3). Before, only a background delivery asked parked answers again, and the
+// Bluesky clone's device settings never answered on the web.
 test('a parked answer is asked again after another answer delivers its storage', async () => {
   const dir = mkdtempSync(resolve(tmpdir(), 'exact-module-storage-'));
   const saved = Object.fromEntries(['fetch', 'document', 'location'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
@@ -259,7 +259,7 @@ for (const placement of ['main', 'worker']) {
   });
 }
 
-// `scheduler.yield()`: the realm resolves an answer's
+// `scheduler.yield()` (LLP 1141.001 D10): the realm resolves an answer's
 // yields in a task of their own, and the answer goes on to its value.
 for (const placement of ['main', 'worker']) test(`${placement}: an answer that yields goes on to its value`, async () => {
   const realm = await moduleRealm(`return (async () => { let n = 0; for (let i = 0; i < 5; i++) { await scheduler.yield(); n++; } return 'yielded ' + n; })();`, { placement });
@@ -268,7 +268,7 @@ for (const placement of ['main', 'worker']) test(`${placement}: an answer that y
   } finally { realm.done(); }
 });
 
-// The prelude asks at load whether the host has a local listener, outside any answer: the page's
+// The prelude asks at load whether the host has a local listener (LLP 1133.005), outside any answer: the page's
 // realm answers that ask, no (''), the one call newly let through; what it refused outside an answer it still
 // refuses (a journal line, 13, and the clock, 21, were already answered there).
 test('outside an answer the realm newly answers only the load-time listen ask', async () => {
@@ -318,7 +318,7 @@ for (const placement of ['main', 'worker']) {
   }, 20000);
 }
 
-// A getter on `exact.overlay` runs inside the overlay's guard (prelude.js `__exact_overlay`): on the
+// A getter on `exact.overlay` runs inside the overlay's guard (prelude.js `__exact_overlay`, LLP 1054): on the
 // page realm an answer's call stays current between its tasks, so before the first read moved under the guard a
 // getter could `store.set` through a store it kept into that outstanding answer. Both reads refuse it now.
 test('a writing getter on exact.overlay is refused on both of the overlay\'s reads (main)', async () => {

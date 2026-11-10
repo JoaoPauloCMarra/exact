@@ -1,4 +1,5 @@
 // Immutable paragraph inputs and worker-confined CoreText paint, shared by Apple hosts.
+// @ref LLP 1044.000 §5 items 2, 4, 7
 import Foundation
 import CoreText
 import IOSurface
@@ -56,7 +57,7 @@ struct TextRasterImage {
     /// it, within a band's clip. `frame` is the same unless the job crops.
     let covered: CGRect
     /// The ink's peak: 0 for ordinary SDR, 1 for extended SDR storage,
-    /// above 1 for HDR.
+    /// above 1 for HDR (LLP 1100 D8).
     var headroom: Float = 0
     /// An HDR `text-shadow` alone, the same size, for a layer under the ink's.
     #if os(iOS) || os(tvOS)
@@ -235,7 +236,7 @@ struct TextRasterJob {
             pixels: CGSize(width: right - left, height: bottom - top))
     }
     /// How far past the box a run's own `text-shadow` may reach in these
-    /// pixels: its offset plus 1.5× its blur, per side. Past
+    /// pixels (LLP 1077 D3): its offset plus 1.5× its blur, per side. Past
     /// it the shadow is cut, so a huge value cannot size an absurd bitmap:
     /// a 390 × 70 paragraph at 3× is at most 1414 × 1094 points, 56 MB,
     /// and a shadow cast 512 points to one side about 2 MB.
@@ -243,7 +244,7 @@ struct TextRasterJob {
     private static let srgb = CGColorSpace(name: CGColorSpace.sRGB)!
     private static let p3 = CGColorSpace(name: CGColorSpace.displayP3)!
     private static let extended = CGColorSpace(name: CGColorSpace.extendedSRGB)!
-    /// The bitmap's space and its colours' peak: extended
+    /// The bitmap's space and its colours' peak (LLP 1100 D2, D8): extended
     /// sRGB (at half float) for a colour past SDR white, Display P3 for a
     /// wide one, else sRGB.
     private func format(_ runs: [CTRun]) -> (space: CGColorSpace, headroom: Float, deep: Bool) {
@@ -275,8 +276,8 @@ struct TextRasterJob {
     }
 
     /// A tall paragraph's band around `port`: 32 points past the box each
-    /// side, and as far as the shadows in its pixels reach sideways (at
-    /// most `maxShadowReach`), as tall as `maximumBytes` allows.
+    /// side, and as far as the shadows in its pixels reach sideways (LLP
+    /// 1077 D3, at most `maxShadowReach`), as tall as `maximumBytes` allows.
     /// `down`: the port travels that way (true, toward the paragraph's end),
     /// so three quarters of the room is ahead of it; nil centres it.
     static func band(_ spec: Spec, width: CGFloat, port: CGRect, scale: CGFloat, maximumBytes: CGFloat, down: Bool? = nil) -> CGRect {
@@ -351,7 +352,7 @@ struct TextRasterJob {
             if !ink.isNull, !ink.isEmpty {
                 let glyphs = CGRect(x: position.x + ink.minX, y: position.y - ink.maxY, width: ink.width, height: ink.height)
                 painted = painted.union(glyphs.insetBy(dx: -1 / scale, dy: -1 / scale))
-                // Runs' own shadows are in these pixels.
+                // Runs' own shadows are in these pixels (LLP 1077 D3).
                 var shadows = TextRunShadow.reach(line, ink: glyphs)
                 if let s = shadow {
                     let spread = s.blur * 1.5 + 1

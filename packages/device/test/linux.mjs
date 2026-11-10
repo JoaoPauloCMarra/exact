@@ -1,4 +1,4 @@
-// @exact/device on the Linux host, and the
+// @exact/device on the Linux host (LLP 1133.031 §12 stage 4), and the
 // Windows implementation's compile:
 //
 // - The readers over recorded answers (`linux/readers.rs`, run by
@@ -13,8 +13,8 @@
 //   `unknown`; on Linux, this machine's values, checked by range. Under the
 //   agent unbound the declaration answers.
 // - With `--cross`, the package's Rust checked for the targets this Mac
-//   cannot run, with Zig as the C compiler, as docs/reference.md's cross
-//   checks of the Linux apps and Windows Desk do: two crates added to the fixture,
+//   cannot run, with Zig as the C compiler, as the async lane's tier 2
+//   checks the Linux apps and Windows Desk: two crates added to the fixture,
 //   each the fixture's plan and the build's composition of the package with
 //   no data module, one over `exact_linux::run_composed` for
 //   `x86_64-unknown-linux-gnu` (compiling `system.rs`), and one over

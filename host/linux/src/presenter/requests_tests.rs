@@ -1,4 +1,4 @@
-//! The channel out: what a commit asks of the platform is
+//! The channel out (LLP 1115.001 D5): what a commit asks of the platform is
 //! queued for the shell, taken once and answered by its id; a host with no
 //! shell keeps what it did.
 use super::*;

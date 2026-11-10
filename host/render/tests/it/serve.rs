@@ -1,4 +1,4 @@
-//! The server over a small dist: each route's
+//! The server (LLP 1048.000 D10, D11) over a small dist: each route's
 //! policy, the statuses and headers of the HTTP contract, its files, and a
 //! full queue.
 
@@ -290,7 +290,7 @@ fn each_route_answers_by_its_policy() {
         csp.contains("connect-src 'self' https://api.blog.test;"),
         "{csp}"
     );
-    // Beside it, every device the app does not grant is denied.
+    // Beside it, every device the app does not grant is denied (LLP 1069.008 D6).
     assert_eq!(
         header(&headers, "permissions-policy"),
         Some("microphone=(), camera=(), geolocation=(), midi=(), accelerometer=(), gyroscope=(), magnetometer=(), serial=(), hid=(), usb=()")
@@ -1271,7 +1271,7 @@ pub(super) fn unchunk(mut body: &[u8]) -> Vec<u8> {
 
 #[test]
 fn a_navigation_gets_the_head_before_the_render_and_the_rest_after() {
-    // The early flush (host/render/src/stream.rs).
+    // @ref LLP 1071 D6 — the early flush (host/render/src/stream.rs).
     super::warm_transport();
     let dir = dist("flush");
     std::fs::write(dir.join("shell.html"), JS_SHELL).unwrap();
@@ -1319,7 +1319,8 @@ fn a_navigation_gets_the_head_before_the_render_and_the_rest_after() {
     assert!(started.elapsed() >= Duration::from_millis(1400));
     let text = String::from_utf8_lossy(&bytes).into_owned();
     // A chunked 200, with no 103: this plan's undeclared routes may wait for
-    // the reader, so nothing names the runtime before the render decides.
+    // the reader, so nothing names the runtime before the render decides
+    // (LLP 1048.007 D1).
     assert!(text.starts_with("HTTP/1.1 200 OK\r\n"), "{text}");
     let rest = &bytes[..];
     let at = rest.windows(4).position(|w| w == b"\r\n\r\n").unwrap();
@@ -1344,7 +1345,8 @@ fn a_navigation_gets_the_head_before_the_render_and_the_rest_after() {
     assert!(page.contains("data-activate=\"eager\""), "{page}");
     // The rest: at the deadline, the document with what is pending, which
     // the runtime asks again once it adopts the page. Its language is the
-    // shell's, the manifest's: this plan has no strings table to name one.
+    // shell's, the manifest's: this plan has no strings table to name one
+    // (LLP 1115.000 D4.6).
     assert!(
         page.starts_with("<!doctype html>\n<html lang=\"en\" dir=\"ltr\">"),
         "{page}"

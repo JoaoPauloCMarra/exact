@@ -164,7 +164,7 @@ pub(crate) fn check_uses(
 
 /// `actions: false` checks only data arguments: an action argument (or a
 /// provider's value) is refused where the child invokes it, which is what
-/// its correction hints are built to follow.
+/// its correction hints are built to follow (LLP 1006 §3).
 fn walk_uses(
     nodes: &[Node],
     scope: &Scope,

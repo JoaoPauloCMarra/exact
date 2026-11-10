@@ -1,8 +1,8 @@
-//! Icon tokens at build: each icon's SVG read as one shape under its viewBox, a
-//! source per target the app ships, a literal `symbol:icon.…` written as the
-//! source form hosts read, the plan's `icons` table for a computed source, and
-//! `symbol:sf/…` naming the role whose Apple name it is or the icon whose `sf`
-//! it is.
+//! @ref LLP 1121 D10 (stage 6 F) — icon tokens at build: each icon's SVG read
+//! as one shape under its viewBox, a source per target the app ships, a
+//! literal `symbol:icon.…` written as the source form hosts read, the
+//! plan's `icons` table for a computed source, and `symbol:sf/…` naming the
+//! role whose Apple name it is or the icon whose `sf` it is.
 
 use std::path::PathBuf;
 
@@ -110,7 +110,7 @@ fn a_shipped_target_without_a_source_is_refused() {
         e.message.contains("linux") && e.message.contains("more than one colour"),
         "{e:?}"
     );
-    // Apple draws a template's path too: an SVG alone is a
+    // Apple draws a template's path too (stage 9 A): an SVG alone is a
     // source there; a file of more than one colour needs an SF Symbol.
     let svg_only = "  icon.svg = icon(svg \"icons/reply.svg\")\n";
     let path = app("apple", "\"ios\": {}", svg_only, &view("symbol:icon.svg"));
@@ -227,7 +227,7 @@ fn a_computed_source_keeps_every_icon_and_the_runner_resolves_it() {
     );
 }
 
-/// A native button takes an icon token; a template that
+/// Review round 1: a native button takes an icon token; a template that
 /// starts with other text keeps no icon; `deploy.binaries` ships a target;
 /// the source graph names each icon's SVG, so a watcher rebuilds on its edit.
 #[test]
@@ -277,7 +277,7 @@ fn a_button_a_url_template_binaries_and_the_graph() {
     assert!(e.message.contains("no source for linux"), "{e:?}");
 }
 
-/// An app's target crate (`web/`, `linux/`, `android/`) is
+/// theme2's ruling: an app's target crate (`web/`, `linux/`, `android/`) is
 /// a target it ships.
 #[test]
 fn a_target_crate_is_a_shipped_target() {
@@ -408,7 +408,7 @@ fn later_platform_symbols_are_a_line_each_outside_the_cap() {
     assert_eq!(advice.map(|w| w.span.line), Some(line), "{warnings:?}");
 }
 
-/// A nested template of literals folds too, and a template
+/// Review round 1: a nested template of literals folds too, and a template
 /// of literals is linted as its literal.
 #[test]
 fn a_nested_literal_template_folds_and_lints() {
@@ -432,7 +432,8 @@ fn a_nested_literal_template_folds_and_lints() {
     );
 }
 
-/// A refused icon's uses say nothing more: its own error is the one.
+/// A refused icon's uses say nothing more: its own error is the one
+/// (x2-perf4's stage 6 gate).
 #[test]
 fn a_refused_icons_uses_are_not_refused_again() {
     let design = "  icon.gone = icon(sf \"star\", svg \"icons/gone.svg\")\n";
@@ -445,7 +446,7 @@ fn a_refused_icons_uses_are_not_refused_again() {
     assert_eq!(ids, ["tamber-icon-svg"], "{errors:?}");
 }
 
-/// A grouped row led by an svg-only icon is a standard cell
+/// Stage 9 A2: a grouped row led by an svg-only icon is a standard cell
 /// whose symbol is "" and whose icon is its token form, which Apple draws
 /// as the cell's template image; an `sf` icon's row names its symbol and
 /// carries no icon.
@@ -497,7 +498,7 @@ fn a_grouped_row_carries_an_svg_only_icon() {
 
 /// A design icon naming another builds in an app with params, an icon
 /// param's default naming the alias too (beside `tamber_cli`'s test of an
-/// app without params).
+/// app without params, theme2 22:12).
 #[test]
 fn an_icon_alias_builds_beside_params() {
     let design =
@@ -676,10 +677,10 @@ fn the_tamber_verbs_read_icon_svgs_under_the_apps_assets() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
-/// An SVG whose paths fill even-odd is a template; its plan row
+/// Stage 14 C2: an SVG whose paths fill even-odd is a template; its plan row
 /// and its literal source form carry `evenodd:` before the path (the kernel
-/// reads it back as the icon's rule); a nonzero icon's row and form carry
-/// no marker; an SVG that mixes rules on Linux's and the web's targets is
+/// reads it back as the icon's rule); a nonzero icon's row and form are as
+/// before; an SVG that mixes rules on Linux's and the web's targets is
 /// refused naming its paths.
 #[test]
 fn an_even_odd_icon_carries_its_rule_in_the_row_and_the_form() {
@@ -742,7 +743,7 @@ fn an_even_odd_icon_carries_its_rule_in_the_row_and_the_form() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
-/// An Illustrator-style export (a `<style>`
+/// Stage 14 C2 round 2 (theme2): an Illustrator-style export (a `<style>`
 /// block of class rules) is no template, refused where a template is
 /// needed with the fix named; an app that ships only the web draws it as
 /// the file, unaffected.

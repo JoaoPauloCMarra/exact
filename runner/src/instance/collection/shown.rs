@@ -1,4 +1,4 @@
-//! Which mounted rows have shown in the list's port, and
+//! Which mounted rows have shown in the list's port (LLP 1055 D13), and
 //! which a glimpse builds of those that show.
 //!
 //! A list mounts rows ahead of its port, so an animation that starts when
@@ -141,8 +141,8 @@ impl Collection {
     }
 }
 
-/// Whether this scope is a virtualized list's row: an inner list's,
-/// whose first rows are bounded by its own literal size.
+/// Whether this scope is a virtualized list's row: an inner list's (LLP
+/// 1070), whose first rows are bounded by its own literal size.
 pub(super) fn in_collection_row(plan: &Plan, frames: &[Frame]) -> bool {
     frames.iter().filter_map(|f| f.region).any(|region| {
         let region = plan.region(RegionsId(region));

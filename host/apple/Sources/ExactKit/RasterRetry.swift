@@ -1,7 +1,7 @@
 import Foundation
 
 /// When a picture on screen whose download failed in a way asking again may
-/// mend is asked for again, and what counts as one: the same
+/// mend is asked for again, and what counts as one (LLP 1011 §4): the same
 /// rules as the Linux, Android and Windows host's (`host/linux/src/image.rs`,
 /// `image/remote.rs`).
 enum RasterRetry {

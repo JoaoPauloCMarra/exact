@@ -1,4 +1,4 @@
-//! DTCG export: a design as DTCG Format 2025.10
+//! DTCG export (LLP 1121 D14, stage 5): a design as DTCG Format 2025.10
 //! with the Resolver Module 2025.10, and the round trip of that export.
 //!
 //! The document has one modifier, `mode`, whose contexts are the design's
@@ -149,7 +149,7 @@ fn side(
     }
 }
 
-/// A colour's side as 2025.10's object, for a shadow's colour.
+/// A colour's side as 2025.10's object, for a shadow's colour (stage 6 G).
 pub(crate) fn colour_side(value: &Folded, dark: bool, vocab: &Vocab) -> Option<Value> {
     side(value, dark, vocab).map(|(h, _)| colour_json(h).0)
 }
@@ -284,7 +284,7 @@ pub fn dtcg(f: &Folding, vocab: &Vocab) -> Result<String, Vec<Diagnostic>> {
         let mut tree = Map::new();
         let mut count = 0;
         for (checked, t) in f.tokens.iter().zip(&f.design.tokens) {
-            // Every other kind as its DTCG type.
+            // Every other kind as its DTCG type (stage 6 G).
             if checked.kind != crate::Kind::Color {
                 let Some(w) = checked
                     .values
@@ -421,7 +421,7 @@ pub fn dtcg(f: &Folding, vocab: &Vocab) -> Result<String, Vec<Diagnostic>> {
         })).collect::<Vec<_>>(),
     });
     let description = format!(
-        "The Tamber design `{}`: one modifier, `mode`, whose contexts are the design's full tuples, each a complete set. Conversions: {}.",
+        "The Tamber design `{}` (LLP 1121 D14): one modifier, `mode`, whose contexts are the design's full tuples, each a complete set. Conversions: {}.",
         f.design.name,
         CONVERSIONS.join("; ")
     );
@@ -546,7 +546,7 @@ fn baseline_for(incoming: &Value, kept: &[String], fresh: &str) -> Result<String
 /// (one of `kept`, newest first; or a fresh export of `current`, the design
 /// as it is). A token whose `$value` is unchanged in every context proposes
 /// nothing, its source kept. A changed one edits the line that wins for the
-/// changed tuples (its target branch), or, where that line's other tuples
+/// changed tuples (D6's target branch), or, where that line's other tuples
 /// did not change, adds the narrowest `when` that tells the changed ones
 /// apart; a side the file did not change keeps the design's. The operations
 /// are applied and folded as the design would take them, and a tuple they
@@ -564,7 +564,7 @@ pub fn reimport(
 }
 
 /// [`reimport`] against `explicit`, the export a client says it pulled
-/// (its `baseline`), when given: that one only, never another kept
+/// (stage 10b's `baseline`), when given: that one only, never another kept
 /// one or the design's own, and only while its axes and contexts are the
 /// design's (an export from before an axis moved is pulled again).
 pub fn reimport_against(
@@ -734,7 +734,7 @@ fn reimport_within(
     }
     let mut accepted: Vec<(String, Vec<Op>)> = Vec::new();
     // Tokens whose every changed context is on a line that is one colour dial
-    // alone, moved to one literal: the dial's change.
+    // alone, moved to one literal: the dial's change (D14; stage 10b).
     let mut dialed: Vec<crate::export_dials::Candidate> = Vec::new();
     // Each token's plan, or what the whole proposal's folding (`taken`)
     // makes of its lines (option B, `export_batch`).
@@ -791,7 +791,7 @@ fn reimport_within(
         };
         let (now, decl) = (&cur.tokens[index], &cur.design.tokens[index]);
         let written = decl.name.value.clone();
-        // Every other kind: one value a tuple, whatever the scheme.
+        // Every other kind: one value a tuple, whatever the scheme (stage 6 G).
         if now.kind != crate::Kind::Color {
             let baseline = |context: &str| {
                 our.get(context)
@@ -932,7 +932,7 @@ fn reimport_within(
                 break;
             }
         }
-        // The target branch: each context's side comes from the line that
+        // D6's target branch: each context's side comes from the line that
         // wins for its tuple (`explain`), the default or a `when`. A branch
         // whose contexts on a side all changed, to one value, takes it there,
         // its other side kept. One some of whose contexts did not change
@@ -1233,9 +1233,10 @@ fn reimport_within(
         });
     let alone: std::collections::HashSet<usize> = alone.into_iter().collect();
     // Each candidate's place: its index, and where its own report would go
-    // among the others (a report that leaves it out of its dial's change).
+    // among the others (a report that leaves it out of its dial's change, as
+    // it was said before the dial was decided first).
     // (by the candidate's token, as the design spells it, which `dials` asks
-    // by: an export's name can differ, a role override's)
+    // by: an export's name can differ, a role override's, Astra's check)
     let mut place: HashMap<String, (usize, usize, String)> = HashMap::new();
     for (i, (name, p)) in names.iter().zip(&planned).enumerate() {
         match p {
@@ -1266,9 +1267,9 @@ fn reimport_within(
         return Err(refuse(why));
     }
     // A changed value whose line is one dial alone is that dial's change
-    // first in the transaction: decided on the candidates' values alone,
-    // each candidate's literal settled (one check, charged) only if its dial
-    // falls back.
+    // (D14; stage 10b), first in the transaction: decided on the candidates'
+    // values alone, each candidate's literal settled (one check, charged)
+    // only if its dial falls back (theme2's ruling on the counts' round 2).
     let mut literal = |token: &str| {
         use crate::export_dials::Fallback;
         let i = place[token].0;

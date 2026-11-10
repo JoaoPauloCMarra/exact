@@ -3,7 +3,7 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// A header's readout (`role="status"`) over hand-built
+/// A header's readout (`role="status"`, LLP 1075.003 §9.15) over hand-built
 /// routes: what counts as one, what its face holds, and what its bar item's
 /// view does with direction, `aria-hidden` and the text size. The native
 /// fixture's readout, pushed and pressed, is NavigationBasicsIOSTests'.
@@ -75,7 +75,7 @@ final class BarReadoutIOSTests: XCTestCase {
     }
 
     /// A disabled button is UIKit's disabled bar item, shown dimmed, though
-    /// nothing presses it (a "● Clock" readout written as one); one
+    /// nothing presses it (the euxy port's "● Clock" written as one); one
     /// neither pressed nor disabled is still the page's.
     func testADisabledButtonIsADisabledItemThoughNothingPressesIt() throws {
         let button = { (id: Int, props: [String: String]) -> [String: Any] in

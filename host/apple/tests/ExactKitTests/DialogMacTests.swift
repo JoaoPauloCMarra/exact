@@ -6,7 +6,7 @@ import XCTest
 /// A `dialog` on the Mac, in both of its presentations: this class paints it
 /// in the page over its backdrop, the driver's own chrome (`--chrome agent`);
 /// `DialogSheetMacTests` runs every case again with it in AppKit's sheet, what
-/// a person gets. A case says so where the two differ.
+/// a person gets (LLP 1115.002 D7.2). A case says so where the two differ.
 class DialogMacTests: XCTestCase {
     private var window: NSWindow!
     private weak var presenter: Presenter?
@@ -15,7 +15,7 @@ class DialogMacTests: XCTestCase {
     /// The window the keyboard is in: the open dialog's sheet, else the page's.
     private var front: NSWindow { presenter?.dialogs.active?.window ?? window }
     override func tearDown() { presenter?.dialogs.reset(); window?.close(); window = nil }
-    /// These cases walk a dialog's Tab through its buttons: Keyboard Navigation on.
+    /// These cases walk a dialog's Tab through its buttons: Keyboard Navigation on (LLP 1115.000 D7.2).
     override func setUp() { super.setUp(); keyboardNavigation(true) }
 
     private func fixture(session: ExactSession? = nil) -> Presenter {
@@ -183,7 +183,7 @@ class DialogMacTests: XCTestCase {
         XCTAssertEqual(heard, ["4 Escape", "4 Tab", "4 Tab", "4 Escape"])
         XCTAssertNil(p.dialogs.active, "an unprevented Escape closes it")
     }
-    /// `stopPropagation()`: a field's handler that calls it
+    /// `stopPropagation()` (files diary F8): a field's handler that calls it
     /// is the last to hear the key, and the key's default still happens.
     func testAStoppedKeyReachesNoAncestorAndKeepsItsDefault() throws {
         let p = fixture()
@@ -862,7 +862,7 @@ class DialogMacTests: XCTestCase {
         background.performClick(nil)
         XCTAssertEqual(pressed, [8], "native activation resumes after the modal closes")
     }
-    /// A native row that only closes its dialog is its
+    /// A native row that only closes its dialog (LLP 1069.011.000 D9) is its
     /// own press, as a custom command-only button is: not its ancestor's.
     func testANativeCloseRowClosesItsDialog() throws {
         let p = fixture()
@@ -1234,7 +1234,7 @@ class DialogMacTests: XCTestCase {
 
     /// With nothing focused a bare-key shortcut still presses its button, as
     /// a page's do; a field's `focus` and `blur` arrive when it takes and
-    /// loses the focus, not at its first edit.
+    /// loses the focus, not at its first edit (jukebox F11, F23).
     func testBareShortcutsWithNothingFocusedAndFieldFocusEvents() throws {
         _ = NSApplication.shared
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

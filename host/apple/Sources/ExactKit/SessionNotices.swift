@@ -1,5 +1,6 @@
 // System notices (the app became active, a window moved, a preference
 // changed) told to the runtime without the main thread waiting.
+// @ref LLP 1027.007 P1
 #if canImport(UIKit)
 import UIKit
 #else
@@ -39,9 +40,9 @@ extension ExactSession {
 
     /// What a system notice tells the runtime (the app became active, a
     /// window moved, a preference changed) while the owner activates the data
-    /// source, sent there without main waiting: on a cold
+    /// source, sent there without main waiting (LLP 1027.007 P1): on a cold
     /// launch iOS posts these at first pixel. The batches land in the owner's
-    /// order, before any batch made after them. At any other time a
+    /// order, before any batch made after them (T4). At any other time a
     /// notice is told at once, so it has taken effect when it returns.
     func tellSoon(_ calls: [(Runtime) -> Batch]) {
         guard !runtime.holds("tellSoon(_:)") else { return } // (a notice a restart's reset sets off: held before it is counted or queued, ResetGate)
@@ -63,13 +64,13 @@ extension ExactSession {
         tellSoon([{ $0.setPage(bits) }, { $0.setRootFontSize(font) }, { $0.setDisplayScale(scale) }])
     }
 
-    /// Told after every boot, as the date is, and on each
+    /// @ref LLP 1061 D5 — told after every boot, as the date is, and on each
     /// change: in the same main-thread turn as the boot batch, so the first
     /// frame on screen already reads the user's preferences.
     func tellPreferences() {
         guard booted, state != .destroyed else { return }
         apply(runtime.setPreferences(preferenceBits()))
-        // Increased Contrast changes what every platform colour resolves to; the build channel reports it.
+        // Increased Contrast changes what every platform colour resolves to; the build channel reports it (LLP 1122 D4).
         reportColors(); app.scheduleStatus()
         #if os(macOS)
         controlTextChanged()

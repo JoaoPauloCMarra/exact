@@ -11,7 +11,7 @@ import java.util.concurrent.FutureTask
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * exact2 on a thread of its own (on Android). Every call into the Rust host runs on the `exact` thread, which
+ * exact2 on a thread of its own (LLP 1072, on Android). Every call into the Rust host runs on the `exact` thread, which
  * owns it from boot on: its looper takes the executor's replies and decoded pictures, its Choreographer the turns an
  * animation wants. Each new op stream is copied and published; the main thread only ingests and replays them. A scroll
  * translates the feed's group on the main thread at once (as a compositor scrolls) and reaches exact2 after, so a long
@@ -68,9 +68,9 @@ internal class Owner(private val hwbuf: Boolean, private val fast: Boolean, prio
      * includes, and the feed's group (0 before the first scroll). [scrollers]: what exact2 tells the reader of its
      * scrollers as of this stream ([Native.scrollers]), null when that is what it last told; with no [ops], that
      * statement alone. [fields]: what exact2 tells of the text fields the reader hosts as of this stream
-     * ([Native.fields]), null when that is what it last told. [bars]: what it tells of its bars as
-     * of this stream ([Native.bars]), null likewise. [access]: what it tells of the accessibility tree
-     * ([Native.access]), null likewise, and always while no accessibility service is on. */
+     * ([Native.fields], LLP 1115.001 D8), null when that is what it last told. [bars]: what it tells of its bars as
+     * of this stream ([Native.bars], D11), null likewise. [access]: what it tells of the accessibility tree
+     * ([Native.access], D13), null likewise, and always while no accessibility service is on. */
     class Pub(
         val publication: Long,
         val ops: IntBuffer?, val move: Boolean, val seq: Int, val feed: Int, val scrollers: IntArray?, val fields: IntArray?,
@@ -89,7 +89,7 @@ internal class Owner(private val hwbuf: Boolean, private val fast: Boolean, prio
     /** Pictures the exact thread made for streams it published (copying exact2's pixels into a GPU buffer), so the
      * main thread's ingest only takes them. */
     val made = java.util.concurrent.ConcurrentHashMap<Int, android.graphics.Bitmap>()
-    /** Called on the main thread with what exact2 asks of the platform ([Native.requests]): the
+    /** Called on the main thread with what exact2 asks of the platform ([Native.requests], LLP 1115.001 D5): the
      * view's activity that reads this owner now acts on them ([Requests]). */
     @Volatile var asked: (IntArray) -> Unit = {}
 
@@ -170,8 +170,8 @@ internal class Owner(private val hwbuf: Boolean, private val fast: Boolean, prio
     /** The host's wake descriptors, watched again after each turn ([schedule]): a dev loop's plan brings new ones. */
     private var wakes: Wakes? = null
 
-    /** Whether an accessibility service is on, and whether the reader holds nothing of the tree yet: the exact thread's
-     * own. exact2 is asked for the tree with each stream only while one is on. */
+    /** Whether an accessibility service is on, and whether the reader holds nothing of the tree yet (LLP 1115.001
+     * D13): the exact thread's own. exact2 is asked for the tree with each stream only while one is on. */
     private var accessible = false
     private var accessAgain = false
 
@@ -185,7 +185,7 @@ internal class Owner(private val hwbuf: Boolean, private val fast: Boolean, prio
     }
 
     /** Boot at the size the view is expected to have; [done] on the main thread with whether it booted. An activity
-     * made again in this process calls this for its own view: [Native.start] then adopts the host
+     * made again in this process (LLP 1115.001 D15.1) calls this for its own view: [Native.start] then adopts the host
      * that runs on this thread, which paints everything again for the new reader, and starts no second one. */
     fun boot(width: Int, height: Int, scale: Float, dir: String, live: Boolean, done: (Boolean) -> Unit) {
         handler.post {
@@ -241,7 +241,7 @@ internal class Owner(private val hwbuf: Boolean, private val fast: Boolean, prio
      * changed: asked after each stream, so it is drawn with the frame it belongs to. */
     @Volatile var chrome: (IntArray) -> Unit = {}
 
-    /** Whether the activity is started. While it is stopped the host does no frame work: no
+    /** Whether the activity is started. While it is stopped the host does no frame work (LLP 1115.001 D15.2): no
      * turn at a vsync, no timer, no stream. Replies are still drained as they arrive ([Native.poll]), so what they
      * change is in the frame drawn when the activity starts again. */
     private var running = true
@@ -339,7 +339,7 @@ internal class Owner(private val hwbuf: Boolean, private val fast: Boolean, prio
         if (led) { led = false; if (Native.refine(-1, 0f) and 1 != 0) produce() }
     }
 
-    /** A touch: answered within [waitMs] if exact2 is free (as the host's events are synchronous, so the response is
+    /** A touch: answered within [waitMs] if exact2 is free (as LLP 1072's events are synchronous, so the response is
      * in this frame), else published when it is. Whether it was answered. */
     fun touch(action: Int, x: Float, y: Float, tool: Int, waitMs: Long): Boolean = answer(waitMs) {
         Native.touch(action, x, y, tool)
@@ -551,7 +551,7 @@ internal object Exact {
     const val KEY_WAIT_MS = 2L
 
     fun back(): Boolean = owner?.sync { Native.back() } ?: Native.back()
-    /** A URL given to the running app ([Native.open]): on exact2's thread, in order. */
+    /** A URL given to the running app ([Native.open], LLP 1133.023 D15 item 3): on exact2's thread, in order. */
     fun open(href: String) { val o = owner; if (o != null) { o.input(); o.call { Native.open(href) } } else Native.open(href) }
     fun share(request: String) { val o = owner; if (o != null) { o.input(); o.call { Native.share(request) } } else Native.share(request) }
 
@@ -563,7 +563,7 @@ internal object Exact {
         return o.sync { String(Native.agent(line.toByteArray(Charsets.UTF_8)), Charsets.UTF_8) }
     }
 
-    /** What an [ExactTamber] asks ([Native.tamber]): on exact2's thread, waited for, publishing
+    /** What an [ExactTamber] asks ([Native.tamber], LLP 1121 D12): on exact2's thread, waited for, publishing
      * nothing. An error's JSON where no host runs or the library predates the call. */
     fun tamber(request: String): String {
         val f = { try { Native.tamber(request) } catch (e: UnsatisfiedLinkError) { "{\"error\":\"no tamber in this library\"}" } }
@@ -575,7 +575,7 @@ internal object Exact {
      * what that changed. */
     var turned: () -> Unit = {}
 
-    /** What a hosted text field tells exact2 ([Fields]), on exact2's thread and in order. */
+    /** What a hosted text field tells exact2 ([Fields], LLP 1115.001 D8), on exact2's thread and in order. */
     private fun field(f: () -> Unit) {
         val o = owner
         if (o != null) { o.input(); o.call(f) } else { f(); turned() }
@@ -593,8 +593,8 @@ internal object Exact {
     fun fieldAction(id: Int, generation: Int, action: Int) = field { Native.fieldAction(id, generation, action) }
     fun fieldInput(id: Int, generation: Int) = field { Native.fieldInput(id, generation) }
 
-    /** What happened in the window of surface [serial] of the top layer ([Surfaces], [Native.surface]): told on
-     * exact2's thread, in order. exact2 answers with the surface painted again or closed (a request,
+    /** What happened in the window of surface [serial] of the top layer ([Surfaces], [Native.surface], LLP 1115.001
+     * D10): told on exact2's thread, in order. exact2 answers with the surface painted again or closed (a request,
      * [Requests]) and with whatever a chosen row's handler changed in the page (a stream). */
     fun surface(serial: Int, what: Int, x: Float, y: Float) {
         val o = owner
@@ -602,7 +602,7 @@ internal object Exact {
         else { Native.surface(serial, what, x, y); turned() }
     }
 
-    /** What happened in bar [which] ([Bars], [Native.bar]): told on exact2's thread, in order.
+    /** What happened in bar [which] ([Bars], [Native.bar], LLP 1115.001 D11): told on exact2's thread, in order.
      * exact2 answers with the bar painted again (a target lit) and with whatever the press changed in the page. */
     fun bar(which: Int, what: Int, x: Float, y: Float) {
         val o = owner
@@ -610,8 +610,8 @@ internal object Exact {
         else { Native.bar(which, what, x, y); turned() }
     }
 
-    /** What an accessibility service asks of node [id] of the tree exact2 last told ([Access], [Native.accessAct]): on
-     * exact2's thread, and waited for, since the service is answered with whether it was
+    /** What an accessibility service asks of node [id] of the tree exact2 last told ([Access], [Native.accessAct],
+     * LLP 1115.001 D13): on exact2's thread, and waited for, since the service is answered with whether it was
      * done. exact2 then publishes what it changed. */
     fun accessAct(id: Int, action: Int, value: Float): Boolean {
         val o = owner

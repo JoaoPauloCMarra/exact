@@ -1,4 +1,4 @@
-//! `explain` answers an icon (its `describe`
+//! @ref LLP 1121 stage 9 C1 — `explain` answers an icon (its `describe`
 //! entry, with which source each shipped target draws) and a param (where
 //! it is declared, its default as written, and the design's line that sets
 //! the app's value); `describe`'s icon entries say `draws` too.
@@ -9,7 +9,7 @@ use serde_json::json;
 
 const SVG: &str = r#"<svg viewBox="0 -960 960 960"><path d="M760-200v-160H200Z"/></svg>"#;
 
-/// A param's `set` is the line of the design asked
+/// C1 review round 1: a param's `set` is the line of the design asked
 /// about (`file`), not always the app's.
 #[test]
 fn a_params_set_line_is_the_asked_designs() {
@@ -102,7 +102,7 @@ fn explain_answers_a_param_its_declaration_and_the_apps_value() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// An icon naming another is explained as written,
+/// C1 review round 2: an icon naming another is explained as written,
 /// that one its chain; a one-colour shape draws everywhere but Apple, a
 /// shape of several colours on the web alone, a missing file nowhere; a
 /// padded param default keeps its chain.
@@ -138,7 +138,7 @@ fn explain_reads_icons_as_written_and_svgs_as_the_build_does() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// In an app with no params, an icon naming another is
+/// C1 review round 3: in an app with no params, an icon naming another is
 /// read as the build reads it, not refused.
 #[test]
 fn an_icon_alias_reads_in_an_app_without_params() {
@@ -152,7 +152,7 @@ fn an_icon_alias_reads_in_an_app_without_params() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// `uses` of an icon lists the images that draw it, directly
+/// Stage 9 C2: `uses` of an icon lists the images that draw it, directly
 /// or through an icon param; a motion token's literal in a component used
 /// twice is two sites, each its plan node, the literal kept; one in a
 /// component no one uses keeps `site: null`.
@@ -206,7 +206,7 @@ fn uses_lists_an_icons_images_and_a_motion_tokens_instances() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// An icon is read from an image's source only (not a
+/// C2 review round 1: an icon is read from an image's source only (not a
 /// text, an attribute or a comment), a parenthesized source over lines
 /// too; an icon param asked about gives its images; motion sites are
 /// located at their node, an animation's longhands included; a design
@@ -265,7 +265,7 @@ fn uses_reads_sources_not_text() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A motion literal in a condition's arm or a `+`'s
+/// C2 review round 2: a motion literal in a condition's arm or a `+`'s
 /// side, or on a style two nodes take, has its instances (with their call
 /// chains); an image naming it in a `match` arm is a site.
 #[test]
@@ -302,7 +302,7 @@ fn uses_follows_expressions_styles_and_icon_aliases() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A button's text child, which shares its span, is no
+/// C2 after round 3: a button's text child, which shares its span, is no
 /// motion site; an icon param asked about reads its own image directly
 /// (no `via` back to itself).
 #[test]

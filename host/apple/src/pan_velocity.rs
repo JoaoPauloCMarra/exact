@@ -1,11 +1,12 @@
 //! The `pan` contact's release velocity, where the platform measures none.
 //!
+//! @ref LLP 1057 §10.6 (`panrelease`), LLP 1057.001 §3 (one velocity estimator)
 //!
 //! UIKit hands its pan a velocity; AppKit's mouse and the iOS agent's
 //! recognized contact do not. Those feed viewport-space pointer samples here
 //! and read the engine's [`VelocityTracker`] at release — never a Swift
-//! estimator. One tracker per runtime: a session holds one contact,
-//! and a first sample starts it over.
+//! estimator. One tracker per runtime: a session holds one contact (LLP
+//! 1035.003 D1), and a first sample starts it over.
 
 use crate::abi::Bridge;
 use exact_motion::{Value, VelocityTracker};

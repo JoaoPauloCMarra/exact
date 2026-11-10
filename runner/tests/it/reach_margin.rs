@@ -1,5 +1,5 @@
 //! `reach-margin` sets how far ahead of an edge `reachstart` and `reachend`
-//! fire. 200 rows of 32 px in a 320 px port: the last row
+//! fire (@ref LLP 1145 D4). 200 rows of 32 px in a 320 px port: the last row
 //! starts at 6368.
 
 use exact_kernel::Kernel;
@@ -203,7 +203,7 @@ fn an_edge_a_fling_fired_rearms_once_outside_the_band_at_rest() {
     assert_eq!(hits(&r), [2., 0.]);
 }
 
-/// A chat app's fling: `reachstart` fires 960 px out, a message arrives at the
+/// Excord's fling: `reachstart` fires 960 px out, a message arrives at the
 /// end, the reader travels on to 100, and a page of 20 rows (640 px) lands,
 /// which moves the port to 740.
 fn paged(velocity: f64) -> Runner<NoData> {

@@ -1,4 +1,4 @@
-//! A component's anatomy, checked: each part
+//! A component's anatomy, checked (LLP 1139 D2, D6; stage 12 C1): each part
 //! a node of the component's own view, named once and declared; each
 //! group one the table knows; each row a `class` brings to a part's node in
 //! that part's groups, in every branch of a conditional class and every
@@ -6,9 +6,9 @@
 //! its rows (its own and its classes') the control's.
 //!
 //! The checks read [`contract_syntax::anatomy::Anatomy`], the data whatever
-//! its spelling: a change of spelling never reaches them.
+//! its spelling (LLP 1139 §9 Q7): a change of spelling never reaches them.
 //! They run on every component that says anything of parts; which
-//! components must have parts is the library rules'.
+//! components must have parts is the library rules' (C3).
 
 pub(crate) mod library;
 mod platform;
@@ -19,7 +19,7 @@ use contract_syntax::anatomy::{Anatomy, Mark, PartDecl};
 use contract_syntax::{Attr, Component, Expr, File, Node, Span};
 use exact_kernel::StyleId;
 
-/// The row groups a part may take, by name.
+/// The row groups a part may take (LLP 1139 D2's table), by name.
 pub const GROUPS: [&str; 5] = ["paint", "text", "shape", "space", "control"];
 
 /// Whether group `group` holds row `id`; `control`'s rows are the control's
@@ -81,18 +81,18 @@ fn holds(group: &str, id: StyleId) -> bool {
     }
 }
 
-/// The rows a native control's part takes (the `control` group): its
-/// accent, and on a native `button` the rows a native button's
+/// The rows a native control's part takes (the `control` group, LLP 1139
+/// D2, D6): its accent, and on a native `button` the rows a native button's
 /// box carries (`controls::NATIVE_ROWS`).
 fn control_rows(button: bool, id: StyleId) -> bool {
     id == StyleId::AccentColor || button && crate::controls::native_row(id)
 }
 
-/// Whether a part's element is a native control: an `input`
+/// Whether a part's element is a native control (LLP 1139 D6): an `input`
 /// of any type, a `textarea`, a `select`, a `progress`, or a `button` that
 /// says so (`appearance="auto"`) or is named for the `control` group. Any
-/// other button is an authored pressable (the Post button), which takes
-/// the other groups.
+/// other button is the authored pressable D9's exception keeps (the Post
+/// button), which takes the other groups.
 fn native(tag: &str, rows: &[&Attr], control: bool) -> bool {
     match tag {
         "input" | "textarea" | "select" | "progress" => true,
@@ -133,7 +133,7 @@ fn appearance<'a>(rows: &[&'a Attr]) -> Option<&'a str> {
         })
 }
 
-/// Whether a part's name is a lower-case word.
+/// Whether a part's name is a lower-case word (LLP 1139 D2).
 fn word(name: &str) -> bool {
     name.starts_with(|c: char| c.is_ascii_lowercase())
         && name
@@ -285,7 +285,7 @@ pub(crate) fn check(c: &Component, file: &File) -> Vec<LowerError> {
             ));
             continue;
         }
-        // One node, one part: the selection names the part a node is.
+        // One node, one part: D5's selection names the part a node is.
         if let Some(first) = marks[..i]
             .iter()
             .find(|f| f.node == m.node && f.part != m.part && !f.part.is_empty())
@@ -373,7 +373,7 @@ fn rows(c: &Component, file: &File, decl: &PartDecl, m: &Mark) -> Vec<LowerError
         if !groups.iter().all(|g| *g == "control") {
             out.push(LowerError {
                 id: "lower-anatomy-control",
-                message: format!("part `{part}` of `{comp}` is a native `{tag}`: a native control's part takes the `control` group alone (`{}`), not `{said}`{}", contract_syntax::anatomy::declared(part, &["control"]), if tag == "button" { "; a `button` with `appearance=\"none\"` is a bare box, which takes the other groups" } else { "" }),
+                message: format!("part `{part}` of `{comp}` is a native `{tag}`: a native control's part takes the `control` group alone (`{}`), not `{said}`{} (LLP 1139 D6)", contract_syntax::anatomy::declared(part, &["control"]), if tag == "button" { "; a `button` with `appearance=\"none\"` is a bare box, which takes the other groups" } else { "" }),
                 span: decl.span,
             });
             return out;
@@ -392,7 +392,7 @@ fn rows(c: &Component, file: &File, decl: &PartDecl, m: &Mark) -> Vec<LowerError
             if rows_of(a).iter().any(|id| !control_rows(button, *id)) {
                 out.push(LowerError {
                     id: "lower-anatomy-control",
-                    message: format!("`{}` ({}) on part `{part}` of `{comp}`, a native `{tag}`: the `control` group takes {}", a.name, from(a), if button { "`accent-color` and the rows a native button carries" } else { "`accent-color` alone" }),
+                    message: format!("`{}` ({}) on part `{part}` of `{comp}`, a native `{tag}`: the `control` group takes {} (LLP 1139 D2, D6)", a.name, from(a), if button { "`accent-color` and the rows a native button carries" } else { "`accent-color` alone" }),
                     span: a.span,
                 });
             }
@@ -413,7 +413,7 @@ fn rows(c: &Component, file: &File, decl: &PartDecl, m: &Mark) -> Vec<LowerError
         if let (true, Some(a), false) = (button, radius, appearance(&all) == Some("auto")) {
             out.push(LowerError {
                 id: "lower-anatomy-control",
-                message: format!("`{}` on part `{part}` of `{comp}`: a corner keeps a native button native only with `appearance=\"auto\"`, else it draws as a bare box", a.name),
+                message: format!("`{}` on part `{part}` of `{comp}`: a corner keeps a native button native only with `appearance=\"auto\"`, else it draws as a bare box (LLP 1139 D6)", a.name),
                 span: a.span,
             });
         }
@@ -422,7 +422,7 @@ fn rows(c: &Component, file: &File, decl: &PartDecl, m: &Mark) -> Vec<LowerError
     if control {
         out.push(LowerError {
             id: "lower-anatomy-control",
-            message: format!("part `{part}` of `{comp}` is a `{tag}`, no native control: the `control` group is a native control's alone"),
+            message: format!("part `{part}` of `{comp}` is a `{tag}`, no native control: the `control` group is a native control's alone (LLP 1139 D6)"),
             span: decl.span,
         });
         return out;
@@ -435,7 +435,7 @@ fn rows(c: &Component, file: &File, decl: &PartDecl, m: &Mark) -> Vec<LowerError
             {
                 out.push(LowerError {
                     id: "lower-anatomy-row",
-                    message: format!("`{}` in `style {style}`, which `class` brings to part `{part}` of `{comp}`: the part takes `{said}`, and a class brings a part only its groups' rows", a.name),
+                    message: format!("`{}` in `style {style}`, which `class` brings to part `{part}` of `{comp}`: the part takes `{said}`, and a class brings a part only its groups' rows (LLP 1139 D2)", a.name),
                     span: a.span,
                 });
             }
@@ -444,8 +444,8 @@ fn rows(c: &Component, file: &File, decl: &PartDecl, m: &Mark) -> Vec<LowerError
     out
 }
 
-/// Each line of the design's `params` block a library's names refuse,
-/// with its line and column: one naming a param under a library
+/// Each line of the design's `params` block a library's names refuse (LLP
+/// 1139 D8), with its line and column: one naming a param under a library
 /// package that has none (not warned of, as an app's own is), and a
 /// library component's param by its short name.
 pub(crate) fn param_lines(
@@ -476,19 +476,19 @@ pub(crate) fn param_lines(
         let error = match resolver.resolve(name) {
             Err(e) if e.id == "tamber-param-unknown" && under_library(name) => LowerError {
                 id: "tamber-package-unknown",
-                message: format!("`{name}` in the design's `params` block names no param of the library: its names are its API, so a renamed or removed one fails the build"),
+                message: format!("`{name}` in the design's `params` block names no param of the library: its names are its API, so a renamed or removed one fails the build (LLP 1139 D8)"),
                 span: Span::default(),
             },
             // Short, naming no param, as a library component's (`Card.gap`
             // once `gap` is gone): a rename never falls back to the warning.
             Err(e) if e.id == "tamber-param-unknown" && exported(name) => LowerError {
                 id: "tamber-param-short-library",
-                message: format!("`{name}` names no param, and `{}` is a library component: a library's params are named in full (`<package>/<file>#{}.<param>`), so a renamed or removed one fails the build", short(name), short(name)),
+                message: format!("`{name}` names no param, and `{}` is a library component: a library's params are named in full (`<package>/<file>#{}.<param>`), so a renamed or removed one fails the build (LLP 1139 D8)", short(name), short(name)),
                 span: Span::default(),
             },
             Ok(p) if !name.contains('#') && file.library.contains(&p.identity) => LowerError {
                 id: "tamber-param-short-library",
-                message: format!("`{name}` names a library component's param by its short name: write it in full, `{}`", p.full),
+                message: format!("`{name}` names a library component's param by its short name: write it in full, `{}` (LLP 1139 D8)", p.full),
                 span: Span::default(),
             },
             _ => continue,
@@ -518,7 +518,7 @@ pub(crate) fn unknown_params(
         .collect()
 }
 
-/// Each host read in a component of a library package.
+/// Each host read in a component of a library package (LLP 1139 D6).
 pub(crate) fn platform(file: &File) -> Vec<LowerError> {
     let components: Vec<(&Component, &str)> = file
         .components
@@ -535,7 +535,7 @@ pub(crate) fn platform(file: &File) -> Vec<LowerError> {
     platform::check(file, &components)
 }
 
-/// A `button` named as a part, which lowering judges where it
+/// A `button` named as a part (LLP 1139 D6), which lowering judges where it
 /// decides whether the platform draws it.
 #[derive(Debug, Clone)]
 pub(crate) struct ControlPart {
@@ -561,7 +561,7 @@ impl Lowerer<'_> {
             self.push(e);
         }
         for c in &file.components {
-            // An exported library component's slot.
+            // An exported library component's slot (LLP 1139 D0, D4).
             let library = c
                 .params
                 .identity
@@ -574,7 +574,7 @@ impl Lowerer<'_> {
                 self.library_nodes
                     .extend(spans.into_iter().map(|s| (s, identity.clone())));
             }
-            // The library rules: an exported component's
+            // The library rules (LLP 1139 D1, D6): an exported component's
             // knobs and controls; any component of a library package's host
             // reads.
             if library {
@@ -653,14 +653,14 @@ impl Lowerer<'_> {
     }
 
     /// A native button's `control` part that lowering, deciding at `node`,
-    /// draws as a bare box (`reason`): refused.
+    /// draws as a bare box (`reason`): refused (LLP 1139 D6).
     /// A `button` part as lowering decides it at `node` (`native`, or a
     /// bare box for `reason`): a `control` part drawn as a bare box, or any
-    /// other part the platform draws as its own button, refused (the native
-    /// button's part is the `control` group's alone, and a library control
-    /// is refused where an app's button would be demoted).
+    /// other part the platform draws as its own button, refused (LLP 1139
+    /// D6: the native button's part is the `control` group's alone, and a
+    /// library control is refused where an app's button would be demoted).
     pub(crate) fn button_part(&mut self, node: Span, native: bool, reason: Option<&str>) {
-        // A library button with a control's role, drawn as a bare box.
+        // A library button with a control's role, drawn as a bare box (D6).
         if !native {
             if let Some(i) = self.library_buttons.iter().position(|e| e.span == node) {
                 let e = self.library_buttons.swap_remove(i);
@@ -674,9 +674,9 @@ impl Lowerer<'_> {
             (true, false) => {
                 let why =
                     reason.map_or_else(|| "its `appearance` is `none`".to_string(), str::to_string);
-                format!("part `{}` of `{}` is a native button the platform draws as a bare box here: {why} (a library control is refused where an app's button would be demoted)", p.part, p.component)
+                format!("part `{}` of `{}` is a native button the platform draws as a bare box here: {why} (LLP 1139 D6: a library control is refused where an app's button would be demoted)", p.part, p.component)
             }
-            (false, true) => format!("part `{}` of `{}` is a button the platform draws as its own here: a native button's part takes the `control` group alone (`{}`); write `appearance=\"none\"` for the authored pressable, which takes the other groups", p.part, p.component, contract_syntax::anatomy::declared(&p.part, &["control"])),
+            (false, true) => format!("part `{}` of `{}` is a button the platform draws as its own here: a native button's part takes the `control` group alone (`{}`); write `appearance=\"none\"` for the authored pressable, which takes the other groups (LLP 1139 D6)", p.part, p.component, contract_syntax::anatomy::declared(&p.part, &["control"])),
             _ => return,
         };
         self.push(LowerError {
@@ -687,7 +687,7 @@ impl Lowerer<'_> {
     }
 }
 
-/// What the Tamber IR says of a component's anatomy.
+/// What the Tamber IR says of a component's anatomy (LLP 1139 D5).
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Described {
     /// Each part: its name, its groups, and whether its node holds the
@@ -697,9 +697,9 @@ pub struct Described {
     /// or a row's `?:` or `match`, of the component's view reads), with its
     /// options.
     pub variants: Vec<(String, Vec<String>)>,
-    /// Whether it is an exported library component.
+    /// Whether it is an exported library component (LLP 1139 D0).
     pub library: bool,
-    /// An exported library component's slot chain, root first: each node's tag and the
+    /// An exported library component's slot chain (LLP 1139 D4), root first: each node's tag and the
     /// rows of the deny-list its classes (every branch and state layer) and
     /// its own attributes write, each `(row, value)` as written (a `?:`'s
     /// every leaf; `?` for one no literal says). What the design server
@@ -783,7 +783,7 @@ fn holds_children(nodes: &[Node], span: Span) -> bool {
 
 /// The names a `?:` or a `match` reads in a `class` or a style row of
 /// `nodes`, at any depth, but those a `for` or a `match` arm binds there:
-/// what makes a prop a variant.
+/// what makes a prop a variant (LLP 1139 D5).
 fn conditions(nodes: &[Node], out: &mut Vec<String>) {
     walk_conditions(nodes, &mut Vec::new(), out);
 }

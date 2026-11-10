@@ -4,13 +4,13 @@
 // (`markdown-parse` is one crate, shared): the specialisation is entirely
 // below the data seam, in `apps/llp/data` — the index in number order with
 // sub-documents under their parents, a search over every document's text,
-// the outline, and `LLP 0042` in prose resolved to the document it names.
+// the outline, and `LLP 1234` in prose resolved to the document it names.
 //
 // The block model, `Runs` and `SchemeButton` are `@exact/reading`'s
 // (`packages/reading`), shared with `apps/markdown`; `Blocks` is this
 // reader's own layout of them.
 
-// The readers' palette, one `light-dark()` pair an entry; a
+// The readers' palette (LLP 1095 D4), one `light-dark()` pair an entry; a
 // row names an entry (`color="ink"`). The dark half is warm rather than
 // blue-black, so the same documents read as the same documents, and its text
 // sits below white-on-black contrast, which is what makes a long document
@@ -80,8 +80,8 @@ shape Doc
   blocks: Block[]
   outline: Heading[]
 
-// The system's colour scheme, beneath whatever `setScheme` chose:
-// CSS's `prefers-color-scheme`, on every host.
+// The system's colour scheme, beneath whatever `setScheme` chose (LLP
+// 1069.000 D1): CSS's `prefers-color-scheme`, on every host.
 shape SystemMedia
   prefersColorScheme: string
 
@@ -95,7 +95,7 @@ component Llp
   // most often starts. Off by default: number order is the corpus's own.
   state newest = false
   // Which declared working set to show, or every document when empty. The
-  // overlays are the corpus's `current/` and `foundation/` directories.
+  // overlays are `llp/current` and `llp/foundation` (rules/RULES.md).
   state overlay = ""
   // Which appearance the reader asked for; `system` follows the OS.
   state scheme = "system"
@@ -140,8 +140,9 @@ component Llp
   derive searching = query != ""
   derive sectioned = doc.section >= 0
   derive hasOutline = not doc.outline.isEmpty()
-  // The window says which project is open, not just which app this is:
-  // the folder the corpus lives in, from `head`.
+  // The window says which project is open, not just which app this is
+  // (LLP 1033 D7): the folder the corpus lives in, from `head` (LLP
+  // 1069.010 D6).
   derive title = index.project != "" ? `LLP — ${index.project}` : "LLP"
 
   view
@@ -161,7 +162,7 @@ component Llp
             Chip(label="Outline", on=showOutline, press=toggleOutline, testId="outline-toggle")
             // Appearance: system, light, dark — the icons exact1's blog used
             // (`js/src/blog/lib/icons.ts`: monitor, sun, moon), rasterised
-            // to PNG because an Exact `image` is a raster asset
+            // to PNG because an Exact `image` is a raster asset (LLP 1011)
             // and the Apple host decodes through ImageIO, which has no SVG.
             // Following the system is the absence of an override, not a
             // third appearance, on every host.
@@ -184,9 +185,9 @@ component Llp
               // so they stay put while it moves: a filter you have to
               // scroll back up to reach is a filter you stop using.
               //
-              // The declared working sets: `current/` is the documents
-              // in hand, `foundation/` the orientation kernel. Pressing the
-              // one that is on clears it.
+              // The declared working sets (rules/RULES.md): `llp/current`
+              // is the documents in hand, `llp/foundation` the orientation
+              // kernel. Pressing the one that is on clears it.
               row gap=6 padding=8 padding-bottom=6 width="100%" box-sizing="border-box" align-items="center"
                 Chip(label="current", on=(overlay == "current"), press=showOverlay("current"), testId="overlay-current")
                 Chip(label="foundation", on=(overlay == "foundation"), press=showOverlay("foundation"), testId="overlay-foundation")
@@ -265,7 +266,7 @@ component IndexLine
       // The number column does not shrink and the title does. Both matter:
       // a flex item's `flex-shrink` is 1 by default, and the title's own
       // `min-width: auto` is its longest word — so a long title pushed the
-      // number's box narrower than the number, and `0030.000` wrapped onto a
+      // number's box narrower than the number, and `1030.000` wrapped onto a
       // second line. 60 points is the width of the longest number this
       // corpus has (a dotted sub-document) at this size and weight.
       text entry.number font-size=11 font-weight=700 color="softInk" width=60 flex-shrink=0

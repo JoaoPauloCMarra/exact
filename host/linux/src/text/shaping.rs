@@ -56,7 +56,7 @@ pub(super) struct RawFontMetrics {
     pub(super) x_height: f32,
 }
 
-/// Chrome's line-break choices for ordinary paragraphs:
+/// Chrome's line-break choices for ordinary paragraphs (LLP 1085.000 G6):
 /// the table and rules the text-flow walker uses, so the two paths break
 /// alike (`exact_textflow::chrome_break`).
 fn chrome(cx: LineBreakContext) -> Option<bool> {
@@ -89,8 +89,8 @@ pub(super) fn push_style(
     // the size, as the browser and CoreText set it; one without the axis
     // ignores it, and `none` leaves the face's own. Parley applies it after
     // fontique's synthesis, and `font-variation-settings` after it, each axis
-    // winning over the weight's, the width's and the size's
-    // (CSS Fonts 4 §7.2).
+    // winning over the weight's, the width's and the size's (CSS Fonts 4
+    // §7.2, LLP 1019 D9).
     let mut axes = Vec::new();
     if run.optical_sizing {
         axes.push(parley::FontVariation::new(
@@ -118,7 +118,7 @@ pub(super) fn push_style(
         );
     }
     // CSS `tabular-nums` is the chosen face's own `tnum` feature, never a
-    // substitute face; a face without it keeps its figures.
+    // substitute face; a face without it keeps its figures (LLP 1053 G4).
     // `font-variant-ligatures` turns the face's ligature features on or off
     // (CSS Fonts 4); HarfRust keeps its defaults for the kinds left unsaid.
     let mut features = Vec::new();
@@ -185,7 +185,7 @@ pub(super) struct HardLine {
     /// character under `ltr`).
     pub(super) rtl: bool,
     /// `(first, rest)` inset, points: a Markdown list item's head indent,
-    /// its first line's less the marker hung before it.
+    /// its first line's less the marker hung before it (LLP 1045 D4).
     inset: (f32, f32),
     /// The first visual line's indent as Parley applies it.
     indent: f32,
@@ -229,7 +229,7 @@ type Boxes = Vec<(usize, usize)>;
 /// each paragraph separator (`\r\n` one), the last empty piece dropped,
 /// and one empty line for no text. Each line keeps its byte offset and
 /// pieces: (range in the line, run index). An inline box's run has no text,
-/// only its place in the line.
+/// only its place in the line (LLP 1011.002).
 fn hard_lines(spec: &Spec) -> Vec<(usize, String, Pieces, Boxes)> {
     let mut out: Vec<(usize, String, Pieces, Boxes)> =
         vec![(0, String::new(), Vec::new(), Vec::new())];
@@ -328,8 +328,8 @@ impl ShapedSource {
             exact_kernel::OverflowWrap::Anywhere => parley::OverflowWrap::Anywhere,
         };
         // `direction: rtl` makes the base direction right-to-left, as CSS
-        // does. Under `ltr` the first strong
-        // character still decides: the text-flow
+        // does (LLP 1053; LLP 1085.000 G1). Under `ltr` the first strong
+        // character still decides (declared in LLP 1001 §1): the text-flow
         // walker cannot yet break an RTL run inside an LTR paragraph.
         let base = if spec.direction == exact_kernel::Direction::Rtl {
             BaseDirection::Rtl
@@ -463,8 +463,8 @@ impl ShapedSource {
     pub(super) fn layout_ellipsized(self: &Rc<Self>, width: f32) -> Paragraph {
         self.layout_as(Some(width), true, false)
     }
-    /// The paragraph's widest content, min- or max-content:
-    /// min-content is Parley's patched content
+    /// The paragraph's widest content, min- or max-content (LLP 1085.000
+    /// §4, "Content widths"): min-content is Parley's patched content
     /// widths (soft hyphens, text-indent and RTL hanging space included),
     /// which agree with Chrome where the width-zero layout did not (a URL's
     /// `/`); max-content stays the unbroken layout's widest line, which
@@ -591,7 +591,7 @@ impl ShapedSource {
         (out, cut)
     }
 
-    /// CSS `text-wrap-style: balance`: the width the first
+    /// CSS `text-wrap-style: balance` (LLP 1001 §6): the width the first
     /// hard line's lines break at, the narrowest that keeps the count they
     /// have at `width` (two to six, `exact_textflow::balanced_width`; Chrome
     /// balances only the lines before the first forced break), and those
@@ -632,7 +632,7 @@ impl ShapedSource {
     fn alignment(&self) -> Alignment {
         match self.spec.align.physical(self.spec.direction) {
             // Physical: Parley's `Start` would align by each line's own bidi
-            // direction, not the paragraph's CSS `direction`.
+            // direction, not the paragraph's CSS `direction` (LLP 1053).
             TextAlign::Left | TextAlign::Start => Alignment::Left,
             TextAlign::Center => Alignment::Center,
             TextAlign::Right | TextAlign::End => Alignment::Right,
@@ -772,7 +772,7 @@ impl ShapedSource {
             (line.w - (original.1 - original.0) + (new_extent.1 - new_extent.0)).max(0.0)
         };
         // An image past the ellipsis's edge goes with the glyphs it cut: its
-        // box answers no place.
+        // box answers no place (LLP 1011.002).
         let line_index = out.lines.len() as u32 - 1;
         let spec = &self.spec;
         out.boxes.retain(|b| {
@@ -901,7 +901,7 @@ fn line_inset(
 }
 
 /// How far an inline box's run reaches above and below the baseline, by
-/// its `vertical-align` against the run's own font.
+/// its `vertical-align` against the run's own font (LLP 1011.002 D3).
 pub(super) fn box_extent(spec: &Spec, catalog: &mut catalog::Catalog, run: usize) -> (f32, f32) {
     let Some(b) = spec.runs.get(run).and_then(|r| r.inline) else {
         return (0.0, 0.0);

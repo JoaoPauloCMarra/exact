@@ -110,7 +110,7 @@ test('wasm and JS request executors refuse outside origins and redirects, and ad
       expect(new TextDecoder().decode(admitted.body)).toBe('ok');
       const redirected = await run({ method: 'GET', url: `${origin.url}redirect`, headers: [] });
       expect(redirected.failed ?? redirected.kind).toBe(2);
-      // It names where the redirect led, as the native executor does.
+      // It names where the redirect led (podcast F5), as the native executor does.
       expect(redirected.message ?? text(redirected)).toBe(`outside the app's grants (net.fetch): redirected to ${destination.url.origin}`);
       const grantedRedirect = await run({ method: 'GET', url: `${origin.url}granted-redirect`, headers: [] });
       expect(grantedRedirect.failed ?? grantedRedirect.kind ?? 0).toBe(0);
@@ -166,7 +166,7 @@ test('the redirect mode reaches every web executor', async () => {
   } finally { origin.stop(true); destination.stop(true); }
 });
 
-// A response over its size limit is the host refusing it (`failure(x)`'s `refused`) on every web
+// LLP 1109 D3: a response over its size limit is the host refusing it (`failure(x)`'s `refused`) on every web
 // executor, as on Apple's: plain HTTP on the wasm host, a stream's one answer, a Rust source's request on the JS
 // target, and a TypeScript source's `fetch` there, which takes `exactIndependentHttp.maxResponseBytes` as native does.
 test('a response over its size limit is Refused on every web executor', async () => {
@@ -346,7 +346,7 @@ test('the TypeScript secret facade has native Store null, reservation, read and 
   expect(() => malformed.set('token', 'x')).toThrow('line 1');
 });
 
-test('the web refuses a locked secret and keeps an optional one plain', async () => {
+test('the web refuses a locked secret and keeps an optional one plain (LLP 1133.010 D15)', async () => {
   const backing = new Map([['key', 'older']]), store = createSecretFacade(backing, normalized('secret.keep token user-presence optional\nsecret.keep key user-presence\ndevice.local-auth purpose.lock'), () => Promise.resolve(null));
   expect(() => store.set('key', 's')).toThrow(expect.objectContaining({ name: 'NotSupportedError' })); store.set('token', 'open'); await expect(store.protect('token')).rejects.toMatchObject({ name: 'NotSupportedError' }); expect([store.get('key'), store.has('key'), store.locked('key'), backing.get('key'), store.get('token'), store.has('token'), store.locked('token'), await store.unlock('token')]).toEqual([null, false, false, 'older', 'open', true, false, 'open']);
 });
@@ -367,7 +367,7 @@ test('a refused sqlite.open names the file it wanted and the grant lines that ad
   expect(authorize(normalized('sqlite.open app:/data'), 'sqlite.open', 'app:/data/garden-amy.sqlite')).toBe('app:/data/garden-amy.sqlite');
 });
 
-// A folder the person chose is one reach on the
+// LLP 1069.010 D1, files F2: a folder the person chose is one reach on the
 // web, for a TypeScript source (`files`) and a Rust request (`run`), with
 // the codes and refusals ibex2's `run_document` gives both on Hermes.
 test('a chosen folder is the same storage for a TypeScript source and a Rust request', async () => {
@@ -397,7 +397,7 @@ test('a chosen folder is the same storage for a TypeScript source and a Rust req
       code(fs.readFile(`${doc}/absent`)), code(fs.readFile(`${doc}/../escape`)), code(fs.readFile(`${doc}/sub`)),
       code(fs.readdir(`${doc}/a.txt`)), code(fs.rm(`${doc}/sub`)), code(fs.rm(doc)), code(fs.rename(`${doc}/a.txt`, `${doc}/c.txt`)),
       code(fs.readFile('doc:/999999/a.txt')), code(globalThis.exact.documents.files(read).writeFile(`${doc}/a.txt`, new Uint8Array([1]))),
-      // Writing the chosen folder itself, or a folder in it, is EISDIR, as on Hermes.
+      // Review B6: writing the chosen folder itself, or a folder in it, is EISDIR, as on Hermes.
       code(fs.writeFile(doc, new Uint8Array([1]))), code(fs.appendFile(doc, new Uint8Array([1]))), code(fs.writeFile(`${doc}/sub`, new Uint8Array([1]))),
     ])).toEqual(['Unavailable ENOENT', 'Unavailable denied', 'Unavailable EISDIR', 'Unavailable ENOTDIR', 'Unavailable ENOTEMPTY',
       'Unavailable failed', 'Unavailable failed', 'Unavailable ENOENT', 'Unavailable denied', 'Unavailable EISDIR', 'Unavailable EISDIR', 'Unavailable EISDIR']);
@@ -593,7 +593,7 @@ chromeTest('a built TypeScript source refuses fetch and storage without grants',
   }
 }, 60_000);
 
-// The page's `exactBodyFrom` read counts against the
+// @ref LLP 1108 D6 R2 — the page's `exactBodyFrom` read counts against the
 // request's deadline and nothing is sent after it; a WebSocket takes no body.
 test('a body read from a file is bounded by the deadline, and a socket refuses one', async () => {
   const grants = normalized('fs.read app:/data\nnet.fetch https://x.test\nnet.websocket wss://x.test');
@@ -626,9 +626,9 @@ test('a body read from a file is bounded by the deadline, and a socket refuses o
   } finally { globalThis.fetch = fetchBefore; }
 });
 
-// An `exactBodyFrom` fetch on the JS target whose signal
+// @ref LLP 1108 D6 R2 — an `exactBodyFrom` fetch on the JS target whose signal
 // is already aborted rejects with its reason, reads nothing, and leaves no
-// rejection unhandled.
+// rejection unhandled (Astra, post-landing).
 test('a pre-aborted exactBodyFrom fetch rejects once, reads nothing, and leaves nothing unhandled', async () => {
   const dir = mkdtempSync(resolve(tmpdir(), 'exact-ts-fetch-abort-'));
   for (const name of ['ts-fetch.js', 'ts-body-from.js']) cpSync(resolve(ROOT, 'host/web-js', name), resolve(dir, name));
@@ -685,7 +685,7 @@ test('the JS target checks and takes the redirect mode once, as fetch is called'
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-// `exactBodyFrom` on the JS target: the app file is the
+// @ref LLP 1108 D6 R2 — `exactBodyFrom` on the JS target: the app file is the
 // request's body, read from the page's store as a Blob (a picked entry is its
 // own File), with no Content-Type but the author's; a missing file and a path
 // outside `fs.read` reject the fetch before anything is sent, and fetch's own
@@ -747,7 +747,7 @@ export const answer: Answer = (source, args, store, storage, native) => sources[
     expect(first[2]).toStartWith('denied FetchError:Refused exactBodyFrom app:/tmp/photo.bin: denied: fs.read app:/tmp/photo.bin');
     expect(first.slice(3)).toEqual(['get TypeError: fetch: a GET request cannot have a body', 'both TypeError: fetch: a request has one body: body or exactBodyFrom']);
     expect(received).toEqual([{ type: 'image/jpeg', sha: expected, length: 300000 }]);
-    // A picked file's entry, the browser's own File with its type, in the page's store: sent untyped, as its bytes.
+    // A picked file's entry, the browser's own File with its type (LLP 1069.002 D5), in the page's store: sent untyped, as its bytes.
     const put = await call('Runtime.evaluate', { expression: `(async()=>{const {createFileStore}=await import('/storage-fs.js');const {storageKey}=await import('/storage-environment.js');const s=createFileStore(storageKey('test.upload-probe'));await s.putBlob('app:/data/picked.bin',new File([${bytes}],'picked.jpg',{type:'image/jpeg'}));s.close();return 'put';})()`, returnByValue: true, awaitPromise: true });
     expect(put.result.value).toBe('put');
     await call('Page.reload');
@@ -761,9 +761,9 @@ export const answer: Answer = (source, args, store, storage, native) => sources[
   }
 }, 60_000);
 
-// An `image` shows a file the app keeps in `app:/data`
-// on the JS target, bound or literal, and again after the page reloads:
-// the web host's file store, as an object URL.
+// @ref LLP 1069.002 D7 — an `image` shows a file the app keeps in `app:/data`
+// on the JS target, bound or literal, and again after the page reloads
+// (recipes F9, gallery F7): the web host's file store, as an object URL.
 chromeTest('an app:/data image shows from the page\'s store, after a reload too', async () => {
   const dir = mkdtempSync(resolve(tmpdir(), 'exact-app-image-')), dist = resolve(dir, 'dist');
   const png = [137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,6,0,0,0,31,21,196,137,0,0,0,13,73,68,65,84,120,218,99,252,207,192,80,15,0,4,133,1,128,132,169,140,33,0,0,0,0,73,69,78,68,174,66,96,130];
@@ -897,7 +897,7 @@ test('ts-data installs the native Store facade and a later gpu-glue shader uses 
     cancelAnimationFrame: { configurable: true, value() {} }, devicePixelRatio: { configurable: true, value: 1 },
   });
   globalThis.exact = { devAssets: null, root: { dataset: {} }, views: new Map(), pendingSurfaces: [], generation: 0 };
-  // A browser with WebGPU: gpu-glue chooses its tier from the adapter before it loads (gpu-tier.js).
+  // A browser with WebGPU: gpu-glue chooses its tier from the adapter before it loads (LLP 1139.003 D2, gpu-tier.js).
   const gpuDescriptor = Object.getOwnPropertyDescriptor(globalThis.navigator, 'gpu');
   Object.defineProperty(globalThis.navigator, 'gpu', { configurable: true, value: { requestAdapter: async () => ({ info: { vendor: 'apple', architecture: 'common-3' } }) } });
   try {
@@ -920,7 +920,7 @@ test('ts-data installs the native Store facade and a later gpu-glue shader uses 
 });
 
 // The JS target checks a TypeScript answer as Hermes does (js/value's
-// `decode_tree`), with Hermes's message.
+// `decode_tree`), with Hermes's message (ledger F11).
 test('ts-data refuses an answer outside its shape as Hermes does', async () => {
   const dir = mkdtempSync(resolve(tmpdir(), 'exact-ts-shape-'));
   const app = resolve(dir, 'source.js');
@@ -936,7 +936,7 @@ const answers = {
 };
 import { fetch } from './ts-fetch.js';
 export function answer(name, args, store, storage) {
-  // A socket the grants do not name: its end, mapped.
+  // A socket the grants do not name: its end, mapped (LLP 1016.000).
   if (name === 'stream') return fetch('ws://127.0.0.1:9/feed', { exactStream: e => e.type + ' ' + e.kind + ': ' + e.message });
   if (name === 'read') return storage.fs.readFile('app:/data/x').then(() => 'read', e => e.kind + ' ' + e.code + ' ' + e.message);
   return name === 'later' ? Promise.resolve(answers.spread) : answers[args[0]];
@@ -964,11 +964,11 @@ export function answer(name, args, store, storage) {
     // What `JSON.stringify` leaves out is not there for Hermes either.
     expect(data.answer('ledger', ['dropped'], new Map()).v).toEqual([[['d', [['a', 1]]]], 'n']);
     await expect(data.answer('later', [], new Map()).promise).rejects.toThrow('`later` answered outside its shape: field `days`: field `transactions`: field `cents` is not in the shape');
-    // A storage refusal's code is Hermes's: a drive with no scratch store reads an empty one.
+    // A storage refusal's code is Hermes's (kanban F28): a drive with no scratch store reads an empty one.
     globalThis.location = { href: 'http://localhost/?agent' };
     expect(await data.answer('read', [], new Map()).promise).toBe('Unavailable ENOENT filesystem: no such file or directory: app:/data/x (a drive that names no scratch store reads an empty one; --storage <name> names one)');
     // A stream is the answer's, opened by the runtime, admitted as the wasm host admits it: a socket by
-    // `net.websocket`, never as `net.fetch`. Outside an answer it says where to start one.
+    // `net.websocket` (x2apps dash diary: refused as `net.fetch`). Outside an answer it says where to start one.
     const stream = data.answer('stream', [], new Map());
     expect(await stream.stream(() => {}, new AbortController())).toEqual({ v: "error Refused: outside the app's grants (net.websocket)" });
     const { fetch } = await import(pathToFileURL(resolve(dir, 'ts-fetch.js')).href);
@@ -1007,7 +1007,7 @@ test('the web build retains every ambient diagnostic with its source location', 
   }
 }, 60_000);
 
-// On the JS target, the app's modules get guarded bindings
+// LLP 1027.000 D3 on the JS target: the app's modules get guarded bindings
 // in place of the page's clock, Math.random and timers, injected as the web
 // build injects them, and Hermes's fixture of aliases refuses with Hermes's words.
 test("the JS target refuses a data module's clock, randomness and timers as Hermes does", async () => {
@@ -1042,7 +1042,7 @@ test("the JS target refuses a data module's clock, randomness and timers as Herm
       const atInit = answer('atInit', [form]);
       expect(atInit.startsWith(api) && atInit.includes('as an argument'), `${form} at initialization: ${atInit}`).toBe(true);
       expect(() => answer('ambient', [form]), form).toThrow(api);
-      // Randomness names its recipe, in Hermes's words too.
+      // LLP 1116 D8: randomness names its recipe, in Hermes's words too.
       if (api === 'Math.random()') expect(atInit).toContain('seed from crypto.getRandomValues in a source (docs/recipes/random-and-shuffle.md)');
     }
     // Explicit inputs keep the language's behavior.
@@ -1057,7 +1057,7 @@ test("the JS target refuses a data module's clock, randomness and timers as Herm
   }
 });
 
-// On the JS target, a data module's own socket, request or
+// LLP 1016.000 D3 on the JS target: a data module's own socket, request or
 // event source refuses with the wasm target's words (module-glue.js), in every
 // spelling, so no frame leaves past the grants (#126).
 test("the JS target refuses a data module's own WebSocket, XMLHttpRequest and EventSource as the wasm target does", async () => {
@@ -1168,7 +1168,7 @@ export function answer(name, args, store, storage) {
 });
 
 // The page realm's storage hands an answer's operations to the background
-// before it retires the answer's owner: a write still in flight
+// before it retires the answer's owner (LLP 1097 D7): a write still in flight
 // when its answer replied resolves the app's promise through its re-pointed
 // cell, and a completion already queued for the answer moves with it.
 test('storage re-homes an answer\'s writes to the background before retiring it', async () => {
@@ -1205,7 +1205,7 @@ test('storage re-homes an answer\'s writes to the background before retiring it'
 }, 30_000); // hang bound: the import is waited for up to 10 s
 
 // A read queued behind a write the answer did not await is issued later, in
-// the background round that delivers the write. The cell has
+// the background round that delivers the write (LLP 1097 D7). The cell has
 // to belong to the answer that asked, which is current when the read is
 // accepted. Attributing it when the adapter runs attributes it to the
 // background, and the parked answer's deliver waits forever.
@@ -1227,7 +1227,7 @@ async function until(pred) { for (const end = realNow() + 10_000; !pred() && rea
 const stuck = async () => { for (let i = 0; i < 20; i++) await checkpoint(); return 'stuck'; }; // twenty turns: nothing outside is left to wait on
 let context = null;
 const backgroundOwner = {};
-self.__exact_host = (op, name) => { if (op === 12 && name === 'listen') return ''; // the prelude's load-time ask: no listener
+self.__exact_host = (op, name) => { if (op === 12 && name === 'listen') return ''; // the prelude's load-time ask (LLP 1133.005): no listener
   if (!context) throw new Error('host call outside an answer');
   if (op === 5) return;
   if (op === 13) return '1';
@@ -1323,7 +1323,7 @@ const stuck = async () => { for (let i = 0; i < 20; i++) await checkpoint(); ret
 self.land = [];
 self.writes = 0;
 let context = null;
-self.__exact_host = (op, name) => { if (op === 12 && name === 'listen') return ''; // the prelude's load-time ask: no listener
+self.__exact_host = (op, name) => { if (op === 12 && name === 'listen') return ''; // the prelude's load-time ask (LLP 1133.005): no listener
   if (!context) throw new Error('host call outside an answer');
   if (op === 5) return;
   if (op === 13) return '1';
@@ -1361,7 +1361,7 @@ ${body}
 
 // A send between its own storage steps is superseded. The step in flight has
 // to finish and the step chained on it has to run; retiring the owner drops
-// the step and the module's later storage never starts (ios7).
+// the step and the module's later storage never starts (LLP 1097, ios7).
 test('a superseded send between storage steps still writes on the wasm realm', async () => {
   const verdict = await realmVerdict(`
 self.exact = { abi: 1, appId: 'test', answer(name, _a, _s, cap) {
@@ -1491,7 +1491,7 @@ test('the web build\'s deadline covers a stalled body, and keeps the caller\'s o
     } finally { quick.stop(true); }
     const aborted = new AbortController(); aborted.abort();
     const own = await fetchWith(set, new Request(origin.url.href, { signal: aborted.signal }), { exactTimeout: 5000 }).catch(e => e);
-    // The caller's own abort rejects with its signal's reason, as Fetch and native do, never a lost connection.
+    // The caller's own abort rejects with its signal's reason, as Fetch and native do, never a lost connection (LLP 1109 D3).
     expect([own === aborted.signal.reason, own.name]).toEqual([true, 'AbortError']);
     const kept = await fetchWith(set, new Request(origin.url.href, { signal: aborted.signal }), { signal: undefined, exactTimeout: 5000 }).catch(e => e);
     expect(kept).toBe(aborted.signal.reason);

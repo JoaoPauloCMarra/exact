@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-// An answer's own timers on the JS target, ts-fetch.js and held.js as they
+// An answer's own timers on the JS target (LLP 1027.000 D1, amended 2026-10-28), ts-fetch.js and held.js as they
 // are: each is an entry of the page clock's timers, owned by its answer, run with that answer current, never run
 // once the answer has answered or been let go, and an answer with only timers out counts for no clock.
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -122,7 +122,7 @@ test("an answer's timer is a clock entry it owns, and only timers out count for 
   }
 });
 
-// A fetch carrying an `AbortSignal.timeout`, or a signal composed of one, has the time the signal has
+// LLP 1146 §2.1: a fetch carrying an `AbortSignal.timeout`, or a signal composed of one, has the time the signal has
 // left on the page's clock as its deadline, in real time, its answer over or not, as natively (js/tests/it/timers.rs).
 test("a fetch carrying an AbortSignal.timeout has the signal's time left as its deadline", async () => {
   const { dir, tsf } = await load();

@@ -1,4 +1,4 @@
-//! The folder's forms are the kernel's: a literal folds to
+//! The folder's forms are the kernel's (LLP 1121 D7): a literal folds to
 //! text the kernel parses to the same `ColorValue` as the literal itself,
 //! and every value the corpus folds parses in the kernel.
 

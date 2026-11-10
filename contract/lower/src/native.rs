@@ -1,13 +1,13 @@
-//! Native modules: a hyphenated tag is a custom element. It
+//! Native modules (LLP 1024 D1): a hyphenated tag is a custom element. It
 //! lowers to a `NativeView` whose module name is the tag and whose leftover
 //! attributes are one JSON object, replaced whole on change.
 //!
-//! The rules: HTML's potential-custom-element-name, lowercase only,
+//! @ref LLP 1024 D1 (HTML's potential-custom-element-name, lowercase only,
 //! the SVG/MathML reserved names refused; a fixed `display: block` row; the
 //! known attribute table binds first and its renamed spellings stay refused;
 //! an SVG element's own props, `svg::svg_only_prop`, stay the module's; a
 //! known name the leaf box never uses, a text row or a form control's, is
-//! refused by name rather than bound to nothing, `refused`.
+//! refused by name rather than bound to nothing, `refused`)
 
 use crate::tags::{self, Tag};
 use crate::{err, LowerError, Lowerer};
@@ -57,7 +57,7 @@ pub(crate) fn tag(name: &str) -> Option<Tag> {
 /// Whether an attribute on a module tag is a leftover: a module prop, not a
 /// row of the table. A renamed spelling (`fontSize`) is still refused with
 /// its CSS name, `class` is the style mechanism, and a `data-` word is the
-/// element's dataset, as a custom element's is.
+/// element's dataset, as a custom element's is (LLP 1075.003 §3.3).
 pub(crate) fn leftover(tag: &str, a: &Attr) -> bool {
     is_module_tag(tag)
         && a.name != "class"
@@ -67,12 +67,12 @@ pub(crate) fn leftover(tag: &str, a: &Attr) -> bool {
 }
 
 /// A known attribute a module tag cannot use, refused by name. The table
-/// binds before the module, so a known word on a module tag
+/// binds before the module (LLP 1024 D1), so a known word on a module tag
 /// binds to its box, and the box uses only what any leaf box uses: layout,
 /// box and paint rows, the handlers, `testId`, `id`, `role`, ARIA,
 /// `disabled` and `inert` (the module's interaction suppression reads them),
 /// and `tabindex`
-/// — an allow-list (`command` would set a host
+/// — an allow-list (@ref LLP 1088 D7.2, paint F7: `command` set a host
 /// command the module never saw). Every other known word is refused, naming
 /// what it is: a text row (`color`), a form control's row (`appearance`)
 /// or prop (`value`), or another element's attribute (`command`, `href`).
@@ -118,7 +118,7 @@ pub(crate) fn refused(tag: &str, a: &Attr) -> Option<LowerError> {
     Some(LowerError {
         id: "lower-native-attr",
         message: format!(
-            "`{}` on `{tag}` is {what}, which a native module's box never uses; a known attribute binds to the box, not the module, so give the module prop another name",
+            "`{}` on `{tag}` is {what}, which a native module's box never uses; a known attribute binds to the box, not the module (LLP 1024 D1), so give the module prop another name",
             a.name
         ),
         span: a.span,
@@ -138,7 +138,7 @@ pub(crate) fn name_the_fix(n: &Node, mut e: LowerError) -> LowerError {
         && attrs.iter().any(|a| a.span == e.span)
     {
         e.message.push_str(&format!(
-            "; on `{tag}` a name Contract knows binds to the box, not the module, so give the module prop another name"
+            "; on `{tag}` a name Contract knows binds to the box, not the module (LLP 1024 D1), so give the module prop another name"
         ));
     }
     e
@@ -153,7 +153,7 @@ const MODULE_EVENTS: [&str; 9] = [
     "press", "change", "hover", "focus", "blur", "key", "submit", "load", "message",
 ];
 
-/// The form-control props a module's box has
+/// The form-control props (LLP 1069.001, LLP 1069.002) a module's box has
 /// no use for. `checked` is refused on every tag but `input` before this
 /// runs (`controls::control`); it is listed so the set reads whole.
 const CONTROL_PROPS: [&str; 20] = [
@@ -325,7 +325,7 @@ impl Lowerer<'_> {
 mod tests {
     use super::is_module_tag;
 
-    /// SVG elements' own props (the filter primitives among them)
+    /// SVG elements' own props (LLP 1055.000's filter primitives among them)
     /// stay a module's props; rows still bind first.
     #[test]
     fn svg_element_props_stay_a_modules_on_its_tag() {

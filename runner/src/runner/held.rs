@@ -1,5 +1,5 @@
-//! The facts a development host holds over the app's own: in a copy the
-//! design tool pins, the app's
+//! The facts a development host holds over the app's own (LLP 1122 T7,
+//! theme2's F2 ruling): in a copy the design tool pins, the app's
 //! `setScheme`, `setMode` on a pinned axis and `setRootFontSize` are kept,
 //! not applied, until the pin is handed back; then the app's latest choice
 //! of each takes effect. What the app last asked of each is kept whether

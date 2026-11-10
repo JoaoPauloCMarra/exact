@@ -1,4 +1,5 @@
 //! Custom shading over renderer-owned model geometry and instance records.
+//! @ref llp/1046.006.000-render-hooks.rfc.md#d4-custom-materials-inside-the-engines-batches-phase-2
 use crate::{MaterialId, Vertex};
 use exact_gpu::wgpu;
 

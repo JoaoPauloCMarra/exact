@@ -766,7 +766,7 @@ fn a_shell_dismissal_fires_cancel_but_cannot_keep_the_window_open() {
     assert_eq!(p.surface().unwrap().serial, reopened);
 }
 
-/// A row of the shell's menu chosen by a touch hears where the
+/// LLP 1021 D2: a row of the shell's menu chosen by a touch hears where the
 /// touch was, in the page's points, the menu's frame being in the window's
 /// pixels: at 2.75 a row of a menu at (100, 200) is near (110, 212), not
 /// its pixels.

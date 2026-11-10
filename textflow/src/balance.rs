@@ -1,5 +1,5 @@
 //! CSS `text-wrap-style: balance` (CSS Text 4 §6.1.2), bounded as Chromium
-//! bounds it.
+//! bounds it. @ref LLP 1001 §6 "Balanced wrapping"
 //!
 //! Balancing is a search over the host's own greedy breaker: the narrowest
 //! width that keeps the line count the box's width gives. Each host runs it

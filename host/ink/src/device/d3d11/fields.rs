@@ -1,5 +1,5 @@
 //! Window-thread editor state, drawn by Ink and drained by the presenter.
-//! Callbacks never borrow the presenter.
+//! @ref LLP 1115.004 D7. Callbacks never borrow the presenter.
 use super::{rich_edit::RichEdit, *};
 use std::cell::RefCell;
 use windows::Win32::UI::WindowsAndMessaging::*;
@@ -375,7 +375,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "field lifecycle; Windows desktop, isolated process"]
+    #[ignore = "Stage 1w field lifecycle; Windows desktop, isolated process"]
     fn field_retirement_and_window_teardown() {
         std::env::set_var("EXACT_INK_RICHEDIT", "1");
         let window = Window::fixture([400, 100]).unwrap();

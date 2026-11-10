@@ -1,11 +1,11 @@
-//! Which of a plan's nodes are rows: repeated by a `for`
+//! Which of a plan's nodes are rows (LLP 1048.007 D5): repeated by a `for`
 //! that lists items, not one that shows pages.
 
 use exact_plan::Plan;
 
 /// Whether plan node `node` is repeated by a `for`, at any depth: a row of
-/// a list or grid, whose image loads as the row comes into view,
-/// as a platform list's cells load theirs. A `for` over the
+/// a list or grid, whose image loads as the row comes into view (LLP
+/// 1048.007 D5), as a platform list's cells load theirs. A `for` over the
 /// navigation stack (`stack(nav)`) or over one item (`[route]`, which
 /// keys a page) shows pages, not rows.
 pub fn repeated(plan: &Plan, node: exact_plan::NodesId) -> bool {

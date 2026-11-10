@@ -1,4 +1,4 @@
-//! `font-variation-settings` as a style row:
+//! @ref LLP 1019 D9 — `font-variation-settings` as a style row:
 //! `[["wght",650],…]`, the axes in order (FontAxes.swift reads it).
 use exact_kernel::style::FontVariations;
 

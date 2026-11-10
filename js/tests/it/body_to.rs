@@ -1,4 +1,4 @@
-//! `fetch(url, {exactBodyTo})` from TypeScript:
+//! `fetch(url, {exactBodyTo})` from TypeScript (LLP 1108 D6 R2, 2026-10-26):
 //! Hermes and the prelude send the path alone, and the native executor core
 //! (the one the Apple, Linux and render hosts share, here the render host's)
 //! writes a 2xx body into the file as it arrives. The bytes never cross the

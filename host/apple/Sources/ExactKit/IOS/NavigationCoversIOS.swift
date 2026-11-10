@@ -1,17 +1,17 @@
-// What Exact's containers cover of each route, told
+// @ref LLP 1075.003 §3.5 — what Exact's containers cover of each route, told
 // to the kernel as covers, and the development check of what Exact owns on
 // the objects it handed a hatch.
 #if os(iOS) || os(tvOS)
 import UIKit
 
 extension NavigationHost {
-    // MARK: The content area
+    // MARK: The content area (LLP 1075.003 §3.5)
 
     /// Whether the root's routes have a native primary container (a stack
     /// or the tabs), so the session's view takes the whole of its own
     /// (ExactViewIOS `fit`): the document and the window the viewport units
     /// resolve against. Its bars, whether shown or not, and a
-    /// presentation's containers never decide it; its routes
+    /// presentation's containers never decide it (LLP 1123 D1); its routes
     /// clear what covers them (`reportCovers`). Not under the agent's own
     /// chrome, where no native container shows.
     var wantsWholeView: Bool { primaryOwner != nil && !ExactEnv.authoredChrome }
@@ -19,8 +19,8 @@ extension NavigationHost {
     /// What covers a route of its controller's safe area (`safe`): the
     /// edges past the document's insets (`env()`, which the page authored
     /// against) for a route in the document, and every edge of its own for a
-    /// presented one, whose sheet the document's insets do not clear. The
-    /// top is a collapsing title's scroller's when it has one;
+    /// presented one, whose sheet the document's insets do not clear (LLP
+    /// 1123 D2). The top is a collapsing title's scroller's when it has one;
     /// the sides and the bottom only while the containers take the whole
     /// view (`whole`) or the page covers it (`covered`: `viewport-fit="cover"`,
     /// whose `env()` is the window's safe area and not the tab bar's, which a
@@ -70,7 +70,8 @@ extension NavigationHost {
             guard held else { continue }
             // A presented route's controller takes its sheet's whole view, and
             // the document's insets (`env()`) are not the sheet's: its route is
-            // covered for its own safe area whatever the document's fit.
+            // covered for its own safe area whatever the document's fit (LLP
+            // 1123 D2; its own clearance and credit are stage 2's)
             let presented = nav.map { nav in presentedNavigations.contains { $0 === nav } } ?? false
             let covered = wantsWholeView && presenter.viewportFit == "cover"
             let whole = presented || (wantsWholeView && !covered)
@@ -80,12 +81,12 @@ extension NavigationHost {
             // A collapsing title's scroller goes under the bar, which insets it;
             // its expanded inset is where CSS scrollTop 0 rests.
             // While the bar is not as the route wants it (mid-transition to or
-            // from a route without one), its last cover stands.
+            // from a route without one, §9.10), its last cover stands.
             // An active search's bar is UIKit's: the content follows it, as
             // UIKit's own does, but a title's insets are not sampled.
             let search = searching(c)
             let settled = search || (nav?.isNavigationBarHidden ?? true) != routeShowsBar(c, in: nav)
-            // A route showing no bar has no title: its inset is the status bar's, none in landscape.
+            // A route showing no bar has no title: its inset is the status bar's, none in landscape (LLP 1130 D3).
             let barless = !routeShowsBar(c, in: nav)
             let topPeers = arrangementScrollers(in: c, top: true), bottomPeers = arrangementScrollers(in: c, top: false)
             if settled, !search, let node = c.collapseScroll, let sv = c.collapseScrollView, sv === node.scrollView, sv.adjustedContentInset.top > 0 || barless {
@@ -121,7 +122,7 @@ extension NavigationHost {
                 edges = e
             } else { edges = nil }
             // A scroller UIKit insets lays its content out between those
-            // insets: content that fills its height rests
+            // insets (LLP 1116.000 D1.2): content that fills its height rests
             // under the bar and above the home indicator, and scrolling
             // content still passes under both. A large title's inset is its
             // widest, at rest (CSS scrollTop 0).
@@ -147,7 +148,7 @@ extension NavigationHost {
                         if node !== c.collapseScroll { node.scrollCollapsed = node.scrollOrigin }
                     }
                     #endif
-                    // A band's part of the safe area is a UI inset over control bars, not layout.
+                    // A band's part of the safe area is a UI inset over control bars, not layout (LLP 1131 D2).
                     let title = ownsTop ? node.scrollOrigin : 0
                     let stretched = title > 0 && node.scrollView.map { Self.stretched($0, origin: title) } == true
                     let top = max(0, max(stretched ? min(safe.top, title) : safe.top, title) - node.pageBand.top), bottom = max(0, max(safe.bottom, reach) - node.pageBand.bottom)
@@ -166,7 +167,8 @@ extension NavigationHost {
                     let view = presenter.session?.view, view.window != nil {
                 // Authored tabs are page content outside the routes. Protect
                 // only the edges they reach; leave the viewport and bar
-                // backgrounds full-size. A sheet leaves them where they are.
+                // backgrounds full-size. A sheet leaves them where they are
+                // (LLP 1123 D1).
                 let rect = list.convert(list.bounds, to: view)
                 let safe = view.bounds.inset(by: view.safeAreaInsets)
                 let edges = HostCover.Edges(
@@ -184,7 +186,7 @@ extension NavigationHost {
         // A scroller's least content height is the port its cover leaves
         // (`scrollFloor`); the kernel sends no new content size when only that changed.
         for (id, _) in changes { presenter.views[id]?.fitScroll() }
-        // A cold launch's first frame runs no app code: a hatch
+        // Under Q3 (c) a cold launch's first frame runs no app code: a hatch
         // that changes a bar the plan already showed moves the content once.
         if replayingHatches, changes.contains(where: { presenter.views[$0.0]?.props["navigationKey"] != nil }) {
             presenter.session?.log("hatch: the content area moved after the first frame, by a hatch run at launch")
@@ -197,8 +199,9 @@ extension NavigationHost {
     /// What the kernel is told is what is wanted when it is told. A report
     /// queued behind a batch ran after later ones that did not wait, and its
     /// covers, measured under the bar's first frame before the status bar's
-    /// inset (116 points with a large title of 168), won: a control under
-    /// the large title lay drawn over by it and untappable.
+    /// inset (116 points with a large title of 168), won: team-kanban's
+    /// persona switcher lay under the large title, drawn over by it and
+    /// untappable (LLP 1116.006 D1).
     func deliverCovers() {
         // A callback the runtime waits on can make no runtime call: deliver once it returns
         if Owner.shared.isServingMain {
@@ -213,7 +216,7 @@ extension NavigationHost {
         presenter.onCovers?(changes)
     }
 
-    // MARK: The development check
+    // MARK: The development check (LLP 1075.003 §3.5)
 
     /// Whether this build checks what Exact owns: every build but a
     /// production bake.
@@ -262,11 +265,11 @@ extension NavigationHost {
         }
     }
 
-    /// What Exact sets on a node's scroll view and nothing else may, and
-    /// differs from what Exact writes: no inset (a
+    /// What Exact sets on a node's scroll view and nothing else may (LLP
+    /// 1075.003 §3.5) and differs from what Exact writes: no inset (a
     /// refresh control insets it while it spins), no automatic adjustment
     /// but a route's collapse or bottom-edge scroller's, the backend's Exact-owned delegate, the node's keyboard dismissal (authored, or
-    /// the platform's for what it scrolls). The offset
+    /// the platform's for what it scrolls, LLP 1115.000 D9.1). The offset
     /// and the content size are Exact's too but are not checked: they move
     /// with the user and with layout, so no last write predicts them.
     static func ownedChanges(_ s: UIScrollView, of node: NodeView, insetByUIKit: Bool) -> [String] {
@@ -291,7 +294,7 @@ extension RouteController {
     /// A large title at rest stays open when the text size changes. UIKit
     /// draws the title at the new size in the bar's old height, which grows
     /// only when the list is pulled: at the largest size the title ran under
-    /// the bar's buttons, and a hand-built
+    /// the bar's buttons (meal-planner, bake-off round 34), and a hand-built
     /// bar clips it the same way. A scroller at its start is pulled open on
     /// the next turn, after UIKit's layout, as a title that turns large
     /// again in place is (`restAtTop`).

@@ -1,4 +1,4 @@
-//! Gamepads through XInput: the call that reads a slot.
+//! Gamepads through XInput (LLP 1127.003 D2): the call that reads a slot.
 //! What a slot's state means, and when to read it, is `pad_poll.rs`'s.
 #![allow(unsafe_code)]
 

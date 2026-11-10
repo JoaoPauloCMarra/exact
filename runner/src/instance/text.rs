@@ -29,7 +29,7 @@ fn list_region<'a>(
                     if n.view == view {
                         return n.collection().map(|c| (c, selectable));
                     }
-                    // A nested list lives in a mounted row.
+                    // A nested list lives in a mounted row (LLP 1070 §4.7).
                     if let Some(c) = n.collection() {
                         for (_, row) in c.mounted_rows() {
                             frames.push(row.frame.clone());
@@ -198,7 +198,7 @@ fn collect(
                 if text && !inline {
                     out.push((String::new(), selectable.selectable()));
                 }
-                // An image in a paragraph's text copies as its label.
+                // An image in a paragraph's text copies as its label (LLP 1011.002 D4).
                 let image = inline && u.env.plan.node(n.node).node_type == NodeType::Image as u8;
                 if text || image {
                     let prop = if image {

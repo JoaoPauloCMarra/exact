@@ -3,7 +3,7 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// A click addressed by id presses what it names (the agent's `tap`), as on
+/// A click addressed by id presses what it names (LLP 1012 §1 `tap`), as on
 /// iOS (`AddressedTapIOSTests`): the real click lands beside the card a
 /// row's middle holds; a box without a press never presses the control inside
 /// it; `at` keeps a point's semantics.
@@ -49,7 +49,7 @@ final class AddressedTapMacTests: XCTestCase {
 
     private func rows() -> (Agent, () -> [UInt32]) {
         _ = NSApplication.shared
-        clicksArriveAsInTheKeyWindow() // the agent's own rule, which a test's process does not have
+        clicksArriveAsInTheKeyWindow() // the agent's own rule, which a test's process does not have (LLP 1115.000 D7.9)
         let session = ExactApp.shared.makeSession(label: "addressed-tap-mac")
         self.session = session
         let p = session.presenter
@@ -82,7 +82,7 @@ final class AddressedTapMacTests: XCTestCase {
         XCTAssertEqual(presses(), [], "nothing is pressed by a refusal")
         XCTAssertNil(agent.tap(["id": 8])["error"])
         XCTAssertEqual(presses(), [], "a disabled row's click presses nothing, not the button at its middle")
-        // A 2-point strip around a child that covers the rest is found.
+        // A 2-point strip around a child that covers the rest is found (Astra, round 1).
         session?.presenter.apply(wireBatch([
             ["op": "create", "id": 22, "kind": "view", "handlers": ["press"], "props": ["testId": "ring"]],
             ["op": "create", "id": 23, "kind": "view", "handlers": ["press"], "props": ["testId": "ring-core"]],
@@ -95,7 +95,7 @@ final class AddressedTapMacTests: XCTestCase {
         XCTAssertNil(ring["error"], "\(ring)")
         XCTAssertEqual(presses(), [22])
         // An inline run's `at` is from its own fragment, not its paragraph's
-        // top left, where another run is.
+        // top left, where another run is (round 2).
         session?.presenter.apply(wireBatch([
             ["op": "create", "id": 30, "kind": "text", "style": ["font_size": 16, "line_height": "20px"]],
             ["op": "paragraph", "id": 30, "runs": [

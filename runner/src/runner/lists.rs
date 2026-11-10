@@ -1,4 +1,4 @@
-//! Logical text and key lookups over virtualized lists.
+//! Logical text and key lookups over virtualized lists. LLP 1010 §6.
 use super::*;
 
 /// The host's paragraph and `user-select: auto` rules for logical copies.

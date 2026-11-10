@@ -1,4 +1,4 @@
-// @exact/serial's web conformance suite in Chromium, over a fake `navigator.serial`
+// @exact/serial's web conformance suite in Chromium (LLP 1133.037 §16 stage 1), over a fake `navigator.serial`
 // (`chromium.mjs`): the filters the chooser is asked with, `getPorts`, `open`'s options and a second open, one reader
 // that loses nothing with its backpressure (1 MB pushed while the reader is slow), a non-fatal error at its offset and
 // the next `readable` taken, writes in order, signals, an unplug ending the stream, and `forget`.
@@ -88,7 +88,7 @@ check('open answers a connection and the options with their defaults', opened.co
 check('a second open fails InvalidStateError', (await s.call('open', { port: port.id, baudRate: 9600 })).error === 'InvalidStateError');
 const connection = opened.connection;
 
-// A megabyte while the reader does not read. The implementation reads until the undelivered bytes reach the
+// D8: a megabyte while the reader does not read. The implementation reads until the undelivered bytes reach the
 // bound (two seconds at 115,200 baud: 23,040 bytes), then the rest waits in the stream.
 const total = 1 << 20;
 const data = Uint8Array.from({ length: total }, (_, i) => (i * 7) & 0xff);
@@ -104,7 +104,7 @@ for (let i = 0; i < 400 && got.length < total; i++) {
 }
 check('every byte arrives, in order', got.length === total && got.every((b, i) => b === data[i]), `${got.length} of ${total}`);
 
-// A break between two pieces is an entry at its offset, and reading goes on with the next readable.
+// D9: a break between two pieces is an entry at its offset, and reading goes on with the next readable.
 await s.eval(() => __ports[0].feed(new TextEncoder().encode('before')));
 await Bun.sleep(50);
 await s.eval(() => __ports[0].fail('BreakError'));

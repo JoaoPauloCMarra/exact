@@ -1,5 +1,5 @@
-//! Child processes under the agent's clock, answered by scripts:
-//! the events, restarts, stdin's queue and `drain`, the
+//! Child processes under the agent's clock, answered by scripts (LLP
+//! 1133.007 §7): the events, restarts, stdin's queue and `drain`, the
 //! origin rule, release and its escalation, and the refusals that come
 //! before anything runs.
 use super::super::Core;
@@ -623,8 +623,8 @@ fn readiness_that_fails_ends_the_stream_as_a_timeout() {
     assert_eq!(events(&taken(&core)), ["spawn 82 0", "stdout up"]);
     clock.advance(50.0);
     clock.advance(100.0);
-    // `ready-timeout`, then the release (whose events a stream never hears)
-    // and the stream's end, with no wait for the grace.
+    // `ready-timeout`, then the release (whose events a stream never hears,
+    // D2) and the stream's end as D4 says, with no wait for the grace.
     let seen = events(&to_the_end(&core));
     assert_eq!(seen.len(), 2, "{seen:?}");
     assert_eq!(seen[0], "ready-timeout");

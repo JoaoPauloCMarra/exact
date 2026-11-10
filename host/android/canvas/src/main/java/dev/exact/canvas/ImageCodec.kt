@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * Android's image codec, called from exact2's storage workers through JNI
+ * Android's image codec (LLP 1133.019 D16), called from exact2's storage workers through JNI
  * (`host/linux/src/canvas/codec.rs`), which drives these steps in the order and with the search every codec shares:
  * a decode upright, an edit (turn, flip, crop, size) as `Bitmap` transforms, an encode, and the metadata. A decoded
  * picture is held under a handle until it is closed. Steps run on the calling thread and never on the main one.
@@ -99,8 +99,8 @@ object ImageCodec {
     }
 
     /**
-     * Picture [handle] edited by [plan] (`{"rotate", "flip", "turned", "crop", "size", "smooth"}`, applied in that
-     * order): a new handle, or `{"error", "message"}`.
+     * Picture [handle] edited by [plan] (`{"rotate", "flip", "turned", "crop", "size", "smooth"}`, in D14's order): a
+     * new handle, or `{"error", "message"}`.
      */
     @JvmStatic
     fun edit(handle: Long, plan: String): String = try {
@@ -180,7 +180,7 @@ object ImageCodec {
     @JvmStatic
     fun close(handle: Long) { held.remove(handle) }
 
-    /** The standard tags that describe the capture: `no-location`'s whole set, as Apple's codec keeps it. */
+    /** The standard tags that describe the capture: `no-location`'s whole set (D15), as Apple's codec keeps it. */
     private val described = listOf(
         "DateTime", "DateTimeOriginal", "DateTimeDigitized", "OffsetTime", "OffsetTimeOriginal", "OffsetTimeDigitized",
         "SubSecTime", "SubSecTimeOriginal", "SubSecTimeDigitized", "ExposureTime", "FNumber", "ExposureProgram",

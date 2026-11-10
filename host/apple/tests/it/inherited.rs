@@ -1,7 +1,7 @@
-//! CSS inheritance across the Apple host's batch: a
+//! CSS inheritance across the Apple host's batch (LLP 1035.000 slice 1): a
 //! run or an editor carries the computed rows it measures with; an
 //! ancestor's change re-sends exactly the descendants that follow it; and
-//! `layout <node>`'s runner half says where each value
+//! `layout <node>`'s runner half (LLP 1035.002 D1) says where each value
 //! came from.
 
 use exact_apple::Host;
@@ -84,9 +84,10 @@ fn symbol_identity_and_inherited_font_cross_the_image_boundary() {
     assert!(changed.contains("\"font_weight\":600"), "{changed}");
 }
 
-/// A symbol whose `color` its author wrote, on it or on the nearest
-/// ancestor that sets one, says so (`symbolColorWritten`) beside the colour
-/// its style carries; one under no written colour does not.
+/// LLP 1121 stage 9 B (D10): a symbol whose `color` its author wrote, on
+/// it or on the nearest ancestor that sets one, says so
+/// (`symbolColorWritten`) beside the colour its style carries; one under no
+/// written colour does not.
 #[test]
 fn a_symbol_under_a_written_colour_says_so() {
     let plan = contract::compile(
@@ -448,7 +449,7 @@ fn a_percentage_min_height_on_a_list_row_has_no_basis() {
 }
 
 #[test]
-#[ignore = "launches Bun and nested cargo builds; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: launches Bun and nested cargo builds; bun scripts/async.mjs runs it"]
 fn apple_artifacts_own_paths_locks_identity_and_failed_placement() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let result = std::process::Command::new(std::env::var_os("BUN").unwrap_or_else(|| "bun".into()))
@@ -550,9 +551,9 @@ try {
 }
 
 #[test]
-#[ignore = "launches Bun; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: launches Bun; bun scripts/async.mjs runs it"]
 fn a_kept_module_is_taken_only_by_a_checkout_of_the_same_bytes() {
-    // The host's Rust modules, kept for the machine.
+    // @ref LLP 1036.000 §10 — the host's Rust modules, kept for the machine.
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let result = std::process::Command::new(std::env::var_os("BUN").unwrap_or_else(|| "bun".into()))
         .current_dir(root)
@@ -641,9 +642,9 @@ try {
 }
 
 #[test]
-#[ignore = "launches Bun; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: launches Bun; bun scripts/async.mjs runs it"]
 fn kept_registry_crates_are_one_target_directory_at_a_time() {
-    // Compiled registry crates, kept for the machine.
+    // @ref LLP 1036.000 §11 — compiled registry crates, kept for the machine.
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let result = std::process::Command::new(std::env::var_os("BUN").unwrap_or_else(|| "bun".into()))
         .current_dir(root)
@@ -854,7 +855,7 @@ fn paragraph_batches_preserve_inline_identity_and_replace_the_complete_run_table
     assert_eq!(count(&host.resize(420.0, 800.0), "paragraph"), 0);
 }
 
-/// Swift paints a run from its `text` prop, so the prop crosses as
+/// LLP 1064: Swift paints a run from its `text` prop, so the prop crosses as
 /// the string the kernel measured — `text-transform` applied, a word split
 /// across runs one word, a field's value as typed — and an ancestor's change
 /// re-sends it. `box-shadow` crosses as its four rows.
@@ -951,7 +952,7 @@ fn pointer_events_none_reaches_a_box_that_inherits_it() {
     );
 }
 
-/// An `href` that turns out empty is no link (the kernel's
+/// An `href` that turns out empty is no link (LLP 1115 §3, the kernel's
 /// `Props::link`): Swift is told no `href`, so every place it asks whether a
 /// run has one (its role, its pointer, what a press follows) answers no, and
 /// the run inherits its paragraph's colour. A target that arrives is told,
@@ -1109,7 +1110,7 @@ fn explicit_clears_export_computed_values_and_own_declaration_intent() {
     }
 }
 
-/// A pressed paint cleared by its expression is no pressed
+/// LLP 1061 D7: a pressed paint cleared by its expression is no pressed
 /// look, so the presenter is sent no row (an initial transparent would
 /// erase the background while held and keep the platform's press away).
 #[test]

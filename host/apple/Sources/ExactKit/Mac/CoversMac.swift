@@ -1,4 +1,4 @@
-// Covers on the Mac: how the host
+// @ref LLP 1115.002 D8.1; LLP 1075.003 §3.5 — covers on the Mac: how the host
 // tells the kernel that a box is the platform's now, as the UIKit host does
 // (`reportCovers`, NavigationBarIOS.swift). A box a native presentation
 // stands for is covered whole and laid out as `display: none`; nothing

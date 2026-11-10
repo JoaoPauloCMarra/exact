@@ -90,7 +90,7 @@ pub(super) fn changed(
     receipt: &mut CommitReceipt,
 ) {
     let after = arena.default_context(slot);
-    // Whether a symbol image draws in its colour can
+    // Whether a symbol image draws in its colour (LLP 1121 stage 9 B) can
     // change with the colour equal: its images are sent again.
     if before.ink_said != after.ink_said {
         for s in arena.subtree(slot) {
@@ -129,7 +129,7 @@ pub(super) fn changed(
         propagate_inherited(arena, layout, slot, rows, touched, receipt);
     }
     // What is said above changed, if no value here did: a bare text style
-    // below fills what is not.
+    // below fills what is not (LLP 1115.000 D12.2).
     let said = before
         .said_style
         .minus(after.said_style)

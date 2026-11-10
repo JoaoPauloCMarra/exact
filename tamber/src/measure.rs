@@ -1,19 +1,19 @@
-//! Length and number tokens: a length is px, one
+//! Length and number tokens (LLP 1121 D3, stage 6): a length is px, one
 //! `rem` or `em`, or one named length (a text style, `-exact-hairline`);
 //! `calc()`, `min()`, `max()` and `clamp()` over px and numbers fold to px,
-//! and over base names the design leaves unset to a [`Residual`]. A number
-//! is a number, or such a function over numbers.
+//! and over base names the design leaves unset to a [`Residual`] (D11,
+//! stage 12 B2). A number is a number, or such a function over numbers.
 
 use crate::css::Item;
 use crate::fold::{fail, FoldError, Folded, Named, Names};
 use crate::residual::Residual;
 use crate::residual::MAX_RESIDUAL_ATOMS;
 
-/// Why a relative length inside a function is refused.
-const RELATIVE_IN_CALC: &str =
-    "the kernel takes only px inside `calc()`, `min()`, `max()` and `clamp()`";
+/// What QUEUE's `rem`/`em` item says a relative length inside a function
+/// waits on.
+const RELATIVE_IN_CALC: &str = "the kernel takes only px inside `calc()`, `min()`, `max()` and `clamp()` until QUEUE's item \"`rem`/`em` where the kernel still takes only `px`\"";
 
-/// A token's kind, as the IR and the plan name it.
+/// A token's kind (D3), as the IR and the plan name it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Kind {
     /// A colour.
@@ -22,17 +22,17 @@ pub enum Kind {
     Length,
     /// A number.
     Number,
-    /// A `box-shadow` row's value.
+    /// A `box-shadow` row's value (stage 6 D).
     BoxShadow,
-    /// A `text-shadow` row's value.
+    /// A `text-shadow` row's value (stage 6 D).
     TextShadow,
-    /// A time in a `transition` or `animation`.
+    /// A time in a `transition` or `animation` (stage 6 E).
     Duration,
-    /// An easing in a `transition` or `animation`.
+    /// An easing in a `transition` or `animation` (stage 6 E).
     Easing,
-    /// CSS `font` syntax on `font`.
+    /// CSS `font` syntax on `font` (stage 6 C).
     Type,
-    /// A font-family stack on `font-family`.
+    /// A font-family stack on `font-family` (stage 6 C).
     Family,
 }
 
@@ -80,10 +80,10 @@ pub enum Length {
     Em(f64),
     /// A named length as written: a text style (`-exact-body`) or
     /// `-exact-hairline`, which the kernel's relative side table reads, or
-    /// a base name the design leaves unset.
+    /// a base name the design leaves unset (stage 11 B).
     Named(String),
     /// An expression over base names the design leaves unset, each host's
-    /// in its column.
+    /// in its column (D11, stage 12 B2).
     Base(Residual),
 }
 
@@ -169,8 +169,8 @@ pub(crate) fn num(n: f64) -> String {
     exact_num::Shortest(n).to_string()
 }
 
-/// The kind a value's text makes it, where the text says (a kind is
-/// inferred from the value where it can be): a dimension, a named length
+/// The kind a value's text makes it, where the text says (§3: "a kind is
+/// inferred from the value where it can be"): a dimension, a named length
 /// or a function over dimensions is a length, a number or a function over
 /// numbers a number; `None` otherwise (a colour, or a name to follow).
 pub(crate) fn inferred(items: &[Item], named: &dyn Fn(&str) -> bool) -> Option<Kind> {
@@ -268,7 +268,7 @@ pub(crate) fn length(
         }
         Item::Func(f, _, _) if f == "var" => fail(
             "tamber-var",
-            "a token is named bare (`space.row`), not through `var()`",
+            "a token is named bare (`space.row`), not through `var()` (LLP 1121 D3)",
         ),
         Item::Func(_, _, text) => fail("tamber-kind", format!("`{text}` is not a length")),
         Item::Percent(n) => fail(

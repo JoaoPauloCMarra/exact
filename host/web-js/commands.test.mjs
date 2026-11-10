@@ -148,7 +148,7 @@ test('openURL opens a declared scheme, refuses the rest, and journals under the 
   }
 }, 30000);
 
-// A page cannot open the browser's developer tools: `openDevTools(id)` is refused in the journal.
+// A page cannot open the browser's developer tools (LLP 1020.002 D11): `openDevTools(id)` is refused in the journal.
 test('openDevTools is refused on the web', async () => {
   const server = Bun.serve({ port: 0, fetch(request) {
     const path = new URL(request.url).pathname;

@@ -1,7 +1,7 @@
 import { admitsSecret, createRequestExecutor, fetchHostAsset, sameGrantDeclaration, setAppGrantSet } from './admission.js';
 import { rustGrantSet, tsGrantSet } from './admission-data.js';
 import { boundedHttpBody, longPollRefusal, streamed } from './http-body.js';
-// A Rust data module on the JS runtime (the data seam, ABI 4,
+// A Rust data module on the JS runtime (LLP 1029.000's seam, ABI 4,
 // `logic/abi/src/lib.rs`): the app's importless module wasm and its plan's
 // declarations (`app.bind.plan`, the plan without the bake's answers),
 // fetched after first pixel; once bound and activated, every answer is a
@@ -91,7 +91,7 @@ export async function install(data, sources, load = p => fetchHostAsset(p).then(
     // The source's own refusal refuses the commit, as the runner's does;
     // UnknownSource (2): a mixed app's TypeScript module may answer it.
     // A call the seam could not carry (`call` above) is the resource's
-    // failure instead.
+    // failure instead (LLP 1071 §7).
     if (tag >= 2 && tag <= 4) throw Object.assign(new Error(r.str()), { unknown: tag === 2, refuse: true });
     if (tag === 1 || tag === 6 || tag === 9 || tag === 10) {
       const http = tag === 1 ? 'ordered' : `independent:${r.u32()}`;
@@ -99,14 +99,14 @@ export async function install(data, sources, load = p => fetchHostAsset(p).then(
       const method = r.str(), url = r.str(), headers = [];
       for (let n = r.u32(); n--;) headers.push([r.str(), r.str()]);
       const n = r.u32(), body = r.bytes(n);
-      // A long poll (tag 10): its terms after the body, checked as the stream opens (http-body.js).
+      // A long poll (tag 10, LLP 1016.000 D8): its terms after the body, checked as the stream opens (http-body.js).
       const longPoll = tag === 10 ? { cursor: r.str(), from: r.str(), sameCursorEvent: [false, true][r.u8()] ?? (() => { throw new Error('invalid long poll terms'); })() } : undefined;
       // (refused as the native seam refuses it: before the turn's writes apply)
       const pollRefusal = longPoll && longPollRefusal({ url, longPoll, stream: true }, method, n ? 'x' : '');
       if (pollRefusal) throw new Error(pollRefusal);
       return { req: { method, url, headers, body: text.decode(body), raw: body, http, maxResponseBytes: http === 'ordered' ? undefined : Number(http.split(':')[1]), scope: scoped ? scope : null, stream: tag >= 9, longPoll } };
     }
-    // Storage work: a portable request the host runs
+    // Storage work (LLP 1027.001 D2): a portable request the host runs
     // through the web host's own `storage-request.js`, under its scope.
     if (tag === 5) { const payload = r.bytes(r.u32()), scoped = r.u8() === 1, scope = r.str(); return { req: { storage: text.decode(payload), scope: scoped ? scope : null } }; }
     throw new Error(`a Rust answer of kind ${tag} (surface work) is not carried by the JS target`);
@@ -118,7 +118,7 @@ export async function install(data, sources, load = p => fetchHostAsset(p).then(
   r = op(2); r.u8(); result(r);
   // One call (`call_request`): source, arguments by type, the store's
   // snapshot; its reply (`call_reply`): a store read, writes, the result.
-  // Whether the module's last call read the store before it failed: its resource is a store reader.
+  // Whether the module's last call read the store before it failed: its resource is a store reader (LLP 1146 §2.3).
   let threwRead = false;
   const callWith = (code, source, args, store, outcome) => {
     threwRead = false;
@@ -129,7 +129,7 @@ export async function install(data, sources, load = p => fetchHostAsset(p).then(
       w.u32(pairs.length); for (const [k, v] of pairs) { w.str(k); w.str(v); }
       if (outcome) {
         if (outcome.storage) { w.u8(5); w.bytes(outcome.storage); }
-        // One message of a stream, the ABI's tag 8.
+        // One message of a stream (LLP 1016.000), the ABI's tag 8.
         else if (outcome.streamed) { const m = outcome.streamed; w.u8(8); w.str(m.event); w.str(m.id); w.str(m.data); w.u32(m.coalesced); }
         else if (outcome.failed) { w.u8(outcome.failed); w.str(outcome.message); }
         else { w.u8(0); w.u16(outcome.status); w.u32(outcome.headers.length); for (const [k, v] of outcome.headers) { w.str(k); w.str(v); } w.bytes(outcome.body); }
@@ -175,7 +175,7 @@ export async function install(data, sources, load = p => fetchHostAsset(p).then(
   };
   // The host runs the request under this child's own authority. An absent
   // request scope is therefore the Rust child set, not the mixed-app union.
-  // A stream (`Answer::stream`) is the web host's own reader, under the same authority;
+  // A stream (`Answer::stream`, LLP 1016.000) is the web host's own reader, under the same authority;
   // its end is the outcome a single request's would be.
   const run = createRequestExecutor(data.appId ?? meta[0], rustGrantSet, boundedHttpBody);
   data.fetch = (req, message, controller) => !req.stream ? run(req) : streamed(req, rustGrantSet, message, controller).then(o => o.kind

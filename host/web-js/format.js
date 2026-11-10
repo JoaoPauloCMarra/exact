@@ -30,7 +30,7 @@ const pad = (n, w) => String(n).padStart(w, "0");
 /** `formatDate` of a valid wall time. */
 function date(w, style) {
   const [year, month, day] = civil(Math.floor(w / 864e5)), name = MONTHS[month - 1];
-  // "iso": the date part of `toISOString`; `wall` admits years 1–9999 only, so four digits.
+  // "iso" (LLP 1102 §3.4): the date part of `toISOString`; `wall` admits years 1–9999 only, so four digits.
   if (style === "iso") return `${pad(year, 4)}-${pad(month, 2)}-${pad(day, 2)}`;
   return style === "month-year" ? `${name} ${year}` : `${name.slice(0, 3)} ${day}, ${year}`;
 }
@@ -40,7 +40,7 @@ export function x_formatDate(ms, off, style) {
   return w === null ? "" : date(w, style);
 }
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-/** `formatDay` (runner/src/format.rs `day_label`): `then`'s day counted from `now`'s at the offset.
+/** `formatDay` (LLP 1116.020 D8, runner/src/format.rs `day_label`): `then`'s day counted from `now`'s at the offset.
  * "day" is Today, Yesterday, Tomorrow or the medium date, "day-time" adds ` at ` and the short time, "list" is the
  * short time today, Yesterday, the weekday two to six days back, else `M/D/YY`. */
 export function x_formatDay(then, now, off, mode) {
@@ -65,7 +65,7 @@ export function plain(x) {
   if (point <= 0) return "0." + "0".repeat(-point) + digits;
   return point >= digits.length ? digits + "0".repeat(point - digits.length) : digits.slice(0, point) + "." + digits.slice(point);
 }
-// Each code's en-US symbol and fraction digits (runner/src/format.rs `CURRENCIES`).
+// LLP 1116 D8: each code's en-US symbol and fraction digits (runner/src/format.rs `CURRENCIES`).
 const CURRENCIES = { USD: "$2", EUR: "€2", GBP: "£2", JPY: "¥0", CNY: "CN¥2", INR: "₹2", CAD: "CA$2", AUD: "A$2", NZD: "NZ$2",
   HKD: "HK$2", SGD: "SGD2", CHF: "CHF2", SEK: "SEK2", NOK: "NOK2", DKK: "DKK2", PLN: "PLN2", MXN: "MX$2", BRL: "R$2", KRW: "₩0",
   ZAR: "ZAR2", TWD: "NT$2", ILS: "₪2", PHP: "₱2", VND: "₫0" };
@@ -105,7 +105,7 @@ export function x_formatNumber(n, style, code) {
   const grouped = !int ? "0" : int.length >= 5 ? int.replace(/\B(?=(\d{3})+$)/g, ",") : int;
   return (n < 0 ? "-" : "") + grouped + (kept ? "." + kept : "") + (scale ? "KMBT"[scale - 1] : "");
 }
-/** `toFixed(n, digits)`: JavaScript's own, except a non-finite `n` prints "", not `NaN`/`Infinity`. */
+/** `toFixed(n, digits)` (LLP 1102 §3.2): JavaScript's own, except a non-finite `n` prints "" (D7), not `NaN`/`Infinity`. */
 export const x_toFixed = (n, d) => Number.isFinite(n) ? n.toFixed(d) : "";
 /** `formatDecimal(units, digits)`: an integer count of a smallest unit with `digits` places, exactly (a BigInt of it);
  * `-0` is `0`, and a count that is not an integer, or not finite, is "". */

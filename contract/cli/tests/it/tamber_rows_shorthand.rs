@@ -1,5 +1,5 @@
 //! The write check judges a written shorthand or `flex` row as lowering
-//! does: expanded by the build's own
+//! does (theme2's ruling on the shorthand plan): expanded by the build's own
 //! `shorthands::component` or `values::flex_component`, each longhand judged
 //! in row order, so the first refusal said is the build's first. A computed
 //! one is the build's.
@@ -69,7 +69,7 @@ fn a_styles_flex_row_is_judged_where_it_is_applied() {
 
 /// A choice of shorthand literals is judged whole, as the build expands and
 /// judges it: a write breaking both arms in other words is refused in the
-/// build's first, as `contract build` reports it.
+/// build's first (Astra's round 1), as `contract build` reports it.
 #[test]
 fn a_choice_of_shorthands_is_refused_with_the_builds_first_words() {
     let dir = reading("rows-short-both");
@@ -112,8 +112,9 @@ fn a_choice_of_shorthands_is_refused_with_the_builds_first_words() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A choice with a `none` arm, which lowering expands as a clear, and a
-/// token an expansion writes itself (`flex="none"`'s basis `auto`): refused in the build's first words.
+/// A choice with a `none` arm, which lowering expands as a clear (Grok's
+/// round 3), and a token an expansion writes itself (`flex="none"`'s basis
+/// `auto`, Astra's round 3): refused in the build's first words.
 #[test]
 fn a_none_arm_and_an_expansions_own_text_are_judged() {
     kind(

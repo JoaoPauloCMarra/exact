@@ -1,17 +1,17 @@
-// @exact/translation on Apple: the Translation
+// @exact/translation on Apple (LLP 1133.027 D7–D10): the Translation
 // framework (iOS 18, macOS 15; not on tvOS) and Natural Language's
 // `NLLanguageRecognizer` for detection.
 //
-// - A translator and a detector are handles, each's calls one at a time
+// - A translator and a detector are handles (D9), each's calls one at a time
 //   in admission order. On iOS and macOS 26 every translate runs on an
 //   installed-only session, which cannot ask to download; before 26 on a
 //   session a hosted view's `translationTask` gives (Hosted.swift), and only
-//   from the app's own foreground code, after the pair reads installed.
+//   from the app's own foreground code, after the pair reads installed (D8).
 // - A create while the pair is downloadable calls `prepareTranslation()`,
 //   whose system sheet asks the person; dismissed, the create fails
 //   `NotAllowedError`, `declined`. Every create is the app's foreground act,
-//   which the runner admits.
-// - Under the agent no framework is asked and no sheet shown:
+//   which the runner admits (D16).
+// - Under the agent no framework is asked and no sheet shown (§9):
 //   availability is the fixed list's, a translation the script's next entry
 //   or the input behind the target's tag, detection the script's or a rule on
 //   the input's scripts, and the download sheet the drive's `downloadSheet`.
@@ -28,7 +28,7 @@ public final class TranslationModule: ExactPackage {
     let context: ExactPackageContext
     private var serial = 0
     private var translators: [String: Handle] = [:], detectors: [String: Handle] = [:]
-    // The agent's words.
+    // The agent's words (§9).
     private var pairOverlay: [String: Any] = [:], detectorOverlay: [String: Any] = [:]
     private var translations: [[String: Any]] = [], detections: [[String: Any]] = [], sheet = "accept"
     private var seen = (translations: "", detections: "")
@@ -82,7 +82,7 @@ public final class TranslationModule: ExactPackage {
         name == "languageDetectorAvailability" || name == "languageDetectorAvailabilitySync" ? detectorAvailability(args) : ["error": "NotSupportedError"]
     }
 
-    // MARK: languages
+    // MARK: languages (D7)
 
     struct Pair { let source: String, target: String, key: String }
 
@@ -94,7 +94,7 @@ public final class TranslationModule: ExactPackage {
         return a == b ? nil : Pair(source: s, target: t, key: "\(a)>\(b)")
     }
 
-    // MARK: availability
+    // MARK: availability (D8)
 
     private func pairAvailability(_ args: [String: Any], _ reply: @escaping ([String: Any]) -> Void) {
         guard let p = Self.pair(args) else { return reply(["availability": "unavailable", "reason": "unsupported-options"]) }
@@ -130,7 +130,7 @@ public final class TranslationModule: ExactPackage {
         guard downloads[key] != nil, word == "downloadable" || word == "downloading" else { return a }
         var d = a
         d["availability"] = "downloading"
-        // Apple reports no progress; the agent's download stands at 0 until the drive completes it.
+        // Apple reports no progress (D8); the agent's download stands at 0 until the drive completes it (§9).
         if context.agent { d["progress"] = 0 } else { d["progress"] = nil }
         return d
     }
@@ -144,7 +144,7 @@ public final class TranslationModule: ExactPackage {
         return a
     }
 
-    // MARK: translators
+    // MARK: translators (D9)
 
     private func createTranslator(_ args: [String: Any], _ reply: @escaping ([String: Any]) -> Void) {
         guard let p = Self.pair(args) else { return reply(["error": "NotSupportedError", "message": "unsupported-options"]) }
@@ -193,7 +193,7 @@ public final class TranslationModule: ExactPackage {
     }
 
     #if canImport(Translation) && !os(tvOS)
-    /// The pair downloaded through a hosted session's `prepareTranslation()`, whose sheet asks the person.
+    /// The pair downloaded through a hosted session's `prepareTranslation()`, whose sheet asks the person (D8).
     @available(iOS 18.0, macOS 15.0, *)
     @MainActor
     private func download(_ p: Pair, _ done: @escaping ([String: Any]?) -> Void) {
@@ -226,7 +226,7 @@ public final class TranslationModule: ExactPackage {
             guard let input = args["input"] as? String else { return answer(["error": "TypeError"]) }
             if input.isEmpty { return answer(["text": ""]) }
             if !Self.unattendedSafe {
-                // Before 26 a translate could show the sheet: only the app's foreground code runs one.
+                // Before 26 a translate could show the sheet: only the app's foreground code runs one (D8).
                 if origin != "app" { return answer(["error": "NotAllowedError", "message": "person-required"]) }
                 if !shown { return answer(["error": "NotAllowedError", "message": "background"]) }
             }
@@ -254,7 +254,7 @@ public final class TranslationModule: ExactPackage {
         return false
     }
 
-    /// The pair's pack is gone: its availability is read again.
+    /// The pair's pack is gone: its availability is read again (D8).
     func notInstalled(_ h: Handle) -> [String: Any] {
         context.changed(Self.pairTopic)
         say("\(h.id): \(h.key) is not installed")
@@ -323,7 +323,7 @@ public final class TranslationModule: ExactPackage {
         let t = String(describing: values["translations"] ?? ""), d = String(describing: values["detections"] ?? "")
         if t != seen.translations { seen.translations = t; translations = values["translations"] as? [[String: Any]] ?? []; say("script: \(translations.count) translations") }
         if d != seen.detections { seen.detections = d; detections = values["detections"] as? [[String: Any]] ?? []; say("script: \(detections.count) detections") }
-        // The drive completes or fails an agent's download by the availability it lays over.
+        // The drive completes or fails an agent's download by the availability it lays over (§9).
         switch pairOverlay["availability"] as? String {
         case "available":
             for (key, waiting) in downloads { removed.remove(key); say("\(key): download finished (agent)"); waiting.forEach { $0(true) } }
@@ -341,7 +341,7 @@ public final class TranslationModule: ExactPackage {
         }
     }
 
-    /// Back in the foreground, a pack may have arrived or gone.
+    /// Back in the foreground, a pack may have arrived or gone (D8).
     public func foreground(_ shown: Bool) {
         if shown, !context.agent { context.changed(Self.pairTopic) }
     }
@@ -358,7 +358,7 @@ public final class TranslationModule: ExactPackage {
 @available(iOS 18.0, macOS 15.0, *)
 @MainActor
 enum Platform {
-    /// The framework's languages as the table lists them: each one's language, and its language and script.
+    /// The framework's languages as D7's table lists them: each one's language, and its language and script.
     private static var listed: [String]?
 
     static func languages() async -> [String] {
@@ -395,13 +395,13 @@ enum Platform {
 
     /// A hosted session for the pair under the context's session view, or nil while it is in no window.
     static func host(_ p: TranslationModule.Pair, _ context: ExactPackageContext) -> Hosted? {
-        // `Locale.Language(identifier:)` of the tags; the framework matches regions itself.
+        // `Locale.Language(identifier:)` of D7's tags; the framework matches regions itself.
         let s = Locale.Language(identifier: Languages.scripted(p.source)), t = Locale.Language(identifier: Languages.scripted(p.target))
         return Hosted(source: s, target: t, context: context)
     }
 
     /// One translate on the handle's session: the installed-only one on 26, else its hosted one, after the pair reads
-    /// installed. A long input goes in paragraphs.
+    /// installed (D8). A long input goes in paragraphs (D9).
     static func translate(_ h: TranslationModule.Handle, _ input: String, module: TranslationModule) async -> [String: Any] {
         let p = TranslationModule.Pair(source: h.source, target: h.target, key: h.key)
         guard let (s, t) = await languages(p) else { return ["error": "NotSupportedError", "message": "unsupported-options"] }

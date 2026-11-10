@@ -13,7 +13,7 @@ pub enum HostError {
     PreparingModule,
     /// A module replacement refused while requests are in flight; a dev
     /// generation asks again, and after [`LET_GO_AFTER`] lets them go
-    /// (`reload_module`'s `let_go`), as the web's dev loop does.
+    /// (`reload_module`'s `let_go`), as the web's dev loop does (LLP 1007 §6).
     RequestsPending,
 }
 

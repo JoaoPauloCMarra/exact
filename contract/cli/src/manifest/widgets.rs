@@ -1,4 +1,4 @@
-//! Widget entry declarations. The compiler checks the named
+//! Widget entry declarations (LLP 1126 D2). The compiler checks the named
 //! component and props; refresh names a function below the data seam.
 
 use super::Manifest;

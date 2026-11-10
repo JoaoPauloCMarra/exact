@@ -1,5 +1,5 @@
-//! Edge cases of name scope, each one that compiled wrongly or was refused
-//! wrongly.
+//! LLP 1091: the code review's findings (Astra, Grok, 2026-10-04), each a
+//! case that compiled wrongly or was refused wrongly.
 
 use std::path::PathBuf;
 
@@ -190,6 +190,8 @@ fn a_refused_manifest_is_still_watched() {
     );
 }
 
+// Round 2 (Grok, 2026-10-05).
+
 #[test]
 fn a_fn_in_scope_is_called_before_a_binding_of_its_name() {
     let dir = Dir::new("fn-before-binding");
@@ -268,6 +270,8 @@ fn alike_fonts_merge_whatever_the_order_of_their_faces() {
     );
 }
 
+// Round 2 (Astra, 2026-10-05).
+
 #[test]
 fn a_keyword_whose_slot_is_filled_is_the_name_and_quotes_name_too() {
     let dir = Dir::new("slots");
@@ -321,6 +325,8 @@ fn compiler_intrinsics_are_never_another_files_names() {
         "{e:?}"
     );
 }
+
+// Round 3 (Astra, Grok, 2026-10-05).
 
 #[test]
 fn a_whole_attribute_call_resolves_as_the_type_checker_reads_it() {
@@ -396,9 +402,11 @@ fn a_missing_target_is_watched_so_creating_it_builds_again() {
     );
 }
 
+// Round 4 (Astra, Grok, 2026-10-05).
+
 #[test]
 fn computed_easings_times_tabs_and_infinities_are_read_as_motion_reads_them() {
-    let dir = Dir::new("motion-shorthand");
+    let dir = Dir::new("round4-shorthand");
     dir.write(
         "ui.contract",
         "keyframes linear\n  to opacity=0\nkeyframes pulse\n  to opacity=0\nkeyframes slide\n  to opacity=0\ncomponent Card\n  props\n    n: number\n  view\n    column\n      view animation=`steps(${n}, jump-end) linear 1s`\n      view animation=\"\tpulse 1s\"\n      view animation=\"inf slide\"\n",
@@ -465,6 +473,8 @@ fn a_package_not_installed_is_watched_where_it_would_be() {
     );
 }
 
+// Round 5 (Astra, Grok, 2026-10-05).
+
 #[test]
 fn t_follows_its_innermost_binding() {
     let dir = Dir::new("t-innermost");
@@ -519,6 +529,8 @@ fn a_missing_package_is_watched_at_every_ancestor() {
         graph.consulted
     );
 }
+
+// Round 6 (Astra, Grok, 2026-10-05).
 
 #[test]
 fn a_surface_head_is_the_drawing_modules_not_a_function() {
@@ -606,6 +618,8 @@ fn an_installs_own_path_is_watched_so_relinking_it_rebuilds() {
     );
 }
 
+// Round 7 (Astra, Grok, 2026-10-05).
+
 #[test]
 fn a_component_argument_named_surface_is_a_call_like_any_other() {
     let dir = Dir::new("surface-arg");
@@ -658,6 +672,8 @@ fn a_nearer_install_and_the_offered_export_path_are_watched() {
     }
 }
 
+// Round 8 (Astra, Grok, 2026-10-05).
+
 #[test]
 fn a_component_argument_is_a_value_not_a_style_row() {
     let dir = Dir::new("arg-value");
@@ -709,10 +725,12 @@ fn a_relative_use_is_watched_by_the_path_written() {
     );
 }
 
+// Round 9 (Astra, Grok, 2026-10-05).
+
 #[test]
 fn a_keyword_beside_a_computed_value_that_is_also_renamed_keyframes_is_refused() {
     // `${easing} linear 1s`: `linear` is the easing if the value is a time,
-    // the name if it is an easing. No rename is right for both.
+    // the name if it is an easing. No rename is right for both (round 10).
     let dir = Dir::new("computed-easing");
     dir.write(
         "ui.contract",
@@ -762,6 +780,8 @@ fn a_shape_named_path_does_not_take_the_routers_call() {
     );
 }
 
+// Round 10 (Astra, Grok, 2026-10-05).
+
 #[test]
 fn a_computed_part_fills_no_slot_and_the_name_motion_reads_is_renamed() {
     let dir = Dir::new("computed-slot");
@@ -810,6 +830,8 @@ fn a_route_pages_source_is_a_data_source_not_a_fn() {
     );
 }
 
+// Round 11 (Astra, Grok, 2026-10-05).
+
 #[test]
 fn a_keyword_whose_slot_is_settled_is_never_refused() {
     let dir = Dir::new("settled-keyword");
@@ -854,6 +876,8 @@ fn a_shape_named_action_never_takes_another_files_bare_action() {
     );
     contract::compile_path(&root).unwrap();
 }
+
+// Round 12 (Astra, Grok, 2026-10-05).
 
 #[test]
 fn an_empty_value_fills_no_slot() {
@@ -907,6 +931,8 @@ fn a_dot_dot_path_is_watched_as_a_watcher_names_it() {
         graph.consulted
     );
 }
+
+// Round 13 (Astra, Grok, 2026-10-05).
 
 #[test]
 fn a_glued_computed_part_settles_nothing_and_a_quoted_one_is_a_name() {
@@ -995,6 +1021,8 @@ fn a_package_name_is_suggested_only_where_it_reaches_the_same_install() {
     assert!(!e.to_string().contains("use Badge from \"ui\""), "{e}");
 }
 
+// Round 14 (Astra, Grok, 2026-10-05).
+
 #[test]
 fn a_computed_comma_may_begin_another_animation() {
     let dir = Dir::new("computed-comma");
@@ -1078,6 +1106,8 @@ fn a_fn_beside_a_foreign_shape_does_not_stop_the_other_missing_names() {
     let all = format!("{errors:?}");
     assert!(all.contains("Note") && all.contains("Row"), "{all}");
 }
+
+// Round 15 (Astra, Grok, 2026-10-05).
 
 #[test]
 fn a_fn_t_stays_a_fn_beside_any_import() {

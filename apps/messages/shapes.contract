@@ -73,7 +73,7 @@ style Canvas
 style GlassButton
   width=40 height=40 border-radius=20
   display="flex" align-items="center" justify-content="center" flex-shrink=0
-// The platform's own glass button: a 40-point circle UIKit and
+// The platform's own glass button (LLP 1069.011): a 40-point circle UIKit and
 // AppKit draw, its symbol sized and coloured by them.
 style NativeGlass
   appearance="auto" buttonStyle="glass"

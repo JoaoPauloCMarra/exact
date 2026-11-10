@@ -1,4 +1,4 @@
-//! Row-local instances; clips and composition reopen against this frame.
+//! Row-local instances; clips and composition reopen against this frame. @ref LLP 1149 D4.
 use super::*;
 use exact_ink::rows::{Command, Drawing};
 use std::{collections::HashMap, rc::Rc};

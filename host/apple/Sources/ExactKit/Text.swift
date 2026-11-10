@@ -58,7 +58,7 @@ final class PresentedText: TextPresentation {
         if r.hidden { a[.exactHidden] = true }
         if r.fixedInk, r.color != nil { a[.exactFixedInk] = true }
         // A centred stroke over the fill: Core Text's negative width,
-        // in percent of the run's size. Each run's own.
+        // in percent of the run's size (LLP 1077 D7). Each run's own.
         // Its colour four channels, or nine in its own space (a wide colour).
         if let st = r.stroke, st.count == 5 || st.count == 10, st[0] > 0, r.size > 0 {
             a[.strokeWidth] = -st[0] / Double(r.size) * 100
@@ -133,7 +133,7 @@ extension TextEngine {
     }
     /// A baseline on the raster's device pixels (`scale`). On macOS, on the
     /// device pixels its line box was rounded to (`Paragraph.lineScale`) as
-    /// well: whole points where text is laid out at 1.
+    /// well: whole points where text is laid out at 1 (LLP 1008 §3).
     static func paintedBaseline(_ baseline: CGFloat, scale: CGFloat, lineScale: CGFloat = 1) -> CGFloat {
         #if os(iOS) || os(tvOS)
         let scale = max(1, scale)
@@ -170,12 +170,12 @@ extension TextEngine {
     /// UIView's): one CTLineDraw per line, on device-pixel baselines
     /// (`paintedBaseline`), flush by alignment.
     static func draw(_ p: Paragraph, spec: Spec, in bounds: CGRect, context ctx: CGContext, dirty: CGRect? = nil) {
-        // Font smoothing is graphics state.
+        // Font smoothing is graphics state (LLP 1019 D12).
         ctx.saveGState()
         defer { ctx.restoreGState() }
         if spec.antialiased { ctx.setShouldSmoothFonts(false) }
         // CSS `text-shadow`: under every glyph of the paragraph at once, so
-        // one line's shadow never covers another's text. Core
+        // one line's shadow never covers another's text (LLP 1077 D3). Core
         // Graphics' blur is CSS's radius; its offset is base space, y up.
         if let s = spec.shadow {
             ctx.saveGState()
@@ -303,7 +303,7 @@ enum TextLinePaint {
         let runs = CTLineGetGlyphRuns(line) as! [CTRun]
         // CSS removes the collapsible spaces that end a line: a wrapped run's
         // background stops at its last glyph, as the browser paints it. A
-        // left-to-right line ends on the right (the Linux parity).
+        // left-to-right line ends on the right (LLP 1053 §0, the Linux parity).
         var end = CGFloat.infinity
         if !runs.contains(where: { CTRunGetStatus($0).contains(.rightToLeft) }) {
             end = CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil)) - CGFloat(CTLineGetTrailingWhitespaceWidth(line))

@@ -1,4 +1,4 @@
-//! Importers: another system's theme read as a
+//! Importers (LLP 1121 D14, stage 3): another system's theme read as a
 //! transaction of `add-token`, `set-token` and `add-axis` operations, the role
 //! overrides it means offered apart, and an unmapped report. Nothing is
 //! dropped silently: the source's values number exactly the mapped ones plus
@@ -28,16 +28,16 @@ pub struct Import {
     /// The transaction: the tokens (and any axis) the source maps to.
     pub ops: Vec<Op>,
     /// Role overrides and other choices the source means, each offered on
-    /// its own so a person can decline it (a design stays the
+    /// its own so a person can decline it (D1: a design stays the
     /// platform's unless chosen otherwise).
     pub offers: Vec<Offer>,
     /// Every source value not mapped, and why.
     pub unmapped: Vec<Unmapped>,
     /// The count the import was checked against.
     pub counted: Counted,
-    /// A re-import's dial changes: each dial set, and what it moves.
+    /// A re-import's dial changes: each dial set, and what it moves (D14).
     pub dials: Vec<DialChange>,
-    /// A re-import's literals over lines that followed others, each marked.
+    /// A re-import's literals over lines that followed others (D14's mark).
     pub pins: Vec<Pin>,
     /// What decided a choice the import made that the source didn't say
     /// (a Pencil number's kind, by the properties that read it).
@@ -85,7 +85,7 @@ pub struct Counted {
 }
 
 /// A source name's segments as a Tamber name under `prefix`: each segment
-/// that starts with a digit takes `s` (`blue-500` → `blue.s500`).
+/// that starts with a digit takes `s` (`blue-500` → `blue.s500`, D3).
 pub fn tamber_name(prefix: &str, segments: &[&str]) -> String {
     std::iter::once(prefix.to_string())
         .chain(segments.iter().map(|s| match s.chars().next() {
@@ -667,7 +667,7 @@ fn body(
 /// The design's own role overrides a changed value could split: one whose
 /// chain (any spelling) reaches a token the import sets or a role an offer
 /// in `offered` rebinds, and holds a `when` line anywhere, can fold to a
-/// different colour per tuple once accepted. Each is named,
+/// different colour per tuple once accepted (LLP 1121 D5). Each is named,
 /// with no operations; one an offer rebinds, or one `offered` already
 /// names under any spelling, is left out.
 pub(super) fn split_roles(
@@ -730,7 +730,7 @@ pub(super) fn split_roles(
                 role: t.name.value.clone(),
                 token: t.value.value.clone(),
                 ops: Vec::new(),
-                note: Some(format!("the design's `{}` reaches a value this import changes and a `when` line: a role has one value, so the build may refuse it (`tamber-role-axis`) once accepted", t.name.value)),
+                note: Some(format!("the design's `{}` reaches a value this import changes and a `when` line: a role has one value (LLP 1121 D5), so the build may refuse it (`tamber-role-axis`) once accepted", t.name.value)),
             });
         }
     }
@@ -760,7 +760,8 @@ pub(super) fn orphaned_dial<'a>(design: &'a Design, t: &crate::Token) -> Option<
         .find(|d| words_of(t).any(|w| w == *d) && !others.contains(d))
 }
 
-/// The design checker's bound at import: a source value past `css::over_limit`, mapped or reported,
+/// The design checker's bound at import (theme2's condition on the checker
+/// bound): a source value past `css::over_limit`, mapped or reported,
 /// refuses the import with that bound's id, naming the source's name and
 /// never echoing the value. The importers' own budget bounds their work
 /// reading the source; this bounds what they hand the checker.
@@ -801,9 +802,9 @@ pub(crate) fn bounded(import: Result<Import, Vec<Diagnostic>>) -> Result<Import,
 }
 
 /// Each source value an importer reads, before it maps any: one past
-/// `css::over_limit` refuses the import with that bound's id, naming the
-/// source's name and never echoing the value, though the importer might have
-/// folded it to something short.
+/// `css::over_limit` refuses the import with that bound's id (theme2's
+/// condition), naming the source's name and never echoing the value, though
+/// the importer might have folded it to something short.
 pub(crate) fn source_bound<'a>(
     values: impl IntoIterator<Item = (&'a str, &'a str)>,
 ) -> Result<(), Vec<Diagnostic>> {

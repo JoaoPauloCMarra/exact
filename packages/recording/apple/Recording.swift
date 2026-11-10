@@ -1,30 +1,30 @@
-// @exact/recording on Apple: a track
+// @exact/recording on Apple (LLP 1133.009 D1, D2, D6, D8, §10): a track
 // `@exact/media-capture` opened, reached through the session's track table,
 // recorded to a file and metered.
 //
 // - A recorder is a consumer of its stream's audio track, so it holds the
-//   track's lease while it is not `inactive`; its start is a start. A
+//   track's lease while it is not `inactive`; its start is a start (D6). A
 //   level reader is a consumer too, and never a start.
-// - `audio/mp4` (the unsaid default) is AAC in a fragmented MP4
+// - `audio/mp4` (the unsaid default, D2) is AAC in a fragmented MP4
 //   (`AVAssetWriter`, one-second fragments), which plays up to its last
-//   fragment if the process ends mid-take; `audio/wav` is 16-bit PCM
+//   fragment if the process ends mid-take (D6); `audio/wav` is 16-bit PCM
 //   (`AVAudioFile`). The file is at the admitted `app:/` path, its
 //   extension added when the app wrote none.
 // - Buffers arrive on the audio thread; each recorder copies what it takes
 //   and writes on its own serial queue. A writer two seconds behind stops
 //   its recorder with `error` "the writer fell behind" and a finished file
-//   of what it wrote.
+//   of what it wrote (D6).
 // - An interruption, a media-services reset or the background pauses a
-//   recording recorder; a track that ends stops it (`track-ended`).
-// - `audioLevel`: the RMS of each `interval`, computed on the audio
+//   recording recorder (D8); a track that ends stops it (`track-ended`).
+// - `audioLevel` (D1): the RMS of each `interval`, computed on the audio
 //   thread; an answer covers every interval since the last one.
-// - `<audio-waveform>` draws a track's level on the display link from
+// - `<audio-waveform>` (D13) draws a track's level on the display link from
 //   a meter of its own, so no level crosses into Contract.
-// - Under the agent no engine runs: the level is the synthetic signal
+// - Under the agent (§10) no engine runs: the level is the synthetic signal
 //   on the session clock, and a stopped recorder's file is WAV of a tone that
 //   follows it, answered as `audio/wav`.
 // - At the session's end every recorder stops and its file is finished
-//   (`destroy`).
+//   (`destroy`, D10 item 1).
 import AVFoundation
 import ExactPackage
 import Foundation
@@ -42,7 +42,7 @@ public final class RecordingModule: ExactPackage {
 
     public init(context: ExactPackageContext) { self.context = context }
 
-    /// The synthetic signal at step `i` (one step a 50 ms of the session clock): the recorder's formula.
+    /// The synthetic signal at step `i` (one step a 50 ms of the session clock): the recorder's formula (§10).
     static func synthetic(_ i: Int) -> Double {
         let x = Double(i)
         return min(1, 0.12 + 0.75 * abs(sin(x * 0.37)) * (0.55 + 0.45 * sin(x * 0.05)))
@@ -76,7 +76,7 @@ public final class RecordingModule: ExactPackage {
         name == "audioLevelSync" ? level(args) : ["error": "NotSupportedError"]
     }
 
-    /// `<audio-waveform>`.
+    /// `<audio-waveform>` (D13).
     public func view(_ tag: String, id: String, props: [String: String], events: ExactPackageEvents) throws -> ExactPackageView {
         guard tag == "audio-waveform" else { throw ExactPackageRefusal("no view \(tag)") }
         let waveform = Waveform(module: self)
@@ -103,7 +103,7 @@ public final class RecordingModule: ExactPackage {
         let asked = args["mimeType"] as? String
         let type = context.agent ? "audio/wav" : asked ?? "audio/mp4"
         guard context.agent || ["audio/mp4", "audio/wav"].contains(type) else { return ["error": "NotSupportedError"] }
-        // `apple.formatID` must be a codec the container holds: WAV is linear PCM, MP4 AAC, ALAC or Opus.
+        // `apple.formatID` must be a codec the container holds: WAV is linear PCM, MP4 AAC, ALAC or Opus (D4).
         if !context.agent, let word = (args["apple"] as? [String: Any])?["formatID"] as? String,
            !(type == "audio/wav" ? ["linearPCM"] : ["aac", "alac", "opus"]).contains(word) { return ["error": "NotSupportedError"] }
         guard let path = Recorder.path(args["path"] as? String ?? "", type), let url = context.file(path) else { return ["error": "NotSupportedError"] }
@@ -143,7 +143,7 @@ public final class RecordingModule: ExactPackage {
         return m.read(context.now())
     }
 
-    /// A level's argument group has no reader left: its meter goes.
+    /// A level's argument group has no reader left: its meter goes (D10 item 12).
     public func release(_ name: String, args: [String: Any]) {
         guard name == "audioLevel", let track = args["track"] as? String else { return }
         meters.removeValue(forKey: Meter.key(track, args))?.stop()
@@ -155,12 +155,12 @@ public final class RecordingModule: ExactPackage {
         meters.removeAll()
     }
 
-    /// A recorder whose reply was dropped: stopped, its file finished, never the app's.
+    /// A recorder whose reply was dropped: stopped, its file finished, never the app's (D6).
     public func dispose(_ ids: [String]) {
         for id in ids { recorders[id]?.finish("requested") { _ in } }
     }
 
-    /// The session ends: every recorder stops and its file is finished.
+    /// The session ends: every recorder stops and its file is finished (D6).
     public func destroy(_ done: @escaping () -> Void) {
         for m in meters.values { m.stop() }
         let group = DispatchGroup()
@@ -189,7 +189,7 @@ final class Recorder: ExactTrackConsumer {
     private let queue: DispatchQueue
     private var writer: Writer?
     private var finishing: [([String: Any]) -> Void] = []
-    /// Frames handed to the queue and not yet written: the bound.
+    /// Frames handed to the queue and not yet written: the bound (D6).
     private let pending = Pending()
 
     init(id: String, track: String, type: String, path: String, url: URL, context: ExactPackageContext, bitRate: Double?, bitRateMode: String?, apple: [String: Any], changed: @escaping () -> Void) {
@@ -257,7 +257,7 @@ final class Recorder: ExactTrackConsumer {
         }
         tap = source.tap { [weak self] buffer, _ in
             guard let self, self.isRecording else { return }
-            // Nothing waits here: a writer two seconds behind stops the recorder.
+            // Nothing waits here: a writer two seconds behind stops the recorder (D6).
             guard pending.add(buffer.frameLength) <= limit, let copy = Recorder.copy(buffer) else {
                 DispatchQueue.main.async { self.finish("error", error: "the writer fell behind") { _ in } }
                 return
@@ -286,7 +286,7 @@ final class Recorder: ExactTrackConsumer {
     private let recordingFlag = Flag()
     private var isRecording: Bool { recordingFlag.value }
 
-    /// Stop for `why`, finish the file, answer the result; sticky once inactive.
+    /// Stop for `why`, finish the file, answer the result; sticky once inactive (D1).
     func finish(_ why: String, error: String? = nil, _ done: @escaping ([String: Any]) -> Void) {
         if let result { return done(result) }
         finishing.append(done)
@@ -380,13 +380,13 @@ final class Writer {
             file = try AVAudioFile(forWriting: url, settings: settings, commonFormat: format.commonFormat, interleaved: format.isInterleaved)
             return
         }
-        // `apple.formatID` beats the default codec. Linear PCM is `audio/wav`'s, which MP4 does not hold.
+        // `apple.formatID` beats the default codec (D4). Linear PCM is `audio/wav`'s, which MP4 does not hold.
         let codecs: [String: AudioFormatID] = ["aac": kAudioFormatMPEG4AAC, "alac": kAudioFormatAppleLossless, "opus": kAudioFormatOpus]
         let word = apple["formatID"] as? String ?? "aac"
         guard let codec = codecs[word] else { throw CaptureFailure("NotSupportedError: \(word) in audio/mp4") }
         // The `.m4a` brand takes no Opus (measured: `canAdd` refuses it); a plain MP4 does.
         let writer = try AVAssetWriter(outputURL: url, fileType: codec == kAudioFormatOpus ? .mp4 : .m4a)
-        // One-second fragments: a take whose process ended plays up to its last fragment.
+        // One-second fragments: a take whose process ended plays up to its last fragment (D6).
         writer.movieFragmentInterval = CMTime(seconds: 1, preferredTimescale: 600)
         var settings: [String: Any] = [AVFormatIDKey: codec, AVSampleRateKey: format.sampleRate, AVNumberOfChannelsKey: min(format.channelCount, 2)]
         if codec == kAudioFormatAppleLossless { settings[AVEncoderBitDepthHintKey] = 16 }
@@ -523,7 +523,7 @@ final class Writer {
         _ = try FileManager.default.replaceItemAt(url, withItemAt: rebuilt)
     }
 
-    /// The agent's take: WAV, 16-bit mono at 8 kHz, of a 440 Hz tone whose amplitude follows the signal over its spans.
+    /// The agent's take: WAV, 16-bit mono at 8 kHz, of a 440 Hz tone whose amplitude follows the signal over its spans (§10).
     static func tone(_ spans: [(Double, Double?)], rate: Double = 8000) -> Data {
         var samples: [Int16] = []
         for (from, to) in spans {
@@ -549,7 +549,7 @@ struct CaptureFailure: Error, CustomStringConvertible {
     init(_ description: String) { self.description = description }
 }
 
-/// A level on one track with one argument group.
+/// A level on one track with one argument group (D1).
 final class Meter: ExactTrackConsumer {
     let interval: Double, history: Int, agent: Bool
     var subscription: ExactSubscription?
@@ -579,7 +579,7 @@ final class Meter: ExactTrackConsumer {
     func ended() { running = false; tap?.cancel(); tap = nil }
     func stop() { tap?.cancel(); tap = nil; subscription?.cancel(); subscription = nil }
 
-    /// Every interval since the last answer.
+    /// Every interval since the last answer (D1).
     func read(_ now: Double) -> [String: Any] {
         let steps = Int(floor((now - at) / interval))
         var fresh: [Double] = []
@@ -612,7 +612,7 @@ final class Measured: @unchecked Sendable {
     func take() -> [Double] { lock.lock(); defer { lock.unlock() }; let out = done; done = []; return out }
 }
 
-// MARK: the waveform
+// MARK: the waveform (D13)
 
 #if os(macOS)
 typealias WaveformColor = NSColor

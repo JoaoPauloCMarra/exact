@@ -1,4 +1,4 @@
-// Measures browser_paint_order.tsv in Chrome: for each
+// Measures browser_paint_order.tsv in Chrome (LLP 1083.000 D6): for each
 // case, the topmost box at each probe with the markup as written (bare) and
 // with `isolation: isolate` on exactly the boxes the kernel isolates or
 // stacks by policy (exact). The kernel's decisions come from the Rust test

@@ -1,13 +1,13 @@
-// The sound arm: one AVAudioEngine holding one AVAudioSourceNode whose render
-// block is the C mixer (sound_render.c), connected to `mainMixerNode` in the
-// output's own format, so nothing converts downstream of it (a sample time
-// downstream of a converter is not valid). Every declared sound is read once
-// and converted to that format: a mono file is copied to every output channel;
-// a stereo file going to a mono output keeps its two channels, which the mixer
-// pans and then averages. The mixer is told the file's own channel count,
-// which decides how a pan places it. Loaded on demand (SoundModule.swift),
-// never linked into ExactKit; the session is ExactKit's (AudioSession.swift),
-// not the arm's.
+// @ref LLP 1096 D6, D8. The sound arm: one AVAudioEngine holding one
+// AVAudioSourceNode whose render block is the C mixer (sound_render.c),
+// connected to `mainMixerNode` in the output's own format, so nothing converts
+// downstream of it (a sample time downstream of a converter is not valid).
+// Every declared sound is read once and converted to that format: a mono file
+// is copied to every output channel; a stereo file going to a mono output
+// keeps its two channels, which the mixer pans and then averages. The mixer
+// is told the file's own channel count, which decides how a pan places it
+// (LLP 1125 D10). Loaded on demand (SoundModule.swift), never linked into ExactKit;
+// the session is ExactKit's (AudioSession.swift), not the arm's.
 //
 // An output that cannot open is a reason, never a crash: every AVAudioEngine
 // call that can raise is made inside sound_engine.m's @try, so no exception
@@ -181,7 +181,7 @@ private final class SoundArm {
         return true
     }
 
-    /// The device check: a tap on `mainMixerNode` finds each
+    /// The device check (LLP 1096 §5): a tap on `mainMixerNode` finds each
     /// onset after a silence and journals its speaker time — the tap
     /// buffer's host time, plus its frame's offset, plus the latency still
     /// downstream of the tap — against the time its voice was aimed at.

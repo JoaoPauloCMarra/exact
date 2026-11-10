@@ -1,8 +1,9 @@
-//! `set-row`: one row of the app's own Contract written where its author wrote
-//! it. The template rung names the attribute by its place in its file and the
-//! file's digest as the tool saw it (the map's `at` and `sources`); the style
-//! rung names a `style` and its row. Only the value is replaced; the file then
-//! goes through `contract fmt` and the whole app is compiled before anything is
+//! `set-row` (LLP 1122 D6, T5; LLP 1121 stage 9 D): one row of the app's
+//! own Contract written where its author wrote it. The template rung names
+//! the attribute by its place in its file and the file's digest as the
+//! tool saw it (the map's `at` and `sources`); the style rung names a
+//! `style` and its row. Only the value is replaced; the file then goes
+//! through `contract fmt` and the whole app is compiled before anything is
 //! written (`tamber_contract::plan`).
 
 use contract_syntax::{Attr, Expr, Node, UnOp};
@@ -93,9 +94,9 @@ fn plain(e: &Expr) -> bool {
     }
 }
 
-/// A layout row's refusal, and where to edit it instead.
+/// A layout row's refusal (LLP 1122 D14), and where to edit it instead.
 fn layout(row: &str) -> String {
-    format!("`{row}` is a layout row: layout is the author's; edit it in the source, or at a param's or token's rung where it reads one")
+    format!("`{row}` is a layout row: layout is the author's (LLP 1122 D14); edit it in the source, or at a param's or token's rung where it reads one")
 }
 
 /// Whether `set-row` edits `a`'s row on a style: a paint row (history
@@ -122,7 +123,7 @@ pub(crate) fn check(
     };
     let rows = contract_lower::tags::rows(&bare(property));
     if property != row || said != state {
-        // A longhand of the shorthand written there: the
+        // A longhand of the shorthand written there (LLP 1122 D6): the
         // shorthand is edited whole, unless it is a layout row; its
         // current text lets the tool compose the new one.
         let longhand = contract_lower::tags::rows(&bare(row));

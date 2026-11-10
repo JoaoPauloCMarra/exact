@@ -1,9 +1,10 @@
-//! `@exact/geofencing`, the package copied out of the checkout as an installed
-//! package is: a permission that adds to another (`base`), asked one ticket on
-//! Apple and two on Android; a send that answers the entry it lists, bounded by
-//! `most`; a tap that chooses its event by a field and flips it; an entry that
-//! stays whatever its invocation's outcome, keeping an undelivered transition;
-//! and a `--wake` entry delivered cold, or at a launch with a view.
+//! LLP 1133.021 stage 0 for `@exact/geofencing`, the package copied out of
+//! the checkout as an installed package is: a permission that adds to
+//! another (`base`), asked one ticket on Apple and two on Android; a send
+//! that answers the entry it lists, bounded by `most`; a tap that chooses
+//! its event by a field and flips it; an entry that stays whatever its
+//! invocation's outcome, keeping an undelivered transition; and a
+//! `--wake` entry delivered cold, or at a launch with a view.
 
 use exact_runner::{agent, Runner, Value};
 use serde_json::{json, Value as Json};
@@ -265,7 +266,7 @@ fn the_events_carry_their_budget_and_a_literal_radius_holds_its_floor() {
     );
 }
 
-/// On iOS: one ticket, for background location, whose `allow` grants
+/// §12 on iOS: one ticket, for background location, whose `allow` grants
 /// location too; the call answers the entry it listed, `inside` none.
 /// A tap enters, the next leaves, each a wake that flips `inside`.
 #[test]
@@ -336,7 +337,7 @@ fn an_apple_add_asks_once_and_a_tap_enters_then_leaves() {
     assert_eq!(fences(&r), json!([]), "{}", logs(&r));
 }
 
-/// On Android: location first, then background location; a denied
+/// D13 on Android: location first, then background location; a denied
 /// first ticket fails the call with no second.
 #[test]
 fn an_android_add_asks_location_then_background_location() {
@@ -365,7 +366,7 @@ fn an_android_add_asks_location_then_background_location() {
     assert_eq!(fences(&r), json!([]));
 }
 
-/// Twenty per app; the twenty-first fails `QuotaExceededError`, and
+/// D11: twenty per app; the twenty-first fails `QuotaExceededError`, and
 /// adding a name again replaces its fence rather than adding one.
 #[test]
 fn the_twenty_first_fence_is_over_the_quota() {
@@ -394,7 +395,7 @@ fn the_twenty_first_fence_is_over_the_quota() {
     );
 }
 
-/// A wake past its budget keeps the transition on the entry,
+/// D14 step 3: a wake past its budget keeps the transition on the entry,
 /// which stays listed; a later delivery clears it.
 #[test]
 fn an_expired_wake_keeps_its_transition_and_the_fence() {
@@ -422,7 +423,7 @@ fn an_expired_wake_keeps_its_transition_and_the_fence() {
     assert_eq!(kept[0]["inside"], true, "{kept}");
 }
 
-/// The cold wake and the one kept for a launch: `--wake` with the entry
+/// §12's cold wake and the one kept for a launch: `--wake` with the entry
 /// as `state.geofences` printed it and its `event`.
 #[test]
 fn a_launch_with_an_entry_delivers_its_event() {
@@ -462,7 +463,7 @@ fn a_launch_with_an_entry_delivers_its_event() {
     );
 }
 
-/// No cell on the web; the substitute answers as production does.
+/// D20: no cell on the web; the substitute answers as production does.
 #[test]
 fn the_web_has_no_geofencing() {
     let app = App::new("web", APP);

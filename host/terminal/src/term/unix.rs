@@ -155,7 +155,7 @@ impl Drop for ResizeWake {
 }
 
 /// Alternate screen, SGR mouse with drags, bracketed paste, kitty keyboard
-/// disambiguation.
+/// disambiguation (LLP 1101 D6).
 const ENTER_FULL: &str = "\x1b[?1049h\x1b[?25l\x1b[?1000h\x1b[?1002h\x1b[?1006h\x1b[?2004h\x1b[>1u";
 /// The normal screen: no mouse capture, so selection stays the terminal's.
 const ENTER_INLINE: &str = "\x1b[?25l\x1b[?2004h\x1b[>1u";
@@ -403,7 +403,7 @@ fn run_raw<D: DataSource>(host: &mut Host<D>, signal_rx: &UnixStream) -> std::io
             host.frames += 1;
         }
         // Tell the app what is in scrollback now that the bytes are out,
-        // so it can let go.
+        // so it can let go (LLP 1101.001 P1; 1101.002 §0 P5).
         if mode == Mode::Inline {
             if let Some(r) = inline.printed(mode, host.colors()) {
                 host.publish(&r);

@@ -1,10 +1,10 @@
-//! Hit testing a resolved scene: the topmost element
+//! Hit testing a resolved scene (LLP 1055.000 D17): the topmost element
 //! under a point, by SVG 2's `pointer-events`.
 //!
 //! The fill is tested with the fill rule on the flattened path; the stroke
 //! by distance to the flattened path, within half the stroke width. That
 //! is round joins and caps: a miter's tip, a square cap's corners and dash
-//! gaps are treated as stroke (declared). Clips bound hits;
+//! gaps are treated as stroke (declared, LLP 1055.000 §0). Clips bound hits;
 //! masks, filters and opacity do not. An instance under a `use` hits as the
 //! `use`, as its shadow tree retargets events.
 

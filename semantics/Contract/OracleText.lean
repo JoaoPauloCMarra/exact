@@ -5,7 +5,7 @@ Lean elaborates slowly as a term and parses quickly as a string.
   answer <source> <n> <arg>… <value>   one call and its answer
   fact <resource> <value>              a host fact, by resource
   stored <state> <value>               the device's store at launch: a
-                                       persisted state's value
+                                       persisted state's value (LLP 1116 D5)
   every-tab                            the host builds every tab panel
                                        (`Oracle.everyTab`)
 

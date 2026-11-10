@@ -1,4 +1,4 @@
-// `bun exact.mjs verify`'s `contract verify`: started beside the device run, its report kept in a file,
+// `bun exact.mjs verify`'s `contract verify` (LLP 1151 D8): started beside the device run, its report kept in a file,
 // and the part of it the console shows.
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
@@ -7,9 +7,9 @@ import { fileURLToPath } from 'node:url';
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-// `contract verify` reads only the app's Contract and its tests, so it runs beside the device run rather
+// `contract verify` (LLP 1151 D8) reads only the app's Contract and its tests, so it runs beside the device run rather
 // than after it. Its report goes whole to .exact/verify/properties.txt. The console has a line on it, any line saying
-// what failed, the receipt an author keeps, and then the device report's last line: printed whole after that
+// what failed, the receipt an author keeps (D7), and then the device report's last line: printed whole after that
 // report, it pushed the verdict out of a builder's `verify | tail`, and the builder ran verify again to find it.
 export function contractVerify(app, json) {
   let output = '', errors = '';

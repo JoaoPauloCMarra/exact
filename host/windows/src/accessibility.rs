@@ -365,7 +365,7 @@ fn map_node(
         role::EDIT | role::FIELD => Role::TextInput,
         role::TABLIST => Role::TabList,
         role::DROPDOWN => Role::ComboBox,
-        // HTML's table and description list (HTML-AAM).
+        // @ref LLP 1153 D7 — HTML's table and description list (HTML-AAM).
         role::TABLE => Role::Table,
         role::CAPTION => Role::Caption,
         role::ROW => Role::Row,
@@ -543,7 +543,7 @@ mod tests {
         assert_eq!(text.value(), Some("Message"));
     }
 
-    /// The Linux tree's table and description-list roles are
+    /// LLP 1153 D7: the Linux tree's table and description-list roles are
     /// UI Automation's, through AccessKit's.
     #[test]
     fn accessibility_tables_and_description_lists_are_their_roles() {

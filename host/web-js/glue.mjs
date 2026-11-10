@@ -3,7 +3,7 @@
 // One list for every runtime staged from host/web-js: a page (build.mjs) and
 // the differential driver's headless runtime (semantics/difftest/js/drive.mjs),
 // which lost the bundle when it kept a list of its own (intersect-glue.js,
-// 2026-10-12).
+// 2026-10-12). The async lane's `difftest-js` inputs read it too.
 import { cpSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -14,11 +14,11 @@ export const HOST_WEB_GLUE = [
   'sound-glue.js', 'midi-glue.js', 'prompt-glue.js', 'alert-message.js', 'wakelock-glue.js', 'orientationlock-glue.js', 'menu-rows.js',
   // Virtualized lists' browser half; animated images on the agent's clock (agent.js only); Canvas 2D's replayer.
   'collection-glue.js', 'image-glue.js', 'canvas2d-glue.js',
-  // An iframe's navigation records and commands (commands.js, rt.js `onFrameNavigation`).
+  // An iframe's navigation records and commands (commands.js, rt.js `onFrameNavigation`; LLP 1020.002).
   'frame-navigation.js', 'frame-messages.js',
   // Sign-in, storage, request bodies, injected faults and the local network's spaces (ts-data.js, auth.js, admission.js, agent.js, modules.js).
   'auth-glue.js', 'storage-environment.js', 'http-body.js', 'faults.js', 'address-space.js',
-  // The scroll to a location's fragment, at its first (router.js).
+  // The scroll to a location's fragment, at its first (router.js; LLP 1153 D5).
   'fragment.js',
 ];
 
@@ -31,7 +31,7 @@ export function stageHostGlue(root, dir) {
  * What the differential driver's headless runtime copies from the repository
  * at `root`, as paths relative to it: every host/web-js module, the glue, and
  * navigation.js and its grant admission whole (build.mjs splits them for
- * chunking).
+ * chunking). The async lane's `difftest-js` inputs are these files.
  */
 export function driverRuntime(root) {
   const own = readdirSync(resolve(root, 'host/web-js')).filter(f => f.endsWith('.js')).sort().map(f => `host/web-js/${f}`);

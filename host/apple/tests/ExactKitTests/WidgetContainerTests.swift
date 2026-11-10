@@ -61,7 +61,7 @@ final class WidgetContainerTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: root.appendingPathComponent("widget-generations/current").path))
     }
 
-    /// The build writes `ExactWidgetKinds` for an app with an entry of either kind, empty with
+    /// LLP 1126.001 WP13: the build writes `ExactWidgetKinds` for an app with an entry of either kind, empty with
     /// activities alone; a bundle without it publishes nothing.
     func testPublicationIsGatedOnAnEntryOfEitherKind() throws {
         let fm = FileManager.default

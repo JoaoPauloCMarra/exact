@@ -7,7 +7,7 @@ import XCTest
 
 /// A press on a `button` leaves the reader's text selection as it is, as
 /// Chrome does, so the button's action reads it; a click on selectable text,
-/// into a field, on another pressable or on the ground still clears it.
+/// into a field, on another pressable or on the ground still clears it (#132).
 final class TextSelectionMacTests: XCTestCase {
     private var window: NSWindow!
     private var session: ExactSession?
@@ -344,7 +344,7 @@ final class TextSelectionMacTests: XCTestCase {
         }
         // A contact delivered to the scroll view itself clears page selection
         // while the first responder stays put, as AppKit leaves it on a
-        // window's empty ground.
+        // window's empty ground (LLP 1115.000 D7.1).
         try select(p)
         let ground = p.viewport.convert(NSPoint(x: 350, y: 280), to: nil)
         p.viewport.mouseDown(with: mouse(.leftMouseDown, ground))
@@ -352,7 +352,7 @@ final class TextSelectionMacTests: XCTestCase {
         XCTAssertTrue(window.firstResponder === p.views[2])
     }
 
-    /// On the Mac `user-select: auto` is AppKit's. A control's
+    /// LLP 1115 D8: on the Mac `user-select: auto` is AppKit's. A control's
     /// or the chrome's label is not selectable, so ⌘A and a drag skip it;
     /// an `article`'s text (its own header too) and plain content are, and
     /// an authored `user-select` decides over both.
@@ -434,7 +434,7 @@ final class TextSelectionMacTests: XCTestCase {
         XCTAssertEqual(p.selection.selectedText(), "Hidden tab\n\nShown again\n\nInert text")
     }
 
-    /// A copy across a virtualized list's rows leaves out its
+    /// X81: a copy across a virtualized list's rows leaves out its
     /// `user-select: none` text, as the copy of plain rows does and as Chrome
     /// does, and its `visibility: hidden` and `inert` text. The runner
     /// copies a list (rows need not be mounted), between endpoints the host
@@ -562,7 +562,7 @@ final class TextSelectionMacTests: XCTestCase {
         XCTAssertEqual(p.selection.selectedText(), text, "a triple click is still the paragraph")
     }
 
-    /// A secondary click outside the selection takes
+    /// X76 by MAC-16's rule: a secondary click outside the selection takes
     /// the word a double click at the same point takes, by the text
     /// system's boundaries ("hello" without its comma, a word of a Japanese
     /// sentence), so the two never disagree.
@@ -585,11 +585,11 @@ final class TextSelectionMacTests: XCTestCase {
         }
     }
 
-    /// A Shift-click extends the selection as an `NSTextView`'s does
-    /// (measured on macOS 27.0): the end nearer the click moves to it and the
-    /// other stays, whichever way the selection was dragged, so a click
-    /// inside it shrinks it; after a double click it grows by word; and it
-    /// reaches into another paragraph.
+    /// LLP 1115.000 D7.9: a Shift-click extends the selection as an
+    /// `NSTextView`'s does (measured on macOS 27.0): the end nearer the click
+    /// moves to it and the other stays, whichever way the selection was
+    /// dragged, so a click inside it shrinks it; after a double click it
+    /// grows by word; and it reaches into another paragraph.
     func testAShiftClickMovesTheNearerEndOfTheSelection() throws {
         // Alpha 0, beta 6, gamma 11, delta 17, epsilon 23.
         let (session, node) = laidOut("Alpha beta gamma delta epsilon zeta eta theta")
@@ -622,7 +622,7 @@ final class TextSelectionMacTests: XCTestCase {
         XCTAssertEqual(p.selection.range(node), NSRange(location: 3, length: 0))
     }
 
-    /// A drag after a double click grows the selection by
+    /// LLP 1115.000 D7.9: a drag after a double click grows the selection by
     /// word, the first word staying whole whichever way the drag goes, and
     /// after a triple click by paragraph (it grew by character).
     func testADragAfterADoubleClickGrowsByWordAndAfterATripleByParagraph() throws {
@@ -642,7 +642,7 @@ final class TextSelectionMacTests: XCTestCase {
         XCTAssertEqual(p.selection.selectedText(), "amma de", "a single click's drag is still by character")
     }
 
-    /// Shift with an arrow moves the focus end of the
+    /// LLP 1115.000 D7.9: Shift with an arrow moves the focus end of the
     /// selection and leaves its anchor, by the system's key bindings (a
     /// character; with Option a word; with Command the line's end), from the
     /// click that placed it, and into the paragraph beside this one. An
@@ -691,7 +691,7 @@ final class TextSelectionMacTests: XCTestCase {
         XCTAssertEqual(p.selection.selectedText(), " gamma")
     }
 
-    /// CSS UI 4 `user-select: all`: one click selects
+    /// CSS UI 4 `user-select: all` (LLP 1115.000 D11.6): one click selects
     /// the whole element, and a drag, a Shift-click or Shift with an arrow
     /// that reaches into it takes all of it, as Chrome does. An inline run's
     /// element is its offsets in its paragraph.
@@ -840,7 +840,7 @@ final class TextSelectionMacTests: XCTestCase {
         XCTAssertTrue(node.paragraphLayout() === paragraph, "painting preserves the measured geometry")
     }
 
-    /// Which selected glyphs take AppKit's colour for text
+    /// LLP 1115.000 D7.9: which selected glyphs take AppKit's colour for text
     /// on the selection's fill is as an `NSTextView` has it (measured on
     /// macOS 27.0, a key window and one that is not alike). Dark: every one,
     /// whatever its ink. Light: text nobody coloured and text in a role turn
@@ -985,7 +985,7 @@ final class TextSelectionMacTests: XCTestCase {
         override func draw(_ dirtyRect: NSRect) { color.setFill(); bounds.fill() }
     }
 
-    /// The selection is filled as an `NSTextView` fills it.
+    /// LLP 1115.000 D7.9: the selection is filled as an `NSTextView` fills it.
     /// AppKit's colour at full strength (it was 45 % of it), the unemphasized
     /// grey in a window without the focus; and a change of the window's
     /// focus paints what is selected again, and nothing else.
@@ -1031,7 +1031,7 @@ final class TextSelectionMacTests: XCTestCase {
         }
     }
 
-    /// A secondary click on selected text, with no
+    /// LLP 1115.000 D7.9: a secondary click on selected text, with no
     /// authored `contextmenu`, is AppKit's own menu for the selection, the
     /// one a read-only `NSTextView` holding it gives, and not one the host
     /// assembles: Look Up and Translate with the selection in their titles,
@@ -1109,7 +1109,7 @@ final class TextSelectionMacTests: XCTestCase {
         }
     }
 
-    /// A secondary click on a word outside the selection selects that
+    /// X76: a secondary click on a word outside the selection selects that
     /// word, the one a double click selects, before the text menu opens for
     /// it, as Chrome and an `NSTextView` do on a Mac; inside the selection
     /// it keeps it. Unselectable text keeps what is selected and opens
@@ -1240,7 +1240,7 @@ final class TextSelectionMacTests: XCTestCase {
         XCTAssertEqual(boxes.last, [])
     }
 
-    /// On a reader paragraph whose caret cache misses the point (here a
+    /// X76 on a reader paragraph whose caret cache misses the point (here a
     /// line outside the band its worker rastered; in use, a line too long
     /// for that cache): the click opens no menu itself, the raster worker
     /// places it, and then the word under it is selected, or the selection

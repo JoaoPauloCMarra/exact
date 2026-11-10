@@ -1133,7 +1133,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         }
     }
 
-    /// EXACT PATCH 20: say which absolutely positioned boxes each containing
+    /// EXACT PATCH 20 (LLP 1074 T1): say which absolutely positioned boxes each containing
     /// block holds that are not its children: every box from such a box's parent up to, not
     /// including, its owner is [`Position::Static`](crate::Position::Static). This replaces
     /// the whole record. The caller keeps it current before each layout and marks dirty what

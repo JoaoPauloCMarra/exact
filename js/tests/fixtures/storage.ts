@@ -9,14 +9,14 @@ let tail: Promise<unknown> = Promise.resolve();
 let saves: Promise<unknown> = Promise.resolve(), saveError = "";
 let shared: Promise<{text:string}>;
 
-// Background work: the last save started and not awaited, and
+// Background work (LLP 1097): the last save started and not awaited, and
 // the last failure a background step reported to the app.
 let saving: Promise<unknown> = Promise.resolve(), lastError = "";
 let compressAndWrite = 0;
 const slept: string[] = [];
 const bytes = (value: string) => new Uint8Array(Array.from(value).map(c => c.charCodeAt(0)));
 
-// Writes an answer starts and does not await: the answer is
+// Writes an answer starts and does not await (kanban F22): the answer is
 // given before they land, and they must land all the same.
 function answer(source:string, args:unknown[], store:Store, storage:Storage, native:any) {
   const op = String(args[0]), value = String(args[1]);
@@ -80,14 +80,14 @@ function answer(source:string, args:unknown[], store:Store, storage:Storage, nat
     return {text:"saved " + value};
   }
   if (op === "reject") { Promise.reject(new Error("lost " + value)); return {text:"answered"}; }
-  // A database opened by the answer and left open by its chain, which throws.
+  // A database opened by the answer and left open by its chain, which throws (LLP 1097 D7).
   if (op === "open-leak") {
     storage.sqlite.open("app:/data/notes.db").then(() => { throw new Error("leaked " + value); });
     return {text:"answered"};
   }
   if (op === "last-error") return {text:lastError};
   // Each part appended to one log, awaited in turn: two such answers
-  // interleave at their awaits, as two async calls do on the web.
+  // interleave at their awaits, as two async calls do on the web (D4.5).
   if (op === "append") {
     return (async () => {
       for (const part of value.split(",")) await storage.fs.appendFile(storage.fs.directories.data + "/log", bytes(part + ";"));
@@ -98,7 +98,7 @@ function answer(source:string, args:unknown[], store:Store, storage:Storage, nat
     storage.fs.atomicWriteFile(storage.fs.directories.data + "/unawaited", new Uint8Array(Array.from(value).map(c=>c.charCodeAt(0))));
     return {text:"answered"};
   }
-  // A value given at once, its save chained behind a promise
+  // drums R10: a value given at once, its save chained behind a promise
   // already resolved, so the write begins in the checkpoint after the call.
   if (op === "deferred") {
     saves = saves.then(() => storage.fs.atomicWriteFile(storage.fs.directories.data + "/deferred", new Uint8Array(Array.from(value).map(c=>c.charCodeAt(0)))))
@@ -155,7 +155,7 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     }
     return {text: out.join(" ")};
   }
-  // What the host keeps, watched, and one forgotten.
+  // LLP 1069.010.000 D5: what the host keeps, watched, and one forgotten.
   if (op === "kept") {
     storage.fs.watch("doc:/");
     const listed = await storage.fs.recentDocuments();
@@ -165,12 +165,12 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     const left = (await storage.fs.recentDocuments()).length;
     return {text: [listed.map((d) => `${d.path} ${d.kind} ${d.mode}`).join(","), left, again].join(" | ")};
   }
-  // The app's own atomic save of a kept file.
+  // LLP 1069.010.000 D4: the app's own atomic save of a kept file.
   if (op === "kept-save") {
     await storage.fs.atomicWriteFile(value, new TextEncoder().encode("saved"));
     return {text: (await storage.fs.recentDocuments()).map((d) => d.path).join(",")};
   }
-  // The answer watches a chosen file and its
+  // LLP 1069.010.000 D1, D2a: the answer watches a chosen file and its
   // folder, and a write that expects a stale stat is refused.
   if (op === "doc-watch") {
     const folder = value.slice(0, value.lastIndexOf("/"));
@@ -184,7 +184,7 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     out.push("then written");
     return {text: out.join(" ")};
   }
-  // A folder the person chose, `value` its `doc:` path:
+  // A folder the person chose (LLP 1069.010 D1), `value` its `doc:` path:
   // listed, read, written beside, and refused past what it holds.
   if (op === "doc") {
     const out: string[] = [], text = (b: ArrayBuffer) => String.fromCharCode(...new Uint8Array(b));
@@ -211,7 +211,7 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     }
     return {text: out.join(" ")};
   }
-  // A chosen file copied by the host into an
+  // LLP 1069.010 D1 (2026-10-26): a chosen file copied by the host into an
   // app file, its size read back, and the copies still refused.
   if (op === "doc-copy") {
     const out: string[] = [], folder = value.slice(0, value.lastIndexOf("/"));
@@ -227,7 +227,7 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     }
     return {text: out.join(" ")};
   }
-  // Ledger's shape: every answer queued on one chain, a listing
+  // Ledger's shape (ledger F12): every answer queued on one chain, a listing
   // that reads, and a save that refuses bad input before touching storage.
   if (op === "count" || op === "invalid") {
     const run = tail.then(async () => {
@@ -243,7 +243,7 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     return run;
   }
   // A write, then a timer once it lands: refused to a call let go meanwhile,
-  // whose chain still runs (its timer would never run).
+  // whose chain still runs (LLP 1027.000 D1: its timer would never run).
   if (op === "write-then-sleep") {
     return storage.fs.writeFile(storage.fs.directories.data + "/slept", bytes(value)).then(() => {
       try { setTimeout(() => {}, 10); slept.push(value + " armed"); }
@@ -266,7 +266,7 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     return run;
   }
   const path = storage.fs.directories.data + "/note";
-  // File identity selects the cached status; supplied
+  // LLP 1027.005's fixture: file identity selects the cached status; supplied
   // time decides whether that answer needs fetching again, without ambient time.
   if (op === "status") {
     let saved: {text:string; expires:number};
@@ -305,7 +305,7 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     try { return {text:String.fromCharCode(...new Uint8Array(await storage.fs.readFile(path)))}; }
     catch (_) { return {text:"empty"}; }
   }
-  // Refusals carry a stable code beside their message.
+  // Refusals carry a stable code beside their message (kanban F28).
   if (op === "codes") {
     const data = storage.fs.directories.data, out: string[] = [];
     const steps: (() => Promise<unknown>)[] = [
@@ -320,7 +320,7 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     }
     return {text: out.join("\n")};
   }
-  // `fs.compressImage`: the record, then each refusal's
+  // `fs.compressImage` (LLP 1069.002 A1): the record, then each refusal's
   // name and code, in one answer.
   if (op === "compress") {
     const data = storage.fs.directories.data, out: string[] = [];
@@ -343,7 +343,7 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     }
     return {text: out.join("\n")};
   }
-  // `type: "image/png"`: the record and the file's
+  // `type: "image/png"` (LLP 1069.002 A1.11): the record and the file's
   // first 26 bytes (its IHDR's colour type last), then a type it refuses.
   if (op === "compress-png") {
     const data = storage.fs.directories.data, out: string[] = [];
@@ -356,7 +356,7 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     catch (e:any) { out.push(e.name + " " + e.code + " " + e.message); }
     return {text: out.join("\n")};
   }
-  // `fs.transformImage` and `compressImage`'s edit:
+  // `fs.transformImage` and `compressImage`'s edit (LLP 1133.019 D14, D15):
   // each record, then each refusal's name and code, in one answer.
   if (op === "transform") {
     const data = storage.fs.directories.data, out: string[] = [];
@@ -379,14 +379,14 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     return {text: out.join("\n")};
   }
   // A compression the wait gives up on, then a write to the same path: the
-  // write is what remains.
+  // write is what remains (LLP 1069.002 A1.5).
   if (op === "compress-abandoned") {
     const data = storage.fs.directories.data;
     // Seven trials at full size, the first fitting: a second or more.
     await storage.fs.compressImage(data + "/noise.bmp", data + "/slow.jpg", { maxDimension: 3000, maxBytes: 20_000_000 });
     return {text: "written"};
   }
-  // The same, started and not awaited: background work, with a
+  // The same, started and not awaited: background work (LLP 1097), with a
   // write queued behind it.
   if (op === "compress-background") {
     const data = storage.fs.directories.data;
@@ -405,7 +405,7 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     const wrote = storage.fs.writeFile(data + "/second", bytes("second"));
     return Promise.all([shrunk, wrote]).then(([code]) => ({text: String(code)}));
   }
-  // `exactBodyFrom`: the host reads the file into the
+  // `exactBodyFrom` (LLP 1108 D6 R2): the host reads the file into the
   // body. The reply's text, or the rejection's name, kind and message.
   if (op === "upload") {
     try {
@@ -430,7 +430,7 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     }
     return {text: out.join("\n")};
   }
-  // `exactBodyTo`: the host writes a 2xx body to the file.
+  // `exactBodyTo` (LLP 1108 D6 R2): the host writes a 2xx body to the file.
   // The status, what was written, the body and the header names, or the
   // rejection's name, kind and message.
   if (op === "download" || op === "download-missing") {
@@ -456,7 +456,7 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     }
     return {text: out.join("\n")};
   }
-  // An upload's progress: each
+  // An upload's progress (LLP 1016.000 D10): each
   // event as its mapper gets it, a `progress` of the bytes sent, then `load`.
   // (`upload-patient`: a deadline past the portable transport's own 30 s)
   if (op === "upload-progress" || op === "upload-patient") {
@@ -484,14 +484,14 @@ async function work(_source:string, args:unknown[], store:Store, storage:Storage
     await storage.fs.writeFile(storage.fs.directories.data + "/slow.jpg", bytes(value));
     return {text: "wrote " + value};
   }
-  // A long read (a folder's preview walking its tree), one
+  // A long read (files F18: a folder's preview walking its tree), one
   // storage step after another in one answer.
   if (op === "walk") {
     let steps = 0;
     for (let i = 0; i < 24; i++) { await storage.fs.readdir(storage.fs.directories.data); steps++; }
     return {text: value + ":" + steps};
   }
-  // An independent read, on no chain.
+  // An independent read, on no chain (minesweeper F10).
   if (op === "peek") {
     try { return {text: value + ":" + String.fromCharCode(...new Uint8Array(await storage.fs.readFile(storage.fs.directories.data + "/note")))}; }
     catch (_) { return {text: value + ":empty"}; }

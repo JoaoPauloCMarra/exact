@@ -9,7 +9,7 @@
  *   bun scripts/metrics.mjs --json     one JSON object
  *   bun scripts/metrics.mjs --app <name> measure that resolved app; without its own
  *       web/src/bin/metrics.rs, --press <testId>[,<testId>] names the update to time
- *   bun scripts/metrics.mjs --flow     still/serial-propagation layouts, no browser
+ *   bun scripts/metrics.mjs --flow     Stage 2 still/serial-propagation layouts, no browser
  *   bun scripts/metrics.mjs --scaling  runner workloads (300/3000/10000 rows), no browser
  *   bun scripts/metrics.mjs --list-memory  fresh-process eager/virtualized heap/RSS comparison (25/1000/25000)
  *   bun scripts/metrics.mjs --list-memory --collections --repeats 3 --json
@@ -24,9 +24,9 @@
  *                                       rebuild, and the app's boot phases (minutes, not seconds);
  *                                       and the web bytes of RealWorld, the video player and
  *                                       Caltrain: the app.js each ships (gated) and the wasm
- *                                       core's code by capability (reported);
+ *                                       core's code by capability (LLP 1047 D9; reported);
  *                                       and the hello app's iOS binary, for speed and for size
- *                                       (reported)
+ *                                       (LLP 1047.001 D8; reported)
  *
  * Budgets are read from rules/RULES.md so they cannot drift from the prose.
  */
@@ -292,7 +292,7 @@ if (process.argv.includes('--flow')) {
   out.identity.binary_sha256 = sha256(readFileSync(resolve(process.env.CARGO_TARGET_DIR ?? resolve(ROOT, 'target'), 'release/metrics')));
   if (json) console.log(JSON.stringify(out));
   else {
-    console.log(`Flow metrics — ${JSON.stringify(out.identity)}`);
+    console.log(`Stage 2 flow metrics — ${JSON.stringify(out.identity)}`);
     for (const [label, time, note] of flowRows()) console.log(`  ${label}: ${time}; ${note}`);
     console.log(out.flow_note);
   }
@@ -320,8 +320,8 @@ await step('native', () => {
   Object.assign(out, JSON.parse(r.stdout.trim().split('\n').pop()));
 });
 
-// 2. The web build as it ships — the JS target when it takes the app, else
-// the wasm — raw and gzipped, always rebuilt (a warm build is
+// 2. The web build as it ships — the JS target when it takes the app (LLP
+// 1071), else the wasm — raw and gzipped, always rebuilt (a warm build is
 // ~1.5 s), so every number below is for the code as it is now.
 await step('wasm', async () => {
   const dist = resolve(ROOT, 'host/web/dist');
@@ -559,7 +559,7 @@ await step('boot', () => {
       await call('Page.enable');
       await call('Page.navigate', { url: `http://127.0.0.1:${port}/` });
       if (!await connected) throw new Error('the page did not subscribe to the dev stream');
-      // The JS target's loop rebuilds and reloads the page per edit.
+      // The JS target's loop (LLP 1071) rebuilds and reloads the page per edit.
       const js = lines.some(l => /^JS target: /.test(l));
       await evaluate(`new Promise((resolve, reject) => {
         const start = performance.now();
@@ -767,7 +767,7 @@ if (long) {
       floorRun();
     }
   });
-  // The linked delta: the sample host — a native app linking
+  // The linked delta (LLP 1031 D7): the sample host — a native app linking
   // the archive and ExactKit and nothing else — against the empty AppKit app
   // `floor.swift`, installed bytes and gzip apart; each optional artifact
   // (the GPU module, the web arm) reported beside it, never folded in.
@@ -793,9 +793,9 @@ if (long) {
       out[`${key}_gzip_bytes`] = existsSync(f) ? gz(f) : NaN;
     }
   });
-  // The iOS binary: the hello app — one text node, the core
+  // The iOS binary (LLP 1047.001 D8): the hello app — one text node, the core
   // and nothing a plan adds — built for production on the simulator for speed
-  // and for size, its executable stripped, against an empty UIKit app's
+  // and for size (D9), its executable stripped, against an empty UIKit app's
   // (`host/apple/ios/floor.swift`). Gated by IOS_HELLO_BYTES below: on
   // 2026-10-06 the one-text probe had grown from 7.2 MB to 9.8 MB in a week and
   // nothing said so.
@@ -837,14 +837,16 @@ if (long) {
 }
 
 // The web core's ceilings, KiB of brotli-11 app.wasm as shipped (staged
-// capabilities apart). Over one is reported as a VIOLATION: on 2026-09-27 RealWorld's core had grown 30% in a day
-// and nothing said so. Each is the size that day plus 2 KiB.
+// capabilities apart). Over one is a VIOLATION, which the async lane files
+// against the commit: on 2026-09-27 RealWorld's core had grown 30% in a day
+// and nothing said so (LLP 1047.000 §9). Each is the size that day plus 2 KiB.
 // Raise one only on purpose, with the reason here; lower it when a cut lands.
-// Raised 2026-09-28: a day of platform features (auth, pickers, documents,
-// share, streams, controls, the agent's production gate; rem/em; formatters)
-// grew every core ~15 KiB past its line, and d4ef1636 linked the optional ones
-// by use (new optional web capabilities link by use). Each is now that size
-// plus ~2 KiB, lowered as cuts land.
+// Raised 2026-09-28 (Charlie, option (c): raise to reality and cut): a day of
+// platform features (LLP 1069's auth, pickers, documents, share, streams,
+// controls, the agent's production gate; rem/em; formatters) grew every core
+// ~15 KiB past its line, and d4ef1636 linked the optional ones by use (QUEUE:
+// new optional web capabilities link by use). Each is now that size plus ~2 KiB;
+// a size lane is cutting the core, and lowers these when its cuts land.
 // Lowered 2026-09-28 (perf/web-core-size): std's float reader had come back
 // through seven `str::parse::<f64|f32>` sites (a range input's bounds, rgb()
 // channels, the launch seed, Canvas 2D's numbers), its 7.6 KB Eisel–Lemire
@@ -856,56 +858,61 @@ if (long) {
 // leave Caltrain's, 5.0 KiB; then `filter` and `clip-path` linked by use,
 // 3.5–3.9 KiB; then CSS animations' grammars linked by use, 4.6–5.0 KiB; then
 // `background-image`'s gradients linked by use, 2.6–2.8 KiB.
-// Relaxed 2026-09-30: an app's web build is the JS target, and this wasm core
-// is what games, conformance and the fixtures build; smaller is still better,
-// but the limit need not be that low. The cores had reached 298 / 292 / 237 KiB (every(frame),
+// Relaxed 2026-09-30 (Charlie: "we can relax this some since it mattered most
+// for web but our approach is different on web now. smaller is still better but
+// i don't think we need a hard limit that low"): an app's web build is the JS
+// target since LLP 1071, and this wasm core is what games, conformance and the
+// fixtures build. The cores had reached 298 / 292 / 237 KiB (every(frame),
 // initial-item-count, DataError::Interface, the sorted testId index, the CSS
 // property-name table, the render host's detached kernel); each ceiling is that
-// size plus ~12 KiB. Link-by-use stays the rule, and a change still says what
-// it added.
-// Reported, not gated, since 2026-10-02 (the gate measures what ships): the
-// wasm core is what games, conformance and the fixtures build, not
-// what a web app downloads. Over a reference number prints "over", not a
-// VIOLATION; the gate is JS_TARGET_KIB below.
+// size plus ~12 KiB. Link-by-use stays the rule, and a lane still says what it
+// added.
+// Reported, not gated, since 2026-10-02 (Charlie: the gate should measure what
+// ships): the wasm core is what games, conformance and the fixtures build, not
+// what a web app downloads. Over a reference number prints "over", which no
+// lane files; the gate is JS_TARGET_KIB below.
 const WEB_CORE_KIB = { realworld: 304, 'video-player': 249, caltrain: 310 };
 
-// The iOS gate since 2026-10-08 (a tripwire, that day's size plus ~100 KB):
-// bytes of the hello app's stripped executable over the empty UIKit
-// app, as the ios-size step measures them. Over one is reported as a VIOLATION.
-// The measurement is deterministic (two commits
+// The iOS gate since 2026-10-08 (Charlie: a tripwire, today's size plus
+// ~100 KB): bytes of the hello app's stripped executable over the empty UIKit
+// app, as the ios-size step measures them. Over one is a VIOLATION the async
+// lane files against the commit. The measurement is deterministic (two commits
 // with no Apple change built byte-identical), so the headroom is for growth,
-// not noise. It would have stopped the fit-content series, which grew every app by 427 KB (speed) and 115 KB (size) before
+// not noise. It would have stopped the fit-content series (LLP 1075.003
+// §9.11), which grew every app by 427 KB (speed) and 115 KB (size) before
 // c81074f19 cut the copy it added. A feature that costs every app ~100 KB
-// should link by use. Raise one only on purpose, with the
+// should link by use (LLP 1047.001). Raise one only on purpose, with the
 // reason here; lower it when a cut lands. Set at 8,593,568 B (speed) and
 // 5,999,248 B (size): main at 2e48efad1 with the layout pass's measure
-// passed one way ("One layout pass in every app").
-// Lowered 2026-10-08 (the motion engine settles unless something moves): 8,495,088 B and 5,949,632 B at e6caf40bf, plus ~100 KB.
+// passed one way (LLP 1047.001, "One layout pass in every app").
+// Lowered 2026-10-08 (LLP 1047.001: the motion engine settles unless
+// something moves): 8,495,088 B and 5,949,632 B at e6caf40bf, plus ~100 KB.
 const IOS_HELLO_BYTES = { speed: 8_600_000, size: 6_050_000 };
 
 // The web's gate since 2026-10-02: KiB of brotli-11 app.js, the runtime and the
-// app as one ES module, which is what each app's web build ships; since
-// 2026-10-06 the production build's (gate what ships, not the development
+// app as one ES module, which is what each app's web build ships (LLP 1071); since
+// 2026-10-06 the production build's (Charlie: gate what ships, not the development
 // build's tools).
-// Over one is reported as a VIOLATION. Each is the
+// Over one is a VIOLATION the async lane files against the commit. Each is the
 // size that day (d09bfd087: Caltrain 17,159 B, RealWorld 28,721 B, the video
 // player 7,226 B) plus ~2 KiB. Raise one only on purpose, with the reason here;
 // lower it when a cut lands. Pieces loaded on demand (the GPU glue, Canvas 2D,
 // the markup editor) are not in it.
-// Caltrain raised 19 → 28: 26.8 KiB shipped on 2026-10-06, grown
+// Caltrain raised 19 → 28 (Charlie, 2026-10-06): 26.8 KiB shipped on 2026-10-06, grown
 // by real features (browser-side grant checks, media, commands, pointer events, the
-// router, paint order, its TV screens).
-// Caltrain lowered 28 → 25 the same day (the grant admission, media and the event families link by use;
-// 22.7 KiB shipped). RealWorld raised 30 → 38 and the video player 9 → 17
-// (2026-10-06): 36.0 and 15.6 KiB shipped after that cut. RealWorld's bulk is its own
+// router, paint order, its TV screens); a cut lane follows. RealWorld (38.5 KiB) and the
+// video player (18.7 KiB) are over and stay over until Charlie rules or a cut lands.
+// Caltrain lowered 28 → 25 the same day (lane/web-size: the grant admission, media and the event families link by use;
+// 22.7 KiB shipped). RealWorld raised 30 → 38 and the video player 9 → 17 (Charlie,
+// 2026-10-06): 36.0 and 15.6 KiB shipped after that cut. RealWorld's bulk is its own
 // generated module (~8 KB), the runtime core (~11.6 KB) and the TypeScript data layer
 // (~2.9 KB); the video player grew with its media session, controls and full screen.
-// RealWorld raised 38 → 45: 43.45 KiB shipped at fe5b26798, grown by real
-// features since 2026-10-08 (optimistic writes, +2.4 KB, the largest; the navigation web rows);
-// the file-body path already links by use (-0.4 KB).
+// RealWorld raised 38 → 45 (Charlie, 2026-10-12): 43.45 KiB shipped at fe5b26798, grown by real
+// features since 2026-10-08 (optimistic writes, +2.4 KB, the largest; the LLP 1115.000 web rows);
+// the file-body path already links by use (-0.4 KB). A link-by-use cut hunt is in QUEUE.md.
 const JS_TARGET_KIB = { realworld: 45, 'video-player': 17, caltrain: 25 };
 
-// 8. Long: web bytes by capability, for the three apps the
+// 8. Long: web bytes by capability (LLP 1047 D9), for the three apps the
 // size work tracks. Each app's app.wasm as shipped (raw, gzip, brotli-11),
 // then the same build with names kept (EXACT_WEB_NAMES: rustc keeps its name
 // section, wasm-opt runs with -g) and its code attributed: a function goes to
@@ -977,7 +984,7 @@ if (long) {
       for (const names of [false, true]) {
         const dist = resolve(ROOT, 'target/metrics-bytes', `${name}${names ? '-names' : ''}`);
         const env = { ...process.env, EXACT_APP_DIR: target.dir, EXACT_WEB_DIST: dist, EXACT_WEB_NAMES: names ? '1' : '0', ...(names ? { CARGO_TARGET_DIR: resolve(ROOT, 'target/metrics-names') } : {}) };
-        // The wasm's code by capability: the wasm target's own measure.
+        // The wasm's code by capability (LLP 1047 D9): the wasm target's own measure.
         const b = spawnSync(process.execPath, [resolve(ROOT, 'host/web/build.mjs'), target.crate('web'), '--wasm'], { cwd: ROOT, env, stdio: ['ignore', 'ignore', 'pipe'], encoding: 'utf8' });
         if (b.status !== 0) { measured.failed = failure(b); break; }
         const wasm = readFileSync(resolve(dist, 'app.wasm'));
@@ -985,15 +992,15 @@ if (long) {
         else {
           const br = (b) => brotliCompressSync(b, { params: { [constants.BROTLI_PARAM_QUALITY]: 11, [constants.BROTLI_PARAM_SIZE_HINT]: b.length } }).length;
           Object.assign(measured, { raw: wasm.length, gzip: gzipSync(wasm, { level: 9 }).length, brotli: br(wasm) });
-          // app.wasm is the core; its staged capabilities load later.
+          // app.wasm is the core; its staged capabilities load later (LLP 1047.000 §9).
           const staged = existsSync(resolve(dist, 'stages')) ? readdirSync(resolve(dist, 'stages')) : [];
           if (staged.length) measured.stages = Object.fromEntries(staged.map((name) => [name.split('.')[0], br(readFileSync(resolve(dist, 'stages', name)))]));
         }
       }
-      // What the app ships: its JS target's production app.js, the gated number, built as
+      // What the app ships: its JS target's production app.js (LLP 1071), the gated number, built as
       // delivery builds it (scripts/deploy.mjs: `host/web-js/build.mjs --production` over a plan) over the
       // development build's plan. The development build's app.js, which also links its tools (perf, the
-      // seams, the meters), is reported beside it, not gated.
+      // seams, the meters), is reported beside it, not gated (Charlie, 2026-10-06: gate what ships).
       {
         const sizes = (file) => { const js = readFileSync(file); return { raw: js.length, gzip: gzipSync(js, { level: 9 }).length, brotli: brotliCompressSync(js, { params: { [constants.BROTLI_PARAM_QUALITY]: 11, [constants.BROTLI_PARAM_SIZE_HINT]: js.length } }).length }; };
         const dist = resolve(ROOT, 'target/metrics-bytes', `${name}-js`), shipped = `${dist}-production`;
@@ -1038,7 +1045,7 @@ const rows = [
   ['layout 390×844 (Taffy)', ms(out.layout_ms), ''],
   ...flowRows(),
   ['update: screen swap (press)', ms(out.update_ms), `budget ${budget('Dev restart')}`],
-  ['update: inherited row on the root', ms(out.inherit_ms), Number.isFinite(out.inherit_touched) ? `${out.inherit_touched} nodes re-derived (text-color)` : ''],
+  ['update: inherited row on the root', ms(out.inherit_ms), Number.isFinite(out.inherit_touched) ? `${out.inherit_touched} nodes re-derived (text-color; LLP 1035.000 D2)` : ''],
   ['tick: advance 1 s', ms(out.tick_ms), ''],
   ['web host first batch', ms(out.web_boot_ms), `${kib(out.web_first_batch_bytes)} JSON`],
   ['web host update batch', ms(out.web_update_ms), `${kib(out.web_update_batch_bytes)} JSON`],
@@ -1074,18 +1081,18 @@ if (long) {
   rows.push(['macOS: initial captured build', out.macos_build_failed ? 'FAILED' : s(out.macos_build_s), out.macos_build_failed ?? `cargo ${s(out.macos_build_cargo_s)} · swift ${s(out.macos_build_swift_s)}; budget ${budget('Full build')}`]);
   const mib = (v) => (Number.isFinite(v) ? `${(v / 1048576).toFixed(2)} MB` : 'n/a');
   rows.push(
-    ['macOS: link delta (sample host − floor)', out.link_delta_failed ? 'FAILED' : mib(out.link_delta_bytes), out.link_delta_failed ?? Number.isFinite(out.link_delta_bytes) ? `${mib(out.link_delta_gzip_bytes)} gzip; host ${mib(out.host_bytes)}, floor ${mib(out.floor_bytes)}; the archive + ExactKit, nothing optional; host-dev, ~1 MB over release` : 'not measured (the sample host or the floor did not build)'],
+    ['macOS: link delta (sample host − floor)', out.link_delta_failed ? 'FAILED' : mib(out.link_delta_bytes), out.link_delta_failed ?? Number.isFinite(out.link_delta_bytes) ? `${mib(out.link_delta_gzip_bytes)} gzip; host ${mib(out.host_bytes)}, floor ${mib(out.floor_bytes)}; the archive + ExactKit, nothing optional (LLP 1031 D7); host-dev, ~1 MB over release` : 'not measured (the sample host or the floor did not build)'],
     ['  optional: GPU module (dlopen)', mib(out.gpu_module_bytes), Number.isFinite(out.gpu_module_bytes) ? `${mib(out.gpu_module_gzip_bytes)} gzip; paid at the first canvas` : 'no GPU crate'],
     ['  optional: web arm (dlopen)', mib(out.web_module_bytes), Number.isFinite(out.web_module_bytes) ? `${mib(out.web_module_gzip_bytes)} gzip; paid at the first iframe` : 'n/a'],
   );
-  // The hello app's iOS binary over an empty UIKit app's, for speed and for size (gated: IOS_HELLO_BYTES).
+  // LLP 1047.001 D8: the hello app's iOS binary over an empty UIKit app's, for speed and for size (gated: IOS_HELLO_BYTES).
   for (const optimize of ['speed', 'size']) {
     const bytes = out[`ios_${optimize}_bytes`], limit = IOS_HELLO_BYTES[optimize];
     const budget = Number.isFinite(bytes) ? `; budget ${limit.toLocaleString('en-US')} B, ${bytes.toLocaleString('en-US')} B ${bytes <= limit ? 'within' : 'VIOLATION'}` : '';
     rows.push([`iOS: hello app, optimized for ${optimize}`, out[`ios_${optimize}_failed`] ? 'FAILED' : mib(bytes), out[`ios_${optimize}_failed`] ?? `production, simulator, stripped, over an empty UIKit app (${mib(out.ios_floor_bytes)}); one text node: the core and nothing a plan adds; ${optimize === 'size' ? 'what an embed builds' : 'what an app builds'} unless its manifest says otherwise${budget}`]);
   }
   rows.push(['macOS: touch one line, rebuild', out.macos_touch_failed ? 'FAILED' : s(out.macos_touch_s), out.macos_touch_failed ?? `host/apple/src/host.rs; budget ${budget('Touch one line')}`]);
-  // Each app's wasm, and its code by capability (KiB of code).
+  // LLP 1047 D9: each app's wasm, and its code by capability (KiB of code).
   for (const [name, m] of Object.entries(out.web_bytes ?? {})) {
     const parts = m.code ? Object.entries(m.code).filter(([, b]) => b >= 1024).sort((a, b) => b[1] - a[1]).map(([k, b]) => `${k} ${kib(b)}`).join(' · ') : 'names unavailable';
     const shipped = m.js, limit = JS_TARGET_KIB[name];

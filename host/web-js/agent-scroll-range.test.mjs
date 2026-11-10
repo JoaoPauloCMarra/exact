@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { open } from '../../scripts/agent.mjs';
 import { webCompiler } from './module.mjs';
 
-// The agent's `layout` reports each scroller's range beside its offset (`rx`/`ry`), in `nodes` and in
+// The agent's `layout` reports each scroller's range beside its offset (LLP 1012 `rx`/`ry`), in `nodes` and in
 // `layout <target>`'s scroll chain: a scroller that hides `overflow-x` keeps the programmatic range the browser gives
 // it, and the viewport's entry is there while the page has a range, though it is not scrolled.
 test('a scroller\'s range and the page\'s are in layout and in the scroll chain', async () => {

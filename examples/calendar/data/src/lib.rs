@@ -26,12 +26,12 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 /// Identity shared by the Contract bake, browser store and Apple app.
 pub const APP: &str = "com.exact.calendar";
 /// The app's own SQLite file, and the person's calendars, read only while
-/// "Show my calendars" is on, and the person's steps and
-/// workouts, read only while "Show my activity" is on.
+/// "Show my calendars" is on (LLP 1133.018 §11), and the person's steps and
+/// workouts, read only while "Show my activity" is on (LLP 1133.026 §12).
 /// Contacts need no line: the guests are picked, and a pick is the app's
-/// copy.
+/// copy (D4).
 /// The invitation a mail attaches is written to, and read from, the app's
-/// temporary directory.
+/// temporary directory (LLP 1133.024 D16).
 pub const GRANTS: &str =
     "sqlite.open app:/data/calendar.db\ndevice.calendar calendarPurpose\ndevice.health-read healthPurpose\nfs.write app:/tmp\nfs.read app:/tmp";
 

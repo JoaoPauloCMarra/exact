@@ -1,4 +1,4 @@
-// A refused inspect, said in the Inspector: a build whose page answered
+// A refused inspect, said in the Inspector (the hands-on pass on the clone): a build whose page answered
 // `unsupported inspect` is said there while this tool inspects it, until that build inspects after all (a view
 // selected in it), inspect is asked again, the build registers again, or another tool or none owns inspect there.
 // Owning inspect says nothing of whether its page inspects: the server names its owner on sending, refused or not.
@@ -46,8 +46,8 @@ export const restoreRefusals = (builds: Map<string, Refusing>, kept: ReturnType<
 
 /** A move up the chain sent to a build (tamber/1.16 `select`), until its page answers: an `unsupported inspect` in
  * that while that says the page can't step (an older build's) greys out the tool's up control for that build alone,
- * never inspect, until it registers again. Any other (its selection gone in a new generation) is
- * staleness: the move ends, the refusal is said as any is, and the control stays. A selection from
+ * never inspect (theme2 15:02), until it registers again. Any other (its selection gone in a new generation) is
+ * staleness: the move ends, the refusal is said as any is, and the control stays (theme2 06:05). A selection from
  * it ends the while. */
 export const stepping = new Set<string>(), cantStep = new Set<string>();
 export const stepRefused = (id: string, detail?: unknown, b?: Refusing) => {

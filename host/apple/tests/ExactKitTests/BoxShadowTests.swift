@@ -6,7 +6,7 @@ import UIKit
 import AppKit
 #endif
 
-/// CSS `box-shadow`: the list's outer shadows
+/// CSS `box-shadow` (LLP 1064 D2, LLP 1077 D4): the list's outer shadows
 /// cast through contentless layers in one container at the bottom of the
 /// node's own, from the rounded border box (grown by a spread) and masked to
 /// outside it; inset ones in a container masked to the padding box. A node
@@ -139,8 +139,8 @@ class BoxShadowTests: XCTestCase {
     }
 
     #if os(iOS)
-    /// A colour token inside a shadow crosses as its light/dark pair (an
-    /// LED glow, `eu.labelglow`); the cast follows the view's
+    /// A colour token inside a shadow crosses as its light/dark pair (the
+    /// euxy port's LED glow, `eu.labelglow`); the cast follows the view's
     /// appearance.
     func testALightDarkShadowCastsTheAppearancesColour() throws {
         var glow = raised

@@ -1,4 +1,4 @@
-//! The page's environment: an `env(safe-area-inset-*)` length
+//! The page's environment (LLP 1001 §2): an `env(safe-area-inset-*)` length
 //! resolves against the insets the host sets, and a change of the insets
 //! lays the tree out again — only the nodes that read them.
 
@@ -206,7 +206,7 @@ fn env_lengths_travel_the_wire() {
     );
 }
 
-/// A root with two panes sized by the segment variables — the
+/// LLP 1078 D3: a root with two panes sized by the segment variables — the
 /// detail pane positioned at the second segment's left — and the host's
 /// `set_segments`, `set_env`'s twin.
 fn segmented_tree() -> Kernel {
@@ -634,7 +634,7 @@ fn an_escaped_space_in_a_name_is_another_variable() {
     }
 }
 
-/// Under the terminal's space rule a padding that
+/// LLP 1121 stage 11 (c): under the terminal's space rule a padding that
 /// resolves to points (a `calc()` of an `env()` included) lays out in whole
 /// cells, rows down; turning the rule on or off after a layout lays every
 /// box out again, plain px included.
@@ -681,7 +681,7 @@ fn the_terminal_space_rule_rounds_resolved_spaces_and_relays_when_it_turns() {
     assert_eq!(kernel.resolved_padding(root).map(|p| p.3), Some(12.0));
 }
 
-/// A multi-column box's gap is a space across too,
+/// LLP 1121 stage 11 (c): a multi-column box's gap is a space across too,
 /// whole columns under the terminal's rule (12 px is one, 8).
 #[test]
 fn a_multicol_gap_is_whole_columns_under_the_terminal_space_rule() {

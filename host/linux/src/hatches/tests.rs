@@ -1,6 +1,6 @@
-//! The hatches' store, queue and crash breadcrumb against their bounds. The
-//! presenter's half, driven through a booted plan, is
-//! `presenter/hatch_tests.rs`.
+//! The hatches' store, queue and crash breadcrumb against their bounds (LLP
+//! 1075.003.000.001 §2.2.1, §2.5, §3.2, §4.4). The presenter's half, driven
+//! through a booted plan, is `presenter/hatch_tests.rs`.
 use super::breadcrumb::{Breadcrumb, DEPTH_MAX, SLOTS};
 use super::diagnostics::{Store, NAMES, OPEN_SPANS, SAMPLES, SNAPSHOTS};
 use super::session::{ACTS, ACT_BYTES, INPUT_BYTES, OVERLAY_BYTES, OVERLAY_OPS, SNAPSHOT};

@@ -1,7 +1,8 @@
-//! A param's levels (*1.15*), from one walker (`contract::tamber_levels`).
-//! `resolve` of a param says each tuple's winning `level` and `name`;
-//! `explain` and `resolve` say its `levels` when its default is a bare
-//! reference; `describe` says what each param's default `reaches`.
+//! LLP 1121 stage 12 B2-levels (*1.15*): a param's levels, from one walker
+//! (`contract::tamber_levels`). `resolve` of a param says each tuple's
+//! winning `level` and `name`; `explain` and `resolve` say its `levels`
+//! when its default is a bare reference; `describe` says what each param's
+//! default `reaches`.
 #![cfg(unix)]
 
 use super::tamber_serve::{app, Serve};
@@ -292,9 +293,9 @@ fn levels_differ_by_tuple_and_a_chain_stops_after_eight_hops() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A role's override, in either spelling and any case, as the checker keys
-/// it, named by the row spelling the fold publishes; an app-set base name is
-/// the app's token.
+/// Round 1 (Astra 1 = Grok 1): a role's override, in either spelling and any
+/// case, as the checker keys it, named by the row spelling the fold
+/// publishes; an app-set base name is the app's token (Grok 3).
 #[test]
 fn a_roles_override_in_either_spelling_and_an_app_set_base_name() {
     let one = |s: &mut Serve, p: &str| steps(&ask(s, "resolve", &format!("{MAP}.{p}")));
@@ -337,9 +338,10 @@ fn a_roles_override_in_either_spelling_and_an_app_set_base_name() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// An icon param's tuples and levels; a default naming another param, in
-/// Contract and in a `.tamber`, reaches that param's token; a literal
-/// default (`transparent`) or an expression has `levels: null`.
+/// Round 1 (Astra 3, 4, 5 = Grok 2): an icon param's tuples and levels; a
+/// default naming another param, in Contract and in a `.tamber`, reaches
+/// that param's token; a literal default (`transparent`) or an expression
+/// has `levels: null`.
 #[test]
 fn icon_params_param_aliases_and_literals() {
     let dir = reading(
@@ -380,8 +382,8 @@ fn icon_params_param_aliases_and_literals() {
     let lift = ask(&mut s, "explain", &format!("{MAP}.lift"));
     assert_eq!(lift.get("levels"), Some(&Value::Null), "{lift}");
     drop(s);
-    // An app component's icon param naming the app's icon (a package's is
-    // in `package_icons.rs`).
+    // An app component's icon param naming the app's icon (a package's,
+    // stage 13: `package_icons.rs`).
     std::fs::write(dir.join("app.contract"), "use Card from \"@acme/reading\"\ncomponent Badge\n  params\n    mark: icon = \"icon.app\"\n  view\n    image \"symbol:param.mark\"\ncomponent App\n  view\n    column\n      Card()\n      Badge()\n").unwrap();
     let mut s = Serve::start(&dir, &[]);
     let mark = ask(&mut s, "resolve", "app.contract#Badge.mark");
@@ -457,10 +459,10 @@ fn rows(resolved: &Value) -> Vec<(Value, String, String, Value)> {
         .collect()
 }
 
-/// `levels.token` keeps the walk's cap. Nine params, each naming the next
-/// and the last the package's token, are eight aliases: the walk stops on
-/// the last param and `levels` names no token. Eight reach the token at hop
-/// eight, and both say it.
+/// Round 2 (Astra 1 = Grok 1): `levels.token` keeps the walk's cap. Nine
+/// params, each naming the next and the last the package's token, are
+/// eight aliases: the walk stops on the last param and `levels` names no
+/// token. Eight reach the token at hop eight, and both say it.
 #[test]
 fn levels_token_keeps_the_walks_eight_hops() {
     let dir = reading("levels-hops", "tamber t\n\ntheme\n  ink = #111111\n");
@@ -494,9 +496,11 @@ fn levels_token_keeps_the_walks_eight_hops() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A `when` naming an axis `under scheme=dark` makes a colour's light/dark
-/// pair, its light side the token's own line. Each side is walked on its
-/// own: the light side stops on the line, the dark side follows its `when`.
+/// Round 2 (Grok 2), and the per-side correction (theme2's 19:30 ruling,
+/// option (a)): a `when` naming an axis `under scheme=dark` makes a
+/// colour's light/dark pair, its light side the token's own line. Each side
+/// is walked on its own: the light side stops on the line, the dark side
+/// follows its `when`.
 #[test]
 fn a_light_dark_pair_is_walked_per_side() {
     let dir = reading("levels-pair", "tamber t\n\naxes\n  dark-style = black | dim  under scheme=dark\n\ntheme\n  ink = #111111\n  reading.chain = #ffffff\n    when dark-style=dim: reading.pin\n");
@@ -515,11 +519,11 @@ fn a_light_dark_pair_is_walked_per_side() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// Two axes, general and specific `when` lines that overlap, on a package
-/// token and on the app's `params` line with its own: every tuple's modes,
-/// level, name and value, so a wrong tuple order, the first holding `when`
-/// in place of the most specific, or a param's `when` lines ignored, each
-/// fails.
+/// Round 2 (Astra 2): two axes, general and specific `when` lines that
+/// overlap, on a package token and on the app's `params` line with its
+/// own: every tuple's modes, level, name and value, so a wrong tuple order,
+/// the first holding `when` in place of the most specific, or a param's
+/// `when` lines ignored, each fails.
 #[test]
 fn two_axes_overlapping_whens_on_a_package_token_and_an_app_param() {
     let dir = reading(
@@ -575,10 +579,11 @@ fn two_axes_overlapping_whens_on_a_package_token_and_an_app_param() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// Each side is walked on its own: an app's `params` line whose `when`
-/// lines are all on an axis `under scheme=dark`. Light follows the line's
-/// own reference to the package's colour; dark is the app's literal in
-/// every tuple. One level per tuple would name the dark side's for Light.
+/// The per-side correction's counterexample (dtool2's T1 reviewers, 18:55):
+/// an app's `params` line whose `when` lines are all on an axis `under
+/// scheme=dark`. Light follows the line's own reference to the package's
+/// colour; dark is the app's literal in every tuple. One level per tuple
+/// named the dark side's for Light.
 #[test]
 fn a_params_line_with_dark_only_whens_wins_dark_and_follows_its_reference_light() {
     let dir = reading("levels-sides", "tamber t\n\naxes\n  dark-style = black | dim  under scheme=dark\n\ntheme\n  ink = #111111\n\nparams\n  Map.pin = reading.chain\n    when dark-style=black: #000000\n    when dark-style=dim: #111111\n");
@@ -606,10 +611,11 @@ fn per_side(r: &Value) -> Vec<(Value, [String; 3], [String; 3])> {
         .collect()
 }
 
-/// `when` lines that mix an axis `under scheme=dark` with a normal one, and
-/// a normal-only `when` that outranks one under dark. Light takes the most
-/// specific holding `when` naming no axis under dark, else the line's own
-/// value; dark takes the most specific holding `when` of all. On an app's
+/// Round 1 of the per-side follow-up (Astra 1, Grok 1): `when` lines that
+/// mix an axis `under scheme=dark` with a normal one, and a normal-only
+/// `when` that outranks one under dark. Light takes the most specific
+/// holding `when` naming no axis under dark, else the line's own value;
+/// dark takes the most specific holding `when` of all. On an app's
 /// `params` line and on a package token, values asserted beside levels.
 #[test]
 fn mixed_axis_whens_are_walked_per_side() {

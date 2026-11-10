@@ -1,10 +1,10 @@
-// @exact/hid on the web: WebHID (https://wicg.github.io/webhid/), the browser's chooser and
+// @exact/hid on the web (LLP 1133.037 D10–D12): WebHID (https://wicg.github.io/webhid/), the browser's chooser and
 // its remembered devices, in the interface's shapes. The page runtime (host/web-js/modules.js) calls it outside the
 // agent.
 //
-// - Game controllers are `@exact/gamepad`'s: the chooser excludes the pad usages, and a device holding a pad
+// - Game controllers are `@exact/gamepad`'s (D11): the chooser excludes the pad usages, and a device holding a pad
 //   collection is never offered. WebHID applies its own blocklist.
-// - Input reports are a batch: each connection keeps its recent reports, and each reader its cursor; the first
+// - Input reports are a batch (D12): each connection keeps its recent reports, and each reader its cursor; the first
 //   answer is the latest, each later one every report since, at most `history`, `dropped` counting the rest.
 
 /** Generic Desktop's joystick, gamepad and multi-axis controller (HID Usage Tables §4). */
@@ -45,7 +45,7 @@ export function implementation({ changed }) {
     if (!c.open) return { error: { error: c.unplugged ? 'NetworkError' : 'InvalidStateError' } };
     return { c };
   };
-  /** The shared open of a device and its report log: one per device, a lease per connection. */
+  /** The shared open of a device and its report log: one per device, a lease per connection (D5). */
   const shared = new Map();
   async function lease(d) {
     let s = shared.get(d);

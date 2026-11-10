@@ -1,4 +1,4 @@
-//! The checker bound's walks beside the fold, each
+//! The checker bound's round 3 (Astra, Grok): the walks beside the fold, each
 //! bounded or linear. Kind inference and a DTCG composite count the levels
 //! they nest with the names they follow; the importers' role analysis is
 //! iterative; icons' names are checked once each; and the wire measures a
@@ -21,7 +21,7 @@ fn on_small_stack<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> 
 /// A forward chain of 500 tokens whose kinds aren't written, each nesting
 /// the next in 32 `calc()`s: within each value's bound and the names'
 /// depth, but its kind walk nests 16,000 levels. Refused where names and
-/// functions together pass 512.
+/// functions together pass 512 (Astra's round 3).
 #[test]
 fn a_kind_walk_counts_the_functions_it_enters() {
     let mut src = String::from("tamber t\n\ntheme\n  ink = #111111\n");
@@ -40,7 +40,8 @@ fn a_kind_walk_counts_the_functions_it_enters() {
 
 /// A DTCG composite counts its levels with the aliases it follows: 256
 /// tokens, each nesting an alias to the next in 32 arrays, end in moments
-/// on a small stack (not 8,192 levels before its type is refused).
+/// on a small stack (Astra's round 3: 8,192 levels before its type was
+/// refused).
 #[test]
 fn a_dtcg_composite_counts_its_levels() {
     use exact_tamber::import::dtcg;
@@ -76,7 +77,8 @@ fn a_dtcg_composite_counts_its_levels() {
 
 /// The importers' role analysis follows a design's chain of names without
 /// a recursion apiece: a chain of 20,000 tokens a role names (which the
-/// checker folds, each kind found once) imports on a small stack in moments.
+/// checker folds, each kind found once) imports on a small stack in moments
+/// (Astra's round 3).
 #[test]
 fn role_analysis_follows_a_long_chain_without_recursing() {
     use exact_tamber::import::shadcn;
@@ -106,7 +108,7 @@ fn role_analysis_follows_a_long_chain_without_recursing() {
 }
 
 /// Icons' names are checked against the tokens' and each other once each
-/// (not a scan apiece).
+/// (Astra's round 3: a scan apiece).
 #[test]
 fn many_icons_check_in_moments() {
     let n = 60_000;
@@ -128,7 +130,7 @@ fn many_icons_check_in_moments() {
     assert_eq!(folded.map(|f| f.icons.len()).map_err(|d| d.len()), Ok(n));
 }
 
-/// Astryx's own tokens (`local`) are source values too.
+/// Astryx's own tokens (`local`) are source values too (Astra's round 3).
 #[test]
 fn astryx_local_values_meet_the_bound() {
     use exact_tamber::import::astryx;
@@ -142,7 +144,7 @@ fn astryx_local_values_meet_the_bound() {
 }
 
 /// A kind past the bound gets the same words on the wire as on disk, and a
-/// value is measured trimmed on both.
+/// value is measured trimmed on both (both reviewers' round 3).
 #[test]
 fn the_wire_measures_a_kind_and_a_value_as_a_design_does() {
     let src = "tamber t\n\ntheme\n  ink = #111111\n";
@@ -173,10 +175,11 @@ fn the_wire_measures_a_kind_and_a_value_as_a_design_does() {
 }
 
 /// Role spellings in quoted families don't each read the role's value
-/// again in the importers' role analysis. Here 30,000 spellings of a role
-/// with a 4 KB value make 93 thousand edges, where a read each would make
-/// 62 million (about 1 GB); the time bound only guards against a gross
-/// regression, since such edges are cheap to push.
+/// again in the importers' role analysis (Astra's round 3 re-check: 81
+/// million edges from 40,000 spellings). Here 30,000 spellings of a role
+/// with a 4 KB value: 62 million edges (about 1 GB) before, 93 thousand
+/// now; the time bound only guards against a gross regression, since
+/// the old edges were cheap to push on this machine.
 #[test]
 fn role_spellings_are_read_once_each_in_role_analysis() {
     let spell = |k: usize| {

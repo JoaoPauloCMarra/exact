@@ -1,11 +1,11 @@
-// @exact/age-range on Android: Google Play's Age Signals. `requestAgeSignalsAccess` over
+// @exact/age-range on Android (LLP 1133.028 D8, D10, D11): Google Play's Age Signals. `requestAgeSignalsAccess` over
 // the activity in front, then `checkAgeSignals`, answered in Play's own bands (the Console's; 0–12, 13–15, 16–17
 // and 18+ by default): Play's `ageLower` and `ageUpper` as they come, never coarsened into the app's gates, which
-// the module cannot read from the Console.
+// the module cannot read from the Console (D8).
 //
 // Under the agent it asks Play for nothing: the `age-range` ticket's answer reaches it as `preferred`, a typed age
 // answering Play's default band, `decline` `declined`, `unverified` Play's `VERIFICATION_REQUIRED`, and
-// `unavailable` NotSupportedError.
+// `unavailable` NotSupportedError (§7).
 package exact.agerange
 
 import android.os.Build
@@ -29,10 +29,10 @@ import java.util.TimeZone
 
 class AgeRangeModule(context: ExtensionContext) : ExactExtension(context) {
     companion object {
-        /** Play's default bands, inclusive. */
+        /** Play's default bands, inclusive (D11). */
         private val BANDS = listOf(0 to 12, 13 to 15, 16 to 17, 18 to null)
 
-        /** Apple's rule for gates, which the module keeps on every platform: one to three whole ages,
+        /** Apple's rule for gates (D8), which the module keeps on every platform: one to three whole ages,
          * ascending, at least two years apart. */
         fun refused(gates: JSONArray?): String? {
             val ages = (0 until (gates?.length() ?: 0)).map { gates!!.optDouble(it) }
@@ -70,7 +70,7 @@ class AgeRangeModule(context: ExtensionContext) : ExactExtension(context) {
     override fun preferred(values: JSONObject) { overlay = values.optJSONObject("ageRangeStatus") ?: JSONObject() }
 
     /** The library is here; outside the agent, whether Play installed the app, without which Play answers
-     * `APP_NOT_OWNED`. */
+     * `APP_NOT_OWNED` (D17). */
     private fun status(): JSONObject {
         val out = JSONObject().put("available", context.agent || installedByPlay()).put("regulated", JSONObject.NULL).put("apple", JSONObject.NULL)
         if (context.agent) overlay.keys().forEach { out.put(it, overlay.get(it)) }
@@ -142,7 +142,7 @@ class AgeRangeModule(context: ExtensionContext) : ExactExtension(context) {
         task.addOnSuccessListener { done(it) }.addOnFailureListener { failed(failure(it)) }
     }
 
-    /** The names for Play's codes, the code beside. */
+    /** D8's names for Play's codes, the code beside. */
     private fun failure(e: Exception): JSONObject {
         val code = (e as? AgeSignalsException)?.errorCode
             ?: return JSONObject().put("error", "OperationError").put("message", e.message ?: "Age Signals failed")

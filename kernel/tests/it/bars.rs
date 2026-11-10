@@ -1,5 +1,5 @@
 //! What of an app's structure a host projects into its platform's bars
-//! (`kernel/src/bars.rs`): the header-shaped route, read
+//! (LLP 1115.001 D11; `kernel/src/bars.rs`): the header-shaped route, read
 //! from the kernel's tree and from a host's own mirror of it as words, what
 //! a route shows of the bar, and a navigation root's tabs.
 
@@ -153,7 +153,7 @@ fn the_back_control_is_the_platforms_own_back_on_a_pushed_route_and_an_item_else
 #[test]
 fn what_is_not_header_shaped_is_no_bar() {
     // No header first; a header with no heading; one with two; a level with
-    // no heading role; a text in a button is no title.
+    // no heading role (LLP 1115.000 D12.5); a text in a button is no title.
     let level: &[(PropId, &str)] = &[(PropId::AccessibilityHeadingLevel, "1")];
     for (name, route) in [
         (
@@ -256,7 +256,7 @@ fn a_pressable_around_the_heading_is_the_title_and_a_tablist_its_segments() {
 const MORE: &[(PropId, &str)] = &[(PropId::Id, "more"), (PropId::Popover, "auto")];
 const STATUS: &[(PropId, &str)] = &[(PropId::AccessibilityRole, "status")];
 
-/// A readout (`role="status"`) is an item on its side of
+/// A readout (`role="status"`, LLP 1075.003 §9.15) is an item on its side of
 /// the heading, in order among the buttons, and no button: nothing presses
 /// it, and what it holds (a dot, a text) is its face, never the subtitle's.
 #[test]
@@ -576,7 +576,7 @@ fn a_route_that_says_no_bar_or_hides_its_header_has_none() {
 }
 
 /// A header whose author wrote `appearance: none` keeps its authored bar on
-/// every host (#393); one the compiler only implied it
+/// every host (LLP 1075.003 §9.10, #393); one the compiler only implied it
 /// for is still the bar's.
 #[test]
 fn a_header_that_writes_appearance_none_is_no_bar() {

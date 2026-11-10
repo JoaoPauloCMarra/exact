@@ -51,7 +51,7 @@ impl ViewportUnit {
 
     /// The viewport's length in points. Native windows have no browser chrome.
     pub fn basis(self, env: &Env) -> f32 {
-        // The window's, when the host lays the page out
+        // LLP 1075.003 §9.11: the window's, when the host lays the page out
         // in a sheet's smaller viewport.
         let (w, h) = env
             .screen

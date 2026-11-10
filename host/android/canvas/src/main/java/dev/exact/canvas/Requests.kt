@@ -16,7 +16,7 @@ import android.view.Choreographer
 import android.view.HapticFeedbackConstants
 
 /**
- * What exact2 asks of the platform, acted on: the one channel out. exact2 queues a request and
+ * What exact2 asks of the platform, acted on (LLP 1115.001 D5): the one channel out. exact2 queues a request and
  * wakes the reader; whoever holds the host takes the queue ([Native.requests], on exact2's thread) and hands it to
  * the main thread, where [perform] reads it. A request with an answer (the share sheet) is answered later by its id
  * ([Exact.answer]). `host/android/README.md` has the kinds and their words; `host/linux/src/presenter/requests.rs`
@@ -28,9 +28,9 @@ import android.view.HapticFeedbackConstants
 internal class Requests(private val activity: ExactActivity) {
     /** The view a haptic is played through and whose keyboard is shown: the activity's reader, as it is made. */
     var view: ExactView? = null
-    /** Called with whether system Back has somewhere to go in the app. */
+    /** Called with whether system Back has somewhere to go in the app (LLP 1115.001 D6). */
     var back: (Boolean) -> Unit = {}
-    /** The top layer's windows: what exact2 says of its open surface goes to them. */
+    /** The top layer's windows (LLP 1115.001 D10): what exact2 says of its open surface goes to them. */
     var surfaces: Surfaces? = null
 
     /** `x_log_requests=1` (exact2's EXACT_LOG_REQUESTS): each request as it is acted on, to the log. A haptic or a
@@ -73,10 +73,10 @@ internal class Requests(private val activity: ExactActivity) {
                     COPY -> copy(string(words, body).first)
                     SHARE -> share(id, words, body)
                     BACK -> back(words[body] != 0)
-                    // The second word, where there is one: the hosted field the keyboard is for (0: one exact2 paints).
+                    // The second word, from D8 on: the hosted field the keyboard is for (0: one exact2 paints).
                     KEYBOARD -> view?.keyboard(words[body], if (i - body > 1) words[body + 1] else 0)
                     SURFACE -> surfaces?.told(words, body)
-                    // `wakelock="screen"`: the platform's own view attribute.
+                    // `wakelock="screen"` (LLP 1125 D11): the platform's own view attribute.
                     KEEP_SCREEN_ON -> view?.keepScreenOn = words[body] != 0
                     PICK -> pick(id, words, body)
                     HATCH -> activity.hatches()?.told(words, body, i)
@@ -92,7 +92,7 @@ internal class Requests(private val activity: ExactActivity) {
         }
     }
 
-    /** The session's orientation lock, on this activity. */
+    /** The session's orientation lock (LLP 1133.029 D6), on this activity. */
     private val orientation = Orientation(activity) { w, at -> string(w, at) }
 
     /** The string at [at]: its bytes' count, then UTF-8 padded to whole words. And the index after it. */
@@ -106,7 +106,7 @@ internal class Requests(private val activity: ExactActivity) {
     private val picking = HashMap<Int, () -> Unit>()
 
     /**
-     * A date or time control's picker: the control's hatch may set what it offers or take it
+     * A date or time control's picker (LLP 1115.001.000 D1): the control's hatch may set what it offers or take it
      * over ([ExactHatches.picker]); else the activity's [ExactActivity.pickers] shows it. Its answer is the value
      * chosen, in HTML's form, or null when it was dismissed. `x_log_requests=1` logs when it first drew, from the
      * request and from the touch that asked for it.
@@ -149,7 +149,7 @@ internal class Requests(private val activity: ExactActivity) {
         val intent = when (uri.scheme?.lowercase()) {
             "mailto" -> Intent(Intent.ACTION_SENDTO, uri)
             "tel" -> Intent(Intent.ACTION_DIAL, uri)
-            // The app's page in Settings, where its permissions are.
+            // The app's page in Settings (LLP 1133.002 D11), where its permissions are.
             "app-settings" -> Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", activity.packageName, null))
             else -> Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE)
         }

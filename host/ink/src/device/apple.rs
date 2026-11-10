@@ -1,4 +1,5 @@
 //! The carrier owns the view; the render thread only owns its Metal layer.
+//! @ref LLP 1149 D7, D11, D12.
 #[cfg(exact_ink_metal)]
 pub use super::metal::startup::Startup;
 #[cfg(any(not(exact_ink_metal), test))]

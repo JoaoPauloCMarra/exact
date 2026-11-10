@@ -1,8 +1,8 @@
-//! The person's calendars beside the app's own, read from
+//! The person's calendars beside the app's own (LLP 1133.018 §11), read from
 //! `@exact/calendar` through the generated binding while the switch is on:
 //! the selected day's events, each in its calendar's colour, and the days of
 //! the six weeks a month shows that have an event. A read walks the module's
-//! pages (`next`), so only the answer computed from them becomes state.
+//! pages (`next`), so only the answer computed from them becomes state (D6).
 //!
 //! Neither read is made while the switch is off, so the person is asked for
 //! access only when they turn it on.

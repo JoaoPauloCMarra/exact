@@ -60,7 +60,7 @@ extension NodeView {
         var edges = false
         var sideColor: CGColor?
         var own = false
-        /// Apple's continuous curve over one radius.
+        /// Apple's continuous curve over one radius (LLP 1077 D1).
         var curve: CALayerCornerCurve = .circular
         /// A shape only a path says: the layer keeps no radius of its own.
         var shaped = false
@@ -96,7 +96,7 @@ extension NodeView {
         } else {
             p.colors = Array(repeating: CGColor(gray: 0, alpha: 0), count: 4)
         }
-        // A focused field whose ring Exact draws
+        // @ref LLP 1104 D6 — a focused field whose ring Exact draws
         // (`showFieldFocus`): its border two points wide in the focus colour,
         // on whichever path paints it.
         if fieldFocused {
@@ -118,7 +118,7 @@ extension NodeView {
         p.corners = cornerMask(radii)
         p.partialCorners = p.radius > 0 && radii.contains(0)
         let gradient = style["background_image"] != nil
-        // A `corner-shape` the layer cannot say draws.
+        // A `corner-shape` the layer cannot say draws (LLP 1077 D1).
         let shape = CornerShape(style["corner_shape"])
         let continuous = shape?.isAppleContinuous == true && p.oneRadius
         p.curve = continuous ? .continuous : .circular
@@ -146,12 +146,12 @@ extension NodeView {
     /// Whether a capture (`cacheDisplay`, which composites the layer tree)
     /// shows this box's layer paint as the window does, so `draw(_:)` must
     /// not paint the box again: a translucent fill painted twice came out
-    /// doubled (a 12 % selection captured as 20 %). Its
+    /// doubled (spreadsheet F18: a 12 % selection captured as 20 %). Its
     /// renderer ignores a corner mask, so a box rounded at some corners only
     /// is drawn, as are a gradient and a box an inset shadow paints over
     /// (its fill sublayers hidden, `Capture.hideBoxFills`), and so is an
     /// image's rounded fill: a capture draws the picture in `draw(_:)`, under
-    /// every sublayer, so a fill sublayer left showing covered it.
+    /// every sublayer, so a fill sublayer left showing covered it (podcast F7).
     var captureShowsLayerPaint: Bool {
         guard layerBoxEligible, hasBoxPaint, insetCaster == nil, style["background_image"] == nil, !(capturesPixels && boxFill != nil) else { return false }
         let p = boxPlan
@@ -190,7 +190,7 @@ extension NodeView {
         // radius only where the overflow clips; a rounded box that does not
         // clip fills a sublayer of its own under the children.
         let layerRadius = clipsToBounds && p.oneRadius && !p.shaped && !p.partialCorners ? p.radius : 0
-        // A flight interpolates the radius itself.
+        // A flight interpolates the radius itself (LLP 1013.000 D4).
         if flightLook == nil, layer.cornerRadius != layerRadius { layer.cornerRadius = layerRadius }
         if layerRadius > 0, layer.maskedCorners != p.corners { layer.maskedCorners = p.corners }
         if layer.cornerCurve != p.curve { layer.cornerCurve = p.curve }
@@ -299,7 +299,7 @@ extension NodeView {
     }
 
     /// The viewport in this view's coordinates: a `background-attachment:
-    /// fixed` gradient's box. Placed when the box paints;
+    /// fixed` gradient's box (LLP 1066 D7). Placed when the box paints;
     /// re-aiming it as an inner scroller moves, as iOS does, is owed here.
     var fixedGradientPort: CGRect? {
         guard let presenter, window != nil else { return nil }
@@ -320,7 +320,7 @@ extension NodeView {
         let radius = radii.max() ?? 0
         let oneRadius = cornerSizes(in: bounds).allSatisfy { abs($0.width - $0.height) < 0.01 } && radii.allSatisfy { $0 == 0 || abs($0 - radius) < 0.01 }
             && radius <= min(bounds.width, bounds.height) / 2 + 0.01
-        // A shape the layer's radius cannot say draws.
+        // A shape the layer's radius cannot say draws (LLP 1077 D1).
         let shape = CornerShape(style["corner_shape"])
         let fits = radius == 0 || (oneRadius && content == bounds && shown == content && (shape == nil || shape?.isAppleContinuous == true))
         guard fits, !shown.isNull, !shown.isEmpty, rect.width > 0, rect.height > 0 else { return nil }
@@ -342,7 +342,7 @@ extension NodeView {
     func applyImageLayer() {
         if cssVisibilityHidden { imageLayer?.removeFromSuperlayer(); imageLayer = nil; return }
         if let look = flightLook, let layer, kind == "image", !hasSymbolLeaf, style["tint_color"] == nil, let bitmap = raster?.image ?? look.stand?.image {
-            // Flying: the whole image where the flight
+            // Flying (LLP 1013.000 D4): the whole image where the flight
             // puts it; the view's own bounds and radius clip it.
             CATransaction.begin(); CATransaction.setDisableActions(true)
             defer { CATransaction.commit() }

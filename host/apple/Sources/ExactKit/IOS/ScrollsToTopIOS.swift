@@ -1,9 +1,9 @@
-// A tap on the status bar scrolls the screen's content to
+// LLP 1115 wave 1: a tap on the status bar scrolls the screen's content to
 // its top, as in a hand-built app. UIKit does it only when exactly one scroll
 // view in the window has `scrollsToTop`, so every other one is turned off:
 // the one left on is the active route's content scroller (its native top
 // selection, else `navigationScroll`, else the first vertical scroller: the
-// bar's scroller too, by one rule), else, with no routes,
+// bar's scroller too, by one rule, LLP 1115.000 D11.1), else, with no routes,
 // the viewport when it scrolls, else the first vertical scroller on the
 // page. A grouped list answers with the collection view that shows, never
 // the hidden scroll beneath it. Run after every batch and every finished
@@ -88,8 +88,8 @@ extension Presenter {
 }
 
 extension NavigationHost {
-    /// Native selection wins over `navigationScroll`, then the first vertical scroller.
-    /// The bar, scroll-to-top actions and route hatch share this rule.
+    /// Native selection wins over `navigationScroll`, then the first vertical scroller
+    /// (LLP 1115.000 D11.1). The bar, scroll-to-top actions and route hatch share this rule.
     func contentScroller(of c: RouteController) -> NodeView? {
         if c.nativeContentScrollEdges.contains(.top) { return c.nativeContentScroller }
         if let name = c.node.props["navigationScroll"], !name.isEmpty {

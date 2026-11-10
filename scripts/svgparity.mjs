@@ -1,8 +1,9 @@
-// The SVG parity smoke: `apps/svg-gallery` drawn by Chrome (the web host) is the
+// The SVG parity smoke (LLP 1055.000 §5; QUEUE: LLP 1055's hand comparison
+// made a smoke): `apps/svg-gallery` drawn by Chrome (the web host) is the
 // reference; each native host draws the same pages, and every `fx-*` box is
 // cropped from both screenshots by its own host's layout, brought to one
 // pixel per point, registered within ±3 px, and compared. A fixture fails
-// beyond mean |Δ| 4/255 or 6% of pixels off by more than 32 (the
+// beyond mean |Δ| 4/255 or 6% of pixels off by more than 32 (LLP 1055's
 // measured residue: antialiasing and Chrome's 1× raster). Failing crops are
 // written out in pairs. Run: `bun scripts/smoke.mjs svg [--hosts linux,macos,ios]`.
 import { spawnSync } from 'node:child_process';
@@ -16,11 +17,11 @@ const MEAN = 4, OFF = 0.06, BAND = 32, SLOP = 3;
 // not stroke text yet: its text fixtures are held to a looser bound.
 const TEXT = /^fx-(axis|baselines|runs|boxcolor)$/;
 // A fixture a host declares unsupported is not compared there: iOS has no
-// public blend on a layer.
-// Linux draws a box's or an image's CSS `filter` unfiltered for now.
+// public blend on a layer (LLP 1055.000 §8 ruling 6).
+// Linux draws a box's or an image's CSS `filter` unfiltered for now (QUEUE).
 const UNSUPPORTED = { ios: /^fx-mix$/, linux: /^fx-(box|image)-filter$/ };
-// Core Animation blends in the display's colour space, CSS in sRGB:
-// macOS's blend fixture is held to a looser share.
+// Core Animation blends in the display's colour space, CSS in sRGB (LLP
+// 1055.000 §0, stage 10): macOS's blend fixture is held to a looser share.
 const limits = (host, id) => (host === 'linux' && TEXT.test(id) ? { mean: 14, off: 0.16 } : host === 'macos' && id === 'fx-mix' ? { mean: MEAN, off: 0.16 } : { mean: MEAN, off: OFF });
 
 /** An RGBA image averaged down by an integer factor. */
@@ -85,8 +86,8 @@ async function capture(open, host, dir, check) {
       }
       void reply;
     }
-    // A tap on a tile's centre presses the element there — a point, `at` its middle: a plain
-    // tap names the `svg`, which has no press of its own, and never presses an element inside it.
+    // LLP 1055.000 D17: a tap on a tile's centre presses the element there — a point, `at` its middle: a plain
+    // tap names the `svg`, which has no press of its own, and never presses an element inside it (LLP 1012 §1).
     if (pages.includes('page-6')) {
       await s.tap('page-6');
       for (const [fixture, want] of [['fx-hit', 'disc'], ['fx-bars', 'bars']]) {

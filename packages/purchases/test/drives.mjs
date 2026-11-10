@@ -1,4 +1,4 @@
-// The acceptance drives for Weatherlight+, under the agent: the implementation is its own substitute,
+// LLP 1133.015 §10's acceptance drives for Weatherlight+, under the agent: the implementation is its own substitute,
 // so no store is reached and each purchase is a `purchase` ticket the drive taps. Drives 1 to 9 and 11 run on macOS
 // and the iOS simulator (`ios`, the simulator EXACT_SIM names), drive 12 on the web; drive 10 is the runner's
 // (`runner/src/runner/modules/purchases_tests.rs`). The forecast is Open-Meteo's, so the drives need the network.

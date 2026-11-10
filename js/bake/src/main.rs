@@ -7,7 +7,7 @@ use std::process::ExitCode;
 
 /// The source map a development Cargo bake leaves beside its plan
 /// (`exact_bake`'s receipt): only when compiling the app's contract again
-/// gives the baked plan's own nodes. A drive of the generation
+/// gives the baked plan's own nodes. A drive of the generation (LLP 1116.003)
 /// then names Contract lines, as it does on the build that baked them.
 fn development_map(app: &Path, plan: &[u8]) -> Option<String> {
     let source = app.join("app.contract").canonicalize().ok()?;
@@ -102,7 +102,7 @@ fn serve(app: &Path) -> ExitCode {
             .and_then(|r| r.get("id"))
             .cloned()
             .unwrap_or_default();
-        // A scrub's preview (commit 6): `{id, scrub: text}`,
+        // A scrub's preview (LLP 1121 stage 4, commit 6): `{id, scrub: text}`,
         // the design text compiled in place of the file's; its design only,
         // nothing written, no module produced.
         if let Some(text) = request.as_ref().ok().and_then(|r| r["scrub"].as_str()) {
@@ -123,7 +123,7 @@ fn serve(app: &Path) -> ExitCode {
                 .as_str()
                 .ok_or("request requires an out directory")?;
             // The previous generation's plan and the last Cargo bake's
-            // receipt seed the Rust-owned resources.
+            // receipt seed the Rust-owned resources (LLP 1027.002 §5 step 0).
             let seed = exact_js_bake::Seed::read(
                 request["previous"].as_str().map(Path::new),
                 request["receipt"].as_str().map(Path::new),
@@ -169,7 +169,7 @@ fn scrub(app: &Path, text: String) -> Result<serde_json::Value, String> {
     design(&plan.encode())
 }
 
-/// The plan's structure digest and design, for the dev
+/// The plan's structure digest and design (LLP 1121 stage 4), for the dev
 /// loop to send a value-only edit as a batch instead of a generation.
 fn design(plan: &[u8]) -> Result<serde_json::Value, String> {
     use exact_runner::design;

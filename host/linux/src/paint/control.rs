@@ -1,13 +1,13 @@
-//! Form controls, painted: this host has no platform
+//! Form controls, painted (LLP 1069.001 D7): this host has no platform
 //! controls to show. Where it has no platform at all (the Linux desktop,
-//! Windows) each is the web's neutral look's (`neutral.rs`).
-//! Under the Material look a checkbox and a radio are Material's
+//! Windows) each is the web's neutral look's (`neutral.rs`; LLP 1115.000
+//! D17). Under the Material look a checkbox and a radio are Material's
 //! (`material.rs`). Else, which is Android's reader until its other controls
 //! are Material's,
 //! a checkbox is Chrome's rounded square, a radio its circle and a switch a
 //! pill with a thumb, filled with `accent-color`, else the platform's accent
 //! where the host reported one ([`accents`]). `appearance: none` draws
-//! nothing here: the author's box is the whole look.
+//! nothing here: the author's box is the whole look (D6).
 
 use super::material::Icon;
 use super::{look, neutral, rgba, Backend, Rect4, Shape};
@@ -17,12 +17,12 @@ use tiny_skia::Transform;
 
 /// This painter's own accent, Chrome's default `#0075ff`: what a control
 /// paints in where its node sets no `accent-color` and the host reported no
-/// colours (desktop Linux, which has no platform accent to read).
+/// colours (desktop Linux, which has no platform accent to read; LLP 1104 D7).
 const ACCENT: [u8; 4] = [0x00, 0x75, 0xff, 0xff];
 
 /// The accent a control, a focus ring or a filled button paints in, and
 /// what is drawn on it (a check, a switch's thumb, a filled button's
-/// title). One accent: the node's `accent-color` where it
+/// title). One accent (LLP 1115.001 D4): the node's `accent-color` where it
 /// sets one (`authored`), with white on it as before; else the platform's
 /// `AccentColor` with its `AccentColorText`, where the host reported the
 /// device's colours; else this painter's own blue, with white.
@@ -53,7 +53,7 @@ pub(crate) fn control_text_styles() -> exact_kernel::ControlTextStyles {
     }
 }
 
-/// An authored `::placeholder` colour, its alpha its own;
+/// An authored `::placeholder` colour (LLP 1104 D3), its alpha its own;
 /// `None` leaves the platform's.
 pub(crate) fn authored_placeholder(
     style: &exact_kernel::StyleProps,
@@ -65,8 +65,8 @@ pub(crate) fn authored_placeholder(
         .then(|| super::rgba(style.rare.placeholder_color.resolve(dark)))
 }
 
-/// What a field has round its text. Under the neutral look
-/// that is the control's line and the look's padding, of the field's
+/// What a field has round its text. Under the neutral look (LLP 1115.000
+/// D17) that is the control's line and the look's padding, of the field's
 /// font size, as the page's sheet has them; else Material's filled field's
 /// (`material.rs`).
 pub(crate) fn field_chrome(font_size: f32, labelled: bool) -> FieldChrome {
@@ -88,7 +88,7 @@ pub(crate) fn field_chrome(font_size: f32, labelled: bool) -> FieldChrome {
 
 /// A control's choice while its bound value is the one it had when the
 /// person chose, as the web build writes an input's `value` only when the
-/// bound value changes.
+/// bound value changes (LLP 1069.001 D4, amended 2026-10-04; kanban2 #5).
 pub(crate) fn choice<'a>(
     node: &NodeRef<'_>,
     chosen: Option<&'a (String, String)>,
@@ -146,10 +146,10 @@ pub(crate) fn accent(node: &NodeRef<'_>, dark: bool) -> Option<[u8; 4]> {
 }
 
 /// An authored accent: an `accent-color` on the node or above it, else the
-/// design's `AccentColor`; none where only the platform's.
+/// design's `AccentColor` (LLP 1121 D9); none where only the platform's.
 /// `accent-color: AccentColor` names the platform's (or the design's), not
 /// an authored one, except under an authored accent, which it keeps, as the
-/// web's `var(--exact-accent, AccentColor)` does: the painting
+/// web's `var(--exact-accent, AccentColor)` does (stage 9 F1): the painting
 /// scope holds that one ([`roles::scoped_accent`]).
 pub(crate) fn authored_accent(node: &NodeRef<'_>, dark: bool) -> Option<[u8; 4]> {
     use exact_kernel::style::roles;
@@ -168,7 +168,7 @@ pub(crate) fn authored_accent(node: &NodeRef<'_>, dark: bool) -> Option<[u8; 4]>
 }
 
 /// Whether the author took `node`'s focus ring off: CSS `outline: none`,
-/// the row's one value, on any element that takes the focus.
+/// the row's one value (LLP 1104 D6), on any element that takes the focus.
 pub(crate) fn ringless(node: &NodeRef<'_>) -> bool {
     node.style.mask.has(exact_kernel::StyleId::OutlineStyle)
 }
@@ -191,7 +191,7 @@ pub(crate) fn ring(node: &NodeRef<'_>, dark: bool) -> [u8; 4] {
     accents(accent(node, dark), dark).0
 }
 
-/// A select's open menu: its panel in viewport points,
+/// A select's open menu (LLP 1069.001 D7): its panel in viewport points,
 /// one row per option, the chosen one marked with the accent.
 #[derive(Debug, Clone)]
 pub struct MenuPaint {
@@ -233,7 +233,7 @@ impl super::Painter {
         self.filled_field(node, rect, focused, false, ts)
     }
 
-    /// A closed select, or a field that shows a value:
+    /// A closed select, or a field that shows a value (LLP 1069.001 D7):
     /// the neutral look's field with the text, and a caret when it opens a
     /// menu; else Material's filled field with its trailing icon.
     pub(super) fn field_control(
@@ -298,7 +298,7 @@ impl super::Painter {
         self.filled_value(node, content, focused, ts, text, icon);
     }
 
-    /// A range: Chrome's track, filled with the accent to
+    /// A range (LLP 1069.001 D7): Chrome's track, filled with the accent to
     /// a 16 px thumb at the value.
     pub(super) fn range_control(
         &mut self,
@@ -350,10 +350,10 @@ impl super::Painter {
         self.backend.fill(&thumb, alpha(accent), ts);
     }
 
-    /// A select's open menu, over everything.
+    /// A select's open menu, over everything (LLP 1069.001 D7).
     pub(super) fn menu(&mut self, menu: &MenuPaint) {
         let ts = Transform::identity();
-        // Painted after the walk: the select's own scheme, as
+        // Painted after the walk: the select's own scheme (LLP 1034 §8), as
         // its inherited style computes it, else the app's.
         let dark = match menu.style.color_scheme {
             exact_kernel::ColorScheme::Dark => true,
@@ -473,7 +473,7 @@ pub(super) fn paint(
     } else {
         ([0x76, 0x76, 0x76, 0xff], [0xff, 0xff, 0xff, 0xff])
     };
-    // A radio is Chrome's circle: checked, an accent
+    // A radio is Chrome's circle (x2apps survey #2): checked, an accent
     // ring around the field's own fill and an accent dot a fifth in.
     if node.props.str(PropId::Type) == Some("radio") {
         let circle = Shape::new(content, [w.min(h) / 2.0; 4]);
@@ -510,7 +510,7 @@ pub(super) fn paint(
     }
 }
 
-/// An indeterminate `progress`: UIKit's
+/// An indeterminate `progress` (LLP 1069.001, amended 2026-10-07): UIKit's
 /// activity indicator as one still frame, eight spokes round the centre of
 /// the box's shorter side in `color`, the tail fading behind the brightest
 /// one (counterclockwise: the indicator turns clockwise). Linux paints on
@@ -534,7 +534,7 @@ pub(super) fn progress(
     let (cx, cy) = (x + w / 2.0, y + h / 2.0);
     // Its own `color`, else an authored accent, else the platform's
     // (Material's spinner is in the primary colour): an inherited colour is
-    // not the spinner's.
+    // not the spinner's (LLP 1115 D4, LLP 1121 D9).
     let ink = if node.style.written.has(exact_kernel::StyleId::TextColor) {
         rgba(node.text_color().resolve(dark))
     } else {
@@ -553,7 +553,7 @@ pub(super) fn progress(
     }
 }
 
-/// A determinate `progress`: UIKit's progress view, drawn as
+/// A determinate `progress` (LLP 1116 D8): UIKit's progress view, drawn as
 /// the range's track is here — a 4 px pill across the content box, centred,
 /// in the system fill, and the accent to the value from the leading edge.
 pub(super) fn progress_bar(
@@ -618,7 +618,7 @@ mod field_tests {
                     cell: false,
                     labelled: false,
                 });
-                // Material's filled field, whatever the font.
+                // Material's filled field, whatever the font (LLP 1115.001 D9).
                 assert_eq!(
                     chrome,
                     FieldChrome {
@@ -635,7 +635,7 @@ mod field_tests {
     }
 }
 
-/// The authored `::placeholder` colour, its alpha kept; none
+/// LLP 1104 D3: the authored `::placeholder` colour, its alpha kept; none
 /// is the platform's (the field's paint and the hosted field's hint).
 #[cfg(test)]
 #[test]

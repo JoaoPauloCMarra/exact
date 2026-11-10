@@ -7,7 +7,7 @@ import AppKit
 import UIKit
 #endif
 
-/// When a frame's web view is made: at its create op, once
+/// When a frame's web view is made (LLP 1020.002 §9): at its create op, once
 /// the node has its props, as it was told to show; a hatched one waits for the
 /// module's hatches, or is made without them when the module never comes.
 final class IframeEmbedTests: XCTestCase {

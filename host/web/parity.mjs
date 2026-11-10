@@ -7,8 +7,8 @@
 // `cargo test -p exact-web` (tests/parity.rs) with no browser at all.
 // --presence drives the corpus's Contract fixture on web, macOS and Linux.
 // --hosts selects hosts; --record-presence <host> deliberately replaces the
-// shared recording. It is an observation, not a judgment that that host is right.
-// --geometry drives the geometry fixture on each host over the
+// shared recording. It is an observation, not a ruling that that host is right.
+// --geometry drives LLP 1051.000's geometry fixture on each host over the
 // interaction gallery's artifacts, which link geometry because its sheet reads
 // it (build them first: its web dist, its Linux host, its macOS app), and
 // holds every answer to the fixture's own.
@@ -27,7 +27,7 @@ const here = resolve(new URL('.', import.meta.url).pathname);
 const root = resolve(here, '../..');
 const run = (args) => spawnSync('cargo', ['run', '-q', '--release', '-p', 'exact-web', '--bin', 'parity', '--', ...args], { cwd: root, encoding: 'utf8', env: { ...process.env, HERMES_LEAN_SYS_OFFLINE: '1' } });
 
-// These are recordings of one script, not a browser oracle. Boxes
+// LLP 1063: these are recordings of one script, not a browser oracle. Boxes
 // use CSS pixels/points; 0.1 tolerates native layout rounding, opacity 0.005
 // tolerates serialization. Missing ghosts and non-finite numbers always fail.
 export function comparePresence(reference, actual) {
@@ -182,12 +182,12 @@ async function paintParity() {
     let session;
     try {
       session = await open({ host, plan, size: [240, 240] });
-      // Core Animation blends in the display's colour
+      // LLP 1055.000 §10c: Core Animation blends in the display's colour
       // space. This tests which backdrop participates, not colour fidelity;
       // 64 still distinguishes every red, blue and black outcome here.
       const tolerance = host === 'macos' ? 64 : 8;
       const samples = await samplePaint(session, expected.filter(p => !p.after), resolve(dir, `${host}.png`), tolerance);
-      // Then a press and half a fade on the agent's clock.
+      // Then a press and half a fade on the agent's clock (feed F20, trivia F6).
       await session.tap('flip');
       await session.clock('+500');
       samples.push(...await samplePaint(session, expected.filter(p => p.after), resolve(dir, `${host}-after.png`), tolerance));

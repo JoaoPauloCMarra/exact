@@ -1,5 +1,5 @@
 //! File-upload sizing, admission and lifetime in the async executor.
-//! An upload takes one whole reservation before reading.
+//! @ref LLP 1120#d5-byte-budgets-and-counts-the-caps-stated-as-admit-and-next_job-compute-them — one whole reservation before reading.
 use super::*;
 
 #[cfg(test)]
@@ -29,7 +29,7 @@ impl Machine {
         hook.map_or(Ok(()), |hook| hook(phase, run))
     }
 
-    /// An `exactBodyFrom` job: its deadline armed, a reader sizes the
+    /// An `exactBodyFrom` job (D5): its deadline armed, a reader sizes the
     /// file for the finisher to decide, then, its whole charge taken, reads
     /// at most the charged size; a parked one, sized before, is read at once.
     pub(super) fn file(self: &Arc<Self>, lane: usize, run: Run, file: FileJob, sized: bool) {
@@ -153,7 +153,7 @@ impl Machine {
         }
     }
 
-    /// The finisher's decision for a sized upload.
+    /// The finisher's decision for a sized upload (D5; §6 question 8).
     pub(super) fn sized(
         &self,
         state: &mut State,

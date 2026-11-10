@@ -1,4 +1,4 @@
-// A resource over a list on the JS target:
+// A resource over a list on the JS target (LLP 1017.000 P4c, amended 2026-11-04; runner/src/runner/each.rs):
 // `resource r = source(x) for x in list [key=k] as shape S`. Each element has its own resource (`res`), keyed as a
 // row is: an element that joins makes one, which asks; one that leaves lets only its own ticket go, once the commit
 // that dropped it stands; the others go on. `r` reads their values as `S[]` in the list's order, pending or failed

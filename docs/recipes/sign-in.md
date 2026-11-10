@@ -1,7 +1,7 @@
 # Recipe: Sign in with Apple and Google
 
 `@exact/sign-in` is FedCM's `identity` request on `@exact/passkeys`' `get`
-. The provider's ID token goes to your server; the plan never
+(LLP 1133.014). The provider's ID token goes to your server; the plan never
 sees it. `apps/auth-fixture` (`app.contract`, `app.ts`, `sign-in.mjs`) is
 the whole app and server to copy from.
 

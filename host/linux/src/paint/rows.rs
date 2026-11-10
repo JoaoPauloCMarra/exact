@@ -21,7 +21,7 @@ use exact_kernel::NodeKey;
 pub struct Dirty {
     hard: Vec<NodeKey>,
     moved: Vec<NodeKey>,
-    /// Nodes a commit bound to another item.
+    /// Nodes a commit bound to another item (LLP 1078).
     renewed: Vec<NodeKey>,
     /// When the latest commit landed, ms (where a numeric roll starts).
     committed: Option<f64>,
@@ -208,7 +208,7 @@ impl Painter {
                 self.rows.kept.get_mut(&row).expect("found").stale = true;
             }
         }
-        // A row bound to another item is a new row: its kept
+        // A row bound to another item is a new row (LLP 1078): its kept
         // recording is the other item's, and a backend told the row was that
         // one draws it in the row's place until the new one is made. The
         // Canvas reader did, for as long as no stream followed: a rebound
@@ -238,7 +238,7 @@ impl Painter {
         self.rows = Rows::default();
     }
 
-    /// The platform's colours resolve differently:
+    /// The platform's colours resolve differently (LLP 1115.001 D4):
     /// nothing kept from a paint under the old ones stands. Every kept row
     /// is freed and recorded again, and the next paint is whole.
     pub(crate) fn colors_changed(&mut self) {

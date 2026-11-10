@@ -1,5 +1,5 @@
-// The design tool's length, shadow, font-weight, duration and icon tokens on a real dev loop (split from
-// design-tool-scrub.test.mjs, so it runs in parallel with the others).
+// Stage 6's kinds in the design tool on a real dev loop (split from design-tool-scrub.test.mjs, so a lane runs it
+// beside the others).
 import { expect, onTestFinished, test } from 'bun:test';
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -10,7 +10,7 @@ import { DRIVEN, HEARTBEAT_RACE, ROOT, TOOL_ORIGIN, edit, lines, signals, stop, 
 toolTurns();
 
 /** Signal 0 of `looked` once the server lists the frame's build running a design and the plan it runs (the loop's
- * check of a live edit reads it), so a live edit is proposed live (polled until the drive ends). */
+ * check of a live edit reads it, LLP 1122 T2b), so a live edit is proposed live (polled until the drive ends). */
 function framed(looked) {
   let done = false;
   const polling = (async () => {
@@ -28,7 +28,7 @@ function framed(looked) {
  * open already, its push (`clock held`: the next reply, the push or, landed already, a 3 s heartbeat). */
 const ready = looked => [looked.pause(4000, 0), 'clock +1', 'clock data', 'clock +1', 'clock data', 'clock held changes 10s'];
 
-/** Those token kinds in the tool on the JS target's dev loop: a theme-fixture
+/** Stage 6's kinds in the tool on the JS target's dev loop: a theme-fixture
  * copy whose card reads a length, a shadow, a font-weight number and a
  * duration token, with an icon. A typed length field's scrub previews on the
  * frame's build with no reload and no file written, and Keep writes one
@@ -69,7 +69,7 @@ async function kindsOnTheJsLoop() {
     const base = `http://127.0.0.1:${port}`;
     const devSaid = lines(dev);
     await devSaid.until(l => l.includes(`127.0.0.1:${port}/`), 600_000);
-    // Its design reader built: before it is, a live edit is proposed as a rebuild, and this test scrubs.
+    // Its design reader built: before it is, a live edit is proposed as a rebuild (theme2 10:01), and this test scrubs.
     await devSaid.until(l => l === 'design reader ready', 600_000);
     tool = spawnOwned(process.execPath, [resolve(ROOT, 'scripts/exact.mjs'), 'tamber', 'tool', app, '--via', base, '--no-open'], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
     const url = await lines(tool).until(l => l.startsWith(`${TOOL_ORIGIN}/__tamber/tool/`), 600_000);
@@ -155,4 +155,4 @@ async function kindsOnTheJsLoop() {
   }
 }
 
-test('length, shadow, weight and motion tokens on the JS loop: a typed length scrubs live and Keep writes one line, motion says Rebuilds first, an inline font-weight token rebuilds, icons listed', () => kindsOnTheJsLoop(), 900_000);
+test('stage 6 kinds on the JS loop: a typed length scrubs live and Keep writes one line, motion says Rebuilds first, an inline font-weight token rebuilds, icons listed', () => kindsOnTheJsLoop(), 900_000);

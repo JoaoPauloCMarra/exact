@@ -10,11 +10,11 @@
 //!
 //! Values: numbers, strings and bools are JavaScript's; a record or list is
 //! an array; `none` is `null` and `some(x)` is `x` (the checker refuses an
-//! option directly inside an option); unit is `null`.
+//! option directly inside an option, LLP 1090 D2); unit is `null`.
 //!
-//! The runner's evaluation bounds are checked where the VM
+//! The runner's evaluation bounds (LLP 1090 D1, D3) are checked where the VM
 //! checks them, in its order: a body with a list step (a `Map`, `Filter`,
-//! `join`, or a list builder) is *metered*, its function
+//! `join`, or a list builder, LLP 1088 §9.1) is *metered*, its function
 //! counting steps in a local `$s` from 0,
 //! so each call is one evaluation; a `Map`/`Filter` is a loop that steps and
 //! sums its result's extent; a `Record`/`List` is `K`, a `Concat` `cc`, and
@@ -32,8 +32,8 @@ pub struct Scope {
     pub frames: Vec<Frame>,
     /// Whether this is an action body (writes and commands are allowed).
     pub action: bool,
-    /// The JavaScript object holding the row slots in force (a slot owned by
-    /// a `for` lives on its row), by slot index.
+    /// The JavaScript object holding the row slots in force (LLP 1017 P4c:
+    /// a slot owned by a `for` lives on its row), by slot index.
     pub rows: Option<String>,
     /// Row slots available in this scope, excluding slots owned by descendants.
     pub row_slots: BTreeSet<usize>,
@@ -53,13 +53,13 @@ pub struct Uses {
     /// Resource fields read as Markdown, also prepared before an unopened view mounts.
     pub markdown_paths: BTreeSet<Vec<usize>>,
     pub names: BTreeSet<String>,
-    /// budget.js's.
+    /// budget.js's (LLP 1090 D3).
     pub budget: BTreeSet<String>,
     /// How many times generated code named one of budget.js's: a body
     /// that named none cannot trap.
     pub metered: usize,
     /// Module-scope constants, by name: JavaScript built once from the plan
-    /// that many sites share (generated code at scale).
+    /// that many sites share (LLP 1071 §7, generated code at scale).
     pub consts: BTreeMap<String, String>,
     /// The constants `share` made, by value.
     pub shared: BTreeMap<String, String>,
@@ -113,7 +113,7 @@ fn checked(f: Stdlib) -> bool {
 }
 
 /// The roster entries that take list steps on the caller's budget: `join`,
-/// and the list builders, which take its `$s` and leave
+/// and the list builders (LLP 1088 §9.1), which take its `$s` and leave
 /// their own steps in budget.js's `ST`.
 fn stepped(f: u64) -> bool {
     [
@@ -131,7 +131,7 @@ fn stepped(f: u64) -> bool {
     .any(|&g| f == g as u64)
 }
 
-/// Whether `ins` takes list steps, so its function counts them.
+/// Whether `ins` takes list steps, so its function counts them (D1).
 fn metered(ins: &[Instruction]) -> bool {
     ins.iter().any(|i| {
         matches!(i.op, Opcode::Map | Opcode::Filter) || i.op == Opcode::Call && stepped(i.args[0])
@@ -494,7 +494,7 @@ impl Translator<'_> {
                         ));
                         self.push(list);
                     } else if stepped(f as u64) {
-                        // `concat`, `slice`, `includes`: this
+                        // `concat`, `slice`, `includes` (LLP 1088 §9.1): this
                         // evaluation's `$s` in, their steps out, at the VM's
                         // point in its order.
                         self.flush();
@@ -641,7 +641,7 @@ impl Translator<'_> {
                 Opcode::FailedMutation => self.push(format!("m_{}.f()", x.args[0])),
                 Opcode::FailureMutation => self.push(format!("m_{}.e()", x.args[0])),
                 Opcode::FailedResource => self.push(format!("r_{}.f()", x.args[0])),
-                // `none` or the `Failure` record, `[code, message, reason]`.
+                // `none` or the `Failure` record, `[code, message, reason]` (LLP 1109 D3).
                 Opcode::FailureResource => self.push(format!("r_{}.e()", x.args[0])),
                 Opcode::Return => {
                     match self.stack.pop() {
@@ -675,7 +675,7 @@ impl Translator<'_> {
                     ));
                 }
                 Opcode::PendingMutation => self.push(format!("m_{}.p()", x.args[0])),
-                // A native module's props: the pairs as one
+                // A native module's props (LLP 1024 D1): the pairs as one
                 // JSON object of strings, as `stdlib::native_props` writes it.
                 Opcode::NativeProps => {
                     let f = self.popn(x.args[0] as usize * 2)?;
@@ -721,7 +721,7 @@ impl Translator<'_> {
     }
 
     /// A `Map` or `Filter` at `pc` over `list`, its body `f`, as the VM runs
-    /// one: an empty list is itself and takes no step; each item takes a
+    /// one (D3): an empty list is itself and takes no step; each item takes a
     /// step, then runs the body, then adds what it keeps to the result's
     /// extent, trapping where the VM does. A filter that keeps every item is
     /// its list. What came before is flushed first, so it runs first; the
@@ -807,7 +807,7 @@ mod tests {
     /// Every roster entry an `Opcode::Call` can name has its `x_` export in
     /// rt.js (or roster.js and router.js, which it re-exports, or budget.js,
     /// the checked string builders); `at`, `formatDate` and `formatNumber` compiled and then failed
-    /// the bundle for want of one. `map` and
+    /// the bundle for want of one (an app's diary, 2026-10-04). `map` and
     /// `filter` are opcodes with a callback body, never a call.
     #[test]
     fn every_called_roster_entry_has_a_runtime_export() {

@@ -1,4 +1,4 @@
-//! A canvas child placed by its surface: painted apart and
+//! A canvas child placed by its surface (LLP 1014 D5): painted apart and
 //! warped into the frame.
 use super::*;
 

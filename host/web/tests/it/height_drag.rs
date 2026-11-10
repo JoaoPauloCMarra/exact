@@ -500,7 +500,7 @@ fn binary_height_ops_preserve_key_bits_target_identity_and_once_only_action() {
     );
     assert!(begin.contains("\"value\":[400,0]"), "{begin}");
     let token = serial(&begin);
-    // The velocity is measured (400 -> 350 in 10 ms); y is unused.
+    // LLP 1057.001 §3: the velocity is measured (400 -> 350 in 10 ms); y is unused.
     assert!(packet(&mut bridge, 9, view, token, 350.0, -50.0, 110.0).contains("y must be zero"));
     let released = packet(&mut bridge, 9, view, token, 350.0, 0.0, 110.0);
     assert!(released.contains("1/350/-5000"), "{released}");
@@ -782,7 +782,7 @@ fn invalid_stale_delivery_does_not_use_its_future_clock_for_cancellation() {
     );
 }
 
-/// The browser's sequence (moves, the shown heights tracked
+/// LLP 1057.001 §3: the browser's sequence (moves, the shown heights tracked
 /// at each move's instant, a last stationary move, then the action) releases
 /// at the engine's velocity over what was shown.
 #[test]

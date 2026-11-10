@@ -1,4 +1,4 @@
-//! Pretext's greedy walker over cached host advances.
+//! @ref LLP 1043.000 §3 D6 — Pretext's greedy walker over cached host advances.
 
 use crate::{chrome, finite};
 use std::{borrow::Cow, ops::Range};
@@ -39,7 +39,7 @@ pub enum OverflowWrap {
 }
 /// CSS `white-space`, the shorthand of `white-space-collapse` × `text-wrap-mode`:
 /// `normal` is collapse × wrap, `pre-wrap` preserve × wrap, `nowrap` collapse ×
-/// nowrap, `pre-line` preserve-breaks × wrap.
+/// nowrap, `pre-line` preserve-breaks × wrap. @ref LLP 1053 §0 G5
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum WhiteSpace {
     /// Collapse spaces, tabs and segment breaks to one hanging space.
@@ -134,7 +134,7 @@ struct Segment {
 /// `nowrap` collapses like `normal` and never breaks (`overflow-wrap` only
 /// applies where wrapping is allowed, so it admits no emergency cut either).
 /// A terminal break ends a line without a synthetic empty line.
-/// CSS whitespace processing found in M9 review.
+/// @ref LLP 1043.000 §3 D6 — CSS whitespace processing found in M9 review.
 ///
 /// Emergency modes also eagerly measure each conservative grapheme once, so
 /// `next_line` never measures, allocates, or mutates. Partial-word advances sum
@@ -692,7 +692,7 @@ fn inside_cluster(text: &str, end: usize) -> bool {
 /// walker's opportunities, Chrome's (see `opportunities`), outside clusters.
 /// `words` are a host segmenter's boundaries ([`Prepared::with_words`]). A host
 /// that breaks lines with its own typesetter takes its opportunities from here.
-/// One source of break/cluster boundaries.
+/// @ref LLP 1043.000 §3 D6 — one source of break/cluster boundaries.
 pub fn line_breaks(text: &str, words: &[usize]) -> Vec<usize> {
     let mut result = opportunities(text, words);
     result.retain(|&end| end == text.len() || !inside_cluster(text, end));
@@ -709,7 +709,7 @@ fn complex(ch: char) -> bool {
 /// `line-break: normal`, where small kana and `ー` (class CJ) break as ideographs,
 /// and inside SA runs the host's word boundaries stand in for ICU's dictionaries.
 /// A break beside a mandatory break stays UAX's. The last entry is `text.len()`.
-/// Measured against Chrome by `tests/it/corpus.rs`.
+/// @ref LLP 1043 §4 C — measured against Chrome by `tests/it/corpus.rs`.
 fn opportunities(text: &str, words: &[usize]) -> Vec<usize> {
     let starter = |c: char| break_property(c as u32) == BreakClass::ConditionalJapaneseStarter;
     // Swap each CJ character for an ideograph of the same UTF-8 length.
@@ -815,7 +815,7 @@ fn joins_previous(ch: char, previous: char) -> bool {
 /// Conservative grapheme ranges used by emergency breaking and host spacing.
 /// Uses the walker's UAX table, including emoji ZWJ, flags and Indic joins;
 /// hosts must not substitute a different segmenter's boundaries.
-/// One source of break/cluster boundaries.
+/// @ref LLP 1043.000 §3 D6 — one source of break/cluster boundaries.
 pub fn grapheme_ranges(text: &str) -> impl Iterator<Item = Range<usize>> + '_ {
     let mut chars = text.char_indices().peekable();
     std::iter::from_fn(move || {

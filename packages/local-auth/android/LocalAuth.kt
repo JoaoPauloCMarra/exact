@@ -1,17 +1,17 @@
-// @exact/local-auth on Android: the platform's BiometricPrompt and
+// @exact/local-auth on Android (LLP 1133.010 D1, D3, D8, D10-D13): the platform's BiometricPrompt and
 // BiometricManager, not androidx, answered in the interface's shapes. The build makes one per host when the app binds
 // the extension, outside the agent; under the agent the runner's substitute answers and none is made, unless the
 // drive binds it (`--bind local-auth`).
 //
-// - `authenticate` allows BIOMETRIC_WEAK and the device credential unless the call says otherwise: biometrics
+// - `authenticate` allows BIOMETRIC_WEAK and the device credential unless the call says otherwise (D3): biometrics
 //   alone for `biometricOnly`, with a Cancel button; `android.allowedAuthenticators` beats both. API 29 has no
 //   allowed authenticators: it allows the credential with `setDeviceCredentialAllowed`.
-// - The prompt shows only over a resumed activity; a call while none is fails SYSTEM_CANCEL at once.
+// - The prompt shows only over a resumed activity (D8); a call while none is fails SYSTEM_CANCEL at once.
 // - The status: no permission is asked on Android, so `state` is `granted`; `biometry` is `other` when a biometric of
 //   the allowed class is enrolled, the platform naming no modality; its own button label is `android.label` (API 31).
-// - The authenticator entry: the reader's presence backend hands it the key's `CryptoObject` and the policy's
+// - The authenticator entry (D13): the reader's presence backend hands it the key's `CryptoObject` and the policy's
 //   authenticators, and opens the item with what it returns.
-// - Tier 3: `LocalAuthModule.hatch` is given each prompt's builder after the module's words are set, and
+// - Tier 3 (D11): `LocalAuthModule.hatch` is given each prompt's builder after the module's words are set, and
 //   `keyHatch` each presence key's builder; what the module owns it sets again after them.
 package exact.localauth
 
@@ -29,9 +29,9 @@ import org.json.JSONObject
 
 class LocalAuthModule(context: ExtensionContext) : ExactExtension(context), ExactAuthenticator {
     companion object {
-        /** The app's prompt hatch: each prompt's builder, after the module's words are set. */
+        /** The app's prompt hatch (D11): each prompt's builder, after the module's words are set. */
         @JvmStatic var hatch: ((BiometricPrompt.Builder) -> Unit)? = null
-        /** The app's key hatch: a presence name's key builder, before generation. */
+        /** The app's key hatch (D11): a presence name's key builder, before generation. */
         @JvmStatic var keyHatch: ((KeyGenParameterSpec.Builder) -> Unit)? = null
         private val AUTHENTICATORS = mapOf(
             "BIOMETRIC_STRONG" to Authenticators.BIOMETRIC_STRONG,
@@ -91,7 +91,7 @@ class LocalAuthModule(context: ExtensionContext) : ExactExtension(context), Exac
             .put("biometry", if (weak == BiometricManager.BIOMETRIC_SUCCESS) "other" else "none")
             .put("deviceCredential", credential)
             .put("state", "granted")
-            // The runner lays its own over this: whether the host keeps locked secrets.
+            // The runner lays its own over this: whether the host keeps locked secrets (D7, D15).
             .put("presenceSecrets", Build.VERSION.SDK_INT >= 30 && credential)
             .put("apple", JSONObject.NULL)
             .put("android", android)
@@ -101,7 +101,7 @@ class LocalAuthModule(context: ExtensionContext) : ExactExtension(context), Exac
 
     // The prompt
 
-    /** The code for a BiometricPrompt error, with the platform's own beside it. */
+    /** D1's code for a BiometricPrompt error, with the platform's own beside it. */
     private fun failure(code: Int, message: CharSequence?): JSONObject {
         val word = when (code) {
             // 13: the negative button, which the framework names only in BiometricConstants (hidden).
@@ -151,7 +151,7 @@ class LocalAuthModule(context: ExtensionContext) : ExactExtension(context), Exac
     }
 
     private fun authenticate(args: JSONObject, reply: (JSONObject) -> Unit) {
-        // Presence is not delegable; the runner refuses first, and this holds without it.
+        // Presence is not delegable (D12); the runner refuses first, and this holds without it.
         if (context.origin != "app") return reply(JSONObject().put("error", "PERMISSION_DENIED").put("message", "person-required"))
         val words = args.optJSONObject("android") ?: JSONObject()
         val named = words.optJSONArray("allowedAuthenticators")

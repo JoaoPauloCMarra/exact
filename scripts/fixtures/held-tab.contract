@@ -1,4 +1,4 @@
-// A tab whose stack shows no bar and has pushed nothing
+// LLP 1075.003 §3.7: a tab whose stack shows no bar and has pushed nothing
 // holds its route without a navigation controller, which is built when the
 // stack first pushes or its route first shows a bar (HeldStackIOSTests).
 // Plain's root has no header until `titled`, a level-1 heading whose large

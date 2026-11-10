@@ -44,7 +44,8 @@ inductive Expr where
   | str (s : String)
   | bool (b : Bool)
   | none
-  /-- `[a, b, c]`, its items left to right; `[]` is `list []`. -/
+  /-- `[a, b, c]`, its items left to right; `[]` is `list []` (LLP 1088
+  §9.1). -/
   | list (items : List Expr)
   | some (e : Expr)
   /-- A template string: each part is printed with `toString` and the
@@ -82,7 +83,7 @@ inductive Stmt where
   | refresh (target : String)
   | ifS (c : Expr) (thn els : List Stmt)
   | matchS (subject : Expr) (x : String) (some none : List Stmt)
-  /-- A call of the program's action `action`. `args` is
+  /-- A call of the program's action `action` (LLP 1089 D9). `args` is
   its whole parameter list: a lifted callee's capture parameters, the
   arguments curried where it was passed, then the call's own. The callee
   runs in the caller's commit, reading the state the action started with;
@@ -127,7 +128,7 @@ innermost `each` row (arm 0), `when` arm or `match` arm around its use —
 one value per arm instance; `none` for a root slot. A root slot that
 holds a child used outside every region is `late`: initialized after boot
 settlement, so it may read derives and resources. A root slot that says
-`persist` starts from the device's store where the store
+`persist` (LLP 1116 D5) starts from the device's store where the store
 holds a value of its type (`Oracle.stored`, `restore`). -/
 structure StateDecl where
   name : String
@@ -144,7 +145,8 @@ structure DeriveDecl where
   body : Expr
   deriving Repr, Inhabited
 
-/-- A resource's `for item in list [key=k]`: one request for each element, keyed as a row is. The
+/-- A resource's `for item in list [key=k]` (LLP 1017.000 P4c, amended
+2026-11-04): one request for each element, keyed as a row is. The
 arguments and the key read the element as `item`; with no `key=` the
 element is its own key. -/
 structure ResourceEach where
@@ -170,7 +172,7 @@ structure MutationDecl where
   ty : Ty
   refreshes : List String := []
   andThen : Option String := .none
-  /-- `queue`: a send waits while an earlier one of this
+  /-- `queue` (LLP 1092 D1): a send waits while an earlier one of this
   mutation waits, and is asked by an `advance`'s drain. -/
   queue : Bool := false
   deriving Repr, Inhabited
@@ -194,13 +196,13 @@ structure TaskDecl where
   kind : TaskKind
   ms : Expr
   action : String
-  /-- `when cond`: the timer exists while it holds. -/
+  /-- `when cond` (LLP 1092 D7): the timer exists while it holds. -/
   gate : Option Expr := .none
   /-- `key=expr`: a new key restarts the timer, as a new `each` key a row. -/
   key : Option Expr := .none
   deriving Repr, Inhabited
 
-/-- A row of the `routes` table, in declaration order: the
+/-- A row of the `routes` table (LLP 1038 D2), in declaration order: the
 table the compiler checked (`exact_route::Table`). A notfound row has an
 empty pattern; `parent` indexes the table. -/
 structure RouteDecl where
@@ -227,7 +229,7 @@ structure Program where
   /-- The router's slot: the root state `routes <slot>` names (the
   expander puts it first), of type `Router`. -/
   router : Option String := .none
-  /-- The strings tables `t(...)` reads, the base first: each
+  /-- The strings tables `t(...)` reads (LLP 1060), the base first: each
   locale's (key, text) pairs. -/
   strings : List (String × List (String × String)) := []
   /-- The slot holding the resolved locale, when the program has strings

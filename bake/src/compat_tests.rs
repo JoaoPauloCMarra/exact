@@ -422,7 +422,7 @@ fn the_id_is_stable_and_moves_only_with_identity() {
     let first = id(&dir, "ios");
     assert_eq!(first.len(), 32, "{first}");
     assert_eq!(first, id(&dir, "ios"), "stable across computations");
-    // Policy is not identity.
+    // Policy is not identity (LLP 1030 D2).
     let manifest = std::fs::read_to_string(dir.join("app.json")).unwrap();
     std::fs::write(
         dir.join("app.json"),
@@ -432,7 +432,7 @@ fn the_id_is_stable_and_moves_only_with_identity() {
     assert_eq!(first, id(&dir, "ios"), "deploy.origin does not move it");
     // A platform is a cohort of its own.
     assert_ne!(first, id(&dir, "macos"), "platform moves it");
-    // An icon a plan may select is identity.
+    // An icon a plan may select is identity (D3a).
     let manifest = std::fs::read_to_string(dir.join("app.json")).unwrap();
     std::fs::write(
         dir.join("app.json"),
@@ -444,7 +444,7 @@ fn the_id_is_stable_and_moves_only_with_identity() {
     .unwrap();
     let with_icon = id(&dir, "ios");
     assert_ne!(first, with_icon, "an added icon moves it");
-    // Which GPU artifact owns a surface is identity; an
+    // Which GPU artifact owns a surface is identity (LLP 1009 D6); an
     // app with one artifact carries no key at all.
     let manifest = std::fs::read_to_string(dir.join("app.json")).unwrap();
     let m = Manifest::read(&dir).unwrap();
@@ -469,7 +469,7 @@ fn the_id_is_stable_and_moves_only_with_identity() {
     std::fs::write(dir.join("app.json"), &manifest).unwrap();
     // A TypeScript module runs on the binary's prelude: its runtime is
     // identity, so a bundle using `exactBodyFrom` never reaches a shell
-    // whose prelude would send an empty body.
+    // whose prelude would send an empty body (LLP 1108 D6 R2).
     let m = Manifest::read(&dir).unwrap();
     assert!(inputs(&m).get("typescriptRuntime").is_none());
     std::fs::write(dir.join("app.ts"), "export const appId = 'x';\n").unwrap();
@@ -550,8 +550,8 @@ fn shortcuts_move_a_native_binary_but_not_the_web() {
     std::fs::remove_dir_all(dir).unwrap();
 }
 
-/// A faced tool's signature is compiled into the Apple and Android doors:
-/// a change to it moves those binaries' id, never the
+/// A faced tool's signature is compiled into the Apple and Android doors
+/// (LLP 1133.023 D8): a change to it moves those binaries' id, never the
 /// web's or tvOS's, and an unfaced tool moves none.
 #[test]
 fn a_faced_tools_signature_moves_the_binaries_with_its_door() {
@@ -645,7 +645,7 @@ fn the_inputs_name_every_field_and_an_undeclared_app_gets_defaults() {
         assert!(i.get(key).is_some(), "missing {key}: {i}");
     }
     assert_eq!(i["abi"]["c"], super::abi_version().unwrap());
-    // No `rust.module`: nothing to replace, so no executor.
+    // No `rust.module`: nothing to replace, so no executor (LLP 1047.001 D7).
     assert_eq!(i["rustMode"], "off");
     assert!(i["rustAbi"].is_null());
     assert!(i["rustTarget"].is_null());
@@ -665,7 +665,7 @@ fn the_inputs_name_every_field_and_an_undeclared_app_gets_defaults() {
     );
     assert_eq!(i["grantCeiling"], "net.fetch https://x/");
     assert!(c.to_json().starts_with("{\"id\":\""));
-    // Policy rides beside the id: the channel, its
+    // Policy rides beside the id (LLP 1030.000 D4): the channel, its
     // origin, and when a staged bundle applies — `next-launch` unsaid.
     assert!(
         c.to_json().contains(
@@ -688,7 +688,7 @@ fn the_inputs_name_every_field_and_an_undeclared_app_gets_defaults() {
 }
 #[test]
 fn an_executor_is_linked_only_for_a_named_module() {
-    // iOS defaults to the interpreter,
+    // LLP 1047.001 D7: iOS defaults to the interpreter (LLP 1029.000),
     // but only an app that names a module has anything for it to run.
     let dir = app("rust-module-gate");
     let mut manifest = Manifest::read(&dir).unwrap();
@@ -802,7 +802,7 @@ fn web_receipts_name_the_linked_composition_and_refuse_an_unlinked_store() {
         let plain =
             compatibility_with_trust(&dir, "web", "wasm32", &manifest, None, "production").unwrap();
         assert_eq!(plain.inputs["store"]["L"], "0");
-        // No `rust.module`, so no Rust executor.
+        // No `rust.module`, so no Rust executor (LLP 1047.001 D7).
         assert_eq!(
             plain.inputs["executors"],
             serde_json::json!(["browser", "native"])
@@ -895,7 +895,7 @@ fn production_trust_requires_keys_and_has_a_distinct_cohort() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
-/// A module needs the newest runtime whose option it names,
+/// LLP 1016.000 D10: a module needs the newest runtime whose option it names,
 /// so one that uses nothing newer goes to a binary whose prelude is older.
 #[test]
 fn a_bundle_needs_the_runtime_of_the_newest_option_it_names() {
@@ -908,7 +908,7 @@ fn a_bundle_needs_the_runtime_of_the_newest_option_it_names() {
         needs(b"fetch(u, {method:\"POST\",exactUploadProgress:!0,exactStream:m})"),
         5
     );
-    // The file-lock operations.
+    // LLP 1133.007 D6a's operations.
     assert_eq!(
         needs(b"const l = await storage.fs.flock(p, {timeout: 0})"),
         6

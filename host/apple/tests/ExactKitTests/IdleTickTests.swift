@@ -4,7 +4,7 @@ import XCTest
 /// A timer's (or a scroll event's) batch that changes nothing only moves the clock: it does not
 /// reach `apply`, as fills and list feedback already skip theirs, and the
 /// next timer is armed for its deadline. A batch with ops, an error, a
-/// control's viewless contents (`controls`), new motion,
+/// control's viewless contents (`controls`, LLP 1069.011 §9), new motion,
 /// moved page facts, a wake lock or word on work the app must finish still applies. The flag crosses the wire
 /// as `"controls":true`.
 final class IdleTickTests: XCTestCase {

@@ -1,7 +1,7 @@
 //! Desktop processes where no host starts programs (iOS, tvOS, Android,
-//! Windows for now): every process request answers
-//! `Unsupported`, and none of the supervision is linked, so an app
-//! there carries no process code.
+//! Windows until LLP 1133.007's stage 3): every process request answers
+//! `Unsupported` (§8), and none of the supervision is linked, so an app
+//! there carries no process code (§14).
 use super::{complete, failed, Core, Shared};
 use exact_runner::{FailureKind, Request, SocketOp};
 use ibex2::stdlib::abort::AbortController;
@@ -27,7 +27,7 @@ pub(super) fn run(
     _host: &dyn Fn() -> ibex2::host::Host,
     _abort: AbortController,
 ) {
-    let why = "this host starts no programs";
+    let why = "this host starts no programs (LLP 1133.007 §8)";
     complete(shared, ticket, failed(FailureKind::Unsupported, why));
 }
 

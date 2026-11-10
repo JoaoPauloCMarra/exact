@@ -1,4 +1,4 @@
-//! The turn envelope: what a module instance produced
+//! The turn envelope (LLP 1027.002 D3): what a module instance produced
 //! against its own copy of the store, carried back as an `Outcome` for the
 //! runner to commit inside its transaction. Values cross; nothing else does.
 
@@ -18,7 +18,7 @@ fn unavailable(message: impl Into<String>) -> DataError {
 
 /// A module's scoped snapshot of the committed store: its own `secret.keep`
 /// names and their presence occupancy, never the runner's kept answers or
-/// persisted states (change 1).
+/// persisted states (LLP 1027.002 D3, change 1; LLP 1116 D5; LLP 1133.010 D5).
 pub fn snapshot(store: &Store, grants: &str) -> Vec<(String, Vec<u8>)> {
     store.call_snapshot(Store::new(grants, []).granted())
 }
@@ -42,7 +42,7 @@ pub fn encode(result: Result<Answer, DataError>, local: &mut Store, logs: Vec<St
     let mut body = json!({"turn": 1, "reads": local.reads(), "topics": local.take_topics(), "writes": writes, "logs": logs});
     match result {
         Ok(Answer::Now(value)) => body["value"] = Json::String(base64(&value.to_bytes())),
-        // A long poll no host may run is refused before it crosses: the envelope carries
+        // A long poll no host may run (LLP 1016.000 D8) is refused before it crosses: the envelope carries
         // no surface, so its far side couldn't tell.
         Ok(Answer::Later(request)) if request.long_poll_refusal().is_some() => {
             let why = request.long_poll_refusal().unwrap_or_default();
@@ -90,7 +90,7 @@ pub fn apply(
             logs.push(line.to_string());
         }
     }
-    // Topics the turn watched, before its reads: each also
+    // Topics the turn watched (LLP 1016.002), before its reads: each also
     // counts one, which the reads below would otherwise count twice.
     let topics: Vec<&str> = json["topics"]
         .as_array()
@@ -137,7 +137,7 @@ fn error_json(error: &DataError) -> Json {
         DataError::Unavailable(m) | DataError::Interface(m) => ("Unavailable", m),
         // Transient: a peer that predates it reads it as `Unavailable` (`error_from`'s catch-all).
         DataError::Overrun(m) => ("Overrun", m),
-        // Its class travels with it.
+        // Its class travels with it (LLP 1109 D3).
         DataError::Failed(code, m, reason) => {
             return json!({"kind": "Failed", "code": code.name(), "message": m, "reason": reason});
         }
@@ -214,7 +214,7 @@ fn request_from(json: &Json) -> Result<Request, DataError> {
         .transpose()?
         .unwrap_or_default();
     // A listener's connections are handles a worker's turn cannot hold, as
-    // a socket's are.
+    // a socket's are (LLP 1133.005).
     if !json["listen"].is_null() {
         return Err(unavailable(
             "exactListen is unavailable in a worker-placed source; place it on main",
@@ -243,14 +243,14 @@ fn request_from(json: &Json) -> Result<Request, DataError> {
         body: json["body"].as_str().and_then(unbase64).unwrap_or_default(),
         stream: json["stream"].as_bool().unwrap_or(false),
         // A worker's stream only listens: its handle is the main thread's
-        // (worker-placed streams). Nor does it read a byte
+        // (LLP 1016.000 D7, worker-placed streams). Nor does it read a byte
         // stream: a body that is not events is its one answer.
         socket: false,
         bytes: false,
-        // An upload: its progress and reply are a
+        // An upload (LLP 1016.000 D10): its progress and reply are a
         // stream's messages and end, which the main thread delivers as for any.
         upload_progress: json["upload_progress"].as_bool().unwrap_or(false),
-        // A long poll a worker's source asked for: its
+        // A long poll (LLP 1016.000 D8) a worker's source asked for: its
         // terms, checked as the prelude checks them.
         long_poll: match &json["long_poll"] {
             Json::Null => None,
@@ -298,7 +298,7 @@ fn request_from(json: &Json) -> Result<Request, DataError> {
         wake_ms: json["wake_ms"].as_u64(),
         fetch: json["fetch"].as_u64(),
     };
-    // A long poll's terms, checked as every host checks them, and an upload's.
+    // A long poll's terms, checked as every host checks them (LLP 1016.000 D8), and an upload's.
     match request
         .long_poll_refusal()
         .or(request.upload_progress_refusal())

@@ -1,4 +1,4 @@
-//! A look frame's instruments: a record of each draw as it
+//! A look frame's instruments (LLP 1127.000 D1, D4): a record of each draw as it
 //! is encoded, a count of each particle draw's contributing fragments, taken by
 //! the particle draw itself (`quad_coverage.rs`), an occlusion query around each
 //! draw of the forward and translucent passes on native hosts, the cull's own

@@ -1,4 +1,4 @@
-//! Exclusion-flow and split-pane text damage.
+//! @ref LLP 1043.000 §3 D4/D7 — exclusion-flow and split-pane text damage.
 //! One viewport surface and a deduplicated set of changed live nodes. Structural,
 //! transformed, scrolled and region updates use the full painter.
 use super::*;
@@ -118,7 +118,7 @@ impl Painter {
             // frame's field focus ink too, when focus has moved elsewhere.
             || self.damage.focus_ink
             || field_focus_ink(host.kernel(), focus)
-            // A focus's look paints beyond its node's region.
+            // A focus's look (LLP 1121 D8) paints beyond its node's region.
             || focus.is_some_and(|id| host.kernel().node(id).is_some_and(|n| !n.looks().is_empty()))
             || host.content_region().is_some()
             || pixels.width() != (viewport.0 * self.scale).round() as u32

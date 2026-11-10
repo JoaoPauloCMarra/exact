@@ -1,4 +1,4 @@
-// The hermetic proofs of the web cell: the providers'
+// LLP 1133.014 §11 stage 1's hermetic proofs of the web cell: the providers'
 // authorization URLs, the callback's answer, the button's window opened at
 // the press before `press` is delivered and closed when no request claims
 // it, the host glue adopting it, and the fixture server's return route.
@@ -46,7 +46,7 @@ test('the callback answers {relay}, a cancellation NetworkError, any other error
   expect(answered(p, 'https://a/cb?state=s&error=server_error').error).toBe('IdentityCredentialError');
 });
 
-test("the host session's statuses become the module's errors; the capabilities follow the grants", async () => {
+test("the host session's statuses become D1's errors; the capabilities follow the grants", async () => {
   const statuses = { 499: ['NetworkError'], 409: ['NotAllowedError', 'busy'], 428: ['NotAllowedError', 'activation'] };
   for (const [status, [error, message]] of Object.entries(statuses)) {
     globalThis.location = { origin: 'https://app.example' };

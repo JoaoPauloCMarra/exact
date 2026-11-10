@@ -47,7 +47,7 @@ fn colour(id: u32, value: &str, written: bool) -> Op {
     }
 }
 
-/// "written" is a fact each row carries. A patch says it
+/// LLP 1115.000 D2: "written" is a fact each row carries. A patch says it
 /// for each row it sets, the node keeps it beside the row, and a child that
 /// only inherits the value has no row and so no bit.
 #[test]
@@ -749,7 +749,7 @@ fn continuation_resynchronizes_text_created_in_an_earlier_phase() {
     }
 }
 
-/// A node's looks hold the look rows only, set or
+/// @ref LLP 1121 D8 — a node's looks hold the look rows only, set or
 /// cleared (a written-only `width` is refused, as a set one is), each state
 /// once; they go with the node.
 #[test]

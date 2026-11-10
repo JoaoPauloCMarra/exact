@@ -1,9 +1,9 @@
-//! Documents kept across launches.
+//! Documents kept across launches (@ref LLP 1069.010.000 D3–D6).
 //!
-//! An app granted `doc.keep` keeps the exact file or folder a person chose:
-//! its `doc:/<n>/<name>` resolves again after a relaunch, in any of the
-//! app's sessions. Each app's kept set is a file the host names,
-//! outside `app:/` and anything a module can write, holding what each
+//! An app granted `doc.keep` keeps the exact file or folder a person chose
+//! (D3): its `doc:/<n>/<name>` resolves again after a relaunch, in any of the
+//! app's sessions (D4). Each app's kept set is a file the host names,
+//! outside `app:/` and anything a module can write (D6), holding what each
 //! entry needs: `<n>`, the name at the choice, the object's identity (its
 //! device and inode), where it was last found, the mode the choice gave,
 //! and the host's own handle on it (a security-scoped bookmark on a Mac).
@@ -22,7 +22,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, MutexGuard};
 
 /// The topic `storage.fs.watch('doc:/')` records: announced to an app's
-/// sessions when what it keeps changes.
+/// sessions when what it keeps changes (D5).
 pub const LIST_TOPIC: &str = "doc-watch:doc:/";
 
 /// The file or folder an entry names: its device and inode.
@@ -156,7 +156,7 @@ struct Store {
     file: PathBuf,
     /// Held while the process runs: one process of the app writes the set.
     _lock: std::fs::File,
-    /// Above every `<n>` the app has given, in any launch.
+    /// Above every `<n>` the app has given, in any launch (D4).
     next: u64,
     /// Most recently opened first.
     records: Vec<Record>,
@@ -342,7 +342,7 @@ pub fn to_restore(owner: u64) -> Vec<Record> {
 
 /// Where the host found each kept object this launch: `<n>`, the path, and
 /// a fresh handle when the old one was stale. A record found nowhere, or
-/// where something else now is (its identity differs), is forgotten;
+/// where something else now is (its identity differs), is forgotten (D4);
 /// the others resolve again, as `owner`'s app's.
 pub fn restore(owner: u64, found: &[(u64, PathBuf, Option<String>)]) {
     let mut all = stores();
@@ -372,7 +372,7 @@ pub fn restore(owner: u64, found: &[(u64, PathBuf, Option<String>)]) {
     told(listeners);
 }
 
-/// Keep what the person chose, at `real`, for `owner`'s app, with the
+/// Keep what the person chose (D3), at `real`, for `owner`'s app, with the
 /// host's `bookmark` of it: the path that names it, kept. Chosen again, it
 /// is the entry it already was, now the most recent. `None` when the app
 /// keeps nothing, or nothing is at `real`.
@@ -439,7 +439,7 @@ pub fn keep(owner: u64, real: &Path, bookmark: &str, mode: &str) -> Option<Strin
     Some(path)
 }
 
-/// The platform's list holds the objects at `recent`: an entry it does
+/// The platform's list holds the objects at `recent` (D6): an entry it does
 /// not hold is dropped, as when the person cleared it or it fell off the end.
 pub fn held(owner: u64, recent: &[PathBuf]) {
     let held: Vec<(Identity, bool)> = recent.iter().filter_map(|p| Identity::of(p)).collect();
@@ -460,7 +460,7 @@ pub fn held(owner: u64, recent: &[PathBuf]) {
     told(listeners);
 }
 
-/// `storage.fs.recentDocuments()`: `owner`'s app's kept documents, most
+/// `storage.fs.recentDocuments()` (D5): `owner`'s app's kept documents, most
 /// recent first, without reading them. `None` when it keeps nothing.
 pub fn list(owner: u64) -> Option<Value> {
     let mut all = stores();
@@ -482,7 +482,7 @@ pub fn list(owner: u64) -> Option<Value> {
     ))
 }
 
-/// `storage.fs.forgetDocument(path)`: the app's own removal of a kept
+/// `storage.fs.forgetDocument(path)` (D5): the app's own removal of a kept
 /// document. The host hears it ([`on_forgotten`]) and takes it off the
 /// platform's list; a session reading it keeps it until the app quits.
 pub fn forget(owner: u64, path: &str) -> std::io::Result<()> {
@@ -562,7 +562,7 @@ pub struct Replaced {
     relative: String,
 }
 
-/// The app's own atomic write replaced kept files: each is the file it
+/// The app's own atomic write replaced kept files (D4): each is the file it
 /// wrote now, read through the same folder.
 pub fn carry(owner: u64, replaced: Replaced) {
     let Some((after, false)) = Identity::at(&replaced.directory, &replaced.relative) else {

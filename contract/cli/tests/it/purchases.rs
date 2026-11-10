@@ -1,10 +1,10 @@
-//! Purchases' and store review's admission in the runner,
+//! Purchases' and store review's admission in the runner (LLP 1133.015),
 //! through this checkout's `@exact/purchases` and `@exact/store-review`
 //! installed beside the app, each implementation played by the test as the
 //! host's native slot under the agent: the purchase sheet a request holds
 //! and what its tap tells the implementation, the restore sheet Apple alone
-//! shows, the origin rule, the catalogue the implementation is
-//! handed, a stale time that asks the source again, and the targets
+//! shows, the origin rule (§10 drive 10), the catalogue the implementation is
+//! handed, a stale time that asks the source again (D7), and the targets
 //! with no store.
 
 use exact_runner::{CallOrigin, Dispatch, Outcome, Reply, Response, Runner, Work};
@@ -182,7 +182,7 @@ fn tap(r: &mut Runner<Grants>, parked: &mut Vec<(u64, u64)>, ticket: u64, choice
 /// A purchase holds a `purchase` sheet whose tap reaches the implementation
 /// as the call's `preferred`; the implementation is handed the app's
 /// catalogue; a tool's purchase and a tool's review request fail
-/// `person-required` before any sheet.
+/// `person-required` before any sheet (§10 drive 10).
 #[test]
 fn a_purchase_holds_its_sheet_and_a_tool_cannot_buy() {
     let (_app, mut r, calls) = boot("buy", "ios", &["purchases", "store-review"]);
@@ -252,7 +252,7 @@ fn restoring_asks_on_apple_alone() {
 
 /// `listPurchases`' answer names when it goes stale: the runner takes the
 /// time off the answer, and asks the source again when the session's wall
-/// clock reaches it, once.
+/// clock reaches it, once (D7).
 #[test]
 fn a_stale_time_asks_again() {
     let (_app, mut r, calls) = boot("stale", "ios", &["purchases"]);
@@ -280,7 +280,7 @@ fn a_stale_time_asks_again() {
 }
 
 /// A target with no store: the status reads its default, the list is
-/// empty, and a purchase fails `NotSupportedError` before any sheet.
+/// empty, and a purchase fails `NotSupportedError` before any sheet (D20).
 #[test]
 fn the_web_has_no_store() {
     let (_app, mut r, calls) = boot("web", "web", &[]);

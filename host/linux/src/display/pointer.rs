@@ -123,10 +123,10 @@ mod tests {
             .str(PropId::Text)
             .unwrap()
     }
-    /// A desktop's ways Back as evdev reports them, a mouse's back button (at
-    /// its release), Alt (56) around Left (105), and KEY_BACK (158), each
-    /// popping a pushed route that says nothing about Back. The forward button
-    /// returns to it.
+    /// LLP 1115.000 D5.4: a desktop's ways Back as evdev reports them, a
+    /// mouse's back button (at its release, D5.5), Alt (56) around Left
+    /// (105), and KEY_BACK (158), each popping a pushed route that says
+    /// nothing about Back. The forward button returns to it (D5.5).
     #[test]
     fn the_back_button_and_the_back_keys_pop_a_pushed_route() {
         let plan = contract::compile(

@@ -1,4 +1,4 @@
-//! Hits inside an `svg`: the element under a point, by
+//! Hits inside an `svg` (LLP 1055.000 D17): the element under a point, by
 //! the kernel's resolved scene and `pointer-events`.
 use super::*;
 

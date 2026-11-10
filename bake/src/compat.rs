@@ -1,4 +1,7 @@
-//! The compatibility id: the cohort a bundle is safe for.
+//! The compatibility id: the cohort a bundle is safe for (LLP 1030 D3a).
+//!
+//! @ref LLP 1030 D3a (the id and what enters it) / D2 (policy is not
+//! identity) / D4 (the two axes, `L` and `E`); LLP 1030.000 stage 3
 //!
 //! A bundle may depend on things an installed binary cannot replace — the
 //! kernel schema, the plan format, the ABI numbers, the executors linked,
@@ -10,7 +13,7 @@
 //! plan, so an update stream is named by it and a static origin serves each
 //! cohort its own manifest with no negotiation.
 //!
-//! What must not move it: `[deploy]` — schedules, channels, the
+//! What must not move it (D3a, D2): `[deploy]` — schedules, channels, the
 //! release policy — and a host change a bundle cannot observe. The inputs
 //! ride along as JSON so two ids that differ can be explained field by
 //! field (`dev.mjs`, `exact deploy`), and a field that has no value yet is
@@ -25,33 +28,33 @@ const ABI_HEADER: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../host/apple/include/exact.h"
 ));
-/// The GPU module's C ABI: unnumbered in the module today.
+/// The GPU module's C ABI (LLP 1009 D2): unnumbered in the module today.
 pub const GPU_MODULE_ABI: u32 = 1;
 /// The separately linked Rust data-source request/outcome wire ABI. 4: a
-/// long poll's result tag 10 (the plan can't say which Rust sources poll, so
-/// every Rust app's id moves once, and an older binary is never offered a
-/// module that may send one).
+/// long poll's result tag 10 (LLP 1016.000 D8; theme2's Q-RUSTABI ruling: the
+/// plan can't say which Rust sources poll, so every Rust app's id moves once,
+/// and an older binary is never offered a module that may send one).
 pub(crate) const RUST_ABI: u32 = 4;
 /// The data-module runtime a TypeScript bundle may rely on in the binary's
 /// own prelude (`js/src/prelude.js`, compiled into the host): moved when the
 /// prelude learns something a bundle cannot do without and an older prelude
-/// would silently ignore. 1: `fetch`'s `exactBodyFrom`,
+/// would silently ignore. 1: `fetch`'s `exactBodyFrom` (LLP 1108 D6 R2),
 /// which an older prelude would send as an empty body. 2: `fetch`'s
 /// `redirect`, which an older prelude would ignore and follow. 3: `fetch`'s
-/// `exactLongPoll`, which an older prelude would ignore and
-/// open as an event stream. 4: `fetch`'s `exactBodyTo`,
+/// `exactLongPoll` (LLP 1016.000 D8), which an older prelude would ignore and
+/// open as an event stream. 4: `fetch`'s `exactBodyTo` (LLP 1108 D6 R2),
 /// which an older prelude would ignore, reading the body into memory and
 /// writing no file. 5: an aborted `fetch`'s request cancelled on the wire and
 /// its answer resumed at the abort (docs/reference.md), which an older
 /// prelude would leave running, its reply (a 429 included) dropped; and,
 /// sharing it (no binary had shipped 5), an aborted kept write's rejection in
-/// a module turn, which an older prelude would run in the
+/// a module turn (LLP 1146 D2), which an older prelude would run in the
 /// aborting turn, where a refused commit drops its continuation's writes; and,
-/// sharing it as well, `fetch`'s `exactUploadProgress`,
+/// sharing it as well, `fetch`'s `exactUploadProgress` (LLP 1016.000 D10),
 /// which an older prelude would ignore, giving the mapper no progress and the
 /// reply as a byte stream's messages. 6: `storage.fs`'s `lstat`, `readlink`,
 /// `access`, `chmod`, `symlink`, `digest` and `flock`, and `stat`'s `mode`
-/// and `isSymbolicLink`, which an older prelude lacks: a
+/// and `isSymbolicLink` (LLP 1133.007 D6a), which an older prelude lacks: a
 /// call throws a plain `TypeError` rather than `NotSupportedError`, and the
 /// fields read `undefined`. The operations work on `app:/` paths under an
 /// existing `fs` grant, so the grant ceiling does not keep them from an
@@ -93,7 +96,7 @@ const RUNTIME_OPTIONS: [(u32, &str); 18] = [
 /// The lowest runtime a TypeScript `bundle` needs: the newest whose option
 /// it names anywhere (a property name survives bundling), else none. A push
 /// records it, so a module that uses nothing newer still goes to a binary
-/// whose prelude is older. A name in a string or a
+/// whose prelude is older (LLP 1016.000 D10). A name in a string or a
 /// comment counts too: such a module asks for more than it needs, never less.
 pub fn typescript_runtime_of(bundle: &[u8]) -> u32 {
     let text = String::from_utf8_lossy(bundle);
@@ -112,13 +115,13 @@ pub struct Compat {
     pub id: String,
     /// The inputs, one named field each, `null` where a thing does not exist yet.
     pub inputs: serde_json::Value,
-    /// The channel this build bakes in and its origin —
+    /// The channel this build bakes in and its origin (LLP 1030.000 D4) —
     /// beside the id, not in it: where the binary's update store checks.
     pub channel: String,
     /// The channel's origin URL, if the manifest names one.
     pub origin: Option<String>,
     /// When a staged bundle applies (`deploy.activate`): `next-launch` or
-    /// `app-decides` — policy the binary's store follows.
+    /// `app-decides` — policy the binary's store follows (LLP 1030.000 D4).
     pub activate: String,
     /// The exact target the binary-producing Cargo bake received.
     pub target: String,
@@ -126,14 +129,14 @@ pub struct Compat {
     /// `trust`: the build's resolved trust, which every host's production
     /// policy reads. Beside the id, not in it: an updater-free (`L = 0`)
     /// cohort has no trust epoch, so `inputs.trust` is null there and a
-    /// production and a development build share the id.
+    /// production and a development build share the id (LLP 1030 D4).
     pub embedded: serde_json::Value,
-    /// What the app can reach and each host's spelling of it: beside the id,
-    /// not in it; `null` when the grants are unknown.
+    /// What the app can reach and each host's spelling of it (LLP 1069.008
+    /// D7): beside the id, not in it; `null` when the grants are unknown.
     pub reach: serde_json::Value,
-    /// The binary's painter choice, outside the compatibility hash.
+    /// The binary's painter choice, outside the compatibility hash (LLP 1030 D3a).
     pub painter: Option<&'static str>,
-    /// The manifest declares the game engine; outside the compatibility hash.
+    /// The manifest declares the game engine; outside the compatibility hash (LLP 1149 D12).
     pub game: bool,
 }
 
@@ -251,7 +254,7 @@ pub fn stored_module<'a>(
 }
 
 /// As [`compatibility_id_sources_with_entries`], for a module client (its
-/// logic compiled into the binary) whose binary has an update store.
+/// logic compiled into the binary, LLP 1027) whose binary has an update store.
 /// Bundles carry plan and assets, never code, so a bundle is safe only on a
 /// binary whose module is the one the plan was baked against: `module` (the
 /// compiled module's sha256) enters the id as `typescriptModule`, and any
@@ -283,7 +286,7 @@ pub fn compatibility_id_pinned(
         Err(_) => return Err("EXACT_UPDATE_TRUST is not UTF-8".into()),
     };
     crate::reach::parsed(app_dir, grants, rust_grants, trust == "production")?;
-    // A colour this platform can't show is refused here.
+    // @ref LLP 1100 D1 — a colour this platform can't show is refused here.
     // The app's plan, compiled once here: its colours checked, and (stage
     // 14 C2) its icons' fill rules read below.
     let plan = crate::colors::compiled(app_dir)?;
@@ -308,8 +311,9 @@ pub fn compatibility_id_pinned(
     }
     crate::reach::derive(app_dir, platform, plan.as_ref(), &mut compat)?;
     // The plans that ship, each resolved once (the receipt writes the entry
-    // plans): an even-odd icon in any moves the id (icon_rules.rs), and one
-    // that binds `atomFaces` names its record's fields (atom_faces.rs).
+    // plans): an even-odd icon in any moves the id (stage 14 C2,
+    // icon_rules.rs), and one that binds `atomFaces` names its record's
+    // fields (atom_faces.rs).
     let mut owned = None;
     let entries = crate::icon_rules::entries(app_dir, entries, &mut owned)?;
     let out = std::env::var_os("OUT_DIR").map(std::path::PathBuf::from);
@@ -321,7 +325,8 @@ pub fn compatibility_id_pinned(
         faces(&mut compat, plan, platform, target);
     }
     if let Some(out) = std::env::var_os("OUT_DIR") {
-        // What an Apple archive links is part of its cohort, named before anything binds the id.
+        // What an Apple archive links is part of its cohort (LLP 1047.001
+        // D2), named before anything binds the id.
         if matches!(platform, "ios" | "macos") {
             crate::link::name_into(&mut compat, manifest, Path::new(&out))?;
         }
@@ -338,9 +343,10 @@ pub fn compatibility_id_pinned(
     Ok(compat)
 }
 
-/// The faced tools this platform's binary compiles a door for: each one's
-/// signature and face join the id, so a plan that changes one is a binary
-/// change. tvOS (an `ios` bake for a tvOS target) and the web compile none.
+/// The faced tools this platform's binary compiles a door for (LLP 1133.023
+/// D8): each one's signature and face join the id, so a plan that changes
+/// one is a binary change. tvOS (an `ios` bake for a tvOS target) and the
+/// web compile none.
 fn faces(compat: &mut Compat, plan: &exact_plan::Plan, platform: &str, target: &str) {
     let door = match platform {
         _ if target.contains("tvos") => return,
@@ -470,7 +476,7 @@ fn compatibility_with_trust(
         .and_then(Value::as_str);
     // An executor runs a replacement of the module the manifest names; an
     // app that names none has nothing to replace, so it links none
-    // (as `web_rust_mode` already does on the web). The
+    // (LLP 1047.001 D7, as `web_rust_mode` already does on the web). The
     // policy is still validated.
     let rust_mode = match manifest.rust_mode(platform, trust == "development")? {
         _ if rust_module.is_none() => "off",
@@ -537,7 +543,7 @@ fn compatibility_with_trust(
         "kernelSchema": format!("{:016x}", exact_kernel::SCHEMA_DIGEST),
         "formatVersion": exact_plan::FORMAT_VERSION,
         "formatDigest": format!("{:016x}", exact_plan::FORMAT_DIGEST),
-        // An OTA plan with a changed fixed command
+        // @ref LLP 1114.001 D1 — an OTA plan with a changed fixed command
         // shape must not run in a binary that reads its old arguments.
         "commands": commands_digest(),
         "abi": { "c": abi_version()?, "gpuModule": GPU_MODULE_ABI, "storeCodec": if binary_only { Value::Null } else { json!(exact_update::STORE_CODEC) } },
@@ -546,27 +552,27 @@ fn compatibility_with_trust(
         "rustAbi": if rust_mode == "off" { Value::Null } else { json!(RUST_ABI) },
         "rustTarget": rust_target,
         "rustModule": rust_module,
-        // Where each language's module runs: a host
+        // Where each language's module runs (LLP 1027.002 §6): a host
         // without the executor refuses the build; a change is a new cohort.
         "typescriptPlacement": manifest.placement("typescript", platform)?,
         "rustPlacement": manifest.placement("rust", platform)?,
         // A binary that replaces its Rust module binds the module's ABI,
         // target and grants above, never the source it was first built
-        // from: an edit there is an update, not a new cohort.
+        // from: an edit there is an update, not a new cohort (LLP 1029.000 §7).
         "dataCrate": if rust_mode == "off" { data_crate(app_dir)? } else { Value::Null },
-        // Each shader's reflected interface digest — entry
+        // Each shader's reflected interface digest (LLP 1030 D8) — entry
         // points, bindings, layouts, inputs, outputs, overrides, never the
         // text — so a colour edit does not move the id and a binding edit
-        // does. Shaders are assets; the surface's Rust
+        // does. Shaders are assets (1030.000 stage 1); the surface's Rust
         // binds this interface.
         "gpuSurfaces": gpu_surfaces(app_dir, manifest)?,
-        // The roster and the table's ABI: a new tag
-        // is a binary change, never a bundle.
+        // @ref LLP 1024 D3/D4 — the roster and the table's ABI: a new tag
+        // is a binary change, never a bundle (LLP 1047 D8).
         "nativeModules": match contract::native::roster(manifest)? {
             tags if tags.is_empty() => Value::Null,
             tags => json!({ "appleAbi": 3, "webAbi": 1, "tags": tags }),
         },
-        // The hatch words this platform's
+        // @ref LLP 1075.003.000.001 §4.3 — the hatch words this platform's
         // module is built to handle, from app.json: the cohort's capability.
         "hatches": match contract::native::hatches_on(manifest, platform)? {
             words if words.is_empty() => Value::Null,
@@ -577,10 +583,10 @@ fn compatibility_with_trust(
             "backgroundModes": list("backgroundModes"),
             "urlSchemes": list("urlSchemes"),
             "associatedDomains": host.get("associatedDomains").and_then(|v| v.as_bool()).map_or(Value::Null, Value::Bool),
-            // The Apple audio session, baked into the binary.
+            // @ref LLP 1096 D8 — the Apple audio session, baked into the binary.
             "audioSession": manifest.json.get("audio_session").cloned().unwrap_or(Value::Null),
         },
-        // The verification keys the binary carries, by id: a
+        // The verification keys the binary carries (LLP 1026 D11), by id: a
         // rotation is a new cohort (1030 D3a).
         "keys": keys,
         "trust": if binary_only { Value::Null } else { json!(trust) },
@@ -600,7 +606,7 @@ fn compatibility_with_trust(
             }
         }
     }
-    // The icon's menu each native binary carries: iOS's
+    // The icon's menu each native binary carries (LLP 1133.023 D3): iOS's
     // Info.plist, Android's `shortcuts.xml`, the Mac's Dock menu, Windows'
     // jump list and Linux's desktop entry read it from the build.
     if platform != "web" {
@@ -623,7 +629,7 @@ fn compatibility_with_trust(
             "kind":a.kind, "title":a.title, "description":a.description, "push":a.push, "frequent":a.frequent
         })).collect::<Vec<_>>());
     }
-    // Which GPU artifact owns which surface: the manifest's
+    // Which GPU artifact owns which surface (LLP 1009 D6): the manifest's
     // modules, bound into the cohort — a routing change is a new binary. An
     // app with one artifact carries no key, so its id and bytes are as before.
     if let Some(modules) = manifest
@@ -671,7 +677,7 @@ fn abi_version() -> Result<u32, String> {
         .ok_or_else(|| "exact.h declares no EXACT_ABI_VERSION".to_string())
 }
 
-/// The executors the app's composition links: the native
+/// The executors the app's composition links (LLP 1029 D2): the native
 /// crate always; an `app.ts` uses the browser on web, Hermes on native;
 /// wasmtime iff the native host crate names `Swappable`.
 fn executors(app_dir: &Path, platform: &str) -> Vec<String> {
@@ -699,7 +705,7 @@ fn executors(app_dir: &Path, platform: &str) -> Vec<String> {
     out
 }
 
-/// The data crate's source-input digest: its tree, the
+/// The data crate's source-input digest (LLP 1030 D3a): its tree, the
 /// workspace lockfile, the toolchain — never its compiled output, which a
 /// `wasm32` build can keep while the native build moved. A `data/` without
 /// a `Cargo.toml` is no crate: TypeScript modules there are the bundle's,
@@ -794,6 +800,7 @@ fn lockfile(app_dir: &Path) -> Option<PathBuf> {
 /// `null` when the app has no shaders.
 fn gpu_surfaces(app_dir: &Path, manifest: &Manifest) -> Result<serde_json::Value, String> {
     // The bake, hosts and dev server share the declared-root inventory.
+    // @ref llp/1046.006.000-render-hooks.rfc.md#d5-shaders-that-live-with-the-game
     let gate = Path::new(env!("CARGO_MANIFEST_DIR")).join("../scripts/app.mjs");
     let cargo = std::env::var_os("OUT_DIR").is_some();
     if cargo {

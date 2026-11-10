@@ -7,7 +7,7 @@ import process from 'node:process';
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 
 /** What `resolveApp` asked Cargo of an outside app's authored workspace (`cargo metadata --locked`, ~0.1 s), asked when a
- * build first reads `app.workspace` (a web verb never does), kept while the files Cargo reads for it are
+ * build first reads `app.workspace` (LLP 1153 D2.1: a web verb never does), kept while the files Cargo reads for it are
  * as they were (`cargoInputs`): in this process, and for the next in the app's `.exact/cargo-check.json`. The workspace
  * itself is found from the files (`authoredWorkspace`), never by `cargo locate-project`. */
 const outsideChecks = new Map();
@@ -61,7 +61,7 @@ export function rememberWorkspace(dir, outside, manifests, workspace, check) {
   try { mkdirSync(resolve(dir, '.exact'), { recursive: true }); const at = resolve(dir, `.exact/cargo-check.json.${process.pid}`); writeFileSync(at, JSON.stringify(known)); renameSync(at, resolve(dir, '.exact/cargo-check.json')); } catch { /* asked again next time */ }
 }
 
-/** The generated native workspace of an app that authored none: under its `.exact/`, which is ignored. */
+/** The generated native workspace of an app that authored none (LLP 1153 D1): under its `.exact/`, which is ignored. */
 export const shellsDir = (dir) => resolve(dir, '.exact/shells');
 const readToml = (path) => { try { return Bun.TOML.parse(readFileSync(path, 'utf8')); } catch { return null; } };
 /** The crates an app writes beside app.json. */
@@ -98,7 +98,7 @@ function owns(root, workspace, path) {
   return false;
 }
 /** The authored Cargo workspace an app builds in, read from the files alone (no `cargo locate-project`: a web verb runs
- * no Cargo), as Cargo would find it: the app's own `Cargo.toml` when it declares `[workspace]`; the
+ * no Cargo, LLP 1153 D2.1), as Cargo would find it: the app's own `Cargo.toml` when it declares `[workspace]`; the
  * workspace a package names (`package.workspace`, the app's or a crate's beside app.json); else the nearest enclosing
  * workspace whose `members` own the app or one of its crates; else the app itself, a root of its own package or
  * crates. `null` when the app authored no Cargo manifest at all: its workspace is generated (scripts/app-shells.mjs).

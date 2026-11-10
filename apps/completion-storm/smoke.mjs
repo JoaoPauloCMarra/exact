@@ -60,7 +60,7 @@ try {
   // Navigation forgot the old tickets, and every host lets go of their
   // work: the held reads are aborted and the queued ones never sent, so a
   // full-capacity cohort is admitted again with nothing released, and
-  // `clock settle` is not held by them.
+  // `clock settle` is not held by them (LLP 1016 D5).
   let oldRelease=null;
   {
     const deadline=Date.now()+20000;

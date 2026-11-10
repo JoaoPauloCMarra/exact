@@ -25,7 +25,7 @@ extension NodeView {
         if handlers.contains("dblclick"), doubleRecognizer == nil {
             let g = UITapGestureRecognizer(target: self, action: #selector(doubleClicked(_:)))
             g.delegate = self
-            // The web's order: the second tap still presses.
+            // The web's order (LLP 1057.001 §1 rule 5): the second tap still presses.
             g.numberOfTapsRequired = 2; g.delaysTouchesEnded = false; g.cancelsTouchesInView = false
             addGestureRecognizer(g)
             doubleRecognizer = g

@@ -1,34 +1,34 @@
-// @exact/health on Apple: HealthKit through one
+// @exact/health on Apple (LLP 1133.026 D1-D11): HealthKit through one
 // `HKHealthStore`, answered in the interface's shapes. The implementation is
-// its own substitute: under the agent it makes no store and answers
+// its own substitute (§11): under the agent it makes no store and answers
 // from `AgentHealth`, the fixture, applying the permission states and facts
 // the runner tells it.
 //
-// - HealthKit never says a read is granted: a type asked and answered
+// - HealthKit never says a read is granted (D5): a type asked and answered
 //   reads `unknown`, with `since` the limited window
 //   `getEarliestAuthorizedSampleDate` names (iOS 27), and every answer's
 //   `complete` is false. A type never asked reads `prompt`, and a source
-//   fails `NotAllowedError` for it rather than read nothing.
-// - Totals are HealthKit's statistics, which merge every source; a
+//   fails `NotAllowedError` for it rather than read nothing (D6).
+// - Totals are HealthKit's statistics (D2), which merge every source; a
 //   bucket with no sample is `none`, never 0. `since` clamps every query.
 // - Workouts are ordered by start, then id, and paged by a key cursor over
-//   both; a cursor whose workout is gone fails `cursor-stale`.
+//   both (D8); a cursor whose workout is gone fails `cursor-stale`.
 // - One `HKObserverQuery` per type a reader reads announces a change, at
 //   most four times a second; a return to the foreground announces once
-//  .
-// - Tier 3: `HealthModule.hatch` is given the store once, when made.
+//   (D5, D8).
+// - Tier 3 (D11): `HealthModule.hatch` is given the store once, when made.
 // - The Mac calls only `isHealthDataAvailable()` and answers `available`
-//   false whatever it returns.
+//   false whatever it returns (D23 item 2).
 import ExactPackage
 import Foundation
 import HealthKit
 
 #if os(iOS)
 public final class HealthModule: ExactPackage {
-    /// The app's access hatch: given the store once, when it is made.
+    /// The app's access hatch (D11): given the store once, when it is made.
     public static var hatch: ((HKHealthStore) -> Void)?
 
-    /// Tier 1's types: HealthKit's type and the unit both Health apps show.
+    /// Tier 1's types (D1): HealthKit's type and the unit both Health apps show.
     static let quantities: [String: (HKQuantityTypeIdentifier, HKUnit)] = [
         "steps": (.stepCount, .count()), "distance": (.distanceWalkingRunning, .meter()),
         "activeEnergy": (.activeEnergyBurned, .kilocalorie()),
@@ -93,7 +93,7 @@ public final class HealthModule: ExactPackage {
         done()
     }
 
-    /// Every reader asked again, coalesced.
+    /// Every reader asked again, coalesced (D8).
     private func announce() {
         guard !announcing else { return }
         announcing = true
@@ -123,7 +123,7 @@ public final class HealthModule: ExactPackage {
         type == "workouts" ? HKObjectType.workoutType() : quantities[type].map { HKQuantityType($0.0) }
     }
 
-    /// The summary over the types' `read` words.
+    /// D5's summary over the types' `read` words.
     private static func summary(_ reads: [String]) -> String {
         reads.contains("prompt") ? "prompt" : reads.contains("unknown") ? "unknown" : !reads.isEmpty && reads.allSatisfy { $0 == "denied" } ? "denied" : "granted"
     }
@@ -136,7 +136,7 @@ public final class HealthModule: ExactPackage {
 
     // MARK: status and the request
 
-    /// Each type's `read` and `since`.
+    /// Each type's `read` and `since` (D5).
     private func types(_ read: [String], _ done: @escaping ([[String: Any]]) -> Void) {
         if context.agent {
             return done(read.map { t in
@@ -313,7 +313,7 @@ public final class HealthModule: ExactPackage {
         }, reply)
     }
 
-    /// One page after the key cursor `after` (`<start>:<id>`).
+    /// One page after the key cursor `after` (`<start>:<id>`), D8.
     static func page(_ all: [[String: Any]], after: String?, limit: Int, since: Double?) -> [String: Any] {
         var rest = all[...]
         if let after {
@@ -355,7 +355,7 @@ public final class HealthModule: ExactPackage {
     }
 }
 #else
-/// The Mac: HealthKit's `isHealthDataAvailable()` is the
+/// The Mac (D21, D23 item 2): HealthKit's `isHealthDataAvailable()` is the
 /// one call, and the answer is `available` false whatever it returns.
 public final class HealthModule: ExactPackage {
     private static let status: [String: Any] = ["available": false, "state": "unknown", "types": [[String: Any]](), "apple": NSNull(), "android": NSNull()]

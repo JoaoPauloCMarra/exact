@@ -9,12 +9,12 @@ private var canvasControlEvents: [[String: Any]] = []
 private var rawMoveSawContractQueued: [Bool] = []
 private var contractMoveQueued: (() -> Bool)?
 
-/// A game canvas's mouse on AppKit: chorded buttons, motion,
+/// A game canvas's mouse on AppKit (LLP 1046.002 S1): chorded buttons, motion,
 /// and the pointer lock a `data-pointer-lock` canvas takes, driven with the
 /// events AppKit delivers. The lock is the process's own cursor association;
 /// no window server delivery is involved, so this runs at a login window too.
 final class CanvasPointerMacTests: XCTestCase {
-    override class func setUp() { super.setUp(); ExactSurfaces.install() }
+    override class func setUp() { super.setUp(); ExactSurfaces.install() } // LLP 1047.001 D4
     private func fixture() -> (ExactSession, NodeView, NSWindow) {
         _ = NSApplication.shared
         pointerEvents = []
@@ -186,7 +186,7 @@ final class CanvasPointerMacTests: XCTestCase {
     /// from, laid out with its view: when layout sends a content box alone
     /// (a percentage padding of a narrowed containing block, no new size, so
     /// no draw), clipped to the content edge's new curve, each radius less
-    /// its own side's inset (CSS Backgrounds 3 §4.2); and when a points
+    /// its own side's inset (CSS Backgrounds 3 §4.2, §4.3); and when a points
     /// padding moves it.
     func testA2DCanvasBitmapFollowsItsContentBox() throws {
         _ = NSApplication.shared

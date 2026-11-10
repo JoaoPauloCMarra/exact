@@ -1,4 +1,4 @@
-//! A route whose `navigationDetent` names `fit-content`
+//! LLP 1075.003 §9.11: a route whose `navigationDetent` names `fit-content`
 //! carries its content's extent, which the sheet's detent reads. The extent
 //! follows the rows, not the box the sheet gives the route.
 
@@ -111,7 +111,7 @@ fn an_empty_route_measures_its_padding_and_a_scrolling_one_its_scroll_extent() {
     assert!(heights(&covered, clips).is_empty(), "{covered}");
 }
 
-/// Rows that may shrink (CSS's default `flex-shrink:
+/// Astra's regression: rows that may shrink (CSS's default `flex-shrink:
 /// 1`) in a sheet already at the content's height. The fourth row is
 /// measured as asked for, not squeezed into the sheet's box; so are a
 /// child that grows and one at a percentage of the route's height.
@@ -197,7 +197,7 @@ fn percentage_padding_is_of_the_containing_block() {
     }
 }
 
-/// A block route's percentage padding changes with its
+/// Grok's r4: a block route's percentage padding changes with its
 /// containing block while its own box, its children and its extent stay
 /// where they are, so nothing under it is laid out anew: it refits on its
 /// resolved padding.
@@ -275,7 +275,7 @@ fn a_nested_scroller_grows_the_extent_unless_its_height_is_fixed() {
 }
 
 /// The routes of `src`, booted at 390 × 844 with that screen set as a
-/// fit-content sheet's host sets it: each route's
+/// fit-content sheet's host sets it (LLP 1075.003 §9.11): each route's
 /// first extent is `routes`' height; none sends another as the sheet
 /// resizes (844, 44, 200, 844, 44, 200); and the sheet laid out at a
 /// route's extent lays that route's content out at exactly that height —
@@ -362,9 +362,10 @@ fn route(id: &str, rest: &str) -> String {
     )
 }
 
-/// In a fit-content sheet `vh` and its kin are the screen's, so a comparison, a
-/// cap, a floor, a `vmax` and a floor of a route all settle, each at what it is
-/// against the 844-point screen, and the layout agrees.
+/// LLP 1075.003 §9.11, the lead's option (b) after the r4–r6 reviews: in a
+/// fit-content sheet `vh` and its kin are the screen's, so a comparison,
+/// a cap, a floor, a `vmax` and a floor of a route all settle, each at
+/// what it is against the 844-point screen, and the layout agrees.
 #[test]
 fn viewport_lengths_are_the_screens_and_settle() {
     let src = format!(
@@ -418,7 +419,8 @@ fn viewport_lengths_are_the_screens_and_settle() {
 }
 
 /// The same for padding, a flex basis, a native field's floor and widths
-/// in a height unit (through an aspect ratio, and the route's own width).
+/// in a height unit (through an aspect ratio, and the route's own width),
+/// the cases of Astra's and Grok's r6.
 #[test]
 fn padding_bases_fields_and_widths_in_viewport_lengths_settle() {
     let src = format!(
@@ -513,10 +515,10 @@ fn the_window_is_every_sheets() {
     }
 }
 
-/// A route whose width follows the sheet through a percentage of its
-/// height and a ratio (100, 300, 100, … when the trial took its
-/// published width) is measured with its width derived as the layout
-/// derives it, its block size indefinite: it settles.
+/// Astra's review of option (b): a route whose width follows the sheet
+/// through a percentage of its height and a ratio (100, 300, 100, … when
+/// the trial took its published width) is measured with its width derived
+/// as the layout derives it, its block size indefinite: it settles.
 #[test]
 fn a_width_through_a_percentage_height_does_not_cycle() {
     let src = r##"component Menu
@@ -552,14 +554,14 @@ fn a_width_through_a_percentage_height_does_not_cycle() {
     assert_eq!(last, 100.0);
 }
 
-/// A parent's horizontal padding in a viewport unit is the window's,
-/// in the layout and so in the edges the trial copies, so the wrap
-/// width and the extent hold as the sheet resizes.
+/// Grok's review of aff8ce152: a parent's horizontal padding in a viewport
+/// unit is the window's, in the layout and so in the edges the trial
+/// copies, so the wrap width and the extent hold as the sheet resizes.
 #[test]
 fn a_parents_viewport_padding_is_the_screens_in_the_measure() {
     // A border box at the sheet's width, a content box of 100%, and a
     // plain column whose width fills (auto, content-box: its border box
-    // stays, the padding comes out of its content).
+    // stays, the padding comes out of its content; Grok's round-3 case).
     for sizing in [
         r#"width="100%" box-sizing="border-box""#,
         r#"width="100%" box-sizing="content-box""#,
@@ -595,10 +597,10 @@ fn a_parents_viewport_padding_is_the_screens_in_the_measure() {
     }
 }
 
-/// A fixed sibling in a flex row sets the `flex: 1` route's width, 200 of
-/// the row's 400, in the measure as in the layout; the route's text wraps
-/// at 200. The sibling is 300 tall: it sets the width alone, never the
-/// route's height.
+/// Grok's and Astra's round-3 case: a fixed sibling in a flex row sets the
+/// `flex: 1` route's width, 200 of the row's 400, in the measure as in the
+/// layout; the route's text wraps at 200. The sibling is 300 tall: it sets
+/// the width alone, never the route's height (their review of 1a9b86776).
 #[test]
 fn a_rows_siblings_set_the_routes_width_in_the_measure() {
     let src = r##"component Menu
@@ -632,10 +634,11 @@ fn a_rows_siblings_set_the_routes_width_in_the_measure() {
     }
 }
 
-/// The segment variables are the window's grid for every sheet. The host
-/// is told the window's segments (an 800-point window folded into two
-/// 400-point rows); with a 400-point sheet up, a medium route and a
-/// fit-content route both read 400, not a division of the sheet.
+/// Grok's review of 1a9b86776: the segment variables are the window's grid
+/// for every sheet. The host is told the window's segments (an 800-point
+/// window folded into two 400-point rows); with a 400-point sheet up, a
+/// medium route and a fit-content route both read 400, not a division of
+/// the sheet.
 #[test]
 fn segments_are_the_windows_in_every_sheet() {
     let src = r##"component Menu
@@ -787,10 +790,10 @@ fn a_flex_texts_lines_are_placed_as_its_anonymous_item() {
     );
 }
 
-/// The bottom edge's chain: a fitted sheet whose last child is a scroller
-/// UIKit insets at the bottom. Its route keeps its bottom cover and pads
-/// nothing of it (`cover::scroller_insets_bottom`), so the extent takes
-/// nothing off for it: the rows' height, as uncovered.
+/// Astra's round-1 finding on the bottom edge's chain: a fitted sheet whose
+/// last child is a scroller UIKit insets at the bottom. Its route keeps its
+/// bottom cover and pads nothing of it (`cover::scroller_insets_bottom`), so
+/// the extent takes nothing off for it: the rows' height, as uncovered.
 #[test]
 fn a_fitted_sheet_whose_scroller_takes_the_bottom_cover_keeps_its_extent() {
     let src = r##"component Menu

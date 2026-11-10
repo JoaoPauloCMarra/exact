@@ -1,4 +1,4 @@
-//! The data module's own work, run for it.
+//! The data module's own work, run for it (LLP 1016 D2, LLP 1027.002 D3).
 //!
 //! A source that answers `Later` with a continuation (the LLP reader reading
 //! its corpus) hands the host work to run off the runner's thread. After
@@ -62,7 +62,7 @@ impl<D: DataSource> Host<D> {
     /// Run what the last commit asked for, and what it released.
     pub(crate) fn run_requests(&mut self) {
         for r in self.runner.take_requests() {
-            // A long poll on work that is no HTTP request: refused before its work runs, its
+            // A long poll on work that is no HTTP request (LLP 1016.000 D8): refused before its work runs, its
             // refusal landing as any outcome does (this host settles no admission refusals of its own).
             if let Some(why) = r.request.long_poll_refusal() {
                 let reply = self.requests.reply(r.ticket);

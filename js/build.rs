@@ -124,7 +124,7 @@ fn main() {
     } else {
         prelude
     };
-    // The hosts that start programs for data code:
+    // The hosts that start programs for data code (LLP 1133.007 §8):
     // `js/src/process.js` binds `@exact/child-process` to them, and every
     // other target answers NotSupportedError.
     let prelude = if matches!(target_os.as_str(), "macos" | "linux") {
@@ -174,7 +174,7 @@ fn main() {
         rolldown.display()
     );
     // The fixtures bundle as an app's data module does: `async` lowered and
-    // stepped by the answer-context helper.
+    // stepped by the answer-context helper (LLP 1133.002 D14).
     let bake = manifest.join("bake/src/typescript.mjs");
     println!("cargo:rerun-if-changed={}", bake.display());
     for name in [

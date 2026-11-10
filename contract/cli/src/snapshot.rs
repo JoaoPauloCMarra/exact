@@ -1,4 +1,4 @@
-//! Snapshot admission. Only the compiler reads the schema's
+//! Snapshot admission (LLP 1126 D2–D7). Only the compiler reads the schema's
 //! column; absence refuses a row before an archive can silently omit it.
 
 mod activities;
@@ -21,7 +21,7 @@ mod tests;
 
 /// The reserved inject a component reads the family's size from
 /// (`inject` with `snapshot_viewport: <shape>`): the entry's wrapper answers
-/// it with `exactViewport()`, so the render stays pure.
+/// it with `exactViewport()`, so the render stays pure (LLP 1126 D3).
 pub const VIEWPORT_SLOT: &str = "snapshot_viewport";
 pub use entry::{compile, compile_entries, write_entries, Declaration, Entry};
 
@@ -166,7 +166,7 @@ fn attrs(tag: &str, attrs: &[Attr], errors: &mut Vec<CompileError>) {
             attr_valued(&a.name, &a.value)
         };
         match target {
-            Some(AttrTarget::Handler(_)) => errors.push(fail("snapshot-handler", "a snapshot handler cannot navigate or take input; make it a `link href=…` (button and toggle intents are not supported yet)")),
+            Some(AttrTarget::Handler(_)) => errors.push(fail("snapshot-handler", "a snapshot handler cannot navigate or take input; make it a `link href=…` (button and toggle intents are stage 2)")),
             Some(AttrTarget::Styles(_) | AttrTarget::Shorthand) => values::attribute(a, errors, false),
             Some(AttrTarget::Surface | AttrTarget::MediaMetadata) => errors.push(fail("snapshot-request", "render only supplied props; move this work into the refresh function and use an image")),
             Some(AttrTarget::Prop(p) | AttrTarget::InvertedBoolProp(p))
@@ -185,7 +185,7 @@ fn check(file: &File, styles: &HashSet<String>) -> Result<(), Vec<CompileError>>
             errors.push(refusal("snapshot-timer", "a snapshot has no timer or `every`; return dated entries from the refresh function and use `time` for ticking text", t.span));
         }
         for r in &c.resources {
-            // The family's size is the one fact a render reads:
+            // The family's size is the one fact a render reads (LLP 1126 D3):
             // the entry's wrapper declares it and the component injects it.
             if r.source == exact_runner::viewport::SOURCE {
                 errors.push(refusal("snapshot-request", format!("`{}`: a snapshot declares no resource; write `inject` with `{}: <shape>` and read the family's width and height from it", r.name, VIEWPORT_SLOT), r.span));
@@ -295,7 +295,7 @@ fn check(file: &File, styles: &HashSet<String>) -> Result<(), Vec<CompileError>>
 pub(crate) fn local_image(e: &Expr) -> bool {
     fn path(s: &str) -> bool {
         // Every `symbol:` source is the host's, an empty one too, which
-        // draws nothing.
+        // draws nothing (stage 9 H).
         if s.starts_with("symbol:") {
             return true;
         }

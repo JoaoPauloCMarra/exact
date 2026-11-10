@@ -1,4 +1,4 @@
-//! The text engine's font matching: a weight the family lacks
+//! The text engine's font matching (LLP 1015 §3): a weight the family lacks
 //! resolves to the family's nearest face — never to another family that
 //! happens to cover the weight — the browser's rule (family first, then
 //! weight), measured against the pinned font's own advances so the numbers
@@ -25,7 +25,7 @@ impl DataSource for NoData {
 
 #[test]
 fn agent_layout_adds_fragment_fields_only_for_flowed_paragraphs() {
-    // Ordinary layout replies keep their old shape.
+    // @ref LLP 1043.000 §3 D7 — ordinary layout replies keep their old shape.
     pin_font();
     for wrap in ["auto", "both"] {
         let source = format!(
@@ -370,7 +370,7 @@ fn normal_paragraph_preserves_fractional_explicit_child_boxes() {
         font_size: 16.0,
         ..StyleProps::default()
     };
-    // A preserved segment break makes the second line (CSS).
+    // A preserved segment break makes the second line (CSS; LLP 1053 G5).
     let preserved = StyleProps {
         white_space: exact_kernel::WhiteSpace::PreWrap,
         ..style.clone()
@@ -405,7 +405,7 @@ fn fixed_line_height_keeps_each_inline_fonts_shared_baseline_extents() {
     spec.runs[0].size = 40.0;
     let measured = engine.measure(&spec, AxisOffer::MaxContent);
     // DejaVu's unrounded ascent/descent extrema. Chrome rounds this to 27;
-    // baseline metric rounding is a separate question.
+    // baseline metric rounding is the separate LLP 1035.000 D6 investigation.
     assert!((measured.height - 26.923828).abs() < 0.02, "{measured:?}");
     assert_eq!(
         engine.paragraph(&spec, None).baselines()[0],
@@ -415,7 +415,7 @@ fn fixed_line_height_keeps_each_inline_fonts_shared_baseline_extents() {
 
 #[test]
 fn a_drop_cap_flows_its_auto_height_paragraph_and_what_follows_moves() {
-    // Auto height, measured around what is painted.
+    // @ref LLP 1043.000 §8 — auto height, measured around what is painted.
     pin_font();
     let mut heights = Vec::new();
     for wrap in ["auto", "both"] {
@@ -485,7 +485,7 @@ fn a_drop_cap_flows_its_auto_height_paragraph_and_what_follows_moves() {
     assert!(heights[1] > heights[0], "{heights:?}");
 }
 
-/// A paragraph a multi-column flow breaks is painted in
+/// LLP 1093 D8, D12: a paragraph a multi-column flow breaks is painted in
 /// each column, clipped to its fragment, with the rule between; a hit sees
 /// fragments, never the union's gap; `tap` aims inside the first fragment;
 /// `layout` prints the fragments and the columns.

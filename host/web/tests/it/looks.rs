@@ -1,4 +1,4 @@
-//! The wasm host writes a node's `:hover` and
+//! LLP 1121 D8 (stage 8 B): the wasm host writes a node's `:hover` and
 //! `:focus-visible` looks as page rules (`looks`), again when a token they
 //! read moves live; `:active` is the node's press paint (its scale, its
 //! background, its absolute opacity). A node with no looks writes none.
@@ -95,7 +95,7 @@ fn a_nodes_looks_are_page_rules_that_follow_a_live_token() {
 }
 
 /// A text with a look of its own keeps its box: it never folds into its
-/// parent's, where its look would paint nothing.
+/// parent's (LLP 1007.001), where its look would paint nothing.
 #[test]
 fn a_text_with_a_look_keeps_its_box() {
     let src = "component App\n  view\n    column testId=\"box\"\n      text \"t\" testId=\"t\"\n        :hover\n          opacity = 0.5\n";

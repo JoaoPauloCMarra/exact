@@ -1,4 +1,4 @@
-//! One import's work, bounded: a paired
+//! One import's work, bounded (LLP 1121 §5 stage 10b's review): a paired
 //! client's file reaches the importers, and a small document can multiply
 //! (a set referenced eight times a level, a group that extends and refers
 //! to the next, an alias named twice in a list). Every step that expands
@@ -14,7 +14,7 @@ use std::cell::Cell;
 /// 1 GiB): a DTCG import holds about 12 bytes for each unit (measured on
 /// designs over 64 contexts, 2026-10-19), so this refuses one with the
 /// budget's message by about 600 MB, under three quarters of the isolate's
-/// limit, rather than the isolate killing it.
+/// limit, rather than the isolate killing it (LLP 1121 §10).
 pub const IMPORT: u64 = 3 << 24;
 
 /// The work a re-import may do. It exports the design to compare (each
@@ -81,7 +81,8 @@ pub fn spend(n: u64) -> Result<(), String> {
 /// The refusal's words when this import's budget is spent (a step that
 /// stopped at it rather than refusing at once), else `None`.
 pub(crate) fn spent() -> Option<String> {
-    // (one that spent the budget to the last step exactly is within it)
+    // (one that spent the budget to the last step exactly is within it:
+    // Grok's round 1 on the counts)
     let spent = DEPTH.with(Cell::get) > 0 && OVER.with(Cell::get);
     spent.then(|| spend(1).unwrap_err())
 }
@@ -109,7 +110,7 @@ pub fn members(m: &serde_json::Map<String, Value>) -> Result<(), String> {
 /// A context's tree of an export, charged as it is built: inside an
 /// import's budget (a re-import exports the design to compare), a design
 /// too large for one import is refused here, before its export is whole
-/// Outside one, nothing is counted.
+/// (LLP 1121 §10). Outside one, nothing is counted.
 pub(crate) fn tree(tree: serde_json::Map<String, Value>) -> Result<Value, Vec<crate::Diagnostic>> {
     let tree = Value::Object(tree);
     copy(&tree).map_err(|m| vec![crate::Diagnostic::new("tamber-export", m, 1, 1)])?;
@@ -119,7 +120,7 @@ pub(crate) fn tree(tree: serde_json::Map<String, Value>) -> Result<Value, Vec<cr
 #[cfg(test)]
 mod spent_tests {
     /// Spending the budget to its last step is within it; a step past it is
-    /// what `spent` reports.
+    /// what `spent` reports (Grok's round 1 on the counts).
     #[test]
     fn the_last_step_is_within_the_budget_and_one_past_it_is_spent() {
         let _work = super::Work::begin(10);

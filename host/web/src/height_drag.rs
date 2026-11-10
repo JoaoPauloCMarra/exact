@@ -113,8 +113,8 @@ impl<D: DataSource> Host<D> {
         self.dispatch_height(serial, handle_view, height, Some(velocity), now_ms)
     }
 
-    /// The same at the engine's velocity over the heights shown:
-    /// `height` is the displayed, CSS-constrained height, which the
+    /// The same at the engine's velocity over the heights shown (LLP 1057.001
+    /// §3): `height` is the displayed, CSS-constrained height, which the
     /// browser tracked into the hold on every move.
     /// `unused` is the packet's old velocity slot: after the stale checks it
     /// must be zero.

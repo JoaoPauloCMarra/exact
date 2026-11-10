@@ -4,7 +4,7 @@ import XCTest
 @testable import ExactKit
 @testable import ExactGroupedLists
 
-/// Over `scripts/fixtures/tab-edge.contract`: a tab's scroller,
+/// LLP 1116.003 over `scripts/fixtures/tab-edge.contract`: a tab's scroller,
 /// scrolled to its end, brings its last row above the floating tab bar, as a
 /// hand-built table view in a tab bar controller does (its adjusted content
 /// inset holds the bar), and its content still runs under the glass to the

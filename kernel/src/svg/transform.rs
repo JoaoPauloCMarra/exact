@@ -1,7 +1,7 @@
 //! Transforms on SVG elements: the `transform` list (CSS's grammar and
 //! SVG's attribute grammar), `transform-origin`, and 2-D affine arithmetic.
 //!
-//! CSS Transforms 1 §7 (functions), §6 (the
+//! @ref LLP 1055.000 D5; CSS Transforms 1 §7 (functions), §6 (the
 //! transform-origin sandwich), CSS Transforms 2 §6.1 (the individual
 //! properties first); SVG 2 §8.5 (the attribute grammar: unitless numbers,
 //! commas, `rotate(a cx cy)`)
@@ -348,7 +348,7 @@ impl TransformOrigin {
     }
 
     /// The point in a `width` × `height` border box, from its top-left
-    /// (a box's origin).
+    /// (a box's origin, LLP 1061 D6).
     pub fn resolve(&self, width: f32, height: f32) -> (f32, f32) {
         (
             resolve_length(self.x, width),

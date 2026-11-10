@@ -1,13 +1,14 @@
-// A subtree of the session's page in a view of its
+// @ref LLP 1115.002 D8.2 — a subtree of the session's page in a view of its
 // own: a split's pane, a sheet's window. The host moves the subtree's node
 // view into the container's view, as a dialog's is moved to the top layer,
 // and gives the kernel the box it is laid out in (a containing block: a
 // pane's size, or a sheet's maximum). The kernel lays the subtree out in
 // that box and nothing else again, sends its frames in the box's own space
 // and the box's used size, which a sheet gives its window. Where the
-// container is and how it clips are AppKit's. `HostBlockMacTests` drives
-// it; its callers are a `dialog`'s sheet (SheetsMac.swift), the split and
-// the modal route's sheet.
+// container is and how it clips are AppKit's. Stage 6a's proof drives it
+// (`HostBlockMacTests`); a `dialog`'s sheet is its first caller in an app
+// (stage 5, SheetsMac.swift), and the split (6b) and the modal route's
+// sheet (6c) are the next.
 #if os(macOS)
 import AppKit
 import CExact
@@ -116,11 +117,11 @@ final class BlockHost {
     /// Put `node`'s subtree in `container` and lay it out in `block`; `used`
     /// hears its used size, now and whenever layout gives it another.
     /// `placeholder`: `node` is a split's own placeholder, `display: none`
-    /// but where its container shows it.
+    /// but where its container shows it (LLP 1116.006 D2).
     func show(_ node: NodeView, in container: NSView, block: HostBlock, placement: BlockPlacement? = nil, used: ((CGSize) -> Void)? = nil, placeholder: Bool = false) {
         guard let presenter, presenter.views[node.id] === node else { return }
         // Outside the root (a sheet, a popover, a split's pane), still this
-        // presenter's theme.
+        // presenter's theme (LLP 1121 stage 5).
         ThemeRoles.adopt(container, from: presenter.root)
         // A node of another runner may have had this id (a restart): its entry is not this node's.
         if entries[node.id]?.node !== node {

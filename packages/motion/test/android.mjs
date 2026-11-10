@@ -1,4 +1,4 @@
-// @exact/motion on Android: the fixture app made outside the repo and built as the Canvas
+// @exact/motion on Android (LLP 1133.013 stage 4): the fixture app made outside the repo and built as the Canvas
 // reader's APK, which compiles the package's Kotlin, and the roster that names its module. It drives nothing: the
 // emulator's sensors are virtual and the agent's substitute answers under it; phone-checklist.md is the phone's.
 //

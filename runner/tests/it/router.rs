@@ -1,4 +1,4 @@
-//! The router's boundary, not another router corpus.
+//! @ref LLP 1038 D3–D5, D7, D11 — the boundary, not another router corpus.
 #[path = "support/router.rs"]
 mod fixture;
 use exact_kernel::Kernel;
@@ -113,7 +113,7 @@ fn scroll(visit: &Value, fragment: &str, activation: u64) -> Vec<Value> {
     vec![visit.clone(), Value::str(fragment), activation]
 }
 
-/// The fragment rides on the visit; a host is told to
+/// @ref LLP 1153 D5 — the fragment rides on the visit; a host is told to
 /// scroll to it on a new visit, a changed fragment or a navigation to it,
 /// never on a return by Back or by a location without one.
 #[test]
@@ -179,7 +179,7 @@ fn a_fragment_rides_on_the_visit_and_asks_one_scroll_per_activation() {
     assert_eq!(r.derive("fragment"), Some(&Value::str("")));
 }
 
-/// A navigation is a router value assigned to the
+/// @ref LLP 1153 D5 — a navigation is a router value assigned to the
 /// router's slot by a commit that lands: a `go` merely computed, or one
 /// whose commit is refused, scrolls nothing and spends no activation.
 #[test]
@@ -543,7 +543,7 @@ fn a_deep_launch_answering_later_cannot_show_another_locations_compiled_value() 
     b.set_resource_initial_args(resource, &[Value::str("/")]);
     let plan = b.finish().unwrap();
     let calls = Rc::new(RefCell::new(0));
-    // The deep launch shows the type's zero,
+    // @ref LLP 1054.000.002 D1 — the deep launch shows the type's zero,
     // pending, never another location's compiled value.
     let mut deep = Runner::boot(
         plan.clone(),
@@ -835,7 +835,7 @@ fn at<'a>(v: &'a Value, path: &[usize]) -> &'a Value {
     })
 }
 
-/// A host's own Back for a route with no Back control goes to
+/// LLP 1115 D5: a host's own Back for a route with no Back control goes to
 /// the location of the visit beneath it, on whichever stack holds it.
 #[test]
 fn the_location_beneath_a_visit_is_its_stacks_previous_entry() {
@@ -865,7 +865,7 @@ fn the_location_beneath_a_visit_is_its_stacks_previous_entry() {
     );
 }
 
-/// With no `navigate` handler: the host's own Back is the
+/// LLP 1115 D5 with no `navigate` handler: the host's own Back is the
 /// router's `back`, one commit journaled as `host back`, and only from the
 /// selected top that has a visit beneath it.
 #[test]
@@ -947,7 +947,7 @@ fn a_host_history_jump_selects_the_exact_visit_in_one_commit() {
     assert!(r.take_router_change().is_none());
 }
 
-/// With no `navigate` handler: the host's own navigation
+/// LLP 1115.000 D4.3 with no `navigate` handler: the host's own navigation
 /// to a location (the browser's Forward, a link to a declared route) is the
 /// router's `go`, one commit journaled as `host go`; nothing when `go`
 /// leaves the router as it is.

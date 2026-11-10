@@ -1,4 +1,4 @@
-// Paint the same ordered inline runs the kernel measures.
+// @ref LLP 1033: paint the same ordered inline runs the kernel measures.
 import Foundation
 
 extension NodeView {
@@ -83,7 +83,7 @@ extension NodeView {
         return paragraph
     }
 
-    // Invalidate this view, including cached layer ink.
+    // @ref LLP 1043.000 §3 D4 — invalidate this view, including cached layer ink.
     func applyFlow(_ wire: [[String: Any]]) {
         // Worker surfaces encode ordinary lines only. Clear their key before
         // changing eligibility, including when an exclusion is removed.
@@ -135,14 +135,14 @@ extension NodeView {
         // An inline run is not in the view hierarchy — its paragraph owns it
         // and it was removed from any superview — so it has no appearance of
         // its own to read. It inherits the paragraph's, which is the one
-        // actually on screen.
+        // actually on screen. @ref LLP 1034 D2
         let night = drawsDark, contrast = drawsHighContrast, elevated = drawsElevated
-        // The view's own tint, read once, where anything here names it.
+        // The view's own tint, read once, where anything here names it (LLP 1095 D8).
         let tint = style.values.contains(where: \.namesTint) || inlineText.contains(where: \.namesTint) ? viewTint : nil
         let ink = textChannels("text_color", dark: night) ?? SystemColor.canvasTextChannels(dark: night, contrast: contrast)
         if props["markup"] == "markdown", let source = props["text"] {
             // Markdown source: the archive expands it into runs, the same
-            // expansion the measurer used.
+            // expansion the measurer used (LLP 1045 D3).
             // Every piece is in the node's ink, or a share of it: one kind.
             var base = textRun("")
             base.fixedInk = style["text_color"]?.fixesInk == true
@@ -221,13 +221,13 @@ extension NodeView {
         var spec = TextStyle.spec(runs: runs, style: style, props: props, strut: strut,
                                   color: ink,
                                   language: presenter?.documentLanguage ?? "", flow: !flowShapes.isEmpty)
-        // One shadow over the paragraph when its runs agree.
+        // One shadow over the paragraph when its runs agree (LLP 1077 D3).
         spec.gatherShadows()
         cachedTextSpec = spec
         return spec
     }
 
-    /// A shaped-text offset in the node's source text, and back.
+    /// A shaped-text offset in the node's source text, and back (LLP 1053 G5).
     func sourceOffset(_ shaped: Int) -> Int { paragraphSpec().source.source(shaped) }
     func shapedOffset(_ source: Int) -> Int { paragraphSpec().source.collapsed(source) }
 }

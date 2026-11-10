@@ -235,8 +235,8 @@ component Card
       Stamp(testId=(pos == 0 ? "stamp-nope" : `nope-${p.id}`), label="NOPE", color="-exact-system-red", tilt=16, shown=(pos == 0 ? (0 - y > magnitude(x) ? 0 : unit((0 - x) / stampAt)) : (pos == -1 and lastDir == 1 ? 1 : 0)), dragging=dragging, top=48, left=(cardWidth - 160))
       Stamp(testId=(pos == 0 ? "stamp-super" : `super-${p.id}`), label="SUPER LIKE", color="-exact-system-blue", tilt=-8, shown=(pos == 0 ? (0 - y > magnitude(x) ? unit((0 - y) / stampAt) : 0) : (pos == -1 and lastDir == 3 ? 1 : 0)), dragging=dragging, top=150, left=(cardWidth / 2 - 100))
       // The photo's halves page through the photos on a tap and drag the card
-      // otherwise: `pan` and `press` on one node, not a press inside a
-      // panning card, which would keep the contact.
+      // otherwise: `pan` and `press` on one node (LLP 1057.001 §1 rule 4), not
+      // a press inside a panning card, which would keep the contact (rule 3).
       // Positioned, as the info below is, so both paint over the photo and its
       // shade, which are absolute and would otherwise cover them and take the finger.
       row position="relative" flex=1 min-height=0

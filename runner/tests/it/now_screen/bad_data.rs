@@ -20,7 +20,7 @@ impl DataSource for Duplicates {
 
 /// `label` answers `some` until `poke` has run, then `none`, which a
 /// `when`'s subject unwraps: a trap in a region's subject, key or row
-/// initializer still poisons.
+/// initializer still poisons (LLP 1017.003 D3).
 pub(super) struct Fragile;
 
 impl DataSource for Fragile {
@@ -207,7 +207,7 @@ fn an_invalid_value_from_data_unsets_its_row_and_is_journaled() {
 
 /// A prop or style binding that traps is invalid at computed-value time, as
 /// a refused value is: its row is unset, one journal line names its site and
-/// the trap, and the runner goes on. Here a text and a
+/// the trap, and the runner goes on (LLP 1017.003 D3). Here a text and a
 /// style binding pass the list-step bound once `n` grows. One that goes on
 /// trapping is journaled once, until it evaluates to a value again.
 #[test]

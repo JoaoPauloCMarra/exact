@@ -1,6 +1,6 @@
 //! Text in cells: one wrap, shared by the measurer and the painter.
 //!
-//! Whole columns × rows from a pinned grapheme and width
+//! @ref LLP 1101 D3 — whole columns × rows from a pinned grapheme and width
 //! policy (UAX #29 clusters, East Asian wide = 2, ambiguous = 1). The kernel
 //! sizes a paragraph by [`CellMeasurer`]; the painter re-runs [`wrap`] over
 //! the same runs at the same width, so the lines it draws are the lines that
@@ -322,7 +322,7 @@ fn cell(cluster: &str, run: usize) -> Cluster<'_> {
     {
         (" ", 1)
     } else if cluster.chars().any(char::is_control) {
-        // A control character is never drawn as itself.
+        // A control character is never drawn as itself (LLP 1101 D7).
         ("\u{fffd}", 1)
     } else {
         (cluster, cluster.width().max(1))
@@ -330,7 +330,7 @@ fn cell(cluster: &str, run: usize) -> Cluster<'_> {
     Cluster { text, cols, run }
 }
 
-/// The terminal drops the symbol and paints the title, or
+/// LLP 1104 D7: the terminal drops the symbol and paints the title, or
 /// the accessible label of a symbol-only face. Measurement and paint share
 /// this wrap, with one cell of chrome on each side.
 pub(crate) fn button_lines(

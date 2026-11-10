@@ -1,5 +1,5 @@
 //! What the development producer knows about the Rust half of a mixed app,
-//! which it cannot run.
+//! which it cannot run (LLP 1027.002 §5 step 0).
 use contract::DataSource;
 use exact_js::Module;
 use std::collections::BTreeMap;

@@ -1,4 +1,4 @@
-// Lowering's precedence guard: no rule of the shell's own sheets
+// B5's precedence guard (LLP 1071.001 part B, ~/x2theme/x2p4-b5-plan.md §2 row 8): no rule of the shell's own sheets
 // reaches two ids unless it is `!important`. An app's classes sit at two ids and a class (emit.rs), a lowered node's
 // arm class at three ids and a class (lower.js), so a one-id shell rule loses to both as it loses to an inline row,
 // and an important one beats all three alike. A shell rule at two ids would outrank a class where it did not outrank

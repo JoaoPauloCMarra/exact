@@ -1,4 +1,4 @@
-// On iOS the navigation bar is each route's, and Back is
+// LLP 1115.000 D5: on iOS the navigation bar is each route's, and Back is
 // always there (NavigationBasicsIOSTests). One stack that opens on a route
 // with no header, and the routes pushed over it:
 //
@@ -14,11 +14,11 @@
 // - `sheet` is a modal route with no header: the first route of its own
 //   presented stack;
 // - `titled` is a modal route whose header's heading is level 1: a large
-//   title, as its author asked;
+//   title, as its author asked (LLP 1141.001 D7);
 // - `glass` is a modal route at `medium large` whose author left its
 //   background unsaid, its heading of no level: UIKit's glass at the medium
-//   detent, the system background at the large, and an inline title
-//  ;
+//   detent, the system background at the large (D3), and an inline title
+//   (LLP 1116.020 D2);
 // - `clear` is the same route written `transparent`: clear at both;
 // - `form` is a modal route at a 45% detent that says it has no bar: a row
 //   over a scroller that ends it, which reaches the sheet's bottom edge.
@@ -26,7 +26,7 @@
 // Every one of those routes but `form` offers a button to each of the
 // others, and to the four below.
 //
-// The route's scroller is the bar's scroller with nothing
+// LLP 1115.000 D11.1: the route's scroller is the bar's scroller with nothing
 // written (NavigationCollapseIOSTests). Four routes that scroll:
 //
 // - `tall` has a large title and one `scroll` right after its header, and
@@ -38,7 +38,7 @@
 // - `bare` has no header: its scroller runs under the bar that holds the
 //   system Back alone.
 //
-// GroupedListIOSTests: `rows` is a grouped list. One
+// LLP 1115.000 D11.3 (GroupedListIOSTests): `rows` is a grouped list. One
 // row pushes `detail` and stays selected under it; one presses and stays.
 routes nav
   start "/"
@@ -65,7 +65,7 @@ component NavigationBars
   state prefix = false
   action togglePrefix
     prefix = not prefix
-  // Leave declared owners outside the selected prefix, then
+  // LLP 1123 D2: leave declared owners outside the selected prefix, then
   // reintroduce them below the top without showing them first.
   state parked = false
   action park

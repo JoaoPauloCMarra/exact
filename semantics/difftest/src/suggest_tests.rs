@@ -64,7 +64,7 @@ fn unreached_corpus_writes_filter_or_widen_observed_candidates() {
 }
 
 #[test]
-fn none_of_the_false_blocks_can_print() {
+fn none_of_the_thirteen_false_d6_blocks_can_print() {
     let cases = [
         ("typetour", "after \"lock\" \"lock\"\n  only writes screen\n", Some("screen thread")),
         ("caltrain", "after \"openDeck\" \"openDeck\"\n  only writes screen\n", Some("deckLoaded deckLoads deckMessage screen")),
@@ -73,6 +73,7 @@ fn none_of_the_false_blocks_can_print() {
         ("shelf", "after \"back\" \"back\"\n  only writes nav\n", None),
         ("shelf", "after \"tagSaidDone\" \"tagSaidDone\"\n  writes none\n", None),
         ("shelf", "always \"submitted\"\n  expect state submitted stays true\n", None),
+        ("excord", "always \"wantFrom\"\n  expect state wantFrom in \"\" \"launch\" \"route\"\n", None),
         ("design-tool", "always \"pairScope\"\n  expect state pairScope in \"propose\" \"read\"\n", None),
         ("design-tool", "always \"canvasView\"\n  expect state canvasView in \"grid\" \"one\"\n", None),
         ("design-tool", "always \"editKind\"\n  expect state editKind in \"\" \"detach-param\" \"remove-token\" \"set-row\" \"set-state\"\n", None),
@@ -99,7 +100,7 @@ fn none_of_the_false_blocks_can_print() {
             );
         }
         println!(
-            "false {app} {:?}: {}",
+            "D6 false {app} {:?}: {}",
             original.name,
             receipt.details.join("; ")
         );
@@ -107,10 +108,11 @@ fn none_of_the_false_blocks_can_print() {
 }
 
 #[test]
-fn the_kept_blocks_survive_without_existing_property_suppression() {
+fn the_twenty_one_kept_blocks_survive_without_existing_property_suppression() {
     let apps = [
         "agents",
         "caltrain",
+        "excord",
         "messages",
         "metronome",
         "photo-editor",
@@ -225,7 +227,7 @@ fn the_kept_blocks_survive_without_existing_property_suppression() {
                             "not suggested without existing block: {app}: {}",
                             p.name
                         );
-                        println!("kept {app}: {}", p.name);
+                        println!("D6 kept {app}: {}", p.name);
                     }
                     kept.len()
                 })
@@ -233,5 +235,5 @@ fn the_kept_blocks_survive_without_existing_property_suppression() {
             .collect();
         runs.into_iter().map(|r| r.join().unwrap()).sum()
     });
-    assert_eq!(count, 20);
+    assert_eq!(count, 21);
 }

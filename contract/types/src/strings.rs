@@ -1,10 +1,10 @@
-//! `t("key", name=value)` against the app's strings tables.
+//! `t("key", name=value)` against the app's strings tables (LLP 1060 D2).
 
 use super::{err, infer, Ref, Scope, Shapes, Ty, TypeError};
 use contract_syntax::{Expr, Span};
 use std::collections::BTreeMap;
 
-/// The app's strings tables, as the driver read them.
+/// The app's strings tables (LLP 1060 D1), as the driver read them.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Strings {
     /// The locale every `t` is checked against and every table falls back to.

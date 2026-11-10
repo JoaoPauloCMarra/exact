@@ -1,7 +1,7 @@
 # @exact/quick-actions and Shelf's intents: drives by hand
 
 What the agent cannot drive: a launcher's or a taskbar's own menu, Siri,
-and a phone. Each step says what to see.
+and a phone (LLP 1133.023 §11 and §14). Each step says what to see.
 Record the date, the OS version and what happened beside each step when
 you run it.
 
@@ -51,7 +51,7 @@ Build: `bun host/apple/build.mjs --run shelf-apple`.
 9. **Shortcuts, Shelf quit.** Quit Shelf. In Shortcuts make a one-action
    shortcut of Log Pages and run it: record what opens (a window, nothing,
    the app in the Dock) beside what a hand-built Mac app's intent opens
-  , and that Shelf shows the page when opened.
+   (§15 question 5), and that Shelf shows the page when opened.
 
 ## Android phone
 
@@ -69,9 +69,10 @@ install -r` the APK it names.
     opens on its start, and logcat says `open /nowhere: no route matches
     it` when it was running.
 
-AppFunctions (Log Pages from Gemini) are not built.
+AppFunctions (Log Pages from Gemini) are not built (LLP 1133.023 stage
+3's as-built note).
 
-## Windows (the test machine, signed-in console session)
+## Windows (the NucBox, signed-in console session)
 
 Build: `bun host/windows/build.mjs shelf-windows`.
 
@@ -79,8 +80,8 @@ Build: `bun host/windows/build.mjs shelf-windows`.
     button: Tasks lists Add Book. Close Shelf, choose Add Book from the
     jump list: Shelf opens on the add sheet.
 14. **A second launch.** With Shelf open, choose Add Book again: today a
-    second window opens; the hand-off to the running one is the dock
-    package's.
+    second window opens; the hand-off to the running one is LLP
+    1133.025's.
 
 ## Linux desktop
 

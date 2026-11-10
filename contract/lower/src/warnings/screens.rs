@@ -1,8 +1,8 @@
-//! `lower-screen-by-state`: an `if`/`else`, complementary
+//! `lower-screen-by-state` (LLP 1116.005 D1.1): an `if`/`else`, complementary
 //! sibling `if`s or a `match` that swaps the page between screens by state,
 //! at the top of the view or inside a route. On the web such a screen has no
 //! URL: the browser's Back leaves the app, a reload loses the place and
-//! nothing can be linked.
+//! nothing can be linked (rounds 7 and 34 of LLP 1116).
 //!
 //! A screen is an arm with a heading and two controls or more. A state
 //! compared with three string literals or more across one choice, in an

@@ -1,5 +1,5 @@
 //! Shape dependency edges must agree with the type resolver's namespaces,
-//! and a type bounds its values as the runner does.
+//! and a type bounds its values as the runner does (LLP 1090 D2).
 
 #[test]
 fn primitive_named_shapes_do_not_make_primitive_fields_recursive() {

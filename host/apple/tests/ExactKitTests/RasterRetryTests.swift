@@ -6,7 +6,7 @@ import Darwin
 @testable import ExactKit
 
 /// A remote picture whose download failed in a way asking again may mend is
-/// asked again while it is on screen (the Linux host's rules):
+/// asked again while it is on screen (LLP 1011 §4, the Linux host's rules):
 /// the ladder in milliseconds here (`RasterRetry.scale`).
 final class RasterRetryTests: XCTestCase {
     override func setUp() { RasterRetry.scale = 0.01; RasterRetry.wholeScale = 1 }

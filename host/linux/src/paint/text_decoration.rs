@@ -58,7 +58,7 @@ impl Painter {
             .collect();
         if flags.iter().any(|f| f.0.is_some()) && !self.decoration_warning {
             self.decoration_warning = true;
-            self.materials.1.push("CSS text-decoration: Linux uses solid font-size-based line metrics; underline text-decoration-skip-ink:auto is not implemented".into());
+            self.materials.1.push("CSS text-decoration: Linux uses solid font-size-based line metrics; underline text-decoration-skip-ink:auto is not implemented (LLP 1001)".into());
         }
         for (glyph, baseline, paint) in paragraph.paint_glyphs(palette) {
             // A Markdown piece's own: a followed link, `~~strike~~`.

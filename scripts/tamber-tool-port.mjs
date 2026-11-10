@@ -1,4 +1,4 @@
-// The design tool's own local origin: 127.0.0.1:7740, the one
+// The design tool's own local origin (LLP 1122 T1): 127.0.0.1:7740, the one
 // its grants name, or another port for tests and gate runs (`EXACT_TOOL_PORT`),
 // for which the tool is built with that origin.
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';

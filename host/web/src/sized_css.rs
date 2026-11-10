@@ -13,7 +13,7 @@ use exact_kernel::NodeFacts;
 /// its content's, as a replaced box's is, unless a height row bounds it; an
 /// absolutely positioned one is its natural size whatever its insets. Chrome
 /// sizes it as a `<canvas>` everywhere but a flex row's automatic minimum
-/// width, which would need the parent's direction.
+/// width, which would need the parent's direction (LLP 1001 §1).
 pub(super) fn canvas_css(node: &NodeFacts<'_>, parent: Option<&NodeFacts<'_>>, css: &mut String) {
     use exact_kernel::{Dimension, PositionType, StyleId};
     let style = &node.style;

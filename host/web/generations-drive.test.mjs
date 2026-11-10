@@ -1,4 +1,4 @@
-// A drive is served from the build it booted (generations.mjs): a drive on
+// A drive is served from the build it booted (generations.mjs; theme2's ruling on the build-swap pair): a drive on
 // build N loads N's lazy chunk after N+1 is put in place, its reload stays on N, and a drive opened after boots N+1.
 // The app: one source whose answer imports a module of the app's own (a lazy chunk, `lazy-<hash>.js`) only once a
 // press asks for it, so the chunk is first fetched after the next build lands.

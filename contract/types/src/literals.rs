@@ -6,7 +6,7 @@ use contract_syntax::{Expr, Span};
 
 /// A roster parameter spelled as string literals (`"medium" | "month-year"`)
 /// takes one of them, written as a literal: a style is chosen where the call
-/// is written, never computed or forwarded (the
+/// is written, never computed or forwarded (@ref LLP 1054.000.003 D9; the
 /// precedent is `path()`'s route name).
 pub(crate) fn literal_argument(
     name: &str,
@@ -39,8 +39,8 @@ pub(crate) fn literal_argument(
 }
 
 /// A roster parameter spelled as a range (`0..=100`) takes a whole number in
-/// it, written as a number literal, as a style is (`toFixed`'s and
-/// `formatDecimal`'s digits; JavaScript's `toFixed` throws a
+/// it, written as a number literal, as a style is (@ref LLP 1102 §3.2:
+/// `toFixed`'s and `formatDecimal`'s digits; JavaScript's `toFixed` throws a
 /// RangeError past 100).
 pub(crate) fn digits_argument(
     name: &str,
@@ -70,7 +70,7 @@ pub(crate) fn digits_argument(
 }
 
 /// `formatNumber`'s third argument, a currency's ISO 4217 code, is written
-/// with `"currency"` and only with it: the code picks the
+/// with `"currency"` and only with it (@ref LLP 1116 D8): the code picks the
 /// symbol and the fraction digits, and no other style has one.
 pub(crate) fn currency_code(args: &[Expr], span: Span) -> Result<(), TypeError> {
     let currency = matches!(args.get(1), Some(Expr::Str(style, _)) if style == "currency");

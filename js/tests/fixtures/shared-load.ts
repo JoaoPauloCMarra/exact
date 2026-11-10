@@ -1,6 +1,6 @@
 // Many answers that each await one shared load before their own fetch, as
-// the Bluesky clone's sources await `loadModeration()`: the load is one
-// promise, made by the
+// the Bluesky clone's sources await `loadModeration()` (LLP 1041 §8.4,
+// proposed amendment, 2026-10-09): the load is one promise, made by the
 // first answer to ask, and it performs two fetches in a row through the
 // host; every answer then fetches its own row.
 

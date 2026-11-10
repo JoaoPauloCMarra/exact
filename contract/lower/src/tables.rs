@@ -1,4 +1,4 @@
-//! HTML's table and description list, carried as what they
+//! HTML's table and description list (LLP 1153 D7), carried as what they
 //! are: each element is a `View` whose `semanticTag` names it, a cell's
 //! `colspan`, `rowspan` and `scope` are props, and the compiler holds them to
 //! HTML's content model. The web makes the elements themselves; a native
@@ -133,8 +133,8 @@ pub(crate) fn check(
 }
 
 /// `colspan` on a cell, a whole number from 1 to HTML's limit, and
-/// `rowspan` one from 0, which is the rest of the cell's row group
-/// (HTML §4.9.11); `scope` on a `th`, `col` or `row`.
+/// `rowspan` one from 0, which is the rest of the cell's row group (HTML
+/// §4.9.11); `scope` on a `th`, `col` or `row`.
 fn attribute(tag: &str, a: &Attr) -> Result<(), LowerError> {
     let cell = matches!(tag, "th" | "td");
     let (least, most, said) = match a.name.as_str() {

@@ -1,5 +1,6 @@
-// The design tool's Inspector on an app whose design declares no mode axes: exact2's library-gate, on the JS dev loop.
-// Its copy sits on the light column, not "the app's design is not read yet", and a library component's row that reads a token passed by name through a prop offers that token's edit
+// The design tool's Inspector on an app whose design declares no mode axes (stage 15 D4 batch 1 #1, theme2's 18:30
+// ruling): exact2's library-gate, on the JS dev loop. Its copy sits on the light column, not "the app's design is not
+// read yet", and a library component's row that reads a token passed by name through a prop offers that token's edit
 // (VerifiedBadge's check: `color=mark`, mark="cards.badge-mark").
 import { expect, onTestFinished, test } from 'bun:test';
 import { resolve } from 'node:path';

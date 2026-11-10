@@ -1,4 +1,4 @@
-// A package's prebuilt library is fetched by its hash before a build, refused
+// LLP 1154 D3, D6 and LLP 1133.001 D9: a package's prebuilt library is fetched by its hash before a build, refused
 // by name when the bytes have another, and taken from the cache when they are there; what the cache lays out for the
 // link is checked on every build. A Linux target's library is the shared object itself, made here as a minimal ELF
 // file, so these cases need no toolchain; the xcframework cases need a Mac's `ditto` and `plutil`.
@@ -104,7 +104,7 @@ test('a shared object whose SONAME is not lib<link>.so is refused before it is l
 test('a target the declaration does not name, one exact2 cannot link, an http: URL and a bad link name are refused by name', () => {
   const bytes = elf('libvault.so'), url = library('targets', bytes);
   const app = fixture('targets', { vault: { native: { link: 'vault', library: { [TARGET]: { url, sha256: sha256(bytes) }, 'aarch64-linux-android': { url, sha256: sha256(bytes) }, 'armv7-linux-androideabi': { url, sha256: sha256(bytes) } } } } });
-  expect(refusal(() => libraryFor(app, 'aarch64-unknown-linux-gnu'))).toBe(`vault has no native library for aarch64-unknown-linux-gnu: its exact.json native.library names ${TARGET}, aarch64-linux-android, armv7-linux-androideabi. An app that builds for aarch64-unknown-linux-gnu waits for the package to publish one`);
+  expect(refusal(() => libraryFor(app, 'aarch64-unknown-linux-gnu'))).toBe(`vault has no native library for aarch64-unknown-linux-gnu: its exact.json native.library names ${TARGET}, aarch64-linux-android, armv7-linux-androideabi. An app that builds for aarch64-unknown-linux-gnu waits for the package to publish one (LLP 1154 D6)`);
   for (const android of ['aarch64-linux-android', 'armv7-linux-androideabi']) expect(refusal(() => libraryFor(app, android))).toStartWith(`vault declares a native library for ${android}, and exact2 links a package's library only for Apple and Linux targets`);
   expect(refusal(() => libraryFor(fixture('http', declares('http://example.com/libvault.so', bytes)), TARGET))).toBe(`vault's exact.json: native.library.${TARGET}.url is a file: or https: URL, not http:`);
   expect(refusal(() => libraryFor(fixture('apple-file', declares(url, bytes, 'vault', 'aarch64-apple-darwin')), 'aarch64-apple-darwin'))).toContain('native.library.aarch64-apple-darwin is a zip holding the .xcframework');

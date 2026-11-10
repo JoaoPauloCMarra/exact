@@ -6,6 +6,7 @@
 //! without reading either from ambient state. `formatLocale` is the regional
 //! format where the platform keeps one apart from the language (macOS and
 //! iOS's Region, POSIX `LC_TIME`): what the device's own formatters use.
+//! @ref LLP 1027.000.000 (Draft; the Bluesky client is its consumer)
 
 use exact_plan::Value;
 
@@ -22,8 +23,8 @@ pub const FIELDS: &[&str] = &[
     "seed",
 ];
 
-/// The launch seed is a whole number below this, 2^32, on every host,
-/// so `%` and `>>> 0` take all of it. A source mixes a
+/// The launch seed is a whole number below this, 2^32, on every host
+/// (LLP 1116.005 D5), so `%` and `>>> 0` take all of it. A source mixes a
 /// round into it in 32-bit steps (`Math.imul`, `>>> 0`), as
 /// docs/recipes/random-and-shuffle.md shows: a multiply by a large constant
 /// still passes 2^53.
@@ -56,9 +57,9 @@ pub struct Launch {
     /// Where a live clock reads as the boot starts. A fresh runner's clock
     /// starts there, not at zero, so what its boot arms (`after(ms)`) is
     /// due `ms` from now however long the host ran before it (the timers
-    /// RFC). `None`: a seek clock's boot, at zero.
+    /// RFC, D1). `None`: a seek clock's boot, at zero.
     pub clock: Option<f64>,
-    /// A cold share's tokens and what each has so far, set
+    /// A cold share's tokens and what each has so far (LLP 1133.024 D3), set
     /// with the boot's other facts so the first frame is the share's route.
     pub shared: Vec<(String, crate::share_in::SharedFiles)>,
     /// The claims that cold share drew from, so a later share this launch
@@ -190,8 +191,8 @@ pub struct Place {
     pub time_zone: String,
     /// A whole number below 2^32 ([`SEED_LIMIT`]) from the platform's
     /// secure random source, drawn once per launch: the explicit entropy a
-    /// source mixes with the date and a counter for ids. Zero until the
-    /// host says.
+    /// source mixes with the date and a counter for ids (LLP 1027.000's
+    /// seed, supplied). Zero until the host says.
     pub seed: f64,
     /// BCP 47, the regional format the platform's own date and number
     /// formatters use (macOS and iOS's `Locale.current` with the hour cycle

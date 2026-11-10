@@ -91,7 +91,7 @@ fn bake_source<D: contract::DataSource>(
         .unwrap_or_else(|e| panic!("resolved app.json: {e}"));
     let mut plan = contract::compile_path(&app.join("app.contract"))
         .unwrap_or_else(|e| panic!("app.contract: {e}"));
-    // A button shortcut on a key the game's `Actions` bind.
+    // A button shortcut on a key the game's `Actions` bind (LLP 1132 D11).
     for warning in contract::shortcut_findings(&app.join("app.contract")).unwrap_or_default() {
         println!("cargo:warning={}", warning.to_string().replace('\n', " "));
     }
@@ -127,7 +127,7 @@ fn bake_source<D: contract::DataSource>(
     } else {
         String::new()
     };
-    // The packages' Linux or Windows implementations.
+    // The packages' Linux or Windows implementations (LLP 1133.022 D10 item 5).
     let packages = if matches!(platform, "linux" | "windows") {
         contract::native::plan_packages(&app, &baked, &target)
             .unwrap_or_else(|e| panic!("packages: {e}"))

@@ -1,5 +1,5 @@
 //! Compiler-owned navigation and refusal hints over the authored source.
-//! JSON queries, ahead of any editor protocol, and diagnostics.
+//! @ref LLP 1035.005 D2 — JSON queries before an editor protocol; LLP 1006 §3 — diagnostics.
 
 use crate::{
     sources::{self, Sources},
@@ -17,7 +17,7 @@ struct Definition {
     component: Option<String>,
     owner: Option<String>,
     /// An action's inferred effects, in its component's slot order
-    /// What `writes` used to restate.
+    /// (LLP 1035.005.000 D1): what `writes` used to restate.
     writes: Option<Vec<String>>,
 }
 struct Reference {
@@ -288,7 +288,7 @@ struct Resolver<'a> {
 impl<'a> Resolver<'a> {
     fn declarations(&mut self) {
         let names = &self.file.names;
-        // An action writes what the actions it calls write:
+        // An action writes what the actions it calls write (LLP 1089 D5):
         // its effects are read with its component's calls expanded. A prop
         // or inject call writes another component's slots, which no slot
         // of this one is.
@@ -566,7 +566,7 @@ impl<'a> Resolver<'a> {
                     self.expr(arg);
                 }
                 // `empty(…)` is the compiler's constant, not a source
-                //.
+                // (LLP 1054.000.002 D2).
                 if let Some(p) = r
                     .placeholder
                     .as_ref()
@@ -599,7 +599,7 @@ impl<'a> Resolver<'a> {
                         self.types.components[ci].actions[ai][pi].clone(),
                     );
                 }
-                // Geometry reads type-check only in an action.
+                // Geometry reads type-check only in an action (LLP 1051.000 D2).
                 self.scope.enter_action();
                 self.stmts(&a.body);
                 self.scope.leave_action();
@@ -631,7 +631,7 @@ impl<'a> Resolver<'a> {
         for stmt in stmts {
             match stmt {
                 // A `let` reads as a local through the rest of its block
-                //.
+                // (LLP 1035.005.000 D2).
                 Stmt::Let { name, expr, span } => {
                     self.expr(expr);
                     let ty = self.infer(expr);
@@ -648,8 +648,8 @@ impl<'a> Resolver<'a> {
                     {
                         self.graph.id(id, *span);
                     }
-                    // A call of an action, an action prop or an inject
-                    // refers to it; a host command keeps its name.
+                    // A call of an action, an action prop or an inject (LLP
+                    // 1089 D1) refers to it; a host command keeps its name.
                     if !contract_syntax::HOST_COMMANDS.contains(&name.as_str()) {
                         self.name(name, self.file.names.name(*span));
                     }
@@ -855,7 +855,7 @@ impl<'a> Resolver<'a> {
             }
             Expr::Call(name, args, span) => {
                 if contract_types::records::is_record_call(name, &self.types.shapes) {
-                    // `Shape(field=…)`: the shape and
+                    // `Shape(field=…)` (LLP 1035.005.000 D3): the shape and
                     // each field it names.
                     self.refer("shape", name, *span, None, None);
                     for arg in args {
@@ -874,7 +874,7 @@ impl<'a> Resolver<'a> {
                 }
                 for (i, arg) in args.iter().enumerate() {
                     match arg {
-                        // A `map`/`filter` callback's item and index.
+                        // A `map`/`filter` callback's item and index (LLP 1017.003).
                         Expr::Arrow { params, body, span } if i == 1 => {
                             let item = match self.infer(&args[0]) {
                                 Ty::List(t) => *t,
@@ -933,7 +933,7 @@ impl<'a> Resolver<'a> {
 // can say which action spellings the author can use at a failing handler.
 // Walk it on refusal only; successful compilation does no diagnostic work.
 pub(crate) fn authored_action_hint(file: &File, mut error: CompileError) -> CompileError {
-    // An ambiguous call: the declaration it collides with.
+    // An ambiguous call (LLP 1089 D1): the declaration it collides with.
     if error.id == contract_syntax::inline::calls::Ambiguous::ID {
         let found = contract_syntax::inline::calls::ambiguous(file);
         if let Some(a) = found.into_iter().find(|a| a.span == error.span) {
@@ -1079,7 +1079,7 @@ pub(crate) fn authored_action_hint(file: &File, mut error: CompileError) -> Comp
         None
     }
     // A provided value is written in the component's `provide` section,
-    // where no view local shadows an action.
+    // where no view local shadows an action (LLP 1035.005.000 D9).
     fn provided(
         file: &File,
         c: &Component,
@@ -1138,7 +1138,7 @@ pub(crate) fn authored_action_hint(file: &File, mut error: CompileError) -> Comp
     }
     /// What the use at `use_span` in `c`'s view is given for `name`: its
     /// argument, or for an inject `c`'s own provided value (a section covers
-    /// the whole view).
+    /// the whole view, LLP 1035.005.000 D9).
     fn supplied<'a>(
         c: &'a Component,
         use_span: Span,

@@ -1,4 +1,4 @@
-// The design of @exact/cards: the tokens its components'
+// The design of @exact/cards (LLP 1139 D1): the tokens its components'
 // params default to. Spacing and corners are base names. A neutral colour
 // (a ground, a text, a separator) is the platform's role, so a card looks
 // native where no app sets it; the brand's are the package's own. An app
@@ -39,7 +39,7 @@ theme
   // The empty state's icon, title, message and button: Bluesky's (the icon
   // contrast_low, the message contrast_high; the button the brand primary, a
   // literal, not the platform accent: white on Apple's default accent falls
-  // under 4.5:1).
+  // under 4.5:1, theme2's 23:51 ruling).
   // Per tone: medium's message contrast_medium; label's message and icon the
   // text colour (the chats'). The secondary button is Bluesky's secondary,
   // contrast_50 and contrast_700, as FollowButton's following.
@@ -206,14 +206,15 @@ theme
   cards.person-dim: number = 0.5
 
 // The cards' one-colour icons, as templates every host draws from the same
-// path: no `sf`, so Apple draws the path, not
+// path (theme2's path-icons ruling): no `sf`, so Apple draws the path, not
 // an SF Symbol. Each SVG's `d` is the path function's or inline path's it
 // replaced, byte for byte, except the verified ground, whose circle is drawn
 // as two arcs. The Attie mark and the badges' paths were drawn even-odd, but
 // each one's holes wind against its outline, so nonzero fills it the same and
-// they are written nonzero (no marker, so no new compat id). Each badge is
-// two one-colour templates stacked, its ground in `ink` and its check in
-// `mark`, so both colours stay tokens and params.
+// they are written nonzero (theme2's stage 14 C ruling: no marker, so no new
+// compat id). Each badge is two one-colour templates stacked, its ground in
+// `ink` and its check in `mark` (theme2's Q5), so both colours stay tokens
+// and params.
 icons
   // The post card's context line (pinned, reposted) and reply line.
   cards.repost = icon(svg "repost.svg")

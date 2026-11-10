@@ -1,6 +1,6 @@
 //! Explicit source ownership across two executors, without depending on either engine.
-//! Paired replacement.
-//! The ordered set: every child that shares a
+//! @ref LLP 1027 D8 / LLP 1027.001 / LLP 1029.000 — paired replacement.
+//! @ref LLP 1027.002 D3 — the ordered set: every child that shares a
 //! `secret.keep` name with a worker child takes its turns one at a time,
 //! each against the store as committed at dispatch.
 
@@ -71,7 +71,7 @@ fn recorded_key(recorded: &Recorded) -> Key {
     }
 }
 
-/// One ordered set (change 2): its members, the turn it
+/// One ordered set (LLP 1027.002 D3, change 2): its members, the turn it
 /// has reserved, and the calls waiting behind it, in order.
 struct Set {
     busy: bool,
@@ -197,7 +197,7 @@ impl<J: DataSource, R: DataSource> Mixed<J, R> {
             "mixed:{}",
             serde_json::to_string(&(javascript.revision(), rust.revision())).unwrap()
         );
-        // The ordered sets (change 2): a worker child is a
+        // The ordered sets (LLP 1027.002 D3, change 2): a worker child is a
         // set; a main child joins it when their `secret.keep` names overlap,
         // since the Store is the only state the ordering protects. Two
         // workers with disjoint names are two sets that run concurrently.
@@ -352,7 +352,7 @@ impl<J: DataSource, R: DataSource> Mixed<J, R> {
                 } => self.child_parse(rust, target, &mut scratch, &source, &args, outcome),
             };
             return match answer {
-                // A long poll on a member's own work: no request a host could run, so the
+                // A long poll on a member's own work (LLP 1016.000 D8): no request a host could run, so the
                 // answer fails as the member's own refusal would.
                 Ok(Answer::Later(request)) if request.long_poll_refusal().is_some() => {
                     let why = request.long_poll_refusal().unwrap_or_default();
@@ -571,7 +571,7 @@ impl<J: DataSource, R: DataSource> Mixed<J, R> {
         self.route_answer(rust, answer)
     }
 
-    /// Envelope lines plus each member's journal.
+    /// Envelope lines plus each member's journal (LLP 1012, LLP 1097 D8).
     /// The JavaScript child's trait path carries its storage journal; a
     /// worker child keeps its own and is not a member here.
     pub fn take_logs(&mut self) -> Vec<String> {
@@ -747,7 +747,7 @@ impl<J: DataSource, R: DataSource> DataSource for Mixed<J, R> {
             }
             return dispatch;
         }
-        // Background work is the JavaScript child's.
+        // Background work is the JavaScript child's (LLP 1097 D5).
         if token == exact_runner::BACKGROUND {
             return self.javascript.dispatch(token, store);
         }
@@ -832,7 +832,7 @@ impl<J: DataSource, R: DataSource> DataSource for Mixed<J, R> {
     }
 
     /// What the runner still has in flight, after a commit that let
-    /// requests go. A recorded call, held turn or routed
+    /// requests go (LLP 1016 D5). A recorded call, held turn or routed
     /// continuation whose token isn't in flight was replaced or let go, and
     /// is dropped. A key no longer in flight loses its stages; one whose
     /// in-flight request is a newer call recorded here keeps that call's
@@ -955,7 +955,7 @@ impl<J: DataSource, R: DataSource> DataSource for Mixed<J, R> {
         self.javascript.ready() && self.rust.ready()
     }
 
-    /// Both halves' rosters; a name in both is the bake's
+    /// Both halves' rosters (LLP 1056 D1); a name in both is the bake's
     /// refusal, and the TypeScript half's here.
     fn canvas_surfaces(&self) -> Vec<(String, usize)> {
         let mut all = self.javascript.canvas_surfaces();
@@ -1066,7 +1066,7 @@ impl<J: DataSource, R: DataSource> DataSource for Mixed<J, R> {
     // Each let-go request goes to the child that asked it, and each child
     // hears, as after every `forgotten`, even with none of its own.
     // JavaScript kept replies reserve a turn in their ordered set through
-    // module_delivery, just as a live answer does.
+    // module_delivery, just as a live answer does (LLP 1027.002 D3).
     fn keep_sent(
         &mut self,
         store: &Store,
@@ -1146,7 +1146,7 @@ impl<J: DataSource, R: DataSource> DataSource for Mixed<J, R> {
         }
     }
 
-    // An answer's timer outran its own request: the
+    // An answer's timer outran its own request (LLP 1027.000 D1): the
     // JavaScript child's, outside an ordered set, whose turns are the set's.
     // Its continuation goes out under a token of this composer's.
     fn timer_before_reply(
@@ -1164,7 +1164,7 @@ impl<J: DataSource, R: DataSource> DataSource for Mixed<J, R> {
         }
     }
 
-    // A kept request is the JavaScript child's: its module
+    // A kept request is the JavaScript child's (LLP 1146 D2): its module
     // turn sees the store through the child's grants, as an answer does.
     fn module_landed(
         &mut self,
@@ -1248,8 +1248,8 @@ impl<J: DataSource, R: DataSource> DataSource for Mixed<J, R> {
                 "mixed replacement changes admitted identity or grants",
             ));
         }
-        // Placement is carried, never changed by a replacement:
-        // the children's placements decide the sets again.
+        // Placement is carried, never changed by a replacement (LLP
+        // 1027.002 §6): the children's placements decide the sets again.
         Self::construct(javascript, rust, self.sources.clone(), self.retain_rust)
     }
 }

@@ -19,12 +19,12 @@ package struct Bitmap {
     package var image: UIImage? { context.makeImage().map { UIImage(cgImage: $0) } }
 }
 
-/// A view's subtree as pixels.
+/// A view's subtree as pixels (LLP 1014 D3).
 package enum Capture {
-    /// A capture is drawing: its draws are not repaints.
+    /// A capture is drawing: its draws are not repaints (D4 b).
     nonisolated(unsafe) static var capturing = false
     /// Guest pictures when this turn chooses arm snapshots; their remote
-    /// platform views are hidden while the nodes draw these.
+    /// platform views are hidden while the nodes draw these (LLP 1020 D4/D6).
     nonisolated(unsafe) static var web: [UInt32: ExactWebImage] = [:]
     /// EXACT_CAPTURE=cpu: the Core Graphics capture even where Metal is
     /// present — the measure's baseline, and the fixture's oracle.
@@ -77,7 +77,7 @@ package enum Capture {
         func hide(_ v: UIView) {
             for s in v.subviews {
                 if let n = s as? NodeView, n.placement != nil, !n.isHidden { n.isHidden = true; hidden.append(n); continue }
-                // A nested canvas paints its readback in `draw`:
+                // A nested canvas paints its readback in `draw` (LLP 1014):
                 // drop the layer's cached picture so the render calls `draw`
                 // instead of copying what it drew last time (its placements
                 // are read there too, so the cards of a deck in the sky move).

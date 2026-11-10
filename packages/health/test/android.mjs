@@ -1,11 +1,11 @@
-// @exact/health, @exact/pedometer and @exact/altimeter on Android: the conformance fixture
+// @exact/health, @exact/pedometer and @exact/altimeter on Android (LLP 1133.026 §15 stage 3): the conformance fixture
 // made outside the repo, built as the Canvas reader's APK, which compiles the three packages' Kotlin against Health
-// Connect's client and Play services' Recording API in the app's one locked, verified Gradle graph. It checks the
-// graph, the roster, the permissions the read lists derive, the manifest fragment and the fixture stores carried,
-// and prints the APK's size. `--emulator` then drives the fixture on the emulator ANDROID_SERIAL names (an arm64 one
-// of API 34 or later, where Health Connect is built in): under the agent over the fixture store, the reads granted
-// and a typed partial answer; bound (`--bind health`), the status Health Connect gives an app it never asked, which
-// reads no data. checklist.md's Android part is a person's.
+// Connect's client and Play services' Recording API in the app's one locked, verified Gradle graph (LLP 1133.008 D8
+// item 5). It checks the graph, the roster, the permissions the read lists derive, the manifest fragment (D4, D19
+// item 3) and the fixture stores carried, and prints the APK's size. `--emulator` then drives the fixture on the
+// emulator ANDROID_SERIAL names (an arm64 one of API 34 or later, where Health Connect is built in): under the agent
+// over the fixture store, the reads granted and a typed partial answer; bound (`--bind health`), the status Health
+// Connect gives an app it never asked, which reads no data. checklist.md's Android part is a person's.
 //
 // usage: bun packages/health/test/android.mjs [--emulator]
 //   (an NDK of clang 18 or newer in ANDROID_NDK_HOME, and a JDK 17 or newer in JAVA_HOME)

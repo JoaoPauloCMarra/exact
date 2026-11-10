@@ -1,4 +1,4 @@
-//! A resource over a list: `resource
+//! A resource over a list (LLP 1017.000 P4c, amended 2026-11-04): `resource
 //! r = source(x) for x in list [key=k] as shape S`. The list is read in the
 //! root's scope; the arguments and the key read the element, which the
 //! runner passes each element's request as its one parameter. A key is a

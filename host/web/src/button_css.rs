@@ -42,7 +42,7 @@ pub(super) fn rows(
             "--exact-button-leading-subtitle-areas:\"image space title\" \"image space subtitle\";--exact-button-trailing-subtitle-areas:\"title space image\" \"subtitle space image\";--exact-button-space-width:var(--exact-button-column-gap,auto);--exact-button-space-height:0px;--exact-button-columns:auto auto minmax(var(--exact-button-title-min,min-content),auto);--exact-button-space:var(--exact-button-column-space);"
         });
     }
-    // The title column keeps its min-content floor
+    // @ref LLP 1116 D1 — the title column keeps its min-content floor
     // (index.html), so a narrow row never cuts a word; a title the author
     // keeps to one line may still truncate.
     if style.mask.has(StyleId::WhiteSpace)

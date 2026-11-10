@@ -1,4 +1,4 @@
-// Which platform control a `Control` node is, and
+// @ref LLP 1069.001 D2, D5 — which platform control a `Control` node is, and
 // a select's menu as the runtime reads it from the kernel: both hosts'
 // presenters build the platform's own control from these.
 import Foundation
@@ -9,16 +9,16 @@ enum ControlKinds {
     static let indexed = ["type:checkbox", "type:radio", "type:select", "type:range", "type:date", "type:time", "type:datetime-local", "type:button"]
     static let dates: Set<String> = ["date", "time", "datetime-local"]
     /// The chrome index's key for a `progress`, the platform's activity
-    /// indicator or, with a `value`, its
-    /// progress bar: a view, not a control, so its own pass,
+    /// indicator (LLP 1069.001, amended 2026-10-07) or, with a `value`, its
+    /// progress bar (LLP 1116 D8): a view, not a control, so its own pass,
     /// outside `indexed`.
     static let progress = "type:progress"
     /// `switch`, `checkbox`, or the `type` prop's value (`radio`, a select, …).
     static func kind(_ props: [String: String]) -> String {
         switch props["type"] {
-        case "button": return "button" // before the checkbox default
+        case "button": return "button" // LLP 1069.011 D3: before the checkbox default
         case "select": return "select"
-        case "radio": return "radio"
+        case "radio": return "radio" // x2apps survey #2
         case "range": return "range"
         case let t? where dates.contains(t): return t
         default: return props["accessibilityRole"] == "switch" ? "switch" : "checkbox"
@@ -59,7 +59,7 @@ struct RangeSpec {
 }
 
 /// A determinate progress's `value` and `max` by HTML's rules
-/// (`exact_kernel::Progress`): `max` is 1 unless it reads as a
+/// (`exact_kernel::Progress`, LLP 1116 D8): `max` is 1 unless it reads as a
 /// number above 0; `value` is 0 unless it reads as one, held to 0 and `max`.
 struct ProgressSpec {
     var value = 0.0, max = 1.0
@@ -78,7 +78,7 @@ struct ProgressSpec {
 /// platform's `Date` at UTC: HTML's values carry no zone, so the picker
 /// shows the wall time the string names and never converts it.
 enum DateValue {
-    /// What an empty date control says: its author's
+    /// What an empty date control says (LLP 1115.000 D13.1): its author's
     /// `placeholder`, or no words. A date format (`mm/dd/yyyy`) is a
     /// browser's empty field, which the platform's control does not have.
     static func placeholder(_ props: [String: String]) -> String {
@@ -130,9 +130,9 @@ struct SelectMenu: Equatable {
         chosen = (obj["chosen"] as? Int).flatMap { $0 < options.count ? $0 : nil }
     }
 
-    /// The agent's `type <select> <value>`: the enabled
+    /// The agent's `type <select> <value>` (LLP 1069.001 D9): the enabled
     /// option with that value, else the one option with that label, as the
-    /// web host chooses (Playwright's `selectOption`);
+    /// web host chooses (Playwright's `selectOption`; kanban F17, shop F10);
     /// else the refusal, naming the options.
     func choose(_ text: String, id: UInt32) -> (value: String?, refusal: String?) {
         let enabled = options.filter { !$0.disabled }
@@ -145,12 +145,12 @@ struct SelectMenu: Equatable {
     }
 }
 
-/// A button's face (`exact_press_face`), custom or
+/// A button's face (`exact_press_face`, LLP 1069.011.000 D1), custom or
 /// native, as the kernel reads it from its children: its title, its symbol as
 /// the platform names it (an svg-only icon's path as its `FaceSymbol` token), whether its image is a raster instead, whether the
 /// image leads, its `aria-label`, whether its children fit (one text, one
-/// image, nothing else); and a native button's `buttonStyles` row — each
-/// platform's draw, a `~` marking a stand-in. `style` is
+/// image, nothing else); and a native button's `buttonStyles` row (LLP
+/// 1069.011 D2) — each platform's draw, a `~` marking a stand-in. `style` is
 /// the `buttonStyle` its author wrote, nil when they wrote none: the face
 /// then carries no row, and the platform columns keep their defaults here,
 /// which are what a button with no style draws (`unsaid`; the Mac's push
@@ -189,7 +189,7 @@ struct ButtonFace: Equatable {
         subtitle = o["subtitle"] as? String
         placement = o["placement"] as? String
         rows = ButtonFaceRows(o["rows"] as? [String: Any] ?? [:])
-        // An svg-only icon's path as its token (FaceSymbol).
+        // An svg-only icon's path as its token (FaceSymbol, stage 9 A2).
         symbol = FaceSymbol.of(o)
         symbolIcon = o["symbolIcon"] as? String
         raster = o["raster"] as? Bool ?? false
@@ -208,7 +208,7 @@ struct ButtonFace: Equatable {
     }
 
     /// What UIKit draws for a button whose author wrote no `buttonStyle`, by
-    /// its name in the table's iOS column. On iOS it is
+    /// its name in the table's iOS column (LLP 1115.000 D15). On iOS it is
     /// the plain configuration, tinted text with no fill, as `UIButton(type:
     /// .system)` and SwiftUI's `Button` are; `buttonStyle="bordered"` is what
     /// an author writes for the grey capsule. tvOS keeps the bordered button:
@@ -252,7 +252,7 @@ enum LinkedDesign {
 }
 
 
-/// Only authored rows cross this dictionary; absence is UIKit's answer.
+/// Only authored rows cross this dictionary; absence is UIKit's answer (D1–D2).
 struct ButtonFaceRows: Equatable {
     var title: NodeStyle = [:], subtitle: NodeStyle = [:], symbol: NodeStyle = [:], button: NodeStyle = [:]
     var imageGap: CGFloat?

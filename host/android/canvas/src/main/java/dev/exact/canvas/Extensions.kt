@@ -7,7 +7,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * A package's implementation of a module on Android. The APK's build compiles each bound
+ * A package's implementation of a module on Android (LLP 1133.001 D1, D5). The APK's build compiles each bound
  * implementation's Kotlin into the app and writes `exact.app.ExactExtensions`, an [ExtensionRoster] naming each
  * extension's class; the reader makes one per session at the extension's first call. Calls come from the runner as
  * requests (kind 11, [Requests]) and every one is on the main thread. An error is answered as `{"error": code}`.
@@ -17,67 +17,68 @@ abstract class ExactExtension(val context: ExtensionContext) {
     abstract fun later(name: String, args: JSONObject, reply: (JSONObject) -> Unit)
 
     /**
-     * [later] with the agent's preferred value for [name], under the agent: the runner also
+     * [later] with the agent's preferred value for [name], under the agent (LLP 1133.009 D10 item 11): the runner also
      * lays it over the answer. An implementation that is its own substitute overrides this one.
      */
     open fun later(name: String, args: JSONObject, preferred: Any?, reply: (JSONObject) -> Unit) = later(name, args, reply)
 
-    /** The last reader of live source [name] is gone: stop what it started. */
+    /** The last reader of live source [name] is gone: stop what it started (LLP 1133.002 D5). */
     open fun release(name: String) {}
 
     /**
-     * No reader of live source [name] reads it with [args] any longer; a reader asked again
+     * No reader of live source [name] reads it with [args] any longer (LLP 1133.009 D10 item 12); a reader asked again
      * has its new arguments first.
      */
     open fun release(name: String, args: JSONObject) {}
 
     /**
      * The agent's preferred values for this extension's names, by name, when it is bound under the agent and
-     * whenever one changes: an implementation that is its own substitute answers by them.
+     * whenever one changes (LLP 1133.008 D8 item 9): an implementation that is its own substitute answers by them.
      */
     open fun preferred(values: JSONObject) {}
 
-    /** Handles a reply carried that the runner dropped, never the app's. */
+    /** Handles a reply carried that the runner dropped, never the app's (LLP 1133.009 D10 item 10). */
     open fun dispose(ids: List<String>) {}
 
-    /** The send numbered [request] ([ExtensionContext.request]) was let go: what it started stops. */
+    /** The send numbered [request] ([ExtensionContext.request]) was let go: what it started stops (LLP 1133.016 D15
+     * item 2). */
     open fun cancel(request: Int) {}
 
-    /** The app went to the foreground or left it ([ExtensionContext.foreground]). */
+    /** The app went to the foreground or left it ([ExtensionContext.foreground], LLP 1133.009 D10 item 3). */
     open fun foreground(shown: Boolean) {}
 
-    /** The wake [ExtensionContext.wake] raised for [id] ended with [outcome], after its `ended`. */
+    /** The wake [ExtensionContext.wake] raised for [id] ended with [outcome] (LLP 1133.017 D8), after its `ended`. */
     open fun woke(id: String, outcome: String) {}
 
     /** The activity is in front again: what changed in Settings meanwhile is read again (Android has no event). */
     open fun resumed() {}
 
     /** [Activity.onPause]: what only the activity in front may hold is let go, such as NFC reader mode, which
-     * [android.nfc.NfcAdapter.enableReaderMode] admits only while the activity is resumed. */
+     * [android.nfc.NfcAdapter.enableReaderMode] admits only while the activity is resumed (LLP 1133.035 D16 item 5). */
     open fun paused() {}
 
     /**
-     * Picture [source] of the interface's `img` scheme (`photos:<id>`) for a box of
+     * Picture [source] of the interface's `img` scheme (`photos:<id>`, LLP 1133.019 D2, D11 item 1) for a box of
      * [width] by [height] device pixels at `object-fit` [fit], once the runner admitted it: [reply] once, from any
      * thread, with the picture upright and no larger than the box needs, or null and an error code (`NotFoundError`),
-     * which empties the box. [owned]: admitted as the app's own item alone, drawn only where the platform says it
+     * which empties the box. [owned]: admitted as the app's own item alone (D6), drawn only where the platform says it
      * is.
      */
     open fun picture(source: String, width: Int, height: Int, fit: String, owned: Boolean, reply: (android.graphics.Bitmap?, String?) -> Unit) =
         reply(null, "NotSupportedError")
 
     /** The state the runner holds of each permission this extension's interfaces declare, by name, told with
-     * [preferred] under the agent. */
+     * [preferred] under the agent (LLP 1133.019 §10). */
     open fun permissions(states: JSONObject) {}
 
     /**
-     * The session ends: finish what must be finished, then [done]. Android's session lives
+     * The session ends: finish what must be finished, then [done] (LLP 1133.009 D10 item 1). Android's session lives
      * as long as its process, which ends without calling this.
      */
     open fun destroy(done: () -> Unit) = done()
 
     /**
-     * Make view [tag], one of the package's `views`, for node [id] of [session]: the one
+     * Make view [tag], one of the package's `views`, for node [id] of [session] (LLP 1133.008 D8 item 1): the one
      * extension of the process makes every session's views, so it keeps their state by session, and [id] is what its
      * reports name. [emit] sends an event (`message`, `load`, …) with its text. A report can come before the view is
      * made, since the reader attaches views after first pixel.
@@ -93,7 +94,7 @@ abstract class ExactExtension(val context: ExtensionContext) {
 
     /**
      * View [id] of [session] was displayed or hidden, by the origin of the commit that did it (`app`, `tool` or
-     * `wake`).
+     * `wake`; LLP 1133.008 D8 item 2).
      */
     open fun displayed(session: String, id: String, shown: Boolean, origin: String) {}
 
@@ -101,7 +102,7 @@ abstract class ExactExtension(val context: ExtensionContext) {
     open fun bound(session: String, id: String, prop: String, origin: String) {}
 
     /**
-     * A text field whose `autocomplete` ends in `webauthn` was made ([present]) or went:
+     * A text field whose `autocomplete` ends in `webauthn` was made ([present]) or went (LLP 1133.011 D10 item 4):
      * the real view, on which a conditional credential request is set. Every live one is told to an extension when it
      * is made.
      */
@@ -109,7 +110,7 @@ abstract class ExactExtension(val context: ExtensionContext) {
 
     /**
      * The canvases of [surface], which this extension's input feeds ([ExtensionSurfaces]), were displayed or hidden,
-     * by the origin of the commit that did it. The lease: hidden, the input pauses;
+     * by the origin of the commit that did it (LLP 1133.013 D6, D12 item 3). The lease: hidden, the input pauses;
      * shown by an `app` commit, it resumes; shown by a `tool`'s or a `wake`'s, it stays paused. A start on a hidden
      * canvas is told this before the start.
      */
@@ -120,7 +121,7 @@ abstract class ExactExtension(val context: ExtensionContext) {
 }
 
 /**
- * The authenticator entry: what an implementation whose interface declares `authenticator` serves,
+ * The authenticator entry (LLP 1133.010 D13): what an implementation whose interface declares `authenticator` serves,
  * called by the reader's presence backend ([Presence]) in this process on the main thread. The prompt has one owner,
  * the implementation; the key and its bytes stay the reader's.
  */
@@ -133,17 +134,17 @@ interface ExactAuthenticator {
     fun authenticate(crypto: android.hardware.biometrics.BiometricPrompt.CryptoObject?, authenticators: Int, reason: String, origin: String,
                      done: (android.hardware.biometrics.BiometricPrompt.CryptoObject?, JSONObject?) -> Unit)
 
-    /** A presence name's key builder, before generation: the key hatch. What the backend owns it sets again after. */
+    /** A presence name's key builder, before generation: the key hatch (D11). What the backend owns it sets again after. */
     fun configure(builder: android.security.keystore.KeyGenParameterSpec.Builder) {}
 }
 
 /** The app's bound extensions by name, each with how to make it: what the build writes as `exact.app.ExactExtensions`. */
 interface ExtensionRoster {
     val extensions: Map<String, (ExtensionContext) -> ExactExtension>
-    /** Each view tag a package serves, with the extension that makes it. */
+    /** Each view tag a package serves, with the extension that makes it (LLP 1133.001 D1). */
     val views: Map<String, String> get() = emptyMap()
     /** The extensions whose interface says `"start": "load"`: made after the reader's first frame rather than at their
-     * first call. */
+     * first call (LLP 1133.015 D16 item 1). */
     val startAtLoad: List<String> get() = emptyList()
 }
 
@@ -154,7 +155,7 @@ class ExtensionContext internal constructor(val application: Context, private va
 
     /**
      * Under the agent, unless the drive bound this extension as in production (`--bind`): an implementation that is its
-     * own substitute then opens no device and asks the OS for nothing.
+     * own substitute then opens no device and asks the OS for nothing (LLP 1133.006 D8).
      */
     val agent: Boolean = try { Native.underAgent(name) } catch (e: UnsatisfiedLinkError) { false }
 
@@ -162,56 +163,58 @@ class ExtensionContext internal constructor(val application: Context, private va
     val session: String = "1"
 
     /** Who made the call being answered now, `app`, `tool` or `wake`, read at [ExactExtension.later]'s entry: a
-     * capture's first lease is refused to a tool's read. */
+     * capture's first lease is refused to a tool's read (LLP 1133.009 D6). */
     var origin = "app"
         internal set
 
     /** The number the runner gave the send being answered now, which a later [ExactExtension.cancel] names; null for
-     * a source. */
+     * a source (LLP 1133.016 D15 item 2). */
     var request: Int? = null
         internal set
 
-    /** The session's track table, which its implementations share. */
+    /** The session's track table, which its implementations share (LLP 1133.009 D10 item 6). */
     val tracks: Tracks get() = Extensions.tracks
 
-    /** The process's audio focus owner, through which a module that plays or captures claims focus. */
+    /** The process's audio focus owner, through which a module that plays or captures claims focus (LLP 1133.012
+     * D12 item 2). */
     val audioFocus: AudioFocus get() = AudioFocus
 
-    /** The file an admitted `app:/` path names: the app's own directories, a drive's
+    /** The file an admitted `app:/` path names (LLP 1133.009 D10 item 4): the app's own directories, a drive's
      * scratch tree under the agent. Admission checked the path against the calling source's grants. */
     fun file(path: String): java.io.File? = try { Native.appFile(path)?.let { java.io.File(it) } } catch (e: UnsatisfiedLinkError) { null }
 
     /** A content URI for the file an admitted `app:/` path names, which an intent may carry with a read grant
-     * (`FLAG_GRANT_READ_URI_PERMISSION`), or null when it names none ([Files]). */
+     * (`FLAG_GRANT_READ_URI_PERMISSION`), or null when it names none ([Files], LLP 1133.024 D22 item 2). */
     fun contentUri(path: String): android.net.Uri? = file(path)?.let { Files.uri(application, it) }
 
-    /** Whether the activity is resumed: a prompt shows only over a resumed activity. */
+    /** Whether the activity is resumed: a prompt shows only over a resumed activity (LLP 1133.010 D8). */
     val resumed: Boolean get() = Extensions.resumedNow
 
     /** Whether the app is in the foreground, as the runner's admission reads it ([ExactExtension.foreground]). */
     var foreground = true
         internal set
 
-    /** The session's clock, ms: the agent's under the agent. */
+    /** The session's clock, ms: the agent's under the agent (LLP 1133.009 D10 item 2). */
     fun now(): Double = Native.now()
 
-    /** The page's canvases, whose input an extension may feed. */
+    /** The page's canvases, whose input an extension may feed (LLP 1133.013 D6). */
     val surfaces = ExtensionSurfaces()
 
-    /** Claims on the host's foreground services, which keep a capability running while the app is hidden. */
+    /** Claims on the host's foreground services, which keep a capability running while the app is hidden (LLP
+     * 1133.033 D2). */
     val foregroundService = ForegroundServices(application, name) { agent }
 
     /**
-     * The display's angle as the web's `screen.orientation.angle` (0, 90, 180, 270), from
+     * The display's angle as the web's `screen.orientation.angle` (0, 90, 180, 270; LLP 1133.013 D12 item 4), from
      * `Display.getRotation`: [ExactExtension.orientation] is told each change.
      */
     val orientation: Int get() = Extensions.angle(activity)
 
-    /** The readers of [topic] are asked again. */
+    /** The readers of [topic] are asked again (LLP 1016.002). */
     fun changed(topic: String) = Exact.changed(topic)
 
     /**
-     * Raise the interface's event [event] with [args]: delivered in order, once, with the device's
+     * Raise the interface's event [event] with [args] (LLP 1133.004 D6): delivered in order, once, with the device's
      * origin. Its one channel to the runner is [changed], as on Apple (`exact-event:`,
      * `runner/src/runner/modules/events.rs`); the sequence number keeps two alike from coalescing. Main thread.
      */
@@ -221,22 +224,22 @@ class ExtensionContext internal constructor(val application: Context, private va
     }
 
     /**
-     * Under the agent, what the implementation discloses of its own objects for `state.extensions`: listed as its
-     * `implementation`, each field replacing the one of its name said before. Through
+     * Under the agent, what the implementation discloses of its own objects for `state.extensions` (LLP 1133.008 D8
+     * item 9): listed as its `implementation`, each field replacing the one of its name said before. Through
      * [changed], as on Apple (`exact-state:`, `runner/src/runner/modules/disclosed.rs`). Nothing outside the agent.
      */
     fun state(fields: JSONObject) {
         if (agent) changed("exact-state:" + JSONObject().put("extension", name).put("state", fields))
     }
 
-    /** The process's pads, which a world canvas reads too. */
+    /** The process's pads (LLP 1133.022 D10 item 1), which a world canvas reads too. */
     val pads = ExtensionPads(application)
 
     /** Each [wake]'s `ended`, by id, until the runner tells its outcome. */
     internal val ended = HashMap<String, (String) -> Unit>()
 
     /**
-     * Raise the interface's wake event [event] with [args] for the platform's own [id]: the events
+     * Raise the interface's wake event [event] with [args] for the platform's own [id] (LLP 1133.017 D8): the events
      * of one id are one wake, run with the wake's origin, and [ended] hears its outcome once, on the main thread:
      * `completed`, `expired`, `superseded`, `refused`, or `unheard` when no handler hears it. Its one channel to the
      * runner is [changed], as on Apple (`exact-wake:`, `runner/src/runner/modules/wakes.rs`).
@@ -246,8 +249,8 @@ class ExtensionContext internal constructor(val application: Context, private va
         changed("exact-wake:" + JSONObject().put("extension", name).put("event", event).put("args", args).put("id", id))
     }
 
-    /** Every `img` showing picture [source] is emptied and fires `error`, and no reply in flight draws: the photo left
-     * what the app may read. */
+    /** Every `img` showing picture [source] is emptied and fires `error`, and no reply in flight draws (LLP 1133.019
+     * D2): the photo left what the app may read. */
     fun revokePicture(source: String) = Exact.pictureChanged(source, true)
 
     /** Picture [source] is asked for again: the photo was edited. */
@@ -257,14 +260,14 @@ class ExtensionContext internal constructor(val application: Context, private va
 
     /**
      * The platform's dialog for [permissions], in one request (`Activity.requestPermissions`), then [done], on the main
-     * thread: when the result comes, or when the activity resumes without it (a result lost to recreation). Requests
-     * made while one is up share its answer. With no activity in front nothing is asked and [done] runs
+     * thread: when the result comes, or when the activity resumes without it (a result lost to recreation, LLP 1133.002
+     * D9). Requests made while one is up share its answer. With no activity in front nothing is asked and [done] runs
      * at once, since the platform would present nothing.
      */
     fun requestPermissions(permissions: Array<String>, done: () -> Unit) = Extensions.ask(permissions, done)
 
     /**
-     * Runtime permission [name]'s state, from the one history every module reads: `granted`;
+     * Runtime permission [name]'s state, from the one history every module reads (LLP 1133.008 D8 item 7): `granted`;
      * `denied` once a request was refused and the platform owes no rationale after it, so it will not ask again; else
      * `prompt`. A grant in Settings clears the history.
      */
@@ -279,7 +282,7 @@ class ExtensionContext internal constructor(val application: Context, private va
 
     /**
      * Start [intent] for its result (`Activity.startActivityForResult`), then [done] on the main thread with the
-     * result code and the result's data: a picker's or an editor's answer. A result that
+     * result code and the result's data (LLP 1133.018 D13 item 2): a picker's or an editor's answer. A result that
      * reaches an activity made again meanwhile settles the call, since the call is the process's. With no activity in
      * front, or no app that handles [intent], nothing starts and [done] has `Activity.RESULT_CANCELED`.
      */
@@ -289,7 +292,7 @@ class ExtensionContext internal constructor(val application: Context, private va
     fun startIntentSenderForResult(sender: android.content.IntentSender, done: (Int, android.content.Intent?) -> Unit) = Extensions.start(sender, done)
 
     /**
-     * The app's handler [handler] run for the work [handle] names: one the call that made
+     * The app's handler [handler] run for the work [handle] names (LLP 1133.016 D15 item 1): one the call that made
      * the handle listed, run by the runner as a fresh answer whose origin is at most `tool`. [reply] gets
      * `{"text": JSON}` or `{"error", "message"}`, on the main thread.
      */
@@ -308,7 +311,7 @@ class ExtensionContext internal constructor(val application: Context, private va
     }
 
     /**
-     * Whether the embedder lets the app leave for [url], [how] `browser` (a page over the
+     * Whether the embedder lets the app leave for [url] (LLP 1133.024 D22 item 7), [how] `browser` (a page over the
      * app) or `external` (another app): asked before a page or a hand-off by URL opens. The stock activity lets every
      * one go; an embedding app sets [ExtensionContext.leaving] to decide. Main thread.
      */
@@ -438,11 +441,11 @@ internal object Extensions {
     /**
      * Request [id]'s call, the runner's body: `{"extension", "source"|"send", "args", "preferred"?}`, `{"extension",
      * "release", "args"?}`, `{"extension", "preferred"}`, `{"extension", "dispose"}`, `{"extension", "foreground"}`, or
-     * `{"extension", "view", "displayed"|"bound", "origin"}` (a package view's report),
-     * `{"extension", "surface", "displayed", "origin"}` (a canvas its input feeds),
-     * `{"extension", "picture", "width", "height", "fit", "owned"}`, answered with its
-     * pixels ([Exact.picture]), `{"extension", "cancel"}` (a send let go), or `{"extension",
-     * "woke", "outcome"}` (a wake [ExtensionContext.wake] raised ended).
+     * `{"extension", "view", "displayed"|"bound", "origin"}` (a package view's report, LLP 1133.008 D8 item 2),
+     * `{"extension", "surface", "displayed", "origin"}` (a canvas its input feeds, LLP 1133.013 D6),
+     * `{"extension", "picture", "width", "height", "fit", "owned"}` (LLP 1133.019 D11 item 1), answered with its
+     * pixels ([Exact.picture]), `{"extension", "cancel"}` (a send let go, LLP 1133.016 D15 item 2), or `{"extension",
+     * "woke", "outcome"}` (a wake [ExtensionContext.wake] raised ended, LLP 1133.017 D8).
      */
     fun call(id: Int, body: String) {
         var answered = false
@@ -541,12 +544,12 @@ internal object Extensions {
     /** Whether the activity is resumed ([resumed], [paused]). */
     val resumedNow: Boolean get() = foreground
 
-    /** The extension that serves the authenticator entry, made if need be. */
+    /** The extension that serves the authenticator entry (LLP 1133.010 D13), made if need be. */
     fun authenticator(): ExactAuthenticator? = roster.keys.firstNotNullOfOrNull { extension(it) as? ExactAuthenticator }
 
     /** Extension [name], made at its first call or view. */
-    /** The reader drew its first frame: each extension declared `"start": "load"` is made now, once for the process, as
-     * an extension outlives the activities that show the app. */
+    /** The reader drew its first frame: each extension declared `"start": "load"` is made now (LLP 1133.015 D16 item
+     * 1), once for the process, as an extension outlives the activities that show the app. */
     fun firstFrame() {
         written?.startAtLoad?.forEach { extension(it) }
     }
@@ -562,7 +565,7 @@ internal object Extensions {
         made.values.forEach { it.webauthnField(view, present) }
     }
 
-    /** The app's module views with each package's beside them, each made by its extension. */
+    /** The app's module views with each package's beside them, each made by its extension (LLP 1133.001 D1). */
     fun withViews(modules: Map<String, NativeModule>): Map<String, NativeModule> {
         val views = written?.views ?: emptyMap()
         return if (views.isEmpty()) modules else modules + views.mapValues { (tag, name) -> PackageView(tag, name) }

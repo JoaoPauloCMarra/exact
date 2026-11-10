@@ -1,4 +1,4 @@
-//! Length and number tokens on the JS
+//! @ref LLP 1121 D3, D7 (stage 6 B) — length and number tokens on the JS
 //! target: a varying one a property declared per tuple, one that does not
 //! vary inline as its literal, every one a property in a development build,
 //! and a bound row's value mapped.
@@ -159,7 +159,7 @@ fn a_bound_row_maps_a_tokens_name_to_its_css() {
     );
 }
 
-/// Two varying numbers each get a sentinel no other is a
+/// Review round 1: two varying numbers each get a sentinel no other is a
 /// part of; an SVG stroke's length, which css.rs writes unitless, is its
 /// property too; a font weight's number says it is inline, so a change
 /// builds.
@@ -199,7 +199,7 @@ fn sentinels_stay_apart_and_unitless_lengths_and_weights_are_handled() {
     assert_eq!(weight["inline"], true);
 }
 
-/// A bound row's map holds only the kinds the row takes;
+/// Review round 2: a bound row's map holds only the kinds the row takes;
 /// an SVG attribute reads no property, so its token is inline in a
 /// development build and refused when it varies.
 #[test]
@@ -251,7 +251,7 @@ fn a_rows_map_takes_its_kinds_and_an_svg_attribute_writes_inline() {
     );
 }
 
-/// A varying token's name computed into an SVG attribute
+/// Review round 3: a varying token's name computed into an SVG attribute
 /// stands (no tuple's rule reaches an attribute); a bound opacity's layer
 /// test reads a constant token's value, and a varying one may be below 1.
 #[test]
@@ -283,7 +283,7 @@ fn an_attribute_map_holds_constants_and_opacity_reads_a_tokens_value() {
     );
 }
 
-/// A token's name only compared in a font weight's value
+/// Review round 3: a token's name only compared in a font weight's value
 /// is no use of it; the build goes on.
 #[test]
 fn a_compared_name_is_no_inline_use() {
@@ -296,7 +296,7 @@ fn a_compared_name_is_no_inline_use() {
     assert!(crate::emit::emit(&plan, false, false).is_ok());
 }
 
-/// A shadow token that varies is a property whose
+/// LLP 1121 stage 6 D: a shadow token that varies is a property whose
 /// value per tuple is the row's CSS; a bound shadow row maps its name.
 #[test]
 fn a_varying_shadow_is_a_property_and_a_bound_row_maps_its_name() {
@@ -327,7 +327,7 @@ fn a_varying_shadow_is_a_property_and_a_bound_row_maps_its_name() {
     assert!(dev.css.contains("text-shadow:var(--x-glow)"), "{}", dev.css);
 }
 
-/// A bound text shadow naming a token says it read one,
+/// Review round 1 (D): a bound text shadow naming a token says it read one,
 /// so a mode boundary writes the channel again (`$th`).
 #[test]
 fn a_bound_text_shadow_token_marks_its_read() {
@@ -341,7 +341,7 @@ fn a_bound_text_shadow_token_marks_its_read() {
     assert!(out.js.contains("const $tt=(M=>v=>typeof v===\"string\"&&Object.hasOwn(M,v.trim())?((globalThis.exact??={}).$th=1,M[v.trim()])"), "{}", out.js);
 }
 
-/// A type or family token is written as the kernel resolves each
+/// Stage 6 C: a type or family token is written as the kernel resolves each
 /// longhand (a constant one's literal in the class); a bound row naming one
 /// maps it to that row's part; one that varies by an app axis is refused.
 #[test]
@@ -399,7 +399,7 @@ fn a_type_token_is_its_parts_and_a_varying_one_is_refused() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A type or family token that varies by an app axis
+/// Stage 6 C's follow-up: a type or family token that varies by an app axis
 /// is a property a row it writes, declared by each tuple's rule (a size's
 /// text style as its `rem`, a family as its plan stack); a bound row maps
 /// its name to the property; a constant one stays its literal, as before.
@@ -518,7 +518,7 @@ fn a_development_build_makes_every_type_token_properties() {
     );
 }
 
-/// A node's own row over the token's stands;
+/// Review round 1 (Astra, Grok): a node's own row over the token's stands;
 /// names that write one property are made unique; a varying token named on
 /// a node with children stands, while the same row on a text reads it.
 #[test]
@@ -577,7 +577,7 @@ fn a_type_tokens_properties_hold_their_edges() {
     );
 }
 
-/// A bound `font` naming a type token whose size
+/// theme2's condition (17:36): a bound `font` naming a type token whose size
 /// is a text style writes that style's weight and leading where the token
 /// writes none, in a development build as in release.
 #[test]

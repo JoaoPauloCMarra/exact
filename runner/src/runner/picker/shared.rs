@@ -1,4 +1,4 @@
-//! A received share: one location, `action` with the
+//! A received share (LLP 1133.024 D2, D3): one location, `action` with the
 //! shared text as query parameters, and the files under an opaque token
 //! each `params.files` member gets. The host copies the files into
 //! `app:/tmp/shared/` under names of its own, then sets each token in the
@@ -18,9 +18,10 @@ type MemberFiles = (String, Vec<(std::path::PathBuf, Picked)>, u32);
 /// Where every shared file lands.
 pub const SHARED: &str = "app:/tmp/shared/";
 /// How long a host waits for a share's files before it counts the rest
-/// as dropped.
+/// as dropped (D3).
 pub const COPY_BOUND_MS: f64 = 5000.0;
-/// The largest file a share carries, as an outgoing share refuses one.
+/// The largest file a share carries, as an outgoing share refuses one (LLP
+/// 1125 D12).
 pub const FILE_CAP: u64 = 64 << 20;
 
 /// What `sharedFiles` answers for one token.
@@ -70,7 +71,7 @@ pub fn is_token(token: &str) -> bool {
 }
 
 /// A fresh `app:/tmp/shared/<seed>-<n>.<ext>`: named from the launch seed
-/// and a counter the host keeps, never from the sender.
+/// and a counter the host keeps, never from the sender (D3).
 pub fn shared_path(seed: f64, n: u32, name: &str) -> String {
     format!("{SHARED}{}-{n}.{}", seed as u64, extension(name))
 }
@@ -92,7 +93,7 @@ pub struct ShareTarget {
 }
 
 impl ShareTarget {
-    /// The manifest's `share_target` member, as `app.json` writes it;
+    /// The manifest's `share_target` member (D1), as `app.json` writes it;
     /// `None` when it has no `action`.
     pub fn from_json(member: &serde_json::Value) -> Option<ShareTarget> {
         let params = member.get("params");
@@ -133,8 +134,8 @@ impl ShareTarget {
 }
 
 impl Pending {
-    /// A share in its JSON form: the inbox's `share.json`
-    /// (`{"v":1, "title", "text", "url", "files": [{"file", "name", "type",
+    /// A share in its JSON form: the inbox's `share.json` (LLP 1133.024 D4:
+    /// `{"v":1, "title", "text", "url", "files": [{"file", "name", "type",
     /// "member"}], "dropped": {member: count}}`, each `file` one name in
     /// `dir`), or the driver's (`files` as `{"path", "name"}`). `None` for a
     /// record of another version, or a `file` that is not one plain name.
@@ -225,7 +226,7 @@ pub struct Incoming {
     pub members: Vec<String>,
 }
 
-/// The location a share is delivered as: `action`, then each member
+/// The location a share is delivered as (D2): `action`, then each member
 /// shared under its parameter name, a member not shared left out. A link
 /// with no `url` member mapped goes to `text`, as Android carries one. Each
 /// files member that carried anything gets `tokens(member)`.
@@ -273,7 +274,7 @@ pub fn location(
     }
 }
 
-/// The journal's line for a share as it arrives: the members present
+/// The journal's line for a share as it arrives (D9): the members present
 /// and each file's type and size, never the text.
 pub fn received_line(share: &Incoming, files: &[(String, u64)]) -> String {
     let mut members: Vec<&str> = Vec::new();
@@ -340,14 +341,14 @@ pub struct Pending {
 /// pending, and the copies left to make.
 #[derive(Debug)]
 pub struct Claimed {
-    /// The location to deliver: the launch location, or a `navigate`.
+    /// The location to deliver (D2): the launch location, or a `navigate`.
     pub location: String,
     /// Each files member's token and what it answers now: every file pending.
     pub tokens: Vec<(String, SharedFiles)>,
     /// The copies, by token: `(source, picked)`, the copy's name in
     /// `app:/tmp/shared/` being the end of `picked.path`.
     copies: Vec<(String, Vec<(std::path::PathBuf, Picked)>)>,
-    /// The journal's line.
+    /// The journal's line (D9).
     pub line: String,
 }
 
@@ -554,7 +555,7 @@ impl SharedFiles {
 }
 
 impl<D: DataSource> Runner<D> {
-    /// Claims a share that arrives while the app runs for `target`,
+    /// Claims a share that arrives while the app runs (D2, D3) for `target`,
     /// from this launch's claims, and journals what arrived. The host then
     /// sets each of [`Claimed::tokens`], delivers the location, makes the
     /// copies ([`Claimed::copy`]) and sets each token again with what
@@ -570,7 +571,7 @@ impl<D: DataSource> Runner<D> {
         Some(claimed)
     }
 
-    /// What the host copied of a share so far, under its token: the
+    /// What the host copied of a share so far, under its token (D3): the
     /// readers of `sharedFiles` are evaluated again in one commit. Called
     /// once before the files land (all `pending`) and again as they do; a
     /// cold share sets its tokens before the boot instead

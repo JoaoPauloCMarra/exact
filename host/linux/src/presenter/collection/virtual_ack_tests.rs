@@ -439,7 +439,7 @@ fn a_clamp_under_a_carried_anchor_advances_its_base() {
 
 #[test]
 fn a_wheel_during_a_finger_fling_ends_it_and_lands_where_the_wheel_put_it() {
-    // A wheel is a new input, as an app scroll is: it retires the list's own pending position
+    // theme2 10:25 (B): a wheel is a new input, as an app scroll is: it retires the list's own pending position
     // (no carry) and moves the reader's revision on, so a finger's glide ends and the list stays where the wheel
     // put it.
     let source = r#"component App
@@ -488,7 +488,7 @@ fn a_wheel_during_a_finger_fling_ends_it_and_lands_where_the_wheel_put_it() {
 
 #[test]
 fn a_wheel_on_deferred_collection_turns_rests_where_the_wheel_put_it() {
-    // Android's loop defers the collection turn until after the
+    // theme2 11:06 (X; Astra MAJOR, Grok BLOCKER): Android's loop defers the collection turn until after the
     // frame (pump, wheel, display_frame, display_complete, run_deferred_collections). A 50-row prepend is pending
     // (3370) when a wheel moves 2370 to 2320: the frame's acknowledgement must not write the prepend over the
     // wheel, so the list rests at 2320.
@@ -531,7 +531,7 @@ fn a_wheel_on_deferred_collection_turns_rests_where_the_wheel_put_it() {
 
 #[test]
 fn a_clamp_in_the_flip_gap_keeps_a_seeks_scrollend() {
-    // At 800 (travel 1000) a seek to 100 is painted and in
+    // theme2 11:06 (Y; Grok MAJOR), the reviewer's sequence: at 800 (travel 1000) a seek to 100 is painted and in
     // flight; the content shrinks (travel 400) and the clamp runs before the acknowledgement, advancing the
     // seek's base. The seek is matched by what it is (list, sequence, target), not by its base: its scrollend
     // fires.

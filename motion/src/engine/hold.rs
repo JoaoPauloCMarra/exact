@@ -327,7 +327,7 @@ impl Engine {
 
     /// The held presentation's velocity at `now_s`, in property units per
     /// second: `VelocityTracker` over every value this hold was given. For a
-    /// host whose platform measures none. `None` for a stale
+    /// host whose platform measures none (LLP 1057.001 §3). `None` for a stale
     /// token or a non-finite time.
     pub fn hold_velocity(&self, token: HoldToken, now_s: f64) -> Option<Value> {
         (self.links.hold_velocity)(self, token, now_s)
@@ -425,7 +425,7 @@ impl Engine {
         // suppresses redundant commits, whereas this is a presentation release.
         // A fling keeps its release instant; a cancel or a release at rest
         // waits for the first presented frame, as an authored curve does
-        //.
+        // (LLP 1003.001 D6).
         let fling = velocity != Value::ZERO;
         let at = now_s.max(self.shown);
         let pend = (self.start_on_frame && !fling).then_some(at);

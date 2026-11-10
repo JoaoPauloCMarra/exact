@@ -73,8 +73,8 @@ fn translate_text_is_a_narrow_css_pixel_subset_with_atomic_refusal() {
             .unwrap();
         assert_eq!(s.translate, exact_kernel::Vec2 { x, y }, "{text}");
     }
-    // A percentage of the box is the percent row's, the length row's zero;
-    // both rows take their part of the one text.
+    // A percentage of the box is the percent row's, the length row's zero
+    // (chess diary #4); both rows take their part of the one text.
     for (text, px, pct) in [
         ("-50% -50%", (0.0, 0.0), (-50.0, -50.0)),
         ("12px 25%", (12.0, 0.0), (0.0, 25.0)),
@@ -103,7 +103,7 @@ fn translate_text_is_a_narrow_css_pixel_subset_with_atomic_refusal() {
         "0 1",
         "none",
         "1px,2px",
-        // A third length is `translate`'s z, a fourth nothing.
+        // A third length is `translate`'s z (LLP 1077 D8), a fourth nothing.
         "1px 2px 0px 0px",
         "1px 2px 3",
         "10%% 0",
@@ -298,7 +298,7 @@ fn refusals_are_typed_and_change_nothing() {
                 expected: "nonnegative number",
             },
         ),
-        // CSS refuses a negative flex factor.
+        // CSS refuses a negative flex factor (LLP 1053 G3).
         (
             StyleId::FlexShrink,
             StyleValue::Number(-1.0),
@@ -487,7 +487,7 @@ fn enum_rows_resolve_names_and_others_do_not() {
 
 #[test]
 fn font_variant_numeric_is_a_keyword_bit_set() {
-    // `normal` is 0, `tabular-nums` bit 0; others refused.
+    // @ref LLP 1053 §0 G4 — `normal` is 0, `tabular-nums` bit 0; others refused.
     let set = |v: StyleValue| {
         let mut p = StyleProps::default();
         p.set_dynamic(StyleId::FontVariantNumeric, &v)
@@ -577,7 +577,7 @@ fn caret_auto_and_transparent_are_distinct_and_survive_the_wire() {
         StyleValue::Text("#00000000".into()),
         StyleValue::Text("#ffffff".into()),
         StyleValue::Text("light-dark(#ffffff, #112233)".into()),
-        // A system colour crosses by its index.
+        // A system colour crosses by its index (LLP 1077 D13).
         StyleValue::Text("-apple-system-label".into()),
     ] {
         let mut style = StyleProps::default();
@@ -745,7 +745,7 @@ fn line_height_preserves_kinds_through_dynamic_changes_wire_and_refusal() {
 fn dimension_pixel_strings_use_css_numbers_and_refuse_invalid_values_atomically() {
     let mut style = StyleProps::default();
     // `rem`/`em` hold their pixels at the initial root size until the
-    // kernel resolves them.
+    // kernel resolves them (LLP 1069.000 D3).
     for (text, expected) in [
         ("0px", 0.),
         ("12.5PX", 12.5),
@@ -778,7 +778,7 @@ fn dimension_pixel_strings_use_css_numbers_and_refuse_invalid_values_atomically(
 
 #[test]
 fn every_row_writes_its_own_field_and_no_other() {
-    // Linked by use, as every host that sets the rows links it.
+    // Linked by use (LLP 1057.003), as every host that sets the rows links it.
     exact_kernel::timeline::link();
     exact_kernel::style::link_backdrop_filter();
     let candidates = [
@@ -817,7 +817,7 @@ fn every_row_writes_its_own_field_and_no_other() {
             .chain(candidates.iter().cloned());
         let mut written = None;
         // A row whose one value is its initial one (`outline-style`'s
-        // `none`) is written by marking it.
+        // `none`, LLP 1104 D6) is written by marking it.
         let only_initial = names.len() == 1;
         for value in values {
             let mut s = base.clone();

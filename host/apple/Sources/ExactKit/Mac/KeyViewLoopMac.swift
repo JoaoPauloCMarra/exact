@@ -1,4 +1,4 @@
-// Tab on the Mac: the key-view loop the presenter builds
+// Tab on the Mac (LLP 1115.000 D7.2): the key-view loop the presenter builds
 // from the tree, and the person's Keyboard Navigation setting, which says
 // whether it reaches every control or only text fields and what takes keys
 // of its own. A `tabindex` the author wrote decides either way.
@@ -12,8 +12,8 @@ import AppKit
 enum KeyboardNavigation {
     /// What stands in for the person's setting: an agent's `prefer
     /// keyboard-navigation` or a test's. Under the agent it is off from
-    /// launch, the system's default and never the machine's, unless
-    /// `EXACT_DEVICE=real` asks for the machine's. Nil reads the
+    /// launch, the system's default and never the machine's (LLP 1069.007
+    /// D2), unless `EXACT_DEVICE=real` asks for the machine's. Nil reads the
     /// machine.
     nonisolated(unsafe) static var agent: Bool? = ExactEnv.agentMode && ExactEnv.environment["EXACT_DEVICE"] != "real" ? false : nil
     /// The setting now. Read at each use, so a change in System Settings is
@@ -46,7 +46,7 @@ extension NodeView {
 extension Presenter {
     /// The same editing descendant takes explicit, sequential and modal focus.
     func keyView(of v: NodeView) -> NSView {
-        // A list that is a table: the table is what takes the keys.
+        // A list that is a table: the table is what takes the keys (LLP 1115.002 D5).
         if let table = tables.feeds[v.id]?.table { return table }
         if v.kind == "native", let target = session?.natives.focusTarget(v) { return target }
         if v.isNativeButton, let button = controls.controls[v.id] as? NativeButtonMac { return button }
@@ -98,7 +98,7 @@ extension Presenter {
                 else if run.acceptsFirstResponder { starts.append((run, listed.count)) }
             }
             // A table's rows are in its cells, not among the list's own subviews; a route in the detail's
-            // pane of a split is in that pane's view, and stands where it was written.
+            // pane of a split is in that pane's view, and stands where it was written (LLP 1115.002 D4).
             let own = v.container.subviews.compactMap { $0 as? NodeView }
             for child in tables.feeds[v.id]?.mounted ?? navigation.split.authored(own, in: v.container) { walk(child) }
             for popover in menus.following(v) { walk(popover) }
@@ -182,12 +182,12 @@ extension Presenter {
         return current == nil || current === window || current === window.contentView || current === viewport || current === session?.view
     }
 
-    /// The view a new window's caret goes to: the first
+    /// The view a new window's caret goes to (LLP 1115.000 D7.5): the first
     /// stop of the loop, which with Keyboard Navigation off is the first
     /// text field (or box that takes keys of its own) and with it on the
     /// first control. Nil when there is none, and when it is a canvas that
     /// takes input or a node painted through a canvas: a caret there would
-    /// be in the canvas's first frame (the readback fixture), so
+    /// be in the canvas's first frame (the readback fixture, LLP 1014), so
     /// such a window opens with nothing focused, as every window used to.
     var initialKeyView: NSView? {
         flushKeyViewLoop()
@@ -210,7 +210,7 @@ extension Presenter {
         window.makeFirstResponder(first)
     }
 
-    /// A Tab stop: an explicit `tabindex`
+    /// A Tab stop (LLP 1088 D7.3; LLP 1115.000 D7.2): an explicit `tabindex`
     /// ≥ 0, a text field, or what is one by kind under the Keyboard
     /// Navigation setting (`NodeView.tabStop`); an explicit negative never,
     /// though it still takes a click.
@@ -218,7 +218,7 @@ extension Presenter {
         if v.formDisabled || v.cssVisibilityHidden { return false }
         // A list that is a table is one stop, as AppKit's table is whatever
         // the Keyboard Navigation setting says; the node a row's click
-        // presses is none, since the table selects its rows.
+        // presses is none, since the table selects its rows (LLP 1115.002 D5).
         if let tables = v.presenter?.tables, !tables.feeds.isEmpty {
             if tables.feeds[v.id] != nil { return true }
             if v.explicitTabIndex == nil, tables.pressesRow(v) { return false }

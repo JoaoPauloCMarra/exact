@@ -1,4 +1,4 @@
-// On the web, a tool's, a wake's or the device's fetch to a
+// LLP 1133.036 D6 on the web: a tool's, a wake's or the device's fetch to a
 // space less public than the page's is refused unless that space's
 // permission is granted, and its redirects are not followed while a less
 // public space's permission is answered and not granted.

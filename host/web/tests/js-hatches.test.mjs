@@ -1,4 +1,5 @@
-// The JS target's hatches (host/web-js/hatches.js): what a hatch's code records is bounded and refused past
+// The JS target's hatches (host/web-js/hatches.js; LLP 1075.003.000.001
+// §3.1–3.2, §4.4): what a hatch's code records is bounded and refused past
 // its bounds, a call's time is its own, a throw stops one node's hatch and
 // leaves its end, and a production page keeps nothing. The DOM is a small
 // fake; the runtime and the page module are stand-ins.

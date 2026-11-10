@@ -1,5 +1,5 @@
-//! Keying an answer that shares objects with the previous one: a live
-//! insert keys the rows it added, not the list.
+//! Keying an answer that shares objects with the previous one (LLP 1053 §0
+//! G8): a live insert keys the rows it added, not the list.
 //!
 //! A row's key is its key expression over its item; while the key's other
 //! inputs and its index (if read) are unchanged, the same item has the same

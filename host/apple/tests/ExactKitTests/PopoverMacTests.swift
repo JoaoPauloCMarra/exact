@@ -196,7 +196,7 @@ final class PopoverMacTests: XCTestCase {
 
     private var windows: [NSWindow] = []
     override func tearDown() { windows.forEach { $0.close() }; windows.removeAll() }
-    /// Tab leaves a popover's form for the page's buttons: Keyboard Navigation on.
+    /// Tab leaves a popover's form for the page's buttons: Keyboard Navigation on (LLP 1115.000 D7.2).
     override func setUp() { super.setUp(); keyboardNavigation(true) }
 
     private func fixture() -> Presenter {
@@ -273,7 +273,7 @@ final class PopoverMacTests: XCTestCase {
         p.menus.reset()
     }
     /// A painted menu's focused row chooses on Return as on Space, and the
-    /// menu closes as its row says (as an `NSMenu`'s
+    /// menu closes as its row says (LLP 1115.000 D7.3, as an `NSMenu`'s
     /// highlighted item takes Return); a focused button that is no row
     /// still does nothing with Return.
     func testReturnChoosesAFocusedMenuRowAndClosesTheMenuAsSpaceDoes() throws {
@@ -332,7 +332,7 @@ final class PopoverMacTests: XCTestCase {
     }
     /// A painted popover with no authored placement whose invoker is at the
     /// bottom-left opens above it from its left edge (the web's default flip),
-    /// as a chat app's emoji picker does over its composer.
+    /// as Harmony's emoji picker does over its composer.
     func testAPopoverFromTheBottomLeftOpensAboveItsInvoker() {
         let p = fixture(), pop = p.views[3]!
         p.apply(wireBatch([["op": "frame", "id": 2, "x": 10, "y": 360, "w": 80, "h": 30]]))
@@ -376,7 +376,7 @@ final class PopoverMacTests: XCTestCase {
         XCTAssertFalse(p.menus.isOpen(pop))
         XCTAssertTrue(window.firstResponder === p.views[6])
     }
-    /// A press in an open popover with no pointer node of
+    /// LLP 1005 §Events: a press in an open popover with no pointer node of
     /// its own goes to the innermost authored ancestor that hears one, as on
     /// the web, though the popover's view is in the top layer; a
     /// popover that hears one keeps the press.
@@ -393,7 +393,7 @@ final class PopoverMacTests: XCTestCase {
         XCTAssertEqual(log, ["down 1", "up 1"])
         XCTAssertFalse(p.menus.isOpen(pop), "the row's own press still ran")
         // A popover hearing a pointer event holds the moves; the down and up
-        // bubble past it to its authored ancestors.
+        // bubble past it to its authored ancestors (Charlie, 2026-10-15).
         pop.handlers = ["pointermove", "pointerdown"]
         p.press(2)
         row.mouseDown(with: mouse(p, .leftMouseDown, row))
@@ -625,7 +625,7 @@ final class PopoverMacTests: XCTestCase {
 
     /// A double click and a free move in an open popover reach its authored
     /// ancestors' `dblclick` and `pointermove`, as on the web, and never a
-    /// page node only under it.
+    /// page node only under it (#281).
     func testADoubleClickAndAFreeMoveInAPopoverReachItsAuthoredAncestors() throws {
         let p = fixture(), root = try XCTUnwrap(p.views[1]), pop = try XCTUnwrap(p.views[3]), under = try XCTUnwrap(p.views[6])
         p.press(2)
@@ -854,7 +854,7 @@ final class PopoverMacTests: XCTestCase {
         p.apply(wireBatch([["op": "create", "id": 8, "kind": "native"], ["op": "children", "id": 5, "ids": [8]]]))
         XCTAssertFalse(p.menus.isMenuShaped(pop), "custom content inside a button must keep its pixels")
     }
-    /// HTML's `hr` is a menu row: the separator between items.
+    /// HTML's `hr` (LLP 1021 D1) is a menu row: the separator between items.
     func testAnHrRowIsTheMenusSeparator() {
         let p = fixture(), pop = p.views[3]!
         p.views[5]!.handlers.insert("press")
@@ -1103,7 +1103,7 @@ final class PopoverMacTests: XCTestCase {
     /// batch unmounts the invoker the menu was popped up in. It presses
     /// once, after the tracking has ended.
     func testAPickThatUnmountsTheInvokerPressesOnceAfterTheMenuEnds() throws {
-        try XCTSkipIf(ExactEnv.agentMode, "the agent keeps every popover painted")
+        try XCTSkipIf(ExactEnv.agentMode, "the agent keeps every popover painted (LLP 1021 D4)")
         let (p, _) = menuFixture()
         try XCTUnwrap(windows.last).orderFrontRegardless()
         var pressed: [UInt32] = []

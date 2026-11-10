@@ -1,11 +1,12 @@
-// The number pads' bar on iOS: the decimal, number and
+// The number pads' bar on iOS (LLP 1116.003 D7): the decimal, number and
 // phone pads have no Return key (and the decimal and number pads no minus
 // key), so a field on one gets the keys it needs in the keyboard's accessory
-// bar, as a hand-built form adds them: Done always (a pad with no way to
-// put it away leaves a person tapping elsewhere to dismiss it, where Return
-// would act only for a field with `enterkeyhint="done"` or a `submit`
-// handler), and ± where its `min` is below zero (`inputmode="text"` to reach
-// a minus gives a letter keyboard). ± flips the sign of what the field holds
+// bar, as a hand-built form adds them: Done always (LLP 1116.008 D8: a pad
+// with no way to put it away left expense-tracker's builder tapping a
+// category to dismiss it, where Return would have acted only for a field with
+// `enterkeyhint="done"` or a `submit` handler), and ± where its `min` is
+// below zero (round 5's unit converter wrote `inputmode="text"` to reach a
+// minus and got a letter keyboard). ± flips the sign of what the field holds
 // and fires its `input` as a keystroke does; Done does what Return does
 // (commit, submit) and puts the keyboard away. A one-time code's pad gets
 // none, as UIKit and SwiftUI give it none: the system suggests the code over
@@ -78,7 +79,7 @@ extension NodeView {
 
     /// Done: what Return does (the key its handlers hear, the commit, an
     /// implicit submission, then the keyboard goes away unless the action
-    /// focused the field again). A Return a `key`
+    /// focused the field again, LLP 1115.000 D9.2). A Return a `key`
     /// handler prevented does none of that, and Done still says done.
     @objc func padDone() {
         guard let f = field else { return }

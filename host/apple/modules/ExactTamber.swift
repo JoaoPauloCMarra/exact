@@ -1,4 +1,4 @@
-// The binding core in a native module's library:
+// The binding core in a native module's library (LLP 1121 D12, stage 5):
 // `ExactTamber(view).color(.surfaceCard)` on a view the module made or a
 // hatched node's view, as ExactKit's own `ExactTamber` is in the process.
 // The host answers over the hatches' host table (`tamber`, at 96), resolving
@@ -86,7 +86,7 @@ public struct ExactTamber {
         #endif
     }
 
-    /// `token`'s length here in points; `fallback` where the
+    /// `token`'s length here in points (stage 6 G); `fallback` where the
     /// plan lacks it or before the host can answer. Main thread; a value:
     /// read it again in `observe`.
     public func length(_ token: ExactTamberToken, fallback: CGFloat = 0) -> CGFloat {
@@ -209,7 +209,7 @@ final class TamberPlace {
     }
 
     /// `name`'s value of `kind` (`lengths`, `numbers`, `fonts`), asked of the
-    /// host now; `nil` where the plan lacks it. Main thread.
+    /// host now (stage 6 G); `nil` where the plan lacks it. Main thread.
     func measure(_ kind: String, _ name: String) -> Any? {
         guard Thread.isMainThread, let json = request(["names": [String](), kind: [name]]) else { return nil }
         return (json[kind] as? [String: Any])?[name].flatMap { $0 is NSNull ? nil : $0 }

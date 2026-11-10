@@ -1,4 +1,4 @@
-// The keyboard as a content inset (overlays-content).
+// @ref LLP 1008 §9.1 — the keyboard as a content inset (overlays-content).
 // Under `interactive-widget="overlays-content"` the keyboard covers the
 // viewport rather than resizing it, as CSS has it: nothing is laid out again
 // as the keyboard moves. A `role="toolbar" toolbarPlacement="keyboard"`

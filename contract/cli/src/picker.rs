@@ -1,10 +1,10 @@
-//! The picker's bound: a specific `input type="file"`'s `accept` names media
-//! (`image/*`, `video/*`, one image or video subtype) or a MIME type or
-//! extension the manifest's `file_handlers` declares.
-//! Lowering refuses a bound `accept` and `capture`; missing, empty and `*/*`
-//! accept any file. Specific types are checked here, where the manifest is
-//! read. A plan compiled without an app (a text, a test) admits media and
-//! unrestricted input.
+//! The picker's bound (LLP 1069.002 D1): a specific `input type="file"`'s
+//! `accept` names media (`image/*`, `video/*`, one image or video subtype)
+//! or a MIME type or extension the manifest's `file_handlers` declares
+//! (`rules/DEFERRED.md`, widened 2026-09-27 with LLP 1069.010). Lowering
+//! refuses a bound `accept` and `capture`; missing, empty and `*/*` accept
+//! any file. Specific types are checked here, where the manifest is read. A plan
+//! compiled without an app (a text, a test) admits media and unrestricted input.
 
 use super::{CompileError, Manifest};
 use contract_syntax::{Expr, File, Node, Span, Stmt};
@@ -80,9 +80,9 @@ pub fn handled(manifest: &Manifest) -> Vec<String> {
     out
 }
 
-/// Why the manifest's `share_target.action` cannot be delivered: a share
-/// arrives as that location, so its path must be one the app's routes match, as
-/// a route literal's must.
+/// Why the manifest's `share_target.action` cannot be delivered (LLP
+/// 1133.024 D1): a share arrives as that location, so its path must be one
+/// the app's routes match, as a route literal's must.
 fn share_target_route(file: &File, manifest: &Manifest) -> Option<String> {
     let action = manifest.json.get("share_target")?.get("action")?.as_str()?;
     let path: Vec<&str> = action

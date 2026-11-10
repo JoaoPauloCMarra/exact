@@ -1,4 +1,4 @@
-// The fixture apps of the attestation, age-range and tracking packages,
+// The fixture apps of LLP 1133.028's three packages (§8.3, §8.4 drive 11),
 // made as every package's is: an app `exact new` made outside the repo, its
 // files replaced by the package's `test/fixture/`, depending on the package
 // by `file:` and installed.

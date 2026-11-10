@@ -589,7 +589,7 @@ fn coalesced_retirements_let_go_what_retiring_each_in_order_does() {
     }
 }
 
-/// In a worker: a long poll attached to the worker's own
+/// LLP 1016.000 D8 in a worker: a long poll attached to the worker's own
 /// work is refused before that work runs.
 struct PollsOtherWork(Arc<Mutex<bool>>);
 

@@ -1,7 +1,7 @@
 //! The parsed document as the plan's own value, in the shapes both readers
 //! declare. One conversion, so `apps/markdown` and `apps/llp` cannot drift
 //! into two documents that render differently; a table is the one place
-//! they still differ ([`into_blocks_with_tables`]).
+//! they still differ ([`into_blocks_with_tables`]). @ref LLP 1033
 
 use crate::{Block, Document, Kind, Run};
 use exact_plan::{InlineStr, Str, Value};

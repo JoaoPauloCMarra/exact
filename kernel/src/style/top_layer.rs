@@ -1,7 +1,7 @@
 //! HTML's top layer on kernel hosts: an open popover is `position: fixed`
 //! in the UA sheet, out of its parent's flow, so opening one moves nothing
-//! around where it was written. A host lifts and places it, so an
-//! element written after it, such as a chat composer, never jumps by its
+//! around where it was written. A host lifts and places it; on iOS
+//! Harmony's room composer, a popover written after it, had jumped up by its
 //! height. A closed one is covered whole (`display: none`).
 use crate::arena::NodeArena;
 use crate::PositionType;

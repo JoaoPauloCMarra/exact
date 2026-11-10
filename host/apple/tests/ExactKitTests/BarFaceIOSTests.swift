@@ -3,8 +3,8 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// A header button's face as its author painted it (`ChipFace`):
-/// a dot beside a label, or a label in the author's font, is the bar
+/// A header button's face as its author painted it (`ChipFace`, LLP 1115
+/// §2): a dot beside a label, or a label in the author's font, is the bar
 /// item's drawn image; a plain label is UIKit's title, the platform's.
 final class BarFaceIOSTests: XCTestCase {
     private func button(_ children: [[String: Any]], in p: Presenter = Presenter()) -> (Presenter, NodeView) {
@@ -106,7 +106,7 @@ final class BarFaceIOSTests: XCTestCase {
     }
 
     /// A colour only inherited from the page is unsaid: the bar's ink, as a
-    /// title's, never the page's grey or red.
+    /// title's (LLP 1115 D4), never the page's grey or red.
     func testAnInheritedColourIsTheBarsInk() throws {
         let (p, node) = button([dot, label(["written": ["font_size"]])])
         let face = try XCTUnwrap(ChipFace(node, engine: TextEngine(resolve: { _ in nil })))
@@ -135,8 +135,8 @@ final class BarFaceIOSTests: XCTestCase {
         XCTAssertEqual(try colour()?[0], [240, 40, 120, 255], "the enclosing button's authored colour applies")
     }
 
-    /// Bold Text weights the system font, an authored weight included:
-    /// the kernel's weights say it, so the face draws the
+    /// Bold Text weights the system font, an authored weight included (LLP
+    /// 1115.000 D12.3): the kernel's weights say it, so the face draws the
     /// weight its rows give (600 where Bold Text took a 400), and adds no
     /// step of its own; its source says the setting, so the bar draws it
     /// again when the setting changes.
@@ -185,7 +185,7 @@ final class BarFaceIOSTests: XCTestCase {
     }
 
     /// A native button's title size and weight, written on it or on its
-    /// text, are its bar item's title font: the "●
+    /// text, are its bar item's title font (LLP 1069.011.001 D4): the "●
     /// Clock" glass chip at 12 pt, in every state UIKit draws it in. A
     /// native button whose face says nothing of its font leaves UIKit's.
     func testANativeButtonsAuthoredFontIsItsBarTitlesFont() throws {

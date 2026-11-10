@@ -1,8 +1,8 @@
-//! A grouped section's `button` row of a title, a symbol
+//! LLP 1116.019 D6: a grouped section's `button` row of a title, a symbol
 //! before it at most and nothing after it, is an action cell, in the accent
 //! on the sheet and in the kernel's model, however its symbol is given: a
 //! literal, a template a prop names (a library row's) or an `if` that shows
-//! it. A row that says whether it is selected
+//! it (theme2 16:37, stage 13 C). A row that says whether it is selected
 //! is a choice, never one.
 
 use exact_kernel::{Accessory, ColorValue, GroupedRow, Kernel, Offer};
@@ -233,7 +233,7 @@ fn a_row_that_says_it_is_selected_is_a_choice_not_an_action() {
     assert!(row(&r, "action").action, "a row that says nothing is one");
     // A checkmark row that does not say `aria-selected`: unpicked it shows
     // a title alone, but its source can show a mark, so the sheet says no
-    // action, and the kernel takes its word.
+    // action, and the kernel takes its word (QUEUE, 2026-10-21).
     assert!(
         !row(&r, "unsaid").action,
         "an unpicked choice row is no action"

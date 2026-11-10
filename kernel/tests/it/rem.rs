@@ -1,4 +1,4 @@
-//! `rem` and `em` over a root font size the host sets, as
+//! `rem` and `em` over a root font size the host sets (LLP 1069.000 D3), as
 //! CSS computes them: `rem` against the root, `em` against the element's
 //! font size — for `font-size` itself, the parent's — and `px` never scales.
 //!

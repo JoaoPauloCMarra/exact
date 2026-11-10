@@ -3,7 +3,7 @@ package dev.exact.canvas
 import org.junit.Assert.*
 import org.junit.Test
 
-/** The track table's exclusive hold. */
+/** The track table's exclusive hold (LLP 1133.012 D8, D12 item 4). */
 class TracksTest {
     private class Owner(var running: Boolean) : TrackOwner {
         override fun subscribe(id: String, consumer: TrackConsumer, start: Boolean, origin: String): () -> Unit = {}

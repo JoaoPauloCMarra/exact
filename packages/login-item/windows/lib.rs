@@ -1,4 +1,4 @@
-//! @exact/login-item on Windows: the host's login item
+//! @exact/login-item on Windows (LLP 1133.025 D2): the host's login item
 //! (`exact_linux::desktop`), a `Run` value whose command line carries
 //! `--login`, and `hidden` with it. Settings › Apps › Startup turning it off
 //! reads `requires-approval`. Under the agent the runner's substitute

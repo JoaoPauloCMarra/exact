@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-// What a host draws for a padding and a corner radius, against what it
-// should: a plan driven on each host by the agent, its boxes
+// What a host draws for a padding and a corner radius, against what it should
+// (LLP 1121 stage 11 C): a plan driven on each host by the agent, its boxes
 // read with `layout` and its corners from `screenshot`. A padding is where a
 // named child sits in its box, on both axes. A radius is fitted to where the
 // box's fill begins along its top-left corner's first rows (antialiased
@@ -106,11 +106,11 @@ export function fitRadius(starts, limit) {
 
 /** A box's expected radius once CSS reduces it to the box. */
 export const reduced = (radius, w, h) => Math.min(radius, w / 2, h / 2);
-// A length in whole cells as the terminal paints it:
+// A length in whole cells as the terminal paints it (LLP 1121 stage 11 (c)):
 // to the nearest cell, a tie toward zero.
 export const cellsOf = (px, cell) => (Math.sign(px) * Math.max(0, Math.ceil(Math.abs(px / cell) - 0.5))) || 0;
 
-/** A host's column in the base scale's table: every
+/** A host's column in the base scale's table (LLP 1121 stage 11 B): every
  * web build and the Linux desktop draw the neutral look; `terminal` is the
  * terminal host, driven here (`exact-terminal`), not through the agent. */
 const COLUMN = { web: 'neutral', linux: 'neutral', ios: 'ios', macos: 'mac', android: 'material', terminal: 'terminal' };
@@ -131,7 +131,7 @@ export function baseLength(schema, overrides, name, host, grid = null) {
   const row = schema.scale.find(r => r[0] === name), column = COLUMN[host];
   if (!row || !column) return undefined;
   let cell = row[SCALE_CELL[column]];
-  // A stretch reads its metric as `=metric` does.
+  // A stretch reads its metric as `=metric` does (stage 13 D5).
   if (typeof cell?.stretch === 'string') cell = cell.stretch;
   if (typeof cell === 'string' && cell.startsWith('=')) {
     const metric = schema.metrics.find(r => r[0] === cell.slice(1));
@@ -251,7 +251,7 @@ export function check(host, layout, image, expect, base = () => undefined) {
       else {
         row.padding = [child.x - box.x, child.y - box.y];
         // In a grid of cells (the terminal's), the kernel lays each space out
-        // in whole cells on its axis: across, then down.
+        // in whole cells on its axis (LLP 1121 stage 11 (c)): across, then down.
         const wantPx = layout.cell ? [cellsOf(padding, layout.cell.w) * layout.cell.w, cellsOf(padding, layout.cell.h) * layout.cell.h] : [padding, padding];
         row.expectedPadding = layout.cell ? wantPx : padding;
         if (row.padding.some((p, i) => Math.abs(p - wantPx[i]) > 0.5)) fail(`padding ${row.padding.join(', ')}, expected ${wantPx.join(', ')}`);
@@ -266,7 +266,7 @@ export function check(host, layout, image, expect, base = () => undefined) {
           const [b, c] = [box.cells, child.cells];
           row.margins = { top: c.y - b.y, bottom: b.y + b.h - (c.y + c.h), left: c.x - b.x, right: b.x + b.w - (c.x + c.w) };
           if (want.even && (row.margins.top !== row.margins.bottom || row.margins.left !== row.margins.right)) fail(`its padding paints ${row.margins.top}/${row.margins.right}/${row.margins.bottom}/${row.margins.left} cells (top/right/bottom/left): not equal rows above and below and columns left and right`);
-          // Each edge a length in whole cells on its axis:
+          // Each edge a length in whole cells on its axis (stage 11 (c)):
           // the leading edges always, the far ones for a box `even`.
           if (layout.cell) {
             const [down, across] = [cellsOf(padding, layout.cell.h), cellsOf(padding, layout.cell.w)];

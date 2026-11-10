@@ -1,4 +1,4 @@
-//! Native semantic faces and pre-publication height-for-width.
+//! Native semantic faces and pre-publication height-for-width. LLP 1069.011.001.
 use exact_kernel::wire::Op;
 use exact_kernel::*;
 use std::cell::RefCell;
@@ -396,7 +396,7 @@ fn changing_button_style_requests_layout_in_the_same_commit() {
     assert!(receipt.layout_invalidated);
     layout(&mut k);
     // With none written the kernel names none: what an unsaid button draws
-    // is each platform's default, which its host holds.
+    // is each platform's default, which its host holds (LLP 1115.000 D15).
     assert_eq!(answers.borrow().1.last().unwrap().button_style, None);
 }
 

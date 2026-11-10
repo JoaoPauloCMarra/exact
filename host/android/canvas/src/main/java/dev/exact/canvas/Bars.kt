@@ -7,7 +7,7 @@ import android.widget.FrameLayout
 import java.nio.IntBuffer
 
 /**
- * The app's bars: a route's `header` as Material 3's top app bar and the navigation root's
+ * The app's bars (LLP 1115.001 D11): a route's `header` as Material 3's top app bar and the navigation root's
  * `tablist` as its navigation bar. What counts as either is exact2's to say (the kernel's rule, which the iOS host
  * reads too), and so is the picture: each bar is painted by exact2 from Material's own metrics and replayed here in a
  * [Pane], a view of its own over the page, as a surface of the top layer is in a window of its own ([Surfaces]).
@@ -34,7 +34,7 @@ internal class Bars(activity: ExactActivity, root: FrameLayout) {
     /** The faces the bars have drawn with, by what announces each: a bar painted again makes none anew. */
     private val faces = HashMap<List<Int>, Font>()
     private val layer = FrameLayout(activity).also {
-        // A bar is a picture: what is in it is said by the reader's root ([Access]).
+        // A bar is a picture: what is in it is said by the reader's root ([Access], LLP 1115.001 D13).
         it.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
         root.addView(it, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
     }

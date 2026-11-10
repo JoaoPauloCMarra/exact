@@ -1,10 +1,10 @@
-//! A session's hatches, host side: what its handles share with the host
-//! ([`Shared`]: the act queue, the frame clock's registrations, the overlays
-//! published and not yet taken, the observers, the diagnostics store), and what
-//! the host keeps of them ([`Session`]: the module, the nodes told, each word's
-//! calls, the overlays the painter shows). The presenter drives it between
-//! turns (`presenter/hatches.rs`); nothing here reaches the runner or the
-//! painter.
+//! A session's hatches, host side (@ref LLP 1075.003.000.001 §2.4–§2.5,
+//! §3.3): what its handles share with the host ([`Shared`]: the act queue,
+//! the frame clock's registrations, the overlays published and not yet
+//! taken, the observers, the diagnostics store), and what the host keeps of
+//! them ([`Session`]: the module, the nodes told, each word's calls, the
+//! overlays the painter shows). The presenter drives it between turns
+//! (`presenter/hatches.rs`); nothing here reaches the runner or the painter.
 
 use super::breadcrumb::Breadcrumb;
 use super::diagnostics::Store;
@@ -15,16 +15,16 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::rc::Rc;
 use std::sync::Arc;
 
-/// The act queue's bounds: acts, bytes of `input` text, a drain's
+/// The act queue's bounds (§2.5): acts, bytes of `input` text, a drain's
 /// snapshot, and one `input`'s text.
 pub(crate) const ACTS: usize = 256;
 pub(crate) const ACT_BYTES: usize = 1 << 20;
 pub(crate) const SNAPSHOT: usize = 64;
 pub(crate) const INPUT_BYTES: usize = 65536;
-/// An overlay recording's bounds.
+/// An overlay recording's bounds (§2.2.1).
 pub(crate) const OVERLAY_OPS: usize = 4096;
 pub(crate) const OVERLAY_BYTES: usize = 256 * 1024;
-/// Ticks and `after`s, and drained acts, one agent command runs.
+/// Ticks and `after`s, and drained acts, one agent command runs (§2.4).
 pub(crate) const COMMAND_LIMIT: u32 = 4096;
 
 /// The app's value behind the host's own trait: the calls, erased of its type.
@@ -158,7 +158,7 @@ impl Shared {
         self.woke.replace(false)
     }
 
-    // The act queue.
+    // The act queue (§2.5).
 
     /// Queue an act: one FIFO a session, at most 256 acts and 1 MB of text;
     /// an act past either is refused by name and counted.
@@ -218,7 +218,7 @@ impl Shared {
         self.acts.borrow().queue.len()
     }
 
-    // The overlay.
+    // The overlay (§2.2.1).
 
     /// Publish a recording for `node`, replacing one not yet taken: at most
     /// 4,096 ops and 256 KB, a larger one refused by name. False when refused.
@@ -263,7 +263,7 @@ impl Shared {
         std::mem::take(&mut *self.overlays.borrow_mut())
     }
 
-    // The frame clock.
+    // The frame clock (§2.4).
 
     pub(crate) fn frames(&self) -> u64 {
         let token = self.token();
@@ -445,7 +445,7 @@ pub(crate) struct Session {
     shared: Option<Rc<Shared>>,
     /// The nodes told, by id.
     pub(crate) nodes: BTreeMap<u32, Tracked>,
-    /// Views a commit renewed for another item: ended and built.
+    /// Views a commit renewed for another item (LLP 1078): ended and built.
     pub(crate) renewed: Vec<u32>,
     /// The tree or its layout may have moved since the nodes were last read.
     pub(crate) stale: bool,
@@ -521,7 +521,7 @@ impl Session {
     }
 
     /// One hatch call at session clock `now`: under the crash breadcrumb,
-    /// production included, and timed in a development build.
+    /// production included (§4.4), and timed in a development build (§3.1).
     pub(crate) fn call(
         &mut self,
         now: f64,
@@ -602,7 +602,7 @@ impl Session {
         }
     }
 
-    /// A reload: once every scope has ended, the old incarnation's
+    /// A reload (§4.3): once every scope has ended, the old incarnation's
     /// registrations are dropped, with one journal line, and its counts
     /// start at nothing.
     pub(crate) fn reset(&mut self) -> Option<String> {
@@ -639,7 +639,7 @@ impl Session {
         }
     }
 
-    /// `state.hatches`, in the shape every host answers.
+    /// `state.hatches` (§3.3), in the shape every host answers.
     pub(crate) fn state(&self) -> Value {
         let mut live: BTreeMap<&str, u64> = BTreeMap::new();
         for tracked in self.nodes.values() {
@@ -700,7 +700,7 @@ impl Session {
         ))
     }
 
-    /// `perf hatches`, with `perf`'s own tags.
+    /// `perf hatches` (§3.3), with `perf`'s own tags.
     pub(crate) fn perf(&self, tags: Map<String, Value>) -> Value {
         match &self.shared {
             Some(shared) => shared.store().perf(tags, shared.tickets().len()),

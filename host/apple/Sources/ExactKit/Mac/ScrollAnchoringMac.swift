@@ -1,5 +1,5 @@
 // A scroll container's place across a batch on AppKit: a `scrollFollowEnd`
-// container at its end stays there; anywhere else above the start,
+// container at its end stays there (LLP 1001); anywhere else above the start,
 // CSS scroll anchoring keeps the visible content still (`ScrollAnchoring`).
 // The presenter calls `captureScrollPosition` before a batch and
 // `restoreScrollPosition` after its layout; an explicit `scrollTop` then wins.
@@ -20,7 +20,7 @@ extension NodeView {
             followedScroll = (top, top >= maximum - 1)
             if top >= maximum - 1 { return }
         }
-        // No anchor at the start (CSS Scroll Anchoring §2.2): content inserted on top shows.
+        // No anchor at the start (spec §2.2): content inserted on top shows.
         guard top > 0 else { return }
         scrollAnchor = ScrollAnchoring.anchor(in: self, space: doc, port: doc.convert(sv.contentView.bounds, from: sv.contentView), focused: focused)
     }

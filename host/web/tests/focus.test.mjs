@@ -166,9 +166,9 @@ test('declared shortcuts support named keys and leave text input and composition
   } finally {Object.assign(globalThis,previous);}
 });
 
-// Exercise the shipped stylesheet in Chrome. A disabled native
+// LLP 1104 D3/D6: exercise the shipped stylesheet in Chrome. A disabled native
 // field's ink is the look's grey (the role table's `GrayText`, which the
-// neutral sheet carries), never
+// neutral sheet carries; LLP 1116 D1's look left it to the user agent), never
 // the page's own colour.
 test('bare fields restore keyboard focus and a disabled native field is the look\'s grey, not the page\'s ink', async () => {
   const {readFileSync} = await import('node:fs');
@@ -208,7 +208,7 @@ test('bare fields restore keyboard focus and a disabled native field is the look
       // `outline="none"` as the live host writes it (inline) and the JS
       // target does (its class): the author's row outranks the restore and,
       // on a native control, the UA's ring, on a field and on any other
-      // element that takes the focus; Tab still reaches each.
+      // element that takes the focus (LLP 1104 D6); Tab still reaches each.
       for (const id of ['quiet', 'quiet-area', 'quiet-native', 'quiet-button', 'quiet-native-button', 'quiet-link', 'quiet-box', 'quiet-checkbox', 'quiet-select']) {
         await page.keyboard.press('Tab');
         expect(await page.evaluate(() => document.activeElement.id)).toBe(id);
@@ -242,7 +242,7 @@ for (const engine of ['chromium', 'firefox', 'webkit']) test(`${engine}: native 
         window.presses = 0;
         document.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') window.presses++; });
       });
-      // The page's `bordered` look writes the accent as the label's ink;
+      // The page's `bordered` look writes the accent as the label's ink (LLP 1116 D1);
       // an engine whose ring is `currentColor` draws the UA ring in that ink.
       const ink = await page.$eval('#native', el => getComputedStyle(el).color);
       await reference.$eval('#ua', (el, ink) => { el.style.color = ink; }, ink);

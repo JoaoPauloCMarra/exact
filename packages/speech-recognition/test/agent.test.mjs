@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { implementation } from '../web/index.js';
 
-// The web implementation's agent path against a context of fakes: the session
-// clock is `clock.now`, the journal `lines`, and the store a map.
+// The web implementation's agent path against a context of fakes (LLP 1133.012
+// §9): the session clock is `clock.now`, the journal `lines`, and the store a map.
 function context() {
   const clock = { now: 0 }, lines = [], files = new Map(), held = [];
   const ctx = {

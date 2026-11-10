@@ -1,7 +1,7 @@
 //! A reply's body written to an app file (`Request::body_to`, TypeScript's
-//! `exactBodyTo`): the worker stages the file under `fs.write` before
-//! sending, writes a 2xx body as it arrives, and replaces the target only
-//! when the body is complete.
+//! `exactBodyTo`; LLP 1108 D6 R2, 2026-10-26): the worker stages the file
+//! under `fs.write` before sending, writes a 2xx body as it arrives, and
+//! replaces the target only when the body is complete.
 use super::*;
 use exact_runner::Answer;
 use ibex2::stdlib::fetch::{Body, BodySource};
@@ -303,7 +303,7 @@ fn a_body_over_its_ceiling_leaves_the_target() {
 }
 
 #[test]
-#[ignore = "waits on the wall clock (a 300 ms deadline ends a body mid-way); `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: waits on the wall clock (a 300 ms deadline ends a body mid-way); bun scripts/async.mjs runs it"]
 fn a_body_ended_mid_way_leaves_the_target() {
     let files = Files::new();
     std::fs::write(files.0.join("cache/a"), b"old").unwrap();
@@ -330,7 +330,8 @@ fn a_body_ended_mid_way_leaves_the_target() {
 }
 
 /// The lane is charged what the request can hold in memory, not the 1 GiB it
-/// may write, so a large download fits beside open sockets.
+/// may write, so a large download fits beside open sockets
+/// (issues/20261026-independent-http-refuses-ceilings-over-32-mib-on-apple.md).
 #[test]
 fn a_body_to_a_file_is_charged_a_bounded_allowance() {
     let request = download("/bytes/1", "app:/cache/a").independent_http(1 << 30);
@@ -341,7 +342,7 @@ fn a_body_to_a_file_is_charged_a_bounded_allowance() {
     assert!(reservation(&plain).is_err());
 }
 
-/// The asynchronous core (`EXACT_HTTP_ASYNC`, off) does not write a
+/// The asynchronous core (LLP 1120; `EXACT_HTTP_ASYNC`, off) does not write a
 /// body to a file yet: it refuses one, sending nothing, never reading it into
 /// memory instead. Run in the executor suite's rerun on that core.
 #[test]

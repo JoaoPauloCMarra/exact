@@ -1,4 +1,4 @@
-//! The app's strings tables: `strings/<locale>.json` beside
+//! The app's strings tables (LLP 1060 D1): `strings/<locale>.json` beside
 //! `app.contract`, each a flat `{ "key": "text with {name}" }`, the base
 //! named by `app.json`'s `strings.base` (`en` when it names none). Every
 //! table is checked on every compile, whether or not a `t` reads it: the
@@ -156,7 +156,7 @@ fn read_table(path: &Path) -> Result<BTreeMap<String, String>, String> {
         .collect()
 }
 
-/// `language(-subtag)*`, the shape a host reports.
+/// `language(-subtag)*`, the shape a host reports (LLP 1027.000.000).
 fn is_locale(tag: &str) -> bool {
     let mut subtags = tag.split('-');
     let language = subtags.next().unwrap_or_default();

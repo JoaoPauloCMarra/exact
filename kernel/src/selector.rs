@@ -79,7 +79,7 @@ impl SelectorIndex {
         format!("\u{1}{id}")
     }
 
-    /// Record that `slot`'s `id` prop is now `new`.
+    /// Record that `slot`'s `id` prop is now `new` (LLP 1055.000 D3).
     pub fn update_id(&mut self, slot: u32, old: Option<&str>, new: Option<&str>) {
         let (old, new) = (old.map(Self::id_key), new.map(Self::id_key));
         self.update(slot, old.as_deref(), new.as_deref());

@@ -1,4 +1,4 @@
-# @exact/global-shortcuts by hand
+# @exact/global-shortcuts by hand (LLP 1133.025 D3)
 
 The drives and the person's steps are the desktop fixture's, shared by the
 three desktop packages: `packages/dock/test/desktop.mjs` (drives 4 and 7)

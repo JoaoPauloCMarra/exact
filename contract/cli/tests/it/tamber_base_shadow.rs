@@ -1,10 +1,11 @@
-//! A shadow's lengths over base names the design leaves unset: kept as a
-//! length's expressions are (a bare one, a token aliasing one or over some,
-//! inlined, or a length's function over one), which each host folds in its
-//! column (`contract/cli/tests/base_expression.rs` holds the five columns at
-//! run time). The compiler checks every column and names the one a shadow fails
-//! in. A length's refusals hold inside a shadow. A literal shadow row stays px:
-//! a word in one that names a length or no token says so.
+//! @ref LLP 1121 D11 (stage 12 B3) — a shadow's lengths over base names the
+//! design leaves unset: kept as B2's expressions are (a bare one, a token
+//! aliasing one or over some, inlined, or a length's function over one),
+//! which each host folds in its column (`contract/cli/tests/base_expression.rs`
+//! holds the five columns at run time). The compiler checks every column
+//! and names the one a shadow fails in. B2's refusals hold inside a shadow.
+//! A literal shadow row stays px: a word in one that names a length or no
+//! token says so (QUEUE's two items).
 
 use exact_kernel::style::scale;
 use std::path::PathBuf;
@@ -164,10 +165,10 @@ fn a_shadows_bases_and_a_base_the_design_sets() {
     );
 }
 
-/// A length's function in a shadow folds by the length's own code whatever it
-/// names, so setting a base never turns the same text into a refusal, and a
-/// function over a px length token folds to px, never read as a colour and
-/// refused.
+/// Round 1 (Astra 1): a length's function in a shadow folds by the length's
+/// own code whatever it names, so setting a base never turns the same text
+/// into a refusal, and a function over a px length token folds to px (main
+/// read either as a colour, and refused it).
 #[test]
 fn a_shadows_function_folds_as_a_lengths_whatever_it_names() {
     const SHADOW: &str = "  card.shadow: box-shadow = 0 calc(space.md * 2) 4px black
@@ -219,9 +220,9 @@ fn a_shadows_function_folds_as_a_lengths_whatever_it_names() {
     }
 }
 
-/// A colour function whose words name a base (a platform colour's asset
-/// `space.md`) is a colour, kept whole: a shadow whose lengths are px is not
-/// refused as unfoldable, box or text.
+/// Round 2 (Astra 1): a colour function whose words name a base (a
+/// platform colour's asset `space.md`) is a colour, kept whole: a shadow
+/// whose lengths are px is not refused as unfoldable, box or text.
 #[test]
 fn a_platform_colour_named_for_a_base_is_kept_whole() {
     const COLOUR: &str = "-exact-platform-color(ios named:space.md, #000000)";
@@ -241,8 +242,8 @@ fn a_platform_colour_named_for_a_base_is_kept_whole() {
     }
 }
 
-/// An unkinded value of lengths' functions and a colour reads as a shadow, so
-/// its kind is asked for.
+/// Round 2 (Grok 1): an unkinded value of lengths' functions and a colour
+/// reads as a shadow, so its kind is asked for.
 #[test]
 fn an_unkinded_shadow_of_functions_asks_for_its_kind() {
     for (name, v) in [
@@ -257,7 +258,7 @@ fn an_unkinded_shadow_of_functions_asks_for_its_kind() {
         );
     }
     // Functions over unset base names count too; over plain numbers they
-    // are a number's, never a shadow's.
+    // are a number's, never a shadow's (round 3, Grok).
     let (_, message) = compiled(
         "unkinded-base",
         "  card.shadow = calc(space.md * 2) calc(space.sm) black\n",
@@ -289,7 +290,7 @@ fn b2s_refusals_hold_inside_a_shadow() {
             "rem",
             "calc(space.md + 1rem)",
             "tamber-kind",
-            "the kernel takes only px",
+            "`rem`/`em` where the kernel still takes only `px`",
         ),
         (
             "number-over",
@@ -382,10 +383,10 @@ fn every_column_is_checked_and_a_refusal_names_its_column() {
     assert!(message.contains("on mac"), "{message}");
 }
 
-/// A dotted word in a literal shadow, border or gradient row that names no
-/// token is `tamber-unknown-token`, in a colour row's words; a length token or
-/// a base name in a literal shadow points to a shadow token. A shadow token's
-/// unknown colour is refused by tamber already.
+/// QUEUE's item: a dotted word in a literal shadow, border or gradient row
+/// that names no token is `tamber-unknown-token`, in a colour row's words;
+/// a length token or a base name in a literal shadow points to a shadow
+/// token. A shadow token's unknown colour is refused by tamber already.
 #[test]
 fn a_word_in_a_literal_shadow_says_what_it_is() {
     let theme = "  eu.glow = #ff00ff\n  lift: length = 4px\n  lift.edge: length = 2px\n";
@@ -429,8 +430,8 @@ fn a_word_in_a_literal_shadow_says_what_it_is() {
             "tamber-unknown-token",
             "`eu.nope`",
         ),
-        // A base name or a length token in a border or a gradient is no unknown
-        // token: the row's own refusal stands.
+        // A base name or a length token in a border or a gradient is no
+        // unknown token (round 1, Grok 2): the row's own refusal stands.
         (
             "border-base",
             "border=\"1px solid space.md\"",
@@ -443,8 +444,8 @@ fn a_word_in_a_literal_shadow_says_what_it_is() {
             "lower-css-shorthand",
             "`lift.edge` is not an admitted `border`",
         ),
-        // A number, a dimension or a function is no name: the row's width or
-        // colour refusal stands.
+        // A number, a dimension or a function is no name (round 1, Astra
+        // 4): the row's width or colour refusal stands.
         (
             "border-negative",
             "border=\"-1.5px solid black\"",
@@ -463,7 +464,7 @@ fn a_word_in_a_literal_shadow_says_what_it_is() {
             "lower-attr-value",
             "",
         ),
-        // Tamber's names may start with `_`.
+        // Tamber's names may start with `_` (round 2, Astra 2).
         (
             "underscore-shadow",
             "box-shadow=\"0px 0px 8px _eu.nope\"",

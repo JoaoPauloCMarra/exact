@@ -1,6 +1,6 @@
-// A page is served from the build it booted (generations.mjs): a page's
+// A page is served from the build it booted (generations.mjs; theme2's ruling on the build-swap pair): a page's
 // files all come from one build while another replaces it, old builds are kept while their pages may ask and reaped
-// as the retention rule keeps them, and a generation path is checked strictly.
+// as the ruling keeps them, and a generation path is checked strictly.
 import { expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
@@ -68,7 +68,7 @@ test('a page\'s files all come from one build while 100 builds replace it', asyn
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
-test('builds are kept by generation and reaped as the retention rule keeps them: the newest 3, the leased, the young, within the cap', async () => {
+test('builds are kept by generation and reaped as the ruling keeps them: the newest 3, the leased, the young, within the cap', async () => {
   const { root, dist, stage } = workspace();
   try {
     const ids = [];
@@ -207,7 +207,7 @@ test('no build yet: not found at once, not held for a swap that is not under way
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
-// What a build keeps beside its directory is the build's to replace and reap, so beside an author's
+// LLP 1153 D3: what a build keeps beside its directory is the build's to replace and reap, so beside an author's
 // `--out` directory each such name must be absent or a build's own (`foreignBeside`); and the native bake's capture
 // skips the same names as the web's scans (js/bake/src/beside.rs, host/web/beside.mjs).
 test('what a build keeps beside its directory is its own, or the directory is refused; the bake skips the same names', () => {

@@ -1,4 +1,4 @@
-//! `scrub-fold`: a scrub's frame folded over the base the
+//! `scrub-fold` (LLP 1121 D13): a scrub's frame folded over the base the
 //! scrub opened on, with no texts. The rows it answers, set on the committed
 //! plan, must be the plan a full compile of the frame's text gives, row for
 //! row: fuzzed over dials, tokens that read others, `when` lines, a synthetic

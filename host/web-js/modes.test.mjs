@@ -60,7 +60,7 @@ test('a boundary takes its tuple and the inherited token text, in document order
   expect(T(pinned, 'color', 'var(--x-text-secondary)')).toEqual({ names: ['text.secondary'], text: 'var(--x-text-secondary)', modes: 'dark-style=dim,ink=tint', implied: true });
   expect(T(page, 'color', 'var(--x-text-secondary)').implied).toBe(false);
   expect(T(page, 'color', '#123456')).toBeUndefined();
-  // A role's override is named too (a held row that reads it names it); a host's own property is not.
+  // A role's override is named too (stage 9 E: a held row that reads it names it); a host's own property is not.
   expect(T(page, 'color', 'var(--exact-canvas-text)').names).toEqual(['CanvasText']);
   expect(T(page, 'color', 'var(--exact-accent)')).toBeUndefined();
   // Off a boundary a clear is written as itself.
@@ -82,7 +82,7 @@ test('a boundary takes its tuple and the inherited token text, in document order
   expect(journal.at(-1)).toBe('setMode("dark-style", "grey") refused: an axis of the app\'s design and one of its values');
 });
 
-// A development build's live batch sets each changed
+// LLP 1121 stage 4: a development build's live batch sets each changed
 // token's property in every tuple's rule, on its base only.
 test('a live batch sets each tuple rule on its base, and a stale one asks for the snapshot', async () => {
   const document = createDocument();
@@ -107,7 +107,7 @@ test('a live batch sets each tuple rule on its base, and a stale one asks for th
   expect(design(batch).live).toBe('stale');
   expect(design({ ...batch, kind: 'tamber-snapshot', base: null, design: 'd2', tokens: [{ ...batch.tokens[0], css: ['#000000ff', '#111111ff'] }] }).live).toBe('applied');
   expect(dim.style.map.get('--x-ink')).toBe('#111111ff');
-  // A scrub's frames: each applies with transitions off, and
+  // A scrub's frames (LLP 1121 D13): each applies with transitions off, and
   // one older than the last of its scrub applied (a snapshot fetched late)
   // is dropped.
   const frame = (design, rev, css, more = {}) => ({ ...batch, base: null, kind: 'tamber-snapshot', design, scrub: { id: 'scrub-1', rev }, tokens: [{ ...batch.tokens[0], css }], ...more });
@@ -133,7 +133,7 @@ test('a live batch sets each tuple rule on its base, and a stale one asks for th
   expect(dim.style.map.get('--x-ink')).toBe('#ddddddff');
 });
 
-// A type token is a property a row it writes; a
+// Stage 6 C's follow-up: a type token is a property a row it writes; a
 // batch sets each of its `parts` in every tuple's rule.
 test('a live batch sets each part of a type token', async () => {
   const document = createDocument();
@@ -150,7 +150,7 @@ test('a live batch sets each part of a type token', async () => {
   expect(compact.style.map.get('--x-type-a-weight')).toBe('700');
 });
 
-// A role override's property is set in each tuple's rule,
+// LLP 1121 stage 5: a role override's property is set in each tuple's rule,
 // and the tint's (`root`) in the theme's own `:root` rule alone, so a tuple
 // rule on a boundary does not mask an authored accent above it.
 test('a live batch sets a role override, the tint in the theme rule', async () => {

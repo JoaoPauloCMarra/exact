@@ -1,4 +1,4 @@
-//! `iconFillRules` in the compatibility id: an
+//! @ref LLP 1121 stage 14 C2 — `iconFillRules` in the compatibility id: an
 //! app whose plan keeps an even-odd icon (its `icons` row's path starts
 //! `evenodd:`) needs a binary that reads the marker, so the input is
 //! `["evenodd"]` and the id moves; an app with none has no such input, so
@@ -33,13 +33,14 @@ pub(crate) fn needed(
     Ok(any.then(|| vec!["evenodd"]))
 }
 
-/// The plan that ships when it is not `compiled`: the bake's `out/app.plan`
-/// when it wrote one (`receipt::emit` requires it); none when there is no such
-/// file and `compiled` is the one (the `app.contract` plan the compatibility id
-/// already compiled, `colors::compiled`: no second compile); else a game's
-/// `app/app.contract`, compiled here. A plan that is there and doesn't decode
-/// or compile fails the id (no fail-open: a rule could be missed). compat.rs
-/// reads it once for every input that needs it.
+/// The plan that ships when it is not `compiled` (C2 round 1, Astra 3 =
+/// Grok): the bake's `out/app.plan` when it wrote one (`receipt::emit`
+/// requires it); none when there is no such file and `compiled` is the one
+/// (the `app.contract` plan the compatibility id already compiled,
+/// `colors::compiled`: no second compile); else a game's
+/// `app/app.contract`, compiled here. A plan that is there and doesn't
+/// decode or compile fails the id (no fail-open: a rule could be missed).
+/// compat.rs reads it once for every input that needs it.
 pub(crate) fn shipped(
     app_dir: &Path,
     compiled: Option<&exact_plan::Plan>,
@@ -98,12 +99,13 @@ pub(crate) fn apply(
 
 /// Whether `plan` draws an icon even-odd: a row of its `icons` table (what a
 /// computed source names), a literal source among its strings (`symbol:`
-/// and a form the build or an author wrote, which makes no row), or a source
-/// inside a baked value, a resource's initial or placeholder value, whose
-/// strings are in the data pool, not interned; each read through
-/// `exact_kernel::Icon`, the one reader. A baked value that is there (not
-/// zero-length, which is none) and doesn't decode fails, naming its resource
-/// and field: an unread value could hold the rule.
+/// and a form the build or an author wrote, which makes no row; C2 round 1,
+/// Astra 2), or a source inside a baked value, a resource's initial or
+/// placeholder value, whose strings are in the data pool, not interned
+/// (round 2, Astra 2); each read through `exact_kernel::Icon`, the one reader.
+/// A baked value that is there (not zero-length, which is none) and doesn't
+/// decode fails, naming its resource and field (round 3): an unread value
+/// could hold the rule.
 pub(crate) fn even_odd(plan: &exact_plan::Plan) -> Result<bool, String> {
     let source = |text: &str| {
         text.strip_prefix("symbol:")
@@ -215,8 +217,8 @@ mod tests {
         compat.unwrap()
     }
 
-    /// A plan with no even-odd icon gets EXACTLY the compatibility id and
-    /// inputs it had before fill rules (the id computed without this code path),
+    /// theme2 (C2 round 1): a plan with no even-odd icon gets EXACTLY main's
+    /// compatibility id and inputs (the id computed without this code path),
     /// with no `iconFillRules` key.
     #[test]
     fn a_plan_with_no_even_odd_icon_keeps_mains_compatibility_id() {
@@ -238,10 +240,10 @@ mod tests {
         let _ = std::fs::remove_dir_all(plain);
     }
 
-    /// The packages' icons are written nonzero (each fills the same either
-    /// way), so an app using `@exact/cards` and `@exact/actions`,
-    /// library-gate, keeps EXACTLY the compatibility id and inputs it had
-    /// before fill rules, with no `iconFillRules`.
+    /// theme2's stage 14 C ruling: the packages' moved icons are written
+    /// nonzero (each fills the same either way), so an app using `@exact/cards`
+    /// and `@exact/actions`, library-gate, keeps EXACTLY main's compatibility
+    /// id and inputs, with no `iconFillRules`.
     #[test]
     fn library_gate_keeps_mains_compatibility_id() {
         let gate = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../apps/library-gate");
@@ -287,7 +289,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(odd);
     }
 
-    /// A literal even-odd source with no tamber
+    /// C2 round 1 (Astra 2): a literal even-odd source with no tamber
     /// declaration makes no `icons` row, and still needs the rule: the
     /// compatibility id reads the plan's literal sources too.
     #[test]
@@ -318,7 +320,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(dir);
     }
 
-    /// The rule comes from the plan that ships:
+    /// C2 round 1 (Astra 3 = Grok): the rule comes from the plan that ships:
     /// the bake's `out/app.plan` over a fresh compile of the contract; a
     /// game's `app/app.contract` that doesn't compile fails the id; an app
     /// with neither contract nor plan needs none.
@@ -373,7 +375,7 @@ mod tests {
         }
     }
 
-    /// A source inside a baked value (a resource's
+    /// C2 round 2 (Astra 2): a source inside a baked value (a resource's
     /// initial value, the data source's answer at bake) is in the data pool,
     /// not among the plan's strings, and still needs the rule: the plan a
     /// bake writes is read whole, its resources' values walked.
@@ -419,8 +421,8 @@ mod tests {
                 "{answer}"
             );
         }
-        // A value that is there and doesn't decode fails the id, named; a
-        // zero-length one is none.
+        // A value that is there and doesn't decode fails the id, named
+        // (round 3); a zero-length one is none.
         let mut broken = contract::bake(compiled.clone(), Glyph(odd)).unwrap();
         let at = broken.data.len() as u32;
         broken.data.to_mut().extend_from_slice(&[0xff, 0xff, 0xff]);
@@ -440,7 +442,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(dir);
     }
 
-    /// An even-odd icon a widget alone draws ships in
+    /// C2 round 2 (Astra 3): an even-odd icon a widget alone draws ships in
     /// its entry plan (`plans/<kind>.plan`): the compatibility id reads every
     /// entry plan beside the app's.
     #[test]
@@ -471,7 +473,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(dir);
     }
 
-    /// What the extra compile costs, on the apps named in
+    /// What the extra compile costs (theme2, C2 round 1), on the apps named in
     /// `EXACT_ICON_RULES_APPS` (`:`-separated app dirs): per app, warm, the
     /// median of 5 of the app's own compile (what its build script already
     /// does), the compatibility id with and without this input's path, and

@@ -1,5 +1,5 @@
-// A package's views on the JS target, as the runner's `modules/views.rs`
-// does natively. A tag the
+// A package's views on the JS target (LLP 1133.001 D1; LLP 1133.008 D8
+// items 1 and 2), as the runner's `modules/views.rs` does natively. A tag the
 // plan's `views` table names is made by its extension's web implementation,
 // whose chunk exports `roster`, each tag's view class:
 //

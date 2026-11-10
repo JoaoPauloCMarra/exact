@@ -1,4 +1,4 @@
-//! Drag timelines on Linux: the painter presents what
+//! Drag timelines on Linux (LLP 1057.003 D2, D4): the painter presents what
 //! the engine's frame gives, so a backdrop bound to a photo's
 //! `-exact-drag-timeline` follows the presenter's contact and the release spring,
 //! at f(photo) in every frame, with nothing Linux-specific; and in a list of
@@ -292,7 +292,7 @@ fn an_unresolved_name_holds_time_zero_and_an_inactive_one_has_no_effect() {
     assert_eq!(shown(&p)[2], 0.55);
 }
 
-/// The gallery's card deck: the top card drives `--fling`
+/// The gallery's card deck (LLP 1057.003 C6): the top card drives `--fling`
 /// on x; its face, a child, tilts x / 20 degrees about its bottom edge, and
 /// the card beneath, the top card's sibling through the clip's scope, rises
 /// from 0.95 to full size as it leaves either way. A fast release throws it

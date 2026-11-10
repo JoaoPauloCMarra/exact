@@ -1,9 +1,10 @@
-//! Icon tokens: an
+//! Icon tokens (LLP 1121 D10; stage 6 F, stage 9's brought forward): an
 //! `icons` block's tokens, each naming a symbol that is not a role by a
 //! source per platform, `icon(sf "bubble.left", material "chat_bubble",
 //! svg "icons/reply.svg")`: an SF Symbol on Apple, an SVG under the
-//! `assets/` of the root whose file writes it (the app's, or a package's)
-//! everywhere else, and a Material Symbol's name kept as an annotation. What the files hold, and which
+//! `assets/` of the root whose file writes it (the app's, or a
+//! package's: LLP 1121 D11, stage 13) everywhere else, and a Material
+//! Symbol's name kept as an annotation. What the files hold, and which
 //! targets need which source, is the build's to check: this module reads
 //! the text.
 
@@ -21,7 +22,7 @@ pub struct Icon {
     pub material: Option<String>,
     /// The SVG other hosts draw, relative to the `assets/` of the root
     /// whose file writes its sources (the app's directory, or a package's
-    /// root).
+    /// root: LLP 1121 D11, stage 13).
     pub svg: Option<String>,
     /// Where it was declared.
     pub line: u32,
@@ -123,8 +124,8 @@ pub(crate) fn misplaced(t: &Token) -> bool {
 /// keeps its name, which [`check`] refuses.
 pub(crate) fn aliased(icons: &mut [Token]) {
     // Each alias names an icon; followed once, iteratively, every icon on
-    // the way kept (a pass per alias, each scanning every icon, would be
-    // cubic in a chain). A name two icons
+    // the way kept (Astra's round 2 on the checker bound: a pass per alias,
+    // each scanning every icon, was cubic in a chain). A name two icons
     // share (which the check refuses) takes the first that is an icon.
     let valid: Vec<bool> = icons
         .iter()
@@ -185,7 +186,7 @@ pub(crate) fn check(icons: &[Token], tokens: &[Token]) -> (Vec<Icon>, Vec<Diagno
     let (mut out, mut errors) = (Vec::new(), Vec::new());
     let at =
         |t: &Token, id: &'static str, m: String| Diagnostic::new(id, m, t.name.line, t.name.col);
-    // The names declared so far, once each (linear).
+    // The names declared so far, once each (linear: round 3).
     let mut names: std::collections::HashSet<&str> =
         tokens.iter().map(|x| x.name.value.as_str()).collect();
     for t in icons {

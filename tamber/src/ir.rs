@@ -1,4 +1,4 @@
-//! The IR, `tamber.json`: the folded table every
+//! The IR, `tamber.json` (LLP 1121 D2, D7): the folded table every
 //! generator, the compiler and the editor read. One token a line, so a
 //! golden's diff names what moved.
 
@@ -127,7 +127,7 @@ pub(crate) fn write(f: &Folding) -> String {
         if t.fixed {
             body.push_str(", \"scheme\": \"fixed\"");
         }
-        // The mode key: distinct values, and per full tuple an index into
+        // D5's mode key: distinct values, and per full tuple an index into
         // them when the token varies.
         let mut values: Vec<String> = Vec::new();
         let mut entries = Vec::new();
@@ -165,7 +165,7 @@ pub(crate) fn write(f: &Folding) -> String {
         Some(e) => strings(e.iter().map(|n| n.value.as_str()), &mut body),
         None => body.push_str("null"),
     }
-    // Its icons, when it has any: each its sources, null where unwritten.
+    // D10's icons, when it has any: each its sources, null where unwritten.
     if !f.icons.is_empty() {
         body.push_str(",\n  \"icons\": [");
         for (i, icon) in f.icons.iter().enumerate() {

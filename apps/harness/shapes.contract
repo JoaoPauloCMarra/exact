@@ -1,6 +1,7 @@
 // The harness's data seam: what the Rust data module (apps/harness/data)
 // answers and what the terminal entry renders. Shared by both sides; the
 // data module's `to_value` builds exactly these records.
+// @ref LLP 1101 (terminal apps)
 
 // A styled run of text. Colours are CSS colours ("#rrggbb") or "" for the
 // inherited one.

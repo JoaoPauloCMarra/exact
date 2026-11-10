@@ -1,4 +1,4 @@
-//! What a reader needs from the terminal host (the LLP reader):
+//! What a reader needs from the terminal host (the LLP reader, LLP 1101):
 //! `scrollIntoView` by an element's `id`, the page's keys scrolling when
 //! nothing is focused, a shortcut that acts without taking the focus, and a
 //! data module's continuation run to its answer.
@@ -308,7 +308,7 @@ fn compile_terminal_applies_the_terminal_profile() {
     contract::compile(pixels).expect("a pixel width elsewhere");
 }
 
-/// In the terminal, a long poll attached to the module's own
+/// LLP 1016.000 D8 in the terminal: a long poll attached to the module's own
 /// work (a continuation) is refused before that work runs, and the source
 /// parses the refusal.
 #[derive(Default)]

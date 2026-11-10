@@ -1,4 +1,4 @@
-// A text's numerals rolling per glyph as
+// @ref LLP 1077 D15, LLP 1115.003 D3 — a text's numerals rolling per glyph as
 // they change is a linked capability: the `ExactNumerals` module plays
 // SwiftUI's numeric text, and an app's composition links it (and SwiftUI)
 // only when its plan binds `-exact-content-transition`. Without it a paragraph

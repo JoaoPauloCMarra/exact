@@ -93,7 +93,7 @@ final class WidgetGalleryTests: XCTestCase {
         XCTAssertNotNil(widgets())
     }
     #endif
-    /// The gallery lists an app's activities beside its
+    /// LLP 1126.001 WP10: the gallery lists an app's activities beside its
     /// widgets and renders each one's eight placements from its preview
     /// state, in the gallery's own width.
     func testActivitiesRenderTheirEightPlacementsInTheGallery() throws {

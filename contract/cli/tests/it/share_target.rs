@@ -1,5 +1,5 @@
-//! A received share is one location, and its files arrive by token after its
-//! text.
+//! @ref LLP 1133.024 D2, D3 — a received share is one location, and its
+//! files arrive by token after its text.
 use exact_kernel::{Kernel, PropValue};
 use exact_runner::share_in::{self, Claims, Pending, PendingFile, ShareTarget, SharedFiles};
 use exact_runner::time::{launching_with, Launch};

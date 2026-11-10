@@ -1,6 +1,8 @@
 //! A reader that takes a host that runs (its activity was made again), and
-//! the size of one that tells no window. Configuration changes are handled
-//! in place; an activity made again adopts the running host.
+//! the size of one that tells no window.
+//!
+//! @ref LLP 1115.001 D15.1 (configuration changes are handled in place; an
+//! activity made again adopts the running host)
 
 use super::{colors, device, layer, stream, CanvasHost, Recorder};
 use exact_runner::DataSource;
@@ -54,7 +56,7 @@ impl<D: DataSource + Default> CanvasHost<D> {
         self.travel = crate::travel::Travel::default();
         self.forget_chrome();
         // The device's colours as the new reader read them: a wallpaper
-        // changed while the last one was stopped is a new palette.
+        // changed while the last one was stopped is a new palette (D4).
         if let Some(palette) = colors::palette() {
             self.p.set_palette(&palette);
         }

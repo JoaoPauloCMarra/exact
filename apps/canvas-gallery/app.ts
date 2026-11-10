@@ -1,4 +1,4 @@
-// The Canvas 2D gallery's data module: no sources, only
+// The Canvas 2D gallery's data module (LLP 1056 §4): no sources, only
 // surfaces. Each `canvas surface=<name>(…)` in app.contract draws with the
 // fixture of that name in fixtures.js, which direct.html also runs against
 // Chrome's own context.

@@ -1,5 +1,5 @@
 //! `exact_boot_entry`: a snapshot entry's plan boots by its kind and by
-//! nothing else.
+//! nothing else (LLP 1126 D2).
 
 use crate::host::{handles, out, put};
 

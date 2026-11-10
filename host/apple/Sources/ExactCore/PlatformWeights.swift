@@ -1,4 +1,4 @@
-// CSS `font-weight` on a platform face: UIKit's and
+// CSS `font-weight` on a platform face (LLP 1019 §13 D11): UIKit's and
 // AppKit's named weights at CSS's hundreds, the `wght` axis between them.
 import Foundation
 import CoreText
@@ -19,8 +19,9 @@ extension TextEngine {
     /// CSS `font-weight` on a platform face, `named` making the face at a
     /// hundred's named weight. At each hundred it is the named instance
     /// itself, as a UIKit (AppKit) app draws it: `600` is San Francisco's
-    /// semibold at `wght` 590, where Chrome and WebKit set 600 (looking like
-    /// UIKit by default comes first). Between two hundreds each axis runs linearly from one named
+    /// semibold at `wght` 590, where Chrome and WebKit set 600 (Charlie,
+    /// 2026-10-24: "more concerned with trying to look like UIKit by
+    /// default"). Between two hundreds each axis runs linearly from one named
     /// instance's value to the next (SF Mono's `YAXS` moves with its
     /// `wght`), so a transition is continuous and comes to rest on a named
     /// instance; below 100 `wght` runs from the axis minimum at 1, above 900

@@ -1,4 +1,4 @@
-// A plain textarea's decorations, loaded after first paint by
+// A plain textarea's decorations (LLP 1114.007), loaded after first paint by
 // the first field that has them, outside the signal runtime.
 let Decorations;
 export function startDecoration(e, {own, onEnd, inflight, say}) {

@@ -1,4 +1,5 @@
 //! Paired raster and advance observations from the presenter's own shaper.
+//! @ref LLP 1149 D3.3; LLP 1149.001 M9.
 use super::*;
 use exact_ink::{device::directwrite::DirectWrite, glyph::Font};
 use std::{fs, io::Write};
@@ -32,7 +33,7 @@ fn delta(a: &Image, b: &Image) -> (u64, usize, u8) {
 }
 
 #[test]
-#[ignore = "DirectWrite audit; INK_TEXT_AUDIT names a new retained output directory"]
+#[ignore = "M9 NucBox audit; INK_TEXT_AUDIT names a new retained output directory"]
 fn directwrite_audit() {
     let out = std::path::PathBuf::from(std::env::var_os("INK_TEXT_AUDIT").unwrap());
     fs::create_dir_all(&out).unwrap();
@@ -44,7 +45,7 @@ fn directwrite_audit() {
     writeln!(record, "font,size,weight,scale,phase,glyph,candidate,advance_delta,coverage_sum,coverage_pixels,coverage_max,swash_ns,dwrite_ns").unwrap();
     let mut dw = DirectWrite::new().unwrap();
     println!(
-        "rendering_params gamma/contrast/cleartype={:?}",
+        "M9 rendering_params gamma/contrast/cleartype={:?}",
         dw.rendering_params().unwrap()
     );
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));

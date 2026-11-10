@@ -1,5 +1,5 @@
 //! A `fn` body's repeated calls, bound once. A `fn` is expanded wherever it
-//! is called, so `f1(x) = f0(x) + f0(x)` would expand `f0`
+//! is called (LLP 1017 P5), so `f1(x) = f0(x) + f0(x)` would expand `f0`
 //! twice, and a chain of such functions would grow exponentially. Each
 //! call the body repeats with the same arguments is instead evaluated once
 //! and read from a local (`Expr::Let`).
@@ -87,7 +87,7 @@ fn strict_calls(e: &Expr, is_fn: &dyn Fn(&str) -> bool, out: &mut Vec<Expr>) {
         // A bound value is always evaluated; its body's calls may read the
         // bound name, so they stay where they are.
         Expr::Let { value, .. } => strict_calls(value, is_fn, out),
-        // A callback runs once per item, perhaps never.
+        // A callback runs once per item, perhaps never (LLP 1017.003).
         Expr::Arrow { .. } => {}
         Expr::Template(parts, _) => {
             for p in parts {

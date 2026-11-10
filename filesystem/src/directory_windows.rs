@@ -1,4 +1,4 @@
-// Names are resolved by the kernel beneath owned handles.
+// @ref LLP 1030.002 D4 — names are resolved by the kernel beneath owned handles.
 use crate::Kind;
 use std::fs::{File, OpenOptions};
 use std::io::{self, Read, Write};

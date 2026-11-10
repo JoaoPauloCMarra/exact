@@ -1,4 +1,4 @@
-//! Geometry reads for actions: where layout put a
+//! Geometry reads for actions (LLP 1051.000 D1, D3, D5): where layout put a
 //! node, and how tall it would be at `height: auto`. Neither writes the
 //! arena, a frame, the epoch or a receipt.
 
@@ -14,8 +14,8 @@ impl Kernel {
     /// provisional (an image or video in its subtree has no natural size yet,
     /// so lays out at zero until it loads). A node changed since keeps its
     /// box until the next layout: a read in a dispatch sees the layout last
-    /// shown, not the dispatch's own writes, as the web's page does. `None`
-    /// when the node is not live, is an inline run, has
+    /// shown, not the dispatch's own writes, as the web's page does (LLP
+    /// 1051.000 D1). `None` when the node is not live, is an inline run, has
     /// not been laid out since it was created (so on a kernel that doesn't
     /// lay out, the browser's), is in no root's layout or was under
     /// `display: none` when last laid out.
@@ -38,7 +38,7 @@ impl Kernel {
     /// [`Kernel::laid_out_frame`], while a content region is registered
     /// (ordinary layout is refused then), and while anything under the root
     /// has changed since the last layout: the what-if would see the change,
-    /// which the layout last shown doesn't have.
+    /// which the layout last shown doesn't have (D1).
     pub fn measure_auto_height(&mut self, key: NodeKey) -> Option<(Frame, bool)> {
         if self.region.is_some() {
             return None;
@@ -105,22 +105,22 @@ impl Kernel {
     /// is aligned to the line's start, so none stretches its height. Viewport
     /// lengths resolve as in the ordinary layout, every viewport unit against
     /// the window ([`crate::Env::screen`]), so the measure and the layout
-    /// agree and neither reads the sheet. A height a transition presents
+    /// agree and neither reads the sheet. A height a transition presents (LLP 1063)
     /// is the presented one, as in the ordinary layout. Exclusions and
     /// multi-column fragments are not settled in that tree. The ordinary
-    /// engine tree, its caches, frames and the epoch are untouched, but for the
-    /// symbols owed a measurement, which are measured first, as the next layout
-    /// would (`measure_symbols`). `None` as for [`Kernel::laid_out_frame`], or
-    /// when the trial's layout fails.
+    /// engine tree, its caches, frames and the epoch are untouched (LLP
+    /// 1075.003 §9.11), but for the symbols owed a measurement, which are
+    /// measured first, as the next layout would (`measure_symbols`). `None`
+    /// as for [`Kernel::laid_out_frame`], or when the trial's layout fails.
     pub fn fit_content_height(&mut self, key: NodeKey) -> Option<f32> {
         use taffy::style::{Dimension, LengthPercentage, LengthPercentageAuto};
         let (frame, _) = self.laid_out_frame(key)?;
         self.measure_symbols(false);
         let slot = key.index;
-        // A block's root stands in its block: the block's
+        // A block's root stands in its block (LLP 1115.002 D8.2): the block's
         // width is what it is measured in, with no parent and no height, so
         // a fitted sheet whose route has its block is measured as it wraps
-        // there.
+        // there (LLP 1123 D2, D7).
         let block = self.arena.blocks.get(slot);
         let tree_ref = self.layout.as_deref().and_then(LayoutMirror::tree_ref)?;
         let parent = if block.is_some() {
@@ -166,7 +166,7 @@ impl Kernel {
         let presented = engine(&mut self.layout).height_samples(self.epoch);
         let derive = |s: u32, mut t: taffy::style::Style| {
             // A scroller the platform insets fits by its content alone: the
-            // detent leaves those insets to UIKit.
+            // detent leaves those insets to UIKit (LLP 1116.000 D1.2).
             super::cover::without_inset(&self.arena, s, &mut t);
             let shown = presented
                 .iter()
@@ -186,7 +186,8 @@ impl Kernel {
         style.inset.top = LengthPercentageAuto::auto();
         style.inset.bottom = LengthPercentageAuto::auto();
         // The siblings set its width alone: aligned to the start of the
-        // line, it takes its own height, not a taller sibling's stretch.
+        // line, it takes its own height, not a taller sibling's stretch
+        // (Astra's and Grok's review of 1a9b86776).
         if shares {
             style.align_self = Some(taffy::style::AlignSelf::START);
         }
@@ -270,7 +271,7 @@ impl Kernel {
     /// `width` other than `auto`, 1) or its content's (0), and its resolved
     /// minimum border-box width.
     /// What a Live Activity placement's region takes around a root the bake
-    /// positions absolutely: CSS 2.1 §10.3.7 gave the
+    /// positions absolutely (LLP 1126.001 WP10): CSS 2.1 §10.3.7 gave the
     /// root its shrink-to-fit width in that layout, and the driver draws the
     /// same layout. A read, as [`Kernel::laid_out_frame`] is: it lays nothing
     /// out, and nothing on the ordinary layout path calls it. `None` as for
@@ -393,7 +394,7 @@ impl Kernel {
 
     /// A node's margins as its layout reads them under the kernel's
     /// environment, top/right/bottom/left in points: whole cells under a
-    /// terminal's space rule, a percentage none.
+    /// terminal's space rule (LLP 1121 stage 11 (c)), a percentage none.
     pub fn laid_margins(&self, id: crate::ViewId) -> Option<[f32; 4]> {
         use crate::style::cells::{COLUMN, ROW};
         let node = self.node(id)?;
@@ -412,7 +413,7 @@ impl Kernel {
     }
 
     /// The padding the engine laid the box out with: `resolved_padding` and
-    /// what a host cover added to it.
+    /// what a host cover added to it (LLP 1075.003 §3.5).
     pub fn layout_padding(&self, key: NodeKey) -> Option<(f32, f32, f32, f32)> {
         let inset = self.arena.inset(self.arena.resolve(key)?)?;
         let [left, top, right, bottom] = std::array::from_fn(|i| inset.padding[i] + inset.cover[i]);
@@ -429,8 +430,8 @@ impl Kernel {
     /// The root `slot` is laid out under, when nothing between them was
     /// `display: none` when last laid out (a batch since may have changed a
     /// `display`; the layout last shown hasn't). A subtree a host gave a
-    /// containing block is laid out from the node that has it, whose flag says
-    /// whether anything above hid it.
+    /// containing block is laid out from the node that has it (LLP
+    /// 1115.002 D8.2), whose flag says whether anything above hid it.
     fn root_above(&self, slot: u32) -> Option<u32> {
         let mut top = slot;
         let mut at = Some(slot);
@@ -451,8 +452,8 @@ impl Kernel {
     }
 
     /// Whether an image or video under `slot` still waits for its natural
-    /// size, so the box may change when it loads. An
-    /// `audio` has none to wait for.
+    /// size, so the box may change when it loads (LLP 1051.000 D5). An
+    /// `audio` has none to wait for (LLP 1042 §8).
     fn unsettled(&self, slot: u32) -> bool {
         self.arena.subtree(slot).into_iter().any(|s| {
             matches!(self.arena.node_type(s), NodeType::Image | NodeType::Video)

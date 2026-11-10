@@ -1,4 +1,4 @@
-// A symbol alone on a bar item's face is the bar's symbol size, the neutral look's
+// LLP 1115.000 D4.15: a symbol alone on a bar item's face is the bar's symbol size, the neutral look's
 // `bar-symbol-size` (UIKit's 22 points over its 17-point body, times the web's body), over any size written on it or
 // on the item: a symbol drawn for an SF Symbol in its `symbol-scale` box, on a native button's face too, which stays
 // as tall as a titled one, and an icon of the app's own at its em. The bar is a header the navigation glue marks where

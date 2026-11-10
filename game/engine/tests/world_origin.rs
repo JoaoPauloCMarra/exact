@@ -1,4 +1,4 @@
-//! A world's message carries what caused it:
+//! A world's message carries what caused it (LLP 1133.022 D6, D10 item 6):
 //! once a tool's message is posted into a world, every message the world
 //! emits carries the least privileged origin posted since its fresh start,
 //! through a person's input, the clock and a save restored into a new

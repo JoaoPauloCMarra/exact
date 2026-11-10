@@ -1,4 +1,4 @@
-// A package's prebuilt library, linked into an app `exact new` made outside the repo and carried with
+// LLP 1154 D3: a package's prebuilt library, linked into an app `exact new` made outside the repo and carried with
 // it, found where the product is at run time: how each product links and carries it. The package is
 // @fixture/vault built with its library (packages/fixtures/vault/test/library.mjs); what the app then does with it, on
 // each host, is that fixture's own suites' (packages/fixtures/vault/test/linux.mjs, apple.mjs). The tests share one

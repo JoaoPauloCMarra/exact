@@ -1,5 +1,5 @@
-//! A tool call's arguments against the bound action's parameter types:
-//! stricter than decoding, so that a caller's mistake is
+//! A tool call's arguments against the bound action's parameter types (LLP
+//! 1111 D4 step 1): stricter than decoding, so that a caller's mistake is
 //! named rather than guessed at. Unknown fields, missing fields and
 //! non-finite numbers are refused; `null` is `none` for an `option<T>`,
 //! which is still written. The first failing path is reported.

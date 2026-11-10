@@ -1,6 +1,6 @@
-//! The plan/value boundary of the router.
+//! @ref LLP 1038 D2–D5, D7, D9 — the plan/value boundary of the router.
 //!
-//! The compiler declares these positional records, in this exact order:
+//! Chunk (c)'s compiler declares these positional records, in this exact order:
 //! Router { tab: string, tabs: Tab[], next: number },
 //! Tab { name: string, stack: Entry[] },
 //! Entry { id: number, name: string, url: string, tab: string, params: Params, fragment: string },
@@ -22,7 +22,7 @@ pub struct RouterChange {
     pub top: u64,
     /// Its canonical location.
     pub url: String,
-    /// Its fragment, `""` when it has none.
+    /// Its fragment, `""` when it has none (LLP 1153 D5).
     pub fragment: String,
     /// Whether the host scrolls to that fragment once the route's content
     /// has arrived: the top is a new visit with a fragment, its fragment
@@ -56,10 +56,10 @@ impl RouterChange {
     }
 }
 
-/// The router seam: what the runner and its VM ask of a plan's
+/// The router seam (LLP 1047 D4): what the runner and its VM ask of a plan's
 /// router. [`RouterContext`] is the one implementation, built by
 /// [`routing`]; a host that links no router passes none, and a plan that
-/// declares routes is refused before it boots.
+/// declares routes is refused before it boots (LLP 1047 D6).
 pub trait Routing {
     /// The root slot the router value lives in.
     fn slot(&self) -> SlotsId;
@@ -74,7 +74,7 @@ pub trait Routing {
     fn read(&self, value: &Value) -> Option<Router>;
     /// Return to an earlier visit in the selected stack, only from its current top.
     fn back_to(&self, value: &Value, source: u64, destination: u64) -> Option<Value>;
-    /// What changed since the last commit, for the host.
+    /// What changed since the last commit, for the host (LLP 1038 D7).
     fn change(&self, value: &Value) -> Result<Option<RouterChange>, RunnerError>;
     /// Remember `value` as committed, and keep `change` for the host.
     fn commit(&mut self, value: Value, change: Option<RouterChange>);
@@ -83,17 +83,17 @@ pub trait Routing {
     /// The pending change, once.
     fn take_change(&mut self) -> Option<RouterChange>;
     /// The location a native host's Forward goes to, the nearest of the
-    /// visits Back left (`history.rs`).
+    /// visits Back left (`history.rs`; LLP 1115.000 D5.5).
     fn ahead(&self) -> Option<&str>;
-    /// Whether `location` names a declared route pattern.
+    /// Whether `location` names a declared route pattern (LLP 1038 §7).
     fn matches_pattern(&self, location: &str) -> bool;
-    /// Set what `sharedFiles` answers for a share's token;
+    /// Set what `sharedFiles` answers for a share's token (LLP 1133.024 D3);
     /// false when it already answers that.
     fn share(&self, token: &str, files: Value) -> bool;
-    /// This launch's claims, drawn from `seed` the first time.
+    /// This launch's claims (D3), drawn from `seed` the first time.
     fn claims(&self, seed: f64) -> std::cell::RefMut<'_, crate::share_in::Claims>;
     /// Whether a committed change asked for a scroll to its top's fragment
-    /// that no host has been told to make yet.
+    /// that no host has been told to make yet (LLP 1153 D5).
     fn fragment_due(&self) -> bool;
     /// That visit's id, fragment and activation, once.
     fn take_fragment(&mut self) -> Option<(u64, String, u64)>;
@@ -104,7 +104,7 @@ pub trait Routing {
     fn forget_activation(&self);
 }
 
-/// The plan's router, if it declares one: what a host that
+/// The plan's router, if it declares one (LLP 1038 D2): what a host that
 /// links the router passes as `RunnerLinks.router`.
 pub fn routing(plan: &Plan) -> Result<Option<Box<dyn Routing>>, RunnerError> {
     Ok(RouterContext::from_plan(plan)?.map(|r| Box::new(r) as Box<dyn Routing>))
@@ -134,7 +134,7 @@ pub struct RouterContext {
     /// to a fragment the visit already shows, where a return by `back` or
     /// `select` does not. It counts only when the router is assigned that
     /// very value (`compare::same`), never for a value merely computed
-    /// (the router's verbs stay pure).
+    /// (LLP 1153 D5; LLP 1038's verbs stay pure).
     navigations: RefCell<Vec<(Value, u64, String)>>,
     refusals: RefCell<Vec<String>>,
     /// The last router value a call read, checked and converted once, with
@@ -362,7 +362,7 @@ impl RouterContext {
     }
 
     fn refuse_once(&self, intent: &str, message: &str) {
-        // Settlement may retry a read;
+        // @ref LLP 1035.001 D6 / LLP 1038 D4 — settlement may retry a read;
         // each distinct refused intent is journaled once in this commit.
         let line = format!("router {intent} refused: {message}");
         let mut lines = self.refusals.borrow_mut();
@@ -682,7 +682,7 @@ impl Routing for RouterContext {
             .flat_map(|r| r.tabs)
             .flat_map(|t| t.stack)
             .collect();
-        // A new visit with a fragment, a fragment that
+        // @ref LLP 1153 D5 — a new visit with a fragment, a fragment that
         // changed, or a navigation to the top's fragment scrolls; a visit
         // returned to keeps its place.
         let scroll = self.activates(value, top)
@@ -830,7 +830,7 @@ impl<D: DataSource> Runner<D> {
                 .map(|(_, old)| old);
             self.slots[slot.0 as usize] = context.initial(old, launch)?;
         }
-        // The locale slot is the last one lowered, and an
+        // @ref LLP 1060 D4 — the locale slot is the last one lowered, and an
         // initializer may call `t`: it is filled first.
         let locale = self.plan.locale.map(|s| s.0 as usize);
         let rest = (0..self.plan.slots.len()).filter(|i| Some(*i) != locale);
@@ -853,7 +853,7 @@ impl<D: DataSource> Runner<D> {
 
     /// The root slots of children used outside every region, initialized
     /// as the root instance first renders: after boot settlement, so an
-    /// initializer may read derives and resources. A carried
+    /// initializer may read derives and resources (LLP 1017 P4c). A carried
     /// value still wins, as for any root slot.
     pub(super) fn init_late_slots(&mut self, carried: Option<&Carried>) -> Result<(), RunnerError> {
         for i in 0..self.plan.slots.len() {
@@ -879,8 +879,8 @@ impl<D: DataSource> Runner<D> {
         if !v.conforms(&self.plan, row.ty) {
             return Err(RunnerError::slot_type(&self.plan, &v, row.ty, name));
         }
-        // A persisted slot takes the store's value over its initializer's;
-        // a carried value is this session's and wins.
+        // A persisted slot takes the store's value over its initializer's
+        // (LLP 1116 D5); a carried value is this session's and wins.
         self.slots[i] = if carried {
             v
         } else {
@@ -916,8 +916,8 @@ impl<D: DataSource> Runner<D> {
     /// The host's scroll to the selected visit's fragment, as the command
     /// `scrollToFragment(visit, fragment, activation)`, once the content it
     /// waits for has arrived: the data source is ready and no request is in
-    /// flight, a mutation's included and a held one not (`has_pending`).
-    /// The host finds the element in that visit's route
+    /// flight, a mutation's included and a held one not (`has_pending`; LLP
+    /// 1153 D5, LLP 1113). The host finds the element in that visit's route
     /// and holds it in place while pictures load. An author's own
     /// `scrollIntoView` before then wins.
     pub(super) fn fragment_command(&mut self) {
@@ -950,7 +950,7 @@ impl<D: DataSource> Runner<D> {
         });
     }
 
-    /// A refused commit's navigation intent goes with it.
+    /// A refused commit's navigation intent goes with it (LLP 1153 D5).
     pub(super) fn conclude_router(&self, refused: bool) {
         if let Some(router) = self.router.as_deref().filter(|_| refused) {
             router.forget_activation();
@@ -969,7 +969,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Take the navigation change published by successful commits, including boot.
-    /// Drained beside commands; kernel receipts stay unchanged.
+    /// @ref LLP 1038 D7 — drained beside commands; kernel receipts stay unchanged.
     /// Multiple commits before a take retain the latest top/url and every removed
     /// id in first-removal order. Unchanged or refused commits leave it alone.
     /// Returns `None` after a take until navigation changes again, or without a router.
@@ -978,7 +978,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Whether `location` names a pattern the plan's route table declares —
-    /// never only its notfound fallback. `false` without a router.
+    /// never only its notfound fallback (LLP 1038 §7). `false` without a router.
     pub fn route_matches(&self, location: &str) -> bool {
         self.router
             .as_ref()
@@ -987,7 +987,7 @@ impl<D: DataSource> Runner<D> {
 
     /// The canonical location of a retained visit, or `None` when it is
     /// absent. Without its fragment: a `go` there returns to the visit as it
-    /// was, where a fragment would scroll it again.
+    /// was, where a fragment would scroll it again (LLP 1153 D5).
     pub fn visit_location(&self, id: u64) -> Option<String> {
         let (_, router) = self.carry_router()?;
         router
@@ -1001,7 +1001,8 @@ impl<D: DataSource> Runner<D> {
     /// The location of the visit beneath visit `id` on the stack that holds
     /// it, or `None` (no router, no such visit, or a stack's root). A host's
     /// own Back for a route with no authored Back control delivers it to the
-    /// navigation root's `navigate`, as the web's history Back does.
+    /// navigation root's `navigate`, as the web's history Back does (LLP
+    /// 1115 D5; LLP 1038 D11 as amended 2026-10-03).
     pub fn location_beneath(&self, id: u64) -> Option<String> {
         let (_, router) = self.carry_router()?;
         router.tabs.iter().find_map(|tab| {
@@ -1015,7 +1016,8 @@ impl<D: DataSource> Runner<D> {
     /// beneath the selected stack's top, without its fragment, as
     /// [`Runner::location_beneath`] gives it. A host asks it for a
     /// navigation root with no routes that hears `navigate`, whose Back
-    /// steps the router's visits as a browser steps session history.
+    /// steps the router's visits as a browser steps session history (LLP
+    /// 1115.000 D5.5).
     pub fn location_behind(&self) -> Option<String> {
         let (_, router) = self.carry_router()?;
         let stack = exact_route::stack(&router);
@@ -1028,15 +1030,16 @@ impl<D: DataSource> Runner<D> {
     /// Where the platform's own Forward goes, or `None` (no router, or
     /// nothing ahead): the nearest location Back left on the selected
     /// stack, as a browser's session history keeps it. A native host
-    /// delivers it as the web host delivers a Forward: to the
-    /// navigation root's `navigate`, else by [`Runner::host_go`].
+    /// delivers it as the web host delivers a Forward (LLP 1038 D7): to the
+    /// navigation root's `navigate`, else by [`Runner::host_go`] (LLP
+    /// 1115.000 D5.5).
     pub fn location_ahead(&self) -> Option<String> {
         self.router.as_deref()?.ahead().map(String::from)
     }
 
     /// The platform's own Back from the selected visit `id`, for a route
     /// with no authored Back control under a navigation root with no
-    /// `navigate` handler: the router's `back`, written by the
+    /// `navigate` handler (LLP 1115 D5): the router's `back`, written by the
     /// runner as one commit of its own, as the app's `nav = back(nav)`
     /// would be — journaled as `host back`, refused like any commit. `None`
     /// (nothing done) without a router, or when `id` is not the selected
@@ -1080,7 +1083,7 @@ impl<D: DataSource> Runner<D> {
 
     /// The platform's own navigation to `location` under a navigation root
     /// with no `navigate` handler: the browser's Forward, or a same-origin
-    /// link to a declared route. It is the router's
+    /// link to a declared route (LLP 1115.000 D4.3). It is the router's
     /// `go`, written by the runner as one commit of its own, as the app's
     /// `nav = go(nav, location)` would be — journaled as `host go`, refused
     /// like any commit. `None` (nothing done) without a router, or when
@@ -1131,7 +1134,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// The evaluated arguments of a settled resource (the bake's cache key).
-    /// Written beside `resources.initial`.
+    /// @ref LLP 1038 D5 — written beside `resources.initial`.
     pub fn resource_args(&self, name: &str) -> Option<&[Value]> {
         let i = self
             .plan
@@ -1141,8 +1144,8 @@ impl<D: DataSource> Runner<D> {
         self.resources[i].as_ref().map(|r| r.args.as_slice())
     }
 
-    /// Whether resource `name` shows a placeholder, not an answer:
-    /// the bake compiles no value for it.
+    /// Whether resource `name` shows a placeholder, not an answer (LLP
+    /// 1054.000.002 D4): the bake compiles no value for it.
     pub fn resource_is_placeholder(&self, name: &str) -> bool {
         self.plan
             .resources

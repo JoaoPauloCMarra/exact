@@ -271,8 +271,8 @@ final class AccessibilityClientMacTests: XCTestCase {
     /// A `role="menu"` box is AppKit's menu and its rows (`menuitem`, a
     /// box's `menuitemcheckbox`) are menu items, as WebKit serves them
     /// (Core-AAM), so VoiceOver says "menu" and "menu item" where it said
-    /// nothing and "button". A checked row carries AppKit's check mark, and
-    /// the menu says it opened as it shows.
+    /// nothing and "button" (realinput-1016a rows 10 and 13). A checked row
+    /// carries AppKit's check mark, and the menu says it opened as it shows.
     func testAMenuAndItsRowsAreAppKitsMenuAndMenuItems() throws {
         let p = try fixture([])
         let client = AXClient()
@@ -325,8 +325,8 @@ final class AccessibilityClientMacTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(client.attributes(of: "remove", keys))["AXRole"], "AXButton", "a plain button again")
     }
 
-    /// A labelled `group` says its role as AppKit's group does (an image
-    /// preview's zoomable group must not read with no "group").
+    /// A labelled `group` says its role as AppKit's group does (realinput-1016a
+    /// row 5: the image preview's zoomable group read with no "group").
     func testALabelledGroupHasAppKitsRoleDescription() throws {
         _ = try fixture([
             ["op": "create", "id": 10, "kind": "view", "handlers": ["key"],
@@ -416,8 +416,8 @@ final class AccessibilityClientMacTests: XCTestCase {
 
     /// A modal whose field took the focus as it arrived (`autofocus`) sends
     /// VoiceOver to the field, as AppKit's popover posts only the focus change
-    /// for its first responder (a font picker reads "Search fonts", not
-    /// "Interface font family, dialog").
+    /// for its first responder (realinput-1016a row 15: the font picker read
+    /// "Interface font family, dialog", not "Search fonts").
     func testAModalThatTookTheFocusSendsVoiceOverToTheFocus() throws {
         let p = try fixture([])
         let client = AXClient()
@@ -562,7 +562,8 @@ final class AccessibilityClientMacTests: XCTestCase {
     /// Settings page). A menu in a popover over it, holding an `aria-modal`
     /// list, closed by Escape, gives the focus back to its trigger before it
     /// says it closed, and VoiceOver is sent there after: the layout change
-    /// names the trigger, then the trigger's focus is told.
+    /// names the trigger, then the trigger's focus is told
+    /// (realinput-1016f row 8: VoiceOver landed on the page's thread title).
     func testAMenuOverAnInertPageSendsVoiceOverBackToItsTrigger() throws {
         let p = try fixture([])
         let client = AXClient()
@@ -774,14 +775,15 @@ final class AccessibilityClientMacTests: XCTestCase {
         XCTAssertEqual(heard(), ["AXLayoutChanged AXScrollArea More actions", "AXFocusedUIElementChanged AXButton More actions"])
     }
 
-    /// A dialog in a popover whose field autofocuses (the font picker), opened by VO-Space on
-    /// its trigger, sends VoiceOver to the field, and VoiceOver names the dialog by its web
-    /// area. The layout change is posted on the dialog: posted on the page's scroll view,
-    /// VoiceOver went to the scroll view's child that holds the field, the dialog, said
-    /// "Interface font family, dialog" and stayed there (measured beside AppKit's
-    /// `NSPopover`, which VoiceOver reads as "Search fonts, search text field", then "In …,
-    /// popover"). VoiceOver names AppKit's popover by its window, so only one painted in the
-    /// page has a web area.
+    /// A dialog in a popover whose field autofocuses (the font picker),
+    /// opened by VO-Space on its trigger, sends VoiceOver to the field, and
+    /// VoiceOver names the dialog by its web area. The layout change is posted on the dialog:
+    /// posted on the page's scroll view, VoiceOver went to the scroll view's
+    /// child that holds the field, the dialog, said "Interface font family,
+    /// dialog" and stayed there (realinput-1016i H-10; measured beside
+    /// AppKit's `NSPopover`, which VoiceOver reads as "Search fonts, search
+    /// text field", then "In …, popover"). VoiceOver names AppKit's popover
+    /// by its window, so only one painted in the page has a web area.
     func testAPopoverDialogSendsVoiceOverToTheFieldItFocused() throws {
         let p = try fixture([
             ["op": "create", "id": 20, "kind": "view",
@@ -858,7 +860,7 @@ final class AccessibilityClientMacTests: XCTestCase {
     /// Served as itself it was an `AXUnknown` holding a field whose parent
     /// named the scroll view, the layout change posted on it reached no
     /// client, and VoiceOver's cursor stayed on the scroll area while the
-    /// keyboard was in the field, then lost the field
+    /// keyboard was in the field (realinput-1017k FN15), then lost the field
     /// to the window (F-2).
     func testARoleLessModalIsServedByItsElements() throws {
         let p = try fixture([

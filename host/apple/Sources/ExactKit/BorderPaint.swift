@@ -1,5 +1,5 @@
-// A box's border as the web paints it, on both Apple platforms: each side
-// in its own colour, over the area between the border box's
+// A box's border as the web paints it, on both Apple platforms (LLP 1053
+// G2): each side in its own colour, over the area between the border box's
 // curve and the padding box's, with the corners joined where Chrome joins
 // them. The iOS layer keeps the uniform case (`applyBoxLayer`); everything
 // else — sides that differ in colour or width, over square or rounded
@@ -76,7 +76,7 @@ package enum BorderPaint {
     }
 
     /// A rectangle with an elliptical radius per corner, clockwise on screen;
-    /// with a `corner-shape`, the kernel's outline.
+    /// with a `corner-shape`, the kernel's outline (LLP 1077 D1).
     package static func roundedRect(_ r: CGRect, _ radii: [CGSize], shape: CornerShape? = nil) -> CGMutablePath {
         if let shape { return shape.outline(r, radii) }
         let p = CGMutablePath()

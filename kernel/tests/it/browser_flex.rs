@@ -1,4 +1,4 @@
-//! `flex-grow` and CSS `direction` against literal Chrome.
+//! `flex-grow` (LLP 1053 G3) and CSS `direction` against literal Chrome.
 //!
 //! Chrome 154, 2026-09-25, by the method of `browser_cases.rs`. `flex: <n>`
 //! is written as the three rows Contract lowers it to, in authored order, so
@@ -386,7 +386,7 @@ fn order_lays_items_out_in_order_modified_document_order() {
 /// fit-content, and its main size (height) is found at that width (CSS
 /// Flexbox §9.2 3E). Measured under the available width alone, a wrapping
 /// row took its items' summed bases, one line, and kept that line's height
-/// after it was laid out at the narrower fit-content width: a chat
+/// after it was laid out at the narrower fit-content width: a Signal Clone
 /// bubble's second line of text spilled out of it (2026-10-05). Chrome 154,
 /// 2026-10-05, through the web host (Contract's own CSS).
 #[test]
@@ -585,7 +585,7 @@ fn a_fit_content_row_is_as_tall_as_its_wrapped_text() {
 /// then its `max-width`, not the space, and its height is found at that
 /// width. Measured at the space, a chat bubble (max-width 100% of a 75%
 /// column, padded) was two lines taller than its text at the default size
-/// and most of a screen at the largest. Chrome 155,
+/// and most of a screen at the largest (chat-rooms, round 26). Chrome 155,
 /// 2026-10-19, plain HTML: 16px/18px monospace (a 9.64 advance, the same
 /// 31 characters a line), #3 at x 76, 324 wide, 304 tall (340 before).
 #[test]
@@ -629,7 +629,7 @@ fn a_leaf_wider_than_its_column_is_as_tall_as_its_lines_at_its_used_width() {
 }
 
 /// The same bubble with no `max-width` of its own, its bound on the column
-/// only (a time under each bubble). `break-word` adds
+/// only (chat-rooms, round 32: a time under each bubble). `break-word` adds
 /// no break to min-content (CSS Text 3 §5.5), so the shrink-to-fit leaf takes
 /// the word's width and overflows its column, as in Chrome; `anywhere` does,
 /// and it wraps at the column's width. Chrome 155, 2026-10-20, plain HTML:

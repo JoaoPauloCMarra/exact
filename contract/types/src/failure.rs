@@ -1,4 +1,4 @@
-//! `failed(x)` and `failure(x)`: whether
+//! `failed(x)` and `failure(x)` (LLP 1054.000.002, LLP 1109 D3): whether
 //! resource `x`'s latest request failed without an answer, and why. Like
 //! `pending`, each reads a resource's status, not its value, so its argument
 //! is a name.
@@ -10,7 +10,7 @@ use contract_syntax::Span;
 /// The record `failure(x)` answers, in the order the runner builds it: a
 /// code from the closed vocabulary the grammar lists, the message the
 /// agent's `state.failed` shows, then the reason the source's error named (a
-/// Snapback refusal's code, else empty).
+/// Snapback refusal's code, else empty; the author's ruling of 2026-10-12).
 pub(super) fn declare(shapes: &mut Shapes) {
     shapes.map.insert(
         "Failure".into(),

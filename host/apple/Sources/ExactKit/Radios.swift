@@ -1,4 +1,4 @@
-// `input type="radio"`, projected as the checkbox is:
+// `input type="radio"` (x2apps survey #2), projected as the checkbox is:
 // AppKit's radio button, and on UIKit (which has none) a circle drawn as
 // Safari iOS draws one (`ExactRadio`). Exact owns the group, never the
 // platform: AppKit groups radio buttons that share a superview and an action,
@@ -6,7 +6,7 @@
 // non-empty `name` in the window, in tree order (`exact_radio_group`, the
 // kernel's `radio_group`). A click checks at once and unchecks the rest,
 // fires `input` then `change` with the radio's value, and then the whole
-// group shows its bound `checked` again (a snap-back).
+// group shows its bound `checked` again (LLP 1069.001 D4's snap-back).
 import Foundation
 #if canImport(AppKit)
 import AppKit

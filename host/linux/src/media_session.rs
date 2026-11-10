@@ -1,8 +1,8 @@
-//! The media session on a host with no player: the
+//! @ref LLP 1098 D9 — the media session on a host with no player: the
 //! record, never a publication. `state.mediaSession` reads the claimants
 //! (`audio`/`video` rows with `metadata=`) from their kernel props and the
 //! runner's handlers; nothing plays, so the owner is the most recently
-//! mounted claimant, its playback state `"paused"`, and
+//! mounted claimant (D5's second rule), its playback state `"paused"`, and
 //! no position. `tap … mediasession` dispatches one of the six to the owner
 //! through the runner's media event path, never as a press. Windows's agent
 //! mode is this presenter and does the same.
@@ -18,7 +18,7 @@ use exact_runner::{DataSource, Event};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 
-/// The six actions, by `setActionHandler`'s names.
+/// The six actions, by `setActionHandler`'s names (LLP 1098 D2).
 const ACTIONS: [&str; 6] = [
     "seekbackward",
     "seekforward",
@@ -42,7 +42,7 @@ impl Mounts {
         for key in &receipt.destroyed {
             self.first.remove(key);
         }
-        // A renewed node is a new mount too: the key stays, the
+        // A renewed node is a new mount too (LLP 1078): the key stays, the
         // mount does not.
         for key in receipt.created.iter().chain(receipt.renewed.iter()) {
             if kernel.node_by_key(*key).is_some_and(claims) {
@@ -57,7 +57,7 @@ fn claims(node: NodeRef<'_>) -> bool {
     node.node_type == NodeType::Video && node.props.contains(PropId::MediaTitle)
 }
 
-/// A seek's offset: the element's, else the default 10 s.
+/// A seek's offset: the element's, else the default 10 s (D2).
 fn offset(node: NodeRef<'_>, prop: PropId) -> f64 {
     match node.props.get(prop) {
         Some(&PropValue::Float(s)) if s.is_finite() && s > 0.0 => s,
@@ -103,7 +103,7 @@ fn named(kernel: &Kernel, id: ViewId) -> String {
     }
 }
 
-/// `state.mediaSession`, as every host reports it.
+/// `state.mediaSession`, as every host reports it (D10).
 pub(crate) fn state<D: DataSource>(p: &Presenter<D>) -> Value {
     let kernel = p.host().kernel();
     let (claimants, owner) = owner(p);
@@ -130,7 +130,7 @@ pub(crate) fn state<D: DataSource>(p: &Presenter<D>) -> Value {
     })
 }
 
-/// `tap <id> mediasession <action> [seconds]`: the action the
+/// `tap <id> mediasession <action> [seconds]` (D9, D10): the action the
 /// platform's handler would send, with the payload a player's host sends;
 /// refused, with nothing dispatched, for a target that is not the owner or
 /// an action it does not offer.
@@ -156,9 +156,7 @@ pub(crate) fn act<D: DataSource>(
         ));
     }
     if matches!(action, "play" | "pause") {
-        return Err(format!(
-            "mediasession: {action} is unavailable: this host has no media player to act on"
-        ));
+        return Err(format!("mediasession: {action} is unavailable: this host has no media player to act on (LLP 1098 D9)"));
     }
     if !handled(p, id).contains(&action) {
         return Err(format!(
@@ -169,7 +167,7 @@ pub(crate) fn act<D: DataSource>(
     let node = kernel.node(id).ok_or("mediasession: the owner is gone")?;
     // A skip of 0, or any interval that is not a positive finite number, is
     // "the platform gave none": the element's offset, as the web glue and
-    // Apple's `perform` send it. `seekto` 0 stays the start.
+    // Apple's `perform` send it. `seekto` 0 stays the start. (LLP 1098 D9)
     let skip = seconds.filter(|s| s.is_finite() && *s > 0.0);
     let (offset, time) = match action {
         "seekbackward" => (

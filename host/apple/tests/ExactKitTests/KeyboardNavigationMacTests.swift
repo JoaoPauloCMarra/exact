@@ -1,6 +1,7 @@
-// Tab honours the Mac's Keyboard Navigation setting: off (the default)
-// it moves between text fields and what takes keys of its own; on it
-// reaches every control. A `tabindex` the author wrote wins either way.
+// @ref LLP 1115.000 D7.2 — Tab honours the Mac's Keyboard Navigation
+// setting: off (the default) it moves between text fields and what takes
+// keys of its own; on it reaches every control. A `tabindex` the author
+// wrote wins either way.
 #if os(macOS)
 import AppKit
 import XCTest
@@ -77,9 +78,9 @@ final class KeyboardNavigationMacTests: XCTestCase {
         if !p.routeKey(event, focused: true, in: window) { window.sendEvent(event) }
     }
 
-    /// A date, a time and a `select`: with Keyboard
-    /// Navigation on, Tab stops at each, in order, as at every control.
-    /// Off, each is its own AppKit control's answer, which
+    /// A date, a time and a `select` (X52, #280, #327): with Keyboard
+    /// Navigation on, Tab stops at each, in order, as at every control (LLP
+    /// 1115.000 D7.2). Off, each is its own AppKit control's answer, which
     /// follows the machine's setting and so is not asserted here.
     func testADateATimeAndASelectAreStopsWithKeyboardNavigationOn() {
         _ = NSApplication.shared
@@ -332,7 +333,7 @@ final class KeyboardNavigationMacTests: XCTestCase {
         p.dialogs.close(dialog)
         KeyboardNavigation.agent = true
         p.dialogs.show(dialog)
-        // In its sheet: the sheet's window holds its focus.
+        // In its sheet (LLP 1115.002 D7.2): the sheet's window holds its focus.
         XCTAssertTrue(window.attachedSheet === dialog.window)
         XCTAssertTrue(dialog.window?.firstResponder === p.views[21], "on, the button comes first")
         p.dialogs.close(dialog)

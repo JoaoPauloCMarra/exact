@@ -1,5 +1,5 @@
 //! `page(path, find)`: the open document as the terminal reader draws it
-//! (`apps/llp/terminal.contract`).
+//! (`apps/llp/terminal.contract`, LLP 1101).
 //!
 //! The same parsed blocks as `document`, with three things a reader in a
 //! terminal needs and the windowed reader does not ask for:

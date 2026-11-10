@@ -1,4 +1,4 @@
-//! A two-way socket on a scripted transport: every frame,
+//! A two-way socket on a scripted transport (LLP 1016.000 D7): every frame,
 //! close, overflow and abort is the test's to make, and every frame sent
 //! is recorded.
 use super::super::super::Core;

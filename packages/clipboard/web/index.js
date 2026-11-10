@@ -1,16 +1,16 @@
-// @exact/clipboard on the web: `navigator.clipboard.write`
+// @exact/clipboard on the web (LLP 1133.006): `navigator.clipboard.write`
 // with a `ClipboardItem` (https://www.w3.org/TR/clipboard-apis/).
 //
-// - The image is sanitized as Apple's is: decoded, frame 0 of an
+// - The image is sanitized as Apple's is (D1): decoded, frame 0 of an
 //   animation chosen with `ImageDecoder` where the browser has it, and drawn
 //   to a canvas whose PNG is what the browser is given, so both hosts hold
 //   the same pixels to the same bounds before the browser sanitizes again.
-// - When a write may happen is the browser's: Chrome writes while the
+// - When a write may happen is the browser's (D3): Chrome writes while the
 //   document has focus; Safari and Firefox within a person's activation. A
 //   refusal is the browser's `NotAllowedError`.
-// - Under the agent it is its own substitute: the item is
+// - Under the agent it is its own substitute (D8 item 4, §7): the item is
 //   kept in memory, never given to the browser.
-// - A later write supersedes one still decoding, which fails `AbortError`.
+// - A later write supersedes one still decoding, which fails `AbortError` (D2).
 
 const MOST_FILE = 64 * 1024 * 1024, MOST_BYTES = 2 * 1024 * 1024, MOST_PIXELS = 64_000_000, MOST_TEXT = 1024 * 1024;
 const TYPES = ['text/plain', 'image/png'];
@@ -82,7 +82,7 @@ export function implementation({ agent, log, files }) {
       if (source.length > MOST_BYTES) return refused('DataError', 'image/png is over 2 MiB as bytes: pass an app:/ path');
     } else if (image != null) return refused('TypeError', 'image/png is an app:/ path or bytes');
 
-    // This write supersedes any still decoding.
+    // This write supersedes any still decoding (D2).
     const number = ++latest;
     inFlight?.supersede();
     let superseded = null;
@@ -117,7 +117,7 @@ export function implementation({ agent, log, files }) {
     writeText: ({ data }, told) => typeof data === 'string' ? write([{ 'text/plain': data }], told) : refused('TypeError', 'writeText takes a string'),
     cancel(request) { if (inFlight && inFlight.request === request) { latest++; inFlight.supersede(); } },
     destroy() { inFlight?.supersede(); },
-    /** `state.extensions.clipboard.implementation`. */
+    /** `state.extensions.clipboard.implementation` (§7 item 3). */
     state: disclosed,
   };
 }

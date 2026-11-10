@@ -5,7 +5,7 @@ import XCTest
 
 /// A plain UIKit scroller (not `scrollFollowEnd`, not a list) keeps the
 /// reader's content still when a box above the port changes size or is
-/// inserted, as CSS scroll anchoring does in Chrome.
+/// inserted, as CSS scroll anchoring does in Chrome (#138 X23d).
 final class ScrollAnchoringIOSTests: XCTestCase {
     private var window: UIWindow!
 
@@ -21,7 +21,7 @@ final class ScrollAnchoringIOSTests: XCTestCase {
             ["op": "create", "id": 1, "kind": "view", "style": ["overflow_y": "scroll"]],
             ["op": "create", "id": 2, "kind": "view", "props": ["id": "header"], "style": ["height": 48.0]],
         ]
-        // A prop keeps each row a view, not a flat leaf.
+        // A prop keeps each row a view, not a flat leaf (LLP 1068 §6.1).
         for i in 0..<20 { ops.append(["op": "create", "id": 10 + i, "kind": "view", "props": ["id": "r\(i)"], "style": ["height": 30.0]]) }
         ops += [
             ["op": "children", "id": 1, "ids": [2] + Array(10..<30)],

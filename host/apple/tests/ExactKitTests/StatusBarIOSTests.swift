@@ -3,7 +3,7 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// The status bar's style from `status-bar-style`. The declaration
+/// LLP 1105: the status bar's style from `status-bar-style`. The declaration
 /// painted on top of what covers the bar wins, and a flip reaches the
 /// controllers in the batch that made it.
 final class StatusBarIOSTests: XCTestCase {

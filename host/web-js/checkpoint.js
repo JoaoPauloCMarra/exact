@@ -2,7 +2,7 @@ import { viewChildren, inertAncestor } from './navigation.js';
 import { carryRouter, clock, launchLocation, res, sig } from './rt.js';
 import { offerAll } from './focus.js';
 
-// A render's checkpoint answers, as
+// A render's checkpoint answers (LLP 1048.000 D6), as
 // `exact_web::document::checkpoint` writes them: JSON text, one
 // `[name, source, [args…], value]` per answer the document used, each value
 // typed as `push_value` (host/web/src/page.rs) spells it — a list an array,
@@ -51,7 +51,7 @@ export function devSignal(name, initial, type, declared, router = false) {
   if (name.includes('@')) { Panels.live.add(out); Panels.used.add(name); }
   return out;
 }
-/** A tab panel's state, `slot@panel`, made when the panel is built (emit's `owned`): the capture
+/** A tab panel's state, `slot@panel`, made when the panel is built (emit's `owned`; LLP 1075.003 §9.14): the capture
  * (dev.mjs) takes each live one, and what the last reload carried for a panel not built since. */
 const Panels = globalThis.__exactDevPanels = { live: new Set(), used: new Set(), left: () => (dev()?.slots ?? []).filter(s => s[0].includes('@') && !Panels.used.has(s[0])) };
 

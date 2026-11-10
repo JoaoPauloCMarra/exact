@@ -1,4 +1,4 @@
-//! Tailwind CSS v4 `@theme` (importer 2): the theme as
+//! Tailwind CSS v4 `@theme` (LLP 1121 D14, importer 2): the theme as
 //! Tailwind builds it from each `@theme` block (in order: a reset clears
 //! what it names, a `default` key yields to a value the key has, a later
 //! value wins; an enclosing media query does not condition it), and the
@@ -13,7 +13,7 @@
 //!   key that names it reads its colour on each side. An `inline` key's
 //!   redefinition is reported: its utilities read its value.
 //! - Spacing, radii, fonts, type, weights, leading, tracking, the three
-//!   shadow kinds and easings are their kinds' tokens:
+//!   shadow kinds and easings are their kinds' tokens (stage 6 H):
 //!   `space.<n>`, `radius.<n>`, `family.<n>`, `type.<n>` (`--text-<n>` and
 //!   its `--line-height` and `--font-weight`, one type token), `weight.<n>`
 //!   …, a `var()` the token it names. One that does not fold (a text

@@ -114,7 +114,7 @@ pub(crate) struct SharedStyles {
     groups: Groups,
     /// Each held style's wide colour slots, by its allocation, visited once:
     /// a style is never changed in place, and a dead one's entry no longer
-    /// upgrades (the wide table's sweep).
+    /// upgrades (the wide table's sweep, LLP 1121 stage 4).
     wide: HashMap<usize, (std::rc::Weak<StyleProps>, Box<[u16]>)>,
     /// Every held style's wide colours, a superset: added to as styles come,
     /// rebuilt when styles have gone (the table's own sweeps, amortized).
@@ -139,7 +139,8 @@ impl Default for SharedStyles {
 }
 
 /// A style's key: its set rows encoded, then what was written in `rem`/`em`,
-/// which tells two styles apart even when their pixels agree.
+/// which tells two styles apart even when their pixels agree (LLP 1069.000
+/// D3).
 fn key(style: &StyleProps, w: &mut Writer) {
     w.clear();
     style.encode_patch(w);
@@ -271,8 +272,8 @@ impl SharedStyles {
 /// The rare and cold rows of held styles, each distinct group once, by a
 /// hash of every row in it encoded (so `-0` and `0` stay apart, as styles
 /// do). One under a hash another live group already has stays the style's
-/// own. Held weakly: a group no style holds is in no wide-colour mark, so
-/// its colours' ids may be reclaimed and must not be read.
+/// own. Held weakly: a group no style holds is in no wide-colour mark (LLP
+/// 1121 stage 4), so its colours' ids may be reclaimed and must not be read.
 #[derive(Debug, Clone, Default)]
 struct Groups {
     rare: HashMap<u64, Weak<RareRows>, BuildHasherDefault<IdHasher>>,
@@ -639,7 +640,7 @@ mod tests {
         b.mask.set(crate::StyleId::Height);
         let z = shared.intern(b);
         assert!(!Rc::ptr_eq(&x, &z));
-        // The same row its author wrote is another style:
+        // The same row its author wrote is another style (LLP 1115.000 D2):
         // one node's bit is never another's.
         let mut written = a.clone();
         written.written.set(crate::StyleId::Width);

@@ -1,8 +1,9 @@
-//! `set-row`, the design server's checked edit of one Contract row: at the
-//! attribute's place, named by the map's `at` and the file's digest, or on a
-//! `style`; only the value replaced, through `contract fmt`, compiled whole
-//! first; the inverse gives the bytes back; a stale digest and a failing
-//! candidate write nothing.
+//! @ref LLP 1122 D6, T5 — `set-row`, the design server's checked edit of
+//! one Contract row (LLP 1121 stage 9 D): at the attribute's place, named
+//! by the map's `at` and the file's digest, or on a `style`; only the value
+//! replaced, through `contract fmt`, compiled whole first; the inverse
+//! gives the bytes back; a stale digest and a failing candidate write
+//! nothing.
 #![cfg(unix)]
 
 use super::tamber_serve::{app, digest, Serve};
@@ -173,9 +174,10 @@ fn a_class_row_is_edited_in_its_styles_own_file() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// One place once; a name in scope is the author's; a neighbour's open
-/// parentheses are its own; a shorthand's text as written; a place past u32
-/// refused; a place and a style not both; a refusal says its place.
+/// Review round 1: one place once; a name in scope is the author's; a
+/// neighbour's open parentheses are its own; a shorthand's text as
+/// written; a place past u32 refused; a place and a style not both; a
+/// refusal says its place.
 #[test]
 fn set_row_round_one_edges() {
     let dir = app("set-row-r1", DESIGN);
@@ -240,9 +242,9 @@ fn set_row_round_one_edges() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A style's own row joins history and revert by (style, row): a value edit is
-/// undone with `set-row`; a row the commit added or removed is the author's to
-/// put back. A template row stays code.
+/// Round 1, theme2 17:18: a style's own row joins history and revert by
+/// (style, row): a value edit is undone with `set-row`; a row the commit
+/// added or removed is the author's to put back. A template row stays code.
 #[test]
 fn a_styles_own_row_joins_history_and_revert() {
     let dir = app("row-history", DESIGN);
@@ -294,11 +296,11 @@ fn a_styles_own_row_joins_history_and_revert() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// History keeps a style's row as `set-row` writes it (a paint row alone on its
-/// line), the rest code: a layout row's edit, a reorder of overlapping rows; a
-/// held proposal's no-op target guarded by `requires`; a style's longhand
-/// refused naming its shorthand; a sign whose number is below it refused as
-/// over more lines.
+/// Review round 2: history keeps a style's row as `set-row` writes it (a
+/// paint row alone on its line), the rest code: a layout row's edit, a
+/// reorder of overlapping rows; a held proposal's no-op target guarded by
+/// `requires`; a style's longhand refused naming its shorthand; a sign
+/// whose number is below it refused as over more lines.
 #[test]
 fn set_row_round_two_edges() {
     let dir = app("set-row-r2", DESIGN);
@@ -359,9 +361,10 @@ fn set_row_round_two_edges() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A neighbour's continuation line is the neighbour's (code); own border rows'
-/// order doesn't block a revert; an own row moved across a layout shorthand is
-/// code; a positional argument after a value is no continuation of it.
+/// Review round 3: a neighbour's continuation line is the neighbour's
+/// (code); own border rows' order doesn't block a revert; an own row
+/// moved across a layout shorthand is code; a positional argument after a
+/// value is no continuation of it.
 #[test]
 fn set_row_round_three_edges() {
     let dir = app("set-row-r3", DESIGN);
@@ -415,8 +418,9 @@ fn set_row_round_three_edges() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A style's row written by name is the one set-row edits (a revert names it),
-/// even under a later shorthand that writes it too.
+/// After round 3's re-check: a style's row written by name is the one
+/// set-row edits (a revert names it), even under a later shorthand that
+/// writes it too.
 #[test]
 fn a_named_row_is_edited_under_a_later_shorthand() {
     let dir = app("set-row-named", DESIGN);
@@ -437,9 +441,9 @@ fn a_named_row_is_edited_under_a_later_shorthand() {
 
 const CARD: &str = "component Card\n  view\n    column background-color=\"accent.fill\" testId=\"card\"\n      text \"c\"\n\ncomponent App\n  view\n    column\n      Card()\n";
 
-/// Promote to param is one transaction (a `set-row` reading it and its
-/// `add-param`), with one undo; either alone is refused with the hint;
-/// detaching the last reader takes the param.
+/// Stage 9 D3, LLP 1122 D6: promote to param is one transaction (a
+/// `set-row` reading it and its `add-param`), with one undo; either alone
+/// is refused with the hint; detaching the last reader takes the param.
 #[test]
 fn promote_to_param_and_detach_are_each_one_transaction() {
     let dir = app("promote-param", DESIGN);
@@ -541,9 +545,10 @@ fn promote_to_token_writes_two_files_as_one() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The section goes in the named component, before its own `view` even with a
-/// comment there; the last param's removal takes a commented header and its
-/// comments; the hint is for an unread param only.
+/// D3 review round 1: the section goes in the named component, before
+/// its own `view` even with a comment there; the last param's removal
+/// takes a commented header and its comments; the hint is for an unread
+/// param only.
 #[test]
 fn param_lines_find_their_own_component() {
     let dir = app("param-lines-r1", DESIGN);
@@ -594,8 +599,9 @@ fn param_lines_find_their_own_component() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A param the app sets a value for in its design is not detached, both files
-/// left as they are; the last param takes the comments under it too.
+/// D3 review round 2: a param the app sets a value for in its design is
+/// not detached (LLP 1122 D6), both files left as they are; the last
+/// param takes the comments under it too.
 #[test]
 fn detach_refuses_a_param_the_app_sets() {
     let dir = app("detach-set", DESIGN);
@@ -639,9 +645,9 @@ fn detach_refuses_a_param_the_app_sets() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The hint is for this transaction's param named whole (not `missing` beside
-/// `(its params: fill)`); the last param takes a comment under it past a blank
-/// line.
+/// D3 after round 3: the hint is for this transaction's param named whole
+/// (not `missing` beside `(its params: fill)`); the last param takes a
+/// comment under it past a blank line.
 #[test]
 fn param_hint_names_its_own_param_whole() {
     let dir = app("param-hint-r3", DESIGN);
@@ -691,10 +697,11 @@ fn param_hint_names_its_own_param_whole() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A `:hover` row is edited at its part's place as the compiler's map gives it
-/// (its row's `states`), never at its base row's: `set-row` with `state` on the
-/// node's own part (a side's `border-color` whole), `set-state` on a style's;
-/// undo gives the bytes back.
+/// LLP 1122's queue item (1): a `:hover` row is edited at its part's place
+/// as the compiler's map gives it (its row's `states`), never at its base
+/// row's: `set-row` with `state` on the node's own part (a side's
+/// `border-color` whole), `set-state` on a style's; undo gives the bytes
+/// back.
 #[test]
 fn a_look_row_is_edited_at_the_part_its_map_gives() {
     let dir = app("set-row-look", DESIGN);
@@ -756,11 +763,11 @@ fn a_look_row_is_edited_at_the_part_its_map_gives() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A folded row's base and each of its parts are edited apart, at the places
-/// the compiler's map gives (the base's attribute; each part's row in
-/// `states`): editing the base leaves each part's line as it was, and editing a
-/// part leaves the base's and the other part's, byte for byte; undo gives the
-/// bytes back.
+/// LLP 1122's queue item (2): a folded row's base and each of its parts are
+/// edited apart, at the places the compiler's map gives (the base's
+/// attribute; each part's row in `states`): editing the base leaves each
+/// part's line as it was, and editing a part leaves the base's and the
+/// other part's, byte for byte (review2's 04:24); undo gives the bytes back.
 #[test]
 fn a_folded_rows_base_and_parts_are_edited_apart() {
     let dir = app("set-row-folds", DESIGN);

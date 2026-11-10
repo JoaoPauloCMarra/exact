@@ -65,7 +65,7 @@ pub(super) struct State {
     pub(super) hold: bool,
     /// Each scroller's node as the clamp last saw it shown ([`Presenter::hidden_scrollers`]).
     pub(super) shown_keys: BTreeMap<ViewId, NodeKey>,
-    /// Slices: a host that fills between frames builds at
+    /// Slices (LLP 1050.000 §6): a host that fills between frames builds at
     /// most this many rows past what shows per report, and sends one report
     /// per list per pass; the rest is the list's `pending`. `None` builds the
     /// whole window at once.
@@ -195,13 +195,13 @@ impl Cursor {
     }
     /// `resized_from`: the sequence a port resize in this same pass moved on
     /// from. The resize is not the reader moving, so a correction planned at
-    /// it still lands (posts put above the reader as a
+    /// it still lands (feed F14: posts put above the reader as a
     /// pull-to-refresh zone closes; a sent message's end-follow as the
     /// composer shrinks back), as on Apple. A `scrollIntoView`'s own move
-    /// lands whatever the reader did since, as on Apple
+    /// lands whatever the reader did since (LLP 1070.000 §2.6), as on Apple
     /// and the web: Android's reader then takes the port from there. Once
     /// the reader has moved the port after it, the request's corrections
-    /// land only at their sequence, as any does.
+    /// land only at their sequence, as any does (§2.5).
     fn correction(
         &mut self,
         snapshot: &CollectionSnapshot,
@@ -275,7 +275,7 @@ impl State {
     }
 }
 
-/// A collection's port facts along its axis: `main` is the
+/// A collection's port facts along its axis (LLP 1070 H1): `main` is the
 /// inner height of a vertical list and the inner width of a horizontal one;
 /// `origin` is the main-axis padding before the content; `max` the offset's
 /// range on the main axis; `padding` the main-axis padding at each end.
@@ -741,9 +741,9 @@ impl<D: DataSource> Presenter<D> {
             && facts.row_width == g.cross
     }
 
-    /// The authored `scroll` event at the port's offset, with its extents:
-    /// the box is the port, as the scroll range is measured, and the
-    /// content is the port plus the range the offset clamps to.
+    /// The authored `scroll` event at the port's offset, with its extents
+    /// (chat F4): the box is the port, as the scroll range is measured, and
+    /// the content is the port plus the range the offset clamps to.
     fn scroll_event(&self, view: ViewId) -> Event {
         let (x, y) = self.scroll_of(view);
         let kernel = self.host.kernel();
@@ -1008,7 +1008,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// The agent's `clock settle`: every queued report, nested lists'
-    /// included, before the fixed point is read. Bounded.
+    /// included, before the fixed point is read (LLP 1070 G3). Bounded.
     pub(crate) fn settle_collections(&mut self) -> Option<String> {
         let mut error = None;
         for _ in 0..16 {
@@ -1177,7 +1177,7 @@ impl<D: DataSource> Presenter<D> {
                     self.scroll.entry(view).or_default(),
                 );
                 // The content stays where it shows: a shell that scrolls
-                // this list itself goes on from where it was.
+                // this list itself goes on from where it was (D7.3).
                 let now = self.scroll.get(&view).copied().unwrap_or_default();
                 self.reader.rebased(view, was, now);
                 self.dirty = true;
@@ -1210,7 +1210,7 @@ impl<D: DataSource> Presenter<D> {
                 revision: snapshot.revision,
                 scroll_sequence: cursor.sequence,
                 // From the first row: negative in the padding before it, down
-                // to that padding.
+                // to that padding (LLP 1010 §6.9).
                 offset: (feedback_main as f64 - g.origin).max(-g.origin),
                 port_main: g.main(),
                 port_cross: g.port_cross(),
@@ -1248,7 +1248,7 @@ impl<D: DataSource> Presenter<D> {
                         == Some(view)
                 }),
             };
-            // Unchanged facts, the padding among them, are
+            // Unchanged facts, the padding among them (LLP 1010 §6.9), are
             // news only to a list a slice left pending.
             let unchanged = cursor.sent.as_ref() == Some(&feedback) && !snapshot.pending;
             if !unchanged {
@@ -1266,7 +1266,8 @@ impl<D: DataSource> Presenter<D> {
             // A `scrollIntoView`'s moves are its own until the reader moves
             // the port: no travel is reported meanwhile, the lead sampled
             // before its jump included. The reader's move then makes it the
-            // reader's, and the report says so, which ends it, as on Apple and the web.
+            // reader's, and the report says so, which ends it (LLP 1070.000
+            // §2.5), as on Apple and the web.
             let velocity = (self.collection.velocity)
                 .filter(|(v, _)| *v == view && (!snapshot.seeking || reader_moved))
                 .map_or(0.0, |(_, v)| v);

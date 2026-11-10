@@ -3,7 +3,7 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// `layout agree`: the walk over what the presenter
+/// `layout agree` (LLP 1080.001 D2, D5): the walk over what the presenter
 /// mounted against the kernel's frames. A clean tree reports nothing; each
 /// kind fails when its fact is broken by hand, and a parked or leaving
 /// tree's classification never excuses it from showing or taking input.
@@ -167,7 +167,7 @@ final class AgreementIOSTests: XCTestCase {
         withExtendedLifetime(controller) {}
     }
 
-    /// Flat leaves under a box: two alike bars of `size`.
+    /// Flat leaves (LLP 1068 §6.1) under a box: two alike bars of `size`.
     private func flats(size: Double) -> Presenter {
         let p = Presenter()
         window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 400))

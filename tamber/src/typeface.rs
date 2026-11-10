@@ -1,4 +1,4 @@
-//! Type and family tokens. A `type` is CSS
+//! Type and family tokens (LLP 1121 D3, D6; stage 6 C). A `type` is CSS
 //! `font` syntax, `[style] [weight] size[/line-height] [family]`, and it
 //! names only what it writes: `-exact-body/1.35 "InterVariable"` writes the
 //! size, the leading and the family, and the text style's own weight
@@ -291,7 +291,7 @@ pub(crate) fn family(text: &str, names: &mut dyn Names) -> Result<String, FoldEr
     Ok(members.join(", "))
 }
 
-/// The kind a value's text makes it, where it says: CSS `font` syntax
+/// The kind a value's text makes it, where it says (§3): CSS `font` syntax
 /// with more than a size (a line height, a family, a style or a weight
 /// before it) is a type; a stack with a quoted name or a comma, a family.
 pub(crate) fn inferred(text: &str, named: &dyn Fn(&str) -> bool) -> Option<crate::Kind> {

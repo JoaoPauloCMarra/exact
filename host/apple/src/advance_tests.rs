@@ -1,7 +1,7 @@
 //! An advance whose commits change no node does no layout (`inert_layout`):
-//! a `sent` reader answered at each MIDI message's time with
-//! nothing on screen reading it, as a sequencer app's activity log is while
-//! it plays. What layout keeps besides boxes still follows.
+//! a `sent` reader answered at each MIDI message's time (LLP 1125 D6) with
+//! nothing on screen reading it, as euxy's activity log is while the
+//! sequencer plays. What layout keeps besides boxes still follows.
 use super::*;
 use crate::content_region::{ContentRegionRegistration, NativeProjectionLimits};
 use exact_kernel::MonospaceMeasurer;

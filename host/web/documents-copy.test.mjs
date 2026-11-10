@@ -1,4 +1,4 @@
-// `copyFile` takes a document the person
+// LLP 1069.010 D1 (ruled 2026-10-26): `copyFile` takes a document the person
 // chose into an app file on the web, as ibex2's `copy_document` does on
 // Hermes: `fs.read` on the document, `fs.write` on the app file, admitted
 // before the document is opened, and the document's File, never its bytes,

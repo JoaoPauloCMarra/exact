@@ -585,7 +585,7 @@ fn link_destinations_are_each_links_own_syntax() {
     }
 }
 
-/// Each undo step keeps the host's words for the state it
+/// LLP 1045 D11: each undo step keeps the host's words for the state it
 /// returns to, however many keystrokes it holds; the app's new words forget
 /// them all.
 #[test]

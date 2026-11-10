@@ -37,7 +37,7 @@ pub use env::link as link_segments;
 pub use env::{uses_env, Edge, Env, EnvRefusal, Rect, Region, SegmentVar, TitleBarVar};
 /// Link the wide colour forms (`lab()`, `lch()`, `oklab()`, `oklch()`,
 /// `color()`) into every colour row's grammar: native hosts and the compiler
-/// at start, a web artifact by use.
+/// at start, a web artifact by use (LLP 1047 D2, LLP 1056 §8.2).
 pub use exact_motion::color::css::link_wide as link_wide_colors;
 mod viewport;
 pub use viewport::ViewportUnit;
@@ -84,9 +84,9 @@ pub enum Dimension {
     /// The viewport's safe-area inset at an edge, plus points (zero for a
     /// bare `env()`).
     Env(Edge, f32),
-    /// A layout region's inset at an edge plus points ([`env`]).
+    /// A layout region's inset at an edge plus points (LLP 1123 D10; [`env`]).
     Region(Region, Edge, f32),
-    /// A viewport segment's length: `env(viewport-segment-<var>
+    /// A viewport segment's length (LLP 1078 D3): `env(viewport-segment-<var>
     /// <x> <y>)`, plus points. Undefined on a viewport with one segment, or
     /// past its grid: the row's initial value then (CSS-ENV-1 §2.3).
     Segment(SegmentVar, u8, u8, f32),
@@ -130,8 +130,8 @@ impl Dimension {
     }
 
     /// An `env()` length by CSS's grammar, or `None` when the text is not one:
-    /// `env(safe-area-inset-<edge>)`, `env(viewport-segment-<var> <x> <y>)`,
-    /// either with a fallback, or a math function
+    /// `env(safe-area-inset-<edge>)`, `env(viewport-segment-<var> <x> <y>)`
+    /// (LLP 1078 D3), either with a fallback, or a math function
     /// ([`Self::parse_calc`]). An undefined segment without a fallback takes
     /// the row's initial value. A text that names one of the variables
     /// wrongly is `None` too; [`env::parse`] says why.
@@ -182,7 +182,7 @@ impl Dimension {
         }
     }
 
-    /// Whether this is a segment length `env` does not define,
+    /// Whether this is a segment length `env` does not define (LLP 1078 D3),
     /// or a calculation that reads one or an undefined title-bar area.
     fn undefined_segment(self, env: &Env) -> bool {
         match self {
@@ -339,13 +339,13 @@ impl StyleValue<'_> {
 
     /// [`Self::unsets`] for borrowed text; dynamic bindings ask it of every changed row.
     pub fn text_unsets(t: &str, style: StyleId) -> bool {
-        // A metric with no row on this platform.
+        // A metric with no row on this platform (LLP 1115.002 D6).
         let t = metrics::text(t).unwrap_or(t).trim();
         t.is_empty()
             || t.eq_ignore_ascii_case("unset")
             || (t.eq_ignore_ascii_case("inherit") && StyleMask::INHERITED.has(style))
             || (t.eq_ignore_ascii_case("currentcolor") && style == StyleId::TextColor)
-            // A bound `normal` follows the surrounding
+            // @ref LLP 1034 §8: a bound `normal` follows the surrounding
             // scheme, as leaving the row off does (CSS's own `normal` means
             // the page's schemes, which no host here has).
             || (t.eq_ignore_ascii_case("normal") && style == StyleId::ColorScheme)
@@ -373,12 +373,12 @@ impl StyleValue<'_> {
     }
 
     pub(crate) fn f32(&self, style: StyleId) -> Result<f32, StyleValueError> {
-        // The rows that take CSS text or a
+        // @ref LLP 1077 D7, D8, D11 — the rows that take CSS text or a
         // range of their own.
         if let Some(value) = space::f32_row(self, style) {
             return value;
         }
-        // Shape-margin is a nonnegative CSS length.
+        // @ref LLP 1043.000 §3 D1 — shape-margin is a nonnegative CSS length.
         if style == StyleId::ShapeMargin {
             let value = match self {
                 StyleValue::Number(n) => Some(*n as f32),
@@ -392,7 +392,7 @@ impl StyleValue<'_> {
                 style, expected: "nonnegative finite length in points/px (percentage shape-margin is not implemented in exact2 v1)",
             });
         }
-        // CSS refuses a negative flex factor, gap or
+        // @ref LLP 1053 G3 — CSS refuses a negative flex factor, gap or
         // border width.
         if calc::nonnegative_row(style) {
             return match self {
@@ -459,7 +459,7 @@ impl StyleValue<'_> {
             StyleValue::Percent(p) if (*p as f32).is_finite() => Ok(Dimension::Percent(*p as f32)),
             StyleValue::Auto if admits_auto => Ok(Dimension::Auto),
             StyleValue::Auto => Err(StyleValueError::AutoNotAdmitted { style }),
-            // CSS's initial maximum, the unbounded one `auto` already names here.
+            // CSS's initial maximum, the unbounded one `auto` already names here (LLP 1102 §3.11).
             StyleValue::Text(t)
                 if matches!(style, StyleId::MaxWidth | StyleId::MaxHeight)
                     && t.trim_matches(['\t', '\n', '\u{c}', '\r', ' '])
@@ -502,7 +502,7 @@ impl StyleValue<'_> {
                         .map(Dimension::Points)
                 })
                 // CSS's absolute units (96 px to the inch) and a percentage
-                // written as text.
+                // written as text (LLP 1055.000 D4).
                 .or_else(|| absolute_length(t.trim_matches(['\t', '\n', '\u{c}', '\r', ' '])))
                 .ok_or(StyleValueError::WrongKind {
                     style,
@@ -528,7 +528,7 @@ impl StyleValue<'_> {
 
     /// A colour as a row holds it. `light-dark(a, b)` is the one text a
     /// colour row takes beyond a hex, exactly as `env()` is the one text a
-    /// dimension row takes.
+    /// dimension row takes (LLP 1034 D1).
     pub(crate) fn color_value(&self, style: StyleId) -> Result<ColorValue, StyleValueError> {
         if let StyleValue::Text(t) = self {
             if let Some(pair) = ColorValue::parse_light_dark(t) {
@@ -547,7 +547,7 @@ impl StyleValue<'_> {
         match self {
             StyleValue::Auto if keyword == "auto" => Ok(None),
             StyleValue::Text(t) if t.eq_ignore_ascii_case(keyword) => Ok(None),
-            // A colour, else the shorthand's colour part.
+            // @ref LLP 1077 D7 — a colour, else the shorthand's colour part.
             StyleValue::Text(t) if style == StyleId::TextStrokeColor => {
                 self.color_value(style).map(Some).or_else(|_| {
                     stroke::parse(t)
@@ -577,8 +577,8 @@ impl StyleValue<'_> {
     pub(crate) fn vec2(&self, style: StyleId) -> Result<Vec2, StyleValueError> {
         match self {
             StyleValue::Vec2(x, y) if x.is_finite() && y.is_finite() => Ok(Vec2 { x: *x, y: *y }),
-            // The one `translate` text sets its lengths,
-            // its percentages and its z, each row its part.
+            // @ref LLP 1077 D8 — the one `translate` text sets its lengths,
+            // its percentages (chess diary #4) and its z, each row its part.
             StyleValue::Text(t)
                 if style == StyleId::Translate || style == StyleId::TranslatePercent =>
             {
@@ -611,7 +611,7 @@ impl StyleValue<'_> {
 /// text arm (`opacity`, `flex-grow`, `z-index`, `font-weight`) refuses every
 /// computed string, where a browser applies one (`opacity: 0.5`), so the
 /// compiler refuses a string-typed binding of such a row as it refuses the
-/// literal. The rows listed are those whose conversion has a
+/// literal (LLP 1017 P1a). The rows listed are those whose conversion has a
 /// text arm: `rem`/`em` and `px` lengths ([`relative`]), SVG's stroke
 /// lengths, and the CSS forms [`StyleValue::f32`] reads.
 pub fn takes_text(style: StyleId) -> bool {
@@ -640,8 +640,8 @@ pub fn takes_text(style: StyleId) -> bool {
 
 // CSS pixel length or unitless zero, shared by dimensions and translation.
 /// A CSS length in an absolute unit (96 px to the inch), or a percentage
-/// written as text, with the CSS number grammar `px` lengths use. Unitless
-/// text stays refused.
+/// written as text, with the CSS number grammar `px` lengths use (LLP
+/// 1055.000 D4). Unitless text stays refused.
 fn absolute_length(token: &str) -> Option<Dimension> {
     let number = |n: &str| parse_pixel_length(&format!("{n}px"));
     if let Some(n) = token.strip_suffix('%') {
@@ -708,7 +708,7 @@ fn parse_css_number(number: &str) -> Option<f64> {
 /// because nothing about layout depends on a colour and because the browser
 /// is the one that should resolve `light-dark()` — handed the function it
 /// does so per element against the inherited `color-scheme`, with no work of
-/// ours.
+/// ours. @ref LLP 1034 D1/D2
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ColorValue {
     /// One colour, whatever the appearance.
@@ -716,18 +716,18 @@ pub enum ColorValue {
     /// CSS `light-dark(a, b)`: the first under a light scheme, the second
     /// under a dark one.
     LightDark(Color, Color),
-    /// A colour role, by id into `COLOR_ROLES`: the platform's
+    /// A colour role (LLP 1095 D2), by id into `COLOR_ROLES`: the platform's
     /// own colour where a host has it, the role's pair everywhere else.
     Role(u8),
-    /// A `-exact-platform-color()`, by id into the interned table.
+    /// A `-exact-platform-color()` (LLP 1095 D3), by id into the interned table.
     Platform(u16),
-    /// A colour in its own space, or a `light-dark()` with one, by id into
-    /// `style::wide`.
+    /// A colour in its own space, or a `light-dark()` with one (LLP 1100
+    /// D2), by id into `style::wide`.
     Wide(u16),
-    /// A paint-motion frame: extended linear sRGB in
+    /// A paint-motion frame (LLP 1100 D2): extended linear sRGB in
     /// 1/2048ths and 8-bit alpha. Never authored; not interned.
     Moving([i16; 3], u8),
-    /// A colour in a profile's space, by id into
+    /// A colour in a profile's space (LLP 1100 D3), by id into
     /// `style::profiled`.
     Profiled(u16),
 }
@@ -745,11 +745,11 @@ impl ColorValue {
         if let Some(c) = roles::painted_accent(self, dark) {
             return c;
         }
-        // A role the theme replaces is what replaces it.
+        // @ref LLP 1095 D4 — a role the theme replaces is what replaces it.
         if let Some(o) = roles::painted_override(self) {
             return o.resolve(dark);
         }
-        // A reference is what the host reported, else
+        // @ref LLP 1095 D1 — a reference is what the host reported, else
         // its fallback pair.
         if let Some(c) = roles::reported(self, dark) {
             return c;
@@ -797,8 +797,8 @@ impl ColorValue {
         }
     }
 
-    /// A role, a `-exact-platform-color()`, a colour in a
-    /// profile's or its own space, or `light-dark(<color>,
+    /// A role (LLP 1095 D2), a `-exact-platform-color()` (D3), a colour in a
+    /// profile's or its own space (LLP 1100), or `light-dark(<color>,
     /// <color>)`. Anything else falls through to the plain colour parse.
     pub fn parse_light_dark(text: &str) -> Option<ColorValue> {
         let start = text.trim_start();
@@ -808,7 +808,7 @@ impl ColorValue {
         if start.starts_with('#') {
             return None;
         }
-        // A theme name, or a role the theme overrides,
+        // @ref LLP 1095 D4 — a theme name, or a role the theme overrides,
         // reads the colour its entry stands for.
         if let Some(value) = theme::resolved(text, |value| {
             ColorValue::parse_light_dark(value)
@@ -832,7 +832,7 @@ impl ColorValue {
     }
 
     /// `light-dark()` of two legacy colours; a reference is not valid inside
-    /// one.
+    /// one (LLP 1095 D1).
     pub(crate) fn parse_pair(text: &str) -> Option<ColorValue> {
         let inner = text.trim().strip_prefix("light-dark(")?.strip_suffix(')')?;
         let comma = top_level_comma(inner)?;
@@ -871,51 +871,51 @@ pub enum RowValue<'a> {
     LineHeight(LineHeight),
     /// A validated CSS clipping path.
     ClipPath(&'a crate::clip::ClipPath),
-    /// CSS shape-outside, resolved after layout.
+    /// CSS shape-outside, resolved after layout (LLP 1043.000 D1).
     ShapeOutside(&'a exact_textflow::ShapeOutside),
-    /// CSS `aspect-ratio` as authored.
+    /// CSS `aspect-ratio` as authored (LLP 1053 G1).
     AspectRatio(&'a crate::ratio::AspectRatio),
-    /// Ordered invoker-popover flip attempts.
+    /// Ordered invoker-popover flip attempts (LLP 1021 D2).
     PositionTryFallbacks(&'a crate::position_try::PositionTryFallbacks),
-    /// `-exact-drag-timeline`.
+    /// `-exact-drag-timeline` (LLP 1057.003).
     DragTimeline(&'a crate::timeline::DragTimeline),
-    /// CSS `animation-timeline`.
+    /// CSS `animation-timeline` (LLP 1057.003).
     AnimationTimeline(&'a crate::timeline::AnimationTimeline),
-    /// CSS `animation-range`.
+    /// CSS `animation-range` (LLP 1057.003).
     AnimationRange(&'a crate::timeline::AnimationRange),
-    /// CSS `timeline-scope`.
+    /// CSS `timeline-scope` (LLP 1057.003 D4).
     TimelineScope(&'a crate::timeline::TimelineScope),
-    /// SVG paint.
+    /// SVG paint (LLP 1055 D2).
     Paint(&'a crate::svg::Paint),
-    /// SVG `stroke-dasharray`.
+    /// SVG `stroke-dasharray` (LLP 1055 D2).
     DashArray(&'a crate::svg::DashArray),
-    /// CSS `transform` on an SVG element.
+    /// CSS `transform` on an SVG element (LLP 1055.000 D5).
     Transform(&'a crate::svg::TransformList),
-    /// CSS `transform-origin`.
+    /// CSS `transform-origin` (LLP 1055.000 D5).
     TransformOrigin(&'a crate::svg::TransformOrigin),
-    /// SVG `paint-order`.
+    /// SVG `paint-order` (LLP 1055.000 D7).
     PaintOrder(&'a crate::svg::PaintOrder),
-    /// SVG `marker-start`, `marker-mid`, `marker-end`.
+    /// SVG `marker-start`, `marker-mid`, `marker-end` (LLP 1055.000 D9).
     Marker(&'a crate::svg::MarkerRef),
-    /// CSS `filter` on SVG elements.
+    /// CSS `filter` on SVG elements (LLP 1055.000 D14).
     Filter(&'a crate::svg::filter::FilterList),
-    /// CSS `background-image`: `none` or one gradient.
+    /// CSS `background-image`: `none` or one gradient (LLP 1066).
     BackgroundImage(&'a crate::gradient::BackgroundImage),
-    /// CSS `box-shadow`: `none` or a list.
+    /// CSS `box-shadow`: `none` or a list (LLP 1077 D4).
     BoxShadow(&'a BoxShadows),
-    /// CSS `backdrop-filter`, in authored order.
+    /// CSS `backdrop-filter`, in authored order (LLP 1053.000 D1).
     BackdropFilter(&'a BackdropFilter),
-    /// CSS `text-shadow`.
+    /// CSS `text-shadow` (LLP 1077 D3).
     TextShadow(&'a TextShadow),
-    /// CSS `font-variation-settings`.
+    /// CSS `font-variation-settings` (LLP 1019 D9).
     FontVariations(&'a FontVariations),
-    /// CSS `mask-image`: `none` or one gradient.
+    /// CSS `mask-image`: `none` or one gradient (LLP 1077 D2).
     MaskImage(&'a crate::gradient::BackgroundImage),
-    /// CSS `corner-shape`.
+    /// CSS `corner-shape` (LLP 1077 D1).
     CornerShape(&'a crate::corner::CornerShape),
-    /// CSS `rotate`'s axis.
+    /// CSS `rotate`'s axis (LLP 1077 D8).
     RotateAxis(&'a space::RotateAxis),
-    /// A symbol's palette.
+    /// A symbol's palette (LLP 1077 D10).
     SymbolPalette(&'a symbols::SymbolPalette),
     /// A dimension.
     Dimension(Dimension),
@@ -924,7 +924,7 @@ pub enum RowValue<'a> {
     /// A color.
     Color(Color),
     /// A colour a row holds: fixed, or a `light-dark()` pair a host resolves
-    ///.
+    /// (LLP 1034 D1).
     ColorValue(ColorValue),
     /// Two numbers.
     Vec2(Vec2),
@@ -938,7 +938,7 @@ pub enum RowValue<'a> {
     Placement(&'a GridPlacement),
     /// The `transition` row.
     Transitions(&'a Transitions),
-    /// The `animation` row.
+    /// The `animation` row (LLP 1055 D5).
     Animations(&'a Animations),
 }
 
@@ -1159,7 +1159,7 @@ pub(crate) fn encode_grid_rows(
 impl StyleProps {
     /// Whether every padding and border width reaches layout as zero, read
     /// without building the engine's style: a kernel that mirrors no engine
-    /// tree checks content regions too.
+    /// tree checks content regions too (LLP 1047 §10).
     pub(crate) fn unpadded(&self, env: &Env) -> bool {
         let (down, across) = (cells::ROW, cells::COLUMN);
         [
@@ -1179,19 +1179,19 @@ impl StyleProps {
     /// Lower to engine style. `node_type` supplies the per-tag defaults the
     /// table does not carry: scroll containers scroll on their block axis
     /// unless the producer set `overflow_y`.
-    /// `env` resolves the `env()` lengths (the kernel's environment, set by
-    /// the host with the viewport).
+    /// `env` resolves the `env()` lengths (LLP 1001 §2: the kernel's
+    /// environment, set by the host with the viewport).
     #[allow(clippy::field_reassign_with_default)]
     pub fn to_taffy(&self, node_type: NodeType, env: &Env) -> taffy::style::Style {
         // A segment length the environment does not define is invalid at
         // computed-value time (CSS-ENV-1 §2.3): the row takes its initial
-        // value, which is the table's default.
+        // value, which is the table's default (LLP 1078 D3).
         self.env_resolved(env).lower(node_type, env)
     }
 
     /// This style with every segment length `env` does not define replaced
     /// by its row's initial value (CSS-ENV-1 §2.3: invalid at computed-value
-    /// time) — borrowed when there is none to replace, a copy
+    /// time; LLP 1078 D3) — borrowed when there is none to replace, a copy
     /// otherwise. Every reader of a style's dimensions goes through this
     /// before resolving them, so no reader sees the `Auto` stand-in on a row
     /// that does not admit it.
@@ -1239,7 +1239,7 @@ impl StyleProps {
     fn lower(&self, node_type: NodeType, env: &Env) -> taffy::style::Style {
         let mut s = taffy::style::Style::default();
         s.display = match self.display {
-            // A document's metadata takes no space.
+            // A document's metadata takes no space (LLP 1048.003 D1).
             _ if node_type.is_metadata() => taffy::style::Display::None,
             Display::Block => taffy::style::Display::Block,
             Display::Flex => taffy::style::Display::Flex,
@@ -1269,7 +1269,7 @@ impl StyleProps {
             PositionType::Static => taffy::style::Position::Static,
             PositionType::Relative => taffy::style::Position::Relative,
             PositionType::Absolute => taffy::style::Position::Absolute,
-            // A sticky box lays out as a relative one
+            // @ref LLP 1083 D1 — a sticky box lays out as a relative one
             // whose insets are not offsets: the host moves it as its
             // scroller scrolls (`sticky.rs`).
             PositionType::Sticky => taffy::style::Position::Relative,
@@ -1370,7 +1370,7 @@ pub fn taffy_style(arena: &NodeArena, slot: u32) -> taffy::style::Style {
     // HTML's button layout, which Exact's reset of a `<button>` keeps: its
     // automatic inline size is shrink-to-fit, and a block button's content
     // sits in an anonymous flow-root box centred safely in the block axis,
-    // whatever `align-content` says (Chrome 154). A flex or
+    // whatever `align-content` says (Chrome 154; LLP 1001 §1). A flex or
     // grid button lays out as any flex or grid container.
     if arena.is_button(slot) {
         s.item_is_table = true;
@@ -1386,7 +1386,7 @@ pub fn taffy_style(arena: &NodeArena, slot: u32) -> taffy::style::Style {
     // padding; with `none` the authored padding remains in that border box.
     // A select's native UA default is border-box unless the author overrides
     // it, and the web page's field look makes a date, time or local date-time
-    // control one too. Other controls keep the reset's
+    // control one too (LLP 1116.001 D1). Other controls keep the reset's
     // content-box semantics.
     match crate::ControlKind::of(arena.node_type(slot), arena.props(slot)) {
         Some(crate::ControlKind::Checkbox | crate::ControlKind::Switch) => {
@@ -1411,9 +1411,9 @@ pub fn taffy_style(arena: &NodeArena, slot: u32) -> taffy::style::Style {
             s.box_sizing = taffy::style::BoxSizing::BorderBox;
         }
         // A determinate `progress` is a block of intrinsic size `10em` by
-        // `1em`.
+        // `1em` (LLP 1116 D8; LLP 1115.000 D10.2).
         Some(crate::ControlKind::ProgressBar) => crate::control::progress_box(arena, slot, &mut s),
-        // A percentage-wide range is compressible.
+        // A percentage-wide range is compressible (LLP 1115.000 D10.2).
         Some(crate::ControlKind::Range) => crate::control::range_box(arena, slot, &mut s),
         _ => {}
     }
@@ -1442,7 +1442,7 @@ pub fn taffy_style(arena: &NodeArena, slot: u32) -> taffy::style::Style {
                 s.aspect_ratio_content_box = true;
             }
         } else if let Some(ratio) = crate::svg::natural_ratio(arena, slot) {
-            // An `svg`'s view box is its natural ratio.
+            // @ref LLP 1055.000 D4 — an `svg`'s view box is its natural ratio.
             s.aspect_ratio = Some(ratio);
             s.aspect_ratio_content_box = true;
         } else if let Some(((w, h), true)) = arena.node_type(slot).default_object_size() {
@@ -1452,7 +1452,7 @@ pub fn taffy_style(arena: &NodeArena, slot: u32) -> taffy::style::Style {
         }
     }
     crate::kernel::apply_projection(arena, slot, &mut s);
-    // What a native container covers of the box.
+    // @ref LLP 1075.003 §3.5 — what a native container covers of the box.
     crate::kernel::apply_cover(arena, slot, &mut s);
     // A grouped list's card and cell margins, as the platform's list has them.
     crate::grouped::apply_margins(arena, slot, &mut s);
@@ -1463,9 +1463,9 @@ pub fn taffy_style(arena: &NodeArena, slot: u32) -> taffy::style::Style {
     }
     // After the mirror: a table's sides are what they cancel, physically.
     table::apply(arena, slot, &mut s);
-    // The containing block a host gave the subtree.
+    // @ref LLP 1115.002 D8.2 — the containing block a host gave the subtree.
     crate::kernel::apply_block(arena, slot, &mut s);
-    // A root is the containing block of every absolutely
+    // @ref LLP 1074 T1 — a root is the containing block of every absolutely
     // positioned box no positioned ancestor holds, on every host: a static
     // root is `relative` (its insets apply, as on the web's root element).
     if arena.is_root(slot) && s.position == taffy::style::Position::Static {

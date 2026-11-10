@@ -72,7 +72,7 @@ extension RegionTextSource {
                 lineHeight: (row["lineHeight"] as? Double).map { CGFloat($0) }, letterSpacing: spacing,
                 color: row[dark ? "darkColor" : "color"] as? [Double],
                 decoration: row["decoration"] as? String ?? "", href: row["href"] as? String ?? "")
-            // The colour is one its author fixed, not a role.
+            // The colour is one its author fixed, not a role (LLP 1115.000 D7.9).
             run.fixedInk = row["fixed"] as? Bool == true
             // Its decorating ancestors' lines, in their colours (`Run.propagate`).
             run.underlineColor = row[dark ? "underlineDarkColor" : "underlineColor"] as? [Double]

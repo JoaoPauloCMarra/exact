@@ -1,6 +1,6 @@
 //! `lower-menu-row-popover`, a note: a row of a menu (`role="menu"`) whose
-//! `popovertarget` names a popover that is no menu. The menu rule opens it
-//! as if by the menu's
+//! `popovertarget` names a popover that is no menu. exact2's menu rule
+//! (LLP 1021; theme2 2026-10-21 19:47, 22:05) opens it as if by the menu's
 //! own invoker, so the menu closing as its row is chosen doesn't take it
 //! along: the note says where it opens, and blames nothing. Only rows the
 //! source settles: literal ids, roles, targets and actions (`commandfor` as

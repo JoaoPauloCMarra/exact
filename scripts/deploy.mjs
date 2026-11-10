@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 import { requireReleasePins } from '../game/inputs.mjs';
-// `exact deploy` — the publisher: the verb, its policies, one library in its
-// own process, the classifier, the compatibility id and the signed head.
+// `exact deploy` — the publisher (LLP 1030.000 D3 the verb, D4 the policies,
+// D5 one library in its own process, D7 where things live; LLP 1030 D3 the
+// classifier and D3a the compatibility id; LLP 1026 D11 the signed head).
 // The repo has no `exact` binary; this script is the verb:
 //
 //   bun scripts/deploy.mjs <app> [--origin <dir|url>] [--channel <name>]
@@ -9,7 +10,7 @@ import { requireReleasePins } from '../game/inputs.mjs';
 //       [--release <id>] [--keys <dir>] [--json] [--yes]
 //   bun scripts/deploy.mjs keygen <id> [--keys <dir>] [--json]
 //
-// In order: **snapshot** — the app's tree must be committed
+// In order, as D3 states it: **snapshot** — the app's tree must be committed
 // (`--dirty` publishes the working tree and says so loudly) and the snapshot
 // is `HEAD` of the repository holding the app; **bake** into a run-specific
 // directory, `target/deploy/<release>/web`, never the dev server's shared
@@ -28,8 +29,8 @@ import { requireReleasePins } from '../game/inputs.mjs';
 //
 // The **bundle** for a platform is `app.plan` plus every asset the bake
 // listed in `exact.json` (`assets/`, `deck/`, `shaders/*.wgsl`): the same
-// bytes for every platform in v1. Per-platform bundles arrive with modules.
-// The head is signed with Ed25519 over the canonical bytes
+// bytes for every platform in v1. Per-platform bundles arrive with modules
+// (LLP 1029). The head is signed with Ed25519 over the canonical bytes
 // exactly as `update/src/envelope.rs` defines them — `signature` removed,
 // keys sorted recursively, no whitespace, integers only — with the private
 // key `<keys dir>/<deploy.signing.key>.pem` (PKCS#8; `--keys`,
@@ -172,7 +173,7 @@ function cargoDependencyRoots(app, exactRoot) {
 }
 
 /** Contract packages linked from outside the app and Exact repositories
- * (`"file:../ui"`, `bun link`) are source too: their whole
+ * (`"file:../ui"`, `bun link`; LLP 1091 D10) are source too: their whole
  * repository, captured beside the app's so a relative link still reaches it.
  * A registry package is not: the captured bun.lock pins its bytes, and the
  * materialized install restores exactly those. */
@@ -366,7 +367,7 @@ function captureRepository(source, sources, captureRoot, stagedRoot, common, app
   } finally { removePrivateTree(scratch); }
 }
 
-/** The snapshot: capture every repository and every
+/** The snapshot (LLP 1030.000 D3 item 1): capture every repository and every
  * dirty source byte the bake can read. Ignored files are source too unless
  * they are under a precise generated-output root. */
 export function snapshotOf(app, opts, exactRoot = ROOT) {
@@ -421,7 +422,7 @@ export function snapshotOf(app, opts, exactRoot = ROOT) {
     if (changes.length && !opts.dirty) refuse(`the source repository${captured.length === 1 ? '' : 'ies'} this bake reads ${captured.length === 1 ? 'has' : 'have'} uncommitted or ignored source files:\n  ${changes.join('\n  ')}\ncommit them, or pass --dirty to publish those captured bytes (the table says so loudly)`);
     const id = captured.length === 1 && changes.length === 0 ? captured[0].commit
       : sha256(Buffer.from(`exact2 source snapshot v3\n${captured.map((source) => `${source.roles.join('+')} ${source.commit} ${source.workingSha256}`).join('\n')}\n`)).slice(0, 40);
-    if (opts.snapshot && !id.startsWith(opts.snapshot.toLowerCase())) refuse(`the source snapshot is ${id}, not --snapshot ${opts.snapshot}: the dry run and its --yes must name the same complete source set`);
+    if (opts.snapshot && !id.startsWith(opts.snapshot.toLowerCase())) refuse(`the source snapshot is ${id}, not --snapshot ${opts.snapshot}: the dry run and its --yes must name the same complete source set (LLP 1030.000 D3)`);
     const sources = captured.map(({ repo, roles, commit, workingSha256, changes: sourceChanges }) => ({ repo, roles, commit, workingSha256, changes: sourceChanges }));
     const snapshot = { id, commit: sources[0].commit, dirty: changes.length > 0, changes, repo: sources[0].repo, sources };
     snapshotCaptures.set(snapshot, { sources: captured, common, captureRoot, stagedSourceRoot, compiler,
@@ -566,7 +567,7 @@ export function materializeSnapshot(snapshot, run, app, cache = null) {
   // (game/app/shells.lock), still locked and offline.
   if (manifest.game) gameShells(dir, manifest.game, resolve(exactRoot, 'game'));
   // node_modules is an output, never captured: a TypeScript app's bake runs Rolldown from it, ships SQLite WASM out of it,
-  // and a module package's crate is under it. Install exactly what the captured bun.lock pins, from
+  // and a module package's crate is under it (LLP 1133.001 D9). Install exactly what the captured bun.lock pins, from
   // Bun's cache, into the captured tree, before the Cargo closure is asserted.
   for (const root of new Set([exactRoot, workspace])) {
     if (!existsSync(resolve(root, 'package.json')) || !existsSync(resolve(root, 'bun.lock'))) continue;
@@ -576,7 +577,7 @@ export function materializeSnapshot(snapshot, run, app, cache = null) {
   }
   assertMaterializedCargoClosure([workspace, exactRoot], sourceRoot, target, {workspace, manifest});
   // Every Contract file the bake will read is in the captured tree: an
-  // installed library that still leads outside it is live bytes.
+  // installed library that still leads outside it is live bytes (LLP 1091 D10).
   assertCapturedContractSources(contractSources(dir, exactRoot, sealedSourceEnv(sourceRoot, { CARGO_TARGET_DIR: capture.compilerTarget }), capture.compiler), sourceRoot);
   return {
     exactRoot, sourceRoot,
@@ -612,9 +613,9 @@ export function deployRun(target, release) {
 
 // ------------------------------------------------------------------ the bake
 
-/** The web root on the JS target: the wasm bake's plan compiled into `<run>/web-js` (`host/web-js/build.mjs
- * --production`) with the bake's origin files, so the root and every stream share one plan; with no bake (`web` null),
- * the app's own Contract, with no envelope. The directory; a JS build that fails refuses the deploy. */
+/** The web root on the JS target (LLP 1071 §7): the wasm bake's plan compiled into `<run>/web-js` (`host/web-js/build.mjs
+ * --production`) with the bake's origin files, so the root and every stream share one plan; with no bake (`web` null,
+ * LLP 1153 D3.6), the app's own Contract, with no envelope. The directory; a JS build that fails refuses the deploy. */
 function bakeJs(app, run, web, exactRoot, sourceRoot) {
   const out = resolve(run, 'web-js');
   const env = sealedSourceEnv(sourceRoot, { CARGO_TARGET_DIR: app.target, EXACT_UPDATE_TRUST: 'production', EXACT_APP_DIR: app.dir });
@@ -635,7 +636,7 @@ export function bake(app, run, exactRoot, sourceRoot) {
   else env.EXACT_APP_DIR = app.dir;
   // An app's bake needs no wasm (`--bake`: the build script's outputs and the
   // origin files; its web root is the JS build, below); a game's web root
-  // is the wasm build.
+  // is the wasm build (LLP 1071 §8).
   const r = spawnSync(process.execPath, [resolve(exactRoot, 'host/web/build.mjs'), app.crate('web'), app.manifest.game === undefined ? '--bake' : '--wasm'], {
     cwd: exactRoot, env, stdio: ['ignore', 'pipe', 'inherit'], encoding: 'utf8', maxBuffer: 64 * 1024 * 1024,
   });
@@ -645,7 +646,7 @@ export function bake(app, run, exactRoot, sourceRoot) {
   return web;
 }
 
-/** The bundle the bake produced, with its bytes: the plan and every asset `exact.json` lists — the same bytes for every platform in v1. */
+/** The bundle the bake produced (LLP 1023 D2's cards with their bytes): the plan and every asset `exact.json` lists — the same bytes for every platform in v1. */
 function readBundle(web, app) {
   const envelope = JSON.parse(readFileSync(resolve(web, 'exact.json'), 'utf8'));
   if (envelope.app?.id !== app.id || envelope.app?.name !== app.displayName) {
@@ -694,7 +695,7 @@ function channelOf(manifest) {
   return names.length === 1 ? names[0] : 'prod';
 }
 
-/** Native deployment targets, including binary-only L=0: what `deploy.store` and `deploy.binaries` name, else what `host` names. Classification decides the carrier before touching a stream. */
+/** Native deployment targets, including binary-only L=0: what `deploy.store` and `deploy.binaries` name, else what `host` names (LLP 1153 D1.1). Classification decides the carrier before touching a stream. */
 export function nativePlatforms(manifest) {
   const deploy = manifest.deploy ?? {};
   const named = [...new Set([...Object.keys(deploy.store ?? {}), ...Object.keys(deploy.binaries ?? {})])].filter((p) => p !== 'web');
@@ -702,7 +703,7 @@ export function nativePlatforms(manifest) {
   if (unknown.length) refuse(`app.json names the platform${unknown.length > 1 ? 's' : ''} ${unknown.join(', ')} under deploy; this repo builds ${PLATFORMS.join(', ')}`);
   return PLATFORMS.filter((p) => p !== 'web' && (named.length ? named : Object.keys(manifest.host ?? {})).includes(p));
 }
-/** Whether the manifest names a native platform, under `host` or `deploy`; one that names none ships the web root alone, with no stream and no envelope, and its deploy bakes nothing. */
+/** Whether the manifest names a native platform, under `host` or `deploy`; one that names none ships the web root alone, with no stream and no envelope, and its deploy bakes nothing (LLP 1153 D1.5, D3.6). */
 export const namesNative = (manifest) => [manifest.host, manifest.deploy?.store, manifest.deploy?.binaries].some((table) => Object.keys(table ?? {}).some((p) => p !== 'web'));
 
 function sunsetFor(app, stream) {
@@ -946,7 +947,7 @@ async function latestRecord(origin, app, stream) {
   return records.at(-1) ?? null;
 }
 
-/** The table: the origin row, a row per stream, a binary row per stream whose cohort this snapshot is not. Nothing is written. */
+/** The table (LLP 1030 D3; 1030.000 D3 item 3): the origin row, a row per stream, a binary row per stream whose cohort this snapshot is not. Nothing is written. */
 export async function classify({ app, opts, origin, channel, snapshot, release, web, bundle, compat, builds, platforms, wantOrigin }) {
   const notes = [];
   if (snapshot.dirty) {
@@ -1045,11 +1046,11 @@ export async function classify({ app, opts, origin, channel, snapshot, release, 
   return { release, snapshot: { id: snapshot.id ?? snapshot.commit, commit: snapshot.commit, dirty: snapshot.dirty, changes: snapshot.changes,
     ...(snapshot.sources ? { sources: snapshot.sources.map(({ roles, commit, workingSha256 }) => ({ roles, commit, workingSha256 })) } : {}) },
   app: { id: app.id, name: app.displayName }, channel, origin: { kind: origin.kind, location: origin.describe() }, dryRun: !opts.yes, notes, rows,
-  // What the app can reach: the bake's rows, the same union on every platform.
+  // What the app can reach (LLP 1069.008 D7): the bake's rows, the same union on every platform.
   reach: (compat.web ?? Object.values(compat).find((c) => c?.reach))?.reach?.rows ?? null };
 }
 
-/** The reach table: each grant line, its purpose in the
+/** The reach table (LLP 1069.008 D7): each grant line, its purpose in the
  * base locale, and what enforces it: the runtime, the OS, or only a native
  * module's declaration. */
 export function renderReach(rows) {
@@ -1062,7 +1063,7 @@ export function renderReach(rows) {
 
 // ------------------------------------------------------------------ printing
 
-/** The table: the release line, one row per line with its carrier on the right. */
+/** The table in D3's shape: the release line, one row per line with its carrier on the right. */
 export function renderTable(table) {
   const line = (label, detail, action) => `${label.padEnd(8)} ${detail.padEnd(60)} → ${action}`;
   const out = [`release ${table.release} · snapshot ${(table.snapshot.id ?? table.snapshot.commit).slice(0, 12)}${table.snapshot.dirty ? ' (DIRTY)' : ''} · channel ${table.channel} · origin ${table.origin.location}${table.origin.kind === 'https' ? ' (read-only)' : ''}`];
@@ -1093,14 +1094,14 @@ export function renderTable(table) {
     out.push(line('', detail, `bundle seq ${row.seq}`));
   }
   const binaries = table.rows.filter((r) => r.action === 'binary');
-  if (binaries.length) out.push(`binary needed: ${binaries.map((r) => `${r.platform ?? '?'} ${r.compatibilityId.slice(0, 8)}`).join(', ')} — a later verb; independently safe bundle rows still publish`);
+  if (binaries.length) out.push(`binary needed: ${binaries.map((r) => `${r.platform ?? '?'} ${r.compatibilityId.slice(0, 8)}`).join(', ')} — a later verb (LLP 1030.000 §6); independently safe bundle rows still publish`);
   out.push(...renderReach(table.reach));
   return out.join('\n');
 }
 
 // ---------------------------------------------------------------- publishing
 
-/** Publish one stream: under its lock, refuse a
+/** Publish one stream (LLP 1030.000 D3 item 5): under its lock, refuse a
  * reused immutable receipt, read the head and allocate seq, put and verify
  * content-addressed blobs, prepare the immutable release record, then swap
  * the signed head conditionally. A failure before that last operation leaves
@@ -1192,7 +1193,7 @@ export function webRelease(web) {
     file.sourceSha256 = sha256(file.body);
     if (file.name === 'index.html') {
       const html = file.body.toString('utf8');
-      // A bake anchors deep locations at /; a published
+      // @ref LLP 1038 D7 — a bake anchors deep locations at /; a published
       // page anchors assets in its captured release, keeping the location.
       const base = /<base\s+href=["']\/["']\s*\/?\s*>/i;
       if (/<base\b/i.test(html.replace(base, ''))) refuse('the baked index defines a non-root or duplicate base URL');
@@ -1377,7 +1378,7 @@ async function deployCaptured(opts, capsule) {
     if (row.kind === 'origin') {
       if (row.action === 'unavailable') { failed.push({ kind: 'origin', error: row.reason }); log(`  origin: unavailable — ${row.reason}`); continue; }
       if (row.action !== 'publish') { published.push({ ...row, action: 'current' }); continue; }
-      // A step that fails leaves what was there; the run goes on to the next row and exits 1.
+      // A step that fails leaves what was there (D3 item 5); the run goes on to the next row and exits 1.
       try { published.push(await publishRoot({ origin, row, web: webRoot, log })); } catch (e) { failed.push({ kind: 'origin', error: e.message }); log(`  origin: failed — ${e.message}`); }
       continue;
     }

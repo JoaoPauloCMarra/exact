@@ -1,4 +1,4 @@
-//! Paint motion: colour and shadow transitions
+//! Paint motion (LLP 1055.000 D6, LLP 1062): colour and shadow transitions
 //! and keyframes, sampled by the engine like every other property.
 //!
 //! Ownership, `currentcolor` and per-view appearance are shared in
@@ -18,7 +18,7 @@ use std::collections::BTreeMap;
 pub(super) struct Paint {
     motion: PaintMotion,
     /// Inline runs painting an inherited `color` that moves, by run: their
-    /// paragraph paints them.
+    /// paragraph paints them (LLP 1062 D5).
     pub(super) runs: BTreeMap<ViewId, exact_motion::Value>,
 }
 
@@ -85,8 +85,8 @@ impl<D: DataSource> Host<D> {
         self.finish(batch, None)
     }
 
-    /// The platform's colours resolve differently: paint
-    /// motion re-targets, transitioning under each owner's row.
+    /// The platform's colours resolve differently (LLP 1095 D1): paint
+    /// motion re-targets, transitioning under each owner's row (D6).
     /// `first`: the session's first report, a correction without motion.
     pub(super) fn repaint_colors(&mut self, batch: &mut Batch, first: bool) {
         if let Some(retired) = self.paint.motion.colors_changed(
@@ -100,7 +100,7 @@ impl<D: DataSource> Host<D> {
     }
 
     /// A view's own appearance, when the presenter finds it differs from the
-    /// session's: its node's colours resolve by it. The first
+    /// session's (LLP 1062 D4): its node's colours resolve by it. The first
     /// report for a view corrects what was presented without motion, as the
     /// session's first does; a later change transitions, and so does a view
     /// that agrees with the session again.

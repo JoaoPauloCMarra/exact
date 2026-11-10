@@ -25,7 +25,7 @@ test('an announcement-only page module connects without a native.later export', 
   await expect(page.later(btoa('{}'))).rejects.toThrow('exports no later');
 });
 
-test('connect receives the agent flag and the page clock', async () => {
+test('connect receives the agent flag and the page clock (LLP 1067.000 Q7)', async () => {
   let seen = null;
   const h = host({ connect(context) { seen = context; } });
   await h.exact.pageNative(true, { changed() {}, ready: () => true, generation: () => 1, agent: true, now: () => 1234 });

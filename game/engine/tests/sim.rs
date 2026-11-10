@@ -1370,8 +1370,8 @@ fn saves_canonicalize_consumed_input_edges_and_preserve_pending_events() {
     }
 }
 
-// Commands sent through a live argument lose all but the last press between
-// ticks, and saves need an acknowledge-and-reset protocol; posted messages do not.
+// Grow a Garden's HUD sent commands through a live argument: two presses between
+// ticks kept only the second, and saves needed an acknowledge-and-reset protocol.
 mod posted {
     use exact_game::*;
     #[derive(Args, Default)]

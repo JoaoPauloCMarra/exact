@@ -1,5 +1,5 @@
 //! The module refuses what a host gets wrong before it touches a device
-//! (the ABI is the one `unsafe` boundary, and it is sound
+//! (LLP 1009 D2: the ABI is the one `unsafe` boundary, and it is sound
 //! against a confused host — a null pointer, a byte count that overflows, a
 //! child out of order — each refused by name).
 
@@ -148,7 +148,7 @@ fn device_event_json_preserves_every_variant_and_refuses_fields_by_name() {
     ] {
         assert!(parse_input(bad).is_err(), "{bad}");
     }
-    // A sensor's sample, `dropped` 0 when the host leaves it out.
+    // A sensor's sample, `dropped` 0 when the host leaves it out (LLP 1133.013 D6).
     use exact_gpu::SensorKind;
     assert_eq!(
         parse_input(

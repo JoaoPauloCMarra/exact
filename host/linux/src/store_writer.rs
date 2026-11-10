@@ -1,6 +1,6 @@
 //! The app's store writes, off the thread that commits. A kv or secret write
 //! syncs its file and its directory, which took up to 154 ms a commit on an
-//! Android emulator while a chat app's gateway traffic came in, and a drag got no
+//! Android emulator while Excord's gateway traffic came in, and a drag got no
 //! frames meanwhile. Each commit hands its writes here and goes on; one writer
 //! thread writes them as [`StoreWrites::flush`] did on the commit's thread.
 //!

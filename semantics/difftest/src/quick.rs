@@ -1,6 +1,6 @@
 //! `difftest quick`: the semantics before a change lands, in about a
-//! minute warm. Advice, not a gate: the full run (`semantics/README.md`)
-//! is the complete check.
+//! minute warm. Advice, not a gate: the async lane's `semantics` step is
+//! the full run.
 //!
 //! From the files changed since `--base` (default: where HEAD left
 //! origin/main) plus the working tree's: when none is under `contract/`,

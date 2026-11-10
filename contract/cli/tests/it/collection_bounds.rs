@@ -83,7 +83,7 @@ fn eager_lists_and_actual_parent_stretch_remain_valid() {
 fn nested_source(row: &str) -> String {
     source("virtualized=true height=200").replace("          text `${x}` height=20", row)
 }
-/// One level of nesting compiles wherever the row puts it;
+/// One level of nesting compiles wherever the row puts it (LLP 1070 N6);
 /// `collection_nest.rs` refuses a second.
 fn nests(source: &str) {
     contract::compile(source).unwrap_or_else(|e| panic!("{e}"));
@@ -137,7 +137,7 @@ fn disabled_lists_and_ordinary_scrolls_remain_valid_inside_virtual_rows() {
 }
 
 /// Main-axis padding is CSS's room before the first row and after the last
-/// A number, an `env()` inset or its `calc()`, computed as
+/// (LLP 1010 §6.9): a number, an `env()` inset or its `calc()`, computed as
 /// a number too; a percentage, or a computed string that could be one, is
 /// refused.
 #[test]
@@ -197,8 +197,8 @@ fn horizontal_container_padding_and_measured_row_spacing_still_compile() {
     }
 }
 
-/// The `flex` shorthand's text is a bound as its longhands are: a positive
-/// grow, or a definite length basis (zero included);
+/// The `flex` shorthand's text is a bound as its longhands are (Grok's batch
+/// 2 reviews): a positive grow, or a definite length basis (zero included);
 /// `none`, `initial`, `"0"` and a zero grow over `auto` or `0%` are not, on a virtualized
 /// list and on a `scroll` alike. A scroller's shrink comes from the
 /// shorthand too, so `flex="none"` does not shrink under a bounded column.

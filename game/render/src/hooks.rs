@@ -1,4 +1,5 @@
 //! Game-owned passes in an engine-owned frame.
+//! @ref llp/1046.006.000-render-hooks.rfc.md#d1-the-shape-a-type-parameter-like-presentation
 use crate::{FrameInput, RenderError};
 use exact_game::{Component, Entity, Mat4, Ref, Resource, Target, Transform, World};
 use exact_gpu::wgpu;
@@ -218,6 +219,7 @@ impl HookWork {
 }
 
 /// Optional game rendering. Every callback borrows resources for this frame only.
+/// @ref llp/1046.006.000-render-hooks.rfc.md#d1-the-shape-a-type-parameter-like-presentation
 pub trait Hooks: Default {
     /// Compile away all hook preparation for the default implementation.
     const ENABLED: bool = true;
@@ -399,7 +401,7 @@ impl HookClock {
             shader_generation: frame.shader_generation,
         }
     }
-    /// A look frame's time: `frame` held, no time passing, and
+    /// A look frame's time (LLP 1127.000): `frame` held, no time passing, and
     /// the clock untouched, so the next live frame's delta is the one it would
     /// have had without the look.
     pub fn held(&self, frame: &exact_gpu::Frame, generation: u64, paused: bool) -> HookTime {

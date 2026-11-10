@@ -1,4 +1,4 @@
-// The driver's `post` on the web: the page's agent answers the wire's `type`
+// The driver's `post` on the web (LLP 1139.004 D1): the page's agent answers the wire's `type`
 // with a `message` through glue.js `postSurface`, the path the page's postMessage takes, into
 // the real gpu-glue.js (alone, and behind the GPU modules router) over a stand-in GPU module, in Chrome.
 import {test, expect} from 'bun:test';

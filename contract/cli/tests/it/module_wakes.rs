@@ -1,10 +1,10 @@
-//! Through a module outside the tree (`tests/tide`, copied out of the
-//! checkout as an installed package is): an event of its own that a wake
-//! raises, with its budget; registrations the declared substitute lists, a
-//! one-shot and a periodic one; a warm wake (`tap @ref`), a cold one
-//! (`--wake`), and one that expires. A wake's invocation owns the request its
-//! handler makes, stops the session's timers while unseen, and refuses the
-//! host commands a wake may not run.
+//! LLP 1133.017 stage 0, through a module outside the tree (`tests/tide`,
+//! copied out of the checkout as an installed package is): an event of its
+//! own that a wake raises, with its budget; registrations the declared
+//! substitute lists, a one-shot and a periodic one; a warm wake (`tap @ref`),
+//! a cold one (`--wake`), and one that expires. A wake's invocation owns the
+//! request its handler makes, stops the session's timers while unseen, and
+//! refuses the host commands D6 names.
 
 use exact_runner::{agent, CallOrigin, Runner, Value, WakeHow};
 use std::path::{Path, PathBuf};
@@ -193,7 +193,7 @@ fn a_wake_event_carries_its_budget_and_the_bake_holds_its_bounds() {
     assert!(refused.contains("only an event a wake raises"), "{refused}");
 }
 
-/// A warm wake on a periodic registration: refused until due; then the
+/// §10's warm wake on a periodic registration: refused until due; then the
 /// handler runs as the wake's, its request owned until it lands, the
 /// session's page hidden and timers stopped meanwhile and its `copyText`
 /// refused; the entry stays, with its run.
@@ -256,7 +256,7 @@ fn a_tap_on_a_periodic_registration_is_a_warm_wake() {
     assert_ne!(slot(&r, "ticks"), ticks, "{}", logs(&r));
 }
 
-/// A one-shot: refused `offline` while the page is, retired when its
+/// D1's one-shot: refused `offline` while the page is, retired when its
 /// invocation completes.
 #[test]
 fn a_one_shot_waits_for_the_network_and_is_retired_when_it_completes() {
@@ -283,7 +283,7 @@ fn a_one_shot_waits_for_the_network_and_is_retired_when_it_completes() {
     assert_eq!(state(&r)["tides"], serde_json::json!([]));
 }
 
-/// Expiry: past the budget with its request in flight, the invocation
+/// D6's expiry: past the budget with its request in flight, the invocation
 /// ends `expired`, the request answers as a failure, and a one-shot stays
 /// listed as an attempt, not due again until its backoff has passed.
 #[test]
@@ -306,7 +306,7 @@ fn a_wake_past_its_budget_expires() {
     assert!(backoff.contains("is not due until"), "{backoff} {e}");
 }
 
-/// A cold wake: `--wake '<entry>'` lists the entry again in a fresh
+/// §10's cold wake: `--wake '<entry>'` lists the entry again in a fresh
 /// session and raises it there, `cold`.
 #[test]
 fn a_launch_with_an_entry_is_a_cold_wake() {
@@ -327,7 +327,7 @@ fn a_launch_with_an_entry_is_a_cold_wake() {
     assert_eq!(entry(&r, "every")["tag"], "e1");
 }
 
-/// Only the host raises a wake's event, at the platform's call; the
+/// D5: only the host raises a wake's event, at the platform's call; the
 /// events it raises for one platform object are one wake, invocations one
 /// at a time, and the host takes each ended wake to tell the platform.
 #[test]
@@ -382,7 +382,7 @@ fn the_host_raises_a_wake_and_takes_its_end() {
     assert_eq!(r.take_ended_wakes().len(), 1);
 }
 
-/// Retry: a handler that registers its own one-shot again keeps it,
+/// D1's retry: a handler that registers its own one-shot again keeps it,
 /// not due until a backoff of 5 minutes has passed, then 10; after the third
 /// attempt in a row it is retired unless registered again.
 #[test]
@@ -422,7 +422,7 @@ fn a_one_shot_its_handler_registers_again_backs_off() {
 }
 
 /// A bound implementation the platform ran raises a wake through its
-/// module's `changed` and is told how it ended; one the
+/// module's `changed` (LLP 1133.017 D8) and is told how it ended; one the
 /// substitute answers raises nothing.
 #[test]
 fn an_implementation_raises_a_wake_and_is_told_its_end() {
@@ -572,9 +572,9 @@ fn an_implementation_expires_the_wake_it_raised() {
     assert_eq!(woke(&heard).len(), 2);
 }
 
-/// A tool call is an invocation as a wake's event is, one at a time with the
-/// wakes: a call that arrives while a wake runs waits for it, and runs once
-/// the wake has ended.
+/// LLP 1133.023 D7: a tool call is an invocation as a wake's event is, one
+/// at a time with the wakes: a call that arrives while a wake runs waits
+/// for it, and runs once the wake has ended.
 #[test]
 fn a_call_waits_for_a_running_wake() {
     let app = App::new("call");
@@ -608,10 +608,10 @@ fn a_call_waits_for_a_running_wake() {
     assert_eq!(calls[0]["certainty"], "applied");
 }
 
-/// Android's reader under the agent starts no foreground service and says
-/// each claim through the claimant's `changed`; the runner journals it and
-/// lists the claims held in the claimant's `state.extensions` entry until
-/// their release.
+/// LLP 1133.033 D21: Android's reader under the agent starts no foreground
+/// service and says each claim through the claimant's `changed`; the runner
+/// journals it and lists the claims held in the claimant's
+/// `state.extensions` entry until their release.
 #[test]
 fn a_foreground_service_claim_is_listed_while_held() {
     let app = App::new("claim");

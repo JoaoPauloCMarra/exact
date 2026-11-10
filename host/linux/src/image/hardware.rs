@@ -4,6 +4,8 @@
 //! on a decode thread, however often it leaves the screen and comes back.
 //! Whoever reads the pixels in Rust (nothing on the Canvas host's paths)
 //! gets a copy made on first use.
+//!
+//! @ref LLP 1076 §3.4 (the Rust painter on Android)
 #![allow(unsafe_code)]
 use std::ffi::c_void;
 use std::sync::atomic::{AtomicBool, Ordering};

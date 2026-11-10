@@ -1,4 +1,4 @@
-//! Rows of a vertical `list` are cells. Contract decides
+//! LLP 1115.000 D16: rows of a vertical `list` are cells. Contract decides
 //! which lists, once (`contract/lower/src/cells.rs`), and marks each with
 //! `listRows`, the prop every host reads; these hold the rule.
 
@@ -183,7 +183,7 @@ fn an_author_cannot_write_the_mark() {
     assert!(contract::compile(source).is_err());
 }
 
-/// A cells list's rows are inset by the look's cell margin, or the
+/// LLP 1138: a cells list's rows are inset by the look's cell margin, or the
 /// one their host reports, at each end where their author wrote no padding;
 /// a windowed list's rows too, inside their wrappers.
 #[test]

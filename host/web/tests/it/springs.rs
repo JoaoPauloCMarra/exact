@@ -1,5 +1,5 @@
 //! Springs on the web: a `-exact-spring()` in a node's `transition` row reaches the
-//! page as frames the browser plays, released from wherever the
+//! page as frames the browser plays (LLP 1002 D2), released from wherever the
 //! property is at that moment — the engine's value, the same rule natively.
 
 use exact_motion::{Property, SpringConfig};

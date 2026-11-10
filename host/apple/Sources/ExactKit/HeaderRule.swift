@@ -1,9 +1,9 @@
-// What is header-shaped is one rule every host reads:
+// @ref LLP 1115.001 D11 — what is header-shaped is one rule every host reads:
 // the kernel's (`kernel/src/bars.rs`), which the Android host reads from the
 // kernel's own tree to make Material's top app bar. The Apple hosts read the
 // same rule over their own views: UIKit's navigation bar is made from it
 // (`HeaderShape`, NavigationBarIOS.swift), and the Mac's title bar and
-// toolbar (HeaderMac.swift). The views mirror that tree, and
+// toolbar (LLP 1115.002 D2, HeaderMac.swift). The views mirror that tree, and
 // a query of the kernel would not serve here: a presenter fed a batch by hand
 // (the tests') has no kernel behind it, and the bar is projected several
 // times a batch. So the views' facts are handed to the rule as words
@@ -26,7 +26,7 @@ struct HeaderRule {
     let search: NodeView?, segments: NodeView?, tap: NodeView?
 
     /// The readouts among the leading and trailing items: nothing presses
-    /// them.
+    /// them (LLP 1075.003 §9.15).
     var readouts: [NodeView] { (leading + trailing).filter { node in !items.contains { $0 === node } } }
 
     /// The nodes handed to the shared rule, in all: what a projection walks,
@@ -34,7 +34,7 @@ struct HeaderRule {
     nonisolated(unsafe) static var walked = 0
 
     /// The route's first child is a shown `header` whose author wrote
-    /// `appearance: none`: the rule makes no bar of it
+    /// `appearance: none` (LLP 1075.003 §9.10): the rule makes no bar of it
     /// (`fact::AUTHORED`), and on iOS a pushed route with one gets no bar
     /// of the system Back alone either, since the author drew their own.
     static func keepsAuthoredHeader(_ route: NodeView) -> Bool {
@@ -59,7 +59,7 @@ struct HeaderRule {
         if back != nil, node.props["id"] == back { facts |= 32 }
         if node.props["semanticTag"] == "header" { facts |= 64 }
         if node.style["display"]?.string == "none" { facts |= 128 }
-        // Written, never implied: a header that says it keeps its authored bar.
+        // Written, never implied (LLP 1075.003 §9.10): a header that says it keeps its authored bar.
         if node.wrote("appearance"), node.style["appearance"]?.string == "none" { facts |= 512 }
         return facts
     }

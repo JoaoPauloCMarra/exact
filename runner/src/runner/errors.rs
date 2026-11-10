@@ -36,7 +36,7 @@ pub enum RunnerError {
         plan: u64,
         kernel: u64,
     },
-    /// The plan belongs to another app: its header names one identity, this binary's data crate another.
+    /// The plan belongs to another app (LLP 1023 D5): its header names one identity, this binary's data crate another.
     AppMismatch {
         plan: String,
         host: String,
@@ -60,7 +60,7 @@ pub enum RunnerError {
     InvalidEvent {
         event: &'static str,
     },
-    /// A control's `input` or `change` carries a value it could never report: a select's value no enabled option has.
+    /// A control's `input` or `change` carries a value it could never report (LLP 1069.001 D4): a select's value no enabled option has.
     InvalidValue {
         event: &'static str,
         reason: String,
@@ -76,7 +76,7 @@ pub enum RunnerError {
     },
     /// Derives and resources depend on each other in a cycle; nothing settles.
     Cycle,
-    /// An earlier update failed after the instance tree had begun to change; the runner no longer matches its kernel and must be restarted.
+    /// An earlier update failed after the instance tree had begun to change; the runner no longer matches its kernel and must be restarted (D5).
     Poisoned,
     /// `advance` was given a non-finite time.
     NonFiniteClock,
@@ -98,16 +98,16 @@ pub enum RunnerError {
     TimerFireLimit {
         limit: usize,
     },
-    /// A send would be the 65th waiting for a `queue` mutation.
+    /// A send would be the 65th waiting for a `queue` mutation (LLP 1092 D4).
     QueueFull {
         mutation: String,
     },
-    /// A gated task's `key=` is no key (a non-finite number).
+    /// A gated task's `key=` is no key (a non-finite number; LLP 1092 D8).
     TaskKey {
         task: String,
     },
     /// A resource over a list keyed an element with no key (a non-finite
-    /// number P4c).
+    /// number; LLP 1017.000 P4c).
     ResourceKey {
         resource: String,
     },

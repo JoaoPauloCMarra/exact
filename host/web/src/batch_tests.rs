@@ -109,7 +109,7 @@ fn cases() -> Vec<(&'static str, String)> {
                 b.grants("# reach\n\n net.fetch https://api.example \nsecret.keep app.token\nsurface.read \"sketch\"\n")
             }),
         ),
-        // Crew's set: one bad line, and
+        // Crew's set (the port report of 2026-09-24, F1): one bad line, and
         // the page is handed nothing to admit.
         (
             "grants-unparsed",
@@ -487,7 +487,7 @@ fn every_op_writes_the_json_it_always_wrote() {
     }
 }
 
-/// On the web page, a long poll attached to work that is no
+/// LLP 1016.000 D8 on the web page: a long poll attached to work that is no
 /// HTTP request is refused in the batch, before `emit_request` dispatches any
 /// continuation, auth or storage work (host.rs `emit_request`, first line).
 #[test]
@@ -505,7 +505,7 @@ fn a_long_poll_on_other_work_is_refused_before_dispatch() {
     }
 }
 
-/// On the web page, an upload's op says so (the page sends
+/// LLP 1016.000 D10 on the web page: an upload's op says so (the page sends
 /// it with XMLHttpRequest, http-body.js `upload`), and the batch refuses, in
 /// the words of the native hosts, an upload they refuse.
 #[test]

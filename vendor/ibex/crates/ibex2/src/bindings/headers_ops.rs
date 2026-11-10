@@ -1,7 +1,7 @@
 //! Handle-table ops behind the JavaScript `Headers` class.
 //!
-//! A header list crosses as a **handle** for the same reason a `Response` does:
-//! it is a list of pairs, and serializing it at the
+//! A header list crosses as a **handle** for the same reason a `Response` does
+//! (LLP 0059.000 §1.1): it is a list of pairs, and serializing it at the
 //! boundary is what the contract forbids. Iteration is therefore
 //! count/name-at/value-at over primitives rather than a marshalled array.
 //!
@@ -9,8 +9,7 @@
 //! validation, value normalization, comma-joining on append, and sorted
 //! iteration order.
 //!
-//! The handle table lives in the runtime bindings, not in the engine-free
-//! library.
+//! @ref LLP 0057.000#50-three-doors-one-implementation — handles in a runtime table are bindings, not the engine-free library
 
 use crate::boundary::{HostArg, HostError, HostValue};
 use crate::stdlib::fetch::{is_valid_name, is_valid_value, Headers};

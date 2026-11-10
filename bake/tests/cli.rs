@@ -1,4 +1,4 @@
-//! `exact-bake compat`, the compatibility id on the command line.
+//! `exact-bake compat`, the compatibility id on the command line (LLP 1030 D3a).
 use serde_json::Value;
 use std::{
     path::{Path, PathBuf},

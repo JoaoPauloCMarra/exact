@@ -1,6 +1,6 @@
 //! The language-neutral corpus and every law of the core.
 //!
-//! These same records run through the TypeScript binding.
+//! @ref LLP 1038 §3 (laws), D9 (these same records run through the TS binding).
 //! Expected visits are plain JSON, including every intermediate value and
 //! refusal. URL, component-encoding and query-read answers were read from
 //! Chrome; no router implementation writes its own expected values here.
@@ -415,7 +415,7 @@ fn law_go_to_the_top_is_unchanged() {
 }
 #[test]
 fn law_a_fragment_only_change_is_the_same_visit() {
-    // Identity is the path and query; the fragment rides.
+    // @ref LLP 1153 D5 — identity is the path and query; the fragment rides.
     law("fragment_in_place", |t, r, _| {
         let top_url = top(r).unwrap().url.clone();
         for fragment in ["", "moves", "b%20c"] {
@@ -530,7 +530,7 @@ fn empty_values_and_id_exhaustion_refuse_without_partial_changes() {
     assert_eq!(reason.unwrap().message, "router entry ids exhausted");
 }
 
-// Replay the existing expected values through the real VM.
+// @ref LLP 1038 D9 — replay the existing expected values through the real VM.
 #[path = "../../runner/tests/it/support/router.rs"]
 mod runner_plan;
 

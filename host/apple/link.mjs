@@ -8,13 +8,13 @@ import { basename } from 'node:path';
  * `Package.swift` (its `capabilities` table) each is. */
 const SWIFT_CAPABILITIES = [['grouped_lists', 'ExactGroupedLists'], ['markdown', 'ExactMarkdown'], ['surfaces', 'ExactSurfaces'], ['drag', 'ExactDrag'], ['media_picker', 'ExactMediaPicker'], ['auth_session', 'ExactAuthSession'], ['numerals', 'ExactNumerals']];
 
-/** The capabilities a development build links only as production would:
- * each links a framework that costs every iOS launch
+/** The capabilities a development build links only as production would
+ * (LLP 1047.001.000 F): each links a framework that costs every iOS launch
  * its images (PhotosUI, AuthenticationServices, ~300 each; SwiftUI), and the
  * agent's substitutes answer without the first two. */
 const BY_USE_IN_DEVELOPMENT = ['media_picker', 'auth_session', 'numerals'];
 
-/** What the archive links: for a
+/** What the archive links (LLP 1047.001 D2, D4, D6; LLP 1047 D8): for a
  * production build, the plan's use-set, as the bake's graph names it, the
  * manifest's `link` (capabilities linked ahead of use) and, for an app
  * whose grants name `auth.session` (`granted`), the sign-in sheet; every
@@ -36,14 +36,14 @@ export function appleComposition(graph, production, ahead = [], granted = false)
 }
 
 /** The system frameworks only a capability's Swift half brings, and so
- * absent from an executable whose composition does not link it (the check's
- * first form). */
+ * absent from an executable whose composition does not link it (LLP
+ * 1047.001.000 §6, the check's first form). */
 const CAPABILITY_FRAMEWORKS = [['ExactMediaPicker', 'PhotosUI'], ['ExactAuthSession', 'AuthenticationServices'], ['ExactNumerals', 'SwiftUI'], ['ExactSnapshot', 'WidgetKit'], ['ExactSnapshot', 'ActivityKit']];
 
 /** The dylibs an executable's load commands name (`LC_LOAD_DYLIB` and its
  * weak, re-export, lazy and upward forms), every slice of a universal one.
  * Read from the file, since `otool` takes a path ending in `name(member)`
- * for an archive's member. */
+ * for an archive's member (#234). */
 export function loadedDylibs(executable) {
   const bytes = readFileSync(executable), names = new Set();
   const thin = (at) => {
@@ -73,7 +73,7 @@ export function assertCapabilityFrameworks(executable, products, allowedFramewor
   if (stray.length) throw new Error(`host/apple: ${basename(executable)} links ${stray.map(([product, framework]) => `${framework} (only ${product} may)`).join(', ')}, which its composition does not link: an import outside the capability's module brings it to every launch`);
 }
 
-/** Whether a build links by its plan: production always;
+/** Whether a build links by its plan (LLP 1047.001 D6): production always;
  * a development build with `--link plan`, so a smoke runs what ships
  * (development otherwise links everything, for the agent's whole vocabulary
  * and plan restarts). */
@@ -83,11 +83,11 @@ export function linksByPlan(production, args) {
 
 /** The SDK the linker recorded in an executable (`LC_BUILD_VERSION`) is the
  * one asked for: AppKit draws its design by that number, so a link that
- * records another (as SwiftPM's did) changes every app's
+ * records another (as SwiftPM's did, LLP 1069.011 §7) changes every app's
  * look without a word. Compared to major.minor. Read by `vtool`, which
  * takes any path as a file: the executable is named for its app, and
  * `otool` takes a path ending in `name(member)`, such as "T3 Code (Exact)",
- * for an archive's member. */
+ * for an archive's member (#234). */
 export function assertLinkedSdk(executable, expected) {
   const shown = spawnSync('xcrun', ['vtool', '-show-build', executable], { encoding: 'utf8' });
   if (shown.status !== 0) throw new Error(`host/apple: xcrun vtool -show-build failed (${shown.status ?? shown.signal ?? shown.error?.message}) on ${executable}${shown.stderr?.trim() ? ': ' + shown.stderr.trim() : ''}`);

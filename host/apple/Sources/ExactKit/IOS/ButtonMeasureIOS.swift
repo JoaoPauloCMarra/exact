@@ -1,4 +1,4 @@
-// Cached real UIKit height-for-width before publication.
+// @ref LLP 1069.011.001 D11: cached real UIKit height-for-width before publication.
 #if os(iOS) || os(tvOS)
 import UIKit
 import CExact
@@ -194,8 +194,8 @@ final class ButtonMeasureCache: @unchecked Sendable {
             // needs. The box is drawn between its edges rounded to the pixel
             // grid (PixelGrid), which can come out a pixel narrower than
             // layout's width, and UIKit wraps a title that does not fit its
-            // drawn bounds: a centred "Find a recipe" broke onto a second
-            // line spilling out of its capsule.
+            // drawn bounds: Recipe Finder's centred "Find a recipe" broke
+            // onto a second line spilling out of its capsule (round 27).
             let slack = widthKind == 0 ? 0 : 1 / scale
             result = ExactButtonMeasure(width: Float((ceil(max(0, minimumWidth ?? size.width) * scale) / scale) + slack),
                 height: Float(ceil(max(0, size.height) * scale) / scale), provisional: 0)

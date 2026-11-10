@@ -1,5 +1,8 @@
-//! The Linux host. Layout is a host call and text measurement is injected;
-//! every host but the web runs `exact-motion`.
+//! The Linux host.
+//!
+//! @ref LLP 1015 (Linux host v1)
+//! @ref LLP 1001 §5–6 (layout is a host call; text measurement is injected)
+//! @ref LLP 1002 D2, §4 (every host but the web runs `exact-motion`)
 //!
 //! The third host and the first that paints. The runner and kernel run
 //! natively; after every commit the host lays the tree out with the
@@ -9,7 +12,7 @@
 //! **the kernel is the display list**: no batch, no mirror, no view tree of
 //! the platform's, because the platform has none to offer. The pixels go to DRM/KMS dumb buffers with evdev input, or
 //! into a buffer with no display at all, which is how the host is tested:
-//! the agent API over stdio, a screenshot, a smoke run — on a
+//! the agent API (LLP 1012) over stdio, a screenshot, a smoke run — on a
 //! fleet Linux box with no GPU, or on macOS in the seconds-loop. Pure Rust
 //! end to end; no system library is linked.
 //!
@@ -23,12 +26,12 @@
 //! - [`image`] — sources under the asset root, PNG decoded off-thread.
 //! - [`presenter`] — scroll, focus, hit-testing, the host-side operations.
 //! - [`hatches`] — access hatches: an app's own code at its nodes' boxes,
-//!   their overlays and the input that lands there.
+//!   their overlays and the input that lands there (LLP 1075.003.000.001).
 //! - [`agent`] — the agent API on stdio (`Agent.swift`'s twin).
 //! - [`executor`] — `ibex2::host` on a worker thread for a request that
-//!   leaves the process, its wake a socketpair the loop polls.
-//! - [`delivery`] — the optional app-supplied delivery adapter boundary;
-//! no updater is linked by the host.
+//!   leaves the process (LLP 1016 D2), its wake a socketpair the loop polls.
+//! - [`delivery`] — the optional app-supplied delivery adapter boundary
+//!   (LLP 1030 D4); no updater is linked by the host.
 //! - [`journal`] — the event journal launch parts subscribe to: startup,
 //!   custom events, errors.
 //! - [`launch_marks`] — startup timestamps for the display path.

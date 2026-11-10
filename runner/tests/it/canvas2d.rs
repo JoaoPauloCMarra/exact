@@ -1,4 +1,4 @@
-//! Canvas 2D's protocol in the runner: 2D surfaces never
+//! Canvas 2D's protocol in the runner (LLP 1056 D4, D5): 2D surfaces never
 //! reach the GPU side-output; a draw needs geometry; a new size is a new
 //! generation with a fresh recorder; a throw keeps what it drew before;
 //! a stale reply is discarded; frames are drawn once per clock value.
@@ -257,7 +257,7 @@ fn a_later_reply_applies_only_with_live_stamps() {
     assert!(r.canvas_reply(c2, g2, s2, reply.clone()).is_ok());
     let lists = r.take_canvas_lists();
     assert!(lists[0].fresh && !lists[1].fresh);
-    // A draw that asked for no frame does not animate.
+    // A draw that asked for no frame does not animate (LLP 1056 §8.4).
     assert!(!lists[0].animating && !lists[1].animating);
     // The same stamps twice: the second is stale.
     assert!(r.canvas_reply(c2, g2, s2, reply.clone()).is_err());
@@ -279,7 +279,7 @@ fn a_later_reply_applies_only_with_live_stamps() {
 /// A list that does not read starts a new generation and draws it once
 /// more; a source that keeps replying so is not asked again until
 /// something else changes, so a host drawing whenever one is owed
-/// does not draw it forever.
+/// (LLP 1072 §8.5) does not draw it forever.
 #[test]
 fn a_malformed_reply_is_retried_once() {
     let (mut r, log) = boot();
@@ -351,7 +351,7 @@ fn an_image_a_draw_asks_for_redraws_it_when_it_decodes() {
     assert_eq!(log.borrow().frames.last().unwrap().cause.primary(), "font");
 }
 
-/// `color-space` and `color-type` are the canvas's getContext
+/// LLP 1100 D12a: `color-space` and `color-type` are the canvas's getContext
 /// settings: the draw is told, the host's bitmap carries them, a change is
 /// a new generation, and float16 counts 8 bytes a pixel.
 #[test]
@@ -410,7 +410,7 @@ fn green(dark: bool) -> Option<exact_canvas::Rgba> {
     })
 }
 
-/// A canvas's `currentColor` is its colour in its own scheme:
+/// A canvas's `currentColor` is its colour in its own scheme (LLP 1056 D3):
 /// a role under `color-scheme="dark"` is the role's dark value, else the
 /// window's scheme's.
 #[test]

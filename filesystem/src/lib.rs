@@ -1,4 +1,4 @@
-// Platform operations keep the same owned-handle boundary.
+// @ref LLP 1030.002 D4 — platform operations keep the same owned-handle boundary.
 #[cfg(unix)]
 #[path = "directory.rs"]
 mod backend;

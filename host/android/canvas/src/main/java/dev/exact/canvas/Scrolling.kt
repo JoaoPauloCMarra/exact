@@ -17,7 +17,7 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
- * A finger scrolls. The gesture and its physics are the reader's, with the platform's own
+ * A finger scrolls (LLP 1115.001 D7.1 to D7.3). The gesture and its physics are the reader's, with the platform's own
  * classes and nothing imitated: the system's touch slop and fling velocities ([ViewConfiguration]), [VelocityTracker],
  * [OverScroller] for the fling, the stretch [EdgeEffect] at the ends, and the scrollbar a [View] draws and fades.
  *

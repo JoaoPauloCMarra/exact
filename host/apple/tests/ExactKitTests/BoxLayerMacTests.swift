@@ -270,7 +270,7 @@ final class BoxLayerMacTests: XCTestCase {
         }
     }
 
-    /// A padding that resolves at layout (`min(10%, 20px)`
+    /// LLP 1116: a padding that resolves at layout (`min(10%, 20px)`
     /// arrives as a calculation's handle) reads the content box the kernel published,
     /// for the box and for each side; without one, the box's bounds.
     func testAPaddingResolvedAtLayoutReadsTheKernelsContentBox() throws {

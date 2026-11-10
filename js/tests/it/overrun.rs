@@ -1,5 +1,5 @@
-//! A resource a turn over its budget refused is asked again
-//! (runner/src/runner/overrun.rs), over every hop a real app uses: the
+//! A resource a turn over its budget refused is asked again (theme2's 18:06
+//! ruling; runner/src/runner/overrun.rs), over every hop a real app uses: the
 //! module in process (`Main`), on its own owner (`Worker`, the reply's
 //! envelope), and behind the mixed composer (its envelope). The fixture's
 //! `busy-once` runs over 100 ms of its own time the first time and answers at
@@ -180,8 +180,8 @@ fn an_overrun_is_asked_again_behind_the_mixed_composer() {
     asks_again(r, "mixed", true);
 }
 
-/// A mutation's turn over its budget is never asked again (its earlier
-/// turns may have had effects): its send fails, and nothing more runs.
+/// A mutation's turn over its budget is never asked again (LLP 1041 D2: its
+/// earlier turns may have had effects): its send fails, and nothing more runs.
 #[test]
 fn a_mutations_overrun_is_not_asked_again() {
     let root = Root::new();

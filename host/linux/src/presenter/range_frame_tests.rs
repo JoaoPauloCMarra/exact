@@ -351,7 +351,7 @@ fn a_field_under_a_perspective_is_unavailable() {
 }
 
 /// Conform's decorations fixture answers its font-independent facts here as
-/// on the web, each of them true.
+/// on the web (theme2's 17:27 ruling), each of them true.
 #[test]
 fn the_conform_fixture_reads_its_facts() {
     let mut p = boot(include_str!(
@@ -393,9 +393,10 @@ fn a_caret_between_directions_ends_the_run_before_it() {
     assert_eq!(got[2].unwrap()[0], f64::from(field.0));
 }
 
-/// A collapsed range answers where the caret is painted: an empty field's at its start, an empty
-/// line's on that line, with the text's height there, as the web's glue now measures it too
-/// (conform's decorations fixture compares the facts).
+/// A collapsed range answers where the caret is painted (theme2's 18:42
+/// ruling, G3): an empty field's at its start, an empty line's on that
+/// line, with the text's height there, as the web's glue now measures it
+/// too (conform's decorations fixture compares the facts).
 #[test]
 fn an_empty_field_and_an_empty_lines_caret_are_where_it_is_painted() {
     let mut p = boot(&app("width=200 height=120", "", &[(0, 0)], ""));

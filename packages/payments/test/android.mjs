@@ -1,6 +1,6 @@
-// @exact/payments on Android: the fixture app (`test/fixture`) built as the Canvas reader's
+// @exact/payments on Android (LLP 1133.034 §12 stage 3): the fixture app (`test/fixture`) built as the Canvas reader's
 // APK, which compiles the package's Kotlin against Play services' wallet library and merges its manifest fragment under
-// the allow-list. The build is checked for the roster binding the implementation, the callbacks
+// the allow-list (LLP 1133.030 D9). The build is checked for the roster binding the implementation, the callbacks
 // service exported only to `BIND_PAYMENTS_CALLBACK_SERVICE` with Google's action, the wallet's meta-data switch, and
 // the classes a manifest names compiled in under their names. No emulator boots on the Mac that built it, and a
 // payment needs the Google test card suite's account (checklist.md); this prints the APK's path for that phone.

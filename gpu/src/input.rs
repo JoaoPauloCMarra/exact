@@ -1,4 +1,4 @@
-//! Device input inside a canvas that asks for it.
+//! Device input inside a canvas that asks for it (LLP 1046.002 S1).
 
 /// A pointer's contact phase.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -24,8 +24,8 @@ pub enum PointerKind {
     Pen,
 }
 
-/// A sampled sensor an app asked for on a canvas (`startSensorInput`), by
-/// its Generic Sensor name.
+/// A sampled sensor an app asked for on a canvas (`startSensorInput`, LLP
+/// 1133.013 D6), by its Generic Sensor name.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SensorKind {
     /// `Accelerometer`: m/s², gravity included.

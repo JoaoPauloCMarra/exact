@@ -84,7 +84,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// A send to `m` was accepted. A newer send to a non-queue mutation
-    /// ends the older pending ones (newest wins).
+    /// ends the older pending ones (newest wins, LLP 1092 D1).
     pub(super) fn accept_write(&mut self, m: usize, source: &str, args: &[Value]) {
         if self.plan.mutations[m].refreshes.len == 0 {
             return;

@@ -1,9 +1,9 @@
 import Foundation
 import QuartzCore
 
-/// The card's charts, fed by each frame the app draws. The frame-rate chart
+/// The card's charts, fed by each frame the app draws (LLP 1079.000 §7.2). The frame-rate chart
 /// plots a moving average over the last half second, and the frame-time chart each frame's own frame
-/// time and work, or, measuring the screen, the main thread's long spells of work, kept as 30
+/// time and work, or, measuring the screen, the main thread's long spells of work (§7.4), kept as 30
 /// seconds of tenth-of-a-second columns. Each plot's gridlines and lines are one opaque layer, wider
 /// than the plot by five seconds of axis, which renders itself as an image. The frame hooks only store
 /// each frame; `present()`, after them, moves the layers left by whole device pixels, and draws them
@@ -64,7 +64,7 @@ final class FrameHealthChart {
 
     /// A plot's layer. It renders its lines as an image, which Core Animation commits in the update that asks for it;
     /// drawn into a backing store by `draw(in:)`, a layer takes UIKit another update a refresh later to show each
-    /// drawing.
+    /// drawing (LLP 1079.000 §7.4).
     private final class Lines: CALayer {
         weak var chart: FrameHealthChart?
         var which = 0
@@ -168,8 +168,8 @@ final class FrameHealthChart {
         changed()
     }
 
-    /// A frame of the screen's, which UIKit expects on screen at `time`, with its work against its budget, in seconds.
-    /// Its frame rate is the frames of the last half second, since frames of the screen bound no
+    /// A frame of the screen's, which UIKit expects on screen at `time`, with its work against its budget, in seconds
+    /// (LLP 1079.000 §7.4). Its frame rate is the frames of the last half second, since frames of the screen bound no
     /// frame time; its line reaches back to a column whose frames lie within that half second.
     func screenFrame(at time: Double, work: Double, budget: Double) {
         guard !columns.isEmpty, !held, time > newest else { return }

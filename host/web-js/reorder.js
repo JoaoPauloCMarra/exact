@@ -1,4 +1,4 @@
-// Arrange's collection half on the JS target: the runner's
+// Arrange's collection half on the JS target (LLP 1041 §8.5): the runner's
 // `instance/collection/reorder.rs` (the preview: the source row's gap,
 // certified by measured rows, each wrapper's absolute target) and
 // `runner/reorder.rs` (a grip's binding, one owner, the list's `reorderdrop`
@@ -105,7 +105,7 @@ export function install({ internals: { Collection, Lists, Views, find, minEpoch,
       if (!(before > now || after < now)) return ordinary;
       return drop.anchor;
     },
-    // A hold is ended only by its own endings (`endHold`).
+    // A hold is ended only by its own endings (LLP 1094 D8, `endHold`).
     endPreview() {
       if (!this.preview) return;
       if (!this.preview.holding) { this.preview.terminal = true; this.preview.certified = null; }
@@ -129,7 +129,7 @@ export function install({ internals: { Collection, Lists, Views, find, minEpoch,
     },
     // The source's own preview (`Outgoing` when another list is the
     // target: the row keeps its slot and the rows after it close the gap),
-    // else a target's `Incoming` (reorder_group.rs).
+    // else a target's `Incoming` (reorder_group.rs; LLP 1094 D4).
     offsets() {
       const p = this.preview;
       if (p && !p.terminal) {
@@ -154,8 +154,8 @@ export function install({ internals: { Collection, Lists, Views, find, minEpoch,
     },
     /** Each mounted wrapper's absolute target (views.rs's style op): the motion
      * engine springs it there (`translate -exact-spring(300,30,1)`). */
-    // Offsets that move with their rows in one commit apply at once;
-    // the dragged row hides while a ghost stands for it.
+    // Offsets that move with their rows in one commit apply at once (LLP
+    // 1094 D8); the dragged row hides while a ghost stands for it (D6).
     emitPreview() {
       if (!this.preview && !this.incoming && this.hidden == null && !this.mounted.some(m => m.previewHidden)) return;
       const at = this.offsets(), hidden = this.hidden == null ? undefined : this.index.pos.get(this.hidden);
@@ -189,7 +189,7 @@ export function install({ internals: { Collection, Lists, Views, find, minEpoch,
     },
     uncertify() { for (const x of [this.preview, this.incoming]) if (x) { x.certified = null; x.stepped = false; } },
     retargetHome(geometry, y) { const p = this.preview, was = p.outgoing; p.outgoing = false; const ok = this.movePreview(geometry, y); if (!ok) p.outgoing = was; return ok; },
-    /** The measured gap at `y`, nothing excluded; an empty list with a port certifies gap 0. */
+    /** The measured gap at `y`, nothing excluded; an empty list with a port certifies gap 0 (D4). */
     moveIncoming(geometry, y) {
       const inc = this.incoming;
       if (!inc) return false;
@@ -266,7 +266,7 @@ export function install({ internals: { Collection, Lists, Views, find, minEpoch,
   });
   // A row's measured border box comes through its transform: a row the
   // preview translates remeasures a few float32 ulps off (76 as 75.99998)
-  // when a relayout reports it mid-drag. Layout itself moves in
+  // when a relayout reports it mid-drag (habits F10). Layout itself moves in
   // 1/64 (Chrome, WebKit) or 1/60 (Firefox) pixels, so a hundredth is noise.
   const HEIGHT_NOISE = 0.01;
   const GEOMETRY = ["list", "revision", "scrollSequence", "scrollTop", "portWidth", "portHeight", "rowWidth", "totalExtent"];
@@ -282,8 +282,8 @@ export function install({ internals: { Collection, Lists, Views, find, minEpoch,
   const sameGeometry = (a, b) => !!a && !!b && GEOMETRY.every(k => a[k] === b[k]);
   const hasReorder = token => { const p = ReorderOwner?.preview; return !!p && p.token === token && !p.terminal && !p.holding && p.pinOwned && sameBinding(reorderBinding(p.binding.handle), p.binding); };
   // ------------------------------------------------ a session across grouped lists (runner/reorder_group.rs)
-  // The source's token and owner for the whole gesture, a target and a phase;
-  // a drop may hold until the move shows.
+  // The source's token and owner for the whole gesture, a target and a phase
+  // (LLP 1094 D4); a drop may hold until the move shows (D8).
   const HOLD_MS = 1000;
   let Session = null;
   const groupOf = c => c?.el?.dataset.reordergroup || null;
@@ -292,7 +292,7 @@ export function install({ internals: { Collection, Lists, Views, find, minEpoch,
   const listId = c => c?.el?.id ?? "";
   const grouped = token => Session && Session.token === token && Session.group ? Session : null;
   function leaveTarget(s, current) {
-    // Without a ghost the row stays shown: it is the focused grip's.
+    // Without a ghost the row stays shown: it is the focused grip's (D9).
     if (current === s.source) s.source.setOutgoing(true);
     else current?.closeIncoming(false);
   }
@@ -374,13 +374,13 @@ export function install({ internals: { Collection, Lists, Views, find, minEpoch,
       if (!ReorderOwner) return false;
       if (!ReorderOwner.finishPreview(token)) return false;
       ReorderOwner = null;
-      // Every row a grouped session hid shows again, and a gap left open closes.
+      // Every row a grouped session hid shows again, and a gap left open closes (D6).
       if (Session?.token === token) { for (const c of Session.touched) if (Lists.get(c.view) === c) { c.closeIncoming(false); c.setHidden(null); } Session = null; }
       settled();
       return true;
     },
     controller: () => controller(),
-    // ---------------------------------------------- grouped
+    // ---------------------------------------------- grouped (LLP 1094)
     /** `begin_group_reorder`: `ghost` when the page draws one, so the row hides until `finish`. */
     beginGroup(binding, geometry, ghost) {
       const c = Lists.get(binding.list), group = groupOf(c);
@@ -421,7 +421,7 @@ export function install({ internals: { Collection, Lists, Views, find, minEpoch,
       if (ok) { s.target = t; s.touched.add(t); } else if (t !== current) current.uncertify();
       return ok ? "accepted" : "needs";
     },
-    /** `reorder_step`: a row up or down, or the same index in the previous or next grouped list. */
+    /** `reorder_step` (D9): a row up or down, or the same index in the previous or next grouped list. */
     step(token, n) {
       const s = grouped(token);
       if (!s || s.phase !== "active" || !hasReorder(token)) return false;
@@ -444,7 +444,7 @@ export function install({ internals: { Collection, Lists, Views, find, minEpoch,
       if (near) globalThis.exact?.lists?.into(t.view, near.slice(2), "nearest", "nearest");
       return true;
     },
-    /** A grouped drop: the target's `reorderdrop` once, with its `ReorderEvent`; the hold armed first. */
+    /** A grouped drop (D2, D8): the target's `reorderdrop` once, with its `ReorderEvent`; the hold armed first. */
     dropGroup(token, geometry, releaseAt) {
       const s = grouped(token), t = s?.target;
       if (!s || s.phase !== "active" || !hasReorder(token) || !sameGeometry(t.reorderGeometry(), geometry) || !Number.isFinite(releaseAt) || releaseAt < 0) return false;
@@ -463,7 +463,7 @@ export function install({ internals: { Collection, Lists, Views, find, minEpoch,
     cancelGroup(token) { const s = grouped(token); if (s && s.phase === "active") endSession(s, null, false); },
     reconcileGroup,
     session: () => Session,
-    /** `state.reorder`. */
+    /** `state.reorder` (D12). */
     json() {
       const s = Session;
       if (!s) return null;

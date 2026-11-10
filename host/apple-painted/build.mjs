@@ -1,4 +1,4 @@
-// Benchmark-only bundle. The shipping Apple presenter remains native.
+// Benchmark-only bundle. The shipping Apple presenter remains native. @ref LLP 1149 D12.
 import { spawnSync } from 'node:child_process';
 import { chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -13,7 +13,7 @@ const run = (command, args, options = {}) => {
 export function buildPainted(app, args, { macInfoPlist }) {
   if (process.platform !== 'darwin') throw new Error('the painted benchmark carrier requires macOS');
   if (args.some(arg => ['--distribution', '--archive', '--host', '--embed', '--test', '--prebuild', '--url', '--link'].includes(arg))) {
-    throw new Error('the painted benchmark carrier supports --release and --run; distribution waits on its accessibility tree');
+    throw new Error('the painted benchmark carrier supports --release and --run; distribution requires the LLP 1149 accessibility gate');
   }
   const crate = app.crate('macos'), bin = `${crate}-painted`;
   const profile = args.includes('--release') ? 'release' : 'host-dev';

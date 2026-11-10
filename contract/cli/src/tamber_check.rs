@@ -1,15 +1,18 @@
-//! The design server's background whole build. A retention build stops once
-//! the design's retention is known, so it can't tell a build that fails
-//! after the design; this check builds the whole app behind it, so the
-//! server can.
+//! The design server's background whole build (LLP 1121 stage 12 B1's
+//! follow-up, theme2's 12:15 and 12:19 rulings, option (4)). A retention
+//! build stops once the design's retention is known, so it can't tell a
+//! build that fails after the design. Main's server could, for an app with
+//! no synthetic expressions: such a build left the closure unknown, and
+//! every later edit was answered `rebuild`, so the dev loop's build said
+//! the refusal. This check restores that.
 //!
 //! Each retention key has a verdict:
 //! - unverified, after the retention build that made it: answered from
-//!   that build while a whole build runs;
+//!   that build, as theme2 ruled, while a whole build runs;
 //! - passed, when a whole build of the files as they were passed;
 //! - failed, when a whole build under it failed, of any files then.
 //!   Answers are `rebuild` until a whole build of exactly the files as they
-//!   are now passes (the one way a result moves toward `live`).
+//!   are now passes (12:19: the one way a result moves toward `live`).
 //!
 //! While a key is unverified or failed, every answer makes sure a whole
 //! build of the files as they are now is done or under way. Only a

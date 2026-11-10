@@ -1,11 +1,11 @@
-//! The wire's operations (`tamber/1`): each `ops` entry read
+//! The wire's operations (`tamber/1`, LLP 1121 D13): each `ops` entry read
 //! into the crate's [`Op`], with the file it edits.
 
 use exact_tamber::Op;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
-/// The wire's operations (kebab-case names; named fields), each with
+/// The wire's operations (D13's names, kebab-case; named fields), each with
 /// the file it edits (the design's own when unsaid). A `restore` is no
 /// client's to send.
 pub(crate) fn parse_ops(ops: &Value, design: &str) -> Result<Vec<(String, Op)>, Value> {
@@ -127,9 +127,9 @@ pub(crate) fn parse_ops(ops: &Value, design: &str) -> Result<Vec<(String, Op)>, 
     Ok(out)
 }
 
-/// The app's params as the design's folds take them.
+/// The app's params as the design's folds take them (LLP 1121 D15).
 pub(crate) fn params(app: &contract::tamber_params::AppParams) -> exact_tamber::params::Params {
-    // And its packages' tokens, which every plan folds beside the design.
+    // And its packages' tokens (LLP 1121 D11), which every plan folds beside the design.
     let (joined, joined_icons) = contract::tamber_params::joined_all(app);
     exact_tamber::params::Params {
         joined,
@@ -144,7 +144,7 @@ pub(crate) fn params(app: &contract::tamber_params::AppParams) -> exact_tamber::
 /// the name an earlier op of this transaction wrote it by, so one
 /// transaction never gives a param two lines; an exported library
 /// component's param set by its full name, its line respelled if it is
-/// short.
+/// short (LLP 1139 D8).
 pub(crate) fn param_names(
     ops: &mut [(String, Op)],
     snap: &[(String, String, String)],
@@ -206,10 +206,11 @@ pub(crate) fn param_names(
             .and_then(|by_token| by_token.get(p.token.as_str()).cloned());
         // An earlier op's spelling first: it may have respelled the line.
         let earlier = written.get(&(file.clone(), p.token.clone())).cloned();
-        // An exported library component's param is written by its full name
-        // whatever name it was asked by, a new line and a set of a line spelled
-        // short alike: a short one is `tamber-param-short-library`, which the
-        // build refuses. An unset removes the line as it is spelled.
+        // An exported library component's param is written by its full
+        // name whatever name it was asked by, a new line and a set of a
+        // line spelled short alike: a short one is
+        // `tamber-param-short-library`, which the build refuses (LLP 1139
+        // D8). An unset removes the line as it is spelled.
         let library = app
             .library
             .iter()
@@ -268,12 +269,12 @@ pub(crate) fn param_values(
             })),
             Ok(folding) if refused.is_empty() => {
                 // An icon param's SVG is a file beside the design it is
-                // written in (a package's default's, its package's), as the build reads it.
+                // written in (D10; a package's default's, its package's, stage 13), as the build reads it.
                 for i in folding.icons.iter().filter(|i| i.name.starts_with(contract_lower::params::PREFIX)) {
                     let home = contract_lower::icons::Home::of(i, Some(dir), &app.packages, list);
                     let whose = home.package.map_or_else(|| "the app".to_string(), |p| format!("the package `{p}`"));
                     if let Some(svg) = i.svg.as_ref() {
-                        // A package's confined to its own `assets/`.
+                        // A package's confined to its own `assets/` (round 1, Astra 4).
                         let why = match home.svg(svg) {
                             Some(p) if home.leaves(&p) => Some("leaves"),
                             Some(p) if p.is_file() => None,

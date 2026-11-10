@@ -11,7 +11,7 @@ theme
   type.label = -exact-body system-ui
   type.code = 14px ui-monospace
 
-// The swatch module's own params: a view that isn't
+// The swatch module's own params (D15, stage 7 D): a view that isn't
 // Contract declares them here and reads them through the bindings,
 // `ExactTamber(view).color(.swatchRing)`.
 component Swatch

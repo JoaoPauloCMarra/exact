@@ -1,7 +1,7 @@
-//! A miswiring the compiler can see is a warning. A name that points at
-//! nothing, or a key that never meets its partner, which a host would refuse or
-//! ignore at run time; each names its repair, fails no build, and what the
-//! compiler cannot see through is given the benefit.
+//! LLP 1116.010 D5: a miswiring the compiler can see is a warning. A name
+//! that points at nothing, or a key that never meets its partner, which a
+//! host would refuse or ignore at run time; each names its repair, fails no
+//! build, and what the compiler cannot see through is given the benefit.
 
 /// The ids and lines of the warnings `src` earns, after checking that it
 /// still compiles.
@@ -209,8 +209,8 @@ fn stack(root: &str, home: &str, pushed: &str) -> String {
 
 #[test]
 fn a_navigation_key_that_never_meets_its_route_is_named_with_its_repair() {
-    // `main navigationKey="rooms"` over routes keyed by id: a tap on a room
-    // pushes nothing that is ever shown.
+    // chat-rooms, round 12: `main navigationKey="rooms"` over routes keyed by id,
+    // so a tap on a room pushed nothing that was ever shown (eight minutes).
     let src = stack("\"rooms\"", "\"rooms\"", "`${e.id}`");
     assert_eq!(warned(&src), [(KEY.to_string(), 6)]);
     let m = &messages(&src)[0];
@@ -264,7 +264,8 @@ const SPLIT: &str = "lower-navigation-split";
 
 #[test]
 fn a_navigation_split_where_no_host_reads_it_is_named_with_its_repair() {
-    // `navigationSplit` on `main`, which the split reads on the root route only.
+    // recipe-finder, round 12 (and seven apps of rounds 10 and 11): `navigationSplit`
+    // on `main`, which the split reads on the root route only.
     let on_root = stack("`${top(nav).id}`", "`${e.id}`", "`${e.id}`").replace(
         "navigationBack=\"back\"",
         "navigationBack=\"back\" navigationSplit=360",
@@ -311,8 +312,8 @@ fn warned_file(name: &str, src: &str) -> Vec<(String, u32, String)> {
 
 #[test]
 fn an_image_source_that_is_neither_a_symbol_nor_a_file_is_named_with_its_repair() {
-    // `EmptyState(symbol="sparkles")` draws a blank, as `symbol="calendar"`
-    // does; the warning points at the call's own line.
+    // habit-tracker, round 12: `EmptyState(symbol="sparkles")` drew a blank, and event-rsvp's
+    // `symbol="calendar"` the same; the warning points at the call's own line.
     let src = "use EmptyState from \"exact:content\"\ncomponent App\n  view\n    column\n      EmptyState(symbol=\"sparkles\", title=\"Nothing\", message=\"Add one\")\n      image \"gear\"\n      image \"banner\"\n";
     let got = warned_file("blank", src);
     assert_eq!(
@@ -337,7 +338,7 @@ fn an_image_source_that_is_neither_a_symbol_nor_a_file_is_named_with_its_repair(
 
 const ROOT: &str = "lower-replace-root";
 
-/// A welcome at `/` beside a main list at `/habits`, a common shape: the
+/// A welcome at `/` beside a main list at `/habits`, as Codex Sol wrote it: the
 /// action `begin` is `body` (line 10 on), pressed on the route that `cond` chooses;
 /// `follow` is the navigation root's `navigate`, as in every pattern.
 fn first_screen(body: &str, cond: &str) -> String {
@@ -362,8 +363,8 @@ fn beside(extra: &str) -> String {
 
 #[test]
 fn a_replace_the_router_refuses_at_launch_is_named_with_its_repair() {
-    // A welcome screen whose Continue replaces the root with the main list,
-    // which the router refuses while the root is alone.
+    // The welcome app (guard-rail evaluation, 2026-10-16): Continue replaced the
+    // root with the main list, which the router refuses while the root is alone.
     let src = first_screen(&format!("    welcomed = true\n{LEAVE}"), WELCOME);
     assert_eq!(warned(&src), [(ROOT.to_string(), 11)]);
     let m = &messages(&src)[0];

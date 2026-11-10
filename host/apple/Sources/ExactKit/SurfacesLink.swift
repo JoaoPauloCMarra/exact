@@ -1,4 +1,4 @@
-// GPU surfaces and Canvas 2D (the Surfaces
+// @ref LLP 1047.001 D4 — GPU surfaces and Canvas 2D (the Surfaces
 // capability) are a linked capability: their implementation is the
 // `ExactSurfaces` module, which an app's composition links only when its
 // plan has a surface or a 2D canvas, and installs here. The core names no
@@ -33,7 +33,7 @@ package protocol SurfacesCapability: AnyObject {
     func replaceShaders(_ sources: [String: Data])
 }
 
-/// The agent's clock over every world.
+/// The agent's clock over every world (LLP 1046.001).
 package struct WorldClock {
     package var pending = false
     package var settleAt: Double?
@@ -70,10 +70,10 @@ package protocol Canvases: AnyObject {
     func surfaceName(_ view: UInt32) -> String?
     func surfaceNames() -> [String]
     func waiting(_ name: String) -> Bool
-    /// A sensor input's event for the live canvas of surface `name`; false when none is live.
+    /// A sensor input's event for the live canvas of surface `name` (LLP 1133.013 D6); false when none is live.
     @discardableResult func sensor(_ name: String, _ event: [String: Any]) -> Bool
-    /// A package's sample for surface `surface`'s canvas input, or its end:
-    /// kept until the next display frame delivers it.
+    /// A package's sample for surface `surface`'s canvas input, or its end
+    /// (LLP 1133.013 D6): kept until the next display frame delivers it.
     func sensorWrite(_ surface: String, _ sensor: String, _ values: [Double], dropped: Int, at: Double, ended: Bool)
     func period(_ ms: Double)
     func tick(now: Double) -> Bool
@@ -90,7 +90,7 @@ package protocol Canvases: AnyObject {
     func refreshLifecycle()
     func lifecycleFrame()
     var lifecycleNeedsRetry: Bool { get }
-    // The agent's seams.
+    // The agent's seams (LLP 1046.001).
     func waitUntilReady() -> Bool
     func decorate(_ request: [String: Any], _ reply: [String: Any]) -> [String: Any]
     func worlds(_ request: [String: Any]) -> [[String: Any]]

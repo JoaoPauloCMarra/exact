@@ -1,5 +1,5 @@
-//! @exact/local-network on Linux and Windows, composed
-//! into the app's host crate by the desktop builder.
+//! @exact/local-network on Linux and Windows (LLP 1133.036 §13), composed
+//! into the app's host crate by the desktop builder (LLP 1133.022 D10 item 5).
 //!
 //! Neither host browses yet: Linux's browser over Avahi's D-Bus API and
 //! Windows' over `DnsServiceBrowse` are not built, so `available` is false,

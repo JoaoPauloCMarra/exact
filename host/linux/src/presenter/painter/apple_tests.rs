@@ -136,7 +136,7 @@ fn archive_miss_starts_with_cpu_pixels_then_replaces_the_whole_frame_with_ink() 
     let over = 100. * errors.iter().filter(|p| p.iter().any(|e| *e > 32)).count() as f64
         / errors.len() as f64;
     eprintln!("Metal archive transition: mean {mean:.3}/255, {over:.3}% beyond 32");
-    assert!(mean < 5. && over < 6., "mean {mean}, outliers {over}%");
+    assert!(mean < 5. && over < 6., "D9: mean {mean}, outliers {over}%");
     assert!(
         archive.is_file(),
         "the worker must serialize the populated archive"

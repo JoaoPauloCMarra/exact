@@ -1,4 +1,5 @@
 //! Host-owned date answers; never baked or carried.
+//! @ref LLP 1027.000.000
 use super::{DataError, DataSource, Runner, RunnerError};
 use crate::time::{Place, WallTime, SOURCE};
 use exact_kernel::CommitReceipt;
@@ -119,7 +120,7 @@ impl<D: DataSource> Runner<D> {
         }
         let changed = place != self.place;
         let previous = std::mem::replace(&mut self.place, place);
-        // An ordinary slot write, so dependency tracking
+        // @ref LLP 1060 D4 — an ordinary slot write, so dependency tracking
         // re-renders exactly the `t(...)` readers. The checkpoint the commit
         // takes already holds the new value: a refusal restores it here.
         let written = self.plan.locale.and_then(|slot| {
@@ -151,7 +152,7 @@ impl<D: DataSource> Runner<D> {
         result.map(Some)
     }
 
-    /// Take the topics the source's native module announces,
+    /// Take the topics the source's native module announces (LLP 1016.002),
     /// calling `wake` from the announcing thread; the host then calls
     /// [`Runner::apply_announced`] on its own. A source with no native
     /// handle announces nothing.
@@ -171,8 +172,8 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Every topic a current answer watches, once each, sorted: what a host
-    /// that announces on its own behalf (a document watch) must listen for
-    /// after a commit.
+    /// that announces on its own behalf (a document watch, LLP 1069.010.000
+    /// D1) must listen for after a commit.
     pub fn watched_topics(&self) -> Vec<String> {
         let mut topics: Vec<String> = self.watching.iter().flatten().cloned().collect();
         topics.sort();
@@ -194,13 +195,13 @@ impl<D: DataSource> Runner<D> {
     /// between two calls coalesce, so a fast producer costs one re-ask.
     pub fn apply_announced(&mut self) -> (Vec<CommitReceipt>, Option<RunnerError>) {
         // A module's reply that carried handles may have left its
-        // implementation for a request no longer in flight.
+        // implementation for a request no longer in flight (LLP 1133.009 D6).
         self.dispose_dropped();
         let topics = std::mem::take(&mut *self.announced.lock().unwrap_or_else(|e| e.into_inner()));
         let mut receipts = Vec::new();
         for topic in topics {
             // An event a bound implementation emitted, said through its
-            // module's `changed`: raised, not a topic.
+            // module's `changed` (LLP 1133.004 D6): raised, not a topic.
             if let Some(event) = topic.strip_prefix(super::modules::EMITTED) {
                 self.raise_emitted(event);
                 continue;
@@ -214,23 +215,23 @@ impl<D: DataSource> Runner<D> {
                 }
                 continue;
             }
-            // A wake a bound implementation raised.
+            // A wake a bound implementation raised (LLP 1133.017 D8).
             if let Some(wake) = topic.strip_prefix(super::modules::TOLD) {
                 self.raise_told_wake(wake);
                 continue;
             }
             // A person's act on a bound implementation's own screen, on a
-            // list the runner keeps.
+            // list the runner keeps (LLP 1133.033 §13).
             if let Some(choice) = topic.strip_prefix(super::modules::CHOSEN) {
                 self.listed_choice(choice);
                 continue;
             }
-            // An implementation's own objects, for `state.extensions`.
+            // An implementation's own objects, for `state.extensions` (LLP 1133.008 D8 item 9).
             if let Some(state) = topic.strip_prefix(super::modules::STATED) {
                 self.disclosed_told(state);
                 continue;
             }
-            // A foreground-service claim under the agent.
+            // A foreground-service claim under the agent (LLP 1133.033 D21).
             if let Some(claim) = topic.strip_prefix(super::modules::CLAIMED) {
                 self.foreground_service_told(claim);
                 continue;
@@ -241,16 +242,16 @@ impl<D: DataSource> Runner<D> {
                 Err(error) => return (receipts, Some(error)),
             }
         }
-        // Then the module events raised meanwhile.
+        // Then the module events raised meanwhile (LLP 1133.004 D6).
         let (events, error) = self.deliver_module_events();
         receipts.extend(events);
         (receipts, error)
     }
 
-    /// The device says `topic` changed: every resource whose
+    /// The device says `topic` changed (LLP 1016.002): every resource whose
     /// answer watches it is asked again, in one commit; none, no commit.
     ///
-    /// A resource with a request in flight is not
+    /// @ref LLP 1016.002 D4 — a resource with a request in flight is not
     /// asked now: forgetting that request would drop its reply, and a topic
     /// that changes faster than the source answers would starve the
     /// resource. The request is marked instead; its reply lands as any
@@ -259,7 +260,7 @@ impl<D: DataSource> Runner<D> {
     pub fn changed(&mut self, topic: &str) -> Result<Option<CommitReceipt>, RunnerError> {
         let mut which = Vec::new();
         for i in 0..self.watching.len() {
-            // An upload is asked once for its arguments.
+            // An upload is asked once for its arguments (LLP 1016.000 D10).
             if !self.watching[i].iter().any(|t| t == topic) || self.upload_stands(i) {
                 continue;
             }
@@ -281,7 +282,7 @@ impl<D: DataSource> Runner<D> {
                 None => which.push(i),
             }
         }
-        // Each reader asks again under its own last ask's origin.
+        // Each reader asks again under its own last ask's origin (LLP 1133.002 D12).
         self.reasking(|r| r.recommit(which, "changed"))
     }
 

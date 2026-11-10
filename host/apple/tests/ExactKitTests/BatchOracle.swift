@@ -2,7 +2,7 @@ import Foundation
 import CoreText
 // Frozen pre-S13 decoder: independent Foundation oracle, never linked into the app.
 @testable import ExactKit
-// Decode the existing Apple JSON wire once, before
+// @ref LLP 1044.000 §6 S8 — decode the existing Apple JSON wire once, before
 // presentation. Style names/values still come from kernel/tables/schema.json;
 // this is a consumer of that wire, not another declaration table.
 
@@ -107,10 +107,10 @@ struct OracleBatch: Decodable {
     let ops: [OracleBatchOp]
     let timers: Bool
     let motion: Bool
-    /// The runner's clock after the call, milliseconds (the agent's `clock`).
+    /// The runner's clock after the call, milliseconds (LLP 1012 `clock`).
     let clock: Double?
     let error: String?
-    /// Absolute runner deadline, absent without timers.
+    /// @ref LLP 1043.000 §3 D8 — absolute runner deadline, absent without timers.
     var timerDueMs: Double? = nil
     var pending = false
     enum CodingKeys: String, CodingKey {
@@ -138,7 +138,7 @@ struct OracleBatch: Decodable {
 
 }
 
-// Textual descendants are paragraph values.
+// @ref LLP 1044.000 §6 S1 — textual descendants are paragraph values.
 
 struct OracleInlineText: Decodable {
     let id: UInt32

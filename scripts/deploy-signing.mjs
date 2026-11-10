@@ -92,14 +92,14 @@ const rawPublic = (key) => key.export({ type: 'spki', format: 'der' }).subarray(
 export function loadSigner(app, keysDir) {
   const signing = app.manifest.deploy?.signing ?? {};
   const keyId = signing.key;
-  if (!keyId) refuse(`${app.dir}/app.json names no deploy.signing.key: a publish signs every head; bun scripts/deploy.mjs keygen <id> makes one`);
+  if (!keyId) refuse(`${app.dir}/app.json names no deploy.signing.key: a publish signs every head (LLP 1026 D11); bun scripts/deploy.mjs keygen <id> makes one`);
   const path = resolve(keysDir, `${keyId}.pem`);
   if (!existsSync(path)) refuse(`no signing key at ${path} — bun scripts/deploy.mjs keygen ${keyId} --keys ${keysDir} writes one (and prints the public half for app.json's deploy.signing.keys["${keyId}"])`);
   let privateKey;
   try { privateKey = createPrivateKey(readFileSync(path)); } catch (e) { refuse(`${path} is not a PEM private key: ${e.message}`); }
   if (privateKey.asymmetricKeyType !== 'ed25519') refuse(`${path} is a ${privateKey.asymmetricKeyType} key; the head is signed with Ed25519`);
   const declared = signing.keys?.[keyId];
-  if (!declared) refuse(`${app.dir}/app.json's deploy.signing.keys has no "${keyId}": the binary verifies with that key; paste the public half keygen printed`);
+  if (!declared) refuse(`${app.dir}/app.json's deploy.signing.keys has no "${keyId}": the binary verifies with that key (LLP 1030 D3a); paste the public half keygen printed`);
   const manifestKey = publicKeyFromRaw(Buffer.from(declared, 'base64'));
   const probe = Buffer.from('exact deploy: is this key mine?');
   if (!verify(null, probe, manifestKey, sign(null, probe, privateKey))) refuse(`the manifest's public key for ${keyId} is not this private key's (${path}): a head signed here would be refused by every installed binary`);
@@ -119,13 +119,13 @@ export function keygen(opts, usage) {
   const id = opts._[1];
   if (!id || !/^[A-Za-z0-9._-]+$/.test(id)) refuse(`keygen <id>: letters, digits, . _ - (it names the PEM and the manifest entry)\n${usage}`);
   const path = resolve(opts.keys, `${id}.pem`);
-  if (existsSync(path)) refuse(`${path} exists: a signing key is never overwritten — remove it yourself, or pick another id (a rotation is a new cohort)`);
+  if (existsSync(path)) refuse(`${path} exists: a signing key is never overwritten — remove it yourself, or pick another id (a rotation is a new cohort, LLP 1030 D3a)`);
   const { privateKey, publicKey } = generateKeyPairSync('ed25519');
   mkdirSync(opts.keys, { recursive: true, mode: 0o700 });
   try {
     writeFileSync(path, privateKey.export({ type: 'pkcs8', format: 'pem' }), { mode: 0o600, flag: 'wx' });
   } catch (error) {
-    if (error.code === 'EEXIST') refuse(`${path} exists: a signing key is never overwritten — remove it yourself, or pick another id (a rotation is a new cohort)`);
+    if (error.code === 'EEXIST') refuse(`${path} exists: a signing key is never overwritten — remove it yourself, or pick another id (a rotation is a new cohort, LLP 1030 D3a)`);
     throw error;
   }
   const raw = rawPublic(publicKey).toString('base64');

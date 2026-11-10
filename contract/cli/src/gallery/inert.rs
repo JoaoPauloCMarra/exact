@@ -346,7 +346,7 @@ fn shows(
 /// some; a shadow, gradient or filter that holds a colour takes none alone
 /// and keeps the prop's name, a token's it may be), a length row's `24px`,
 /// where the prop's name would be no colour, token or length (Avatar's
-/// `width=size`, VerifiedBadge's `color=ink`); a
+/// `width=size`, VerifiedBadge's `color=ink`, LLP 1121 stage 15 B); a
 /// length row is one whose every row is a dimension (a width, a padding),
 /// so a font's family or a weight keeps its name. Through a component of
 /// `file` the prop is passed to, at any depth, as [`shows_image`]; a colour
@@ -479,9 +479,10 @@ fn each(nodes: &[Node], bound: &[String], f: &mut dyn FnMut(&Node, &[String])) {
 /// The string literals `c`'s own view compares prop `prop` with in an `if`
 /// (`if badge == "verified"`, either side, an `else if` too), in the order
 /// written, each once: the values that draw something, which a string's name
-/// never does (VerifiedBadge). With `ne`, a `!=` counts too (an enum's
-/// `if badge != "none"`: PostCard's, ProfileHeader's, PersonRow's). A `for` or
-/// `match` binding of the same name shadows it.
+/// never does (VerifiedBadge, stage 15 D4 batch 1 #2). With `ne`, a `!=`
+/// counts too (an enum's `if badge != "none"`: PostCard's, ProfileHeader's,
+/// PersonRow's, stage 15 B batch 2). A `for` or `match` binding of the same
+/// name shadows it.
 pub(super) fn compared_literals(c: &Component, prop: &str, ne: bool) -> Vec<String> {
     let mut found: Vec<String> = Vec::new();
     each(&c.view, &[], &mut |node, bound| {

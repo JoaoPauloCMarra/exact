@@ -1,8 +1,8 @@
-// The tool's one `tamber/1` client: its token and every
+// The tool's one `tamber/1` client (LLP 1122 D2, D12): its token and every
 // request. Local, the server is this machine's at the tool's own origin and
 // the token is the one its loopback page gives (`/__tamber/token`), asked
-// again when the server restarts. Paired with another machine's server,
-// the server is the door the person typed, https or a tunnel they
+// again when the server restarts. Paired with another machine's server
+// (T6), the server is the door the person typed, https or a tunnel they
 // trust to this machine's loopback (anything else is refused before the
 // code is sent), and the token is the one pairing gave: kept in memory only,
 // never in storage, a URL, a log or an error. Revoked or expired (401), it
@@ -113,7 +113,7 @@ export function wire(api: string, ownerOf: (id: string) => string | null = () =>
    * since: that is a refusal, the server restarted. A paired client revoked
    * or expired (401) is told so, a write in flight then too, and sends
    * nothing more. `held`: the server holds the reply until something changes (the changes poll), so no
-   * agent clock waits on it (`exactHeld`). */
+   * agent clock waits on it (`exactHeld`, LLP 1016.000 D9). */
   async function call(path: string, body: unknown, timeout = 15000, bound?: string, held = false): Promise<{ error: string; reply: Reply; used: string }> {
     for (let attempt = 0; attempt < 2; attempt++) {
       const got = bound ? { token: tokens.get(bound) ?? null, error: RESTARTED } : await tokenOf();

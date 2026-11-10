@@ -1,8 +1,8 @@
-// A tap addressed by id presses what it names, the web's
+// A tap addressed by id presses what it names (LLP 1012 §1 `tap`), the web's
 // half of `host/apple/Sources/ExactKit/AgentAddressedTap.swift`: a plain
 // `tap <target>` aims at the target's middle, and a click there reaches the
 // innermost element with a press of its own — a link card or a Like button
-// inside a post row (a Bluesky-style feed). A target with a press
+// inside a post row (the Bluesky clone, 2026-10-09). A target with a press
 // of its own is clicked where a click reaches it (its middle, else the point
 // of its box nearest the middle that does), or refused; a target without one
 // never presses a control inside it in its name. `tap <target> at <x> <y>` is

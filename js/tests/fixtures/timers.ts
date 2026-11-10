@@ -1,4 +1,4 @@
-// An answer's own timers, due on the
+// LLP 1027.000 D1 (amended 2026-10-28): an answer's own timers, due on the
 // runner's clock. `setInterval` and the clock reads stay refused.
 const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 const log: string[] = [];
@@ -50,7 +50,7 @@ async function answer(source: string, args: any[]): Promise<unknown> {
       } catch (e) {
         return e.name;
       }
-    // A POST bounded by a timeout signal, run to its end once its answer is let go: the signal
+    // A POST bounded by a timeout signal, run to its end once its answer is let go (LLP 1146 D2): the signal
     // carried as it is, through `AbortSignal.any`, beside an equal `exactTimeout`, shared with the next answer,
     // or longer than a request waits.
     case "postTimeout": {

@@ -1,10 +1,10 @@
-// The design tool driven as a person would, against a real
+// The design tool (LLP 1122 T1) driven as a person would, against a real
 // design server: `bun exact.mjs tamber tool` on a copy of the theme fixture
 // serves it at its own URL, and the agent drives that page (`agent web
 // --url`). The tool shows the server's hello, and an agent's write arrives
 // on its long poll attributed. Its stub-server tests are
 // apps/design-tool/*.test.contract.
-// Its heaviest drives are files of their own, so they run in parallel (design-tool-ops, -canvas, -inspect,
+// Its heaviest drives are files of their own, so a lane runs them side by side (design-tool-ops, -canvas, -inspect,
 // -scrub, -kinds, -commit and -fields.test.mjs); each claims its own port and temp dirs (design-tool-harness.mjs).
 import { expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
@@ -144,7 +144,7 @@ test('every control on the dials panel comes from the design as describe gives i
       // The sliders' own range and step, which the page keeps a value to:
       // a step of 0.001 to 0.005, a value past the end held at it.
       'type dial-fine-slider 0.004', 'state', 'type dial-fine-slider 1', 'state', 'type dial-lift-slider 0.374', 'state', 'type dial-chroma-slider -1', 'state',
-      // A length dial's value, written in px, which the real server takes.
+      // A length dial's value, written in px, which the real server takes (stage 6).
       'type dial-gap-slider 10', 'clock data', 'tap apply', 'clock data'], { cwd: ROOT, env: DRIVEN.env, encoding: 'utf8' });
     expect(drive.status, drive.stderr).toBe(0);
     const out = drive.stdout.split('\n').filter(l => l.startsWith('{')).map(l => JSON.parse(l));
@@ -189,7 +189,7 @@ test('every control on the dials panel comes from the design as describe gives i
         dial('warmth', 'slider', 'Warmth', '20', '0 – 60 · step 1'),
       ] },
       { group: 'Space', dials: [
-        // A length dial: its value, range and step in px.
+        // A length dial: its value, range and step in px (LLP 1121 D15).
         dial('gap', 'slider', 'Gap', '8px', '0px – 24px · step 2px'),
         dial('inset', 'stepper', 'inset', '4px', '0px – 16px · step 1px'),
       ] },
@@ -252,7 +252,7 @@ test('a dial edit and a Dim cell edit each write one line, undo gives the bytes 
   }
 }, 900_000);
 
-test('a re-scope reads the branch it moves: the alias there, the param that aliases a token there, a role by its spelling, none toward a value that names its destination, none from another revision', async () => {
+test('T3: a re-scope reads the branch it moves: the alias there, the param that aliases a token there, a role by its spelling, none toward a value that names its destination, none from another revision', async () => {
   const { paramInfoOf, rescopeOf, tokenOfIn } = await import('../apps/design-tool/rescope.ts');
   const ir = { tokens: [{ name: 'radius.md' }, { name: 'radius.sm' }, { name: '-exact-label', role: 'label' }], components: [{ params: [
     { name: 'a#Card.radius', short: 'Card.radius', kind: 'length', default: 'radius.md', set: { value: 'radius.md', whens: 1 } },
@@ -289,7 +289,7 @@ test('a re-scope reads the branch it moves: the alias there, the param that alia
     { op: 'set-token', name: 'radius.md', when: [], value: '12px' },
     { op: 'set-param', name: 'Card.radius', when: [], value: '10px' },
   ] });
-  // A copy a shorter `when` covers: on dim+compact, Fill shows paper (its dim line), so an
+  // A copy a shorter `when` covers (Grok's case): on dim+compact, Fill shows paper (its dim line), so an
   // edit of ink there moves nowhere, and Fill's Only-this-mode edit there moves to paper.
   const two = { tokens: [{ name: 'ink' }, { name: 'paper' }], components: [{ params: [{ name: 'a#Card.fill', short: 'Card.fill', kind: 'color', default: 'ink', set: { value: 'ink', whens: 1 } }] }] };
   const dim = [{ axis: 'dark-style', value: 'dim' }], both = [...dim, ...compact];
@@ -308,7 +308,7 @@ test('a re-scope reads the branch it moves: the alias there, the param that alia
   expect(await rescopeOf({ op: 'set-param', name: 'Card.ink', when: [], value: '#111' }, params, tokenOf, async n => ({ ...branches[n], files: { 'app.tamber': 'd2' } }), key)).toBe(null);
 });
 
-test('Reset gives a param\'s line back byte for byte in one undo; a param edit re-scoped to the token it aliases is one transaction, undone a level at a time; a re-scope after another write is refused', async () => {
+test('T3: Reset gives a param\'s line back byte for byte in one undo; a param edit re-scoped to the token it aliases is one transaction, undone a level at a time; a re-scope after another write is refused', async () => {
   const app = mkdtempSync(join(tmpdir(), 'exact-design-tool-params-'));
   const original = readFileSync(resolve(ROOT, 'apps/design-tool/stub/dials.tamber'), 'utf8');
   writeFileSync(join(app, 'app.tamber'), original);
@@ -363,7 +363,7 @@ test('Reset gives a param\'s line back byte for byte in one undo; a param edit r
 test('controls from metadata that does not fit, steps, select values, column labels, branches, inputs and contrast over a background', async () => {
   const { controlOf, columnsOf, branchOf, inputsOf, cellText } = await import('../apps/design-tool/app.ts');
   const { contrast } = await import('../apps/design-tool/contrast.ts');
-  // A cell's text for each token kind, from `resolve`'s tuples as the server gives them (tamber/tests/corpus).
+  // A cell's text for each stage 6 kind, from `resolve`'s tuples as the server gives them (tamber/tests/corpus).
   expect(cellText('length', { amount: 12, kind: 'length', unit: 'px', value: '12px' })).toBe('12px');
   expect(cellText('length', { amount: 1.5, kind: 'length', unit: 'rem', value: '1.5rem' })).toBe('1.5rem');
   expect(cellText('number', { amount: 0.5, kind: 'number', value: '0.5' })).toBe('0.5');

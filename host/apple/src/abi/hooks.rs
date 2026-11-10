@@ -1,7 +1,7 @@
 use super::*;
 
-/// What the presenter hands the library at boot: the text measurer
-/// and the wake for a request's reply, each with an
+/// What the presenter hands the library at boot: the text measurer (LLP
+/// 1008 §3) and the wake for a request's reply (LLP 1016 D2), each with an
 /// opaque context the library passes back untouched.
 #[derive(Clone, Copy)]
 pub struct Hooks {
@@ -9,16 +9,16 @@ pub struct Hooks {
     pub measure: Option<MeasureFn>,
     /// Passed back to `measure` and `lines`.
     pub ctx: *mut c_void,
-    /// A paragraph's line boxes; `None` keeps paragraphs whole.
+    /// A paragraph's line boxes (LLP 1093 D6); `None` keeps paragraphs whole.
     pub lines: Option<crate::measure::LinesFn>,
-    /// Each inline box's origin; `None` leaves images at
+    /// Each inline box's origin (LLP 1011.002 D2); `None` leaves images at
     /// their paragraph's content origin.
     pub inline_boxes: Option<crate::measure::LinesFn>,
     /// Called on the executor's thread when a reply is queued; `None`: replies wait for `exact_pump`.
     pub wake: Option<crate::executor::WakeFn>,
     /// Passed back to `wake`.
     pub wake_ctx: *mut c_void,
-    /// Measures a Canvas 2D run with Core Text, with `ctx`.
+    /// Measures a Canvas 2D run with Core Text (LLP 1056 D8), with `ctx`.
     pub canvas_text: Option<crate::canvas_text::CanvasTextFn>,
     /// Measures a system symbol (`TextMeasurer::symbol_size`), with `ctx`.
     pub symbol: Option<crate::measure::SymbolFn>,

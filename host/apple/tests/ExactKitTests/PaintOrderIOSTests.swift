@@ -85,9 +85,9 @@ final class PaintOrderIOSTests: XCTestCase {
     /// holders' rank: over its in-flow siblings, among positioned ones where
     /// its subview place (the routes' place in the tree) puts it, and under
     /// a positive `z-index` overlay. A top-layer view (a popover, a
-    /// snapshot) stays over every ranked sibling. A root sheet after the
-    /// routes, positioned with no `z-index`, keeps its taps from the route's
-    /// collection view.
+    /// snapshot) stays over every ranked sibling. Chat2 diary: a root sheet
+    /// after the routes, positioned with no `z-index`, lost its taps to the
+    /// route's collection view.
     func testANavigationContainerPaintsAtTheRoutesPlace() throws {
         let p = fixture()
         let parent = try XCTUnwrap(p.views[1])

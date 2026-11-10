@@ -1,6 +1,7 @@
-// The dev loop's status pill (DevPill.swift): while the loop's producers start
-// the window shows what it said, in a pill outside the page and the kernel's
-// tree; it is gone when the plan comes; under the agent there is none.
+// The dev loop's status pill (DevPill.swift; dtool2's pass 3 #8, theme2's
+// plan approval): while the loop's producers start the window shows what it
+// said, in a pill outside the page and the kernel's tree; it is gone when the
+// plan comes; under the agent there is none.
 import XCTest
 @testable import ExactKit
 #if os(macOS)

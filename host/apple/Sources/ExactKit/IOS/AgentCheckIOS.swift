@@ -1,4 +1,4 @@
-// `check` on UIKit: what the presented screen shows, as
+// `check` on UIKit (LLP 1116.003 D8): what the presented screen shows, as
 // observations the driver judges (scripts/agent-check.mjs) — each view's box
 // in the window, a paragraph's text, ink and type and whether it fits its box
 // or a clip cuts it, a control and who sized it (UIKit's own controls at
@@ -6,10 +6,10 @@
 // rest (a bar, the keyboard, a sheet, another node) and whether a scroller
 // could move it clear, a filled box's fill and edge, how far a view runs
 // past the viewport's sides, and a percentage width its own padding pushes
-// past its parent. UIKit's own labels (a native button's title, a
+// past its parent (LLP 1116.009 D5). UIKit's own labels (a native button's title, a
 // segment's, a list cell's) are text too. Read from the view tree, never a
 // second model; the background under a text is the nearest fill painted
-// under it, else the driver's, from a capture of the
+// under it (LLP 1116.006 D5), else the driver's, from a capture of the
 // window, taken at rest (`settleMotion`, AgentMotionIOS.swift).
 #if os(iOS) || os(tvOS)
 import UIKit
@@ -22,7 +22,7 @@ extension Agent {
         guard let win = vp.window else { return ["error": "check: the app has no window yet"] }
         // What lies over a view is what a finger at its middle lands on, not the cell's widening of its field's
         // target: a touch a grouped row leaves to no control falls to the row's field, which covers nothing the
-        // row draws.
+        // row draws (LLP 1116.009 D5).
         let falls = NodeView.touchFallsToCellField
         NodeView.touchFallsToCellField = false
         defer { NodeView.touchFallsToCellField = falls }
@@ -33,7 +33,7 @@ extension Agent {
         let roots = [scope] + presenter.presentations().filter { !$0.isDescendant(of: scope) && !presenter.modals.inertBehind($0) }
         let keyboard = keyboardTopForCheck()
         let r2 = { (v: CGFloat) in Agent.r2(v) }
-        // The bars drawn over the content: what lies under one, scrolled there, is covered, not presented.
+        // The bars drawn over the content: what lies under one, scrolled there, is covered, not presented (LLP 1116.007 D3.8).
         var bars: [(view: UIView, box: CGRect, top: Bool)] = []
         func findBars(_ v: UIView) {
             guard !v.isHidden, v.alpha > 0.01 else { return }
@@ -103,8 +103,8 @@ extension Agent {
             return r
         }
         /// The part of box `b` (`v`'s, in the window) that is presented: each clipping view above it (a scroller, a list,
-        /// a box that hides its overflow) cuts it at its edges, and a bar over the screen's top or
-        /// bottom cuts what lies past its inner edge.
+        /// a box that hides its overflow) cuts it at its edges (LLP 1116.006 D5), and a bar over the screen's top or
+        /// bottom cuts what lies past its inner edge (LLP 1116.007 D3.8).
         func visible(_ v: UIView, _ b: CGRect) -> CGRect {
             var r = b, at = v.superview
             while let cur = at, !r.isNull {
@@ -136,7 +136,7 @@ extension Agent {
             }
             return s.subviews.contains { paints($0, at: p) }
         }
-        /// What a text (`v`, box `b` in the window) stands on: the nearest fill painted under its
+        /// What a text (`v`, box `b` in the window) stands on (LLP 1116.006 D5): the nearest fill painted under its
         /// middle — its own box's, a bubble's, a card's, the route's or the canvas's — composited over what lies below
         /// where it is translucent, and whose it is (nil: the page's). Nil where something the tree does not say for
         /// certain paints there — a picture, a material, a native control's or a list cell's own background, a view laid
@@ -178,7 +178,7 @@ extension Agent {
         func cover(_ v: UIView, _ b: CGRect) -> [String: Any]? {
             // Past the screen's top or bottom, or its scroller's, where nothing scrolls it in: a column taller than
             // the screen, a row past a scroller's end. Whatever is over that point covers nothing the scroller cut
-            // away: a row past a tab's scroller, under the tab bar the agent paints there, was one.
+            // away: a row past a tab's scroller, under the tab bar the agent paints there, was one (LLP 1116.003).
             let seen = shown(v)
             if seen.isNull || b.midY >= seen.maxY || b.midY < seen.minY {
                 let up = seen.isNull ? b.midY < port.midY : b.midY < seen.minY
@@ -220,7 +220,7 @@ extension Agent {
         }
 
         /// A box whose content fits its parent and whose own padding (content-box sizing) pushes it past the parent's content
-        /// edge (`width="100%"` with padding). The presenter is
+        /// edge (LLP 1116.009 D5; focus-timer and recipe-finder, round 11: `width="100%"` with padding). The presenter is
         /// never told a width (the kernel sized the box and the frame carries it), so the cause is read from the geometry: the
         /// padding is what the author wrote (`written`), the content is no wider than the parent's, and the border box is.
         /// A parent that scrolls sideways because its author wrote `overflow-x` is on purpose (a `scroll` view's own `auto` is the
@@ -278,7 +278,7 @@ extension Agent {
                     if item["control"] != nil || item["text"] != nil, let c = cover(n, b), item["control"] != nil || c["kind"] as? String != "offscreen" { item["cover"] = c }
                     if item["text"] == nil, item["control"] == nil { fill(n, b, alpha: a, faded: alpha < 0.999, into: &item) }
                     // A fill's presented part too: a card below the viewport, or past its scroller's edge, is not drawn, and the
-                    // pixels there are the page's (a badge below the viewport is "a card that does not show").
+                    // pixels there are the page's (LLP 1116.010 D2: trivia's Badge below the viewport was "a card that does not show").
                     if item["text"] != nil || item["control"] != nil || item["fill"] != nil { presented(n, b, into: &item) }
                     if item.keys.contains(where: { ["text", "control", "fill", "outX", "spill", "padded"].contains($0) }) { items.append(item) }
                 } else if n.isParagraph, b.width < 1, b.height > 0, b.minX >= port.minX - 1, b.minX <= port.maxX + 1, b.maxY > port.minY, b.minY < port.maxY {
@@ -294,8 +294,8 @@ extension Agent {
                 }
                 // What scrolls sideways or clips keeps its children's overflow its own. A scroll view does so only where its
                 // author wrote its `overflow-x`: a vertical one's x is `auto` by CSS's rule, and UIKit neither pans nor shows
-                // what runs past its side, which the screen's edge cuts. The web's `holdsX`
-                // (host/web-js/check.js).
+                // what runs past its side, which the screen's edge cuts (LLP 1116.020 D4; round 18's focus-timer and
+                // trivia-quiz). The web's `holdsX` (host/web-js/check.js).
                 let sideways = n.scroll == nil || n.style["written"]?.array?.contains(.string("overflow_x")) == true
                 if sideways && (n.scroll?.scrollsX == true || n.clipsToBounds || n.clipBox != nil) { heldBelow = true }
             } else if let label = v as? UILabel {
@@ -313,7 +313,7 @@ extension Agent {
             if var fg = rgba(spec.color) { fg[3] = Double(r2(CGFloat(fg[3]) * alpha)); item["fg"] = fg }
             if let under = backing(n, b) {
                 item["bg"] = under.bg; item["on"] = under.by == Int(n.id) ? "own" : under.by.map { $0 as Any } ?? "page"
-                // On the accent's fill: the box that paints it follows the tint.
+                // On the accent's fill (LLP 1116.020 D7): the box that paints it follows the tint.
                 var at: UIView? = n
                 while let cur = at, under.by != nil {
                     if let fill = cur as? NodeView, Int(fill.id) == under.by { if fill.followsTint("background_color") { item["onAccentFill"] = true }; break }
@@ -324,7 +324,7 @@ extension Agent {
             if let role = n.systemColor("text_color") { item["fgRole"] = role }
             if spec.lineClamp > 0 || spec.ellipsis { item["clamp"] = true }
             if spec.ellipsis { item["ellipsis"] = true }
-            // A control's own label on the control's own fill (the ink rule): the nearest pressable node within three. A
+            // A control's own label on the control's own fill (D3's ink rule): the nearest pressable node within three. A
             // disabled one's label is an inactive component's text, which WCAG 1.4.3 does not judge (the web's `inactive`).
             var up = n.superview, k = 0
             while let cur = up, k < 3 {
@@ -447,7 +447,7 @@ extension Agent {
             // not the 3:1 a control's label on its own fill gets outside a row: countdowns' indigo button in dark).
             // So is the title of any UIKit button, a `select`'s pop-up button (the value it shows, in the accent
             // UIKit tints it with) and a menu's: the platform's own ink for the control, as a hand-built screen
-            // draws it (an indigo menu in dark measured 3.9:1).
+            // draws it (LLP 1116.008 D7: countdowns' and expense-tracker's indigo menu in dark, 3.9:1).
             var held: UIView? = label.superview
             while let cur = held, !(cur is NodeView), !(cur is UIButton) { held = cur.superview }
             var up: UIView? = held is UIButton ? held : label.superview
@@ -457,7 +457,7 @@ extension Agent {
                 if let button = cur as? NativeButtonIOS {
                     if let o = button.owner { item["of"] = Int(o.id) }
                     item["label"] = true
-                    // UIKit's white on a fill of the accent: what reads on it is the accent's choice.
+                    // UIKit's white on a fill of the accent (LLP 1116.019 D3): what reads on it is the accent's choice.
                     if ButtonConfigurationIOS.filledStyles.contains(button.drawn), button.configuration?.baseForegroundColor == nil { item["onAccent"] = true }
                     // UIKit's hue on its own pale fill: the tinted style's label in the button's tint.
                     if button.drawn == "tinted", button.configuration?.baseForegroundColor == nil { item["tinted"] = true }
@@ -480,7 +480,7 @@ extension Agent {
                 up = cur.superview
             }
             // A list's section header, which a plain list pins over its rows as they scroll under it, on UIKit's
-            // own edge effect: a row meeting it is not running into it (contacts at the largest text size).
+            // own edge effect: a row meeting it is not running into it (contacts at the largest text size, bake-off r28).
             var list: UIView? = label.superview
             while let l = list, !(l is UICollectionView) { list = l.superview }
             if let list = list as? UICollectionView,

@@ -1,4 +1,4 @@
-//! The uploads a runner has asked: for each resource,
+//! The uploads a runner has asked (LLP 1016.000 D10): for each resource,
 //! the identifying arguments an upload was asked at and how it stands.
 //! Nothing asks an upload again at arguments it has a mark for: the
 //! resource shows the answer the upload ended with, or its failure. The
@@ -196,7 +196,7 @@ impl<D: DataSource> Runner<D> {
         self.uploads.at(name, source, self.upload_identity(i, args))
     }
 
-    /// Whether an upload is in flight for resource `i`.
+    /// Whether an upload is in flight for resource `i` (LLP 1016.000 D10).
     pub(super) fn uploading(&self, i: usize) -> bool {
         (self.pending.iter()).any(|p| p.target == Target::Resource(i) && p.upload)
     }
@@ -208,7 +208,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Whether resource `i`'s answer is an upload's, in flight, ended or
-    /// failed: nothing asks it again at its arguments.
+    /// failed: nothing asks it again at its arguments (D10).
     pub(super) fn upload_stands(&self, i: usize) -> bool {
         self.uploading(i)
             || (self.resources[i].as_ref()).is_some_and(|s| self.upload_at(i, &s.args).is_some())
@@ -246,7 +246,7 @@ impl<D: DataSource> Runner<D> {
     /// `started` had begun to go out, and is cut off, `interrupted`. Any
     /// other never reached the network and is no upload asked: `refresh`
     /// asks it again, and a resource that shows it cut off is asked again at
-    /// the next commit.
+    /// the next commit (LLP 1016.000 D10).
     pub fn uploads_started(&mut self, started: &[u64]) {
         for ticket in std::mem::take(&mut self.uploads.let_go) {
             if started.contains(&ticket) {
@@ -319,7 +319,7 @@ mod tests {
     fn an_end_reaches_every_mark_of_its_ticket_and_an_unsent_one_is_forgotten() {
         let mut uploads = Uploads::default();
         uploads.sent("photo", "upload", &[Value::Number(1.0)], 4);
-        // The same request for newer arguments.
+        // The same request for newer arguments (LLP 1054.000.000 D3).
         uploads.sent("photo", "upload", &[Value::Number(2.0)], 4);
         uploads.sent("photo", "upload", &[Value::Number(3.0)], 5);
         let ok = UploadEnd::Answered(Value::str("ok"));

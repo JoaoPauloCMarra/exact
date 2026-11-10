@@ -1,4 +1,4 @@
-//! The local network as a grant names it: decided from a
+//! The local network as a grant names it (LLP 1133.036 D5): decided from a
 //! URL's host as written, never from where a name resolves.
 
 use std::net::{Ipv4Addr, Ipv6Addr};
@@ -32,8 +32,8 @@ pub fn is_local_network(host: &str, loopback: bool) -> bool {
     name.ends_with(".local") && name.len() > ".local".len() || loopback && name == "localhost"
 }
 
-/// Whether `kind` is a DNS-SD service type `net.dns-sd` may name:
-/// `_<name>._tcp` or `_<name>._udp`, the name 1 to 15
+/// Whether `kind` is a DNS-SD service type `net.dns-sd` may name (LLP
+/// 1133.036 D1): `_<name>._tcp` or `_<name>._udp`, the name 1 to 15
 /// letters, digits and hyphens with at least one letter and no leading,
 /// trailing or doubled hyphen (RFC 6335 §5.1; RFC 6763 §7).
 pub fn is_service_type(kind: &str) -> bool {

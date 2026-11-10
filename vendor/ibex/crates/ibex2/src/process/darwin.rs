@@ -1,4 +1,4 @@
-//! `posix_spawn` with Apple's attributes: its own
+//! `posix_spawn` with Apple's attributes (exact2 LLP 1133.007 D9): its own
 //! process group (`POSIX_SPAWN_SETPGROUP`) or session (`POSIX_SPAWN_SETSID`),
 //! only the descriptors the file actions place (`POSIX_SPAWN_CLOEXEC_DEFAULT`),
 //! every signal's default disposition (`POSIX_SPAWN_SETSIGDEF`) and an empty

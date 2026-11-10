@@ -76,7 +76,7 @@ inductive EvalR (env : Env) : Bool → Locals → Expr → Value → Prop
       MapR env inFn ls ps body xs 0 ys → EvalR env inFn ls (.call "map" [l, .arrow ps body]) (.list ys)
   | filter : env.prog.fns.find? (·.name == "filter") = .none → EvalR env inFn ls l (.list xs) →
       FilterR env inFn ls ps body xs 0 ys → EvalR env inFn ls (.call "filter" [l, .arrow ps body]) (.list ys)
-  /-- `sortBy`: the keys by `map`'s callback, then the
+  /-- `sortBy` (LLP 1116.016 §5): the keys by `map`'s callback, then the
   roster's sort of the items by them. -/
   | sortBy : env.prog.fns.find? (·.name == "sortBy") = .none → EvalR env inFn ls l (.list xs) →
       MapR env inFn ls ps body xs 0 ks → sortDir dir = .ok d → sortByKeys xs ks d = .ok v →
@@ -95,7 +95,7 @@ inductive EvalR (env : Env) : Bool → Locals → Expr → Value → Prop
   | failedOther : env.prog.fns.find? (·.name == "failed") = .none →
       env.prog.resources.any (·.name == x) = false →
       EvalR env inFn ls (.call "failed" [.var x]) (.bool false)
-  /-- `failure(r)`, likewise: nothing here says why. -/
+  /-- `failure(r)`, likewise: nothing here says why (LLP 1109 D3). -/
   | failureSettled : env.prog.fns.find? (·.name == "failure") = .none →
       env.prog.resources.any (·.name == x) = true → (lookup x env.resources).isSome →
       EvalR env inFn ls (.call "failure" [.var x]) .none
@@ -210,7 +210,7 @@ inductive ExecR (env : Env) : Locals → List Stmt → Effects → Effects → P
       ExecR env ls rest fx₁ fx' → ExecR env ls (.matchS s x sm nn :: rest) fx fx'
   | matchNone : EvalR env false ls s .none → ExecR env ls nn fx fx₁ → ExecR env ls rest fx₁ fx' →
       ExecR env ls (.matchS s x sm nn :: rest) fx fx'
-  /-- A call: its arguments in the caller's scope, the
+  /-- A call (LLP 1089 D9): its arguments in the caller's scope, the
   callee's body in a scope of its parameters alone, against the same `env`;
   the rest of the caller's block sees its locals again. -/
   | call : ListR env false ls args vs → env.prog.actions.find? (·.name == a) = .some ad →

@@ -1,4 +1,4 @@
-//! An image in a paragraph's text: its paragraph's measurer
+//! An image in a paragraph's text (LLP 1011.002): its paragraph's measurer
 //! reserves its margin box in the line, the line grows to hold it as CSS's
 //! line box does, and the kernel places the image where the box went.
 

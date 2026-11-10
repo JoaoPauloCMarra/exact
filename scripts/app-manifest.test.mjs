@@ -109,7 +109,7 @@ test('distribution-only handlers stay out of both Apple registration keys in loc
   assert.doesNotMatch(infoPlist(app, true, { distribution: { ExactBuildKind: 'release' } }), /packaged/);
 });
 
-test('http and https come as a pair: a Mac web browser, refused on iOS and dropped from the web manifest', async () => {
+test('http and https come as a pair: a Mac web browser, refused on iOS and dropped from the web manifest (LLP 1030 D2)', async () => {
   const { macInfoPlist, infoPlist } = await import('../host/apple/build.mjs');
   const { readManifest, webAppManifest } = await import('./app.mjs');
   const flat = (plist) => plist.replace(/\s+/g, '');
@@ -177,7 +177,7 @@ test('an iOS app lists the schemes canOpenURL may ask about, and a malformed or 
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('readManifest admits the app\'s design, `tamber`', async () => {
+test('readManifest admits the app\'s design, `tamber` (LLP 1121 D2)', async () => {
   const { readManifest } = await import('./app.mjs');
   const { mkdtempSync, writeFileSync, rmSync } = await import('node:fs');
   const { tmpdir } = await import('node:os');

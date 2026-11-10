@@ -1,7 +1,7 @@
-// A symbol drawn for an SF Symbol (a role, or an icon with an
+// LLP 1011 §3: a symbol drawn for an SF Symbol (a role, or an icon with an
 // `sf` source) is the size UIKit draws that symbol at the same font size, and
 // on a button's face at UIKit's large symbol scale without making the button
-// taller beside a title, UIKit's image padding from it;
+// taller beside a title, UIKit's image padding from it (LLP 1069.011.001 D3);
 // a tab's symbol keeps the tab bar's and the sidebar's box; an icon of
 // the app's own draws its viewBox at 1em, as the Apple hosts draw its path; and
 // a page built ahead of time does not move when the symbols are painted. Each
@@ -377,7 +377,7 @@ for (const engine of ['chromium', 'firefox', 'webkit']) for (const [file, [stand
     await page.locator('#sheet-alone').evaluate(el => el.style.removeProperty('transform'));
     await settled();
     const titled = await Promise.all(cases.map(async kind => [kind, await measure(`${kind}-titled`)]));
-    // Absent face text leaves a symbol alone;
+    // LLP 1011 §3 and LLP 1115.000: absent face text leaves a symbol alone;
     // a subtitle still occupies its own row. Both textContent writers clear to :empty.
     for (const text of ['', 'Go', '']) {
       await page.evaluate(text => { globalThis.changeTitle(text); globalThis.paint(); }, text);

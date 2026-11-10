@@ -1,7 +1,7 @@
 // URL and URLSearchParams.
 //
 // The CLASS SHAPE is here; every question about a URL is answered in Rust
-// (stdlib/url.rs over the `url` crate: a partial URL
+// (stdlib/url.rs over the `url` crate — LLP 0059.000 §3.4: a partial URL
 // parser is a security bug, not a missing feature). A URL object holds the
 // eleven components the parser returned, and a setter asks Rust for the URL
 // as it is after the assignment, so the setters' semantics are the spec's.

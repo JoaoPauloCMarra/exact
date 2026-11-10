@@ -115,7 +115,7 @@ fn first_layout_uses_real_pending_and_never_calls_foreign_giant() {
     h.resize(601., 800.);
     assert_eq!(calls.get(), 0);
 }
-/// A region's runs cross with their colours resolved, so
+/// LLP 1115.000 D7.9: a region's runs cross with their colours resolved, so
 /// each says whether its colour is one its author fixed (selected on the Mac,
 /// such text keeps its ink): a literal, a `light-dark()` pair and a colour
 /// from the app's asset catalogue are; a role, a system colour by name and a
@@ -853,7 +853,7 @@ fn native_region_promotes_and_clears_the_fields_editor_rect() {
     );
 }
 
-/// The top-layer fallback: a popover under a registered
+/// Stage 14 B's fallback (theme2 09:54): a popover under a registered
 /// region keeps its in-region layout, no viewport block, so the native
 /// region's capture, which takes every node of the content branch, matches
 /// the kernel's publication, and the region publishes.

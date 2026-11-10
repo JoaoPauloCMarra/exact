@@ -1,5 +1,6 @@
 //! Environment lighting: prefiltered specular radiance and SH9 diffuse irradiance,
 //! derived from the environment's procedural sky only when that sky changes.
+//! @ref llp/1046.003-game-engine-as-built.explainer.md#culling-and-environment-lighting-2026-09-23
 //!
 //! Split-sum specular samples a small cube map whose mips hold GGX-prefiltered
 //! radiance (roughness = mip / (MIPS - 1)); forward and model shaders scale it by

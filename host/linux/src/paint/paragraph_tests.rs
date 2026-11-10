@@ -222,7 +222,7 @@ fn styled_paragraph_pixels_on_real_gpu_when_available() {
     let gpu = match crate::gpu::Gpu::new() {
         Ok(gpu) => gpu,
         Err(error) => {
-            // A missing GPU fails under EXACT_REQUIRED=1 (scripts/coverage.mjs).
+            // A missing GPU fails under EXACT_REQUIRED=1, which the async lane sets (scripts/coverage.mjs).
             assert_ne!(
                 std::env::var("EXACT_REQUIRED").as_deref(),
                 Ok("1"),

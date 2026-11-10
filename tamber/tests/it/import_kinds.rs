@@ -1,4 +1,4 @@
-//! The importers' kinds besides colour: each source's
+//! The importers' kinds besides colour (LLP 1121 stage 6 H): each source's
 //! lengths, numbers, type, families, shadows and motion are proposed as
 //! their kinds' tokens when they fold, and reported with why when they do
 //! not; the count holds, the transaction checks, and re-importing proposes
@@ -275,7 +275,7 @@ fn astryx_refuses_a_length_with_a_dark_side_and_a_style_with_no_size() {
     );
 }
 
-/// What a source means after folding, not just a token
+/// Review round 1: what a source means after folding, not just a token
 /// that checks.
 #[test]
 fn each_importer_maps_what_the_source_means_or_reports_it() {
@@ -371,7 +371,7 @@ fn each_importer_maps_what_the_source_means_or_reports_it() {
     assert!(accepted(&i).contains("ds.f"), "{:?}", i.unmapped);
 }
 
-/// Chains of references, a leading over a token, and
+/// Review round 1 (Grok): chains of references, a leading over a token, and
 /// a design token's written kind.
 #[test]
 fn chains_resolve_to_what_they_end_at() {
@@ -403,7 +403,7 @@ fn chains_resolve_to_what_they_end_at() {
     assert!(why(&i, "--radius")[0].contains("is a color token, not a length"));
 }
 
-/// Kinds through `set-token`, longer chains, quoted
+/// Review round 2 (Astra): kinds through `set-token`, longer chains, quoted
 /// names, the edit grammar, and DTCG's weight names.
 #[test]
 fn round_two_cases_map_what_the_source_means() {
@@ -474,7 +474,7 @@ fn round_two_cases_map_what_the_source_means() {
     );
 }
 
-/// Sizes and sub-properties written out, a bare
+/// Review round 2 (Grok): sizes and sub-properties written out, a bare
 /// zero, and a typography's quiet values.
 #[test]
 fn round_two_values_are_written_out() {
@@ -580,7 +580,7 @@ fn an_import_holds_where_it_lands_or_says_why() {
     );
 }
 
-/// The landing check: what each case's input proposes.
+/// Review round 1 of the landing check: what the reviewers' inputs propose.
 #[test]
 fn the_landing_check_charges_what_breaks_and_only_that() {
     let vocab = vocab();
@@ -663,7 +663,7 @@ fn the_landing_check_charges_what_breaks_and_only_that() {
     assert_eq!(names(&i), ["tw.radius.good"], "{:?}", i.ops);
 }
 
-/// The landing check: the operations an import returns
+/// Review round 2 of the landing check: the operations an import returns
 /// apply to the design they were planned against, and what holds is kept.
 #[test]
 fn the_landing_check_keeps_what_holds_and_refuses_axes_that_do_not() {
@@ -769,7 +769,7 @@ fn the_landing_check_keeps_what_holds_and_refuses_axes_that_do_not() {
     lands(design, &i);
 }
 
-/// A small document that multiplies is refused quickly,
+/// Stage 10b round 4: a small document that multiplies is refused quickly,
 /// whatever shape multiplies it (each charged against one import's work).
 #[test]
 fn a_document_that_multiplies_is_refused_whatever_its_shape() {

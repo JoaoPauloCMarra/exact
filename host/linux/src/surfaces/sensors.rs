@@ -1,4 +1,4 @@
-//! A package feeds a canvas on Android: its Kotlin writes
+//! A package feeds a canvas (LLP 1133.013 D6) on Android: its Kotlin writes
 //! each sample into the surface's input (`SurfaceInput`, `Native.sensorInput`)
 //! from whatever thread its listener runs on, without waiting for the host's;
 //! it waits here until the host's next display frame, which delivers every

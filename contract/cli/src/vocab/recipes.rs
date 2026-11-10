@@ -1,4 +1,4 @@
-//! The recipes and the patterns, answered by name: a
+//! The recipes and the patterns, answered by name (LLP 1116.021 D1): a
 //! recipe (`docs/recipes/<name>.md`) prints whole, a pattern
 //! (`docs/patterns/<name>`) its starter comment and how to write it, so the
 //! names a screen needs are one call. A recipe or pattern added under `docs/`

@@ -1,4 +1,4 @@
-//! A popover's default surface:
+//! A popover's default surface (LLP 1021; theme2 2026-10-21 18:45, 19:55):
 //! an author who writes no surface on a `popover` gets the platform's, as
 //! the web's UA style gives one a filled, bordered card and the Mac its
 //! system popover. Only the compiler sees which rows the author wrote, so

@@ -2,7 +2,7 @@
 //! storage, and a request with effects in flight, within its bound.
 use super::*;
 
-/// An orderly exit pumps the module's storage to its end
+/// LLP 1097 D10: an orderly exit pumps the module's storage to its end
 /// first, within its bound.
 #[test]
 fn an_orderly_exit_finishes_background_storage() {
@@ -140,7 +140,7 @@ impl crate::package::Package for Named {
     }
 }
 
-/// An orderly exit waits for a request with effects in flight,
+/// LLP 1146 D2: an orderly exit waits for a request with effects in flight,
 /// so its reply lands, and its turn runs, before the process ends, within an
 /// agent's quit's bound; the module calls made meanwhile are served, as the
 /// loop serves them, before the packages end.

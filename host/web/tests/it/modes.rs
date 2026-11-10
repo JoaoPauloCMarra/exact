@@ -1,4 +1,4 @@
-//! The wasm host writes a mode boundary's implied rows in its
+//! LLP 1121 D7: the wasm host writes a mode boundary's implied rows in its
 //! CSS, as any row: inherited text inside a pin is the pin's tuple's, and a
 //! Light card on a dark page writes its text again, so the browser resolves
 //! the `light-dark()` there.

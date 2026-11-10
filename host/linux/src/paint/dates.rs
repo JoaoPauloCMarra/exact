@@ -1,5 +1,5 @@
-//! A date or time control's value as the device writes one:
-//! the value shown in the locale's format. The value is HTML's
+//! A date or time control's value as the device writes one (LLP 1115.001
+//! D9: "the value shown in the locale's format"). The value is HTML's
 //! (`2026-10-23`, `14:05`, `2026-10-23T14:05`); what is shown is the
 //! locale's medium date and its clock, 12 or 24-hour as the person set it.
 //!

@@ -1,6 +1,6 @@
 use ArrangementScreen from "./arrangement.contract"
 
-// Duo Lab: the first consumer of `device-posture` and the
+// Duo Lab (LLP 1078 D8): the first consumer of `device-posture` and the
 // viewport segments, and the iPhone Duo's stress fixture — what
 // `bun scripts/smoke.mjs duo` drives fully open, partially folded and closed.
 //
@@ -26,7 +26,7 @@ routes nav
     keyboard-form "/keyboard/form"
     keyboard-search "/keyboard/search"
 
-// The web's vocabulary, exactly: two postures, two counts.
+// The web's vocabulary, exactly (LLP 1078 D1, D2): two postures, two counts.
 shape Viewport
   width: number
   height: number
@@ -73,7 +73,7 @@ style ReadingBody
   padding-bottom=16
   padding-left="max(calc(env(-exact-safe-area-corners-inset-left) + 16px), env(-exact-readable-content-corners-inset-left))"
   padding-right="max(calc(env(-exact-safe-area-corners-inset-right) + 16px), env(-exact-readable-content-corners-inset-right))"
-// The safe area kept clear of the panel's rounded corners
+// The safe area kept clear of the panel's rounded corners (LLP 1123 D10)
 style Safe
   box-sizing="border-box"
   padding-top="env(-exact-safe-area-corners-inset-top)"
@@ -300,7 +300,7 @@ component DuoLab
               // UIKit's navigation bar, whose large title UIKit takes away as the
               // scroller immediately following the header moves. Fold, Combinations
               // and the note screen draw their own headers, which move with their
-              // panes when the device folds.
+              // panes when the device folds (LLP 1115.000 D5.2).
               if entry.name == "images"
                 column navigationKey=`${entry.id}` navigationScroll="image-list" class=Screen testId="screen-images"
                   header class=Head
@@ -333,13 +333,13 @@ component DuoLab
                   if entry.name == "fold"
                     // Two segments across: the list on the first, the detail on the
                     // second, each inset on its own side by the safe area kept clear
-                    // of the panel's corners; two down
+                    // of the panel's corners (LLP 1123 D10); two down
                     // (the Duo's inner panel upright): the list on the upper, the
                     // detail on the lower. A pane reaching the bottom ends where the
                     // route does: under UIKit's tab bar along the bottom by the home
                     // indicator's inset, which its padding takes; at the bottom beside
                     // UIKit's rail; above the web's tablist. The band
-                    // belongs to neither; one segment stacks the panes.
+                    // belongs to neither (LLP 1078 D1, D3); one segment stacks the panes.
                     if twoAcross
                       column testId="pane-list" width="env(viewport-segment-width 0 0)" height="100%" box-sizing="border-box" padding-top="env(-exact-safe-area-corners-inset-top)" padding-bottom="env(-exact-safe-area-corners-inset-bottom)" padding-left="env(-exact-safe-area-corners-inset-left)"
                         Facts(viewport=viewport)
@@ -378,7 +378,7 @@ component DuoLab
                     // header and on the lower segment, where Apple's talk puts controls, down to the
                     // route's end: the viewport's bottom, as this screen hides the tab bar. The
                     // keyboard covers that segment and ends the route above it; the segment keeps its
-                    // top, 0 tall (the keyboard). The step `(segment top - 100%) * 1000`,
+                    // top, 0 tall (LLP 1078, the keyboard). The step `(segment top - 100%) * 1000`,
                     // at most zero while the route reaches the segment and past any cap once it ends
                     // a point or more above it, then lifts the segment's cap, and the sheet riding
                     // the keyboard takes the room below the header.

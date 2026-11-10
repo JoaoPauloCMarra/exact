@@ -1,5 +1,5 @@
-//! The binding core on the Linux host, and so on Android's Canvas host:
-//! what `ExactTamber(view)` asks of a session
+//! The binding core on the Linux host, and so on Android's Canvas host
+//! (LLP 1121 D12, stage 5): what `ExactTamber(view)` asks of a session
 //! (`host/android/canvas`, `Tamber.kt`), by token name, for a view.
 //!
 //! Where the Apple entry hands a colour on for the platform to resolve per
@@ -13,7 +13,7 @@ use exact_runner::{DataSource, Place};
 
 impl<D: DataSource> Host<D> {
     /// Answer `{"view": id, "names": [..]}` (`view` 0 or none: the session's
-    /// root; optional `"lengths"`, `"numbers"` and `"fonts"`
+    /// root; since stage 6 G optional `"lengths"`, `"numbers"` and `"fonts"`
     /// lists too, answered as [`exact_runner::Tamber::measures_json`]):
     /// `{"inputs": "<u64>", "colors": {name: ARGB}}`, each colour as
     /// the painter resolves it at that view (its scheme, the nearest
@@ -82,7 +82,7 @@ impl<D: DataSource> Host<D> {
             }
         }
         out.push('}');
-        // Lengths in points, numbers, fonts.
+        // Stage 6 G: lengths in points, numbers, fonts.
         out.push_str(&tamber.measures_json(&request, place));
         out.push('}');
         out

@@ -1,4 +1,4 @@
-//! A resource over a list: `resource
+//! A resource over a list (LLP 1017.000 P4c, amended 2026-11-04): `resource
 //! r = source(x) for x in list [key=k] as shape S`. The runner keeps one
 //! request for each element, keyed as a `for` row is: each element is a
 //! member, a resource row of its own appended after the plan's, that asks

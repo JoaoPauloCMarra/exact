@@ -7,8 +7,8 @@ import java.nio.ByteBuffer
 object Native {
     init { System.loadLibrary("exactcanvas") }
     /** Boot the app's host on the calling thread, in a window of this size in pixels ([window] told its insets);
-     * whether it booted. Where a host already runs on this thread (the activity was made again in this process) nothing
-     * boots: that host is adopted in this window, and paints everything again for the
+     * whether it booted. Where a host already runs on this thread (the activity was made again in this process,
+     * LLP 1115.001 D15.1) nothing boots: that host is adopted in this window, and paints everything again for the
      * reader that calls, which has none of the last one's rows, faces or pictures. */
     @JvmStatic external fun start(width: Int, height: Int, scale: Float, dir: String, live: Boolean): Boolean
     /** [start] on a thread of its own; [adopt] takes the host. Where a host already runs in this process nothing
@@ -16,18 +16,18 @@ object Native {
     @JvmStatic external fun startAsync(width: Int, height: Int, scale: Float, dir: String, live: Boolean)
     /** Wait for [startAsync]'s host and run it on this thread from now on; whether it booted. */
     @JvmStatic external fun adopt(): Boolean
-    /** The device's settings, whole ([Device]): before [start], from any thread, so the host boots
+    /** The device's settings, whole ([Device], LLP 1115.001 D3.1): before [start], from any thread, so the host boots
      * with them, and again on the host's thread whenever one changes. */
     @JvmStatic external fun configure(
         night: Boolean, fontScale: Float, locale: String, rtl: Boolean, hour24: Boolean, noAnimations: Boolean,
         boldText: Boolean, highContrast: Boolean, touch: Boolean, tv: Boolean, touchSlop: Float, dates: String,
     )
-    /** The device's colours ([Palette]): Material 3's colour roles as the reader resolved them for
+    /** The device's colours ([Palette], LLP 1115.001 D4): Material 3's colour roles as the reader resolved them for
      * this device, twelve under the light scheme and then the same twelve under the dark one, ARGB. Before [start],
      * from any thread, so the host boots resolving every colour role by them, and again on the host's thread whenever
      * one changes. */
     @JvmStatic external fun colors(roles: IntArray)
-    /** The window: its size in pixels, the display's pixels a point, and the system's raw insets
+    /** The window (LLP 1115.001 D3.3): its size in pixels, the display's pixels a point, and the system's raw insets
      * in pixels, sixteen numbers: top, right, bottom, left for the system bars, then the display cutout, the software
      * keyboard and the system's gestures. Before [start], from any thread, so the host boots laid out in it, and on
      * the host's thread again whenever any of it changes. The reader pads nothing: [chrome] says where the page is. */
@@ -52,8 +52,8 @@ object Native {
     /** A driver from outside scrolls the feed by [dy] px ([ExactActivity.drive]). A finger's scroll is the three
      * calls below. */
     @JvmStatic external fun scroll(dy: Float)
-    /** What is under a point of the view (pixels), for the reader to decide what a drag from there is and whose a touch
-     * there is: the axes exact2's own gestures there claim (bit 0 sideways, bit 1 up
+    /** What is under a point of the view (pixels), for the reader to decide what a drag from there is (LLP 1115.001
+     * D7.3) and whose a touch there is (D8): the axes exact2's own gestures there claim (bit 0 sideways, bit 1 up
      * and down), a count, the hosted text field the touch is for (0: none; [Fields]), and eleven numbers a scroller,
      * innermost first: its id, flags (bit 0 it takes a sideways drag from here, bit 1 one up or down, bit 2 its
      * rows are a node the reader can move), its revision, then as float bits its offset (x, y), its farthest offset
@@ -62,7 +62,7 @@ object Native {
      * box x, y, width and height as float bits, in pixels, its allocation slot and generation, and how many long
      * presses a node has taken so far (wrapping). */
     @JvmStatic external fun under(x: Float, y: Float): IntArray
-    /** What exact2 tells the reader of the text fields it hosts, when that is not what this last
+    /** What exact2 tells the reader of the text fields it hosts (LLP 1115.001 D8), when that is not what this last
      * returned (else null): a count, then for each field, in tree order: its id, its generation (moved on when its
      * node became another row's item: the view starts over), flags (bit 0 it was painted and has a place, bit 1 it
      * takes no touch and no focus) and the scroller whose rows it was painted among (0: none); as float bits its
@@ -75,14 +75,14 @@ object Native {
      * thread, as every `field` call is; what one says of a generation exact2 has moved on from is dropped. */
     @JvmStatic external fun fieldFocused(id: Int, generation: Int, focused: Boolean)
     /** Hosted field [id], known at [generation], had real input that may change nothing exact2 hears of: a finger
-     * down in it, a key down. A state held on it lets go. */
+     * down in it, a key down. A state held on it (LLP 1122 D8) lets go. */
     @JvmStatic external fun fieldInput(id: Int, generation: Int)
     /** Hosted field [id] holds [value] after the person's edit number [seq], its selection at [start] to [end]
      * (UTF-16 units). Composing text is part of the value: exact2 fires `input` as the text composes. */
     @JvmStatic external fun fieldEdited(id: Int, generation: Int, seq: Int, value: String, start: Int, end: Int)
     /** Hosted field [id] began to compose, holding [value], or its composition ended, committed or cancelled: told
      * before the edit that began or ended it. While it composes exact2 holds a value the app writes and tells the
-     * field its own text; once it ends, the value the app then shows. */
+     * field its own text; once it ends, the value the app then shows (LLP 1115.000 §5, ruling 6). */
     @JvmStatic external fun fieldComposing(id: Int, generation: Int, composing: Boolean, value: String)
     /** Hosted field [id] moved its selection with no edit. */
     @JvmStatic external fun fieldSelected(id: Int, generation: Int, start: Int, end: Int)
@@ -103,17 +103,17 @@ object Native {
     @JvmStatic external fun scrollers(): IntArray?
     /** A touch (0 down, 1 up, 2 move, 3 cancel) at the view's pixels, and what touched: the event's tool type
      * ([android.view.MotionEvent.getToolType]). A finger is reported to the app as a touch that hovers nothing and
-     * leaves no focus ring, a mouse as a mouse. Action 4 is no new touch: the one that is down
+     * leaves no focus ring, a mouse as a mouse (LLP 1115.001 D7.4). Action 4 is no new touch: the one that is down
      * has been held still for the system's long-press time ([android.view.ViewConfiguration.getLongPressTimeout]).
-     * What names a context menu there opens it, and that touch then presses nothing when it lifts. */
+     * What names a context menu there opens it (D10), and that touch then presses nothing when it lifts. */
     @JvmStatic external fun touch(action: Int, x: Float, y: Float, tool: Int)
-    /** What happened in the window the reader made for surface [serial] of the top layer ([Surfaces]), on the host's
-     * thread: a touch ([what] 0 down, 1 up, 2 move, 3 cancel) at ([x], [y]), pixels from the
+    /** What happened in the window the reader made for surface [serial] of the top layer ([Surfaces], LLP 1115.001
+     * D10), on the host's thread: a touch ([what] 0 down, 1 up, 2 move, 3 cancel) at ([x], [y]), pixels from the
      * window's own top left; the system dismissed the window (8: a tap outside a menu, Back, Escape); the reader
      * could not make it (9); a key (16 Enter, 17 Tab, 18 Shift+Tab, 19 to 22 the arrows up, down, left and right, 23
      * Space). What is said of a surface that is no longer the one open is dropped. */
     @JvmStatic external fun surface(serial: Int, what: Int, x: Float, y: Float)
-    /** What exact2 tells the reader of its bars ([Bars]), when that is not what this last returned
+    /** What exact2 tells the reader of its bars ([Bars], LLP 1115.001 D11), when that is not what this last returned
      * (else null): a route's header as Material's top app bar and the navigation root's tablist as its navigation
      * bar, each painted by exact2 and shown over the page. A count, then for each bar which it is (1 the top app
      * bar, 2 the navigation bar), its frame in the window (x, y, width, height, pixels), a count of words and that
@@ -124,7 +124,7 @@ object Native {
      * 0 down, 1 up, 2 move, 3 cancel) at ([x], [y]), pixels from the bar's own top left. exact2 knows what is
      * there: the Up arrow goes Back, a header's button and a destination are pressed. */
     @JvmStatic external fun bar(which: Int, what: Int, x: Float, y: Float)
-    /** What exact2 tells the reader of the accessibility tree ([Access]), when that is not what
+    /** What exact2 tells the reader of the accessibility tree ([Access], LLP 1115.001 D13), when that is not what
      * this last returned (else null). Called only while an accessibility service is on; exact2 builds nothing
      * otherwise. [again]: the reader holds nothing of the tree (it was made again, or a service was just turned on)
      * and is told it whole. The words: the statement's number; the surface whose window the nodes are in (its
@@ -164,21 +164,21 @@ object Native {
     /** A key at the focused node when no hosted field holds the focus: a character (or '\n' for Enter), or
      * Backspace. A hosted field ([Fields]) takes its keys itself. */
     @JvmStatic external fun key(code: Int, backspace: Boolean)
-    /** A gamepad's state for the canvas a key would reach: [values] its 17 standard buttons, then
+    /** A gamepad's state for the canvas a key would reach (LLP 1127.003 D2): [values] its 17 standard buttons, then
      * its 4 axes; [connected] false when it went away. */
     @JvmStatic external fun pad(index: Int, connected: Boolean, values: FloatArray)
-    /** A remote's key, down or up, by the web's `code` and `key`: a D-pad arrow, or Select. */
+    /** A remote's key, down or up, by the web's `code` and `key` (LLP 1115.001.003 D3): a D-pad arrow, or Select. */
     @JvmStatic external fun namedKey(code: String, key: String, down: Boolean, repeat: Boolean)
-    /** System Back: whether the app took it. From its navigation root's selected route it goes to
+    /** System Back (LLP 1115.001 D6): whether the app took it. From its navigation root's selected route it goes to
      * the Back control the root names, else to the root's `navigate` handler, else it is the runner's own `back`;
      * false when there is nowhere to go back to, and the activity finishes. The reader takes Back only while the
      * host says it has somewhere to go (a request, [requests]). */
     @JvmStatic external fun back(): Boolean
-    /** A URL given to the running app: its location goes to the navigation root's `navigate`. */
+    /** A URL given to the running app: its location goes to the navigation root's `navigate` (LLP 1133.023 D15 item 3). */
     @JvmStatic external fun open(href: String)
-    /** A share given to the running app, `{"target", "share"}` as [Shares.request] writes it. */
+    /** A share given to the running app, `{"target", "share"}` as [Shares.request] writes it (LLP 1133.024 D5). */
     @JvmStatic external fun share(request: String)
-    /** What exact2 asks of the platform since this last returned any, or null when it asks
+    /** What exact2 asks of the platform since this last returned any (LLP 1115.001 D5), or null when it asks
      * nothing: the one channel out, which [Requests] reads and acts on, on the main thread. exact2 queues a request
      * and makes the first of [fds] readable, so the reader comes for it whether or not a frame follows. The words:
      * for each request its kind, its id, the count of words that follow, and those words. */
@@ -193,7 +193,7 @@ object Native {
     @JvmStatic external fun bindExtensions(names: String)
     /** How a presence check ended ([Presence]), on the store's completion path: never journaled. On the host's thread. */
     @JvmStatic external fun presence(answer: String)
-    /** A package's picture for request [id]: [bitmap], software `ARGB_8888`, or why there is
+    /** A package's picture for request [id] (LLP 1133.019 D11 item 1): [bitmap], software `ARGB_8888`, or why there is
      * none ([error]) when it is null. On the host's thread. */
     @JvmStatic external fun picture(id: Int, bitmap: android.graphics.Bitmap?, error: String?)
     /** Picture [source] changed, so it is asked for again, or was [revoked]: every box showing it is emptied. On the
@@ -204,7 +204,7 @@ object Native {
     /** Waits up to [ms] for the store's writes, which exact2 makes on a thread of its own: whether every commit handed
      * over was written (a write that failed is tried once more; failing again, it stays pending). Any thread. */
     @JvmStatic external fun storeDrain(ms: Int): Boolean
-    /** What [Orientation] asked of the activity for the session's orientation lock, JSON, whether
+    /** What [Orientation] asked of the activity for the session's orientation lock (LLP 1133.029 §8), JSON, whether
      * its resolution found a conflict, and a line for the journal or null. On the host's thread. */
     @JvmStatic external fun orientationApplied(applied: String, conflict: Boolean, line: String?)
     /** The session's clock, ms, as of the host's last turn and moved on by the wall's outside the agent
@@ -215,7 +215,7 @@ object Native {
     @JvmStatic external fun appFile(path: String): String?
     /** Whether extension [name] is told it runs under the agent ([ExtensionContext.agent]). Any thread. */
     @JvmStatic external fun underAgent(name: String): Boolean
-    /** A package's call of the app's handler, `{"extension", "handle", "handler", "args"}`:
+    /** A package's call of the app's handler, `{"extension", "handle", "handler", "args"}` (LLP 1133.016 D15 item 1):
      *  its number, or -1 with no session; [invoked] reads its answer. */
     @JvmStatic external fun invoke(body: String): Int
     /** Call [id]'s answer as JSON, once; null while it has none. */
@@ -223,18 +223,18 @@ object Native {
     /** Whether the page places a canvas of surface [name], as of the host's last turn ([ExtensionSurfaces]). Any
      * thread. */
     @JvmStatic external fun surfaceHas(name: String): Boolean
-    /** A package's sample for surface [surface]'s canvas input, or with [ended] its end: kept until
+    /** A package's sample for surface [surface]'s canvas input (LLP 1133.013 D6), or with [ended] its end: kept until
      * the host's next display frame delivers it to the canvas. [values] x, y, z and w; [at] the session clock's ms.
      * Any thread; it waits for nothing. Whether none waited before it: the host is then woken for a frame. */
     @JvmStatic external fun sensorInput(surface: String, sensor: String, values: DoubleArray, dropped: Int, at: Double, ended: Boolean): Boolean
-    /** What the app's Kotlin hatches ask, for node [node] or 0 for their module (the kinds are
+    /** What the app's Kotlin hatches ask, for node [node] or 0 for their module (LLP 1115.001.000 D4; the kinds are
      * `hatches::reader::act`'s): its answer, a ticket for a registration, -1 when refused. */
     @JvmStatic external fun hatchAct(node: Int, kind: Int, text: String?): Long
-    /** One request of the agent API, a JSON line as UTF-8, and its answer the same way: the Linux
+    /** One request of the agent API (LLP 1012), a JSON line as UTF-8, and its answer the same way: the Linux
      * host's own handler (`host/linux/src/canvas/agent.rs`), on the host's thread. From the first one the host's turns
      * run at the driver's clock, which only a `clock` request moves. [AgentDrive] calls it for a driver over adb. */
     @JvmStatic external fun agent(line: ByteArray): ByteArray
-    /** What an [ExactTamber] asks, on the host's thread: `{"view": id or 0, "names": [..]}`, answered
+    /** What an [ExactTamber] asks (LLP 1121 D12), on the host's thread: `{"view": id or 0, "names": [..]}`, answered
      * `{"inputs": "<u64>", "colors": {name: ARGB or null}}`, each colour as exact2 paints it at that view (its pinned
      * modes, its scheme), null for a name the design lacks; `inputs` moves when anything the answer read does. A
      * view that is no live node, or a name that is no string, is answered `{"error": ...}`. */

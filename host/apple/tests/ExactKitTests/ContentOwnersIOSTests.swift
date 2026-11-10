@@ -3,12 +3,12 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// Every route is a content owner. Its root is laid out in its
-/// controller's view, its host block, and the runner is
+/// LLP 1123 D2: every route is a content owner. Its root is laid out in its
+/// controller's view, its host block (LLP 1115.002 D8.2), and the runner is
 /// told where each route a window shows is: a presented one as a top-layer
 /// box, as a dialog is, and any other by its placement in its parent, so
 /// that it keeps its place among its siblings. A sheet mounts only its own
-/// navigation; the document, the session's one viewport, stays in the
+/// navigation; the document, the session's one viewport (D1), stays in the
 /// session's view at its own size.
 final class ContentOwnersIOSTests: XCTestCase {
     func testAScreenKeepsItsMountAndFocusWhenABackendChanges() throws {
@@ -831,7 +831,7 @@ final class ContentOwnersIOSTests: XCTestCase {
         XCTAssertTrue(window?.hitTest(middle, with: nil)?.isDescendant(of: ask) == true, "and a touch at its middle lands on it")
     }
 
-    /// The document is fitted by one rule, whether the root's
+    /// LLP 1123 D1: the document is fitted by one rule, whether the root's
     /// routes have a native primary container, never by its bars or by a
     /// presentation. A primary stack whose bar an app's `navigation` hatch
     /// turned off still takes the whole view, and a sheet whose own stack
@@ -937,7 +937,7 @@ final class ContentOwnersIOSTests: XCTestCase {
                        .init(top: 106, right: 0, bottom: 83, left: 0), "the whole view's route: the bar and the status bar")
     }
 
-    /// A sheet's route ends only at a docked keyboard: the
+    /// A sheet's route ends only at a docked keyboard (LLP 1123 C26): the
     /// sheet's keyboard layout guide counts none without the keys, so a
     /// focused field with no keyboard up (a hardware keyboard, as in this
     /// test window) leaves the route its sheet's whole height. The guide
@@ -959,8 +959,8 @@ final class ContentOwnersIOSTests: XCTestCase {
         XCTAssertEqual(laidOut(session, sheet.id), sheetView.bounds.size, "no keys, no end")
     }
 
-    /// A scroller that ends a sheet's route reaches the sheet's bottom edge:
-    /// UIKit insets its content by the sheet's bottom safe
+    /// A scroller that ends a sheet's route reaches the sheet's bottom edge
+    /// (LLP 1116 D2): UIKit insets its content by the sheet's bottom safe
     /// area, and nothing above it clips there, so its content shows through
     /// the inset down to the edge. A hand-built scroll view in a floating 45%
     /// sheet on iOS 27 has the same: the sheet's bottom safe area is 34 points

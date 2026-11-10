@@ -1,8 +1,9 @@
 //! The terminal itself: raw mode, the bytes in, the bytes out, and always
 //! putting it back.
 //!
-//! vte parses the input; the output is constructed here; rustix reads termios
-//! and the window size. The app runs full screen or inline.
+//! @ref LLP 1101 D6 (input), D7 (restoration), D9 (vte parses input; the
+//! output is constructed here; rustix for termios and the window size),
+//! D10 (full screen and inline)
 //!
 //! Inline, the app lives on the normal screen like a shell's output: each
 //! settled transcript entry is printed once and becomes the terminal's own
@@ -280,7 +281,7 @@ pub(crate) struct Inline {
     protocol: Protocol,
     /// The live region as last written.
     last: Option<crate::grid::Grid>,
-    /// Mouse reporting is on (only while a dialog is open),
+    /// Mouse reporting is on (only while a dialog is open, LLP 1101.001),
     /// and the cursor row inside the region at each position query still
     /// unanswered: the answer places the presented painting on the screen.
     mouse: bool,
@@ -308,7 +309,7 @@ impl Inline {
     }
 
     /// The record to publish once this frame's bytes are out, when what is
-    /// printed changed since the last one.
+    /// printed changed since the last one (LLP 1101.002 §0 P5).
     pub(crate) fn printed(
         &mut self,
         mode: Mode,
@@ -367,7 +368,7 @@ impl Inline {
             self.last = None;
         }
         let children = host.transcript();
-        // Printed children are known by identity: those the
+        // Printed children are known by identity (LLP 1101.001 P1): those the
         // app has since retired, or cleared, are forgotten.
         self.printed
             .retain(|k| children.iter().any(|c| c.key == *k));
@@ -386,7 +387,7 @@ impl Inline {
         // which a reflowing terminal never rejoins, so a wider window keeps
         // the rows; a narrower one may wrap them into more, and moving up
         // too few leaves a stale fragment above rather than erasing printed
-        // rows (the safer error).
+        // rows (the safer error; LLP 1101.002 code review).
         if self.cursor_row > 0 {
             out.push_str(&format!("\x1b[{}A", self.cursor_row));
         }

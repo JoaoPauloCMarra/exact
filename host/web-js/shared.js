@@ -1,4 +1,4 @@
-// Shared elements on the web: CSS View Transitions, the
+// Shared elements on the web (LLP 1013.000 D7): CSS View Transitions, the
 // browser's own, for the commits that hand a `sharedElement` name from one
 // element to another. Loaded after first paint with presence-glue.js, by a
 // plan with a `-exact-layout-transition` (rt.js `pr`), which a pair needs at one
@@ -139,7 +139,7 @@ export function commit(tail, queue, inflight, after) {
       const [el, ghost] = left[0];
       const c = to && (curve(to) ?? curves.get(el));
       if (!c) { for (const [e] of left) rules.push(`::view-transition-group(${ids.get(e)}){display:none}`); continue; }
-      // The transition is its exit: a ghost of its own goes; inside an
+      // The transition is its exit (D7): a ghost of its own goes; inside an
       // ancestor's, it is hidden and the rest leaves as it would.
       if (ghost === el) el.remove(); else if (ghost) el.style.visibility = 'hidden';
       const id = ids.get(el);

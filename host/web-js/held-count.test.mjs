@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-// The JS target's count of held fetches, ts-fetch.js and held.js as they are, over a stand-in
+// The JS target's count of held fetches (LLP 1016.000 D9), ts-fetch.js and held.js as they are, over a stand-in
 // `fetchWith` whose replies the test lets through: an answer counts for no clock only while every piece of work it
 // has out is a held fetch, and counts again for what follows the held reply.
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');

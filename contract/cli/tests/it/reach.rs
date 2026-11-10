@@ -1,4 +1,4 @@
-//! The system's ways into an app under the agent, through
+//! The system's ways into an app under the agent (LLP 1133.023 §10), through
 //! this checkout's `@exact/quick-actions` and `@exact/search-index`
 //! installed beside the app: the runner keeps the shortcut list and the
 //! content index the host's stores would, refuses what the platforms do,
@@ -126,7 +126,7 @@ fn extension(r: &Runner<NoData>, name: &str) -> Json {
 
 /// `setContentIndex` replaces one kind's entries and records the
 /// difference; an entry added alone keeps its own kind; the source of the
-/// entries answers them all, asked again when they change.
+/// entries answers them all, asked again when they change (D4, D9).
 #[test]
 fn the_index_keeps_entries_by_kind_and_tells_its_readers() {
     let (_app, mut r) = boot("index");
@@ -164,7 +164,7 @@ fn the_index_keeps_entries_by_kind_and_tells_its_readers() {
 }
 
 /// An entry whose url the routes do not match is refused `TypeError`, and
-/// the index is kept.
+/// the index is kept (D4).
 #[test]
 fn an_entry_outside_the_routes_is_refused() {
     let (_app, mut r) = boot("refused");
@@ -179,7 +179,7 @@ fn an_entry_outside_the_routes_is_refused() {
 
 /// The shortcut list is the app's last, after the manifest's; a url the
 /// routes do not match keeps the list; a pin is refused off Android, and
-/// there requested, or unsupported while the agent says so.
+/// there requested, or unsupported while the agent says so (D3, D11).
 #[test]
 fn shortcuts_are_the_last_list_and_a_pin_is_requested() {
     let (_app, mut r) = boot("shortcuts");
@@ -226,7 +226,7 @@ fn shortcuts_are_the_last_list_and_a_pin_is_requested() {
 }
 
 /// Where the platform has no shortcut list, the send is refused
-/// `NotSupportedError`.
+/// `NotSupportedError` (D17).
 #[test]
 fn shortcuts_are_refused_where_the_platform_has_none() {
     let (_app, mut r) = boot("web");
@@ -236,10 +236,10 @@ fn shortcuts_are_refused_where_the_platform_has_none() {
     assert!(logs(&r).contains("NotSupportedError"), "{}", logs(&r));
 }
 
-/// `intents.tools` in `app.json` faces a tool. A face is stored with the doors
-/// it reaches and its digest; one naming no tool, a parameter of another type,
-/// or a door with no confirmation for a `destroys` tool is refused; and a door
-/// is held to its face's digest.
+/// LLP 1133.023 D5, D8, D10: `intents.tools` in `app.json` faces a tool. A
+/// face is stored with the doors it reaches and its digest; one naming no
+/// tool, a parameter of another type, or a door with no confirmation for a
+/// `destroys` tool is refused; and a door is held to its face's digest.
 #[test]
 fn a_face_is_checked_against_its_tool_and_holds_its_door() {
     let tools = "  state last = \"\"\n  tool log writes closed \"Log a page.\" = log\n  tool drop destroys \"Drop a book.\" = drop\n  action log(id: string, page: number)\n    last = `${id} ${page}`\n  action drop(id: string)\n    last = id\n  action follow(url: string)";

@@ -1,8 +1,8 @@
-// Which popovers an Apple host may present as the
+// @ref LLP 1021 D3 — which popovers an Apple host may present as the
 // platform's own menu.
 
 extension NodeView {
-    /// Whether this popover is menu-shaped: `button` rows
+    /// Whether this popover is menu-shaped (LLP 1021 D3): `button` rows
     /// (a native one, one whose face fits a menu item, or text with at most
     /// one image) and `hr` separators, nothing else, so it may present as
     /// the platform's menu (`NSMenu`, `UIMenu`). A popover inside it (a

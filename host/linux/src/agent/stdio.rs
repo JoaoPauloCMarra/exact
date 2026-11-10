@@ -42,8 +42,9 @@ fn handle_request<D: DataSource + Default>(
     p.poll_development(D::default);
     p.run_commands(D::default);
     p.sync_surfaces();
-    // A command is a turn of the loop for the hatches: what they asked of elements during the last
-    // one runs before this one, a snapshot of it, and its caps start at nothing.
+    // A command is a turn of the loop for the hatches (LLP 1075.003.000.001
+    // §2.5): what they asked of elements during the last one runs before
+    // this one, a snapshot of it, and its caps start at nothing.
     p.hatch_command();
     p.hatch_turn();
     let reply = answer(p, line);
@@ -63,7 +64,7 @@ fn handle_request<D: DataSource + Default>(
     // may activate a generation after the initial boot's frame was counted.
     if headless && p.dirty() {
         let _ = p.frame();
-        // What that frame moved under the resting pointer is hovered.
+        // What that frame moved under the resting pointer is hovered (#139).
         p.follow_pointer();
     }
     p.first_pixel();

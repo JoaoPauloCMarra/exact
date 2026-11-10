@@ -1,5 +1,5 @@
-// The web's frame sampler (host/web/frames.js) and the hatches:
-// a late frame's record names the hatch calls that
+// The web's frame sampler (host/web/frames.js) and the hatches (LLP
+// 1075.003.000.001 §3.1): a late frame's record names the hatch calls that
 // overlapped its interval, as `exact.hatchPerf.window` answers; an on-time
 // frame's record names none. The page is a small fake.
 import { test, expect } from 'bun:test';

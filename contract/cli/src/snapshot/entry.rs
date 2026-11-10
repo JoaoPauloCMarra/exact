@@ -29,7 +29,7 @@ pub enum Declaration {
     Widget(Widget),
     /// An activity updated by its app or backend.
     Activity(Activity),
-    /// The app's watch entry: a live plan, not a snapshot.
+    /// The app's watch entry: a live plan, not a snapshot (LLP 1126.002 D4).
     Watch(WatchEntry),
 }
 
@@ -398,7 +398,7 @@ pub(super) fn compile_file(
         span,
     }];
     // A component that injects `snapshot_viewport` reads the family's content
-    // size: the wrapper declares the fact and provides it. The
+    // size: the wrapper declares the fact and provides it (LLP 1126 D3). The
     // shape is the injecting components' own, and must be one shape.
     let mut viewport: Option<(TypeExpr, Span)> = None;
     for c in &file.components {

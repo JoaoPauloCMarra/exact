@@ -1,4 +1,4 @@
-// The build channel: registration
+// The build channel (LLP 1122 D4, LLP 1121 stage 4 commit 5): registration
 // by nonce and the build list, a report without the nonce refused, `pin` on
 // one build only and its effective facts reported, a client's pins cleared
 // when it goes and replayed to a build that registers again, a command
@@ -528,7 +528,7 @@ test('a stream behind takes no frames until it drains, then the latest design\'s
   expect(written.at(-1)).toBe('data: {"n":4}\n\n');
 });
 
-// A hold (*1.11*), one a build and its
+// LLP 1122 D8, LLP 1121 stage 8 E (*1.11*): a hold, one a build and its
 // client's, sent as a command frame; refused where it is malformed and told
 // where the build holds no state; its build's `held` reports go to every
 // client; a build that lets it go (real input) is not held any more; replayed
@@ -705,7 +705,7 @@ test("a design waiting when its build registers again or goes is never told; the
   expect(told()).toEqual(['d0', 'r0']);
 });
 
-test('navigate (*1.14*) routes one build to a location on its own origin, its refusal its sender\'s, holding nothing', () => {
+test('navigate (*1.14*, LLP 1122 T7) routes one build to a location on its own origin, its refusal its sender\'s, holding nothing', () => {
   const events = [];
   const channel = buildChannel({ send: e => events.push(e), log: () => {} });
   const a = stream(channel), b = stream(channel);
@@ -724,7 +724,7 @@ test('navigate (*1.14*) routes one build to a location on its own origin, its re
   expect(report(channel, { nonce: a.nonce, kind: 'status', location: '/posts/7?tab=replies#top' }).status).toBe(204);
   expect(events.at(-1)).toMatchObject({ event: 'build-status', build: { id: 'web-1', status: { location: '/posts/7?tab=replies#top' } } });
   expect(report(channel, { nonce: a.nonce, kind: 'status', location: 'https://evil.example/' }).status).toBe(400);
-  // A pinned copy says what the app asked instead.
+  // A pinned copy says what the app asked instead (theme2's F2 ruling).
   expect(report(channel, { nonce: a.nonce, kind: 'status', location: '/', app: { mode: { 'dark-style': 'dim' }, scheme: 'light' } }).status).toBe(204);
   expect(events.at(-1)).toMatchObject({ event: 'build-status', build: { status: { app: { mode: { 'dark-style': 'dim' }, scheme: 'light' } } } });
   for (const app of [{ other: 1 }, { scheme: 7 }, { mode: { a: 1 } }, 'x', { rootFontSize: 'x'.repeat(65) }]) expect(report(channel, { nonce: a.nonce, kind: 'status', app }).status).toBe(400);

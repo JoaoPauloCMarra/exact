@@ -20,6 +20,8 @@
 //! and bitmap strikes (CBDT, sbix): a COLRv1 glyph is drawn from its plain
 //! outline, which Noto Color Emoji's COLRv1 build leaves empty. Android 10
 //! and 11 ship the CBDT build; only an app's own COLRv1 face would show it.
+//!
+//! @ref LLP 1076 §3.3 (Exact plus Android Canvas)
 
 use swash::scale::image::Content;
 use swash::scale::{Render, ScaleContext, Source, StrikeWith};

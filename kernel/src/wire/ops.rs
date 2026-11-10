@@ -42,7 +42,7 @@ pub enum Op {
     SetChildren { id: ViewId, children: Vec<ViewId> },
     /// Register `id` as a layout root. Roots have no parent.
     AttachRoot { id: ViewId },
-    /// Replace `id`'s state looks: each a state
+    /// Replace `id`'s state looks (LLP 1121 D8): each a state
     /// ([`LOOK_HOVER`], [`LOOK_FOCUS_VISIBLE`]; ascending, each once) and a
     /// patch of [`look_rows`] only, resolved as a static row is. Empty
     /// clears them. `:active` is no look: it lowers to the press paint.
@@ -57,7 +57,7 @@ pub const LOOK_HOVER: u8 = 1;
 /// A look's state: `:focus-visible`.
 pub const LOOK_FOCUS_VISIBLE: u8 = 2;
 
-/// The rows a state look may set.
+/// The rows a state look may set (LLP 1121 D8, stage 8 A's lowering).
 pub fn look_rows() -> StyleMask {
     let mut mask = StyleMask::EMPTY;
     for id in [
@@ -288,7 +288,7 @@ mod tests {
         let mut patch = StyleProps::default();
         patch.width = Dimension::Percent(50.0);
         patch.mask.set(StyleId::Width);
-        // One row its author wrote, one the compiler implied.
+        // One row its author wrote, one the compiler implied (LLP 1115.000 D2).
         patch.written.set(StyleId::Width);
         patch.flex_direction = FlexDirection::Row;
         patch.mask.set(StyleId::FlexDirection);

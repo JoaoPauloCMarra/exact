@@ -1,4 +1,4 @@
-//! A list's own position acknowledged under a reader's fling (an Android fling):
+//! A list's own position acknowledged under a reader's fling (Excord's Android fling, theme2 2026-10-28 07:39):
 //! the acknowledgement never moves the reader's revision on, so the reader's fling goes on and its moves stand;
 //! an app's position still lands where asked and does move it on.
 use super::*;

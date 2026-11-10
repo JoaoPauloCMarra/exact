@@ -3,7 +3,7 @@ import UIKit
 import QuartzCore
 
 /// The app's UI updates on its screen and the work its main thread does, which the card measures while it reads, on
-/// iOS 18 and later. A passive `UIUpdateLink` takes part in every UI update of the scene, Exact's
+/// iOS 18 and later (LLP 1079.000 §7.4). A passive `UIUpdateLink` takes part in every UI update of the scene, Exact's
 /// frames and UIKit's alike, and requests none, nor any rate. Two observers of the main run loop time each spell its
 /// thread works without waiting. Stopped, or before iOS 18, it observes nothing.
 ///

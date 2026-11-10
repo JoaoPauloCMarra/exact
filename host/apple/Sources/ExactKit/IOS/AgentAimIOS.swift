@@ -1,5 +1,5 @@
-// Where a real finger aims when UIKit draws a node in its place: a header
-// button's item in the navigation bar under
+// Where a real finger aims when UIKit draws a node in its place (LLP 1080.000
+// D4, LLP 1116.003): a header button's item in the navigation bar under
 // `--chrome platform`. The authored node stays hidden in the content, so
 // its own box is not where a person would touch.
 #if os(iOS) || os(tvOS)
@@ -112,7 +112,7 @@ extension Agent {
         return found
     }
 
-    /// The control the tab bar a tablist is drawn as shows for
+    /// The control the tab bar a tablist is drawn as (LLP 1059) shows for
     /// `item`. That bar centres its items in a pill narrower than its box, so
     /// the hidden tab's box is not where its item is. By the item's
     /// identifier, else by its name or title: iOS 27.1's tab button carries
@@ -180,7 +180,7 @@ extension Agent {
     /// sheet's included, whose bars are outside both.
     static func shows(_ session: ExactSession, _ view: UIView) -> Bool {
         if session.presenter.mounts(view) || session.view.map({ view.isDescendant(of: $0) }) == true { return true }
-        // A dialog's sheet holds the session's own nodes, outside its view.
+        // A dialog's sheet holds the session's own nodes, outside its view (LLP 1115.000 D11.5).
         if session.presenter.menus.sheets.shows(view) { return true }
         let nav = session.presenter.navigation
         if let tabs = nav.tabController, view.isDescendant(of: tabs.view) { return true }

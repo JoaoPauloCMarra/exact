@@ -1,5 +1,5 @@
 // The design tool's import review and typed fields against a real design server (split from design-tool.test.mjs, so
-// they run in parallel with the others).
+// a lane runs them beside the others).
 import { expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -9,7 +9,7 @@ import { ROOT, STUB_APP, drive, edit, proxied, toolTurns } from './design-tool-h
 
 toolTurns();
 
-test('an import reviewed through the file picker, overrides off until ticked, every unmapped value listed, accepted as one transaction and undone in one step', async () => {
+test('T1a: an import reviewed through the file picker, overrides off until ticked, every unmapped value listed, accepted as one transaction and undone in one step', async () => {
   const app = mkdtempSync(join(tmpdir(), 'exact-design-tool-import-'));
   for (const f of ['app.contract', 'app.tamber', 'app.json']) cpSync(resolve(ROOT, 'apps/theme-fixture', f), join(app, f));
   const original = readFileSync(join(app, 'app.tamber'), 'utf8');
@@ -26,7 +26,7 @@ test('an import reviewed through the file picker, overrides off until ticked, ev
     const review = states[0].resources.changes.held.find(h => h.importer === 'shadcn');
     expect(review.counted).toBe('47 source values = 47 mapped + 0 reported');
     expect(review.countOk).toBe(true);
-    // 23 colours, `--radius` a length and its derived `lg`.
+    // 23 colours, `--radius` a length and its derived `lg` (stage 6 H).
     expect(review.mapped).toHaveLength(25);
     expect(review.mapped[0]).toMatchObject({ name: 'shadcn.background', modes: [{ label: 'default', light: 'oklch(1 0 0)', dark: 'oklch(0.145 0 0)' }] });
     // Every override off until ticked, every unmapped value with its reason.
@@ -84,7 +84,7 @@ test('an import reviewed through the file picker, overrides off until ticked, ev
     expect(tailwind.countOk).toBe(true);
     expect(tailwind.mapped.length).toBeGreaterThan(200);
     const dtcg = later[5].resources.changes.held.find(h => h.importer === 'dtcg');
-    // Its numbers are tokens too: only the strings and booleans
+    // Its numbers are tokens too (stage 6 H): only the strings and booleans
     // are reported.
     expect(dtcg.counted).toBe('104 source values = 101 mapped + 3 reported');
     expect(dtcg.unmapped).toHaveLength(3);

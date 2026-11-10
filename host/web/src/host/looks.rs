@@ -1,8 +1,9 @@
-//! A node's `:hover` and `:focus-visible` looks on the page, as one rule a
-//! state in the page's looks sheet, composed in that order over the node's
-//! inline base, so rows a look doesn't name show the base. They show at once (no transition: a look's colours snap, under
+//! A node's `:hover` and `:focus-visible` looks on the page (LLP 1121 D8,
+//! stage 8 B), as one rule a state in the page's looks sheet, composed in
+//! that order over the node's inline base, so rows a look doesn't name show
+//! the base. They show at once (no transition: a look's colours snap, under
 //! Reduce Motion too), and under the shell's pressed paint, which `:active`
-//! lowers to (the input glue's important rule per painting node).
+//! lowers to (LLP 1061 D7, the input glue's important rule per painting node).
 
 use super::*;
 use exact_kernel::{StyleProps, LOOK_HOVER};
@@ -34,12 +35,12 @@ pub fn rules(at: &str, looks: &[(u8, String)]) -> String {
             .collect();
         // A hover look is the whole hover, as `:active` is the whole press: it
         // replaces the neutral look's unsaid wash on this node, and a bar
-        // button's dim (neutral.css), and no image of the author's.
+        // button's dim (neutral.css, LLP 1129), and no image of the author's.
         if *state == LOOK_HOVER {
             rows.push_str("--exact-hover-wash:none!important;--exact-hover-dim:1!important;");
         }
         match *state {
-            // A held state (`data-exact-held`) is the state's own
+            // A held state (LLP 1122 D8, `data-exact-held`) is the state's own
             // rule, whatever the pointer (the input glue's `hold`).
             LOOK_HOVER => write!(
                 out,

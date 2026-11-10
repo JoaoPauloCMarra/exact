@@ -1,10 +1,11 @@
-// A `dialog` as a sheet, in a whole session: the kernel lays the dialog out
-// in its sheet's containing block and the sheet's window is the size that
-// comes back; in a window really made key the sheet takes the keyboard, and
-// Escape, Command-period and the default button's Return work there; an
-// alert goes over the sheet and a popover opens from it; the driver finds,
-// clicks and reads what is in it. `DialogSheetMacTests` holds what a dialog
-// is to the app in either presentation; `PopoverNativeMacTests` the popover.
+// @ref LLP 1115.002 D7.2 — a `dialog` as a sheet, in a whole session: the
+// kernel lays the dialog out in its sheet's containing block and the sheet's
+// window is the size that comes back; in a window really made key the sheet
+// takes the keyboard, and Escape, Command-period and the default button's
+// Return work there (D7's condition for stage 6c); an alert goes over the
+// sheet and a popover opens from it; the driver finds, clicks and reads what
+// is in it. `DialogSheetMacTests` holds what a dialog is to the app in
+// either presentation; `PopoverNativeMacTests` the popover.
 #if os(macOS)
 import AppKit
 import XCTest
@@ -166,7 +167,7 @@ final class SheetHostMacTests: XCTestCase {
         f.settle()
     }
 
-    /// The runner reads a sheet's dialog by its block, which the
+    /// LLP 1123 D2: the runner reads a sheet's dialog by its block, which the
     /// dialog sits in by its own frame. A dialog with 20-point side margins
     /// in a sheet: `frame` and `elementFromPoint` answer where AppKit shows
     /// its card, not a box stretched or shifted by the margins.
@@ -279,11 +280,12 @@ final class SheetHostMacTests: XCTestCase {
         XCTAssertTrue(wide.isHidden)
     }
 
-    /// In a window really made key: the sheet is the key window and the
-    /// page's stays main; the caret arrives in its first field and typing
-    /// goes to the authored input; Tab goes round its fields; Return presses
-    /// the one `filled` button; Escape and Command-period close it; and the
-    /// page has the keyboard and its focus back each time.
+    /// D7's condition for stage 6c, in a window really made key: the sheet
+    /// is the key window and the page's stays main; the caret arrives in its
+    /// first field and typing goes to the authored input; Tab goes round its
+    /// fields; Return presses the one `filled` button; Escape and
+    /// Command-period close it; and the page has the keyboard and its focus
+    /// back each time.
     func testInAKeyWindowTheSheetTakesTheKeyboardAndReturnAndEscapeWorkThere() throws {
         KeyboardNavigation.agent = false
         addTeardownBlock { KeyboardNavigation.agent = nil }

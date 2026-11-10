@@ -1,4 +1,4 @@
-// A `contextmenu` from a control in a real browser: a
+// A `contextmenu` from a control in a real browser (issues/closed/20261012-web-an-exact-contextmenu-inside-a.md): a
 // right-click, or on a Mac a Control-click, on a checkbox, switch, radio, range, date or time input inside a node
 // with `contextmenu` runs that node's handler and keeps the browser's own menu shut. Chrome sends the event from each
 // of them and macOS runs the node's (#487). A `contextPopover` above one opens. A text field and a textarea keep the
@@ -97,7 +97,7 @@ check('a contextmenu from a checkbox, switch, radio, range, date or time input i
 }, 120000);
 
 // The helper both targets call: real HTML popover methods, including omitted
-// source and the browser's queued, coalesced ToggleEvent.
+// source and the browser's queued, coalesced ToggleEvent (issue #319).
 check('popover commands preserve HTML source, focus, idempotence and toggle coalescing', async () => {
   const browser = await suiteBrowser();
   try {

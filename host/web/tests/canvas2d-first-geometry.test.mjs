@@ -4,7 +4,7 @@
 // (`settled`). A second on, the content box is read from layout (fractional,
 // as the observer's); a canvas gone before then waits for nothing, a newer
 // watch of its id owns its own wait, and a new element's first geometry is
-// always sent.
+// always sent (LLP 1122 queue item (3)'s QUEUE follow-up, review round 2).
 // The module runs in a vm with stand-in browser globals.
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';

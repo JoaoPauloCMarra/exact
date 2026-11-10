@@ -1,8 +1,8 @@
-//! A text field's own paint: its container, then its value or
+//! A text field's own paint: its container (LLP 1104 D7), then its value or
 //! placeholder, its selection and its caret (`caret.rs`).
 //!
-//! Where the shell hosts the platform's own field (Android's
-//! `EditText`; [`crate::fields`]) the text, the placeholder, the
+//! Where the shell hosts the platform's own field (LLP 1115.001 D8:
+//! Android's `EditText`; [`crate::fields`]) the text, the placeholder, the
 //! caret and the selection are that field's, and nothing of them is painted
 //! here: the walk paints the container and its focus ring, names the field
 //! to the backend in its content box, where it stacks in tree order under
@@ -186,7 +186,7 @@ impl PaintedField {
         super::bbox(self.transform, caret)
     }
 
-    /// `rangeFrame`: the UTF-16 range `start..end` of the
+    /// `rangeFrame` (LLP 1114.007): the UTF-16 range `start..end` of the
     /// value last painted, each of its boxes through the transform it was
     /// painted with, then bounded as `Range.getBoundingClientRect()` bounds
     /// them: the empty ones skipped unless all are, then the first; never
@@ -262,7 +262,7 @@ impl Painter {
         } else {
             content
         };
-        // Typed text its bound value has not replaced.
+        // Typed text its bound value has not replaced (LLP 1069.001 D4).
         let composition = self.composition.clone().filter(|c| c.key == node.key);
         let value = composition
             .as_ref()
@@ -342,11 +342,11 @@ impl Painter {
                 (content.3 - paragraph.height) / 2.0
             };
         // The field names its inks by role: the placeholder's, and the grey
-        // of a disabled one (the neutral look's, and
+        // of a disabled one (the neutral look's, LLP 1115.000 D17, and
         // Material's `onSurfaceVariant` and `onSurface` at 38 %).
         // The value's ink: a native field's own colour, moving or pressed,
         // else its start's, the design's FieldText: an inherited colour, or
-        // an ancestor's press, never tints it. A
+        // an ancestor's press, never tints it (LLP 1115 D4, LLP 1121 D9). A
         // field of the author's own inherits as text does. The caret takes
         // it too.
         let value_ink = if native {
@@ -356,7 +356,7 @@ impl Painter {
         }
         .unwrap_or_else(|| rgba(node.text_color().resolve(self.dark)));
         let mut ink = if placeholder {
-            // An authored `::placeholder` colour, its alpha its own.
+            // An authored `::placeholder` colour, its alpha its own (LLP 1104 D3).
             control::authored_placeholder(node.style, self.dark)
                 .unwrap_or_else(|| look::role("-exact-placeholder", self.dark))
         } else {

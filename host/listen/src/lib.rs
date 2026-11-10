@@ -1,12 +1,15 @@
-//! A local listener: a `unix:` socket bound under the path rules
-//! ([`bind`]), each connection read as lines within the bounds and written
-//! as the app sends, and each address held by one listener of the process
-//! at a time. One thread per listener runs a `poll` loop over the socket,
+//! A local listener (LLP 1133.005): a `unix:` socket bound under D4's
+//! rules, each connection read as lines within D3's bounds and written as
+//! the app sends, and each address held by one listener of the process at a
+//! time (D2). One thread per listener runs a `poll` loop over the socket,
 //! its connections, the directory watch and a wake pipe.
 //!
 //! The caller hears events through a sink, which may refuse one ([`Taken`]):
-//! the executor bounds what waits for the runner. Sends arrive from
+//! the executor bounds what waits for the runner (D3). Sends arrive from
 //! another thread ([`Listener::send`]) and are written by the loop.
+//!
+//! @ref LLP 1133.005 D1 (events, options) / D2 (the hold) / D3 (bounds) /
+//! D4 (paths, `takeover`, the lock, the watch) / D13 (a separate artifact)
 #![cfg(unix)]
 
 pub mod abi;
@@ -24,17 +27,17 @@ use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-/// Bytes a connection may hold unwritten.
+/// Bytes a connection may hold unwritten (D3).
 pub const SEND_BYTES: usize = 1 << 20;
 
-/// What to listen on, and how.
+/// What to listen on, and how (D1).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Config {
     /// The address as the app asked: `unix:<path>`.
     pub address: String,
     /// The path, its existing ancestors resolved.
     pub path: PathBuf,
-    /// Newest wins.
+    /// Newest wins (D2, D4).
     pub takeover: bool,
     /// How long a connection has for its first complete line.
     pub first_line: Option<Duration>,
@@ -69,7 +72,7 @@ pub enum Taken {
     Queued,
     /// Nobody wants the listener any more: it closes.
     Gone,
-    /// Past a bound: a connection is closed at once, with no event; a
+    /// Past a bound (D3): a connection is closed at once, with no event; a
     /// line ends its connection `overflow`.
     Full,
 }

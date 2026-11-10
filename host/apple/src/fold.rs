@@ -1,4 +1,4 @@
-//! The page's environment as the host sets it:
+//! The page's environment as the host sets it (LLP 1001 §2; LLP 1078 D4):
 //! the safe-area insets, the layout regions, the title-bar area and the
 //! viewport segments a fold makes, each a call
 //! that re-sends the dictionaries of the nodes whose style reads the
@@ -27,7 +27,7 @@ impl<D: DataSource> Host<D> {
         self.set_environment(env)
     }
 
-    /// The layout regions' insets, five regions of four
+    /// The layout regions' insets (LLP 1123 D10), five regions of four
     /// edges each, top right bottom left, in [`exact_kernel::style::Region`]'s
     /// order; `None`: every region is the safe area. As for the insets, every
     /// node whose style reads the environment is re-sent and laid out again.
@@ -63,8 +63,8 @@ impl<D: DataSource> Host<D> {
         }
     }
 
-    /// The window's own size, whatever is presented in it:
-    /// what every viewport unit (`vw`, `vh`, `vmin`, `vmax` and kin) resolves
+    /// The window's own size, whatever is presented in it (LLP 1075.003
+    /// §9.11): what every viewport unit (`vw`, `vh`, `vmin`, `vmax` and kin) resolves
     /// against everywhere, root and every sheet, never a sheet's viewport,
     /// so no length follows a sheet's height. `None`: the layout viewport.
     pub fn set_screen(&mut self, screen: Option<(f32, f32)>) -> String {
@@ -91,7 +91,7 @@ impl<D: DataSource> Host<D> {
         segments: Option<Vec<exact_kernel::Rect>>,
         batch: &mut Batch,
     ) -> Result<bool, String> {
-        let _roles = self.runner.bind_roles(); // Its own.
+        let _roles = self.runner.bind_roles(); // Its own (LLP 1121 stage 5).
         let kernel = self.runner.kernel_mut();
         let moved = match segments {
             Some(rects) => {
@@ -119,9 +119,9 @@ impl<D: DataSource> Host<D> {
     /// layout regions, the viewport and the segments' rects on the grid the
     /// kernel has, in one batch under one layout, as the calls one by one
     /// would leave them. An iOS boot's view takes the whole window as its
-    /// tab bar comes, which changes the first four
+    /// tab bar comes (LLP 1123 D1), which changes the first four
     /// (`ExactView.fit`); a keyboard changes the viewport and the
-    /// segments' extents together (the keyboard).
+    /// segments' extents together (LLP 1078, the keyboard).
     pub fn set_view(
         &mut self,
         screen: Option<Option<(f32, f32)>>,
@@ -160,8 +160,8 @@ impl<D: DataSource> Host<D> {
         }
     }
 
-    /// The device's posture and the viewport segments a fold makes:
-    /// the kernel's grid and `exactViewport`'s three fields in one
+    /// The device's posture and the viewport segments a fold makes (LLP
+    /// 1078 D4): the kernel's grid and `exactViewport`'s three fields in one
     /// batch — the nodes whose style reads the environment get their
     /// dictionaries re-sent and are laid out again, as for the insets, and
     /// every reader of the fields recommits. Empty when nothing changed. A
@@ -174,7 +174,7 @@ impl<D: DataSource> Host<D> {
         rows: u32,
         rects: Vec<exact_kernel::Rect>,
     ) -> String {
-        let _roles = self.runner.bind_roles(); // Its own.
+        let _roles = self.runner.bind_roles(); // Its own (LLP 1121 stage 5).
         let (Ok(c), Ok(r)) = (u8::try_from(cols), u8::try_from(rows)) else {
             return self.finish(
                 Batch::new(),
@@ -224,7 +224,7 @@ impl<D: exact_runner::DataSource> crate::Host<D> {
         let fonts = self.runner.kernel().env().button_fonts;
         self.measuring_traits_changed(Some((styles, fonts)))
     }
-    /// The text engine's line boxes round to another scale:
+    /// The text engine's line boxes round to another scale (LLP 1008 §3):
     /// every paragraph is measured again, and the auto heights running
     /// transitions target with them.
     pub(crate) fn text_scale_changed(&mut self) -> String {

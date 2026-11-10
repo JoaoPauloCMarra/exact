@@ -370,7 +370,7 @@ fn the_bridge_carries_state_across_boots_from_bytes() {
 }
 
 #[test]
-#[ignore = "launches Bun, whose static serving builds the filesystem helper; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: launches Bun, whose static serving builds the filesystem helper; bun scripts/async.mjs runs it"]
 fn static_serving_falls_back_to_an_interrupted_previous_build() {
     let dir = scratch("serve-previous");
     let dist = dir.join("dist");
@@ -533,7 +533,7 @@ fn display_mode_bits_preserve_fold_and_preferences_at_boot_and_without_a_resize(
     }
 }
 
-/// A value-only edit of the app's design
+/// LLP 1121 stage 4, commit 3: a value-only edit of the app's design
 /// publishes no plan (its file is written, for a host that watches it); its
 /// batch says what changed. An edit that changes the plan's
 /// structure, or the Contract, still writes one. A write by rename, as the
@@ -606,8 +606,9 @@ fn a_value_only_design_edit_writes_no_plan_and_sends_a_batch() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
-/// The wasm loop reloads for what the plan keeps: in an app that can name a
-/// token outside its views (a data crate beside it) every token is kept, so an added one
+/// The wasm loop reloads for what the plan keeps (theme2's ruling, LLP
+/// 1121 stage 5, D7's retention): in an app that can name a token outside
+/// its views (a data crate beside it) every token is kept, so an added one
 /// publishes a plan; and a first `when` on a kept token that did not vary
 /// does too, wherever it is (the plan gains its slices). `propose` classes
 /// both `rebuild` by the same retention.
@@ -653,7 +654,7 @@ fn a_kept_token_added_or_starting_to_vary_publishes_a_plan() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
-/// A scrub's preview compiles the design text
+/// LLP 1121 stage 4, commit 6: a scrub's preview compiles the design text
 /// in place of the file's and writes nothing; each value's batch is based
 /// on the last; restore goes back to the committed design; a structure
 /// change is refused; and a save while one previews batches from it.
@@ -747,7 +748,7 @@ fn a_scrub_previews_without_writing_and_restores_the_committed_design() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
-/// A running web build applies a batch in
+/// LLP 1121 stage 4, commit 4: a running web build applies a batch in
 /// place (no reload: its state stays), and answers stale for one whose base
 /// it has passed.
 #[test]
@@ -788,7 +789,7 @@ fn a_running_web_build_applies_a_batch_in_place() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
-/// A scrub's frames (*1.10*): a build applies one newer than
+/// A scrub's frames (LLP 1121 D13, *1.10*): a build applies one newer than
 /// the last of that scrub it applied, drops an older one or its snapshot
 /// (which carries no base), and takes another scrub's frames as they come.
 #[test]
@@ -870,7 +871,7 @@ fn a_running_web_build_drops_a_scrub_frame_older_than_one_it_showed() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
-/// A scrub's frame patched: the committed design with the
+/// A scrub's frame patched (LLP 1121 D13): the committed design with the
 /// folded rows set, as the compile of the same text gives it; a row that
 /// would gain slices is not patched.
 #[test]
@@ -939,7 +940,7 @@ fn a_patched_scrub_frame_is_the_compiled_one() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
-/// A role override's value edit reaches a
+/// LLP 1121 stage 5, commit 2: a role override's value edit reaches a
 /// running web build as a batch: its role sheet is written again in the
 /// batch (`theme`), which unsaid text and the accent read.
 #[test]
@@ -967,8 +968,8 @@ fn a_running_web_build_takes_a_role_override_edit_in_place() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
-/// Two web sessions on one thread, each with its own role overrides:
-/// an event on one sends its rows under its own roles, with
+/// Two web sessions on one thread, each with its own role overrides (LLP
+/// 1121 stage 5): an event on one sends its rows under its own roles, with
 /// no role resolved unbound beside the other (a debug build would assert).
 #[test]
 fn an_event_beside_another_session_crosses_under_its_own_roles() {

@@ -40,7 +40,7 @@ impl Producer {
     }
     /// Capture and validate a fresh generation. A refusal never returns stale
     /// output. `seed` supplies the Rust-owned first-frame values this
-    /// producer cannot compute.
+    /// producer cannot compute (LLP 1027.002 §5 step 0).
     pub fn bake(&mut self, app: &Path, seed: Option<&Seed>) -> Result<Baked, String> {
         bake_in(
             app,
@@ -179,7 +179,7 @@ pub(super) const BINDING: &str = include_str!("__exact_binding.mjs");
 /// The settings' reader (`import.meta.env`), which `CONFIG` imports from beside it.
 pub(super) const ENV: &str = include_str!("__exact_env.mjs");
 
-/// The target a module binding answers `supports` for, as
+/// The target a module binding answers `supports` for (LLP 1133.006 D7), as
 /// an implementation's `targets` names it: Cargo's `CARGO_CFG_TARGET_OS` in
 /// an app's build script, else the OS of `TARGET`'s triple, which is all a
 /// bake run outside Cargo (`exact-js-bake --cargo`) is told. None where

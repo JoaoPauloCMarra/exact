@@ -1,4 +1,4 @@
-//! The browser's route visibility rule, without a view mirror.
+//! @ref LLP 1038 D6 — the browser's route visibility rule, without a view mirror.
 use exact_kernel::invocation::Action;
 use exact_kernel::{Kernel, PropId, ViewId};
 use std::collections::{BTreeMap, BTreeSet};
@@ -17,7 +17,7 @@ pub(crate) fn popover_invoker(kernel: &Kernel, id: ViewId) -> bool {
             return false;
         }
         // A native button is a button: a press on it is its own, not an
-        // enclosing invoker's (it invokes no menu).
+        // enclosing invoker's (LLP 1069.011.000 D9; it invokes no menu).
         if node.node_type == exact_kernel::NodeType::Pressable
             || exact_kernel::ControlKind::of(node.node_type, node.props)
                 == Some(exact_kernel::ControlKind::Button)
@@ -39,7 +39,7 @@ fn dialog_command(action: Action) -> bool {
     matches!(action, Action::ShowModal | Action::Close)
 }
 
-/// When the root's key matches no route: the stack is left
+/// LLP 1035.001 D1, when the root's key matches no route: the stack is left
 /// alone, less the routes that have left the tree. The deepest route of the
 /// stack last shown (its keys through its selected route) that is still
 /// declared is the selected one, so a closed sheet or a popped screen never
@@ -72,8 +72,8 @@ pub fn route_visibility(
     )
 }
 
-/// A navigation root's stacks: with tabs (the kernel's
-/// rule, which every host with a tab bar reads) each
+/// A navigation root's stacks (LLP 1075.003 §3.7): with tabs (the kernel's
+/// rule, which every host with a tab bar reads, LLP 1115.001 D11) each
 /// panel is one, its children that carry a `navigationKey`; with none, the
 /// root's own such children are the one stack.
 pub(crate) fn stacks(
@@ -108,16 +108,17 @@ pub(crate) struct Navigation {
     refused: BTreeMap<ViewId, String>,
     /// Each root's stack as last shown, its keys through its selected route.
     shown: BTreeMap<ViewId, Vec<String>>,
-    /// The first root's stack as its key last named it: its routes through the
-    /// selected one. What the focus follows (`presenter/arrive.rs`); a key that
-    /// matches no route leaves it as it was.
+    /// The first root's stack as its key last named it: its routes through
+    /// the selected one. What the focus follows (`presenter/arrive.rs`; LLP
+    /// 1115.000 D4.2); a key that matches no route leaves it as it was.
     pub(crate) stack: Option<Vec<ViewId>>,
     popovers: bool,
     pub(crate) shown_popover: Option<ViewId>,
-    /// A shell presents the top layer (Android's reader, as windows): a press on an invoker is then
-    /// the presenter's to act on (`presenter/top.rs`), not refused here.
+    /// A shell presents the top layer (LLP 1115.001 D10: Android's reader,
+    /// as windows): a press on an invoker is then the presenter's to act on
+    /// (`presenter/top.rs`), not refused here.
     pub(crate) top_layer: bool,
-    /// What a shell's bars are made from (`bars.rs`),
+    /// What a shell's bars are made from (LLP 1115.001 D11; `bars.rs`),
     /// and the nodes a bar stands for: a header its top bar replaces, a
     /// tablist its navigation bar replaces. Those are neither painted nor
     /// hit, as iOS hides the header its bar lifts.
@@ -138,7 +139,7 @@ pub struct RouteBar {
     pub shape: exact_kernel::HeaderShape<ViewId>,
 }
 
-/// The structure a shell's bars are made from, read
+/// The structure a shell's bars are made from (LLP 1115.001 D11), read
 /// from the first navigation root after each commit (`bars.rs`). Empty on a
 /// host whose shell has no bars: desktop Linux, a headless run.
 #[derive(Debug, Default)]
@@ -192,7 +193,7 @@ impl Navigation {
                 continue;
             }
             let first = std::mem::take(&mut first);
-            // With tabs, each panel is a stack.
+            // @ref LLP 1075.003 §3.7 — with tabs, each panel is a stack.
             let (tabs, stacks) = stacks(kernel, *id);
             let panels = tabs.map_or(Vec::new(), |tabs| tabs.panels);
             self.panels.extend(panels.iter().copied());
@@ -377,8 +378,8 @@ mod tests {
         assert_eq!(route_visibility(&[], "missing", &[]), None);
     }
 
-    /// A sheet over a sheet shows both the sheet beneath it and the page,
-    /// as navigation.js `covered` does; a page pushed
+    /// A sheet over a sheet shows both the sheet beneath it and the page
+    /// (LLP 1133.029 D3), as navigation.js `covered` does; a page pushed
     /// beneath the first sheet hides the route it was pushed over.
     #[test]
     fn a_sheet_over_a_sheet_shows_the_page_and_the_sheets_between() {
@@ -403,7 +404,7 @@ mod tests {
         );
     }
 
-    /// A root whose key names no route (visit "0" over a
+    /// LLP 1035.001 D1: a root whose key names no route (visit "0" over a
     /// route keyed "rooms") keeps what is left of the stack it showed: the
     /// sheet closed, the route beneath it is selected, live again.
     #[test]

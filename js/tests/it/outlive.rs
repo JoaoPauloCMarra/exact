@@ -1,4 +1,4 @@
-//! Work that outlives its answer through the Apple host's
+//! Work that outlives its answer (LLP 1146 D2) through the Apple host's
 //! actual Bridge, executor and pump, with a scripted transport and no lock:
 //! a resource renews a token while a timer asks it again three times. The
 //! renewal's POST is held until every re-ask has let its answer go; the
@@ -466,7 +466,7 @@ fn held_write() -> WriteServer {
 /// An app aborts a kept write in a reply's turn whose commit is then refused:
 /// the write's rejection reaches its let-go answer's continuation in a module
 /// turn, outside that commit's checkpoint, so what the continuation writes
-/// stands.
+/// stands (LLP 1146 D2).
 #[test]
 fn an_aborted_kept_write_s_continuation_writes_in_a_module_turn() {
     let _one = DRIVE.lock().unwrap_or_else(|e| e.into_inner());

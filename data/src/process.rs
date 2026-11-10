@@ -1,7 +1,7 @@
-//! `@exact/child-process` for a Rust source: `execFile`,
+//! `@exact/child-process` for a Rust source (LLP 1133.007 D13): `execFile`,
 //! `execPath` and the environment reads as typed requests, as `fetch` has
-//! them, and `spawn` as a stream that only listens, since Rust sources have
-//! no send path yet. Each builds the process request the
+//! them, and `spawn` as a stream that only listens until Rust sources get
+//! LLP 1016.000 D7's send path. Each builds the process request the
 //! TypeScript binding builds (js/src/process.js), so the host admits and
 //! runs both alike; each reply is read here.
 use exact_runner::{Answer, Outcome, Request};
@@ -13,7 +13,7 @@ fn ceiling(max_buffer: usize) -> u32 {
     (2 * (4 * max_buffer.div_ceil(3)) + 65_536).min(64 << 20) as u32
 }
 
-/// `execFile`'s options.
+/// `execFile`'s options (D3).
 #[derive(Debug, Clone, Default)]
 pub struct ExecFile {
     /// The child's whole environment; `None`, the app's own.
@@ -91,7 +91,7 @@ pub fn app_environment() -> Request {
     )
 }
 
-/// `spawn(program, args)` as a stream that listens: its events reach
+/// `spawn(program, args)` as a stream that listens (D13): its events reach
 /// the source's `parse` as messages, `utf8` output in `data`.
 pub fn spawn(program: &str, args: &[&str], utf8: bool) -> Answer {
     let body = json!({

@@ -1,4 +1,4 @@
-//! Filter primitives (Filter Effects 1 §9, §15): a
+//! Filter primitives (LLP 1055.000 D14; Filter Effects 1 §9, §15): a
 //! resolved chain run over an island that covers the filter region.
 //!
 //! Working images are premultiplied RGBA in `f32`, each tagged with its

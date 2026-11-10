@@ -1,4 +1,4 @@
-// Exit animation and layout transition on the web. Fetched after
+// Exit animation and layout transition on the web (LLP 1063). Fetched after
 // paint, when a batch first carries either row (`presenceLoader` in
 // navigation.js holds a batch that needs it before it arrives); the browser
 // plays both.
@@ -122,7 +122,7 @@ function createPresence(root) {
   // the animations that show its size, and the surface's stand-in.
   const flips = new WeakMap();
   const surfaces = new Set();
-  // A ghost cannot escape its parent's turn. Keep the
+  // A ghost cannot escape its parent's turn (LLP 1083.000 D4). Keep the
   // parent's current row beneath this temporary write, including changes
   // made by a later batch, and restore it when the last ghost ends.
   const ghostParents = new Map();
@@ -131,7 +131,7 @@ function createPresence(root) {
     else el.style.removeProperty('isolation');
   };
   let frame = null;
-  // What a leaving view's ghost keeps, read as it leaves: the `left` and `top` that keep its border box
+  // What a leaving view's ghost keeps (LLP 1063 D4), read as it leaves: the `left` and `top` that keep its border box
   // where it is (its offsets less its margins), its border-box size, and whether its `z-index` applies (a positioned
   // box's or a flex or grid item's)
   const kept = el => {
@@ -335,7 +335,7 @@ function createPresence(root) {
       s.transition = 'none';
       s.position = 'absolute'; s.left = `${box[0]}px`; s.top = `${box[1]}px`;
       s.width = `${box[2]}px`; s.height = `${box[3]}px`; s.boxSizing = 'border-box'; s.pointerEvents = 'none';
-      // It keeps its paint order among its siblings: its own `z-index`, or level 0 in tree
+      // It keeps its paint order among its siblings (LLP 1083.000 D4): its own `z-index`, or level 0 in tree
       // order, as a positioned box. A `z-index` that had no effect before it was positioned still has none.
       if (!ranked) s.zIndex = 'auto';
       // And it paints its subtree in its turn, as a ghost does on Apple: a sticky or fixed box was a stacking
@@ -401,5 +401,5 @@ function createPresence(root) {
 
 if (globalThis.exact) globalThis.exact.presence = createPresence;
 // A box's border-box size from its computed style, shared with geometry
-// reads' `measure` (geometry-glue.js).
+// reads' `measure` (geometry-glue.js, LLP 1051.000 D4).
 export { size };

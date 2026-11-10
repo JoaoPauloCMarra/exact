@@ -1,12 +1,12 @@
-// A vertical `list` is a table
+// @ref LLP 1115.002 D5, LLP 1115.000 D16 — a vertical `list` is a table
 // on the Mac: AppKit's `NSTableView`, with its selection, its separators
 // and its keys, holding the runner's rows (`TableFeed`, TableFeedMac.swift).
 // Contract marks the lists whose rows are cells; this host reads that mark.
 //
 // A marked list is a table whether the runner windows its rows or keeps
 // them all mounted. Contract excludes carousels, authored arrangements,
-// grouped forms and sections. Kept painted too, each said once in the log
-// and queued: a list whose rows are in
+// grouped forms and sections (D16). Kept painted too, each said once in the log
+// and queued (LLP 1115.002 §3, stage 3b): a list whose rows are in
 // `section`s, a list inside another list's row, and a list whose rows are
 // dragged to reorder.
 //
@@ -65,9 +65,9 @@ final class TableHost {
     /// Why `list` is not a table; nil when it is one.
     private func refusal(_ list: NodeView) -> String? {
         guard presenter != nil, list.kind == "list" else { return "it is no list" }
-        if list.props["listStyle"] != nil { return "appearance=\"auto\": the grouped form, painted" }
+        if list.props["listStyle"] != nil { return "appearance=\"auto\": the grouped form, painted (LLP 1115.002 D6)" }
         if list.style["appearance"]?.string == "none" { return "appearance=\"none\": the author's rows" }
-        guard list.props["listRows"] == "true" else { return "Contract leaves its authored rows" }
+        guard list.props["listRows"] == "true" else { return "Contract leaves its authored rows (LLP 1115.000 D16)" }
         if list.handlers.contains("reorderdrop") { return "its rows are dragged to reorder, which the table does not do yet" }
         var above = list.superview
         while let view = above {
@@ -136,7 +136,7 @@ final class TableHost {
         return nil
     }
 
-    /// The Swift projection of `Kernel.row_separator`.
+    /// The Swift projection of `Kernel.row_separator` (LLP 1115.000 D16).
     /// The wrapper is the row; only its authored child's edge intent is read.
     /// Logical siblings include the children AppKit does not make table rows.
     func separates(_ row: NodeView, in list: UInt32) -> Bool {

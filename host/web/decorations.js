@@ -1,4 +1,4 @@
-// A plain textarea's decorations: the app's TextDecorations
+// A plain textarea's decorations (LLP 1114.007): the app's TextDecorations
 // record painted with the CSS Custom Highlight API over the field's own
 // value ranges (`createValueRange()`, OpaqueRange), one `::highlight()` rule
 // per span. Paint only: the textarea stays the browser's, its value and

@@ -1,4 +1,4 @@
-//! Opt-in live-window observations.
+//! Opt-in live-window observations. @ref LLP 1149.001 Stage 0.
 use exact_ink::counters;
 use serde_json::{json, Value};
 use std::{

@@ -3,7 +3,7 @@ import XCTest
 @testable import ExactKit
 import UIKit
 
-/// Inspect mode's hit test (InspectIOS.swift): a tap
+/// Inspect mode's hit test (LLP 1122 D5, T2c; InspectIOS.swift): a tap
 /// selects the nearest view, walking up from the window's own hit view, that
 /// stands for a plan node, and the walk stops at a system bar. A plan node
 /// the bar hosts (the drawn title) is selected; UIKit's own parts (Back, the

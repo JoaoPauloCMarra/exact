@@ -1,4 +1,4 @@
-// Pure glue tests, beside existing bun:test glue tests.
+// @ref LLP 1043.000 §3 D7/D8 — pure glue tests, beside existing bun:test glue tests.
 import { test, expect } from 'bun:test';
 import { baselineIn, fragmentBaseline, fragmentDiff, framePhases, fontStyle, forgetTextBoxEdges, measurementCache, textBoxCut } from './textflow-glue.js';
 import { render } from '../../scripts/agent.mjs';
@@ -69,7 +69,7 @@ test('computed font recipe pins macOS system faces for both painting and canvas'
   expect(fontStyle({ ...style, fontFamily: 'system-ui, -apple-system, ui-sans-serif, sans-serif' }, true).family)
     .toBe('"Helvetica Neue", "Helvetica Neue", "Helvetica Neue", sans-serif');
   expect(fontStyle({ ...style, fontWeight: '700' }, true).key).not.toBe(font.key);
-  // Tabular figures change advances: they are part of the measurement key.
+  // Tabular figures change advances: they are part of the measurement key (LLP 1053 G4).
   expect(fontStyle({ ...style, fontVariantNumeric: 'tabular-nums' }, true).key).not.toBe(font.key);
   expect(font.extra.fontVariantNumeric).toBe('normal');
 });
@@ -393,7 +393,7 @@ test('a flowed paragraph with no line is not trimmed', async () => {
   } finally { f.close(); }
 });
 
-// The kernel admits auto height; the glue writes the flowed height.
+// @ref LLP 1043.000 §8 — the kernel admits auto height; the glue writes the flowed height.
 test('an admitted auto-height paragraph flows unbounded and takes the flowed height', async () => {
   const f = controllerFixture({ paragraph: { id: 2, definite: false, refusal: null } });
   try {
@@ -431,7 +431,7 @@ test('a refused auto paragraph keeps ordinary text and journals the kernel\'s re
     for (let i = 0; i < 3; i++) { f.controller.afterBatch({ ops: [{ op: 'style', id: 3 }], timers: false }); await f.settle(); }
     expect(f.p.childNodes[1]).toBe(f.link); expect(f.calls.filter(op => op === 2)).toEqual([]);
     expect(f.controller.facts(2).skipped).toBe('its wrapping context is flex');
-    expect(f.events.filter(e => e[0] === 'log')).toEqual([['log', 'wrap-flow: text #2 has auto height and is not flowed: its wrapping context is flex']]);
+    expect(f.events.filter(e => e[0] === 'log')).toEqual([['log', 'wrap-flow: text #2 has auto height and is not flowed: its wrapping context is flex (LLP 1043.000 §8)']]);
   } finally { f.close(); }
 });
 
@@ -486,7 +486,7 @@ test('oversize text is journaled while ordinary source stays visible', async () 
   } finally { f.close(); }
 });
 
-// The bounded experiment must not promote a partial
+// @ref LLP 1044.001 §7.4 — the bounded experiment must not promote a partial
 // or differently shaped paragraph when the exclusions executor refuses it.
 for (const bytes of [1024 * 1024, 4 * 1024 * 1024]) {
   test(`${bytes}-byte text keeps its authored DOM through width and font changes`, async () => {
@@ -549,7 +549,7 @@ test('one scheduler catches up once before paint, replaces wakes, and cancels on
   clock.update(501); clock.requestFrame(); expect(frames.size + timers.size).toBe(0);
 });
 
-// While the batch says frames, each animation frame is one
+// @ref LLP 1073 D5 — while the batch says frames, each animation frame is one
 // present at its timestamp (never a catch-up), and a slow timer keeps its timeout.
 test('a batch that wants frames presents every animation frame and keeps timer timeouts', () => {
   let now = 0, id = 0; const frames = new Map(), timers = new Map(), events = [];

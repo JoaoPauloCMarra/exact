@@ -1,9 +1,10 @@
-//! Document watches. The answers' watch
+//! Document watches (@ref LLP 1069.010.000 D1, D2). The answers' watch
 //! topics name `doc:` paths; this keeps one FSEvents stream over the folders
 //! they live in (file-level events, so an atomic replace of a watched file
 //! is seen), and each change announces the watches it covers. The runner
-//! then asks again the answers that watch them. iOS has no
-//! FSEvents, so there a watch is accepted and never announces.
+//! then asks again the answers that watch them (LLP 1016.002). iOS has no
+//! FSEvents, so there a watch is accepted and never announces (stage 1
+//! builds macOS first).
 
 use exact_data::documents::{self, Watched};
 use std::path::PathBuf;

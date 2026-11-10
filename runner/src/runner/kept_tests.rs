@@ -1,4 +1,4 @@
-//! Persisted-answer identity and request context.
+//! Persisted-answer identity and request context (LLP 1027.005 D3–D6).
 use super::*;
 
 #[path = "kept_identity_tests.rs"]
@@ -21,8 +21,8 @@ struct Source {
     value: Value,
     asks: Vec<Vec<Value>>,
     parses: Vec<Vec<Value>>,
-    /// A device line whose app keeps no answers: Health's,
-    /// the contacts' or a calendar's.
+    /// A device line whose app keeps no answers: Health's (LLP 1069.008.000
+    /// D7), the contacts' or a calendar's (LLP 1133.018 D8).
     private: Option<&'static str>,
 }
 
@@ -255,7 +255,7 @@ fn seed_survives_two_context_changes_and_activation_asks_the_latest_full_argumen
     assert!(
         r.journal()
             .any(|l| l.contains("answer answered differently from its kept answer")),
-        "a contradicted kept answer is journaled"
+        "a contradicted kept answer is journaled (LLP 1102 §3.17)"
     );
     assert_eq!(state(&r).args, full("A", "200", 2.));
     assert_eq!(
@@ -304,7 +304,7 @@ fn an_activation_answer_outside_its_shape_fails_it_and_keeps_nothing() {
     r.data.ready = true;
     r.data.value = Value::Bool(false);
     // The answer outside its shape fails the resource, not the activation,
-    // which commits: the seed still shows, is not eligible, and
+    // which commits: the seed still shows, is not eligible (D4), and
     // nothing is persisted.
     assert!(r.data_ready().is_ok());
     shows(&r, "kept");
@@ -675,8 +675,8 @@ fn a_cold_boot_forgets_kept_answers_no_declared_reader_seeds() {
 fn an_app_granting_a_private_store_neither_seeds_nor_keeps_answers() {
     // A reader's answer kept before the grant (or by an older build) is
     // forgotten on disk and does not paint the first frame; the fresh answer
-    // is never kept: Health's rule, and the contacts'
-    // and calendars'. The source loads after first pixel,
+    // is never kept: Health's rule (LLP 1069.008.000 D7), and the contacts'
+    // and calendars' (LLP 1133.018 D8). The source loads after first pixel,
     // as an app's TypeScript does.
     for line in ["health-read", "contacts", "calendar", "calendar-write-only"] {
         let source = Source {

@@ -1,4 +1,5 @@
-//! The design checker's own bounds, beside a value's bytes and nesting (`css::over_limit`)
+//! The design checker's own bounds (rt1's finding; theme2's approval of the
+//! checker bound), beside a value's bytes and nesting (`css::over_limit`)
 //! and a length's residual (`residual::MAX_RESIDUAL_ATOMS`): how deep a chain
 //! of names goes, how much a kind walk infers, and the design's values
 //! checked against them all before anything reads one ([`preflight`]).
@@ -114,7 +115,7 @@ pub(crate) fn preflight(design: &Design) -> Vec<Diagnostic> {
         }
     }
     // How many axes, and how many `when` lines a token, before anything
-    // walks them: every pass over a token's lines or a
+    // walks them (theme2's 19:26): every pass over a token's lines or a
     // tuple's modes is linear in these.
     if let Some(a) = design.axes.get(MAX_AXES) {
         let why = format!(
@@ -156,8 +157,8 @@ pub(crate) fn too_deep() -> (&'static str, String) {
 thread_local! {
     /// The folds on this thread's stack now: each token followed
     /// (`Checker::value`) and each function folded (`measure::func`,
-    /// `fold::func`), which compose (512 tokens each nesting 32 functions
-    /// inside both bounds would otherwise overflow a 2 MB stack).
+    /// `fold::func`), which compose (Astra's and Grok's round 2: 512 tokens
+    /// each nesting 32 functions inside both bounds overflowed a 2 MB stack).
     static DEPTH: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 

@@ -165,7 +165,7 @@ struct Em<'a> {
     uses: Uses,
     out: String,
     classes: Vec<String>,
-    /// Each distinct set of state looks, `data-exact-looks` index plus one.
+    /// Each distinct set of state looks (LLP 1121 D8), `data-exact-looks` index plus one.
     looks: Vec<Vec<(u8, String)>>,
     /// Where each class and each set of looks is in `classes` and `looks`.
     class_at: HashMap<String, usize>,
@@ -194,7 +194,7 @@ struct Em<'a> {
     /// Whether a dynamic row can reference an element (`url(#…)`): nodes
     /// with an `id` then name it (`data-exact-id`, rt.js `Sr`).
     refs: bool,
-    /// A development build's `data-site`, each element's plan node.
+    /// A development build's `data-site`, each element's plan node (LLP 1012.001.000 D6).
     site_attrs: bool,
     /// The JS dev loop's state checkpoint. Ordinary builds emit none of it.
     dev_reload: bool,
@@ -217,11 +217,11 @@ const HOST_FACTS: &[&str] = &[
 ];
 
 pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, String> {
-    // A development build makes every token a property.
+    // A development build makes every token a property (LLP 1121 stage 4).
     let _every = crate::modes::every_for(plan, dev_reload);
-    // And every overridden role its sheet's property.
+    // And every overridden role its sheet's property (stage 5).
     let _live = exact_kernel::style::roles::live_properties(dev_reload);
-    // The roles the theme replaces, as the runner sets them.
+    // @ref LLP 1095 D4 — the roles the theme replaces, as the runner sets them.
     let _roles = exact_runner::bridge::set_role_overrides(plan);
     let fonts = crate::faces::fonts(plan)?;
     let sites = Sites::new(plan)?;
@@ -281,7 +281,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
     };
     let mut body = String::new();
     // The route table, and the router slot filled from the location before
-    // any initializer.
+    // any initializer (LLP 1038 D5).
     if let Some(slot) = plan.router {
         let rows: Vec<String> = plan
             .routes
@@ -320,7 +320,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
             slot.0
         );
     }
-    // Localized strings: select the launch locale before any
+    // Localized strings (LLP 1060): select the launch locale before any
     // initializer, which may call `t`; `language` publishes it after mount.
     if let Some(slot) = plan.locale {
         let tables: Vec<String> = plan
@@ -407,7 +407,8 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
             body.push_str(&each);
             continue;
         }
-        // What it shows while it waits with nothing kept: an `else source()` row's value, a declared
+        // What it shows while it waits with nothing kept (LLP 1048.003 D6,
+        // 1054.000.002): an `else source()` row's value, a declared
         // `else empty(…)`, or the type's zero; a placeholder row has none.
         let is_placeholder = plan
             .resources
@@ -421,7 +422,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
             _ if is_placeholder => "void 0".into(),
             _ => zero(plan, r.ty),
         };
-        // A host fact is the page's; a store reader's value a placeholder.
+        // A host fact is the page's; a store reader's value a placeholder (LLP 1027 D4).
         let fact = HOST_FACTS.contains(&plan.str(r.source));
         let initial = plan.bytes(r.initial);
         let initial = if initial.is_empty() || fact {
@@ -442,15 +443,15 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
         };
         // An `else` row's compiled answer is the bake's for every launch,
         // never asked again (each was a worker turn; the runner's
-        // `is_placeholder_row`): it is settled, not a bake.
+        // `is_placeholder_row`, review B4): it is settled, not a bake.
         let kept = if is_placeholder { ",1" } else { "" };
         let carry = if dev_reload {
             format!(",{}{kept}", type_json(plan, r.ty))
         } else {
             kept.to_string()
         };
-        // Its last `context` arguments are its `with` context,
-        // which identify no upload it asks (uploads.js).
+        // Its last `context` arguments are its `with` context (LLP 1027.005
+        // D6), which identify no upload it asks (uploads.js, LLP 1016.000 D10).
         let args = match r.context {
             0 => format!("()=>[{}]", args.join(",")),
             n => format!("Object.assign(()=>[{}],{{context:{n}}})", args.join(",")),
@@ -474,7 +475,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
             .map(|x| format!("r_{}", plan.mutation_refreshes[x.0 as usize].resource.0))
             .collect();
         let mt = em.uses.rt("mut");
-        // A queue's sends wait their turn (schedule.js).
+        // A queue's sends wait their turn (LLP 1092 D6; schedule.js).
         let _ = write!(
             body,
             "const m_{i}={mt}({},s_{},[{}],{}{});",
@@ -486,7 +487,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
         );
     }
     // A child's state used outside every region: initialized as the root
-    // instance renders, after the derives and resources.
+    // instance renders, after the derives and resources (LLP 1017 P4c).
     for (i, r) in plan.slots.iter().enumerate() {
         if r.late {
             root_slot(plan, i, &top, dev_reload, &mut em.uses, &mut body)?;
@@ -525,7 +526,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
             })
             .collect();
         // A string parameter's name, which an argument past MAX_STRING
-        // names (the runner's StringTooLong).
+        // names (the runner's StringTooLong, LLP 1090 D6).
         let names: Vec<String> = r
             .params
             .iter()
@@ -559,8 +560,8 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
     if let Some(m) = &modes {
         body.push_str(&m.js(plan, &em.classes));
     }
-    // Symbols (symbols.js): a bound source picks its role, or an icon token,
-    // from the plan's own table.
+    // Symbols (symbols.js): a bound source picks its role, or an icon token
+    // (LLP 1121 D10), from the plan's own table.
     if em.symbols.0 {
         let _ = write!(
             body,
@@ -633,7 +634,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
         list("d", plan.derives.len()),
         list("r", plan.resources.len())
     );
-    // The queues read the state a stalled `next` saw.
+    // The queues read the state a stalled `next` saw (LLP 1092 D3).
     if plan.mutations.iter().any(|m| m.queue) {
         let queues = em.uses.rt("queues");
         let _ = write!(body, "{queues}($state);");
@@ -725,7 +726,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
             )
         })
         .collect();
-    // Each route's render and activation policy, for the renderers.
+    // Each route's render and activation policy, for the renderers (LLP 1048.003 D5).
     let pages: Vec<String> = plan
         .routes
         .iter()
@@ -748,7 +749,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
     );
     let imports: Vec<String> = em.uses.names.iter().cloned().collect();
     let budget: Vec<String> = em.uses.budget.iter().cloned().collect();
-    // What many sites share, built once (generated code at
+    // What many sites share, built once (LLP 1071 §7, generated code at
     // scale): after `sources`, which build.mjs reads as the first match.
     let consts: String = em
         .uses
@@ -786,7 +787,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
         // A resource with no compiled value: the page waits for its source.
         false
     );
-    // Canvas text names a declared family by its declared name.
+    // Canvas text names a declared family by its declared name (LLP 1056 D8).
     let js = if em.canvas2d && !fonts.aliases.is_empty() {
         format!(
             "{js}(globalThis.exact??={{}}).fontAliases={};\n",
@@ -796,7 +797,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
         js
     };
     let mut css = fonts.css.clone();
-    // The theme's reach into the host's own sheet.
+    // @ref LLP 1095 D4 — the theme's reach into the host's own sheet.
     css.push_str(&(exact_kernel::style::roles::theme_css() + &crate::base_scale::css(plan)));
     css.push_str("#exact-root#exact-root{");
     for (i, c) in em.classes.iter().enumerate() {
@@ -810,7 +811,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
     // The classes that set a scheme read the theme's text on it.
     css.push_str(&exact_kernel::style::roles::scheme_classes(&em.classes));
     css.push_str(&modes.as_ref().map_or(String::new(), |m| m.css(plan)));
-    // The plan's `@keyframes`, as the document's head
+    // The plan's `@keyframes` (LLP 1055 D5, D7), as the document's head
     // carries them: the browser runs `animation` rows.
     for row in &plan.keyframes {
         if let Ok(frames) = exact_motion::Keyframes::parse(plan.str(row.css)) {
@@ -989,14 +990,14 @@ impl Em<'_> {
         }
         let mut css = parts.css.clone();
         css.push_str(&extra);
-        // `-exact-layout-transition` and `-exact-exit-animation` are custom
+        // @ref LLP 1063 — `-exact-layout-transition` and `-exact-exit-animation` are custom
         // properties the web host's presence-glue.js reads from the element's
         // own declaration: inline, as the live host writes every row, not
         // the class (a class's custom property would be inherited).
         let presence = rows::presence_decls(&mut css);
         // Press feedback, a press haptic, or a native button's highlight: the input piece shows it,
-        // and gives a radio group its arrow keys and one Tab stop, and a
-        // tablist and a menu theirs.
+        // and gives a radio group its arrow keys and one Tab stop (LLP 1116.004 D5.2), and a
+        // tablist and a menu theirs (LLP 1115.000 D4.5).
         if presence.contains("--exact-press:")
             || presence.contains("--exact-press-haptic:")
             || presence.contains("--exact-press-opacity:")
@@ -1012,7 +1013,7 @@ impl Em<'_> {
             let _ = write!(self.out, "{press}();");
         }
         self.clocks_in(&presence);
-        // A fitted text: the runtime scales it after each tree update.
+        // A fitted text (LLP 1116.001 D1.4): the runtime scales it after each tree update.
         if presence.contains("--exact-fit:") {
             let fit = self.uses.rt("fitTexts");
             let _ = write!(self.out, "{fit}();");
@@ -1048,7 +1049,7 @@ impl Em<'_> {
                 kinds.iter().map(|k| k.name()).collect::<Vec<_>>().join(" "),
             ));
         }
-        // A pressable is focusable too, as natively (input-glue.js),
+        // A pressable is focusable too, as natively (chat F14; input-glue.js),
         // and so is a clipboard listener: the clipboard's events go to the focus.
         let on = kinds.iter().any(|k| {
             matches!(
@@ -1057,7 +1058,7 @@ impl Em<'_> {
             )
         });
         // An authored `tabindex` is explicit and wins, a negative one
-        // included; a bound one `P` sets over this.
+        // included (LLP 1088 D7.3); a bound one `P` sets over this.
         if on
             && !["input", "button", "select", "textarea", "a", "summary"].contains(&element)
             && !attrs.iter().any(|(k, _)| k == "tabindex")
@@ -1112,12 +1113,12 @@ impl Em<'_> {
             self.out,
             "const {e}={h}({parent},\"{element}\",{class},{attrs_js},{text});"
         );
-        if !presence.is_empty() {
-            let pr = self.uses.rt("pr");
-            let _ = write!(self.out, "{pr}({e});");
+        if let Some(register) = self.presence_registration(i, !presence.is_empty()) {
+            let register = self.uses.rt(register);
+            let _ = write!(self.out, "{register}({e});");
         }
         self.element_extras(&parts.tag, &e, &attrs, &parts.props);
-        // Its surface's inputs, named or positional.
+        // Its surface's inputs, named or positional (LLP 1009 D2).
         if let Some(sf) = row.surface {
             let sf = &plan.surfaces[sf.0 as usize];
             // A surface the app's GPU module draws (the build names them)
@@ -1127,7 +1128,7 @@ impl Em<'_> {
             let named = sf.mode == exact_plan::SurfaceArgsMode::Named;
             if !gpu {
                 // Positional values, their declared types where known, and
-                // the authored names (a draw's `args`).
+                // the authored names (LLP 1056 D1: a draw's `args`).
                 self.canvas2d = true;
                 let values = sf
                     .args
@@ -1203,7 +1204,7 @@ impl Em<'_> {
             let v = if v == "true" { "!0" } else { "!1" };
             let _ = write!(self.out, "{e}.checked={e}.$checked={v};");
         }
-        // A `markup="markdown"` text builds its pieces.
+        // A `markup="markdown"` text builds its pieces (LLP 1045 D3).
         let markdown = node_type == NodeType::Text
             && row.bindings.iter().any(|b| {
                 let b = plan.binding(b);
@@ -1228,7 +1229,7 @@ impl Em<'_> {
             if b.kind == BindingKind::Prop && b.id == PropId::FocusGuide as u16 {
                 continue;
             }
-            // Nor has the status bar's style.
+            // Nor has the status bar's style (LLP 1105 D7).
             if b.kind == BindingKind::Prop
                 && (b.id == PropId::StatusBarStyle as u16
                     || b.id == PropId::StatusBarAnimation as u16)
@@ -1257,7 +1258,7 @@ impl Em<'_> {
                     let prop = PropId::from_wire(b.id).ok_or("unknown prop")?;
                     let name = style::prop_name(node_type, prop)?;
                     // The plan stores editable; HTML exposes the inverse, readonly.
-                    // `glassGroup`'s reserved `-1` is `auto`.
+                    // `glassGroup`'s reserved `-1` is `auto` (LLP 1053.000.000.000 D3).
                     let f = if prop == PropId::Editable {
                         format!("()=>{{const v=({f})();return v==null?v:!v}}")
                     } else if prop == PropId::GlassGroup {
@@ -1275,7 +1276,7 @@ impl Em<'_> {
                         "{p}({e},{},{f});",
                         serde_json::to_string(&name).unwrap()
                     );
-                    // A bound context menu popover: read at the event.
+                    // A bound context menu popover (LLP 1021 §5.1): read at the event.
                     if prop == PropId::ContextPopover {
                         let _ = write!(self.out, "{}({e});", self.uses.rt("cp"));
                     }
@@ -1349,13 +1350,13 @@ impl Em<'_> {
                 | EventKind::Selectionchange
                 | EventKind::Beforeinput
                 | EventKind::Beforeunload
-                // midi.js's listeners, through `onMIDI`.
+                // @ref LLP 1125 D8 — midi.js's listeners, through `onMIDI`.
                 | EventKind::Midimessage
                 | EventKind::Wheel
                 | EventKind::Drop
                 | EventKind::Dragenter
                 | EventKind::Dragleave
-                | EventKind::Atompress // The Markdown editor's and reader's.
+                | EventKind::Atompress // LLP 1045.000 D7: the Markdown editor's and reader's.
                 | EventKind::Play
                 | EventKind::Playing
                 | EventKind::Pause
@@ -1370,13 +1371,13 @@ impl Em<'_> {
                 | EventKind::Seeked
                 | EventKind::Ratechange
                 | EventKind::Volumechange
-                // Through `media.js`, a bool payload.
+                // @ref LLP 1042 — through `media.js`, a bool payload.
                 | EventKind::Fullscreenchange
-                // An image's, which picture-in-picture.js dispatches on it.
+                // @ref LLP 1042 §9 — an image's, which picture-in-picture.js dispatches on it.
                 | EventKind::Enterpictureinpicture
                 | EventKind::Leavepictureinpicture
                 | EventKind::Pictureinpictureerror
-                // The media session's, through `media.js`.
+                // @ref LLP 1098 D6 — the media session's, through `media.js`.
                 | EventKind::Seekbackward
                 | EventKind::Seekforward
                 | EventKind::Seekto
@@ -1395,11 +1396,11 @@ impl Em<'_> {
                 | EventKind::Currententrychange
                 | EventKind::Navigatesuccess
                 | EventKind::Navigateerror
-                | EventKind::Newwindow // Nothing fires them,
+                | EventKind::Newwindow // @ref LLP 1020.002 D5, D7: nothing fires them,
                 | EventKind::Download // the browser opening its own and downloading,
                 | EventKind::Capture // and the runtime refusing a capture (`onFrameCapture`)
-                | EventKind::Userpromptopened // the browser's own dialogs
-                // the browser's history swipe, which shows its own arrow
+                | EventKind::Userpromptopened // @ref LLP 1020.002 D9: the browser's own dialogs
+                // @ref LLP 1115.000 D5.5 — the browser's history swipe, which shows its own arrow
                 | EventKind::Historyswipe
                 | EventKind::Select => {}
                 // The motion piece's: the swipe's holds, a pan's velocity.
@@ -1425,7 +1426,8 @@ impl Em<'_> {
                 args.insert(0, scope.rows.clone().unwrap_or_else(|| "{}".into()));
             }
             // Its arguments are evaluated in the action's commit (`.t`): one
-            // that traps refuses it, as the runner's handler evaluation does.
+            // that traps refuses it, as the runner's handler evaluation does
+            // (LLP 1090 D1).
             let handler = if args.is_empty() {
                 format!("a_{}", h.action.0)
             } else {
@@ -1453,7 +1455,7 @@ impl Em<'_> {
             let (bind, name) = (bind.unwrap_or_default(), h.event.name());
             let _ = write!(self.out, "{on}({e},\"{name}\",{handler}{bind});");
         }
-        // A tab's contents are made when it is first
+        // @ref LLP 1075.003 §3.7 — a tab's contents are made when it is first
         // selected: a virtualized list's rows as well.
         let panel = self.panels.binary_search(&exact_plan::NodesId(i)).is_ok();
         if panel {

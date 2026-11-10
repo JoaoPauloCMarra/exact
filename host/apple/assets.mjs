@@ -201,15 +201,15 @@ export function appleAssets(app, dir, { platform = 'macos', device = false, cata
  * (the manifest's `background_color` and `background_color_dark`): iOS crossfades
  * from the launch screen to the first frame, and between two screens of one
  * colour that crossfade is invisible, so the app opens on its first frame.
- * Where the manifest names none, the app's unsaid background is the platform's:
- * `systemBackground`, which an empty `UILaunchScreen` already is
+ * Where the manifest names none, the app's unsaid background is the platform's
+ * (LLP 1115 D2): `systemBackground`, which an empty `UILaunchScreen` already is
  * in both schemes, or, where the first route scrolls a grouped list (`launch`,
- * the bake's `launchBackground`), `systemGroupedBackground`,
+ * the bake's `launchBackground`, LLP 1116.011 D2.3), `systemGroupedBackground`,
  * which the system shows as #F2F2F7 and black. That is a colour set of its own
  * (a reference to the system colour compiles to its light value alone), so the
  * window under the first frame (`ExactLaunch-…`, read by the presenter) is the
  * same grey and nothing lighter shows between the launch screen and the first
- * frame (no blank white screen for a second).
+ * frame (stopwatch, round 13: "blank white screen for ~1 s").
  * `UILaunchScreen` names colours and images only from an asset catalog, so
  * this writes its colour set, and the manifest's `host.ios.launchImage`
  * (`picture`: its captured bytes' file and width) as an image set at its
@@ -254,8 +254,8 @@ function launchScreen(app, catalog, launch = 'system', picture = null) {
 /** A launch asset's name ends in a digest of what it draws: iOS keeps the launch
  * screen it drew for an app's `UILaunchScreen` and draws it again while those keys
  * are the same, through a reinstall of a new build of the same version, so a new
- * colour or picture under an unchanged name launched on the old one (a new `background_color`
- * showed white on a simulator that had launched a white build). */
+ * colour or picture under an unchanged name launched on the old one (the euxy
+ * port's `background_color`, white on a simulator that had launched a white build). */
 const digest = (content) => createHash('sha256').update(JSON.stringify(content)).digest('hex').slice(0, 8);
 
 const NESTED_BUNDLE = /\.(app|appex|bundle|framework|plugin|xpc|systemextension)$/;
@@ -366,11 +366,11 @@ function machOType(path) {
 /** The hardened-runtime entitlements `exact release` signs the Mac app with:
  * the bake's derivation from the app's `device.*` grants (a usage string
  * alone is not enough; a hardened app without the entitlement is silently
- * refused). Runtime exceptions never reach the app's own executable. Null
- * when the app grants no such device. */
+ * refused). Runtime exceptions never reach the app's own executable (LLP
+ * 1069.008 D9). Null when the app grants no such device. */
 export const macReleaseEntitlements = (compat, widgets = {}) => {
   const names = compat?.reach?.entitlements ?? [];
-  // An https auth callback's `webcredentials:` domain,
+  // An https auth callback's `webcredentials:` domain (LLP 1069.006 D2),
   // which a Developer ID build signs only with a profile that grants it.
   const domains = compat?.reach?.auth?.associatedDomains ?? [];
   if (!names.length && !domains.length && !Object.keys(widgets).length) return null;
@@ -390,7 +390,7 @@ function resolvedExecutable(bundle) {
   return path && existsSync(path) ? realpathSync(path) : null;
 }
 
-/** Each helper a `runtime.<exception> <path>` grant names,
+/** Each helper a `runtime.<exception> <path>` grant names (LLP 1069.008 D9),
  *  keyed by the path `signingOrder` signs it as (a nested bundle, for the
  *  executable that bundle runs), mapped to its entitlements plist. A target
  *  must be a regular Mach-O executable inside a `host.macos.resources`

@@ -11,7 +11,7 @@ is an expander mirroring `contract_syntax::inline`, and
 
 Expressions and statements are `Contract.Expr` and `Contract.Stmt`: the
 same language, read in a component's own scope. A handler names an action
-of its component or an `action` prop; a tail call is a
+of its component or an `action` prop; a tail call (LLP 1017 §11) is a
 `command` naming an `action` prop.
 -/
 import Contract.Syntax
@@ -81,7 +81,7 @@ structure CProgram where
   shapes : List Shape := []
   fns : List FnDecl := []
   /-- The declared shapes that are not also `fn`s: a call naming one builds
-  a record ahead of any name in scope. -/
+  a record ahead of any name in scope (LLP 1035.005.000 D3). -/
   records : List String := []
   root : CComponent
   /-- Every other component, in file order. -/

@@ -1,4 +1,4 @@
-//! A containing block a host gives a subtree.
+//! A containing block a host gives a subtree (@ref LLP 1115.002 D8.2).
 //!
 //! A host shows some subtrees of one page in views of their own: a route in
 //! a split's pane, a modal route in a sheet. Each is laid out in a box that
@@ -44,7 +44,7 @@ pub enum BlockAxis {
     /// size or minimum may exceed it; percentages still use this basis.
     Fit(f32),
     /// The region a box is placed in, CSS's inset-modified containing block
-    /// for a `position-area` (a popover's option): across, an
+    /// for a `position-area` (a popover's option, LLP 1021 D2): across, an
     /// automatic size is `fit-content` in it, its content's min-content
     /// winning where that is wider; down, its content's height, which may
     /// overflow it (whether it does is what picks the option). Percentages
@@ -230,9 +230,9 @@ pub(crate) fn publication_start(arena: &mut NodeArena, root: u32) -> (bool, bool
 /// uses the same placement, but supplies a ceiling only for an automatic
 /// size; CSS's own minimum can exceed that ceiling.
 ///
-/// A block in a box a host replaced whole (a tab not yet built) is `display:
-/// none` as that box is: none of its subtree is measured, and it is published
-/// hidden until the box is given back.
+/// A block in a box a host replaced whole (a tab not yet built, LLP
+/// 1075.003 §9.12) is `display: none` as that box is: none of its subtree
+/// is measured, and it is published hidden until the box is given back.
 pub(crate) fn apply(arena: &NodeArena, slot: u32, s: &mut taffy::style::Style) {
     let Some(block) = arena.blocks.get(slot) else {
         return;
@@ -337,7 +337,8 @@ impl Kernel {
     /// the offer's; until a definite offer has given a viewport there is
     /// none, and a top-layer box stays in its positioned ancestor. One
     /// exception: under a registered content region a top-layer box stays
-    /// in the region's trial.
+    /// in the region's trial (QUEUE, "A popover under a registered content
+    /// region").
     pub(super) fn imply_blocks(&mut self) {
         let (wants, moved) = self.implied_changes();
         for (slot, want) in wants {
@@ -374,7 +375,7 @@ impl Kernel {
                 // One its host replaced whole (a closed popover, a Linux
                 // shell's menu) has no layout to lay out in it. One under a
                 // registered content region stays in the region's trial
-                // (the native region captures it).
+                // (theme2 09:54; the native region captures it: QUEUE).
                 let boxed = !arena.is_root(slot)
                     && !arena.in_paragraph(slot)
                     && arena.cover(slot) != Some(super::HostCover::Whole)

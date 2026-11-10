@@ -4,19 +4,19 @@
 
 use std::path::PathBuf;
 
-/// The kv scope the runner's kept answers live in, beside secrets.
-/// The same scope Apple's store writes.
+/// The kv scope the runner's kept answers live in, beside secrets
+/// (LLP 1027 D4). The same scope Apple's store writes.
 const KEPT: &str = "exact.kept";
 
-/// The kv scope persisted states live in: a preference, never
+/// The kv scope persisted states live in (LLP 1116 D5): a preference, never
 /// a secret. The same scope Apple's agent stores write.
 const STATE: &str = "exact.state";
 
 /// What the app has kept — in a named agent drive's scratch tree, or outside
-/// the agent in its own data root ([`crate::picker::store_root`]) — for the
-/// runner's boot snapshot. A carried launch and a nameless drive contribute
-/// nothing. A fresh drive's tree is emptied first, once a process and before
-/// anything is written there
+/// the agent in its own data root ([`crate::picker::store_root`], LLP
+/// 1027.007 D13) — for the runner's boot snapshot. A carried launch and a
+/// nameless drive contribute nothing. A fresh drive's
+/// tree is emptied first, once a process and before anything is written there
 /// (`picker::empty_fresh_tree`); one that cannot be emptied gives nothing,
 /// said at boot and again by the activation.
 pub(super) fn store_snapshot(app_id: &str, carried: bool) -> Vec<(String, Vec<u8>)> {
@@ -57,9 +57,9 @@ pub(super) fn store_snapshot(app_id: &str, carried: bool) -> Vec<(String, Vec<u8
             }
         }
     }
-    // The runner's own: kept answers and persisted states,
+    // The runner's own: kept answers and persisted states (LLP 1116 D5),
     // each a kv scope of its own beside the secrets. No more kept answers
-    // are read than the runner keeps together.
+    // are read than the runner keeps together (LLP 1027 D4).
     let mut left = exact_runner::Store::KEPT_TOTAL_BYTES;
     for (scope, prefix) in [
         (KEPT, exact_runner::Store::KEPT),
@@ -351,7 +351,7 @@ impl StoreWrites {
     }
 }
 
-/// Physical memory in bytes, for the canvas budget: a quarter
+/// Physical memory in bytes, for the canvas budget (LLP 1056 D4): a quarter
 /// of it, as WebKit charged on iOS. Linux reports it in `/proc/meminfo`;
 /// elsewhere (the host run on a Mac) 8 GiB is assumed.
 pub(super) fn physical_memory() -> u64 {

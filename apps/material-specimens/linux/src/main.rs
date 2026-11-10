@@ -1,4 +1,4 @@
-//! The specimen door: each specimen of the Material
+//! The specimen door (LLP 1115.001.001 D4): each specimen of the Material
 //! oracle's manifest, drawn by the Linux presenter as Android's reader
 //! would show it. Not the neutral look; the scheme's palette and a phone's
 //! settings told before the first frame; the top app bar and the navigation

@@ -1,4 +1,4 @@
-// The design tool's pinned review digests (apps/design-tool/reviewed.ts): pinned when a
+// The design tool's pinned review digests (apps/design-tool/reviewed.ts, the third hands-on pass's #2): pinned when a
 // draft is first proposed and kept through its re-proposals; another draft, its end or a new run drops it; one's own
 // write moves it along only when it held the files that write read; a refusal re-pins to the server's files.
 import { beforeEach, expect, test } from 'bun:test';

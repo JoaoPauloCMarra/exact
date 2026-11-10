@@ -315,7 +315,7 @@ impl Default for BoxGenerationMode {
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Position {
-    /// EXACT PATCH 20: CSS `position: static`. The box is laid out in flow, its
+    /// EXACT PATCH 20 (LLP 1074 T1): CSS `position: static`. The box is laid out in flow, its
     /// insets do nothing, and it is not the containing block of an absolutely positioned
     /// descendant: the nearest ancestor that is not `Static` is (see
     /// [`LayoutPartialTree::hoisted_absolute`](crate::LayoutPartialTree::hoisted_absolute)).

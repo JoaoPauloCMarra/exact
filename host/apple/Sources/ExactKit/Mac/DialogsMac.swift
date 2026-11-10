@@ -4,9 +4,9 @@ import AppKit
 /// HTML's top layer belongs to the session, not to NSApp or a second runner.
 /// The actual subtree moves; fields, selection and app state remain the same.
 /// A `dialog` that is no alert is AppKit's sheet on its window, holding that
-/// subtree (SheetsMac.swift); under the driver's own
+/// subtree (LLP 1115.002 D7.2, SheetsMac.swift); under the driver's own
 /// chrome it is painted in the page over a backdrop, as it was. A modal route
-/// is a sheet by the same means (RouteSheetMac.swift): an entry here
+/// is a sheet by the same means (D7.4, RouteSheetMac.swift): an entry here
 /// whose node is the route, which navigation shows and takes away.
 final class DialogHost {
     private(set) weak var presenter: Presenter?
@@ -49,7 +49,7 @@ final class DialogHost {
     /// The native button drawn as the open dialog's default (DefaultButtonMac.swift).
     weak var drawnDefault: NativeButtonMac?
     var active: NodeView? { entries.last?.dialog }
-    /// An open dialog's backdrop; the dialogs it lifts.
+    /// LLP 1080.001 D3: an open dialog's backdrop; the dialogs it lifts.
     func inspectionOwns(_ view: NSView) -> Bool { entries.contains { $0.backdrop === view } }
     func projects(_ node: NodeView) -> Bool { entries.contains { $0.dialog === node } }
     var presented: [NodeView] { entries.map(\.dialog) }
@@ -118,7 +118,7 @@ final class DialogHost {
               let parent = dialog.superview, parent.isDescendant(of: presenter.root) || parent === presenter.root
                 || entries.contains(where: { parent.isDescendant(of: $0.dialog) || parent === $0.dialog }) else { return }
         // A confirmation in the alert shape is the platform's alert, a sheet
-        // on the window (AlertsMac.swift). HTML: showModal
+        // on the window (LLP 1115.000 D7.6, AlertsMac.swift). HTML: showModal
         // on an open modal dialog does nothing.
         if presenter.alerts.isOpen(dialog) || presenter.alerts.present(dialog, from: nil, popover: false) { return }
         // Over the dialog that is open, when one is: its sheet's window.
@@ -340,7 +340,7 @@ final class DialogHost {
             if event.type == .keyDown, !event.isARepeat, dismissalOwner(of: dialog).props["closedby"] != "none" { dismiss(dialog) }
             return true
         }
-        // Return is the default button's, when the dialog has one.
+        // Return is the default button's, when the dialog has one (LLP 1115.000 D7.3).
         if pressDefault(event, in: dialog) { return true }
         if event.type == .keyDown, event.keyCode == 48 {
             // A node that holds the focus and is no stop (the dialog itself, a `tabindex=-1` box) is where Tab
@@ -405,7 +405,7 @@ final class DialogBackdrop: NSView {
     override var isFlipped: Bool { true }
     override func draw(_ dirtyRect: NSRect) { NSColor.black.withAlphaComponent(0.18).setFill(); dirtyRect.fill() }
     /// A backdrop is not a control: the click that activates its window does
-    /// not also dismiss the dialog. The agent's does.
+    /// not also dismiss the dialog (LLP 1115.000 D7.9). The agent's does.
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { NodeView.everyClickCounts }
     private func outside(_ event: NSEvent) -> Bool {
         guard let parent = superview else { return false }

@@ -1,5 +1,5 @@
-//! The device's settings reach the app through the presenter's doors:
-//! what a shell tells with [`Presenter::set_device`].
+//! The device's settings reach the app through the presenter's doors
+//! (LLP 1115.001 D3.1, D3.2): what a shell tells with [`Presenter::set_device`].
 use super::*;
 use exact_kernel::StyleId;
 
@@ -121,7 +121,7 @@ fn text_scaling_reflows_default_fields_and_preserves_authored_fonts_and_drafts()
 fn a_phones_settings_reach_the_app() {
     let mut p = boot(READS);
     assert!(p.set_device(&phone()).is_none());
-    // A finger is a coarse pointer that cannot hover.
+    // A finger is a coarse pointer that cannot hover (D3.2).
     assert_eq!(facts(&p), "light false no-preference coarse none");
     assert_eq!(width(&p, "rem"), 160.0);
 
@@ -256,8 +256,8 @@ fn a_fields_placeholder_is_its_label_and_floats_as_it_fills() {
     assert_ne!(resting, floated);
 }
 
-/// Android's bold text (its font weight adjustment) is Bold Text: the
-/// system font one step heavier, and back.
+/// Android's bold text (its font weight adjustment) is Bold Text (LLP
+/// 1115.000 D12.3): the system font one step heavier, and back.
 #[test]
 fn bold_text_weights_the_system_font() {
     let mut p = boot(READS);
@@ -361,8 +361,8 @@ fn a_touch_screen_alone_is_the_primary_pointer() {
     assert!(!touch_only(&[]));
 }
 
-/// Android's shell tells its locale and no regional format:
-/// `formatLocale` answers the device's locale, not the one
+/// Android's shell tells its locale and no regional format (LLP
+/// 1027.000.000): `formatLocale` answers the device's locale, not the one
 /// the process launched with.
 #[test]
 fn a_phones_locale_is_its_format_locale_too() {
@@ -386,7 +386,7 @@ fn a_phones_locale_is_its_format_locale_too() {
 }
 
 /// A page symbol is drawn in its `color`, inherited here from a custom button
-/// or a box, as Apple and the web draw one, not in the accent.
+/// or a box, as Apple and the web draw one (LLP 1081 §4), not in the accent.
 #[test]
 fn a_page_symbol_takes_its_color() {
     let source = "component App\n  view\n    column\n      button appearance=\"none\" color=\"#ff0000\" testId=\"b\"\n        image \"symbol:emoji\" width=48 height=48\n      view color=\"#ff0000\" testId=\"v\"\n        image \"symbol:emoji\" width=48 height=48\n";

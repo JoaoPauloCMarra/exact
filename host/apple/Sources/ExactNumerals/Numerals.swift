@@ -1,4 +1,4 @@
-// The Numerals capability: a paragraph under
+// The Numerals capability (LLP 1077 D15, LLP 1115.003 D3): a paragraph under
 // `-exact-content-transition: numeric` is drawn by SwiftUI's `Text` with its
 // numeric content transition, per glyph and blurred as iOS's own numbers roll,
 // where the core would push its whole raster. An app's composition links this

@@ -240,7 +240,7 @@ fn wasm_fuel_memory_imports_and_export_bounds_are_enforced() {
     assert!(executor.call(&vec![0; abi::MAX_MESSAGE + 1]).is_err());
 }
 
-// Work in proportion to the input passes the flat base: 100
+// @ref LLP 1029.000 — work in proportion to the input passes the flat base: 100
 // loop turns a byte over 60,000 bytes is past 20 million fuel, within the
 // per-byte allowance.
 #[test]
@@ -254,7 +254,7 @@ fn wasm_fuel_grows_with_the_input_it_is_handed() {
     assert!(crate::wasm::budget(input.len()) > 20_000_000);
 }
 
-// The same input's loop with no bound still stops, at the
+// @ref LLP 1029.000 — the same input's loop with no bound still stops, at the
 // fuel that input bought. A test of its own, so it runs beside the one above:
 // each spends tens of millions of fuel.
 #[test]

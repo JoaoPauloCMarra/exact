@@ -1,5 +1,5 @@
-// @exact/serial bound on macOS or the Linux host headless: Bench with
-// the Swift or the Rust implementation answering (`--bind serial`), the port a pseudo-terminal this script makes and names through
+// @exact/serial bound on macOS or the Linux host headless (LLP 1133.037 §16 stages 2 and 5, Bench drive 10): Bench with
+// the Swift or the Rust implementation answering (`--bind serial`), the port a pseudo-terminal this script makes and names through D19 item 3's
 // `EXACT_DEVICE_FIXTURE` (a development build's injected device). The pty is set raw and filled with a megabyte of
 // numbered lines before Bench opens it; the writes block while nothing reads, so the bytes wait in the kernel as a
 // device's would, and Bench must read every one, in order, through the module's termios, read loop and bound.

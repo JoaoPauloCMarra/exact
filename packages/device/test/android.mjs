@@ -1,10 +1,10 @@
-// @exact/device on Android: the fixture app made outside the repo and built as the Canvas
+// @exact/device on Android (LLP 1133.031 §12 stage 3): the fixture app made outside the repo and built as the Canvas
 // reader's APK, which compiles Device.kt and merges the implementation's manifest fragment. No emulator boots on the
 // machine this was built on, so it drives nothing: the device checklist (`checklist.md`) holds the shell commands that
 // set each fact on an emulator or a phone.
 //
 // - The roster names `exact.device.DeviceModule`.
-// - The merged manifest holds `ACCESS_NETWORK_STATE`, from the fragment; the fragment's list refuses a
+// - The merged manifest holds `ACCESS_NETWORK_STATE`, from the fragment (D8); the fragment's list refuses a
 //   permission that is not normal (`scripts/android-manifest.test.mjs`).
 //
 // usage: bun packages/device/test/android.mjs

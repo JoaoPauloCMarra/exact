@@ -1,7 +1,7 @@
-// A `dialog` that is not a confirmation is a sheet.
+// @ref LLP 1115.000 D11.5 — a `dialog` that is not a confirmation is a sheet.
 // HTML's `dialog`, shown by `showModal()`, is a box its author laid out over
 // an inert page. A confirmation by its rows is the platform's alert
-// (MenusIOS.swift); any other is UIKit's sheet, the other half
+// (MenusIOS.swift, LLP 1115 D6); any other is UIKit's sheet, the other half
 // of that split by shape. The dialog's own subtree moves into the sheet, as
 // macOS moves it into its top layer (DialogsMac.swift), so its fields, their
 // text and the app's state are the same ones; the kernel lays it out, and
@@ -59,7 +59,7 @@ final class DialogSheetController: UIViewController, UIGestureRecognizerDelegate
     }
     required init?(coder: NSCoder) { nil }
     #if os(iOS)
-    // UIKit asks a presented controller, whose default is
+    // LLP 1133.029 D5: UIKit asks a presented controller, whose default is
     // not its presenter's answer; a dialog over a locked screen keeps the lock.
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         host?.orientationLock?.supported ?? super.supportedInterfaceOrientations
@@ -73,10 +73,10 @@ final class DialogSheetController: UIViewController, UIGestureRecognizerDelegate
         #if os(tvOS)
         view.backgroundColor = .white
         #else
-        // The sheet's surface where the dialog painted none: the platform's,
-        // which UIKit elevates in dark mode.
+        // The sheet's surface where the dialog painted none: the platform's
+        // (LLP 1115 D2), which UIKit elevates in dark mode.
         ThemeRoles.adopt(view, from: host?.root)
-        // Its presenter's tint, as the root's: a sheet sits outside it.
+        // Its presenter's tint, as the root's (LLP 1095 D4): a sheet sits outside it.
         if let tint = ThemeRoles.color("AccentColor", in: view) { view.tintColor = tint }
         view.backgroundColor = ThemeRoles.color("background", in: view) ?? ThemeRoles.color("Canvas", in: view, or: .systemBackground)
         scroller.keyboardDismissMode = .interactive
@@ -286,7 +286,7 @@ final class DialogSheets: NSObject, UIAdaptivePresentationControllerDelegate {
         return ["kind": "dialog", "dialog": Int(entry.dialog.id), "source": entry.source.map { Int($0.id) as Any } ?? NSNull(),
                 "closedby": entry.dialog.props["closedby"] ?? "closerequest", "presentation": "sheet", "phase": moving ? "transition" : "open"]
     }
-    /// The views this host adds.
+    /// LLP 1080.001 D3: the views this host adds.
     func inspectionOwns(_ view: UIView) -> Bool { entries.contains { $0.controller.viewIfLoaded === view || $0.controller.scroller === view } }
     /// The sheets' own views, oldest first: roots of the session's
     /// accessibility tree beside its view (`tree --ax`).
@@ -298,7 +298,7 @@ final class DialogSheets: NSObject, UIAdaptivePresentationControllerDelegate {
         }
     }
     /// The laid-out dialog moves with the sheet's scroller; its visible
-    /// card clips it without rescaling its descendants.
+    /// card clips it without rescaling its descendants (LLP 1051.000 D1).
     var presented: [TopLayerBox] {
         guard let presenter else { return [] }
         return entries.compactMap { entry in

@@ -1,6 +1,6 @@
-//! Persisted state: `state … persist` kept across launches.
+//! Persisted state (LLP 1116 D5): `state … persist` kept across launches.
 //!
-//! The value lives in the store under `exact.state.<name>`, a
+//! The value lives in the store (LLP 1018) under `exact.state.<name>`, a
 //! runner-owned name beside the kept answers, as JSON text: a number as
 //! JSON's (non-finite ones as `"NaN"`, `"Infinity"`, `"-Infinity"`), a
 //! string, a bool, an option as `null` or its value, a list as an array.

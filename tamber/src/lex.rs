@@ -1,6 +1,6 @@
 //! Lines, with Contract's layout rules (`contract/syntax/src/lexer.rs`):
 //! spaces indent, `//` starts a comment, blank lines are skipped. Contract's
-//! lexer makes tokens, and a `.tamber` value is CSS text read whole,
+//! lexer makes tokens, and a `.tamber` value is CSS text read whole (§3),
 //! so the structure is lexed here and each value kept as its text.
 
 use crate::Diagnostic;

@@ -1,4 +1,4 @@
-//! A spawned child's supervision: one incarnation
+//! A spawned child's supervision (LLP 1133.007 D2, D4): one incarnation
 //! after another while the resource holds it. Each incarnation's events go
 //! to the stream in order — `spawn`, output chunks, `exit`, then `close`
 //! once both pipes reach end of file or the drain timeout passes — with
@@ -156,10 +156,10 @@ pub(crate) struct Supervisor<'a> {
     waiter: u64,
     /// Its place on the clock, given up once the stream's end is queued.
     leave: Option<Leave>,
-    /// For readiness probes against a real child.
+    /// For readiness probes against a real child (D4).
     probe: Option<ibex2::host::Bindings>,
     released: bool,
-    /// `exactReady`'s round passed with `onTimeout: "fail"`.
+    /// `exactReady`'s round passed with `onTimeout: "fail"` (D4).
     timed_out: bool,
 }
 
@@ -250,7 +250,7 @@ impl<'a> Supervisor<'a> {
             }
             let restart = self.spec.restart.as_ref().filter(|r| {
                 let prevented = ended.code.is_some_and(|c| r.prevent.contains(&c));
-                // A signal the app sent with `kill` is no failure.
+                // A signal the app sent with `kill` is no failure (D4).
                 let theirs = (ended.signal.as_ref()).is_some_and(|s| !ended.sent.contains(s));
                 let failed = ended.code.is_some_and(|c| c != 0) || theirs;
                 !prevented && (r.always || failed)
@@ -302,9 +302,9 @@ impl<'a> Supervisor<'a> {
         let mut exit: Option<(Option<i64>, Option<String>, f64)> = None;
         let mut eof = [!self.spec.pipes[1], !self.spec.pipes[2]];
         let mut drained = true;
-        // A write that answered `false` owes a `drain`.
+        // A write that answered `false` owes a `drain` (D2).
         let mut owed = false;
-        // Readiness: the next probe, and when the round times out.
+        // Readiness: the next probe, and when the round times out (D4).
         let mut ready = false;
         let mut probe_at = self.spec.ready.as_ref().map(|_| started);
         let mut round_end = self.spec.ready.as_ref().map(|r| started + r.timeout);
@@ -379,7 +379,7 @@ impl<'a> Supervisor<'a> {
             }
             pending.extend(released);
             // What the child took of its stdin; once nothing is queued, a
-            // write that answered `false` hears `drain`, as Node's does.
+            // write that answered `false` hears `drain`, as Node's does (D2).
             let queued = child.queued();
             self.ctl.consumed(held.saturating_sub(queued));
             held = queued;
@@ -394,7 +394,7 @@ impl<'a> Supervisor<'a> {
                     );
                 }
             }
-            // Readiness: a script answers its own probe; a real child's is a GET.
+            // Readiness (D4): a script answers its own probe; a real child's is a GET.
             if !ready && !probing && !self.released && self.clock.passed(probe_at) {
                 match child.ready(now - started) {
                     Some(true) => {
@@ -427,7 +427,7 @@ impl<'a> Supervisor<'a> {
                     round_end = self.spec.ready.as_ref().map(|r| now + r.timeout);
                 }
             }
-            // The drain: output after exit has its timeout, then the pipes close.
+            // The drain (D2): output after exit has its timeout, then the pipes close.
             if let Some((_, _, at)) = &exit {
                 if !(eof[0] && eof[1]) && self.clock.passed(Some(at + self.spec.drain_timeout)) {
                     child.close_pipes();
@@ -544,7 +544,7 @@ impl<'a> Supervisor<'a> {
         )
     }
 
-    /// Let the child go: its kill signal to the group now, `SIGKILL`
+    /// Let the child go (D2): its kill signal to the group now, `SIGKILL`
     /// after the grace (at once when it is 0). What the signal does (a
     /// script's exit and close) goes to `pending`, so the loop ends with it.
     fn release(
@@ -596,7 +596,7 @@ impl<'a> Supervisor<'a> {
     }
 }
 
-/// `execFile`: run to `close` and answer `{stdout, stderr, code,
+/// `execFile` (D3): run to `close` and answer `{stdout, stderr, code,
 /// signal}`; the timeout kills the group, and output past `maxBuffer` is
 /// an error, as Node's are.
 pub(crate) fn exec_file(

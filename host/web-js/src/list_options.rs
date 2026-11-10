@@ -104,9 +104,9 @@ impl Em<'_> {
                 BindingKind::Prop if b.id == PropId::ScrollStart as u16 => {
                     at_end = format!("({value})===\"end\"")
                 }
-                // A literal; list.js reads it as the runner does.
+                // @ref LLP 1145 D4 — a literal; list.js reads it as the runner does.
                 BindingKind::Prop if b.id == PropId::ReachMargin as u16 => reach = value,
-                // The keys of the rows it keeps mounted.
+                // @ref LLP 1010 §6.11 — the keys of the rows it keeps mounted.
                 BindingKind::Prop if b.id == PropId::KeepMounted as u16 => {
                     keep = format!("()=>{value}")
                 }

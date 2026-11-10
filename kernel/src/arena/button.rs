@@ -1,4 +1,4 @@
-//! Semantic button faces, shared by host queries and layout.
+//! Semantic button faces, shared by host queries and layout. LLP 1069.011.001 D1–D3.
 use super::*;
 use crate::{ButtonFaceStyle, ButtonImagePlacement, ControlKind, PressFace};
 
@@ -7,7 +7,7 @@ pub(crate) struct ButtonInputs {
     env: crate::Env,
     neutral_tab_root: Option<f32>,
     neutral_role_floor: bool,
-    /// A list row's inset, which the face's padding takes.
+    /// A list row's inset (LLP 1138), which the face's padding takes.
     row_inset: Option<[f32; 2]>,
     nodes: Vec<ButtonNode>,
 }
@@ -235,7 +235,8 @@ impl NodeArena {
             let mut style = self.computed_rows(at, title_mask);
             // Non-inheriting rows (line-clamp) also map from button to title.
             for &row in TITLE_ROWS {
-                // A text style the title names gives its own.
+                // A text style the title names gives its own (LLP 1115.000
+                // D12.2).
                 if !self.style(at).mask.has(row)
                     && own.mask.has(row)
                     && self.text_style_source(at, row).is_none()
@@ -246,14 +247,14 @@ impl NodeArena {
                 }
             }
             style.mask = own.mask.union(self.style(at).mask).intersect(title_mask);
-            // A text style's weight and leading are the
+            // A text style's weight and leading (LLP 1115.000 D12.2) are the
             // title's as much as its own rows are.
             for row in [StyleId::FontWeight, StyleId::LineHeight] {
                 if title_mask.has(row) && self.text_style_source(at, row).is_some() {
                     style.mask.set(row);
                 }
             }
-            // Bold Text's step on the weight the title
+            // Bold Text's step (LLP 1115.000 D12.3) on the weight the title
             // has, the button's included, said so the host paints it.
             if self.bold_text {
                 let family = self.computed_source(at, StyleId::FontFamily).font_family;
@@ -311,7 +312,7 @@ impl NodeArena {
             StyleId::ColumnGap,
             StyleId::FlexDirection,
         ]));
-        // A list's row inset is the padding the host measures and
+        // A list's row inset (LLP 1138) is the padding the host measures and
         // places the title by, at an end its author wrote none of.
         if let Some([left, right]) = crate::rows::row_inset(self, slot) {
             for (id, length) in [(StyleId::PaddingLeft, left), (StyleId::PaddingRight, right)] {

@@ -1,4 +1,4 @@
-//! `contract tamber gen` (commit 4): every language's
+//! `contract tamber gen` (LLP 1121 D12, stage 5, commit 4): every language's
 //! generated names over the one table, from the design's IR.
 
 use exact_kernel::{ColorValue, Kernel};
@@ -255,8 +255,8 @@ fn the_generated_directory_is_the_apps() {
 }
 
 /// `contract types`' declarations name the design's colour tokens as a
-/// union, so a data module's token is typed (the `tsc` check is an ignored
-/// test, beside the other declaration checks in typescript.rs).
+/// union, so a data module's token is typed (the `tsc` check is the async
+/// lane's, beside the other declaration checks).
 #[test]
 fn the_types_carry_a_colour_token_union() {
     let dir = app(
@@ -274,7 +274,7 @@ fn the_types_carry_a_colour_token_union() {
 }
 
 /// A design's `exports` bounds the generated names, as it bounds what a
-/// plan keeps for bindings: every constant resolves.
+/// plan keeps for bindings (D7): every constant resolves.
 #[test]
 fn exports_bound_the_generated_names() {
     let dir = app(
@@ -342,7 +342,7 @@ fn swift_names_each_token_as_a_member() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// Each kind with a binding gets its constant, and outside Exact
+/// Stage 6 G: each kind with a binding gets its constant, and outside Exact
 /// a text style is px at the default root size, which the stylesheet says.
 #[test]
 fn every_kind_with_a_binding_is_generated() {

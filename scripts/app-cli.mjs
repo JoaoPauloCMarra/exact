@@ -1,4 +1,4 @@
-// An app's commands: what `bun exact.mjs <verb>` runs in an app that
+// An app's commands (LLP 1086; LLP 1116.006 D7): what `bun exact.mjs <verb>` runs in an app that
 // `exact new` made. Its exact.mjs is a few lines that find this checkout (EXACT2) and call `run`, so
 // a builder reading it learns where the verbs are (`bun exact.mjs --help`), not this code. An
 // exact.mjs written before this file held all of it, and still runs; `bun exact.mjs update` thins it.
@@ -8,7 +8,7 @@ import { constants, tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, relative, resolve } from 'node:path';
 import { noteBunLoaded } from '../js/bake/src/__exact_env.mjs';
 
-/** The compiler's warnings in what a build said, each once as `contract build` prints
+/** The compiler's warnings in what a build said (LLP 1116.004 D7), each once as `contract build` prints
  * it, `file:line:col warning [id] text`: the web compiler's or a bake's own line, Cargo's for a build
  * script's (`warning: <crate>@<version>: …`) or a linked bake's (`warning: <app>: …`, linked-plan.mjs); its
  * file from `cwd` when it is below it. */
@@ -46,7 +46,7 @@ export function warningLines(dir, host, warnings) {
 }
 
 /** A compiler warning that is information, not a problem: `tamber-unreachable` names a control whose host draws the
- *  platform's own look, which the author should know of and cannot change. A drive
+ *  platform's own look, which the author should know of and cannot change (LLP 1121 D9, amended 2026-10-30). A drive
  *  and verify say it but do not count it. contract's `warning_rank::information` is the same test. */
 export const information = (w) => / warning \[tamber-unreachable\] /.test(w);
 
@@ -69,7 +69,7 @@ export function appVerbs(name, dir, { host = 'web', game = false } = {}) {
     serve: ['host/web/serve.mjs'],
     test: ['scripts/agent.mjs', host, '--app', name],
     agent: ['scripts/agent.mjs', host, '--app', name],
-    // Builds itself, so not below: one report of the build, the tests and check.
+    // Builds itself, so not below (LLP 1116.004 D7): one report of the build, the tests and check.
     ...game ? {} : { verify: ['scripts/verify.mjs', host, '--app', name] },
     ios: ['host/apple/build.mjs', '--ios', `${name}-apple`],
     mac: ['host/apple/build.mjs', `${name}-apple`],
@@ -77,7 +77,7 @@ export function appVerbs(name, dir, { host = 'web', game = false } = {}) {
     share: ['scripts/share.mjs', '--app', name],
     linux: ['scripts/build-linux.mjs', name],
     windows: ['host/windows/build.mjs', name],
-    // The APK on the Canvas reader, installed; `--headless` the Linux host for Android instead.
+    // The APK on the Canvas reader, installed (LLP 1107 D1); `--headless` the Linux host for Android instead.
     android: ['scripts/agent-android.mjs', 'build', name, '--apk', '--install'],
     update: ['scripts/exact.mjs', 'new', dir, '--update'],
     lock: ['scripts/app-cli.mjs', '--lock', dir],
@@ -124,7 +124,7 @@ const checksDesign = ([command, ...rest]) => ['check', 'eval', 'ir', 'gen', 'ser
 
 /** `bun exact.mjs <verb> [arguments]` for the app `name` in `dir`, with the checkout `exact2`; the exit code. */
 export async function run({ dir, name, game = false, exact2, args }) {
-  // Before any process starts: which settings Bun loaded from this directory's `.env` files.
+  // Before any process starts: which settings Bun loaded from this directory's `.env` files (LLP 1153 D4).
   noteBunLoaded();
   // The design tool's tests, drives and verify run on this checkout's own port (port-lock.mjs `checkoutPort`, unless
   // EXACT_TOOL_PORT names one), from a copy staged with that origin and its stub (tamber-tool-port.mjs
@@ -150,10 +150,10 @@ export async function run({ dir, name, game = false, exact2, args }) {
     console.error(`app.json commands.${clash}: ${clash} is one of exact.mjs's own verbs; give the app's another name`);
     return 2;
   }
-  // Help: `--help` or `-h` among a verb's arguments, `help [<verb>]` or no verb prints exact2's own
+  // Help (LLP 1116 D4): `--help` or `-h` among a verb's arguments, `help [<verb>]` or no verb prints exact2's own
   // text (its scripts/help.mjs) and starts nothing. An app's own verb gets its arguments as given. `all` anywhere
   // among them asks for a verb's whole text (`web --help all`, `help web all`, `help all web`); with no verb it is
-  // the index (`--help all`, `help all`), never a verb.
+  // the index (`--help all`, `help all`), never a verb (LLP 1116.010 D2).
   const known = (a) => verbs[a] || own[a];
   const asked = !verb || ['help', '--help', '-h'].includes(verb) ? rest.find(known) ?? rest.find((a) => !a.startsWith('-') && a !== 'all') ?? '' : verbs[verb] && (rest.includes('--help') || rest.includes('-h')) ? verb : null;
   if (asked !== null) {
@@ -188,7 +188,7 @@ export async function run({ dir, name, game = false, exact2, args }) {
   } catch {}
   return exit; };
   // A native verb names its platform in app.json the first time, after that platform's setup rows, and keeps the
-  // generated workspace current unless the app authored one (scripts/app-shells.mjs). A drive's
+  // generated workspace current unless the app authored one (LLP 1153 D1.2; scripts/app-shells.mjs). A drive's
   // host counts (`test ios`). Absent from a checkout that lacks the module (the scaffold's test SDK), it is skipped.
   const platform = game || rest.includes('--help') || rest.includes('-h') ? null : (await import(resolve(exact2, 'scripts/app-shells.mjs')).catch(() => null))?.platformOf(verb, host);
   if (platform) {
@@ -266,7 +266,7 @@ export async function run({ dir, name, game = false, exact2, args }) {
     return 0;
   };
 // exact.mjs runs from any directory, and a file argument is found where you are, else in the app: `app.contract`
-// from the app's parent, `app/app.contract` from inside it (people run both). Each
+// from the app's parent, `app/app.contract` from inside it (app farm wave 1: 13 builds ran one or the other). Each
 // file found in the app is said, with the app's directory; one found nowhere is named before the command runs.
 const here = process.cwd(), appDir = dir, source = (arg) => /\.(contract|ts|json)$/.test(arg) && !arg.startsWith('-');
 const inApp = (arg) => {
@@ -292,7 +292,7 @@ if (verb === 'contract') {
   // The web build is about a second when nothing changed, so a web drive builds
   // first rather than refusing a stale build. An ios or macos drive builds first
   // when its build is missing or older than its sources, saying so on one line
-  // (scripts/agent-build.mjs); a phone's stays explicit.
+  // (scripts/agent-build.mjs, LLP 1116.002 D4); a phone's stays explicit.
   const backendFlag = ['test', 'agent', 'verify'].includes(verb) && host === 'web' ? rest.indexOf('--backend') : -1;
   if (backendFlag >= 0) {
     const value = rest[backendFlag + 1];
@@ -325,12 +325,12 @@ if (verb === 'contract') {
     // Its refusal ends here, so the command is logged like any other.
     const refused = await refusedFlag();
     if (refused != null) return log(refused);
-    // A server entry that does not read DB is refused before the build too, not after it (verify.mjs `withAppServer`).
+    // A server entry that does not read DB is refused before the build too, not after it (verify.mjs `withAppServer`, LLP 1116.008 D1).
     const refusal = verb === 'test' ? (await import(resolve(exact2, 'scripts/verify.mjs'))).appServer(dir)?.refusal : null;
     if (refusal) { console.error(`test: ${refusal}`); return log(1); }
     const prepared = await prepare();
     if (prepared) return log(prepared);
-    // An `agent` drive's check hashes the build's inputs, and the driver need not again.
+    // An `agent` drive's check hashes the build's inputs, and the driver need not again (LLP 1012.001.000 D1: once a drive).
     const checked = verb === 'agent' && drivesNative ? resolve(tmpdir(), `exact-build-check-${process.pid}`) : null;
     if (checked) process.env.EXACT_BUILD_CHECK_OUT = checked;
     // A web build says every compiler warning each time; the drive says the new ones and a count (`warningLines`).
@@ -367,12 +367,12 @@ if (verb === 'contract') {
   if ((verb === 'test' || verb === 'agent') && host === 'windows' && !rest.includes('--size') && existsSync(manifest)) rest.push('--size', windowsWindow(JSON.parse(readFileSync(manifest, 'utf8'))).join('x'));
   // An Android drive is the APK's (`bun exact.mjs android` installs it), unless it asks for the headless Linux host.
   if ((verb === 'test' || verb === 'agent') && host === 'android' && !rest.includes('--headless') && !rest.includes('--reader')) rest.push('--reader');
-  // A finished site is served to this machine unless --lan asks for every interface; the dev loop
-  // and serve.mjs run alone keep LAN.
+  // A finished site is served to this machine unless --lan asks for every interface (LLP 1153 D3.3); the dev loop
+  // and serve.mjs run alone keep LAN (LLP 1023 D8).
   if (verb === 'serve' && !rest.includes('--lan')) rest.push('--loopback');
   if (verb !== 'test') return log(await script(verbs[verb], rest));
   // An app with a server of its own (the rest pattern's) has it run for the tests, where app.ts calls it, on an empty
-  // database kept through them: as verify runs it, by the same code.
+  // database kept through them: as verify runs it, by the same code (LLP 1116.007 D2).
   const { withAppServer } = await import(resolve(exact2, 'scripts/verify.mjs'));
   return log(await withAppServer(dir, async () => {
     let failed = 0;
@@ -409,7 +409,7 @@ export async function lockApp(dir) {
   const { cargoEnvironment } = await import('./app.mjs');
   const { authoredWorkspace, shellsDir } = await import('./cargo-check.mjs');
   const options = { cwd: dir, env: cargoEnvironment(), encoding: 'utf8', maxBuffer: 1 << 26 };
-  // An app that authored no workspace has the generated one once a native verb wrote it, else no Rust.
+  // An app that authored no workspace has the generated one once a native verb wrote it (LLP 1153 D1.3), else no Rust.
   const workspace = authoredWorkspace(dir) ?? (existsSync(resolve(shellsDir(dir), 'Cargo.toml')) ? shellsDir(dir) : null);
   if (!workspace) return `${dir}: no Rust here yet; a native verb (bun exact.mjs ios, mac, linux, android, windows) brings it`;
   const lock = resolve(workspace, 'Cargo.lock');

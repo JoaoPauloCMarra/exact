@@ -1,5 +1,5 @@
 // Exact's own Swift warnings leave an outside app's build output; the app's own, errors and
-// everything else stay (quiet.mjs).
+// everything else stay (quiet.mjs, LLP 1116.021 D3).
 import { expect, test } from 'bun:test';
 import { quiet, quietFor } from './quiet.mjs';
 

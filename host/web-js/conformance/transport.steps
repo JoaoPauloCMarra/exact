@@ -1,4 +1,4 @@
-# A sequence: the count-in, polymeter, an edit, a tempo change,
+# A sequence (LLP 1125): the count-in, polymeter, an edit, a tempo change,
 # stopSounds, a key restart, the gate's stop, a finite take's ended=, a from past
 # exact counting, an end already past at the arming, an ended= that starts
 # a second sequence, and endless tracks dropped past exact loop counting.

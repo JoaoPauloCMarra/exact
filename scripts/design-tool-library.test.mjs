@@ -1,5 +1,5 @@
 // Back to the default right after Set on a library component's param, against a real design server (the second
-// pass's #9; split from design-tool-ops.test.mjs, so it runs in parallel with the others).
+// pass's #9; split from design-tool-ops.test.mjs, so a lane runs it beside the others).
 import { expect, test } from 'bun:test';
 import { cpSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';

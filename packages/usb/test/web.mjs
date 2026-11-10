@@ -1,4 +1,4 @@
-// @exact/usb's web conformance suite in Chromium, over a fake `navigator.usb`
+// @exact/usb's web conformance suite in Chromium (LLP 1133.037 §16 stage 1), over a fake `navigator.usb`
 // (`packages/serial/test/chromium.mjs`): the chooser asked with the app's filters, the record's configurations, a
 // lease per open on one shared open, a claim held by another connection refused `NetworkError`, control and bulk
 // transfers in both directions with their status, the device closing with its last lease, and `forget`.

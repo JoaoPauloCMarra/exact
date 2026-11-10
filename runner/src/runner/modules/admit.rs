@@ -1,15 +1,16 @@
-//! One admission for every call of a module's name, from every caller,
-//! before anything answers it: the substitute, a ticket,
+//! One admission for every call of a module's name, from every caller
+//! (LLP 1133.002 D14), before anything answers it: the substitute, a ticket,
 //! or a bound implementation, in production or under the agent.
 //!
-//! In order: the grant lines the name or its arguments list (the
-//! interface's own lines are the bake's, `grant-missing`), and those an
-//! argument's value must be the target of (`ceremony.rs`), which refuse with
-//! their own code; the name's `origin` (`"app"`: a tool invocation or a wake
-//! is refused, `person-required`; `{"whenAny", "is": "app"}`, only when the
-//! call gives one of the options named); its
+//! In order: the grant lines the name or its arguments list (LLP 1133.009
+//! D10 item 9; the interface's own lines are the bake's, `grant-missing`),
+//! and those an argument's value must be the target of (LLP 1133.011 D6,
+//! `ceremony.rs`), which refuse with their own code;
+//! the name's `origin` (`"app"`: a tool invocation or a wake is refused,
+//! `person-required`, item 8; `{"whenAny", "is": "app"}`, only when the call
+//! gives one of the options named, LLP 1133.012 D12 item 5); its
 //! `foreground` (refused while the page is
-//! hidden); each conditioned by its `when` where it has one; then the
+//! hidden, item 3); each conditioned by its `when` where it has one; then the
 //! permission. Every other refusal answers `NotAllowedError`, with the
 //! message `person-required` for the origin's.
 //!
@@ -17,12 +18,12 @@
 //! where the host bound it so (outside the agent, or `--bind`), and the
 //! platform decides its permission; by its implementation told it runs
 //! under the agent where the interface is its own substitute
-//! (`"substitute": "implementation"`), behind the runner's permission and
-//! its tickets, the agent's
+//! (`"substitute": "implementation"`, LLP 1133.006 D8, LLP 1133.008 D8 item
+//! 9), behind the runner's permission and its tickets, the agent's
 //! preferred value for the name laid over each answer; else by its
-//! declared substitute.
+//! declared substitute (§6).
 //!
-//! **Origin**. Each commit has one: a person's input or the app's own
+//! **Origin** (D12). Each commit has one: a person's input or the app's own
 //! code (`app`), a tool invocation, a wake. Each request carries its
 //! commit's, an answer's commit carries its request's, and a re-ask the
 //! device causes carries each reader's own last ask's. A data-code call
@@ -30,7 +31,7 @@
 //! privileged origin in flight. A permission ticket is never raised for a
 //! tool or a wake: the call fails `person-required` instead.
 //!
-//! **Invocations**. A wake's event and a tool call each
+//! **Invocations** (LLP 1133.023 D7). A wake's event and a tool call each
 //! run as an invocation with an id, which its dispatch commit stamps on
 //! every request, armed `then`, held call and queued send it makes; a
 //! commit that answers a stamped request, or runs a stamped `then` or
@@ -46,14 +47,14 @@ use exact_plan::Value;
 use serde_json::json;
 use std::collections::BTreeMap;
 
-/// Who a call comes from, least privileged first.
+/// Who a call comes from (LLP 1133.002 D12), least privileged first.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub enum CallOrigin {
-    /// The device: an event a package emitted.
+    /// The device: an event a package emitted (LLP 1133.004 D6).
     Device,
-    /// A background wake.
+    /// A background wake (LLP 1133.017 D5).
     Wake,
-    /// A tool invocation.
+    /// A tool invocation (LLP 1111).
     Tool,
     /// A person's input, or the app's own code in a foreground session.
     #[default]
@@ -72,8 +73,8 @@ impl CallOrigin {
     }
 }
 
-/// A set of origins: every cause a commit or a request has.
-/// A request that a later commit keeps with newer arguments
+/// A set of origins: every cause a commit or a request has (LLP 1133.035
+/// D16 item 6). A request that a later commit keeps with newer arguments
 /// takes that commit's causes too, and its answer's commit, its `then` and
 /// what they ask carry them all, so a rule that refuses a tool sees a
 /// tool's arguments however they arrived. The rest of admission reads one
@@ -135,7 +136,7 @@ pub(in crate::runner) struct Origins {
     /// its own last ask's origin, or its waiting ask's.
     reasking: bool,
     /// Each armed `then`, by mutation, whose answer's commit was not the
-    /// app's: the `then` runs under it.
+    /// app's: the `then` runs under it (LLP 1133.002 D12).
     thens: BTreeMap<usize, CallOrigin>,
     /// The invocation the commit being made is part of; 0 for none.
     id: u64,
@@ -177,7 +178,7 @@ pub(in crate::runner) enum Route {
 
 impl<D: DataSource> Runner<D> {
     /// [`Runner::act`] as a commit of `origin`: a tool invocation's door
-    /// or a wake's runs its action through this.
+    /// (LLP 1111) or a wake's (LLP 1114.001) runs its action through this.
     pub fn act_from(
         &mut self,
         origin: CallOrigin,
@@ -404,7 +405,7 @@ impl<D: DataSource> Runner<D> {
         out
     }
 
-    /// Run `f` as the device's re-ask of its readers.
+    /// Run `f` as the device's re-ask of its readers (D12).
     pub(in crate::runner) fn reasking<T>(&mut self, f: impl FnOnce(&mut Self) -> T) -> T {
         let before = std::mem::replace(&mut self.extensions.origins.reasking, true);
         let out = f(self);
@@ -428,8 +429,8 @@ impl<D: DataSource> Runner<D> {
         }
     }
 
-    /// Resource `i`'s ask at `args` waits for the data source:
-    /// its origin is kept for `data_ready`'s ask, the least
+    /// Resource `i`'s ask at `args` waits for the data source (LLP 1027
+    /// D4): its origin is kept for `data_ready`'s ask (D12), the least
     /// privileged of the commits that asked these arguments; a commit that
     /// changes them asks under its own.
     pub(in crate::runner) fn note_deferred(&mut self, i: usize, args: &[Value]) {
@@ -452,7 +453,7 @@ impl<D: DataSource> Runner<D> {
 
     /// Resource `i` is to be asked again for the commit being made, at a
     /// later commit (a send `data_ready` makes): that ask is no more
-    /// privileged than this commit.
+    /// privileged than this commit (D12).
     pub(in crate::runner) fn note_reasked(&mut self, i: usize) {
         let o = &mut self.extensions.origins;
         if o.now != CallOrigin::App {
@@ -520,7 +521,8 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Every input [`Self::data_origin`] folds, kept apart: the commit's
-    /// causes, each request in flight's, and each handler running.
+    /// causes, each request in flight's, and each handler running (LLP
+    /// 1133.035 D16 item 6).
     pub(in crate::runner) fn data_causes(&self) -> Causes {
         let tools = self.tool_origin().into_iter();
         (self.pending.iter())
@@ -621,7 +623,7 @@ impl<D: DataSource> Runner<D> {
             );
             return Decision::Now(json!({ "error": "NotSupportedError", "message": why }));
         }
-        // Presence is not delegable: a person's check
+        // Presence is not delegable (LLP 1133.010 D12): a person's check
         // fails for a tool or a wake before anything is asked, in every state.
         if self.substitute(row)["origin"] == "person" && origin != CallOrigin::App {
             self.log(format!(
@@ -635,7 +637,7 @@ impl<D: DataSource> Runner<D> {
             );
         }
         // A grant matched by the argument's value fails with its own code
-        // (`SecurityError` for an RP ID).
+        // (`SecurityError` for an RP ID, LLP 1133.011 D6).
         if let Err((code, why)) = self.value_grants(row, args) {
             self.log(format!("{}: refused, {why}", self.key(row)));
             return Decision::Now(json!({ "error": code, "message": why }));
@@ -650,7 +652,7 @@ impl<D: DataSource> Runner<D> {
             }
             return Decision::Now(json!({ "error": "NotAllowedError" }));
         }
-        // A member's option on the call, by the member's rules.
+        // A member's option on the call, by the member's rules (LLP 1133.014 D10 item 1).
         if let Some(refused) = self.members_refused(row, args) {
             let why = refused["message"].as_str().unwrap_or_default();
             self.log(format!("{}: refused, {why}", self.key(row)));
@@ -658,14 +660,14 @@ impl<D: DataSource> Runner<D> {
         }
         let decision = match self.route(row) {
             Route::Real => return Decision::Forward,
-            // A target's own restriction holds under the agent too.
+            // A target's own restriction holds under the agent too (D14 step 2).
             Route::Agent if self.unsupported_here(row) => {
                 Decision::Now(json!({ "error": "NotSupportedError" }))
             }
             // No dialog: the implementation opens it as the app's own or fails.
             Route::Agent if self.owned_call(row) => Decision::Forward,
             // The permission's ticket, a sheet's, or the raise's on the
-            // runner's own status; else the implementation.
+            // runner's own status (LLP 1133.018 D13 item 4); else the implementation.
             Route::Agent => (self.decide_permission(row, send, args))
                 .or_else(|| self.decide_choose(row, send))
                 .or_else(|| self.decide_raise(row, send))
@@ -675,8 +677,8 @@ impl<D: DataSource> Runner<D> {
             {
                 Decision::Now(self.pin_shortcut(row, args))
             }
-            // A login item's registration and a global shortcut's
-            // (`declared/desktop.rs`).
+            // A login item's registration and a global shortcut's (LLP
+            // 1133.025 §11, `declared/desktop.rs`).
             Route::Substitute if self.desktop_form(row) => {
                 if !send && self.substitute(row)["shortcut"] == "register" {
                     self.note_registration_reader(row, args);
@@ -696,7 +698,8 @@ impl<D: DataSource> Runner<D> {
         };
         // A name whose grants are per argument asks permission only for an
         // argument it was given: `getUserMedia(audio=false)` asks for no
-        // device, and its implementation refuses it at once.
+        // device, and its implementation refuses it at once (LLP 1133.009
+        // D3).
         let asks = match &self.substitute(row)["nameGrants"] {
             Json::Object(by_argument) => (by_argument.keys()).any(|a| given(args, a)),
             _ => true,
@@ -709,7 +712,7 @@ impl<D: DataSource> Runner<D> {
             decision => decision,
         };
         let decision = match decision {
-            // Only a person answers a prompt.
+            // Only a person answers a prompt (D12).
             Decision::Hold(Waits::Permission) if origin != CallOrigin::App => {
                 self.call_person_required();
                 let code = self.permission_of(row, args)["denied"].clone();
@@ -730,7 +733,7 @@ impl<D: DataSource> Runner<D> {
     /// or, where its interface declares several and the name's grants are a
     /// line per argument (`permissionBy`), the one of the arguments it was
     /// given that settles the call now: a denied one, else one still to ask,
-    /// else the first.
+    /// else the first (LLP 1133.008 D6, LLP 1133.009 D3).
     pub(in crate::runner) fn permission_of(&self, row: &ModulesRow, args: &Json) -> Json {
         // A permission chosen by an argument's value, or the first still to
         // ask of those a request asks together (`keyed.rs`).
@@ -744,7 +747,7 @@ impl<D: DataSource> Runner<D> {
         }
         let sub = self.substitute(row);
         // The first of the name's permissions whose grant line the app
-        // declares (`"narrowest"`).
+        // declares (`"narrowest"`, LLP 1133.019 D4).
         if let Some(any) = sub["permissionAny"].as_array() {
             let declares = |p: &&Json| {
                 (p["grants"].as_array().into_iter().flatten())
@@ -775,7 +778,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// The permission a call of `row` asks of its own and those it requires
-    /// on this target: a denied one, its own
+    /// on this target (LLP 1133.030 D12 item 1): a denied one, its own
     /// first; else the first required one still `prompt`; else its own. A
     /// status source answers its own.
     fn unsettled(&self, row: &ModulesRow, sub: &Json) -> Json {
@@ -935,7 +938,7 @@ impl<D: DataSource> Runner<D> {
                     }
                 }
             }
-            // An empty list needs no line (a picker's).
+            // An empty list needs no line (a picker's, LLP 1133.018 D4).
             line @ Json::Array(l) if !l.is_empty() && !granted(line) => {
                 return Err(format!("grant-missing ({})", named(line)));
             }
@@ -943,7 +946,7 @@ impl<D: DataSource> Runner<D> {
         }
         // A name any of several lines admits asks the permission of one the
         // app declares, or is let through as a read of the app's own item
-        // (`owned`).
+        // (`owned`, LLP 1133.019 D11 item 4).
         if sub["nameGrants"].as_array().is_some_and(|l| l.len() > 1) && !self.owned_call(row) {
             let permission = self.permission_of(row, args);
             let lines: Vec<&Json> = permission["grants"]
@@ -959,9 +962,10 @@ impl<D: DataSource> Runner<D> {
             }
         }
         // A path option is the app's own file, within the calling source's
-        // `fs.read` or `fs.write` lines; each of a
-        // list's; a keyed shape's path keys (`keys`),
-        // each item's, an item being the option or each of its list.
+        // `fs.read` or `fs.write` lines (LLP 1133.009 D10 item 4); each of a
+        // list's (LLP 1133.024 D16); a keyed shape's path keys (`keys`),
+        // each item's, an item being the option or each of its list (LLP
+        // 1133.006 D8 item 3).
         for (option, path) in sub["paths"].as_object().into_iter().flatten() {
             let given: Vec<&str> = match (&args[option], path["keys"].as_array()) {
                 (Json::Array(items), Some(keys)) => (items.iter())
@@ -985,8 +989,8 @@ impl<D: DataSource> Runner<D> {
                 ));
             }
         }
-        // An option's records name URLs and app files (`"admit"`): each
-        // admitted as a fetch's URL or a path option is.
+        // An option's records name URLs and app files (`"admit"`, LLP
+        // 1133.017 D3): each admitted as a fetch's URL or a path option is.
         // A refusal names the URL without its query or fragment.
         for (option, fields) in sub["admits"].as_object().into_iter().flatten() {
             let records: Vec<&Json> = match &args[option] {
@@ -1024,7 +1028,8 @@ impl<D: DataSource> Runner<D> {
             .is_none_or(|when| when.iter().all(|(k, v)| args.get(k) == Some(v)));
         let app_only = held_to_app(&sub, args);
         // `{"none": [origins]}`: refused while any of them is among the
-        // call's possible causes, read before they are folded to one.
+        // call's possible causes, read before they are folded to one (LLP
+        // 1133.035 D16 item 6).
         if let Some(none) = sub["origin"]["none"].as_array().filter(|_| applies) {
             let causes = (self.extensions.origins.calling).unwrap_or_else(|| self.commit_causes());
             let found = (none.iter().filter_map(Json::as_str))
@@ -1034,16 +1039,18 @@ impl<D: DataSource> Runner<D> {
             }
         }
         // A sampled source's tool or wake reader joins a stream the app's own
-        // consumers run, as it runs; one that would start it is refused.
-        // A reader of a `join` name joins a group the app's own readers run.
+        // consumers run, as it runs; one that would start it is refused
+        // (LLP 1133.013 D4, D11).
+        // A reader of a `join` name joins a group the app's own readers run
+        // (LLP 1133.036 D3).
         let joins = (sub["samples"]["stream"].as_str()).is_some_and(|s| self.app_rate(s).is_some())
             || self.joins_running(row, args);
         if applies && app_only && origin != CallOrigin::App && !joins {
             return Err(format!("person-required ({} origin)", origin.word()));
         }
         // A call the app holds admits a capture's start while hidden on iOS
-        // and Android, whose platforms keep a call's microphone;
-        // the origin rule above has refused a tool's and a wake's.
+        // and Android, whose platforms keep a call's microphone (LLP 1133.033
+        // D10); the origin rule above has refused a tool's and a wake's.
         let calling = || {
             sub["inCall"] == true
                 && matches!(super::ceremony::target(), "ios" | "android")
@@ -1057,9 +1064,10 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// The implementation's answer for `row` under the agent, the agent's
-    /// preferred value laid over it field by field; any other answer as it is.
+    /// preferred value laid over it field by field (LLP 1133.009 D10 item
+    /// 11); any other answer as it is.
     pub(in crate::runner) fn overlaid(&self, row: &ModulesRow, mut answer: Json) -> Json {
-        // An implementation that lays it itself is told it.
+        // An implementation that lays it itself is told it (LLP 1133.016 §9).
         let laid = self.substitute(row)["overlays"] == "implementation";
         if self.route(row) != Route::Agent || laid || error_code(&answer).is_some() {
             return answer;
@@ -1084,7 +1092,7 @@ pub(in crate::runner) const ORIGINS: [CallOrigin; 4] = [
 
 /// Whether a name declared `sub` holds a call giving `args` to the `app`
 /// origin: `"origin": "app"`, or `{"whenAny": [options], "is": "app"}` when
-/// the call gives one of them.
+/// the call gives one of them (LLP 1133.012 D12 item 5).
 pub(super) fn held_to_app(sub: &Json, args: &Json) -> bool {
     match &sub["origin"] {
         Json::Object(o) if o.contains_key("none") => false,

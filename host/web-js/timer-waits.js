@@ -1,4 +1,4 @@
-// Timer admission observations and wake planning.
+// Timer admission observations and wake planning (LLP 1147).
 import { rt } from './rt-link.js';
 import { beatAfter } from './beat.js';
 

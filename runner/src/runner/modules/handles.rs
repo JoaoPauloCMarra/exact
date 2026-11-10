@@ -1,4 +1,4 @@
-//! Handles: a native object a call makes and
+//! Handles (LLP 1133.009 D6, D10 item 10): a native object a call makes and
 //! names in its answer (a stream, a track, a recorder) is the request's
 //! until the runner delivers that answer; only then is it the session's. A
 //! name declares where its answer carries them, `"handles": {"id":
@@ -54,7 +54,7 @@ impl<D: DataSource> Runner<D> {
                 None => return,
             },
         };
-        // A member's answer carries handles too.
+        // A member's answer carries handles too (LLP 1133.014 D12).
         let members =
             (self.members_of(&row).iter()).any(|(_, m)| self.substitute(m)["handles"].is_object());
         if self.substitute(&row)["handles"].is_object() || members {

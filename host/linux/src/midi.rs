@@ -1,4 +1,4 @@
-//! Sound and MIDI on Linux: the runner keeps the
+//! Sound and MIDI on Linux (LLP 1096 D9; LLP 1125 D1): the runner keeps the
 //! voice table and the MIDI queue as the record, and this host plays and
 //! sends nothing, so their ops are drained and dropped. Off the agent a
 //! request finds no MIDI (`unavailable`); under it the runner answers one
@@ -26,7 +26,7 @@ impl<D: DataSource> Host<D> {
         }
     }
 
-    /// The agent's `prefer midi.*` and `tap midi`, committed:
+    /// The agent's `prefer midi.*` and `tap midi` (LLP 1125 §4), committed:
     /// `None` for another request, else the reply or the refusal.
     pub fn midi_agent(&mut self, request: &str) -> Option<Result<String, String>> {
         let (receipts, reply) = self.runner.midi_agent(request)?;
@@ -36,7 +36,7 @@ impl<D: DataSource> Host<D> {
         }
     }
 
-    /// The agent's `prefer extension`, as the runner answers
+    /// The agent's `prefer extension` (LLP 1124 D7), as the runner answers
     /// it: a module source's preferred value, its readers asked again.
     pub fn extension_agent(&mut self, request: &str) -> Option<Result<String, String>> {
         let (receipts, reply) = self.runner.extension_agent(request)?;

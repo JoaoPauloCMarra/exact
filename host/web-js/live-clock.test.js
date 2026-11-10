@@ -1,4 +1,4 @@
-// The JS target's timers on the page's clock: a repeat that missed beats fires once,
+// The JS target's timers on the page's clock (the timers RFC, D2, D3): a repeat that missed beats fires once,
 // observing when it runs, and its next beat is the first of its phase after its callback ends; on the agent's
 // seekable clock every beat fires at its own time. Run alone, `bun test ./host/web-js/live-clock.test.js`:
 // reorder.test.js mocks rt.js for its process.

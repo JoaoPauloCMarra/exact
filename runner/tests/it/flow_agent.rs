@@ -1,4 +1,4 @@
-//! Agent layout facts include exclusions and skips.
+//! @ref LLP 1043.000 §3 D4 — agent layout facts include exclusions and skips.
 use exact_kernel::*;
 use exact_plan::{builder::PlanBuilder, Value};
 use exact_runner::{agent, DataError, DataSource, Runner};
@@ -104,7 +104,7 @@ fn layout_reports_resolved_and_skipped_paragraphs() {
             }],
         )
         .unwrap();
-    // A block context admits auto height: it still flows.
+    // A block context admits auto height (LLP 1043.000 §8): it still flows.
     let receipt = runner
         .kernel_mut()
         .compute_layout(1, Offer::definite(600., 400.))

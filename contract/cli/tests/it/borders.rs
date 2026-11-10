@@ -1,6 +1,6 @@
-//! Per-side border colours by their CSS names — the four longhands,
-//! `border-color` with one to four values, and `currentcolor` kept a keyword
-//! that follows `color`, never an RGB baked at compile time.
+//! LLP 1053 G2: per-side border colours by their CSS names — the four
+//! longhands, `border-color` with one to four values, and `currentcolor`
+//! kept a keyword that follows `color`, never an RGB baked at compile time.
 
 use exact_kernel::{BorderStyle, Color, ColorValue, Kernel, StyleId, StyleMask, StyleProps};
 use exact_plan::Value;
@@ -351,7 +351,7 @@ fn a_computed_shorthand_list_is_refused_naming_the_longhands() {
         // grouped cells, which drew square corners).
         ("border-radius=corners(on)", "write `border-top-left-radius`/"),
         ("border-radius=(on ? \"4px\" : outer(on))", "write `border-top-left-radius`/"),
-        // A call both arms make is bound once by a `let`,
+        // A call both arms make is bound once by a `let` (review round 1),
         // and an arm inside a template or a concatenation is one of its texts.
         ("border-radius=both(on)", "write `border-top-left-radius`/"),
         ("border-radius=`${on ? \"12px 12px 2px 2px\" : \"12px\"}`", "write `border-top-left-radius`/"),
@@ -628,9 +628,10 @@ fn two_value_shorthands_split_into_their_rows() {
     assert!(e.message.contains("one or two values (row, column)"), "{e}");
 }
 
-/// A glass group on a box that scrolls is refused, the box's overflow computed
-/// as CSS Overflow 3 §3.1 does (a `visible` axis beside a non-`visible` one is
-/// `auto`), from every row and each literal arm of a choice.
+/// LLP 1053.000.000: a glass group on a box that scrolls is refused, the
+/// box's overflow computed as CSS Overflow 3 §3.1 does (a `visible` axis
+/// beside a non-`visible` one is `auto`), from every row and each literal
+/// arm of a choice (the review of the two-value split).
 #[test]
 fn a_glass_group_reads_every_overflow_row_and_arm() {
     for overflow in [

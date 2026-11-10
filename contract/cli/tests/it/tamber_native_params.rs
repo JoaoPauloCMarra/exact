@@ -1,7 +1,7 @@
-//! A component that isn't Contract declares its params in the design
-//! (`component MapCard` over `params`): named by the design file and the
-//! component, checked as a Contract param is, kept by its declaration though no
-//! row reads it, and listed beside Contract ones.
+//! @ref LLP 1121 D15 (stage 7 D) — a component that isn't Contract declares
+//! its params in the design (`component MapCard` over `params`): named by the
+//! design file and the component, checked as a Contract param is, kept by its
+//! declaration though no row reads it, and listed beside Contract ones.
 
 use exact_plan::Plan;
 use std::path::PathBuf;
@@ -152,7 +152,7 @@ fn gen(target: &str, dir: &std::path::Path) -> (bool, String) {
     )
 }
 
-/// The bindings name a param by `<Component>.<param>`, its
+/// The bindings name a param by `<Component>.<param>` (D12's mapping), its
 /// value the token name the runtimes resolve; never the hash as a name.
 #[test]
 fn the_bindings_name_a_param_by_its_component() {
@@ -227,7 +227,7 @@ fn the_bindings_name_a_param_by_its_component() {
     );
 }
 
-/// A design app.json names elsewhere, a design the
+/// Review round 1 (Astra): a design app.json names elsewhere, a design the
 /// build refuses, an icon param, and `contract types`' unions.
 #[test]
 fn the_bindings_follow_the_build_and_an_icon_param_is_kept() {

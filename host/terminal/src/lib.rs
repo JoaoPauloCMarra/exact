@@ -1,4 +1,6 @@
-//! The terminal host (a spike), shaped like the painter host.
+//! The terminal host (LLP 1101, a spike).
+//!
+//! @ref LLP 1101 (terminal apps) / LLP 1015 (the painter host it repeats)
 //!
 //! The runner and kernel run natively; after every commit the host lays the
 //! tree out with the kernel's own layout in a fixed 8×16 cell and the painter

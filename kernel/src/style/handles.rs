@@ -7,8 +7,8 @@ use super::{Comparison, Env};
 /// pointer per length, so a pair is interned here and named by its index,
 /// shifted past the three tag bits Taffy reserves. Equal pairs share a
 /// handle, so an unchanged style still compares equal by value. `floor`
-/// clamps the result at zero for a row with no negative values
-/// (CSS Values 4 §10.12); `added` is added after the clamp.
+/// clamps the result at zero for a row with no negative values (CSS Values 4
+/// §10.12); `added` is added after the clamp.
 static CALC_PAIRS: std::sync::Mutex<Vec<CalcPair>> = std::sync::Mutex::new(Vec::new());
 
 #[derive(Clone, Copy)]

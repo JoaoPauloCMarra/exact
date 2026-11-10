@@ -1,4 +1,4 @@
-//! The binding core on the Linux host: what
+//! The binding core on the Linux host (LLP 1121 D12, stage 5): what
 //! Android's `ExactTamber(view)` asks by `Native.tamber`, a colour as the
 //! painter draws it for a place, and the `inputs` its `observe` compares.
 
@@ -109,7 +109,7 @@ fn a_view_asks_its_colours_by_name() {
     assert_eq!(ink(&mut p, outer).1, after_mode);
 }
 
-/// Android's `length` and `number` (and the fonts a native view
+/// Stage 6 G: Android's `length` and `number` (and the fonts a native view
 /// may read) ask by the same entry, a place's own tuple under a pin.
 #[test]
 fn a_view_asks_its_lengths_and_numbers_by_name() {

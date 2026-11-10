@@ -74,7 +74,7 @@ struct StyleRow {
     layout: bool,
     #[serde(default)]
     text: bool,
-    /// The row follows CSS inheritance.
+    /// The row follows CSS inheritance (LLP 1035.000 D1).
     #[serde(default)]
     inherited: bool,
     #[serde(default)]
@@ -84,7 +84,7 @@ struct StyleRow {
     /// value is one bit in vocabulary order (`build/codec.rs` `KEYWORD_BITS`).
     #[serde(default)]
     keywords: Option<String>,
-    /// An `animations` row whose every animation must end.
+    /// An `animations` row whose every animation must end (LLP 1063).
     #[serde(default)]
     ends: bool,
     /// Few nodes set it: kept apart, behind [`build/rare.rs`]'s pointer.
@@ -180,10 +180,10 @@ fn generate(schema: &Schema, digest: u64) -> String {
     writeln!(w, "_ => None, }} }}").unwrap();
     write_symbol_role(w, schema);
     write_symbol_glyphs(w, schema);
-    // `backgroundMaterial`'s vocabulary.
+    // @ref LLP 1053.000 D4 — `backgroundMaterial`'s vocabulary.
     writeln!(
         w,
-        "/// `backgroundMaterial`'s names, one per platform material.\npub const MATERIALS: &[&str] = &{:?};",
+        "/// `backgroundMaterial`'s names, one per platform material (LLP 1053.000 D4).\npub const MATERIALS: &[&str] = &{:?};",
         schema.materials.iter().map(|row| &row[0]).collect::<Vec<_>>()
     )
     .unwrap();
@@ -214,7 +214,7 @@ fn generate(schema: &Schema, digest: u64) -> String {
     writeln!(w, "_ => None, }} }}").unwrap();
     writeln!(
         w,
-        "/// `buttonStyle`'s names, one per platform button style.\npub const BUTTON_STYLES: &[&str] = &{:?};",
+        "/// `buttonStyle`'s names, one per platform button style (LLP 1069.011 D2).\npub const BUTTON_STYLES: &[&str] = &{:?};",
         schema.button_styles.iter().map(|row| &row[0]).collect::<Vec<_>>()
     )
     .unwrap();
@@ -468,7 +468,11 @@ fn generate(schema: &Schema, digest: u64) -> String {
     writeln!(w, "        }}").unwrap();
     writeln!(w, "    }}").unwrap();
     writeln!(w, "    /// The declared value kind.").unwrap();
-    writeln!(w, "    /// Whether a `style` may set this prop.").unwrap();
+    writeln!(
+        w,
+        "    /// Whether a `style` may set this prop (LLP 1069.011 D12)."
+    )
+    .unwrap();
     writeln!(w, "    pub fn styleable(self) -> bool {{").unwrap();
     let styleable: Vec<String> = schema
         .props
@@ -842,7 +846,11 @@ fn generate(schema: &Schema, digest: u64) -> String {
         word_mask(&|r| r.text)
     )
     .unwrap();
-    writeln!(w, "    /// Rows that follow CSS inheritance.").unwrap();
+    writeln!(
+        w,
+        "    /// Rows that follow CSS inheritance (LLP 1035.000 D1)."
+    )
+    .unwrap();
     writeln!(
         w,
         "    pub const INHERITED: StyleMask = StyleMask {{ words: [{}] }};",
@@ -1016,10 +1024,10 @@ fn generate(schema: &Schema, digest: u64) -> String {
     }
     writeln!(w, "    /// Rows explicitly set.").unwrap();
     writeln!(w, "    pub mask: StyleMask,").unwrap();
-    w.push_str("    /// The declarations the author wrote on this node: an attribute or a class's row,\n    /// never one the compiler implied or one only inherited. Bits outside `mask` request CSS unset.\n    pub written: StyleMask,\n");
+    w.push_str("    /// The declarations the author wrote on this node (@ref LLP 1115.000 D2): an attribute or a class's row,\n    /// never one the compiler implied or one only inherited. Bits outside `mask` request CSS unset.\n    pub written: StyleMask,\n");
     writeln!(
         w,
-        "    /// The rows authored in `rem`/`em`, which the kernel keeps resolved."
+        "    /// The rows authored in `rem`/`em`, which the kernel keeps resolved (LLP 1069.000 D3)."
     )
     .unwrap();
     writeln!(w, "    pub relative: crate::style::relative::Relative,").unwrap();
@@ -1250,8 +1258,8 @@ fn generate(schema: &Schema, digest: u64) -> String {
     .unwrap();
     writeln!(w, "    pub fn set_dynamic(&mut self, id: StyleId, value: &StyleValue) -> Result<(), StyleValueError> {{").unwrap();
     // Dispatch disjoint length suffixes once; ordinary style text needs no conversion.
-    // A metric's name is its value in this platform's column, or no row.
-    // A length or number token's name is its value in the node's slice.
+    // A metric's name is its value in this platform's column, or no row (LLP 1115.002 D6).
+    // A length or number token's name is its value in the node's slice (LLP 1121 D7).
     w.push_str("        let measured = crate::style::theme::measured(id, value);\n        let value = measured.as_ref().unwrap_or(value);\n");
     w.push_str("        let metric = crate::style::metrics::of(id, value);\n        let Some(value) = metric.as_ref().map_or(Some(value), Option::as_ref) else { return Ok(()) };\n");
     w.push_str("        let (relative, converted) = crate::style::relative::prepare(id, value)?;\n        let value = converted.as_ref().unwrap_or(value);\n");
@@ -1287,8 +1295,8 @@ fn generate(schema: &Schema, digest: u64) -> String {
                 "{name}::from_name(value.text(id)?).ok_or(StyleValueError::UnknownEnumValue {{ style: id }})?"
             ),
             Codec::Transitions => "Transitions::parse(value.text(id)?).map_err(|_| StyleValueError::BadTransition { style: id })?".to_string(),
-            // Names resolve against the plan's `@keyframes` after this.
-            // An exit must end, refused here as on the wire.
+            // Names resolve against the plan's `@keyframes` after this (LLP 1055 D5).
+            // An exit must end (LLP 1063 D2), refused here as on the wire.
             Codec::Animations if row.ends => "Animations::parse(value.text(id)?).ok().filter(|a| a.validate_ending().is_ok()).ok_or(StyleValueError::BadAnimation { style: id })?".to_string(),
             Codec::Animations => "Animations::parse(value.text(id)?).map_err(|_| StyleValueError::BadAnimation { style: id })?".to_string(),
             Codec::CssValue { variant: "BackdropFilter", path, .. } => format!("{path}::check(&value.css_text(id)?).map_err(|reason| StyleValueError::BadBackdropFilter {{ style: id, reason }})?"),

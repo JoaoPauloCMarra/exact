@@ -44,7 +44,7 @@ def assignPre (t : String) (e : Expr) (Q : Assn) : Assn := fun env ls fx =>
     (isRootState env.prog t = false → isRowState env.prog t = true → (lookup t env.rows).isSome →
       Q env ls (fx.rowWrite t v))
 
-/-- What a call needs of its continuation: for the
+/-- What a call needs of its continuation (LLP 1089 D9): for the
 arguments' values in the pre-state and every outcome of the callee's body
 run from the effects so far, in a scope of its parameters alone. The
 callee reads the same `env`: a call sees the state the action started

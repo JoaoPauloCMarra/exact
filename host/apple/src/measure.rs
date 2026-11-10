@@ -1,6 +1,7 @@
 //! Text measurement through a callback the app registers.
 //!
-//! A per-kernel injected measurer, never a process-global callback.
+//! @ref LLP 1008 §3; LLP 1001 §6 (a per-kernel injected measurer, never a
+//! process-global callback)
 //!
 //! The kernel never embeds a platform text API. The app hands `exact_boot` a
 //! C function and a context; this module wraps them as the kernel's
@@ -44,13 +45,13 @@ pub struct CRun {
     pub line_height: f32,
     /// Points per glyph.
     pub letter_spacing: f32,
-    /// CSS `font-variant-numeric` bits: 1 is `tabular-nums`.
+    /// CSS `font-variant-numeric` bits: 1 is `tabular-nums` (LLP 1053 G4).
     pub font_variant_numeric: u8,
     /// CSS `font-variant-ligatures` as `FontVariantLigatures`' bits.
     pub font_variant_ligatures: u8,
-    /// CSS `font-stretch`, percent of normal width.
+    /// CSS `font-stretch`, percent of normal width (LLP 1019 D8).
     pub font_stretch: f32,
-    /// CSS `font-variation-settings`: how many axes are set.
+    /// CSS `font-variation-settings` (LLP 1019 D9): how many axes are set.
     pub variation_count: u8,
     /// Their tags, big-endian (`'wght'` is `0x77676874`).
     pub variation_tags: [u32; 8],
@@ -58,7 +59,7 @@ pub struct CRun {
     pub variation_values: [f32; 8],
     /// 1 for CSS `font-optical-sizing: none`: the face keeps its own `opsz`.
     pub optical_sizing_none: u8,
-    /// 1 when the run is an image in the paragraph's text.
+    /// 1 when the run is an image in the paragraph's text (LLP 1011.002).
     pub inline_box: u8,
     /// Its `vertical-align` keyword, as `VerticalAlign`'s wire value.
     pub box_align: u8,
@@ -103,7 +104,7 @@ pub struct CRequest {
     /// CSS overflow-wrap: normal, break-word, anywhere.
     pub overflow_wrap: u8,
     /// CSS white-space: normal, pre-wrap, nowrap, pre-line, pre. Runs arrive collapsed
-    /// unless it preserves.
+    /// unless it preserves (LLP 1053 G5).
     pub white_space: u8,
     /// CSS direction: ltr, rtl.
     pub direction: u8,
@@ -111,7 +112,7 @@ pub struct CRequest {
     pub exclusions: *const crate::textflow::Shape,
     /// Exclusion count.
     pub exclusion_count: usize,
-    /// 1 when the one run is Markdown source the host expands
+    /// 1 when the one run is Markdown source the host expands (LLP 1045 D3)
     /// as a reader shows it; 2 when it is a Markdown text area's value, which
     /// the host lays out as its editor does (`MARKUP_EDITOR`).
     pub markup: u8,
@@ -131,9 +132,9 @@ pub struct CRequest {
     pub text_box_over: u8,
     /// `text-box-edge`'s under edge: 0 text, 1 alphabetic.
     pub text_box_under: u8,
-    /// CSS `text-wrap-style`: 0 auto, 1 balance.
+    /// CSS `text-wrap-style`: 0 auto, 1 balance (LLP 1001 §6).
     pub text_wrap_style: u8,
-    /// A Markdown paragraph's `atoms` JSON (UTF-8), borrowed
+    /// A Markdown paragraph's `atoms` JSON (UTF-8, LLP 1045.000 D2), borrowed
     /// for this callback; empty for none.
     pub atoms: *const u8,
     /// Its length in bytes.
@@ -159,7 +160,7 @@ pub struct CMetrics {
 /// The callback's type.
 pub type MeasureFn = extern "C" fn(ctx: *mut c_void, request: *const CRequest) -> CMetrics;
 
-/// Each line box's bottom, in content coordinates, of the
+/// @ref LLP 1093 D6 — each line box's bottom, in content coordinates, of the
 /// paragraph `request` answers: writes `min(count, cap)` and returns `count`.
 pub type LinesFn =
     extern "C" fn(ctx: *mut c_void, request: *const CRequest, out: *mut f32, cap: usize) -> usize;
@@ -216,7 +217,7 @@ pub struct CFontCatalog {
 }
 
 /// Installs a complete plan-scoped catalog before the first text layout,
-/// with the context the runtime was given (the catalog is
+/// with the context the runtime was given (LLP 1031 D12: the catalog is
 /// the session's, so the callback needs to know which session).
 pub type FontsFn = extern "C" fn(ctx: *mut c_void, catalog: *const CFontCatalog);
 
@@ -320,7 +321,7 @@ pub struct CallbackMeasurer {
     button_measure: Option<crate::control_text::ButtonMeasureFn>,
     measure_revision: Option<std::rc::Rc<std::cell::Cell<u64>>>,
     lines: Option<LinesFn>,
-    /// Each inline box's origin, with `ctx`.
+    /// Each inline box's origin (LLP 1011.002 D2), with `ctx`.
     inline_boxes: Option<LinesFn>,
     symbol: Option<SymbolFn>,
     /// Each symbol's answer by its Apple name, point size and weight, under
@@ -473,7 +474,7 @@ impl CallbackMeasurer {
         stamp: Option<&ParagraphStamp>,
         call: impl FnOnce(*mut c_void, &CRequest) -> R,
     ) -> R {
-        // CSS collapsing before CoreText, as the browser does;
+        // CSS collapsing before CoreText, as the browser does (LLP 1053 G5);
         // Markdown source keeps its own lines. The strings live for the call.
         let collapsed = (request.paragraph.markup == exact_kernel::Markup::None)
             .then(|| exact_textflow::collapse(request.runs, request.paragraph.white_space.model()))
@@ -566,7 +567,8 @@ fn sanitize(m: CMetrics) -> TextMetrics {
 }
 
 /// [`CRequest::markup`] for a Markdown text area's value: its editor keeps
-/// the syntax at full advance and draws each atom as a pill, so its text is not the reader's paragraph.
+/// the syntax at full advance and draws each atom as a pill (LLP 1045 D5,
+/// LLP 1045.000 §4), so its text is not the reader's paragraph.
 pub const MARKUP_EDITOR: u8 = 2;
 
 impl TextMeasurer for CallbackMeasurer {
@@ -671,7 +673,7 @@ impl TextMeasurer for CallbackMeasurer {
         true
     }
 
-    /// Each inline box's origin, from the app's hook.
+    /// @ref LLP 1011.002 D2 — each inline box's origin, from the app's hook.
     fn inline_boxes(
         &mut self,
         stamp: &ParagraphStamp,
@@ -690,7 +692,7 @@ impl TextMeasurer for CallbackMeasurer {
         origins.extend(out.chunks_exact(2).map(|p| (p[0], p[1])));
     }
 
-    /// The paragraph's line boxes, from the app's hook.
+    /// @ref LLP 1093 D6 — the paragraph's line boxes, from the app's hook.
     fn lines(
         &mut self,
         stamp: &ParagraphStamp,
@@ -721,7 +723,7 @@ impl TextMeasurer for CallbackMeasurer {
         stamp: &ParagraphStamp,
         request: &TextMeasureRequest<'_>,
     ) -> TextMetrics {
-        // Moving geometry is not a paragraph identity.
+        // @ref LLP 1043.000 §3 D4 — moving geometry is not a paragraph identity.
         if !request.exclusions.is_empty() {
             return self.measure(request);
         }

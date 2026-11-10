@@ -1,4 +1,4 @@
-# The OAuth fixture on the Linux host.
+# The OAuth fixture on the Linux host (LLP 1019 §13).
 [package]
 name = "oauth-fixture-linux"
 version.workspace = true

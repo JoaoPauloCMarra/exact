@@ -1,7 +1,7 @@
-//! The presence backend's vault on this host and Android's reader. The moves
-//! are the runner's ([`Backend`]); the vault keeps a name's plain copy where
-//! `secret.keep` keeps any (`<root>/secrets`), its record in the kv store
-//! (`exact.presence`), and its locked items:
+//! The presence backend's vault on this host and Android's reader (LLP
+//! 1133.010 D4, D6, §7). The moves are the runner's ([`Backend`]); the vault
+//! keeps a name's plain copy where `secret.keep` keeps any (`<root>/secrets`),
+//! its record in the kv store (`exact.presence`), and its locked items:
 //!
 //! - under the agent, in the drive's kv store (`exact.presence.agent`), or in
 //!   memory for a drive that names no scratch store: never a Keystore key,
@@ -13,7 +13,7 @@
 //!   adds an item through a hook ([`on_keystore`]); listing and deleting are
 //!   file operations; the read is the reader's own, after its check;
 //! - elsewhere (Linux, Windows) nowhere: a mandatory name is refused and an
-//!   optional one stays plain.
+//!   optional one stays plain (D15).
 
 use exact_runner::presence::{Backend, MemoryVault, Presence, Vault};
 use ibex2::kv::KvStore;
@@ -21,7 +21,7 @@ use ibex2::secrets::SecretStore;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
-/// The kv scope of the backend's records.
+/// The kv scope of the backend's records (D4 step 1).
 const RECORDS: &str = "exact.presence";
 /// The kv scope of the agent's locked items, `<name>#<generation>`.
 const LOCKED: &str = "exact.presence.agent";

@@ -1,12 +1,13 @@
 //! The envelope: the pointer card a stream publishes, its canonical bytes, and
 //! the signature over them.
 //!
-//! The envelope's URLs are relative; an unknown major is refused and unknown
-//! fields are ignored. The Ed25519 signature is over the canonical bytes, and
-//! the head binds app, channel, compatibility id, `seq` and key id. A stream
-//! retires through its sunset card.
+//! @ref LLP 1023 D2 (the envelope; relative URLs; unknown majors refused,
+//! unknown fields ignored) / LLP 1026 D11 (the Ed25519 signature over the
+//! canonical bytes) / LLP 1030 D3a (the head binds app, channel, compatibility
+//! id, `seq`, and key id) / D5 (the sunset card)
 //!
-//! The form this crate reads:
+//! The form this crate reads, LLP 1023 D2 extended by 1026 D9/D11 and 1030
+//! D3a:
 //!
 //! ```json
 //! {
@@ -26,7 +27,7 @@
 //!
 //! `stream` is required here and nowhere else: a bundle in an update store
 //! always belongs to a cohort's stream, which is what makes a head unreplayable
-//! onto another channel. `sunset` and `signature` are optional;
+//! onto another channel (LLP 1030 D3a). `sunset` and `signature` are optional;
 //! every other member of an unknown name is ignored.
 
 use ed25519_dalek::{Signature as Ed25519Signature, VerifyingKey};
@@ -38,7 +39,7 @@ use sha2::{Digest, Sha256};
 mod entry;
 use entry::entry_identifier;
 
-/// The SHA-256 of `bytes`, lowercase hex — payload integrity as the envelope
+/// The SHA-256 of `bytes`, lowercase hex — payload integrity as LLP 1023 D2
 /// defines it. Bundle identity instead hashes [`canonical_bytes`].
 pub fn sha256_hex(bytes: &[u8]) -> String {
     let mut hasher = Sha256::new();
@@ -50,7 +51,7 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
         .collect()
 }
 
-/// The bytes an envelope's signature covers.
+/// The bytes an envelope's signature covers (LLP 1026 D11; LLP 1030 D3a).
 ///
 /// The rule, stated so that a publisher written in another language produces
 /// the same bytes: take the envelope, **remove the top-level `signature`
@@ -139,7 +140,7 @@ fn canonical(value: &serde_json::Value, out: &mut String) -> Result<(), String> 
     Ok(())
 }
 
-/// The sunset card: a stream's advisory retirement notice. A
+/// The sunset card (LLP 1030 D5): a stream's advisory retirement notice. A
 /// client that still checks shows the message and the link; nothing is forced.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Card {
@@ -162,7 +163,7 @@ pub struct FileCard {
     pub bytes: u64,
 }
 
-/// The stream this envelope heads: `(app, channel,
+/// The stream this envelope heads (LLP 1030 D3a): `(app, channel,
 /// compatibility id)`, with its own monotonic `seq`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StreamCard {
@@ -170,13 +171,13 @@ pub struct StreamCard {
     pub app: Option<String>,
     /// The channel — `release`, `beta`, whatever the developer publishes to.
     pub channel: String,
-    /// The cohort this bundle is safe for.
+    /// The cohort this bundle is safe for (LLP 1030 D3a).
     pub compatibility_id: String,
     /// Monotonic per stream. A client refuses anything below what it selected.
     pub seq: u64,
 }
 
-/// The signature over the canonical bytes.
+/// The signature over the canonical bytes (LLP 1026 D11).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Signature {
     /// Which embedded key signed it.
@@ -196,26 +197,26 @@ pub struct Envelope {
     /// entry's name. Transport whitespace, key order, and the signature's own
     /// encoding cannot give one signed bundle another crash-quarantine name.
     pub digest: String,
-    /// The app this bundle belongs to.
+    /// The app this bundle belongs to (LLP 1023 D5).
     pub app_id: String,
     /// The name people see, when the envelope carries one.
     pub app_name: Option<String>,
     /// The plan card. Its `name` is `app.plan`.
     pub plan: FileCard,
-    /// Snapshot entry kinds indexed into the authenticated asset roster.
+    /// Snapshot entry kinds indexed into the authenticated asset roster (LLP 1126 D2).
     pub plans: std::collections::BTreeMap<String, FileCard>,
-    /// The format version the plan header carries, when stated.
+    /// The format version the plan header carries, when stated (LLP 1023 D2).
     pub format_version: Option<u64>,
     /// The kernel schema digest, when stated: a client may refuse before
     /// downloading, though the compatibility id already covers it.
     pub kernel_schema: Option<String>,
-    /// Every asset, by name and digest.
+    /// Every asset, by name and digest (LLP 1026 D11).
     pub assets: Vec<FileCard>,
-    /// The stream.
+    /// The stream (LLP 1030 D3a).
     pub stream: StreamCard,
     /// The release id: one deploy across every stream it touched.
     pub release: Option<String>,
-    /// The sunset card, when the stream is retiring.
+    /// The sunset card, when the stream is retiring (LLP 1030 D5).
     pub sunset: Option<Card>,
     /// The signature, when the head carries one.
     pub signature: Option<Signature>,
@@ -279,7 +280,7 @@ impl Envelope {
         let stream_object = root
             .get("stream")
             .and_then(|v| v.as_object())
-            .ok_or_else(|| "the envelope names no stream".to_string())?;
+            .ok_or_else(|| "the envelope names no stream (LLP 1030 D3a)".to_string())?;
         let stream = StreamCard {
             app: stream_object
                 .get("app")
@@ -406,7 +407,7 @@ impl Envelope {
         })
     }
 
-    /// Verify the head against the binary's embedded keys.
+    /// Verify the head against the binary's embedded keys (LLP 1026 D11).
     ///
     /// Empty keys fail closed. Only the store's explicit development policy
     /// may admit unsigned heads; absence of trust roots never enables it.
@@ -547,7 +548,7 @@ pub fn check_asset_names<'a>(names: impl IntoIterator<Item = &'a str>) -> Result
 }
 
 /// Resolve a card's `url` against the envelope's own URL, the way a browser
-/// resolves against the document URL. `http` and `https`
+/// resolves against the document URL (LLP 1023 D1/D2). `http` and `https`
 /// only, and the result must have the base URL's scheme, host, and effective
 /// port: every file card is same-origin in v1. Credentials are refused rather
 /// than copied into a request.

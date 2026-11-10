@@ -1,9 +1,9 @@
-//! A followed link: a press on a Markdown
+//! A followed link (LLP 1038 §7; LLP 1045 D4): a press on a Markdown
 //! reader's link run, an inline run's `href` or a `link href` follows it,
 //! as the web's same-document link and Apple's `ExactSession.follow` do. A
 //! path naming one of the app's routes is a location for the navigation
 //! root's `navigate`; an `http`, `https`, `mailto` or `tel` target leaves
-//! the app: the host's shell opens it, and a host with no
+//! the app: the host's shell opens it (LLP 1115.001 D5), and a host with no
 //! shell, which has no browser, logs it instead.
 use super::*;
 
@@ -183,7 +183,7 @@ impl<D: DataSource> Presenter<D> {
     /// leaves the app, where the host's shell can open it.
     pub(crate) fn follow(&mut self, from: ViewId, href: &str, now_ms: f64) {
         // A link to a fragment (`href="#moves"`) is the visit shown, at that
-        // fragment.
+        // fragment (LLP 1153 D5).
         let shown = (href.trim().starts_with('#'))
             .then(|| {
                 self.host
@@ -240,8 +240,8 @@ impl<D: DataSource> Presenter<D> {
         ));
     }
 
-    /// A URL arriving from outside while the app runs (Android's
-    /// `onNewIntent`, a shortcut): its location, as a
+    /// A URL arriving from outside while the app runs (LLP 1133.023 D15
+    /// item 3: Android's `onNewIntent`, a shortcut): its location, as a
     /// link's, goes to the navigation root's `navigate` when the root routes
     /// it. The refusal, else `None`.
     pub fn open_location(&mut self, href: &str, now_ms: f64) -> Option<String> {

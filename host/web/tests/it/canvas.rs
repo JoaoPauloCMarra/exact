@@ -1,4 +1,4 @@
-//! The canvas seam: a `canvas` node reaches the page as a
+//! The canvas seam (LLP 1009 D2/D3): a `canvas` node reaches the page as a
 //! `<canvas>` with the web's default size, and its surface's inputs —
 //! arguments evaluated against state — arrive as `surface` ops, at boot
 //! and whenever they change, never otherwise.
@@ -57,7 +57,7 @@ fn a_canvas_is_a_canvas_element_with_the_webs_default_size() {
         )),
         "{batch}"
     );
-    // The sky: a canvas with children, its surface's one input
+    // The sky (LLP 1014): a canvas with children, its surface's one input
     // a string from state.
     let sky = view(&host, "sky");
     assert!(
@@ -109,7 +109,7 @@ fn the_caltrain_app_boots_with_its_gpu_surface_and_a_2d_map() {
         "{}",
         &batch[batch.len().saturating_sub(600)..]
     );
-    // The line map is a Canvas 2D surface: never a GPU surface
+    // The line map is a Canvas 2D surface (LLP 1056): never a GPU surface
     // op; the page watches its box, and it draws once the box is known.
     assert!(
         batch.contains("\"op\":\"canvas2d\"") && batch.contains("\"watch\":true"),

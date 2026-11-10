@@ -1,6 +1,6 @@
-// The render server's HTTP cache: one shared cache in front
+// The render server's HTTP cache (LLP 1153.001 D7): one shared cache in front
 // of every render's outbound fetch, as RFC 9111 defines one. A render is
-// anonymous, so an answer one render was given is an answer
+// anonymous (LLP 1048.002), so an answer one render was given is an answer
 // any render may be given, for as long as the origin's headers allow.
 //
 // It stores a GET's final answer only when the origin gave it an explicit

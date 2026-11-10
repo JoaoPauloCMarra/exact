@@ -9,7 +9,7 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 
 /**
- * The process's gamepads: a gamepad's or joystick's buttons ([KeyEvent]) and axes
+ * The process's gamepads (LLP 1127.003 D2; LLP 1133.022 D4): a gamepad's or joystick's buttons ([KeyEvent]) and axes
  * ([MotionEvent]) in the W3C Gamepad API's standard mapping (https://w3c.github.io/gamepad/#remapping), as Chrome on
  * Android reads them, sent to a world canvas ([Native.pad]) when a button or a quantized axis changed, and as
  * disconnected when Android removes the device. A pad's index is its slot: a device takes the lowest free one when
@@ -35,7 +35,7 @@ object Pads : InputManager.InputDeviceListener {
     private val slots = IntArray(MAX) { -1 }
     /** Each slot's reading, as last sent. */
     private val readings = arrayOfNulls<PadReading>(MAX)
-    /** The slot whose button last went down, -1 for none: the pad in use. */
+    /** The slot whose button last went down, -1 for none: the pad in use (LLP 1133.022 D2). */
     var current = -1
         private set
     private val watchers = LinkedHashMap<Any, () -> Unit>()

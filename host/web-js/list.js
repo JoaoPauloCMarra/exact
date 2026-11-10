@@ -1,10 +1,11 @@
-// Virtualized lists on the JS target: the runner's half, ported from
+// Virtualized lists on the JS target (LLP 1071 D5): the runner's half of
+// LLP 1010 §6 / 1050.000 §6 / 1070, ported from
 // `runner/src/instance/collection` — the size index, the window, anchoring,
 // the fill limit, edges, one level of nesting and kept positions — over the
 // web host's own browser half (`collection-glue.js`, loaded after the first
 // paint as the wasm build loads it), which reports the same facts to it.
 // Imported by an app's module only when its plan has a virtualized list.
-// `scrollIntoView` (into_view.rs) is carried, and Arrange's
+// `scrollIntoView` (LLP 1070.000, into_view.rs) is carried, and Arrange's
 // preview (reorder.rs) by reorder.js, which the motion piece loads for a
 // reorder drag; not carried (refused at build): a dynamic `virtualized`.
 import { inactive } from "./document.js";
@@ -20,7 +21,7 @@ const END_SLACK = 1;
 const atTarget = (a, c, offset, sent) => { if (c >= 0) offset = Math.max(0, offset); const gap = Math.abs(c - offset); return gap <= 0.01 || (a.follows && gap < END_SLACK && Math.abs(c - sent) <= 0.01); };
 const travelLead = (port, v) => Math.min(Math.abs(v) * LEAD_SECONDS, port * 2);
 const lead = (port, v) => { const extra = travelLead(port, v); return v > 0 ? [port, port + extra] : [port + extra, port]; };
-// `reach-margin` (reach.rs `Margin`): px or % of the port, before and after an edge; default one port.
+// `reach-margin` (reach.rs `Margin`, @ref LLP 1145 D4): px or % of the port, before and after an edge; default one port.
 const reachMargin = text => {
   const parts = (text ?? "100%").trim().split(/\s+/).map(p => { const m = /^(.*?)(px|%)$/i.exec(p), n = m && m[1] !== "" ? Number(m[1]) : NaN; return isFinite(n) && n >= 0 ? [n, m[2] === "%"] : null; });
   if (parts.length > 2 || parts.includes(null)) throw new Refusal("reach margin must be one or two nonnegative px or % lengths");
@@ -31,7 +32,7 @@ const reachBand = (margin, port, v) => { const band = margin.map(([n, percent]) 
 // A row remeasured within this of the height it already has keeps that
 // height (mod.rs `MEASURE_NOISE`): a translated row reads float32 ulps off
 // (58 as 57.99997), and a revision bumped by that would refuse the drop a
-// gap was certified for.
+// gap was certified for (LLP 1094 D7).
 const MEASURE_NOISE = 0.01;
 const noise = (index, key, position, size) => index.measured(key) && (index.h[position] === 0) === (size === 0) && Math.abs(index.h[position] - size) <= MEASURE_NOISE;
 
@@ -147,7 +148,7 @@ class SizeIndex {
     setT(this.t, i, h); this.h[i] = h; this.me[i] = this.epoch; setEpoch(this.t, i, this.epoch);
     return true;
   }
-  // The padding after the last row runs the range past the rows' end;
+  // The padding after the last row (LLP 1010 §6.9) runs the range past the rows' end;
   // a list shorter than the port ends in the padding before its first row.
   get extent() { return this.total + this.trailing; }
   maxOffset(port) { return Math.max(-this.leading, this.extent - port); }
@@ -296,7 +297,7 @@ class Collection {
     if (rekeyed) { this.index.replace(idents); this.idents = idents; this.dups = dups; }
     anchor = this.committedAnchor?.(anchor, dropAnchor) ?? anchor;
     const moved = rekeyed || positions.length > 0;
-    // A grouped session's offsets move with its rows, at once.
+    // A grouped session's offsets move with its rows, at once (LLP 1094 D8).
     const instant = !!(moved && (this.incoming || this.preview?.grouped));
     // A held drop's row already left the index above, so its rows' offsets
     // fall to zero here, in the commit that moved them: at once too. (The
@@ -314,8 +315,8 @@ class Collection {
     if (!this.index.len) this.edgeArmed = [true, true];
     // Rows that arrived are a new end: the old last row is still here with
     // rows after it, or the list grew and kept it (a page inserted before a
-    // trailing row that stays last), so it re-arms (provisionally). An
-    // empty page, a replaced last row or a window
+    // trailing row that stays last), so it re-arms (LLP 1010, the 2026-09-29
+    // ruling, provisional). An empty page, a replaced last row or a window
     // that slid past it re-arm nothing.
     const kept = last === undefined ? undefined : this.index.pos.get(last);
     if (kept !== undefined && (kept < this.index.len - 1 || this.index.len > count)) this.edgeArmed[1] = true;
@@ -493,7 +494,7 @@ class Collection {
   }
   createRow(p, key) {
     // A rendered page's row is adopted where it stands, so what a reader
-    // pressed before the runtime ran is still in the document.
+    // pressed before the runtime ran is still in the document (LLP 1048.001 D5).
     const served = this.served?.get(key);
     if (served) this.served.delete(key);
     const w = served ?? document.createElement("div");
@@ -524,7 +525,7 @@ class Collection {
   // one the window scrolled away, at once.
   retire(m, left) {
     end(m.s);
-    if (!(left && exitView(m.wrapper, m.wrapper.firstElementChild?.style.getPropertyValue("--exact-exit-animation").trim()))) m.wrapper.remove();
+    if (!(left && exitView(m.wrapper, m.wrapper.firstElementChild))) m.wrapper.remove();
     Views.delete(m.view); Views.delete(m.root);
   }
   emit() {
@@ -745,7 +746,7 @@ class Collection {
     return this.edge(fill.velocity ?? 0);
   }
   // ------------------------------------------------ scrollIntoView (into_view.rs)
-  /** A key's row identity here, or why it is refused;
+  /** A key's row identity here, or why it is refused (LLP 1070.000 §2.2);
    * the agent types a key as text, which a list keyed by numbers reads as one. */
   resolve(key) {
     const exactly = k => {
@@ -792,14 +793,14 @@ class Collection {
   intoView(key, align, within, smooth) {
     const p = this.index.pos.get(key), g = this.geometry;
     this.restoredAt = null; this.atEnd = false;
-    // A new request stops the host's animation where the port is.
+    // A new request stops the host's animation where the port is (LLP 1070.000 §2.5).
     this.portUnknown ||= this.hostAnimating();
     this.request++;
     this.target = { key, align, offset: within, smooth, reports: 0, aligned: 0, inner: null, moved: false };
     this.status = [key, "pending"];
     // One the port already satisfies, where the last report and an anchor's correction since put it, is done and moves
     // nothing, as CSSOM View skips a scroll to where the port already is, judged when it is made: a reader's fling goes
-    // on. Not while the host's animation leaves the port's position unknown.
+    // on (LLP 1070.000 §2.6). Not while the host's animation leaves the port's position unknown.
     if (g && !this.portUnknown && this.alreadySatisfied(p, align, within, g.offset)) {
       this.end("done"); this.revision++; return;
     }
@@ -845,7 +846,7 @@ class Collection {
     if (landing) t.moved = true;
     const desired = this.aligned(p, t.align, at, t.offset);
     if (Math.abs(desired - at) <= 0.5) {
-      // Not while the host animates there: it reports where the animation is headed.
+      // Not while the host animates there: it reports where the animation is headed (LLP 1070.000 §11).
       t.aligned = this.alignmentMeasured(p) && !this.animating ? t.aligned + 1 : 0;
       if (t.aligned >= 2) this.end("done");
       return;
@@ -975,7 +976,7 @@ function intoView(list, key, block, inline, row, view, offset, smooth) {
     if (!outer) { let t = ""; try { t = keyText(row); } catch {} return refuse(`no virtualized list holds a row keyed ${t}`); }
     if (!begin(outer, row, null)) return;
     // The inner part, in the outer row: now, or when the outer row lands if the outer list waits for the reader's
-    // scroll.
+    // scroll (LLP 1070.000 §2.6).
     const rest = (fail = refuse) => {
       const m = outer.mounted.find(m => m.key === outer.resolve(row)[0]);
       if (!m) return fail("the outer row did not mount");
@@ -1000,7 +1001,7 @@ function publish() {
   const snapshots = [...Lists.values()].sort((a, b) => a.view - b.view).map(c => c.snapshot());
   const text = JSON.stringify(snapshots);
   if (text !== Published) { Published = text; Controller?.commit(snapshots); }
-  else Controller?.restyled(); // a padding change alone
+  else Controller?.restyled(); // a padding change alone (LLP 1010 §6.9)
   if (Controller && jumps) for (const [view, at, name] of jumps.splice(0)) Controller.jump(view, at, name);
 }
 // After each commit: wake an end edge whose first edge's requests landed,
@@ -1078,7 +1079,7 @@ function report(bytes, f, fill) {
 }
 function edges(c, edge) {
   let endAfterNoop = edge.endAfterNoop;
-  // A list on a route its stack keeps covered is hidden and
+  // @ref LLP 1010 — a list on a route its stack keeps covered is hidden and
   // inert: its edge waits, armed, for the route to show (runner/collection.rs).
   if (inactive(c.el)) {
     c.edgeArmed[edge.first] = true;

@@ -5,12 +5,12 @@ import QuartzCore
 @testable import ExactKit
 @testable import ExactSurfaces
 
-/// The Canvas 2D GPU module under concurrency: several
+/// The Canvas 2D GPU module under concurrency (LLP 1056 §8.5): several
 /// presenters' replay queues drive one process-wide module while the main
 /// thread applies, forgets and shows. Run under Thread Sanitizer on a
 /// simulator. Skipped without a module (`EXACT_CANVAS_GPU_DYLIB`).
 final class Canvas2DGpuStressTests: XCTestCase {
-    override class func setUp() { super.setUp(); ExactSurfaces.install() }
+    override class func setUp() { super.setUp(); ExactSurfaces.install() } // LLP 1047.001 D4
     private func list(_ records: [(Canvas2DOp, [Double])]) -> Data {
         var d = Data()
         func u32(_ v: UInt32) { withUnsafeBytes(of: v.littleEndian) { d.append(contentsOf: $0) } }

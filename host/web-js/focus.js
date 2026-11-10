@@ -1,4 +1,4 @@
-// `autofocus` at mount on the JS target, as the wasm host's
+// `autofocus` at mount on the JS target (LLP 1035.000 D9; LLP 1102 §3.19), as the wasm host's
 // focusController (host/web/navigation.js): after each commit, the first `[autofocus]` not yet
 // offered that is shown, enabled and not inert is offered once, and takes the focus when the focus
 // is on the body or on the control just pressed (an `if` that mounts a field after a tap).
@@ -14,7 +14,7 @@ const offered = new WeakSet();
  * them) and a tree update it handed to a view transition (shared.js holds it and runs it `within`
  * that press). Nothing else may: not after that work has run, not an unrelated commit meanwhile,
  * and not once a later key, or a pointer on another control, supersedes the press, as the wasm
- * host's `pointerTarget` lasts only through `press()`. */
+ * host's `pointerTarget` lasts only through `press()` (Charlie, 2026-10-07: no wall-clock window). */
 const live = new Set(); // the presses whose work may still run (each held until it has)
 let dispatching = null; // the press whose synchronous dispatch is running
 let running = null; // the press a held tree update runs for

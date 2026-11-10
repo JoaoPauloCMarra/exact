@@ -1,8 +1,9 @@
-//! Material 3's filled text field, which Android's reader paints for a text
+//! Material 3's filled text field (LLP 1115.001 D9: "a field's container is
+//! Material's filled text field"), which Android's reader paints for a text
 //! field round its `EditText` and for a field that shows a value: a select,
 //! and a date or time control. Its numbers are the schema's Material column
 //! (the `field-` and `state-` rows), Compose Material 3's at the pinned
-//! version (`host/android/reference/rows.json` names
+//! version (LLP 1115.001.001 D2; `host/android/reference/rows.json` names
 //! each one's symbol): a 56 dp container in `surfaceContainerHighest`, its
 //! top corners 4 dp, its text 16 dp in, an active indicator along its foot
 //! (1 dp `onSurfaceVariant`, 2 dp `primary` while focused) and a 24 dp
@@ -18,7 +19,7 @@
 //! text below it on a 24 dp line. It moves between the two in 150 ms, at
 //! once under Reduce Motion: that is Exact's, where Material 3 1.4 moves it
 //! by its motion scheme's fast spatial spring (`MotionSchemeKeyTokens
-//! .FastSpatial` in `TextFieldImpl.kt`).
+//! .FastSpatial` in `TextFieldImpl.kt`), owed to LLP 1115.001.001 O3.
 use super::{look, rgba, Rect4, Shape};
 use exact_kernel::generated::metric;
 use exact_kernel::style::metrics::{self, Column};
@@ -118,7 +119,7 @@ pub(crate) struct Labels {
 /// Where a field's label and value were painted, in the viewport's points,
 /// for an inspector (the Material oracle's specimen door): what a text
 /// node's box is to any other text. A Material button's title is its label. A value the shell's own field shows
-/// is that field's, not here.
+/// (LLP 1115.001 D8) is that field's, not here.
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct FieldTexts {
     /// The label, resting or floated.
@@ -346,10 +347,10 @@ impl super::Painter {
         } else {
             x + inset()
         };
-        // An authored `::placeholder` colour wins. Enabled and
+        // An authored `::placeholder` colour wins (LLP 1104 D3). Enabled and
         // unfocused, resting or floated, the label is Material's
         // onSurfaceVariant (`-exact-secondary-label`), or the design's
-        // `placeholder` where it overrides that role.
+        // `placeholder` where it overrides that role (LLP 1121 D9).
         let ink = match super::control::authored_placeholder(node.style, dark) {
             Some(ink) => ink,
             None if disabled(node) => look::role("GrayText", dark),
@@ -392,7 +393,7 @@ impl super::Painter {
         let off = disabled(node);
         self.filled_field(node, rect, focused, true, ts);
         let style = node.computed_style(StyleMask::INHERITED);
-        // An inherited `color` does not tint the field; the node's own does.
+        // An inherited `color` does not tint the field (D9); the node's own does.
         let ink = match (off, node.style.mask.has(StyleId::TextColor)) {
             (true, _) => look::role("GrayText", dark),
             (false, true) => rgba(node.text_color().resolve(dark)),
@@ -667,8 +668,8 @@ pub(crate) fn answers_touch(node: &NodeRef<'_>) -> bool {
 
 /// Where a control of `rect` takes a touch under the Material look: at least
 /// the `touch-target` row's 48 dp each way, its middle the control's
-/// (`minimumInteractiveComponentSize`). Apart from layout,
-/// as iOS's 44-point target is.
+/// (`minimumInteractiveComponentSize`; LLP 1115.001 D9). Apart from layout
+/// (LLP 1115.001.001 §5 Q5), as iOS's 44-point target is.
 pub(crate) fn touch_box(rect: Rect4) -> Rect4 {
     let least = dp(metric::TOUCH_TARGET);
     let (x, y, w, h) = rect;
@@ -687,7 +688,7 @@ fn role_path(d: &str, filled: bool) -> exact_kernel::SymbolPath<'_> {
 }
 
 /// An enabled, unfocused label's ink: the design's `placeholder` where it
-/// overrides that role, else Material's onSurfaceVariant.
+/// overrides that role (LLP 1121 D9), else Material's onSurfaceVariant.
 fn resting_label(dark: bool) -> [u8; 4] {
     match placeholder_overridden() {
         true => look::role("-exact-placeholder", dark),
@@ -695,7 +696,7 @@ fn resting_label(dark: bool) -> [u8; 4] {
     }
 }
 
-/// Whether the design overrides the `placeholder` role.
+/// Whether the design overrides the `placeholder` role (LLP 1095 D4).
 fn placeholder_overridden() -> bool {
     exact_kernel::style::roles::role("-exact-placeholder")
         .is_some_and(|id| exact_kernel::style::roles::overridden(id).is_some())
@@ -707,7 +708,7 @@ mod placeholder_tests {
     use exact_kernel::ColorValue;
 
     /// The label's role: `placeholder` only where the design overrides it,
-    /// else Material's onSurfaceVariant.
+    /// else Material's onSurfaceVariant as before (stage 8 C's gap, review 1).
     #[test]
     fn the_label_reads_placeholder_only_where_the_design_overrides_it() {
         roles::set_overrides(Vec::new());

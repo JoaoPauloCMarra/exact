@@ -3,7 +3,7 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// The presence ops on UIKit: `exit` keeps a leaving view where
+/// The presence ops on UIKit (LLP 1063): `exit` keeps a leaving view where
 /// it was, above its old siblings, inert and out of every lookup, while the
 /// engine's values still reach it, until the host's `destroy` ends it; a
 /// `layout` present places the box outermost, from its top-left corner.
@@ -21,7 +21,7 @@ final class PresenceIOSTests: XCTestCase {
         p.apply(wireBatch([
             ["op": "create", "id": 1, "kind": "view"],
             ["op": "create", "id": 2, "kind": "view"],
-            // Named, so they are views and not flat leaves.
+            // Named, so they are views and not flat leaves (LLP 1068 §6.1).
             ["op": "create", "id": 3, "kind": "view", "props": ["testId": "inner"]],
             ["op": "create", "id": 4, "kind": "view", "props": ["testId": "sibling"]],
             ["op": "children", "id": 1, "ids": [2, 4]],
@@ -122,7 +122,7 @@ final class PresenceIOSTests: XCTestCase {
         XCTAssertEqual(bar.frame, owner.bounds)
         drainIntrinsicSizes()
         XCTAssertEqual(reports.count, 1, "applying the measured box does not remeasure forever")
-        // Its width is its narrowest, none: a narrower box
+        // Its width is its narrowest, none (LLP 1116.004 D2): a narrower box
         // keeps the one report.
         XCTAssertEqual(size.width, 1)
         p.apply(wireBatch([["op": "frame", "id": 10, "x": 0.0, "y": 0.0,
@@ -141,7 +141,7 @@ final class PresenceIOSTests: XCTestCase {
     }
 
     /// A tablist padded at a side keeps its bar inside the padding, the
-    /// bar's edges on the device's pixel grid: duo-lab's tabs
+    /// bar's edges on the device's pixel grid (LLP 1059 D2): duo-lab's tabs
     /// on a book fold's trailing segment, from 495.5 points.
     func testTabBarSpansAPaddedTablistsContentBoxOnThePixelGrid() throws {
         let p = tabBarFixture()
@@ -240,7 +240,7 @@ final class PresenceIOSTests: XCTestCase {
         drainIntrinsicSizes()
         let size = try XCTUnwrap(reports.last ?? nil)
         XCTAssertEqual(size, CGSize(width: 1, height: control.intrinsicContentSize.height),
-                       "the control's own height, not the box's; its narrowest none")
+                       "the control's own height, not the box's; its narrowest none (LLP 1116.004 D2)")
         XCTAssertGreaterThan(size.height, 20, "an unsized text row must not squash the native control")
         XCTAssertEqual(control.frame, owner.contentBox(), "the kernel still owns the final box")
         p.apply(wireBatch([["op": "frame", "id": 10, "x": 0.0, "y": 0.0,
@@ -306,7 +306,7 @@ final class PresenceIOSTests: XCTestCase {
             XCTAssertEqual(icon.image != nil, found)
             XCTAssertEqual(bar.items?.first?.image != nil, found)
             XCTAssertNil(icon.symbolRefusal)
-            // Unsized, a symbol is the platform body size.
+            // Unsized, a symbol is the platform body size (LLP 1115 D3).
             let body = PageFacts.defaultRootFontSize
             if !found { XCTAssertEqual(sizes.last ?? nil, CGSize(width: body, height: body)) }
         }
@@ -328,11 +328,11 @@ final class PresenceIOSTests: XCTestCase {
         }
     }
 
-    /// Four text tabs in a grouped row overflowed it by the hidden tabs' own
-    /// widths. The control reports no narrowest width, so the kernel fits the
-    /// tablist to the row; in a box narrower than its equal segments need,
-    /// each segment takes its content's share, so the longest title keeps its
-    /// letters.
+    /// LLP 1116.004 D2 (unit-converter, round 6): four text tabs in a
+    /// grouped row overflowed it by the hidden tabs' own widths. The control
+    /// reports no narrowest width, so the kernel fits the tablist to the row;
+    /// in a box narrower than its equal segments need, each segment takes
+    /// its content's share, so the longest title keeps its letters.
     func testASegmentedControlTooWideForItsBoxApportionsItsSegmentsByContent() throws {
         let p = tabBarFixture()
         defer { p.reset() }
@@ -363,11 +363,11 @@ final class PresenceIOSTests: XCTestCase {
         XCTAssertFalse(control.apportionsSegmentWidthsByContent, "wide again: equal")
     }
 
-    /// A text tab whose `aria-label` says more than its words
+    /// LLP 1116 D6: a text tab whose `aria-label` says more than its words
     /// (`Temp`, named `Temperature`) keeps the native segmented control —
     /// the words its title, the label its segment's accessibility label —
-    /// where it fell back to the authored pills (unit-converter).
-    /// Each segment, and a tab bar's item, carries its tab's `testId`.
+    /// where it fell back to the authored pills (unit-converter). LLP 1116
+    /// D2: each segment, and a tab bar's item, carries its tab's `testId`.
     func testASegmentsAriaLabelIsItsAccessibilityLabelAndItsTestIdItsIdentifier() throws {
         let p = tabBarFixture()
         defer { p.reset() }
@@ -454,7 +454,7 @@ final class PresenceIOSTests: XCTestCase {
         let v = try XCTUnwrap(p.views[3])
         p.apply(wireBatch([["op": "style", "id": 3, "style": ["overflow_x": "hidden", "overflow_y": "hidden"]]]))
         // Laid out closed, 200 wide on screen: the difference carries what
-        // no ratio of a zero width could.
+        // no ratio of a zero width could (GitHub #940).
         p.apply(wireBatch([
             ["op": "frame", "id": 3, "x": 0.0, "y": 0.0, "w": 0.0, "h": 50.0],
             ["op": "present", "id": 3, "property": "layout", "x": 0.0, "y": 0.0, "w": 200.0, "h": 0.0],

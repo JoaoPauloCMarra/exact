@@ -1,4 +1,4 @@
-// @fixture/vault's prebuilt library and the package that declares it, built as a package with
+// @fixture/vault's prebuilt library and the package that declares it (LLP 1154 §3 item 4), built as a package with
 // native code is published: the library (`library/`, a few lines of Rust over rusqlite's bundled SQLite) is compiled as
 // a dynamic library for this machine's targets, each target's file is put at a file: URL under `<out>/libraries/`,
 // and a copy of the package at `<out>/package/` declares each by that URL and its SHA-256 in exact.json

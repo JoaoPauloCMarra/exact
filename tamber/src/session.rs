@@ -1,24 +1,25 @@
-//! A transaction's pure part: operations over a
+//! A transaction's pure part (LLP 1121 D13, stage 3): operations over a
 //! design's files, checked as a whole, giving each file's new text, the
 //! inverse per file, the tokens whose values change, the diff, and whether
 //! running builds take it in the live table or rebuild. The server
 //! (`contract tamber serve`) owns the digests, the lock, the journal and
 //! every write; this owns none.
 //!
-//! `live` is judged by the edit's closure: the plan's retained shape
-//! unchanged (axes, dials, and each token the plan keeps by its retention,
-//! with its kind, its role and whether it varies by an app axis: an override
-//! gained or lost, a token kept added or gone, one starting to vary), and the app's synthetic tokens (Contract rows'
+//! `live` is judged by the edit's closure (D13, stage 4): the plan's
+//! retained shape unchanged (axes, dials, and each token the plan keeps by
+//! D7's retention, with its kind, its role and whether it varies by an app
+//! axis: an override gained or lost, a token kept added or gone, one
+//! starting to vary), and the app's synthetic tokens (Contract rows'
 //! expressions over tokens, folded with the design) re-folded with it,
 //! their new values in the answer. The compiler keeps tokens by the same
 //! [`Retention`], so this is the question the dev loops' plan structures
-//! answer. A role override's value is live. Kinds substituted at build
-//! (durations, easings) rebuild.
+//! answer. A role override's value is live (stage 5). Kinds substituted at
+//! build (durations, easings) wait for stage 6.
 
 use crate::edit::{self, Op};
 use crate::{Diagnostic, Folding, Vocab};
 
-/// What a commit asks of running development builds: a value change
+/// What a commit asks of running development builds (D13): a value change
 /// in the token table only, or anything else.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Class {
@@ -62,7 +63,7 @@ pub struct Planned {
     pub values: Vec<(String, Vec<String>)>,
 }
 
-/// The app's synthetic tokens: Contract rows' expressions over tokens,
+/// The app's synthetic tokens (D3): Contract rows' expressions over tokens,
 /// folded with the design file `file`.
 #[derive(Debug, Clone, Copy)]
 pub struct Synthetic<'a> {
@@ -72,10 +73,10 @@ pub struct Synthetic<'a> {
     /// must fold (the build refuses it otherwise), where another that does
     /// not is dropped.
     pub exprs: &'a [(String, bool)],
-    /// Which of its tokens the app's plan keeps, as the compiler last
+    /// Which of its tokens the app's plan keeps (D7), as the compiler last
     /// found; none: every token, as an app with bindings keeps.
     pub retention: Option<&'a Retention>,
-    /// The app's components' params, which fold with the design file:
+    /// The app's components' params (D15), which fold with the design file:
     /// each a token, its `params` line in place of its default.
     pub params: &'a crate::params::Params,
 }
@@ -91,13 +92,13 @@ impl Default for Synthetic<'_> {
     }
 }
 
-/// Retention: which of a design's tokens an app's plan keeps. The
+/// D7's retention: which of a design's tokens an app's plan keeps. The
 /// compiler keeps a token by [`Retention::keeps`] (and a synthetic token its
 /// rows write), and a transaction's class asks the same, so `propose` and
 /// the dev loops, which compare the plans' structures, agree.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Retention {
-    /// The app can name a token outside its views (its bindings: a data
+    /// The app can name a token outside its views (D12's bindings: a data
     /// module, a native module): every token, bounded by `exports`.
     pub bindable: bool,
     /// A colour row's value is computed somewhere: any colour token may be
@@ -209,11 +210,11 @@ pub fn plan(
                 })
             })
         });
-        // A role override's value is live: each build
+        // A role override's value is live (LLP 1121 stage 5): each build
         // sets its session's overrides from the batch and re-presents them.
         // Gaining or losing one moves the shape.
         let tokens = changed_tokens(before.as_ref(), after.as_ref());
-        // A motion token is written into its rows at build: a
+        // A motion token is written into its rows at build (D3, D13): a
         // change to one, or to what it folds from, rebuilds.
         let motions = |f: &Option<Folding>| -> std::collections::HashSet<String> {
             f.iter()
@@ -411,7 +412,7 @@ fn changed_tokens(before: Option<&Folding>, after: Option<&Folding>) -> Vec<Stri
 /// (one naming a custom property); not another value.
 fn shape(f: &Folding, retention: Option<&Retention>, vocab: &Vocab) -> String {
     let mut s = String::new();
-    // An icon's sources are the plan's table and the asset set.
+    // An icon's sources are the plan's table and the asset set (D10).
     for i in &f.icons {
         s.push_str(&format!(
             "icon {} {:?} {:?} {:?}\n",
@@ -461,9 +462,9 @@ fn shape(f: &Folding, retention: Option<&Retention>, vocab: &Vocab) -> String {
                 _ => false,
             })
             .collect();
-        // And a type token's longhands and family, a family token's stack: a
-        // font a plan has not declared is a build's, and the rows a type
-        // token writes are lowered.
+        // And a type token's longhands and family, a family token's stack
+        // (stage 6 C): a font a plan has not declared is a build's, and the
+        // rows a type token writes are lowered (the lead's ruling, D6).
         let whole: Vec<String> = t
             .values
             .iter()

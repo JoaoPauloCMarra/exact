@@ -1,4 +1,4 @@
-//! Duration and easing tokens, written into
+//! @ref LLP 1121 D3 (stage 6 E) — duration and easing tokens, written into
 //! the `transition` and `animation` values that name them at build, before
 //! a row's codec, the keyframes' scoping or the longhands' composing read
 //! them: the loader does it in each file before scoping ([`substitute`]),
@@ -13,7 +13,7 @@
 use contract_syntax::{Attr, Expr, File, Node, Span, TemplatePart};
 use exact_tamber as tamber;
 
-/// Whether `name` is a motion row (a param may stand in one).
+/// Whether `name` is a motion row (a param may stand in one, D15).
 pub(crate) fn is_row(name: &str) -> bool {
     row(name)
 }
@@ -57,7 +57,7 @@ pub struct Site {
     pub tokens: Vec<String>,
 }
 
-/// The design's duration and easing tokens, its packages',
+/// The design's duration and easing tokens, its packages' (LLP 1121 D11),
 /// and its components' params of those kinds, each name and value; none
 /// when it does not check (lowering reports why). An inline `theme`'s names
 /// are undotted, so it declares none (`tamber-motion-name`).
@@ -81,7 +81,7 @@ pub fn tokens(
         None => tamber::Design::default(),
     };
     // A component's duration and easing params are written in as its rows
-    // read them, the app's value (its `params` line) if set.
+    // read them (LLP 1121 D15), the app's value (its `params` line) if set.
     crate::params::add_to(&mut design, params, components);
     crate::theme::stand_in_profiles(&mut design);
     let Ok(folding) = tamber::check_design(design, &crate::theme::vocab()) else {
@@ -348,7 +348,7 @@ pub fn substitute(file: &mut File, tokens: &[(String, String)]) -> Vec<Site> {
 /// `transition`'s refusal of a CSS layout property, `None` for any other
 /// name: `-exact-layout-transition` animates the change instead, a resize
 /// on the box's surface with its children at the final layout, a move as a
-/// translation that carries them. Each example compiles
+/// translation that carries them (@ref LLP 1063 D6). Each example compiles
 /// (contract/cli/tests/it/styles.rs) and was filmed animating on the web.
 pub(crate) fn layout_property_refusal(property: &str, supported: &str) -> Option<String> {
     const ROW: &str = "border-radius=22 -exact-layout-transition=\"300ms ease\"";
@@ -363,7 +363,7 @@ pub(crate) fn layout_property_refusal(property: &str, supported: &str) -> Option
         | "padding" | "flex-basis" | "gap" => format!("on each box whose size or place the change moves: `box width=(small ? 88 : 358) height=44 {ROW}` contracts a capsule to a pill, its background, border and radius taking the shown size while its children take the final layout at once"),
         _ => return None,
     };
-    Some(format!("`{property}` is a CSS layout property, which `transition` cannot interpolate (that would need layout per frame, which exact2 does not run). Write `-exact-layout-transition` instead, which animates a box's laid-out size and place when a state change moves them: {example}. `transition` animates {supported}"))
+    Some(format!("`{property}` is a CSS layout property, which `transition` cannot interpolate (that would need layout per frame, which exact2 does not run). Write `-exact-layout-transition` instead, which animates a box's laid-out size and place when a state change moves them (LLP 1063 D6): {example}. `transition` animates {supported}"))
 }
 
 #[cfg(test)]

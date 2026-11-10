@@ -1,11 +1,11 @@
-// The status bar's style, declared from state: `status-bar-style`
+// The status bar's style, declared from state (LLP 1105): `status-bar-style`
 // on any node; the declaration painted on top of what covers the bar wins.
 // tvOS has no status bar.
 #if os(iOS)
 import UIKit
 
-/// What the bar shows and how a change reaches it, with the node
-/// that decided it (the agent's `layout`).
+/// What the bar shows (D1, D4) and how a change reaches it, with the node
+/// that decided it (the agent's `layout`, D7).
 struct StatusBarChoice: Equatable {
     var style: UIStatusBarStyle = .default
     var fade = false
@@ -14,7 +14,7 @@ struct StatusBarChoice: Equatable {
 
 extension Presenter {
     /// Resolve the style once and, if it changed, have every controller
-    /// UIKit may ask answer it in this turn. While a navigation or
+    /// UIKit may ask answer it in this turn (D5, D6). While a navigation or
     /// a presentation is moving, the last committed style stays; its end
     /// resolves again.
     /// `settled`: a transition's own end, whose coordinator may still be
@@ -38,7 +38,7 @@ extension Presenter {
         if choice.fade, !ExactEnv.agentFreezes { UIView.animate(withDuration: 0.3, animations: apply) } else { UIView.performWithoutAnimation(apply) }
     }
 
-    /// The declarations in scope that show; the one painted on top.
+    /// The declarations in scope that show; the one painted on top (D2, D3).
     func statusBarChoice() -> StatusBarChoice {
         let declared = carrying("statusBarStyle")
         guard !declared.isEmpty else { return StatusBarChoice() }
@@ -86,10 +86,10 @@ extension Presenter {
         return StatusBarChoice(style: style, fade: winner.props["statusBarAnimation"] == "fade", source: winner.id)
     }
 
-    /// A bound value outside the set counts as unset, said once per node and value.
+    /// A bound value outside the set counts as unset (D1), said once per node and value.
     private func noteStatusBarValue(_ node: NodeView, _ attribute: String, _ value: String) {
         guard statusBarNoted.insert("\(node.id)|\(attribute)|\(value)").inserted else { return }
-        session?.log("\(attribute)=\"\(value)\" on #\(node.id) is not one of its values; unset")
+        session?.log("\(attribute)=\"\(value)\" on #\(node.id) is not one of its values; unset (LLP 1105 D1)")
     }
 
     /// Whether `a` paints over `b`: a descendant over its ancestor; between
@@ -110,13 +110,13 @@ extension Presenter {
         return false
     }
 
-    /// `auto`: the scheme a `color-scheme` subtree forces where the node
+    /// `auto` (D4): the scheme a `color-scheme` subtree forces where the node
     /// sits, else the platform's default, which follows the system's.
     static func schemeStatusBar(_ node: UIView) -> UIStatusBarStyle {
         var up: UIView? = node
         while let v = up {
             if v.overrideUserInterfaceStyle != .unspecified { return v.overrideUserInterfaceStyle == .dark ? .lightContent : .darkContent }
-            // Through a presented route's logical parents
+            // Through a presented route's logical parents (LLP 1123 D2)
             up = (v as? NodeView)?.presenter?.eventParent(of: v) ?? v.superview
         }
         return .default

@@ -3,12 +3,12 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// The native fixture's tabs: Exact's `UITabBarController`, one navigation
-/// controller a tab, items from the authored tablist, a tab the bar selects
-/// pressing its authored tab, every tab's stack kept — its pushed screen, its
-/// scroll offset, its draft — and reselecting a tab popping it to its root.
-/// The bar is driven as a tap on it drives it, through the delegate Exact
-/// keeps.
+/// LLP 1075.003 Stage 2 over the native fixture's tabs: Exact's
+/// `UITabBarController`, one navigation controller a tab, items from the
+/// authored tablist, a tab the bar selects pressing its authored tab, every
+/// tab's stack kept — its pushed screen, its scroll offset, its draft — and
+/// reselecting a tab popping it to its root. The bar is driven as a tap on
+/// it drives it, through the delegate Exact keeps.
 final class NavigationTabsIOSTests: XCTestCase {
     private var window: UIWindow?
     private var sessions: [ExactSession] = []
@@ -435,7 +435,7 @@ final class NavigationTabsIOSTests: XCTestCase {
         let view = try XCTUnwrap(session.view)
         view.fit()
         // The document stays in the session's view; the sheet lays its own
-        // routes out in their blocks
+        // routes out in their blocks (LLP 1123 D1, D2)
         XCTAssertEqual(p.viewport.frame, view.bounds, "a sheet does not move or resize the document")
     }
 
@@ -598,7 +598,7 @@ final class NavigationTabsIOSTests: XCTestCase {
     /// tablist, the pattern docs/agent-pitfalls.md gives for full-screen
     /// overlays, paints and takes touches over the native tab container. Dense
     /// ranks had put the container over every authored sibling, so the
-    /// overlay was laid out, in the tree, and invisible.
+    /// overlay was laid out, in the tree, and invisible (LLP 1083.000 D4).
     func testARootOverlayWithAZIndexIsOverTheNativeTabs() throws {
         let session = try fixture("tabs-overlay")
         let tabs = try XCTUnwrap(session.presenter.navigation.tabController)
@@ -654,19 +654,19 @@ final class NavigationTabsIOSTests: XCTestCase {
         XCTAssertTrue(try node(session, "tabs").isHidden, "the bar takes the authored tablist's place")
         // The container paints where the panels are among the root's
         // children: under the tablist after them, as CSS paints a later
-        // sibling over an earlier one.
+        // sibling over an earlier one (shop F21, recipes F23).
         let root = try node(session, "navigation"), tablist = try node(session, "tabs")
         let order = root.subviews.map { ObjectIdentifier($0) }
         XCTAssertLessThan(try XCTUnwrap(order.firstIndex(of: ObjectIdentifier(tabs.view))), try XCTUnwrap(order.firstIndex(of: ObjectIdentifier(tablist))), "the tablist after the panels paints over the container")
         XCTAssertGreaterThan(try XCTUnwrap(order.firstIndex(of: ObjectIdentifier(tabs.view))), try XCTUnwrap(order.firstIndex(of: ObjectIdentifier(try node(session, "panels")))), "the container paints over the panels' box")
-        // The tablist's `accent-color` is the bar's tint.
+        // The tablist's `accent-color` is the bar's tint (recipes F20, shop F28).
         let tint = try XCTUnwrap(tabs.tabBar.tintColor).resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
         var rgb: (CGFloat, CGFloat, CGFloat, CGFloat) = (0, 0, 0, 0)
         tint.getRed(&rgb.0, green: &rgb.1, blue: &rgb.2, alpha: &rgb.3)
         XCTAssertEqual([rgb.0, rgb.1, rgb.2].map { Int(($0 * 255).rounded()) }, [0x38, 0x38, 0xf5])
         let home = try XCTUnwrap(tabs.viewControllers?[0] as? UINavigationController)
         let second = try XCTUnwrap(tabs.viewControllers?[1] as? UINavigationController)
-        XCTAssertEqual(second.viewControllers.count, 0, "another tab is built when first selected")
+        XCTAssertEqual(second.viewControllers.count, 0, "another tab is built when first selected (LLP 1075.003 §9.14)")
 
         // A pushed screen in Home.
         try tapNode(session, "detail")
@@ -678,7 +678,7 @@ final class NavigationTabsIOSTests: XCTestCase {
         // A change made while Home is hidden shows when it is selected.
         XCTAssertNil(second.tabBarItem.badgeValue, "no badge box, no badge")
         try tapNode(session, "bump-second")
-        // The count's filled box on the Second tab is its item's badge.
+        // The count's filled box on the Second tab is its item's badge (§9.9).
         until("the badge follows the authored box") { second.tabBarItem.badgeValue == "1" }
         // The box goes, the badge goes; it comes back with the box.
         try tapNode(session, "unbump-second")
@@ -918,7 +918,7 @@ final class NavigationTabsIOSTests: XCTestCase {
         detail.handlers.insert("swiperight")
         defer { detail.handlers.remove("swiperight") }
         // (A test cannot place a `UITouch`, so `shouldReceive`'s first-finger
-        // gate is proved by the live drive)
+        // gate is proved by the live drive, LLP 1080.000 §11.)
         for pop in pops(home).compactMap({ $0 as? UIPanGestureRecognizer }) {
             navigation.notePopTouchDown(pop, at: CGPoint(x: 30, y: 400))
             XCTAssertFalse(navigation.popShouldBegin(pop, in: home.view, velocity: right), "landed past the edge: the row's swipe")
@@ -956,11 +956,12 @@ final class NavigationTabsIOSTests: XCTestCase {
         XCTAssertEqual(tabs.selectedIndex, 0)
     }
 
-    /// A check of `tabBarMinimizeBehavior` (iOS 26), as far as a
+    /// Stage 2's check of `tabBarMinimizeBehavior` (iOS 26), as far as a
     /// unit test reaches: a route whose title stays still (Detail's, inline)
     /// names no content scroll view to UIKit, so a minimize behavior a hatch
     /// sets has nothing to follow and the content area holds under scrolling.
-    /// A finger's scroll (UIKit's own heuristics) is owed to a device check.
+    /// A finger's scroll (UIKit's own heuristics) is owed to a device check
+    /// (LLP 1075.003 §6).
     func testAMinimizeBehaviorFollowsNoScrollWhileExactNamesNone() throws {
         guard #available(iOS 26.0, *) else { throw XCTSkip("tabBarMinimizeBehavior is iOS 26") }
         let session = try fixture("tabs-minimize")
@@ -982,7 +983,7 @@ final class NavigationTabsIOSTests: XCTestCase {
         XCTAssertEqual(route.view.safeAreaInsets.bottom, before, "the content area held")
     }
 
-    /// The bottom edge under a tab bar: Second's scroller, its
+    /// The bottom edge under a tab bar (LLP 1116 D2): Second's scroller, its
     /// route's last child, runs under the bar to the screen's edge, and UIKit
     /// insets its content by the bar and the home indicator, as a table
     /// view's under a tab bar is.
@@ -1002,10 +1003,10 @@ final class NavigationTabsIOSTests: XCTestCase {
         XCTAssertTrue(second.contentScrollView(for: .bottom) === sv, "the bar's edge follows it")
     }
 
-    /// The selected tab, tapped again at its stack's
+    /// LLP 1115.000 D11.3: the selected tab, tapped again at its stack's
     /// root, scrolls that screen's content to the top, its large title
     /// expanding, as every tab bar app does. The scroller is the route's
-    /// content scroller, the status bar's, and it scrolls with
+    /// content scroller, the status bar's (D11.1), and it scrolls with
     /// UIKit's animation, which opens the title as it arrives. Another tab's
     /// tap only selects it, and above the root the router pops (the test
     /// above). The agent's frozen clock lands there unanimated
@@ -1051,7 +1052,7 @@ final class NavigationTabsIOSTests: XCTestCase {
         XCTAssertEqual(nav.viewControllers.count, 1)
     }
 
-    /// The selected tab tapped again scrolls its screen's
+    /// LLP 1070.000 §2.6: the selected tab tapped again scrolls its screen's
     /// list to the top unless the tab's press asked for a row there, landed
     /// or already shown, whether or not that list was the screen's before
     /// the press. By the bar's tap (`selectTab`) and by the agent's
@@ -1154,7 +1155,7 @@ final class NavigationTabsIOSTests: XCTestCase {
     /// batch that mounts its route: a screen is contained once that batch
     /// is applied, when the route has its controller. On a tab not yet
     /// selected that is the batch that first selects it, which builds the
-    /// tab: until then the tab has no route.
+    /// tab (LLP 1075.003 §3.7): until then the tab has no route.
     func testAScreenMadeWithItsRouteIsContainedOnceTheRouteMounts() throws {
         let session = try fixture("tabs-screen", module: true)
         defer { NativeViews.uninstallTable() }

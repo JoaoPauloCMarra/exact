@@ -1,5 +1,5 @@
 // @exact/camera's and media-capture's video half's conformance suite on
-// Apple: the fixture app made as the
+// Apple (LLP 1133.001 D7, LLP 1133.008 stage 2): the fixture app made as the
 // web suite makes it, built for macOS or an iOS simulator, and driven by the
 // agent with both implementations bound (`--bind`), so AVFoundation answers
 // and not the agent's cameras.
@@ -54,7 +54,7 @@ for (const host of hosts.length ? hosts : ['macos', 'ios']) {
     const contents = resolve(app, 'target', bundle, '..'), executable = JSON.parse(run('plutil', ['-convert', 'json', '-o', '-', resolve(contents, 'Info.plist')])).CFBundleExecutable;
     process.env.EXACT_MAC_BIN = resolve(contents, 'MacOS', executable);
   }
-  // The build's Info.plist: the usage key, its text the purpose.
+  // The build's Info.plist (D6): the usage key, its text the purpose.
   const plistAt = readdirSync(resolve(app, 'target'), { recursive: true }).find((f) => host === 'ios' ? /iphonesimulator|ios-sim/.test(f) && f.endsWith('.app/Info.plist') : /macos/.test(f) && f.endsWith('-Info.plist'));
   const plist = plistAt ? JSON.parse(run('plutil', ['-convert', 'json', '-o', '-', resolve(app, 'target', plistAt)])) : {};
   check(where, 'Info.plist carries NSCameraUsageDescription with the purpose', plist.NSCameraUsageDescription === 'The conformance suite takes a photo.', plistAt ?? 'no Info.plist under target/');

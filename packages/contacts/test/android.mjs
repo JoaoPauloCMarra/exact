@@ -1,8 +1,8 @@
-// @exact/contacts and @exact/calendar on Android, on `apps/contacts-calendar-fixture`, both
+// @exact/contacts and @exact/calendar on Android (LLP 1133.018 stage 3), on `apps/contacts-calendar-fixture`, both
 // packages' consumer there (the Calendar example has no Android crate).
 //
 // With no flag it builds the fixture's APK and checks what the build made: the permissions the grant lines derive,
-// with `WRITE_CALENDAR` because the fixture calls `saveEvent` (the derivation's other cases are
+// with `WRITE_CALENDAR` because the fixture calls `saveEvent` (D11; the derivation's other cases are
 // `contract/cli/tests/it/contacts_calendar.rs`'s); the roster naming both extensions and their classes compiled in;
 // the agent's fixtures carried byte for byte. `--emulator` then drives the fixture under the agent on a booted
 // emulator or phone (adb's one device): both statuses, the store reads, a pick, a save and the editor. Both need an

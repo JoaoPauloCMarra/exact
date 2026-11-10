@@ -1,9 +1,10 @@
-//! The reader scrolls by itself (the boundary is `presenter/scrollers.rs`): a
-//! finger's drag and its fling are the reader's, with Android's own classes. It
-//! asks what is under a touch, moves the scroller's rows itself where the
-//! stream gave them a node of their own, and says here how far it moved which
-//! scroller. After each frame it is told where the scrollers it knows are and
-//! how far they go, and whether the app moved one, which ends its fling.
+//! The reader scrolls by itself (LLP 1115.001 D7.1 to D7.3; the boundary is
+//! `presenter/scrollers.rs`): a finger's drag and its fling are the
+//! reader's, with Android's own classes. It asks what is under a touch,
+//! moves the scroller's rows itself where the stream gave them a node of
+//! their own, and says here how far it moved which scroller. After each
+//! frame it is told where the scrollers it knows are and how far they go,
+//! and whether the app moved one, which ends its fling.
 //!
 //! The feed is the scroller a finger last moved up or down (or the one a
 //! driver's `scroll` found): the one whose travel the windows lead by and

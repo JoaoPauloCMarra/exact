@@ -1,4 +1,4 @@
-// The JS target's decision to scroll to a fragment (host/web-js/router.js): a navigation counts only when a
+// The JS target's decision to scroll to a fragment (host/web-js/router.js; LLP 1153 D5): a navigation counts only when a
 // commit that lands assigns its very value to the router, and the scroll waits for every request in flight, a mutation's
 // too, as the runner's `fragment_command` waits on `has_pending`. rt.js and router.js run beside stand-ins for the
 // modules they import, and a fragment.js that records what it is asked.

@@ -1,5 +1,5 @@
-//! The display's clock owns time until a driver's takes it: a
-//! running runner and every one a reload boots take the choice.
+//! The display's clock owns time until a driver's takes it (the timers RFC,
+//! D1): a running runner and every one a reload boots take the choice.
 use super::super::{PainterChoice, Presenter};
 use exact_plan::Value;
 use exact_runner::{DataError, DataSource};

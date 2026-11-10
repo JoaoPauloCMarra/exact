@@ -169,7 +169,7 @@ fn setup_reconstructs_generated_geometry_and_drops_old_identities() {
 }
 
 /// A generated model's identity is in every save of a world that holds it.
-/// Material names are informational: model record 2 writes
+/// Material names (LLP 1139.004 D3) are informational: model record 2 writes
 /// no name for an unnamed material, so the identity, and the saves, of
 /// existing generated models stay as they were.
 #[test]

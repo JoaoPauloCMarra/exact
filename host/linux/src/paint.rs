@@ -1,7 +1,7 @@
 //! The painter: the kernel tree is the display list.
 //!
-//! A host that paints has the exact invalidation answer because it *is*
-//! the display list.
+//! @ref LLP 1015 §2; LLP 1014 D4 (a host that paints has the exact
+//! invalidation answer because it *is* the display list)
 //!
 //! One preorder walk emits each node to a [`Backend`]: its background and
 //! per-corner radii, borders, image by `object-fit`, paragraph as measured
@@ -82,7 +82,7 @@ pub(crate) use region::{ActionNode, ActionSlot, RegionActions, ScrollBounds};
 pub use svg::{resolve_with, Ink, SvgPaint};
 
 // Only an explicit row makes a raster a template; motion may supply its ink.
-// `currentcolor` is the node's `color`.
+// `currentcolor` is the node's `color` (feed F1).
 fn image_tint(node: &NodeRef<'_>, presented: &Presented, dark: bool) -> Option<[u8; 4]> {
     let style = node.style;
     style.mask.has(StyleId::TintColor).then(|| {
@@ -111,7 +111,7 @@ pub struct Shape {
     pub rect: Rect4,
     /// The radii.
     pub radii: [(f32, f32); 4],
-    /// CSS `corner-shape` when any corner is not `round`.
+    /// CSS `corner-shape` when any corner is not `round` (LLP 1077 D1).
     pub corners: Option<exact_kernel::corner::CornerShape>,
 }
 
@@ -173,7 +173,7 @@ struct BoxPaint {
     radii: [Dimension; 4],
     /// What a radius that is a calculation with a percentage resolves under.
     env: exact_kernel::Env,
-    /// CSS `background-clip`.
+    /// CSS `background-clip` (LLP 1077 D6).
     clip: exact_kernel::BackgroundClip,
     corners: Option<exact_kernel::corner::CornerShape>,
     widths: [f32; 4],
@@ -212,7 +212,7 @@ impl BoxPaint {
         // The padding layout resolved, which input reads too: a percentage
         // is of the containing block's width
         let (left, top, right, bottom) = kernel.resolved_padding(node.key).unwrap_or_default();
-        // A material wins over `backdrop-filter`; a
+        // @ref LLP 1053.000 D4 — a material wins over `backdrop-filter`; a
         // name the table lacks draws ultra-thin ([`material_note`]).
         let material = node.props.str(PropId::BackgroundMaterial).map(|name| {
             exact_kernel::generated::material(name)
@@ -246,7 +246,7 @@ impl BoxPaint {
                     palette.window
                 }
                 // The material's tint where the author painted no background,
-                // as the web's rule sits under an inline one.
+                // as the web's rule sits under an inline one (LLP 1053.000 D4).
                 (_, Some(m)) if s.background_color.unwrap_or(current).resolve(dark).a() == 0 => {
                     if dark {
                         m.dark
@@ -294,13 +294,13 @@ impl BoxPaint {
                 backend.fill_border(&band, ts);
             }
         }
-        // The backdrop filters under the background.
+        // @ref LLP 1053.000 D2 — the backdrop filters under the background.
         if !self.backdrop.is_none() {
             backend.backdrop_filter(&geometry.outer, &self.backdrop, ts);
         }
         self.emit(geometry, |shape, color| backend.fill(&shape, color, ts));
-        // The last layer first, so the first is on top, within
-        // the background's clip.
+        // The last layer first, so the first is on top (LLP 1077 D5), within
+        // the background's clip (D6).
         if let Some(clip) = self.background_shape(geometry) {
             for g in self.gradients.iter().rev() {
                 gradient::paint(g, &geometry.outer, &clip, self.widths, backend, ts);
@@ -313,7 +313,7 @@ impl BoxPaint {
             backend.fill_border(&part, ts);
         }
     }
-    /// The background colour: within its `background-clip`.
+    /// The background colour: within its `background-clip` (LLP 1077 D6).
     fn emit(&self, geometry: &BoxGeometry, mut emit: impl FnMut(Shape, [u8; 4])) {
         let Some(shape) = self.background_shape(geometry) else {
             return;
@@ -353,8 +353,8 @@ impl BoxPaint {
             .with_corners(outer.corners),
         )
     }
-    /// The outer `box-shadow`s, under everything else, the
-    /// list's first on top.
+    /// The outer `box-shadow`s, under everything else (LLP 1064 D2), the
+    /// list's first on top (LLP 1077 D4).
     fn shadow_fills(&self, geometry: &BoxGeometry) -> Vec<border::BorderFill> {
         self.shadows
             .iter()
@@ -466,15 +466,15 @@ impl PaintedBox {
 pub struct Scene<'a> {
     /// The kernel: frames, styles, props.
     pub kernel: &'a Kernel,
-    /// Hidden route subtrees paint no pixels or hit boxes.
+    /// @ref LLP 1038 D6 — hidden route subtrees paint no pixels or hit boxes.
     pub hidden: &'a dyn Fn(ViewId) -> bool,
     /// The roots, in order.
     pub roots: &'a [ViewId],
     /// A node's presentation values.
     pub presented: &'a dyn Fn(ViewId) -> Presented,
-    /// A path's `d` while a transition moves it.
+    /// A path's `d` while a transition moves it (LLP 1055.000 D15).
     pub paths: &'a dyn Fn(ViewId) -> Option<exact_motion::PathValue>,
-    /// Scroll offsets of scroll containers (host state).
+    /// Scroll offsets of scroll containers (host state, LLP 1010).
     pub scroll: &'a BTreeMap<ViewId, (f32, f32)>,
     /// The page's scroll offset: the window is a viewport over a document.
     pub page: (f32, f32),
@@ -482,16 +482,16 @@ pub struct Scene<'a> {
     pub images: &'a BTreeMap<ViewId, Arc<Bitmap>>,
     /// The focused input, if any (its caret is painted).
     pub focus: Option<ViewId>,
-    /// The focused text field's selection.
+    /// The focused text field's selection (x2apps codeedit #2).
     pub selection: Option<exact_runner::FieldSelection>,
     /// At a wrap, a click or visual-line End can choose the preceding line.
     pub caret_upstream: bool,
-    /// Unbound checkboxes' own states, which the host keeps.
+    /// Unbound checkboxes' own states, which the host keeps (LLP 1069.001 D4).
     pub controls: &'a BTreeMap<ViewId, bool>,
     /// Values chosen in a date, range or select, or typed into a field, since
     /// its bound value last changed: (choice, bound).
     pub chosen: &'a BTreeMap<ViewId, (String, String)>,
-    /// A select's open menu, painted over everything.
+    /// A select's open menu, painted over everything (LLP 1069.001 D7).
     pub menu: Option<control::MenuPaint>,
     /// The pointer, in viewport points, when the host draws one.
     pub pointer: Option<(f32, f32)>,
@@ -511,7 +511,7 @@ pub struct Painter {
     pub text: Shared,
     /// Device pixels per point.
     pub scale: f32,
-    /// Which appearance a `light-dark()` colour resolves to:
+    /// Which appearance a `light-dark()` colour resolves to (LLP 1034 D2):
     /// what the app's `setScheme` last said, else the system's, which the
     /// device's shell or an agent tells the presenter; `light` until one does.
     pub dark: bool,
@@ -528,9 +528,9 @@ pub struct Painter {
     fresh_order: HashMap<ViewId, exact_kernel::paint_order::Potentials>,
     rank_increments: u32,
     pub(crate) placements: BTreeMap<ViewId, crate::placement::Placement>,
-    /// Each 2D canvas's latest bitmap.
+    /// Each 2D canvas's latest bitmap (LLP 1056).
     pub(crate) canvases: BTreeMap<ViewId, crate::canvas2d::CanvasPaint>,
-    /// Each hatched node's overlay as last published.
+    /// Each hatched node's overlay as last published (LLP 1075.003.000.001 §2.2.1).
     pub(crate) overlays: BTreeMap<ViewId, Arc<Pixmap>>,
     pub(crate) top_surface: Option<TopSurface>,
     pub(crate) scrollbars: scrollbar::State,
@@ -550,17 +550,18 @@ pub struct Painter {
     /// `backgroundMaterial` names the schema lacks, and those not yet logged.
     materials: (std::collections::BTreeSet<String>, Vec<String>),
     decoration_warning: bool,
-    /// The node a 3D island paints flat, its own transform being the warp's.
+    /// The node a 3D island paints flat, its own transform being the warp's
+    /// (LLP 1077 D8).
     pub(crate) flatten: Option<ViewId>,
     /// The control a finger's press focused: it is the focus and shows no
-    /// ring, which is for a focus a key moved.
+    /// ring, which is for a focus a key moved (LLP 1115.001 D7.6).
     pub(crate) ringless: Option<ViewId>,
-    /// The focus visual follows WinUI's input tracking, not Chrome's `:focus-visible`: no ring for
-    /// a focus the app moves before any key (`keyless`), and a key held with Ctrl, Alt or the
-    /// Windows key counts as keyboard input.
+    /// The focus visual follows WinUI's input tracking, not Chrome's `:focus-visible` (LLP
+    /// 1115.004 D9.2): no ring for a focus the app moves before any key (`keyless`), and a key
+    /// held with Ctrl, Alt or the Windows key counts as keyboard input.
     pub(crate) winui_focus: bool,
     pub(crate) keyless: bool,
-    /// Android's touch mode: a finger or a pen sets `keyless` again.
+    /// Android's touch mode (LLP 1115.001 D7.6): a finger or a pen sets `keyless` again.
     pub(crate) touch_mode: bool,
     /// Whose shapes a symbol role takes: the process's (`look::symbols`).
     pub(crate) symbols: exact_kernel::SymbolSet,
@@ -573,14 +574,14 @@ pub struct Painter {
     /// which its `background-clip: text` fills with (`text_clip`).
     clipped: Option<(ViewId, [u8; 4])>,
     /// Each hosted text field's content box in its own border box (x, y,
-    /// width, height), as last walked (`field.rs`).
+    /// width, height), as last walked (`field.rs`, LLP 1115.001 D8).
     pub(crate) field_content: HashMap<ViewId, [f32; 4]>,
     rows: rows::Rows,
     /// The `svg` painting now: its elements the reader animates.
     svg_layers: Vec<(ViewId, Presented)>,
     /// How many boxes the last walk painted: the next one's room.
     boxes_hint: usize,
-    /// Numeric text rolling, and the clock it rolls by.
+    /// Numeric text rolling (LLP 1077 D15), and the clock it rolls by.
     pub(crate) numerals: numerals::Numerals,
     /// Material's fields' labels, floated or resting (`material.rs`).
     pub(crate) labels: material::Labels,
@@ -594,19 +595,19 @@ struct Walk<'a, 'b> {
     inline: HashMap<ViewId, Rc<inline_frame::PaintedInline>>,
     skip: Option<exact_kernel::NodeKey>,
     replay: Option<&'b region::Replay<'b>>,
-    /// Each node's rank among its siblings, twice its
+    /// Each node's rank among its siblings (LLP 1083.000 §2.4), twice its
     /// value, from the kernel's one definition.
     ranks: Rc<BTreeMap<ViewId, i64>>,
     /// Painting a ghost, whose root this is: the `visibility: hidden` the
     /// row inherits from its wrapper shows, one its own nodes set does not
-    /// (`lift.rs`).
+    /// (`lift.rs`; b6 review B4).
     reveal: Option<ViewId>,
     dialog: Option<ViewId>,
 }
 
 impl Painter {
     /// Whether `node` has a material (which blurs its backdrop); notes a name
-    /// the schema lacks, once, for the host's log.
+    /// the schema lacks, once, for the host's log (LLP 1053.000 D4).
     fn material_note(&mut self, node: &NodeRef<'_>) -> bool {
         let Some(name) = node.props.str(PropId::BackgroundMaterial) else {
             return false;
@@ -971,7 +972,7 @@ impl Painter {
         let Some(node) = walk.scene.kernel.node(id) else {
             return;
         };
-        // An SVG element is its `svg`'s content, painted there.
+        // An SVG element is its `svg`'s content, painted there (LLP 1055 D4).
         if walk.skip == Some(node.key) || node.node_type.is_svg_element() {
             return;
         }
@@ -990,13 +991,13 @@ impl Painter {
         let (x, y, w, h) = paint_rect(f, offset);
         let p = (walk.scene.presented)(id);
         self.row_node(walk.scene.kernel, node.key, f, &p);
-        // Turned or moved in space: painted apart, warped.
+        // @ref LLP 1077 D8 — turned or moved in space: painted apart, warped.
         if self.spatial(walk, &node, &p, (x, y, w, h), ts, offset, clip_rect) {
             self.row_refuse();
             self.damage.unsupported = true;
             return;
         }
-        // Collect damage eligibility during the
+        // @ref LLP 1043.000 §3 D7 — collect damage eligibility during the
         // existing paint walk, not an extra whole-document walk per flow tick.
         // A shadow paints outside the node's box, where damage never looks.
         self.damage.unsupported |= p.moves()
@@ -1018,7 +1019,7 @@ impl Painter {
             // The layer turns it; a layout transition's offset is drawn.
             ts.pre_translate(p.layout[0], p.layout[1])
         } else if p.moves() && self.flatten != Some(id) {
-            // About `transform-origin`, the centre unless authored.
+            // About `transform-origin`, the centre unless authored (LLP 1061 D6).
             ts.pre_concat(p.transform((x, y, w, h), origin))
         } else {
             ts
@@ -1031,7 +1032,7 @@ impl Painter {
         // its geometry, paints nothing of its own, and is not a hit. A
         // descendant that computes `visible` still paints and is hit.
         // `opacity: 0` is the one that blanks the group. A ghost asks
-        // `revealed`: the wrapper's inherited hidden shows, and
+        // `revealed` (LLP 1094): the wrapper's inherited hidden shows, and
         // a node that sets its own hidden does not.
         let visible = paints(walk.scene.kernel, id, walk.reveal);
         walk.boxes.push(PaintedBox {
@@ -1060,16 +1061,16 @@ impl Painter {
         if drawn.is_none() && opacity < 1.0 {
             self.backend.push_opacity(opacity);
         }
-        // The node's own appearance (a `color-scheme` above it)
+        // The node's own appearance (a `color-scheme` above it, LLP 1034 §8)
         // for its mask and everything it paints below.
         let previous = self.dark;
         self.dark = p.dark.unwrap_or(previous);
-        // The mask is the border box's gradient's alpha.
+        // @ref LLP 1077 D2 — the mask is the border box's gradient's alpha.
         let mask = gradient::Captured::mask(node.style, self.dark).map(|m| m.place((x, y, w, h)));
         if mask.is_some() {
             self.backend.push_mask(&Shape::rect((x, y, w, h)), ts);
         }
-        // Polygon demo ink and exclusion share an outline.
+        // @ref LLP 1043.000 §3 D7 — polygon demo ink and exclusion share an outline.
         let path_clip = !node.style.rare.clip_path.commands().is_empty()
             && self
                 .backend
@@ -1101,15 +1102,16 @@ impl Painter {
     ) {
         let paints_self = paints(walk.scene.kernel, node.id, walk.reveal);
         let shown = (walk.scene.presented)(node.id);
-        // Paint motion's values over the captured box: background, border sides and shadow; then
-        // its states, its looks and a press's background.
+        // Paint motion's values over the captured box (LLP 1055.000 D6,
+        // LLP 1062 D5): background, border sides and shadow; then its states,
+        // its looks and a press's background (LLP 1061 D7, LLP 1121 D8).
         let mut paint = BoxPaint::capture(node, walk.scene.kernel, self.dark)
             .presented(&shown.colors)
             .states(node, &shown, self.dark);
         self.split_row(node, &mut paint);
         self.clipped = Some((node.id, paint.background));
         let geometry = paint.geometry(rect);
-        // A layout transition's size is the surface's alone.
+        // @ref LLP 1063 — a layout transition's size is the surface's alone.
         let surface = paint.geometry(shown.surface(rect));
         // A hidden box paints none of its own chrome. Children still do,
         // and a text node still walks its runs so a visible inline paints.
@@ -1137,7 +1139,7 @@ impl Painter {
             NodeType::Text => self.text_node(walk, node, &geometry, rect, ts),
             // The rest is this element's own paint (its picture, field, or control).
             _ if !paints_self => {}
-            // A 2D canvas's kept bitmap fills its content box.
+            // @ref LLP 1056 D7 — a 2D canvas's kept bitmap fills its content box.
             NodeType::Canvas => {
                 self.row_refuse();
                 if self.window_canvas == Some(node.id) {
@@ -1157,9 +1159,9 @@ impl Painter {
                     .str(exact_kernel::PropId::ImageSource)
                     .is_some_and(|s| s.starts_with("symbol:"))
                 {
-                    // Its `color` as presented, through a transition or a press, unless the
-                    // platform's sheet tinted it: a grouped row's leading symbol and its chevron,
-                    // as UIKit tints a list cell's image.
+                    // Its `color` as presented, through a transition or a press (LLP 1081
+                    // stage 2), unless the platform's sheet tinted it: a grouped row's leading
+                    // symbol and its chevron, as UIKit tints a list cell's image.
                     let sheet = node.style.mask.has(StyleId::TintColor)
                         && !node.style.written.has(StyleId::TintColor);
                     let ink = if sheet {
@@ -1191,7 +1193,7 @@ impl Painter {
                 let label = label.as_deref().unwrap_or("");
                 self.field_control(node, content, focused, ts, label, true);
             }
-            // A date control is a field showing its
+            // @ref LLP 1069.001 D7 — a date control is a field showing its
             // value (`control::date_text`); `type` sets it.
             NodeType::Control
                 if matches!(
@@ -1274,7 +1276,7 @@ impl Painter {
         if clips {
             self.backend.pop_clip();
         }
-        // Native buttons ring their own chrome; a bare
+        // LLP 1104 D6: native buttons ring their own chrome; a bare
         // button rings its outer box even without a press handler.
         if paints_self
             && (node.node_type == NodeType::Pressable
@@ -1287,7 +1289,7 @@ impl Painter {
             let accent = control::ring(node, self.dark);
             self.field_ring(&outer, accent, ts);
         }
-        // A hatch's overlay: over the
+        // @ref LLP 1075.003.000.001 §2.2.1 — a hatch's overlay: over the
         // node's own paint and its descendants, clipped to its border box.
         if let Some(pixels) = self.overlays.get(&node.id).cloned() {
             self.row_refuse();
@@ -1299,7 +1301,7 @@ impl Painter {
     }
 }
 
-/// A sticky box moves by its constraint's offset at its
+/// @ref LLP 1083 D4 — a sticky box moves by its constraint's offset at its
 /// scroller's scroll: the scroller's own, the page's for a root that does
 /// not scroll itself, none for a box that only clips. Painted there, it is
 /// hit there too.
@@ -1330,7 +1332,7 @@ fn sticky(scene: &Scene<'_>, id: ViewId, offset: (f32, f32)) -> (f32, f32) {
 
 /// Where a picture goes under CSS `object-fit`, centred in the content box:
 /// `fill` stretches, `contain`/`cover` keep the ratio, `none` is the natural
-/// size, `scale-down` the smaller of none and contain.
+/// size, `scale-down` the smaller of none and contain (LLP 1011 §4).
 pub fn object_fit(natural: (u32, u32), fit: ObjectFit, content: Rect4) -> Option<Rect4> {
     let (nw, nh) = (natural.0 as f32, natural.1 as f32);
     if nw <= 0.0 || nh <= 0.0 || content.2 <= 0.0 || content.3 <= 0.0 {

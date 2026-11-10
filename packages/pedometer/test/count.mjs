@@ -1,4 +1,4 @@
-// The Android pedometer's sums: `android/Count.kt` and `count/CountCheck.kt` compiled by
+// The Android pedometer's sums (LLP 1133.026 §15 stage 3): `android/Count.kt` and `count/CountCheck.kt` compiled by
 // the Kotlin compiler Gradle keeps in its cache, which the Android build downloaded, and run on the JDK.
 //
 // usage: bun packages/pedometer/test/count.mjs   (a JDK 17 or newer in JAVA_HOME, and one Android build done)

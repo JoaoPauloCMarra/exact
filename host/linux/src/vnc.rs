@@ -2,6 +2,7 @@
 //! `EXACT_VNC=1` binds loopback; another address must be explicit.
 //! `EXACT_VNC_PASSWORD` supplies the RFB password (one to eight bytes).
 //! The protocol does not encrypt frames or input.
+//! @ref LLP 1015 §6
 
 mod auth;
 

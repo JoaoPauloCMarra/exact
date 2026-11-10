@@ -5,14 +5,14 @@ use std::collections::BTreeSet;
 
 impl<D: DataSource> Presenter<D> {
     /// Type into a focused field. `input` edits it now; `change` waits
-    /// for Enter or blur, as for hardware typing.
+    /// for Enter or blur, as for hardware typing (LLP 1069.001 D4).
     pub fn type_text(&mut self, id: ViewId, text: &str) -> Result<String, String> {
         if !self.alert_allows(id) || self.host.route_visibility(id).1 {
             return Err(format!("view {id} is hidden or inert"));
         }
         let kernel = self.host.kernel();
         let node = kernel.node(id).ok_or_else(|| format!("no view {id}"))?;
-        // The agent's root text is a location.
+        // @ref LLP 1038 D11 — the agent's root text is a location.
         if node.props.str(PropId::NavigationBack).is_some() {
             if node.props.bool(PropId::Disabled) == Some(true) {
                 return Err(format!("view {id} is disabled"));
@@ -26,14 +26,15 @@ impl<D: DataSource> Presenter<D> {
             }
             return Ok(format!("{{\"typed\":{id},\"delivery\":\"recognized\"}}"));
         }
-        // A select's value, as a choice sets it.
+        // @ref LLP 1069.001 D9 — a select's value, as a choice sets it.
         if node.node_type == NodeType::Control {
             if node.props.str(PropId::Type) == Some("button") {
                 return Err(format!(
                     "view {id} is a button: it takes a press, not a value"
                 ));
             }
-            // An indeterminate progress has no value.
+            // An indeterminate progress has no value (LLP 1069.001, amended
+            // 2026-10-07).
             if node.props.str(PropId::Type) == Some("progress") {
                 return Err(format!("view {id} is not an input"));
             }
@@ -164,7 +165,7 @@ impl<D: DataSource> Presenter<D> {
         }
         let value = self.field_text(target);
         let mut s = format!("{{\"typed\":{target},\"value\":");
-        // A password's value is never agent output.
+        // A password's value is never agent output (#134).
         let props = self.host.kernel().node(target).map(|n| n.props);
         quote(
             props.map_or(&value[..], |p| exact_runner::agent::shown_value(p, &value)),
@@ -185,19 +186,19 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    /// `type <id> copy|cut|paste [text]`: the clipboard's
+    /// `type <id> copy|cut|paste [text]` (spreadsheet F6): the clipboard's
     /// event with the focus at `id`, heard by the nearest node with a
     /// handler — itself or an ancestor — as on the web; a paste carries
     /// `text` as the clipboard's. This host has no clipboard of its own.
     pub fn clipboard(&mut self, id: ViewId, edit: &str, text: &str) -> Result<String, String> {
         let r = self.clipboard_event(id, edit, text);
         // The paste's chord comes up through the `keyup` handlers last,
-        // whatever took its down, as the web driver's.
+        // whatever took its down, as the web driver's (#140).
         if edit == "paste" {
             self.hold_modifier("ControlLeft", true);
             self.key_up("v", "KeyV", self.host.now());
             self.hold_modifier("ControlLeft", false);
-            // Control's own keyup after it, without its own bit.
+            // Control's own keyup after it, without its own bit (Charlie, 2026-10-07).
             self.key_up("Control", "ControlLeft", self.host.now());
         }
         r
@@ -247,7 +248,7 @@ impl<D: DataSource> Presenter<D> {
         // stay the clipboard event alone.
         if kind == EventKind::Paste {
             self.hold_modifier("ControlLeft", true);
-            // Control's own keydown first, as a keyboard's.
+            // Control's own keydown first, as a keyboard's (Charlie, 2026-10-07).
             let (error, _) = self.key_event(EventKind::Key, "Control", "ControlLeft", false, now);
             if let Some(e) = error {
                 self.hold_modifier("ControlLeft", false);
@@ -281,8 +282,8 @@ impl<D: DataSource> Presenter<D> {
                 return Err(e);
             }
         }
-        // The paste's default action: the text in at the field's selection,
-        // after its listeners, as the web's.
+        // The paste's default action: the text in at the field's selection
+        // (x2apps codeedit #2), after its listeners, as the web's.
         let queued = self.commands.len();
         self.commands.retain(|c| c.name != "preventDefault");
         if field && queued == self.commands.len() {
@@ -309,7 +310,7 @@ impl<D: DataSource> Presenter<D> {
             self.key_shows_ring(key);
         }
         self.restore_controls();
-        // A release's `keyup` handlers at the focus first, whatever
+        // A release's `keyup` handlers at the focus first (#140), whatever
         // took its down; then the release goes where its press went.
         if !down {
             self.key_up(key, code, self.host.now());
@@ -330,7 +331,7 @@ impl<D: DataSource> Presenter<D> {
             };
         }
         // Tab's release goes wherever its press moved the focus, and has no
-        // default; refocusing the target would undo the move.
+        // default; refocusing the target would undo the move (LLP 1088 D7.3).
         if !down && code == "Tab" {
             return Ok(format!("{{\"typed\":{id}}}"));
         }
@@ -383,11 +384,11 @@ impl<D: DataSource> Presenter<D> {
             && self.input_surface(id).is_some()
         {
             // A world's key goes the keyboard's way on the web first: an
-            // `aria-keyshortcuts` button takes it (the web's
+            // `aria-keyshortcuts` button takes it (b6 review B1; the web's
             // capture listener, macOS's `routeKey`), then the `key` handlers
             // at the target and above it hear the down, and one that
-            // prevents it keeps it from the world. A
-            // shortcut's key, down and up, reaches neither.
+            // prevents it keeps it from the world (the platformer's diary,
+            // R8). A shortcut's key, down and up, reaches neither.
             if !down && self.shortcut_keys.remove(code) {
                 return Ok(format!(
                     "{{\"typed\":{id},\"delivery\":\"recognized\",\"shortcut\":true}}"
@@ -416,13 +417,13 @@ impl<D: DataSource> Presenter<D> {
         }
         // A target that takes no focus leaves it where it is, as the web's
         // `focus()` on one does: the key goes to whatever holds the focus,
-        // or to the page's shortcuts when nothing does. A
+        // or to the page's shortcuts when nothing does (pomodoro F5). A
         // surface that refused the key above keeps it refused.
         if !self.focusable(id) && self.input_surface(id).is_some() {
             return Err(format!("view {id} cannot take focus"));
         }
         // A release goes where its press left the focus: a radio's arrow
-        // moves it, as Tab's does.
+        // moves it (x2apps survey #2), as Tab's does.
         if down && self.focusable(id) {
             if let Some(e) = self.set_focus(Some(id), self.host.now()) {
                 return Err(e);
@@ -471,7 +472,7 @@ impl<D: DataSource> Presenter<D> {
         Some(prevented)
     }
 
-    /// A Tab stop: focusable, and an explicit `tabindex` ≥ 0
+    /// A Tab stop (LLP 1088 D7.3): focusable, and an explicit `tabindex` ≥ 0
     /// or none at all — a negative one is focusable but skipped — shown,
     /// not inert, with a box (display: none and `hidden` have none).
     pub(super) fn tabbable(&self, id: ViewId, boxed: &BTreeSet<ViewId>) -> bool {
@@ -481,7 +482,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// A Tab stop but for HTML's one stop to a radio group: every enabled
-    /// radio is one. A TV remote's stops.
+    /// radio is one. A TV remote's stops (LLP 1115.001.003 D4).
     pub(super) fn focus_stop(&self, id: ViewId, boxed: &BTreeSet<ViewId>) -> bool {
         let explicit = self
             .host
@@ -494,12 +495,12 @@ impl<D: DataSource> Presenter<D> {
             && (boxed.contains(&id) || self.inline_box(id).is_some())
     }
 
-    /// Tab's default action, HTML's sequential focus navigation:
-    /// the Tab stops in tree order, positive `tabindex` values first
+    /// Tab's default action, HTML's sequential focus navigation (LLP 1088
+    /// D7.3): the Tab stops in tree order, positive `tabindex` values first
     /// in ascending order; from the focus to the next (Shift: the previous),
     /// wrapping, and from no focus, or one out of the order, to the first
     /// (Shift: the last), or from the starting point a fragment set, to the
-    /// next stop in tree order (Shift: the one before it). A
+    /// next stop in tree order (Shift: the one before it; LLP 1153 D5). A
     /// `key` handler's `preventDefault()` keeps Tab.
     pub(crate) fn move_focus(&mut self, backward: bool, now_ms: f64) -> Option<String> {
         self.move_focus_filtered(backward, now_ms, |_, _| true)
@@ -636,9 +637,9 @@ impl<D: DataSource> Presenter<D> {
     /// whether it is an auto-repeat, which its `KeyboardEvent` carries.
     pub(crate) fn key_down_with(&mut self, name: &str, code: &str, repeat: bool, now_ms: f64) {
         // A hatch observes the key after its handlers and its default
-        // action.
+        // action (LLP 1075.003.000.001 §2.2.2).
         let mark = self.hatch_key_mark();
-        // A key on a held node (the focus there) lets its hold go.
+        // A key on a held node (the focus there) lets its hold go (LLP 1122 D8).
         self.hold_input(self.focus);
         self.key_shows_ring(name);
         self.key_pressed(name, code, repeat, now_ms);
@@ -646,7 +647,8 @@ impl<D: DataSource> Presenter<D> {
     }
 
     fn key_pressed(&mut self, name: &str, code: &str, repeat: bool, now_ms: f64) {
-        // A held Select chooses nothing in a surface it opened either.
+        // A held Select chooses nothing in a surface it opened either
+        // (LLP 1115.001.003 D3).
         if repeat && code == "Select" && self.page_inert() {
             return;
         }
@@ -659,7 +661,7 @@ impl<D: DataSource> Presenter<D> {
         if self.shortcut(name, repeat, now_ms) {
             return;
         }
-        // Then a desktop's Back or Forward key,
+        // Then a desktop's Back or Forward key (LLP 1115.000 D5.4, D5.5),
         // focus or none.
         if self.back_key(name) || self.forward_key(name) {
             self.back_key_down(name, code, repeat, now_ms);
@@ -667,8 +669,8 @@ impl<D: DataSource> Presenter<D> {
         }
         let Some(id) = self.focus else {
             // With no focus the root's handlers hear the key; then, unless
-            // one prevented it, Tab takes the first stop, and
-            // so does a remote's arrow.
+            // one prevented it, Tab takes the first stop (LLP 1088 D7.3), and
+            // so does a remote's arrow (LLP 1115.001.003 D4).
             let (error, prevented) = self.key_event(EventKind::Key, name, code, repeat, now_ms);
             if let Some(e) = error {
                 eprintln!("exact: {e}");
@@ -680,7 +682,7 @@ impl<D: DataSource> Presenter<D> {
             return;
         };
         // A bar's target is no box of the page's: the remote's keys there are
-        // the remote's alone.
+        // the remote's alone (LLP 1115.001.003 D4).
         if self.remote() && self.bar_node(id) {
             self.remote_key(id, (name, code, repeat), now_ms);
             return;
@@ -697,7 +699,7 @@ impl<D: DataSource> Presenter<D> {
             self.remote_leaves_disabled(id, name, now_ms);
             return;
         }
-        // A grouped grip's keys move its row.
+        // A grouped grip's keys move its row (LLP 1094 D9).
         if self.group_key(id, name, now_ms) {
             return;
         }
@@ -715,7 +717,7 @@ impl<D: DataSource> Presenter<D> {
     /// Default keyboard behavior shared by the page and authored top-layer boxes.
     pub(super) fn key_default(&mut self, name: &str, code: &str, repeat: bool, now_ms: f64) {
         // Tab's default action moves the focus, from a canvas or a field too,
-        // as the browser's does.
+        // as the browser's does (LLP 1088 D7.3).
         if name == "Tab" {
             if let Some(e) = self.move_focus(self.modifiers().shift, now_ms) {
                 eprintln!("exact: {e}");
@@ -730,7 +732,7 @@ impl<D: DataSource> Presenter<D> {
             }
             return;
         };
-        // A remote's Select and arrows.
+        // A remote's Select and arrows (LLP 1115.001.003 D3).
         if self.remote_key(id, (name, code, repeat), now_ms) {
             return;
         }
@@ -738,8 +740,9 @@ impl<D: DataSource> Presenter<D> {
             return;
         };
         let role = node.props.str(PropId::AccessibilityRole);
-        // A native button presses under any role, a tab's or a menu item's;
-        // any other pressable as a button does, unless it is a link.
+        // A native button presses under any role, a tab's or a menu item's
+        // (LLP 1069.011.000 D1); any other pressable as a button does, unless
+        // it is a link (chat F14).
         let native = exact_kernel::ControlKind::of(node.node_type, node.props)
             == Some(exact_kernel::ControlKind::Button);
         let pressable = node.node_type != NodeType::TextInput
@@ -756,7 +759,7 @@ impl<D: DataSource> Presenter<D> {
             self.activate_with(id, now_ms, false);
             return;
         }
-        // A radio's arrows and Space.
+        // A radio's arrows and Space (x2apps survey #2).
         if self.radio_key(id, name, now_ms) {
             return;
         }
@@ -764,12 +767,12 @@ impl<D: DataSource> Presenter<D> {
             return;
         }
         // The field's own keys: the caret and selection, editing the text it
-        // shows (typed text kept against its bound value).
+        // shows (typed text kept against its bound value; LLP 1069.001 D4).
         self.field_key(id, name, now_ms);
     }
 
     /// Commit a field typed into since it took the focus: HTML's `change`,
-    /// on blur or Enter. `None` when nothing was
+    /// on blur or Enter (LLP 1069.001 D4). `None` when nothing was
     /// dispatched; else the dispatch's error, if any.
     pub(crate) fn commit_text(&mut self, id: ViewId, now_ms: f64) -> Option<Option<String>> {
         if self.edited != Some(id) || self.ime_owns(id) {
@@ -794,8 +797,8 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// A choice or typed text whose bound value any commit since changed is
-    /// gone, as the web build's write of `value` replaces it: the
-    /// value coming back does not bring it back.
+    /// gone, as the web build's write of `value` replaces it (LLP 1069.001
+    /// D4): the value coming back does not bring it back.
     pub(crate) fn forget_replaced_choices(&mut self) -> std::collections::BTreeSet<ViewId> {
         let replaced = self.host.values.take_replaced();
         for id in &replaced {
@@ -830,7 +833,7 @@ impl<D: DataSource> Presenter<D> {
     /// After an edit's dispatch: a field whose `value` the edit's action did
     /// not write keeps the typed text, as the web's element keeps its own
     /// value and the web build writes `value` only when the bound value
-    /// changes (an unbound field holds its own text).
+    /// changes (LLP 1069.001 D4: an unbound field holds its own text).
     pub(crate) fn keep_typed(&mut self, id: ViewId, typed: String, before: String) {
         // No handler need hear an edit for it to show.
         self.dirty = true;

@@ -163,7 +163,7 @@ impl LayoutInput {
     };
 }
 
-/// EXACT PATCH 20: where an absolutely positioned box sits on an axis with
+/// EXACT PATCH 20 (LLP 1074 T1): where an absolutely positioned box sits on an axis with
 /// neither inset (CSS 2.1 §10.3.7's static position), as its parent's algorithm gives it: a
 /// rectangle in the parent's border-box coordinates and an alignment inside it.
 ///

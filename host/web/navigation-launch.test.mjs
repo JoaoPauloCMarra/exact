@@ -12,7 +12,7 @@ test('a drive\'s formatLocale stays out of the launch route', () => {
   expect(launchLocation({ location: { pathname: '/', search: '?formatLocale=x' } })).toBe('/?formatLocale=x');
 });
 
-test('the launch keeps its fragment, after the query a drive leaves out', () => {
+test('the launch keeps its fragment, after the query a drive leaves out (LLP 1153 D5)', () => {
   expect(launchLocation({ location: { pathname: '/item/7', search: '', hash: '#moves' } })).toBe('/item/7#moves');
   expect(launchLocation({ location: { pathname: '/item/7', search: `?${DRIVE}&q=a`, hash: '#moves' } })).toBe('/item/7?q=a#moves');
   // A history entry's URL carries the fragment after the drive's facts, as the browser writes it.

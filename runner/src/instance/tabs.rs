@@ -1,4 +1,4 @@
-//! A navigation tab built when it is first selected.
+//! A navigation tab built when it is first selected (LLP 1075.003 §3.7).
 //!
 //! A tab panel ([`panel_sites`]) is made empty. Its contents — their views,
 //! rows and the state their components declare — are made in the update
@@ -354,8 +354,8 @@ fn to_open(index: &Index, waiting: &[ViewId]) -> Vec<ViewId> {
     open
 }
 
-/// The state of components in tab panels a reload carries:
-/// each value with its panel's `id` and its slot's name, until that
+/// The state of components in tab panels a reload carries (LLP 1075.003
+/// §9.14): each value with its panel's `id` and its slot's name, until that
 /// panel is built again. A panel's contents are one arm, which owns that
 /// state (`contract_syntax::inline`); no other arm's state is carried.
 pub type CarriedPanels = Vec<(String, String, Value)>;

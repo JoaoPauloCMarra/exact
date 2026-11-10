@@ -13,7 +13,7 @@ pub enum PainterChoice {
     Auto,
     /// vello over wgpu; a boot error when there is no adapter.
     Gpu,
-    /// Instanced geometry; `EXACT_INK_DEVICE` selects wgpu, Metal or D3D11.
+    /// Instanced geometry; `EXACT_INK_DEVICE` selects wgpu, Metal or D3D11 (LLP 1149).
     Ink,
     /// tiny-skia.
     Cpu,
@@ -30,7 +30,7 @@ pub type PainterFactory = fn() -> Result<Box<dyn Backend>, String>;
 static CUSTOM: std::sync::OnceLock<(&'static str, PainterFactory)> = std::sync::OnceLock::new();
 
 /// Register the backend `EXACT_PAINTER=custom` boots with, named for reports
-/// (a renderer comparison builds one outside the host).
+/// (LLP 1076's renderer comparison builds one outside the host).
 pub fn set_custom_painter(name: &'static str, make: PainterFactory) {
     let _ = CUSTOM.set((name, make));
 }
@@ -57,7 +57,7 @@ impl PainterChoice {
         }
     }
 
-    /// `EXACT_PAINTER` overrides the manifest's choice.
+    /// `EXACT_PAINTER` overrides the manifest's choice (LLP 1149 D12).
     pub fn from_env(manifest: PainterChoice) -> PainterChoice {
         manifest.with_override(std::env::var("EXACT_PAINTER").ok().as_deref())
     }
@@ -77,7 +77,7 @@ impl PainterChoice {
 }
 
 #[cfg(any(target_os = "android", test))]
-const ANDROID_INK_UNAVAILABLE: &str = "host.android.painter=\"ink\" / EXACT_PAINTER=ink is not yet honoured: ink's wgpu Vulkan surface presenter is not implemented";
+const ANDROID_INK_UNAVAILABLE: &str = "host.android.painter=\"ink\" / EXACT_PAINTER=ink is not yet honoured: ink's wgpu Vulkan surface presenter is not implemented (LLP 1149 S4)";
 
 /// What the painter is, for the smoke's report.
 #[derive(Debug, Clone)]
@@ -263,7 +263,7 @@ fn ink_backend(ink: crate::ink::Ink) -> (Box<dyn Backend>, PainterInfo) {
 }
 
 impl<D: DataSource> Presenter<D> {
-    /// Attach the benchmark carrier. Shipping Apple apps still use native views.
+    /// Attach S1's benchmark carrier. Shipping Apple apps still use native views.
     #[cfg(target_os = "macos")]
     pub fn attach_apple_layer(
         &mut self,
@@ -492,6 +492,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// Install the device prepared before app boot, before any frame is drawn.
+    /// @ref LLP 1149 S2.4.
     #[cfg(windows)]
     pub(crate) fn install_prepared_painter(
         &mut self,

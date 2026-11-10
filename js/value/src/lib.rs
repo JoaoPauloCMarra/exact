@@ -1,5 +1,5 @@
-//! Values across the seam as JSON, directed by the plan's declared shapes:
-//! records are objects keyed by their declared field names,
+//! Values across the seam as JSON, directed by the plan's declared shapes
+//! (LLP 1027 D2): records are objects keyed by their declared field names,
 //! lists are arrays, `option` is `null` or the value, numbers are finite.
 //! The plan's `sources` table says which shape each argument and each answer
 //! has; the conversion never guesses.

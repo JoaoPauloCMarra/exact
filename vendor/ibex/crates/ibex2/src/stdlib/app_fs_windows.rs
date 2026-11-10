@@ -1,4 +1,4 @@
-//! Logical app paths on Windows.
+//! @ref LLP 0068#windows-app-storage-qualification — logical app paths on Windows.
 use crate::stdlib::fs::{FsOp, FsResult};
 use crate::stdlib::windows_directory::{self, identity, Directory};
 use crate::stdlib::windows_fs::{error, token, Target};

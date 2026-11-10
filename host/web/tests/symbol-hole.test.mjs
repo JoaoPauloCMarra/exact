@@ -1,4 +1,4 @@
-// An icon whose SVG fills even-odd draws its holes on
+// LLP 1121 stage 14 C2: an icon whose SVG fills even-odd draws its holes on
 // the web. Its element is marked `data-symbol-evenodd` (element.rs, or the JS
 // target's `draw`, which reads the form's `evenodd:` marker), and each
 // runtime's painter (glue.js `refreshSymbols`, symbols.js `refresh`) writes

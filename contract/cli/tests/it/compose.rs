@@ -1,5 +1,6 @@
-//! `provide`/`inject` and `slot`/`children`, proven on the kernel after
-//! boot; `provide` is a component section.
+//! LLP 1017 P4a/P4b: `provide`/`inject` and `slot`/`children`, proven on
+//! the kernel after boot; `provide` is a component section (LLP
+//! 1035.005.000 D9).
 
 use exact_kernel::{Color, Kernel, PropValue};
 use exact_plan::Value;
@@ -64,7 +65,7 @@ fn a_provide_section_fills_an_inject_and_the_nearest_component_wins() {
         let key = k.find_by_test_id(id)[0];
         k.node_by_key(key).unwrap().style.text_color
     };
-    // A section covers its component's whole view, an
+    // LLP 1035.005.000 D9: a section covers its component's whole view, an
     // inner component's overrides an outer one's, and a slot's fill keeps
     // its caller's context.
     for (id, hex) in [
@@ -234,7 +235,7 @@ fn position_fixed_says_how_to_pin_a_box() {
     assert!(
         error
             .message
-            .ends_with("; `fixed` is not a row: pin a box to the viewport with `absolute`, directly inside a viewport-sized root that does not scroll (its content scrolls in a `scroll` beside it)"),
+            .ends_with("; `fixed` is not a row (LLP 1001): pin a box to the viewport with `absolute`, directly inside a viewport-sized root that does not scroll (its content scrolls in a `scroll` beside it)"),
         "{error}"
     );
 }
@@ -292,7 +293,7 @@ fn a_logical_box_property_names_its_physical_longhands() {
 
 #[test]
 fn a_maximum_of_none_and_a_pixel_text_compile() {
-    // CSS's initial maximum and `px` on a pixel row.
+    // CSS's initial maximum (LLP 1102 §3.11) and `px` on a pixel row (§3.10).
     for src in [
         "component App\n  view\n    column max-height=\"none\"\n      text \"a\" font-size=\"14px\" letter-spacing=\"-0.5px\"\n",
         "component App\n  state narrow = false\n  view\n    column max-width=(narrow ? \"320px\" : \"none\")\n      text \"a\"\n",
@@ -357,7 +358,7 @@ fn a_stray_else_and_a_body_on_the_next_line_say_where_they_go() {
         ),
         "{error}"
     );
-    // A `fn`'s body may start on the next line; a derive's may not.
+    // A `fn`'s body may start on the next line (LLP 1116.017 D2); a derive's may not.
     let body = "fn label(done: bool): string =\n  done ? \"Done\" : \"Open\"\ncomponent App\n  view\n    text label(true)\n";
     contract::compile(body).unwrap();
     let derive = "component App\n  state done = false\n  derive label =\n    done ? \"Done\" : \"Open\"\n  view\n    text label\n";

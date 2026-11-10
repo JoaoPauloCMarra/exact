@@ -41,7 +41,7 @@ test('a wildcard in a mixed accept preserves the original HEIC type', () => {
   expect(deliveredType('image/heic', ['image/jpeg'])).toBe('image/jpeg');
 });
 
-// The JS target's share holds its files under the agent, and
+// LLP 1125 D12: the JS target's share holds its files under the agent, and
 // refuses a picture of an element, a file outside `fs.read`, a path that is
 // no app file, and nothing to share, in the runner's words (share.rs).
 test('a share holds its files under the agent and refuses what the web cannot share', () => {

@@ -1,5 +1,5 @@
 //! The host's local-network fact and the rule every fetch hop and WebSocket
-//! open passes.
+//! open passes (LLP 1133.036 D6, D8).
 //!
 //! On iOS 14+ and macOS 15+ a connection to a device on the local network
 //! can show the system's Local Network alert as surely as a Bonjour browse
@@ -13,13 +13,13 @@
 //! and resolves' outcomes into it, and on Apple the host's probe does. Under
 //! the agent the runner stamps the substitute's state on each request
 //! instead ([`Reach::substitute`]), and the destination's risk is the
-//! private ranges and local names, since the substitute reads no interface.
+//! private ranges and local names, since the substitute reads no interface (D19).
 
 use crate::CallOrigin;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
-/// A permission state. `Unknown` means "a reach
-/// may ask": Apple reports no state, and each launch starts here.
+/// A permission state, as LLP 1133.002 D8 words it. `Unknown` means "a reach
+/// may ask": Apple reports no state, and each launch starts here (D8).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum State {
     /// Access is allowed, or the target has no local network privacy.
@@ -80,7 +80,7 @@ static PROMPTS: AtomicBool = AtomicBool::new(false);
 /// Whether this host's target has local network privacy, so that a reach to
 /// the local network can show a prompt: iOS 14 and later and macOS 15 and
 /// later (TN3179). Such a host says so at launch, and the fact starts at
-/// `unknown`; elsewhere no reach has prompt risk, the rule refuses
+/// `unknown` (D8); elsewhere no reach has prompt risk, the rule refuses
 /// nothing, and the fact is `granted`.
 pub fn launch(prompts: bool) {
     PROMPTS.store(prompts, Ordering::Release);
@@ -118,7 +118,7 @@ pub fn report(state: State) -> bool {
 /// Who asked a request, for the rule this module states.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Reach {
-    /// The origin of the answer that asked it.
+    /// The origin of the answer that asked it (LLP 1133.002 D12).
     pub origin: CallOrigin,
     /// Under the agent, the substitute's local-network state, which stands
     /// for the host's fact; `None` in production.

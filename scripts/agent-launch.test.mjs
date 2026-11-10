@@ -1,4 +1,4 @@
-// The drive's launch facts (agent-launch.mjs `launchFacts`), and the browser it finds; the fixed
+// The drive's launch facts (agent-launch.mjs `launchFacts`, LLP 1027.000.000 D3), and the browser it finds; the fixed
 // defaults and overrides are host/web/agent.test.mjs's "launch setup" test.
 import { test, expect } from 'bun:test';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -6,11 +6,9 @@ import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { Cdp, agentPage, chromium, chromiumBuilds, launchFacts, launchEnvironment, parseFlags, launchLog, launchFailure, webPort, pollUntil } from './agent-launch.mjs';
 import { PassThrough } from 'node:stream';
-// The Snapback device checks need the Snapback client, which a checkout may not have.
-const hasSnapback = existsSync(new URL('../snapback4/web/device-build.mjs', import.meta.url));
 import { placeReporter } from '../host/web/navigation.js';
 
-// Every browser carrier opens the page with the same query: the drive's auth fixture among it.
+// Every browser carrier opens the page with the same query (LLP 1146 D4): the drive's auth fixture among it.
 test('a web drive opens its page with the facts, its auth fixture, storage and hatches', () => {
   const page = agentPage(new URL('http://127.0.0.1:9/'), { facts: { epoch: '0' }, storage: 'drive', env: { EXACT_AUTH_FIXTURE: 'http://127.0.0.1:4400', EXACT_HATCHES: 'off' } });
   expect(Object.fromEntries(page.searchParams)).toEqual({ agent: '1', epoch: '0', authFixture: 'http://127.0.0.1:4400', storage: 'drive', hatches: 'off' });
@@ -110,8 +108,10 @@ function stampedWasm(stamp = {format: 1, version: engineVersion(), capabilities:
   return Buffer.concat([Buffer.from([0,97,115,109,1,0,0,0,0]), leb(body.length), body]);
 }
 import { timeReporter } from '../host/web/navigation.js';
+// The Snapback device checks need the Snapback client (snapback4/), which this repository does not ship.
+const hasSnapback = existsSync(new URL('../snapback4/web/device-build.mjs', import.meta.url));
 
-// `--reader` is a flag of the drive, said to the Android carrier as the variable it reads
+// LLP 1107 D1: `--reader` is a flag of the drive, said to the Android carrier as the variable it reads
 // (agent-android.mjs `androidBinary`), and never an op.
 test('--reader names the Canvas reader to the Android carrier', () => {
   const before = process.env.EXACT_ANDROID_READER;
@@ -128,7 +128,7 @@ test('--reader names the Canvas reader to the Android carrier', () => {
   }
 });
 
-// A drive against a live backend opts into the machine's clock, read once at launch; the host is
+// App farm round 2: a drive against a live backend opts into the machine's clock, read once at launch; the host is
 // told those milliseconds, so `state.time.epochAtZero` is the launch instant and `clock +N` moves the date from it.
 test('--epoch now is the machine clock read once at launch, reported as that instant', () => {
   const {flags} = parseFlags(['web', '--epoch', 'now', 'state']);
@@ -164,7 +164,7 @@ test('the pinned headless shell by default, the full build for a need, and CHROM
     expect(chromiumBuilds('/pw/chromium-1248/chrome-linux/chrome', 'linux', 'riscv64').shell).toBe(null);
   } finally { rmSync(dir, {recursive:true, force:true}); }
 });
-// A builder on a shared machine keeps every listener in its assigned range.
+// App farm wave 1 (21 builds): a builder on a shared machine keeps every listener in its assigned range.
 test('a web drive takes its port from --port, else EXACT_PORT, and refuses anything but a port', () => {
   expect(parseFlags(['web', '--port', '50821', 'tree']).flags.port).toBe('50821');
   expect(webPort('50821', {EXACT_PORT: '50822'})).toBe(50821);
@@ -178,7 +178,7 @@ test('a web drive takes its port from --port, else EXACT_PORT, and refuses anyth
   expect(() => parseFlags(['web', '--storage', 'proof', '--keep-storage', '--reset-storage'])).toThrow('mutually exclusive');
 });
 
-// Only the drive's own flags let a program run.
+// LLP 1133.007 §7: only the drive's own flags let a program run.
 test('an inherited EXACT_AGENT_PROCESS opens no process gate', () => {
   process.env.EXACT_AGENT_PROCESS = 'path:sh=real';
   process.env.EXACT_AGENT_HOME = '/tmp/inherited';
@@ -190,7 +190,7 @@ test('an inherited EXACT_AGENT_PROCESS opens no process gate', () => {
   delete process.env.EXACT_AGENT_PROCESS;
 });
 
-// Chrome's fatal line comes before a native stack that a tail would keep instead.
+// App farm 082: Chrome's fatal line came before a native stack the tail kept instead.
 test("a Chrome that dies at launch is reported by its first fatal line, before the stack's tail", () => {
   const log = launchLog();
   log.add('[1:1:1011/000000.000:FATAL:process_singleton_posix.cc(313)] Socket path too long: /long/.org.chromium.Chromium.x/SingletonSocket');
@@ -202,7 +202,7 @@ test("a Chrome that dies at launch is reported by its first fatal line, before t
   expect(launchFailure(new Error('closed'), launchLog(), {alive: false, chrome: '/c'}).message).toContain('(it printed nothing)\nSet CHROME');
 });
 
-// `test web` against no `snapback4 dev` would fail as data mismatches. The loopback origins
+// App farm wave 1 (four builds): `test web` against no `snapback4 dev` failed as data mismatches. The loopback origins
 // app.ts fetches are asked first; a Snapback app's run is refused naming the origin, any other app's is told.
 test.skipIf(!hasSnapback)('a web test run asks the backend its app fetches first', async () => {
   const { backendPreflight, loopbackOrigins, fetchOrigins } = await import('./agent-test.mjs');
@@ -343,7 +343,7 @@ test.skipIf(!hasSnapback)('Firefox and WebKit refuse missing and skewed devices 
   }
 });
 
-// `fresh`: before a test, each snapback4 dev server the app
+// `fresh` (the author's ruling of 2026-10-12, via the sb4 app farm): before a test, each snapback4 dev server the app
 // fetches is emptied through `POST /dev/reset`, seeded from the line's file; a server without the door (404, as 0.4.22
 // answers) refuses the test, saying what to do. Stub servers stand in for snapback4 dev, old and new.
 test('fresh empties each snapback4 dev server through its reset door, and refuses one without it', async () => {
@@ -392,7 +392,7 @@ test('fresh empties each snapback4 dev server through its reset door, and refuse
   } finally { for (const s of [door, old, other, shut]) s.close(); rmSync(dir, { recursive: true, force: true }); }
 });
 
-// A mutation's refused reply is named with why, from either runner's line; a resource's is not.
+// A mutation's refused reply is named with why, from either runner's line (sb4 farm wave 6, E3); a resource's is not.
 test("a mutation whose reply was refused is named with the field its shape lacks", async () => {
   const { refusedReplies } = await import('./agent-test.mjs');
   const why = '`post` answered outside its shape: field `seq` is not in the shape';
@@ -879,7 +879,7 @@ test('backend diagnostics name the selected source and warn when a saved selecti
 });
 
 
-// A setting app.ts reads at build (`import.meta.env.NAME`), declared in app.json's `env`.
+// LLP 1153 D4: a setting app.ts reads at build (`import.meta.env.NAME`), declared in app.json's `env`.
 test('a setting is read from the environment, then .env.local, then .env, and what Bun loaded from them is never the environment', async () => {
   const {settingValues} = await import('../js/bake/src/__exact_env.mjs');
   const dir=mkdtempSync(resolve(tmpdir(),'exact-settings-'));

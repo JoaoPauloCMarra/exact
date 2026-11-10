@@ -1,4 +1,4 @@
-//! The agent API's read operations over the Caltrain app: the
+//! The agent API's read operations over the Caltrain app (LLP 1012): the
 //! tree in preorder with props by their schema names, the state as typed
 //! JSON, the journal, `settle` from the springs' engine — the same answers
 //! on every host, because they come from the runner and kernel.
@@ -80,12 +80,12 @@ fn mapped_tree_names_sites_and_the_digest_from_the_same_runner_read() {
 fn state_is_typed_json_with_field_names() {
     let host = boot();
     let state = host.agent(r#"{"op":"state"}"#);
-    // Tagged with the epoch and incarnation, then the
+    // Tagged with the epoch and incarnation (LLP 1035.002 D3), then the
     // clock, then the slots in the plan's order.
     assert!(state.starts_with("{\"epoch\":"), "{state}");
     assert!(state.contains(",\"clock\":0,\"slots\":{"), "{state}");
-    // Every slot by name, typed (the sky's material, the deck, and its
-    // focus among them).
+    // Every slot by name, typed (LLP 1014 added the sky's material, the
+    // deck, and its focus).
     for slot in [
         "\"nowMs\":1787915400000",
         "\"screen\":\"home\"",
@@ -170,7 +170,7 @@ fn an_advance_batch_marks_each_timers_time_and_says_where_the_clock_landed() {
     let mut host = boot();
     // Two timer fires in one seek: each commit's ops sit behind an `at`
     // marker with the timer's due time, and the batch says where the
-    // runner's clock ended (a page that owns time attributes
+    // runner's clock ended (LLP 1002 D3: a page that owns time attributes
     // what each commit started to that instant).
     let batch = host.advance(2500.0);
     let first = batch

@@ -1,4 +1,4 @@
-//! Retained shaping, logical ranges, visual glyphs.
+//! @ref LLP 1043.000 §3 D5–D7 — retained shaping, logical ranges, visual glyphs.
 //! Only the accepted painter owns the current flowed layout per leaf. Flow layouts
 //! never enter the width cache; replacing that owner releases the previous frame.
 //! Preparation is O(G log G); a frame adds O(G + F log G + sum(g_f log g_f)) to
@@ -421,7 +421,7 @@ impl TextEngine {
                     visible.push(c);
                 }
             }
-            // Reserve the run's real ellipsis ink.
+            // @ref LLP 1043.000 §3 D7 — reserve the run's real ellipsis ink.
             let mut suffix: Option<&[LayoutGlyph]> = f.hyphenated.then_some(&data.hyphen);
             let mut paint_end = f.end;
             if result.clamped && fragment_index + 1 == fragment_count {

@@ -45,6 +45,7 @@ impl Default for Transport {
 }
 /// Immutable PCM handed to an output: synthesized mono `f32`, or a sound asset's
 /// interleaved 16-bit frames shared with the world. Outputs key caches by address.
+/// @ref LLP 1046.003 §AU4 (outputs)
 #[derive(Clone, Debug)]
 pub enum Pcm {
     /// Mono samples rendered by the Player.

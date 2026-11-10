@@ -1,4 +1,4 @@
-//! `orientationlock` on Windows: the process's
+//! `orientationlock` on Windows (LLP 1133.029 D8): the process's
 //! [`SetDisplayAutoRotationPreferences`](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setdisplayautorotationpreferences),
 //! which a convertible or a tablet follows when it turns and a desktop
 //! monitor never needs. The presenter tells the session's lock when it

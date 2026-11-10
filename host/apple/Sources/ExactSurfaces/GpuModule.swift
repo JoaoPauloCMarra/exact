@@ -1,8 +1,8 @@
-// The GPU module's C ABI, loaded: the app's `<app>-gpu`
+// The GPU module's C ABI, loaded (LLP 1009 D2): the app's `<app>-gpu`
 // dylib, `dlopen`ed by a presenter the first time a canvas is on screen —
 // after the first painted frame. Shared by the AppKit and UIKit presenters;
 // what each does with a surface (its `CanvasesHost`) is its own. An app that
-// declares GPU modules has one more dylib per module, each an
+// declares GPU modules has one more dylib per module (LLP 1009 D6), each an
 // instance of this class, loaded the first time a canvas of one of its
 // surfaces is; a canvas keeps the instance that created it.
 import Foundation
@@ -17,8 +17,8 @@ import QuartzCore
 /// Why the module could not be loaded.
 struct GpuLoadError: Error { let message: String }
 
-/// The dylib's C ABI (gpu/src/native.rs). Loaded once per process:
-/// `gpu_load` creates the device and the module's instance table, and
+/// The dylib's C ABI (gpu/src/native.rs). Loaded once per process (LLP 1031
+/// D12): `gpu_load` creates the device and the module's instance table, and
 /// a second load would replace them under the first session's surfaces.
 final class GpuModule {
     /// Each artifact's one load: "" is the primary, else a declared module's name.
@@ -32,7 +32,7 @@ final class GpuModule {
         return r
     }
 
-    /// The artifact that owns `surface`: the declared module
+    /// The artifact that owns `surface` (LLP 1009 D6): the declared module
     /// that lists it (`compat.inputs.gpuModules`), else the primary, "".
     static func artifact(for surface: String, compat: [String: Any]) -> String {
         let modules = (compat["inputs"] as? [String: Any])?["gpuModules"] as? [String: [String]] ?? [:]
@@ -60,7 +60,7 @@ final class GpuModule {
     static func verify(path: String, compat: [String: Any], artifact: String = "") -> GpuLoadError? {
         func refusal(_ reason: String) -> GpuLoadError { GpuLoadError(message:"GPU module \(path): \(reason)") }
         let embedded = compat["embedded"] as? [String: Any]
-        // A module's card is its own: one signed digest per artifact.
+        // A module's card is its own (LLP 1009 D6): one signed digest per artifact.
         let found = artifact.isEmpty ? embedded?["gpu"] : (embedded?["gpuModules"] as? [String: Any])?[artifact]
         guard let card = found as? [String: Any] else {
             return refusal("missing baked identity")
@@ -134,7 +134,7 @@ final class GpuModule {
     let wantsInput: WantsFn?
     let input: BindFn?
     typealias HeadroomFn = @convention(c) (UInt32, Float) -> Void
-    /// An HDR surface: whether a canvas is one, and the
+    /// An HDR surface (LLP 1100 D12b): whether a canvas is one, and the
     /// headroom it draws to.
     var highDynamicRange: WantsFn?
     var headroom: HeadroomFn?
@@ -190,7 +190,7 @@ final class GpuModule {
         guard !recovering, deviceLost?() == true else { return }
         recovering = true
         let generation = lossGeneration
-        // Another artifact's canvases keep their device.
+        // Another artifact's canvases keep their device (LLP 1009 D6).
         let recoveryEntries = canvases.allObjects.flatMap { $0.entries.values.filter { $0.module == nil || $0.module === self } }
         let delay = failures == 0 ? 0 : min(5.0, 0.1 * pow(2.0, Double(failures - 1)))
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
@@ -239,24 +239,24 @@ final class GpuModule {
     let render: RenderFn
     private var flushFn: SyncFn?
     /// Submit the frame every canvas rendered since the last flush, once, and
-    /// present them: after a tick's renders.
+    /// present them (LLP 1009 D7): after a tick's renders.
     func flush() {
         if flushFn?() == 1 { FileHandle.standardError.write(Data("exact gpu: \(error())\n".utf8)) }
     }
     let dirty: DirtyFn
     let destroy: DestroyFn
-    /// The canvas's children as pixels; whether the surface wants them.
+    /// The canvas's children as pixels; whether the surface wants them (LLP 1014).
     let texture: TextureFn
     /// The children as a Metal texture the presenter rendered, imported as it
-    /// is — when the module exports it (Apple targets).
+    /// is (LLP 1008 §9) — when the module exports it (Apple targets).
     let textureMetal: TextureMetalFn?
     /// The module's GPU work complete — before a texture it read is drawn
     /// into again.
     let sync: SyncFn?
     let childrenMode: WantsFn
-    /// A canvas's picture as pixels (nested canvases).
+    /// A canvas's picture as pixels (LLP 1014, nested canvases).
     let readback: ReadbackFn
-    /// Each child as its own texture, and where the surface put it.
+    /// Each child as its own texture, and where the surface put it (LLP 1014 D5).
     func wantsChildren(_ id: UInt32) -> UInt32 { (1...2).contains(childrenMode(id)) ? 1 : 0 }
     func wantsChildrenEach(_ id: UInt32) -> UInt32 { childrenMode(id) == 3 ? 1 : 0 }
     private let childView: ChildFn
@@ -269,7 +269,7 @@ final class GpuModule {
     }
     let childrenCount: CountFn
     let placement: PlacementFn
-    /// A shader's text by name: validated, its interface
+    /// A shader's text by name (LLP 1030 D8): validated, its interface
     /// checked against the module's; 0 on success, else `error()` says why.
     let shader: ShaderFn?
     let validateShader: ShaderFn?
@@ -299,7 +299,7 @@ final class GpuModule {
         }
         let module = GpuModule(create: create, bind: bind, render: render, dirty: dirty, destroy: destroy, texture: texture, textureMetal: sym("gpu_texture_metal", TextureMetalFn.self), sync: sym("gpu_sync", SyncFn.self), childrenMode: childrenMode, readback: readback, child: child, childrenCount: childrenCount, placement: placement, shader: sym("gpu_shader", ShaderFn.self), validateShader: sym("gpu_shader_validate", ShaderFn.self), clearShaders: sym("gpu_shaders_clear", ClearShadersFn.self), errorLen: errorLen, errorPtr: errorPtr, wantsInput: sym("gpu_wants_input", WantsFn.self), input: sym("gpu_input", BindFn.self), messages: sym("gpu_messages", WantsFn.self), published: sym("gpu_published", WantsFn.self), agent: sym("gpu_agent", BindFn.self), outPtr: sym("gpu_out_ptr", ErrorPtrFn.self))
         module.flushFn = flush
-        // The GPU tier: the drive's, told before the device
+        // The GPU tier (LLP 1139.003 D2): the drive's, told before the device
         // is made, under the agent; else the module's own from its device.
         let tier = sym("gpu_tier", TierFn.self)
         if PageFacts.substituted { _ = tier?(PageFacts.agentGpuTier) }
@@ -358,8 +358,8 @@ final class GpuModule {
     }
 
     /// A loaded module validates candidate shaders without changing its registry.
-    /// Runtime shader assets are the primary's; a declared
-    /// module compiles the WGSL it carries.
+    /// Runtime shader assets (LLP 1030 D8) are the primary's; a declared
+    /// module compiles the WGSL it carries (LLP 1009 D6).
     static var loaded: GpuModule? { if case .success(let module)? = shared[""] { return module }; return nil }
     func accepts(_ sources: [String: Data]) -> Bool {
         guard let validateShader, clearShaders != nil else { return false }
@@ -381,7 +381,7 @@ final class GpuModule {
         replaceShaders(sources)
     }
 
-    /// One shader's text into the module: validated, its
+    /// One shader's text into the module (LLP 1030 D8): validated, its
     /// interface checked against the one the module binds; false, with the
     /// reason at `error()`, when refused.
     func register(shader name: String, text: Data) -> Bool {
@@ -459,7 +459,7 @@ private let gpuPresented: GpuModule.AcquiredFn = {
 /// The module's callback on the thread that acquired a starved canvas's
 /// drawable (gpu/src/acquire.rs): the render belongs on the main thread.
 /// Drawables that land before the main thread gets to the first are served
-/// by that one pass: one render walk and one flush for them all.
+/// by that one pass: one render walk and one flush for them all (LLP 1009 D7).
 private let gpuAcquired: GpuModule.AcquiredFn = {
     guard AcquiredPass.schedule() else { return }
     DispatchQueue.main.async {
@@ -486,8 +486,8 @@ private enum AcquiredPass {
 
 extension GpuModule {
     /// Before a frame, an HDR GPU surface's headroom (the display's, or 1
-    /// where the limit or display rules HDR out) and its layer's range.
-    /// wgpu already asked for EDR when it configured the target.
+    /// where the limit or display rules HDR out) and its layer's range
+    /// (LLP 1100 D12b). wgpu already asked for EDR when it configured the target.
     func syncDynamicRange(_ id: UInt32, view: NodeView, layer: CALayer?) {
         guard let headroom, highDynamicRange?(id) == 1 else { return }
         let limit = view.style["dynamic_range_limit"]?.string

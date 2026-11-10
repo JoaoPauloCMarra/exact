@@ -1,10 +1,10 @@
 # @exact/maps: drives by hand
 
 What the agent cannot judge: whether the map looks and feels like the
-platform's own, the real tiles (the agent draws plain ones), and the
-Android map, which needs a Maps SDK key. Use dedicated test devices.
-Record the date, the OS version, the device and what happened beside
-each step when you run it.
+platform's own, the real tiles (the agent draws plain ones, LLP 1133.021
+§12), and the Android map, which needs a Maps SDK key (§15 question 7).
+Use LLP 1133.020's test devices. Record the date, the OS version, the
+device and what happened beside each step when you run it.
 
 ## Web: Chrome, Safari and Firefox
 
@@ -40,7 +40,8 @@ the URL it prints.
    pinch once the map rests.
 4. **VoiceOver.** Each marker is an element named by its title.
 5. **Time to the map.** From launch, note how long the map's box stays
-   empty before the map shows (the package loads after first pixel). Record it.
+   empty before the map shows (LLP 1133.021 D21: the package loads after
+   first pixel). Record it.
 
 ## Mac (macOS 14 or later)
 
@@ -58,7 +59,7 @@ rotates nor tilts.
 ## Android phone with Google Play services
 
 Needs a Maps SDK key restricted to `com.exact.mapdemo` and the debug
-signing certificate's SHA-1, given privately.
+signing certificate's SHA-1 (LLP 1133.020 §3.2 item 6), given privately.
 Never commit it.
 
 `EXACT_GOOGLE_MAPS_API_KEY=<key> bun scripts/agent-android.mjs build map-demo --apk`,
@@ -71,7 +72,7 @@ build checks.
    below: that marker selected, the count unchanged.
 3. **Gestures.** Pan, pinch, rotate, tilt. The "Zoom:" line follows once the
    camera is idle. If the map does not pan, hosted views do not yet take
-   touches: record it.
+   touches (LLP 1133.021 §9 item 4): record it.
 4. **Lifecycle.** Leave the app and come back; rotate the phone. The map
    keeps its camera and markers.
 5. **A phone without Play services** (if one is at hand): the SDK's own

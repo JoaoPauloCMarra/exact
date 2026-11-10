@@ -3,8 +3,8 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// HTML's empty date field on iOS (bench t7-wizard, 2026-10-08):
-/// a `UIDatePicker` always holds a date, so while the bound
+/// HTML's empty date field on iOS (bench t7-wizard, 2026-10-08; LLP
+/// 1115.000 D13.1): a `UIDatePicker` always holds a date, so while the bound
 /// value is "" its content is masked under the platform's pill, which holds
 /// the author's `placeholder` and, with none, no words: never today's date,
 /// and never a browser's `mm/dd/yyyy`. It still takes the tap that opens it.

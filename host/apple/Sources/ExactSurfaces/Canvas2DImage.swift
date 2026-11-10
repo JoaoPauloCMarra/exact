@@ -1,4 +1,4 @@
-// Canvas 2D images and pixels on Apple, and the
+// @ref LLP 1056 D9 — Canvas 2D images and pixels on Apple, and the
 // presenter's canvases. An image handle is the string an `image` node's
 // `src` takes: an app asset, or an http(s) URL. The runner names the handles
 // its draws asked for (the batch's `canvasImages`); the host decodes each
@@ -85,7 +85,7 @@ final class Canvas2DHost: Canvas2DEnv {
     /// Where each bitmap shows (`place`). A bitmap drawn at a new size before
     /// its view lays out is stretched into the old box.
     private var placements: [UInt32: (box: CGRect, radii: [CGSize])] = [:]
-    /// Replay runs off the main thread, in order (as
+    /// Replay runs off the main thread, in order (LLP 1056 §8 stage 4, as
     /// built): a list row's canvas cost 130 ms/s of an iPhone's main thread
     /// in a fling. The row's box, mask and scale apply with its batch; its
     /// pixels land when the replay ends, a frame later at most, and the
@@ -129,7 +129,7 @@ final class Canvas2DHost: Canvas2DEnv {
     /// The views' real scale differs from what the canvases were drawn at.
     var onScale: ((CGFloat) -> Void)?
     private var reported: CGFloat = 0
-    /// The session's text engine.
+    /// The session's text engine (LLP 1056 D8).
     var textEngine: (() -> TextEngine?)?
     /// An app asset's bytes.
     var assetBytes: ((String) -> Data?)?
@@ -265,7 +265,7 @@ final class Canvas2DHost: Canvas2DEnv {
         var unreadable = 0
         let lists = job.lists.compactMap { $0 }
         unreadable += job.lists.count - lists.count
-        // The GPU: a canvas is given to the module when its
+        // The GPU (LLP 1056 §8.5): a canvas is given to the module when its
         // bitmap is made, if it animates then (or always, for the parity
         // smoke), and stays with it until its next fresh bitmap.
         // Decided at the first lists a fresh bitmap gets (a fresh bitmap's
@@ -302,7 +302,7 @@ final class Canvas2DHost: Canvas2DEnv {
             return
         }
         for data in lists { k.keep(data) }
-        // The policy: recorded while it animates, from a
+        // The policy (LLP 1056 §8.4): recorded while it animates, from a
         // cover, drawing nothing a recording draws differently, within the
         // bound, at the display's own scale.
         let record = job.animating && !job.stretch && !job.space.float16 && k.start != nil && !k.refused && k.bounded && job.w > 0 && job.h > 0

@@ -1,13 +1,14 @@
-//! The Rust binding of the native modules an app's plan names: generated from
-//! the plan's `modules` table, as [`crate::rust`] is from its shapes, into a
-//! data crate's `OUT_DIR` and never committed. Per extension, a module with a
-//! record for each shape its names take and answer (a call's options as
-//! `<Name>Options`, a platform's words as `<Name><Platform>`), and per name a
-//! request builder and a reply parser over `exact_data::modules`.
+//! The Rust binding of the native modules an app's plan names (LLP 1133 §5,
+//! LLP 1133.002 D13): generated from the plan's `modules` table, as
+//! [`crate::rust`] is from its shapes, into a data crate's `OUT_DIR` and
+//! never committed. Per extension, a module with a record for each shape its
+//! names take and answer (a call's options as `<Name>Options`, a platform's
+//! words as `<Name><Platform>`), and per name a request builder and a reply
+//! parser over `exact_data::modules`.
 //!
 //! Only what the plan names: a module the app's Contract never calls has no
 //! rows, the runner would refuse a Rust call of it, and so it has no binding
-//! either. Rust has no synchronous form.
+//! either. Rust has no synchronous form (D14).
 
 use crate::rust::{check_fields, field_name, type_name};
 use exact_plan::{ModulesRow, Plan, TypeKind, TypesId};
@@ -50,7 +51,7 @@ pub fn module_rust(plan: &Plan) -> Result<String, String> {
         }
         writeln!(
             out,
-            "\n/// `{extension}`'s names.\npub mod {} {{",
+            "\n/// `{extension}`'s names (LLP 1133 §5).\npub mod {} {{",
             field_name(extension)
         )
         .unwrap();
@@ -144,7 +145,7 @@ fn rust_type(plan: &Plan, ty: TypesId) -> Result<String, String> {
         TypeKind::Option => format!("Option<{}>", elem()?),
         TypeKind::List => format!("Vec<{}>", elem()?),
         TypeKind::Record => record_name(plan.str(row.name)),
-        // A signal answers nothing.
+        // A signal answers nothing (LLP 1133.011 D1).
         TypeKind::Unit => "()".into(),
     })
 }
@@ -251,7 +252,7 @@ fn call(plan: &Plan, extension: &str, row: &ModulesRow, out: &mut String) -> Res
     };
     let (f, at) = (field_name(declared), format!("{extension}.{declared}"));
     let ty = plan.sources[row.source.0 as usize].ty;
-    // A send that answers nothing: its reply is `()`.
+    // A send that answers nothing (LLP 1133.004 D5): its reply is `()`.
     let nothing = plan.types[ty.0 as usize].kind == TypeKind::Unit;
     let answer = if nothing {
         "()".to_owned()

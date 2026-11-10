@@ -75,7 +75,7 @@ async function json(url: string): Promise<Json> {
 // Open-Meteo returns ISO wall times in the requested city's timezone. Keep
 // those strings intact: converting through the device timezone shifts the day.
 async function forecast(lat: number, lon: number, plus = false): Promise<Forecast> {
-  // Weatherlight+ looks sixteen days ahead.
+  // Weatherlight+ looks sixteen days ahead (LLP 1133.015 §10).
   const span = plus ? 16 : 7;
   const key = `${lat},${lon},${span}`;
   try {
@@ -132,7 +132,7 @@ async function places(query: string): Promise<Result<'places'>> {
   } catch {return {items:[],message:'City search couldn’t connect. Try again, or choose a city below.'};}
 }
 // Following: the forecast where the person is, approximately, asked again when
-// they move five kilometres. Without a position, the last one.
+// they move five kilometres (LLP 1133.002 §7). Without a position, the last one.
 async function here(lat: number, lon: number, plus: boolean): Promise<Forecast> {
   try {
     const p = await watchPosition({ maximumAge: 600000, apple: { desiredAccuracy: 'threeKilometers', distanceFilter: 5000 }, android: { quality: 'lowPower', minUpdateDistanceMeters: 5000 } });
@@ -141,7 +141,7 @@ async function here(lat: number, lon: number, plus: boolean): Promise<Forecast> 
     return forecast(lat, lon, plus);
   }
 }
-// Weatherlight+'s delivery loop: the one place a purchase
+// Weatherlight+'s delivery loop (LLP 1133.015 D5): the one place a purchase
 // is delivered and finished, however it arrived. A subscription has nothing
 // to credit and is acknowledged; a tip is counted once by its token, in the
 // same write as the count, then consumed. A finish that fails leaves the row

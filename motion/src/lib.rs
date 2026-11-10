@@ -1,6 +1,7 @@
 //! The motion evaluator.
 //!
-//! One representation, two executors.
+//! @ref LLP 1002 (motion v1 — one representation, two executors)
+//! @ref LLP 1003 (motion v1 — what this crate is, as built)
 //!
 //! Motion is CSS's `transition` model. A property's **target** is its style
 //! value in the kernel; a `transition` row on the node says how the property
@@ -20,11 +21,12 @@
 //! - [`transition`] — the declaration, and CSS's rules for starting,
 //!   interrupting, and reversing a transition.
 //! - [`path`] — a path's `d` as a value, and when two interpolate.
-//! - [`color`] — CSS colours as premultiplied values.
-//! - [`animation`] — CSS `@keyframes` and `animation`, sampled in closed form.
+//! - [`color`] — CSS colours as premultiplied values (LLP 1055.000 D6).
+//! - [`animation`] — CSS `@keyframes` and `animation`, sampled in closed form
+//!   (LLP 1055 D5).
 //! - [`engine`] — per-node presentation state under a seekable clock.
 //! - [`uikit`] — UIKit's spring parameterisations, resolved to the springs
-//!   UIKit builds.
+//!   UIKit builds (LLP 1099).
 //! - [`velocity`] — a pointer-velocity estimate for hosts without one.
 //! - [`math`] — pinned transcendentals, so the same input yields the same bits.
 //!

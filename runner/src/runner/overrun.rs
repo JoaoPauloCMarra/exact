@@ -1,8 +1,9 @@
 //! A resource a turn over its budget refused (`DataError::Overrun`, exact-js's
 //! own time or its wall backstop) is asked again, twice at most, before it
-//! fails as any refused resource does. The refusal is the machine's load as
+//! fails as any refused resource does (LLP 1027 as amended 2026-10-27; theme2's
+//! 18:06 ruling and the 18:55 redesign). The refusal is the machine's load as
 //! much as the source's: under load one stood a resource on a stale value until
-//! the app's own 10 s redial (a chat app's gateway).
+//! the app's own 10 s redial (Excord's gateway, x2-perf4's evidence).
 //!
 //! The wait is a request the runner holds and never sends (`reask_at`): the
 //! resource's ask in flight, so it reads exactly as one (`pending`, its last
@@ -10,7 +11,7 @@
 //! the resource again burns no try), and it keeps its ask's origin and
 //! invocation. It comes due in the runner's own deadline order and is asked
 //! again as a commit of that ask; the streak counts each re-ask as it is made.
-//! A mutation is never asked again, nor a stream's message; an
+//! A mutation is never asked again (LLP 1041 D2), nor a stream's message; an
 //! argument change, a refresh or an answer ends the streak, as each replaces
 //! or answers the ask.
 use super::{lines, CommitReceipt, DataError, DataSource, PendingReq, Runner, RunnerError, Target};

@@ -8,9 +8,9 @@ import UIKit
 #endif
 
 #if os(macOS) || os(iOS)
-/// A partitioned iframe through the web arm's C ABI:
-/// its own data store, `FrameNavigation` records in order, its
-/// commands, its refusals and crash recovery, against pages a loopback
+/// A partitioned iframe through the web arm's C ABI (LLP 1020.002 stage 1):
+/// its own data store, `FrameNavigation` records in the D2 sequence, the D3
+/// commands, the D1 refusals and crash recovery, against pages a loopback
 /// server in the test serves.
 final class IframePartitionTests: XCTestCase {
     private typealias EventFn = @convention(c) (UnsafeMutableRawPointer?, UInt32, UInt32, UnsafePointer<UInt8>?, UInt32) -> Void
@@ -290,7 +290,7 @@ final class IframePartitionTests: XCTestCase {
         XCTAssert(seen.cleared?.hasPrefix("SyntaxError") == true, seen.cleared ?? "")
         clear(["partition": "memory-one", "types": ["cookies", "storage"]])
         XCTAssertEqual(seen.cleared, "")
-        // A page open in the partition may keep data; a fresh document reads the cleared store.
+        // A page open in the partition may keep data (D4); a fresh document reads the cleared store.
         let fresh = Seen()
         let (d, webD) = mount(arm, fresh, configuration: ["partition": "memory-one"], src: "\(baseURL)/b")
         defer { arm.destroy(d) }
@@ -349,7 +349,7 @@ final class IframePartitionTests: XCTestCase {
     }
 
     /// Under the agent a `persist:` partition is in memory, so a drive never
-    /// touches a person's saved logins; outside it, it persists, by app.
+    /// touches a person's saved logins; outside it, it persists, by app (D1).
     func testPersistentPartitionsAreTheAppsAndInMemoryUnderTheAgent() throws {
         let arm = try arm(), seen = Seen()
         func store(_ configuration: [String: Any]) -> WKWebsiteDataStore {
@@ -396,7 +396,7 @@ final class IframePartitionTests: XCTestCase {
         XCTAssertNotEqual(first.configuration.websiteDataStore, second.configuration.websiteDataStore)
     }
 
-    /// Three recoveries after 250, 500 and 1,000 ms; the fourth death in 30 s ends it.
+    /// Three recoveries after 250, 500 and 1,000 ms; the fourth death in 30 s ends it (D2, Astra r3).
     func testAFourthCrashIn30SecondsStopsRecovering() throws {
         let arm = try arm(), seen = Seen()
         let (handle, web) = mount(arm, seen, configuration: ["partition": "memory-crash"], src: "\(baseURL)/a")
@@ -427,11 +427,11 @@ final class IframePartitionTests: XCTestCase {
         XCTAssert(seen.records.dropFirst(after).contains { $0.event == "navigatesuccess" })
     }
 
-    /// A partitioned web view under a hidden node view (`display: none`)
-    /// still paints on request, with no private occlusion selector, so a
-    /// capture of a hidden tab has its pixels. (The web view's own
-    /// `isHidden` or a zero `alpha` paints nothing on iOS; the arm sets
-    /// neither.)
+    /// Stage 1's first measurement (D1, "Hidden tabs"): a partitioned web
+    /// view under a hidden node view (`display: none`) still paints on
+    /// request, with no private occlusion selector, so D7's capture of a
+    /// hidden tab has its pixels. (The web view's own `isHidden` or a zero
+    /// `alpha` paints nothing on iOS; the arm sets neither.)
     func testAHiddenFramePaintsWhenAsked() throws {
         let arm = try arm(), seen = Seen()
         let (handle, web) = mount(arm, seen, configuration: ["partition": "memory-hidden"], src: "\(baseURL)/b")
@@ -480,7 +480,7 @@ final class IframePartitionTests: XCTestCase {
     #endif
 
     /// The postMessage bridge is absent: nothing is delivered, and the page's
-    /// own `window.postMessage` reaches its own listeners.
+    /// own `window.postMessage` reaches its own listeners (D1).
     func testAPartitionedFrameHasNoBridge() throws {
         let arm = try arm(), seen = Seen()
         let (handle, web) = mount(arm, seen, configuration: ["partition": "memory-p"], src: "\(baseURL)/a")

@@ -1,6 +1,7 @@
 //! Layout viewport facts in CSS pixels (points on Apple), and the user's
 //! display preferences — what CSS's `@media` answers an app about the
 //! screen it is on.
+//! @ref LLP 1039 D1–D4; LLP 1061 D4; LLP 1069.000 D1; LLP 1078 D2
 
 use exact_plan::Value;
 
@@ -37,14 +38,14 @@ pub struct Viewport {
     /// The user's display preferences; a host that cannot read them says
     /// `no-preference`, as a browser does.
     pub preferences: Preferences,
-    /// The device's posture and the segments a fold makes of the viewport;
-    /// a host without a fold says `continuous`, 1 × 1.
+    /// The device's posture and the segments a fold makes of the viewport
+    /// (LLP 1078 D2); a host without a fold says `continuous`, 1 × 1.
     pub fold: Fold,
 }
 
 /// The Device Posture API's postures: `folded` while the device forms an
 /// angle short of flat (a hinge partially open), `continuous` otherwise —
-/// flat, closed on one panel, or a device with no fold.
+/// flat, closed on one panel, or a device with no fold (LLP 1078 D1).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum Posture {
     /// `continuous`.
@@ -84,7 +85,7 @@ impl Posture {
 
 /// `device-posture` and the viewport segment counts (Media Queries 5's
 /// `horizontal-viewport-segments` and `vertical-viewport-segments`), as
-/// `exactViewport()` answers them. The segments' rects are
+/// `exactViewport()` answers them (LLP 1078 D1, D2). The segments' rects are
 /// the kernel's (`Kernel::set_segments`), not the app's: an app reads them
 /// as `env()` lengths.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -124,7 +125,7 @@ impl Fold {
 }
 
 /// The segments a host without a fold makes for the agent's `prefer
-/// segments <cols>x<rows> [gap <points>]`: the viewport split
+/// segments <cols>x<rows> [gap <points>]` (LLP 1078 D7): the viewport split
 /// evenly, the gap centred on each divider, as `[x, y, w, h]` row-major —
 /// none for 1 × 1. Refused by name: a zero count, a negative or non-finite
 /// gap, a gap wider than the viewport (the dividers leave no room).
@@ -166,8 +167,9 @@ pub fn even_segments(
 /// CSS's user-preference media features (Media Queries 5 §11) a host reads
 /// from the platform: `prefers-reduced-motion: reduce`,
 /// `prefers-reduced-transparency: reduce`, `prefers-contrast` and
-/// `prefers-color-scheme`. The runner has no policy of its own: the app
-/// reads these and chooses.
+/// `prefers-color-scheme`. The runner has no policy of its own
+/// (`rules/DEFERRED.md` §Motion): the app reads these and chooses.
+/// @ref LLP 1061 D5; LLP 1069.000 D1
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct Preferences {
     /// The user asked for less motion.
@@ -178,21 +180,21 @@ pub struct Preferences {
     /// `custom`.
     pub contrast: Contrast,
     /// `prefers-color-scheme: dark` — the system's scheme, beneath any
-    /// `setScheme` the app chose.
+    /// `setScheme` the app chose (LLP 1034 D3 as amended).
     pub dark: bool,
     /// `pointer`: the primary input's pointing accuracy.
     pub pointer: Pointer,
     /// `hover`: whether the primary input can hover.
     pub hover: Hover,
     /// `color-gamut`: the widest of `srgb`, `p3`, `rec2020` the display
-    /// covers (Media Queries 5 §6.4).
+    /// covers (Media Queries 5 §6.4; LLP 1100 D9).
     pub gamut: Gamut,
-    /// `dynamic-range: high` (Media Queries 5 §6.5).
+    /// `dynamic-range: high` (Media Queries 5 §6.5; LLP 1100 D9).
     /// `video-dynamic-range` is the same on every host Exact has.
     pub high_dynamic_range: bool,
     /// The window's presentation, CSS's `display-mode` media feature.
     pub display_mode: DisplayMode,
-    /// Bold Text is on: no media feature, the
+    /// Bold Text is on (LLP 1115.000 D12.3): no media feature, the
     /// kernel's, which weights the system font (`Kernel::set_bold_text`).
     pub bold_text: bool,
 }
@@ -433,7 +435,7 @@ impl Preferences {
 }
 
 impl Default for Viewport {
-    /// The bake's LINT_VIEWPORT: 390 × 844, no preference.
+    /// The bake's LINT_VIEWPORT: 390 × 844 (LLP 1039 D3), no preference.
     fn default() -> Self {
         Self::sized(390.0, 844.0)
     }
@@ -520,7 +522,7 @@ mod tests {
         assert!(even_segments(100.0, 100.0, 2, 1, f64::NAN).is_err());
     }
 
-    /// The three fold fields fill by name; the bake answers
+    /// LLP 1078 D2: the three fold fields fill by name; the bake answers
     /// `continuous`, 1, 1.
     #[test]
     fn fold_fields_fill_by_name_and_default_flat() {
@@ -610,11 +612,11 @@ mod tests {
         assert_eq!(Preferences::from_bits(8).contrast.keyword(), "less");
         assert_eq!(Preferences::from_bits(12).contrast.keyword(), "custom");
         assert_eq!(Preferences::from_bits(16).color_scheme(), "dark");
-        // The display's gamut and range.
+        // LLP 1100 D9: the display's gamut and range.
         for bits in [0, 256, 512, 1024, 256 | 1024] {
             assert_eq!(Preferences::from_bits(bits).bits(), bits);
         }
-        // Bold Text.
+        // LLP 1115.000 D12.3: Bold Text.
         assert!(Preferences::from_bits(1 << 14).bold_text);
         assert_eq!(Preferences::from_bits(1 << 14 | 16).bits(), 1 << 14 | 16);
         let v = |bits| Viewport {

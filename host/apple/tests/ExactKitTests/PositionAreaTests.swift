@@ -2,7 +2,7 @@ import CoreGraphics
 import XCTest
 @testable import ExactKit
 
-/// "Placement": the painted top layers' `position-area`, the
+/// LLP 1021 §5, "Placement": the painted top layers' `position-area`, the
 /// margin box aligned to the invoker as CSS aligns it.
 final class PositionAreaTests: XCTestCase {
     private let anchor = CGRect(x: 100, y: 200, width: 80, height: 30)
@@ -11,7 +11,7 @@ final class PositionAreaTests: XCTestCase {
 
     func testEachAreaPlacesTheBorderBoxWithoutMargins() {
         func at(_ area: String) -> CGPoint { PositionArea.origin(area, anchor: anchor, size: size, in: layer) }
-        XCTAssertEqual(at("none"), CGPoint(x: 100, y: 230), "top-left at the invoker's bottom-left")
+        XCTAssertEqual(at("none"), CGPoint(x: 100, y: 230), "D2: top-left at the invoker's bottom-left")
         XCTAssertEqual(at("bottom span-right"), at("none"))
         XCTAssertEqual(at("bottom"), CGPoint(x: 80, y: 230), "below, centred")
         XCTAssertEqual(at("bottom span-all"), at("bottom"))
@@ -46,7 +46,7 @@ final class PositionAreaTests: XCTestCase {
 
     /// A painted popover whose author wrote no area takes the web's UA
     /// default (neutral.css): below from the inline start, flipping above or
-    /// inline where that doesn't fit (a chat composer's emoji button at the bottom-left
+    /// inline where that doesn't fit (Harmony's emoji button at the bottom-left
     /// opens above it, not held over it), and shifted into its limit only when
     /// nothing fits. Authored fallbacks, `none` included, replace the flips;
     /// an authored area keeps its own.
@@ -177,7 +177,7 @@ final class PositionAreaTests: XCTestCase {
         XCTAssertEqual(at("left", 8, 300), CGPoint(x: -114, y: 255))
     }
 
-    /// Changing `position` clears the remembered option.
+    /// Changing `position` clears the remembered option (§6.5.1).
     func testAPositionChangeClearsTheRememberedOption() {
         var history = PositionArea.History()
         let low = CGRect(x: 332, y: 560, width: 80, height: 32), size = CGSize(width: 322, height: 122)
@@ -233,7 +233,7 @@ final class PositionAreaTests: XCTestCase {
     }
 
     /// A box that changes size starts its options again, as `origin`'s does:
-    /// one that flipped at 150 wide fits its base again at 80.
+    /// one that flipped at 150 wide fits its base again at 80 (Astra round 1).
     func testPlaceStartsAgainWhenTheBoxChangesSize() {
         let block = CGRect(x: 0, y: 0, width: 400, height: 600), anchor = CGRect(x: 300, y: 100, width: 40, height: 20)
         var history = PositionArea.History()
@@ -250,7 +250,7 @@ final class PositionAreaTests: XCTestCase {
 
     /// Each option flips the margins the layout resolved: `flip-start` makes
     /// a top margin a left one, so a 120-point box with a 100-point top
-    /// margin fits the flipped region as 220 by 120; and a
+    /// margin fits the flipped region as 220 by 120 (Astra round 1); and a
     /// percentage margin is what the layout made of it, an offset and no
     /// part of the box.
     func testPlaceFlipsTheMarginsTheLayoutResolved() {
@@ -276,7 +276,7 @@ final class PositionAreaTests: XCTestCase {
     /// it: a scroll since moves the box with its anchor and does not size it
     /// again (WPT position-area-scrolling-002: a 50% box stays its size);
     /// when the moved box no longer fits, the next option is chosen where the
-    /// anchor is now.
+    /// anchor is now (Astra round 3).
     func testPlaceMovesTheChosenOptionWithAScroll() {
         let block = CGRect(x: 0, y: 0, width: 400, height: 600)
         var history = PositionArea.History()
@@ -301,7 +301,7 @@ final class PositionAreaTests: XCTestCase {
                                                        region: CGRect(x: 100, y: 0, width: 300, height: 400)))
         XCTAssertEqual(history.scroll, CGPoint(x: 0, y: -300), "the scroll it was chosen at")
         // No fallback: the box keeps its size and follows its anchor out of the window, aligned
-        // where it was chosen, then moved.
+        // where it was chosen, then moved (Astra's round 3 re-check).
         var alone = PositionArea.History()
         for scroll in [CGPoint.zero, CGPoint(x: 0, y: -300)] {
             let anchor = CGRect(x: 100 - scroll.x, y: 100 - scroll.y, width: 40, height: 20)
@@ -333,7 +333,7 @@ final class PositionAreaTests: XCTestCase {
 
     /// A second placement in the same batch measures nothing; a new batch
     /// measures again, as does a moved layout stamp (a layout whose batch was
-    /// empty), and a refusal is asked again.
+    /// empty), and a refusal is asked again (theme2's cache test).
     func testMeasuresAreKeptForOneBatch() {
         var cache = PositionArea.MeasureCache(), asked = 0
         let region = CGSize(width: 100, height: 480)
@@ -356,7 +356,7 @@ final class PositionAreaTests: XCTestCase {
         XCTAssertEqual(asked, 7, "a refusal is not kept")
     }
 
-    /// A box asked for at a point sits there; on an axis
+    /// LLP 1021 D2: a box asked for at a point sits there; on an axis
     /// without room it goes the other way from the point, as the web's sheet
     /// opens it; where neither fits it is held in the bounds.
     func testABoxAtAPointGoesTheOtherWayWhereItDoesNotFit() {

@@ -1,9 +1,9 @@
-//! Why a resource failed, as `failure(x)` answers it: a code
+//! Why a resource failed, as `failure(x)` answers it (LLP 1109 D3): a code
 //! from a closed vocabulary an app can branch on, the same on every host,
 //! the message the agent's `state.failed` shows, which says more and
 //! differs by host, and the `reason` the source's error named, empty when it
 //! named none: a Snapback refusal's code (`SLOT_FULL`, `E_RULE`), which the
-//! Snapback driver sets.
+//! snapback4 driver sets (the author's ruling of 2026-10-12).
 //!
 //! A code names what reached the runner. A request's failure (`offline`,
 //! `timeout`, `refused`) or a storage call's (`storage`) is the source's

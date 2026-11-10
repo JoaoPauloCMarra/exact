@@ -1,4 +1,4 @@
-// `tree --ax` on Apple: what UIKit and AppKit
+// @ref LLP 1080.002 D2–D7 — `tree --ax` on Apple: what UIKit and AppKit
 // expose for assistive technology, read back from the platform's own
 // accessibility properties after every projection the host made (swipe
 // cells, text elements, native controls, modal layers). UIKit's walk is
@@ -14,11 +14,11 @@ import UIKit
 #endif
 
 /// An accessibility object standing for one Exact view it is not itself:
-/// a swipe cell's authored control, an inline run's element.
+/// a swipe cell's authored control, an inline run's element (D5).
 protocol AgentOwned { var agentViewId: UInt32? { get } }
 
 extension Agent {
-    /// `{"op":"tree","ax":true}`: validated here, at the wire, and
+    /// `{"op":"tree","ax":true}` (D1, D7): validated here, at the wire, and
     /// scoped to `target` when one is named.
     func accessibilityElementsTree(_ req: [String: Any]) -> [String: Any] {
         if req["shallow"] != nil { return ["error": "tree --ax: shallow is refused with ax"] }
@@ -62,7 +62,7 @@ extension Agent {
         return Presenter.axBounded(tagged(["ax": ax]))
     }
 
-    /// The session's own surfaces: its view, each presentation that
+    /// The session's own surfaces (D3): its view, each presentation that
     /// mounts a route beside it, and on macOS a sheet attached to its window.
     private func axRoots(_ view: ExactView) -> [AnyObject] {
         var roots: [AnyObject] = [view]
@@ -70,7 +70,7 @@ extension Agent {
         roots = presenter.accessibilitySurfaces
         #else
         if presenter.navigation.split.active { roots = [presenter.navigation.split.agentRoot] }
-        // A dialog's sheet, the sheets on it, and the popovers AppKit shows.
+        // A dialog's sheet, the sheets on it, and the popovers AppKit shows (LLP 1115.002 D7).
         for sheet in presenter.sheets(on: view.window) { if case .owned(let content) = presenter.axSheet(sheet) { roots.append(content) } }
         roots += presenter.menus.windowed.map(\.content)
         #endif
@@ -98,7 +98,7 @@ extension Presenter {
         #endif
         var remaining: Int { budget - visited }
     }
-    /// The elements' own budget, under the reply's 256 KB.
+    /// The elements' own budget (D7), under the reply's 256 KB.
     static let axBytes = 240 * 1024
     static let axReplyBytes = 256 * 1024
     /// The whole serialized reply within 256 KB at the boundary: elements go
@@ -128,7 +128,7 @@ extension Presenter {
         return size() > axReplyBytes ? ["error": "tree --ax: the reply cannot be bounded to \(axReplyBytes) bytes"] : reply
     }
 
-    /// The elements under `roots`, the platform's facts each;
+    /// The elements under `roots`, the platform's facts each (D2, D7);
     /// `foreign` names another session's surface, where the walk stops;
     /// `modalRoot` is a presentation the platform makes modal (an AppKit sheet);
     /// `scope` keeps the elements joined to those ids and the ones no node
@@ -186,7 +186,7 @@ extension Presenter {
         #endif
         if !w.limits.isEmpty { coverage["excluded"] = w.limits }
         var elements = w.elements
-        // Each part, and whether the platform exposes an element for it: no finding either way.
+        // Each part, and whether the platform exposes an element for it: no finding either way (§3.5).
         let parts = self.elements.regions.coverage(joined: Set(elements.compactMap { $0["part"] as? String }))
         if !parts.isEmpty { coverage["parts"] = parts }
         var ancestors: [[String: Any]] = []
@@ -205,7 +205,7 @@ extension Presenter {
             }
             elements = kept.map { w.elements[$0] }
         }
-        // The states this runtime can observe: UIKit's expanded status needs iOS 18.
+        // The states this runtime can observe (D6): UIKit's expanded status needs iOS 18.
         var observes = ["checked", "pressed", "disabled"]
         #if os(iOS) || os(tvOS)
         if #available(iOS 18, *) { observes.append("expanded") }
@@ -243,7 +243,7 @@ extension Presenter {
         let o = obj as! NSObject
         var here = parent
         // The deepest modal is the active boundary, the later of equals, as
-        // the presenter's `syncModal` chooses.
+        // the presenter's `syncModal` chooses (LLP 1080.003 D2).
         if Self.isModal(obj), exclusion.isEmpty, depth >= w.modalDepth {
             w.modalView = obj
             w.modalDepth = depth
@@ -301,7 +301,7 @@ extension Presenter {
         probe.setTitle("probe", for: .normal)
         return probe.accessibilityLabel == "probe"
     }
-    /// A container's children, no more than the visits left: a count
+    /// A container's children, no more than the visits left (D7): a count
     /// past them stops the walk, its remainder unknown.
     private func children(of o: NSObject, into w: inout AxWalk) -> [AnyObject] {
         let room = max(0, w.remaining)
@@ -379,7 +379,7 @@ extension Presenter {
         }
         // A cell is served its control's typed label, help and required
         // (AppKit's dispatcher prefers them); the cell's own attributes
-        // answer "" or nothing (every named pop-up,
+        // answer "" or nothing (onboarding F16: every named pop-up,
         // checkbox, slider and date read unnamed here).
         let control = (obj as? NSCell)?.controlView
         let nonEmpty = { (s: String?) in s.flatMap { $0.isEmpty ? nil : $0 } }
@@ -392,7 +392,7 @@ extension Presenter {
     }
     enum AxSheet { case none, owned(NSView), foreign }
     /// A sheet attached to the window is this session's only when its
-    /// content holds this presenter's own views; any other sheet blocks
+    /// content holds this presenter's own views (D3); any other sheet blocks
     /// the window and is someone else's.
     func axSheet(_ sheet: NSWindow?) -> AxSheet {
         guard let sheet else { return .none }
@@ -425,7 +425,7 @@ extension Presenter {
     }
     #endif
 
-    /// One element: the platform's facts, cut to their bounds.
+    /// One element (D3, D5, D7): the platform's facts, cut to their bounds.
     private func emit(_ obj: AnyObject, role forced: String?, parent: Int?, exclusion: [String], into w: inout AxWalk) -> Int? {
         if w.elements.count >= w.limit { w.more += 1; return nil }
         var fields = 0
@@ -440,7 +440,7 @@ extension Presenter {
         let (id, via) = axOwner(obj)
         e["id"] = id ?? NSNull()
         e["via"] = via
-        // A hatch's part, joined by its bound view.
+        // A hatch's part, joined by its bound view (LLP 1075.003.000.001 §3.5).
         if let part = elements.regions.part(owning: obj) { e["part"] = part }
         var states: [String: Any] = [:]
         var native: [String: Any] = ["class": String(describing: type(of: obj))]
@@ -475,14 +475,14 @@ extension Presenter {
             if value == "2" { states[state] = "mixed" }
             else if value == "1" || value == "0" { states[state] = value == "1" }
         }
-        // UIKit has no radio trait: the drawn radio says
+        // UIKit has no radio trait: the drawn radio (x2apps survey #2) says
         // what it is by its class, its state by `selected`.
         if let radio = obj as? ExactRadio, forced == nil { e["role"] = "radio"; states["checked"] = radio.isOn }
-        // Nor a progress trait: a `progress`'s indicator is ARIA's busy
-        // `progressbar` by its class.
+        // Nor a progress trait: a `progress`'s indicator (LLP 1069.001,
+        // amended 2026-10-07) is ARIA's busy `progressbar` by its class.
         if obj is UIActivityIndicatorView, forced == nil { e["role"] = "progressbar"; states["busy"] = true }
-        if obj is UIProgressView, forced == nil { e["role"] = "progressbar" }
-        // A drawn range role says its role by ARIA's.
+        if obj is UIProgressView, forced == nil { e["role"] = "progressbar" } // LLP 1116 D8
+        // A drawn range role says its role by ARIA's (LLP 1116 D8).
         if let node = obj as? NodeView, forced == nil, let range = node.rangeRole { e["role"] = range }
         e["interactive"] = forced == nil && (o.accessibilityRespondsToUserInteraction || editable || names.contains("button") || names.contains("link") || names.contains("adjustable"))
         if let actions = o.accessibilityCustomActions, !actions.isEmpty { e["actions"] = actions.prefix(16).compactMap { cut($0.name) } }
@@ -527,7 +527,7 @@ extension Presenter {
                       "AXLevelIndicator": "meter", "AXScrollBar": "scrollbar", "AXIncrementor": "spinbutton"][r]
         e["role"] = forced ?? mapped ?? r
         if r == "AXHeading", let level = f.value as? Int { states["level"] = level }
-        // A spinning indicator is AppKit's busy one.
+        // A spinning indicator is AppKit's busy one (LLP 1069.001, amended 2026-10-07).
         if r == "AXBusyIndicator" { states["busy"] = true }
         if r == "AXCheckBox" || r == "AXRadioButton", let on = f.value as? Int {
             let toggle = r == "AXCheckBox" && f.subrole == "AXToggle"
@@ -561,7 +561,7 @@ extension Presenter {
         return i
     }
 
-    /// The view an element is, the view that declared it, or the view above it.
+    /// D5: the view an element is, the view that declared it, or the view above it.
     private func axOwner(_ obj: AnyObject) -> (UInt32?, String) {
         if let n = obj as? NodeView { return (n.id, "self") }
         if let owned = obj as? AgentOwned, let id = owned.agentViewId { return (id, "owner") }
@@ -583,8 +583,8 @@ extension Presenter {
         return (nil, "none")
     }
 
-    /// A segment or tab bar item the host projected from a tablist (no
-    /// segment join is built: such an element joins its tablist).
+    /// A segment or tab bar item the host projected from a tablist (D5's
+    /// segment join is not built: such an element joins its tablist).
     private static func underSegments(_ obj: AnyObject) -> Bool {
         #if os(iOS) || os(tvOS)
         var v: UIView? = (obj as? UIView) ?? ((obj as? UIAccessibilityElement)?.accessibilityContainer as? UIView)

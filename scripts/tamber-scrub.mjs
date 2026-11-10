@@ -1,4 +1,4 @@
-// Scrub sessions: a token or
+// Scrub sessions (LLP 1121 D13, LLP 1122 D6; stage 4, commit 6): a token or
 // dial dragged on the tool previews on every running build as a live batch,
 // written to no file, and is written once, on release.
 //
@@ -231,7 +231,7 @@ export function scrubSessions({ ask, write, patch = null, verify = null, preview
       try {
         await released(mark(id));
         // Its client ended (a paired client revoked, its token expired) while
-        // the builds took the preview: nothing written.
+        // the builds took the preview: nothing written (stage 10 A2).
         result = allowed(request.client) ? await write({ method: 'transaction', client: request.client, files, ops }) : refused(401, 'this paired client was revoked or its token expired');
       } finally {
         releasing = false;

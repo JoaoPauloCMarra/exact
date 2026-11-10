@@ -1,9 +1,9 @@
-// Real touches under the agent: the touch runner taps the
+// Real touches under the agent (LLP 1080.000): the touch runner taps the
 // device's screen through XCTest, and the app reports two things the driver
 // cannot see from outside. `aim` resolves a target to a point in the scene's
-// coordinate space, refusing by name, and changes nothing. The dispatch
-// log records each touch the window dispatched, after UIKit dispatched it:
-// window dispatch only — never a recognizer's outcome, a cancellation
+// coordinate space, refusing by name, and changes nothing (D4). The dispatch
+// log records each touch the window dispatched, after UIKit dispatched it
+// (D5): window dispatch only — never a recognizer's outcome, a cancellation
 // or a handled press, which `state` and `tree` answer — and beside it which
 // touches down have reached the view they landed on (`reached`).
 #if os(iOS) || os(tvOS)
@@ -132,7 +132,7 @@ enum TouchLog {
         // Whether the view says when the touch reaches it (`reach`).
         out["reports"] = view is NodeView || view is NativeButtonIOS
         // In a grouped list's cell, which row and which part of it: the
-        // node alone is the list's for every row.
+        // node alone is the list's for every row (LLP 1084).
         if let projected = GroupedListsLink.part?(view) { out["projected"] = projected }
         if let v = view {
             for (label, session) in Agent.routes where Agent.shows(session, v) {
@@ -157,7 +157,7 @@ enum TouchLog {
 extension Agent {
     /// Why a real touch on `v` would not test what a person's app does, or
     /// nil: under the agent the host substitutes some presentations, and
-    /// their taps run through activation.
+    /// their taps run through activation (LLP 1080.000 D7, stage 3).
     func substituted(_ v: NodeView) -> String? {
         if presenter.menus.ownsConfirmationNode(v) { return "is a confirmation's action (UIKit's alert)" }
         if presenter.swipeActions.ownsAction(v.id) { return "is a native swipe action" }
@@ -204,7 +204,7 @@ extension Agent {
         #endif
     }
 
-    /// The private touch forms of `tap`, or nil.
+    /// The private touch forms of `tap` (LLP 1080.000 D4/D5), or nil.
     func touchForm(_ req: [String: Any]) -> [String: Any]? {
         if let s = req["log"] as? Int { return TouchLog.read(after: s) }
         guard req["aim"] != nil else { return nil }
@@ -269,7 +269,7 @@ extension Agent {
         // A plain tap's aim: the target's own press (`AgentAddressedTap.swift`).
         let press = (req["aim"] as? [String: Any])?["press"] as? Bool == true
         // A row a grouped list draws, or its toggle's or detail button's
-        // control: the finger aims at UIKit's cell or
+        // control (LLP 1084 D5): the finger aims at UIKit's cell or
         // accessory, never the hidden authored node beneath it.
         var target: UIView = v, port: UIScrollView?, region: CGRect?
         switch presenter.groupedLists?.shown(v) {
@@ -345,12 +345,12 @@ extension Agent {
                 return ["error": "tap #\(v.id): \(Agent.covers(seen!))"]
             }
         }
-        // The press boundary, over the target, every node enclosing it (an
+        // Stage 3's boundary, over the target, every node enclosing it (an
         // invoker around a label) and every node enclosing what the finger
         // would hit.
         for node in (barred ? [] : Agent.enclosing(v)) + Agent.enclosing(seen) {
             if let why = substituted(node) {
-                return ["error": "unsupported: tap #\(v.id)\(node === v ? "" : " (through node #\(node.id))") \(why); native presentation under a real touch is not supported yet"]
+                return ["error": "unsupported: tap #\(v.id)\(node === v ? "" : " (through node #\(node.id))") \(why); native presentation under a real touch lands at LLP 1080.000 stage 3"]
             }
         }
         guard let space = scene?.coordinateSpace else { return ["error": "tap #\(v.id): no scene"] }

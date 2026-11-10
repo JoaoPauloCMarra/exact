@@ -1,4 +1,5 @@
-// A linked package's design on the local wire (*1.14*): read-only, but a change to one on disk is a change to
+// A linked package's design on the local wire (LLP 1121 D11, stage 11 A2
+// part 2, *1.14*): read-only, but a change to one on disk is a change to
 // what the app's design folds, so clients are told as of a hand edit (a
 // `changed` event naming it in `edited`, with the packages' digests), a
 // scrub competes, and the server's own reads are taken again. What the
@@ -39,7 +40,7 @@ export function packageDesigns({ announce, changed, log = () => {} }) {
     // Each one's presence as of its listing: what the look compares with.
     for (const dir of [...listed.keys(), ...installs]) if (!there.has(dir)) there.set(dir, ino(dir));
     for (const [dir, recursive] of listed) follow(dir, recursive);
-    // A design's text and the package SVGs it draws (`assets`): an SVG edit changes `draws`.
+    // A design's text and the package SVGs it draws (`assets`, stage 13): an SVG edit changes `draws`.
     // A package with no design whose SVGs the build reads is `watch.assets`' (`<package>/assets/`).
     const now = new Map([...packages, ...(watched.assets ?? [])].map(p => [p.file, `${p.digest ?? ''}:${p.assets ?? ''}`]));
     const edited = [...new Set([...now.keys(), ...digests.keys()])].filter(file => now.get(file) !== digests.get(file));

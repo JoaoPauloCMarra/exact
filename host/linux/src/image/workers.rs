@@ -109,7 +109,7 @@ pub(super) struct Backend {
     wake_write: Mutex<UnixStream>,
     /// The device scale each SVG picture was asked at, by source and
     /// pixels: with the key's pixels it gives the CSS size the scene
-    /// resolves at, which the key does not carry.
+    /// resolves at (LLP 1011.001 D3), which the key does not carry.
     scales: Mutex<BTreeMap<(u64, exact_raster::PixelSize), f32>>,
     /// SVG pictures with text, resolved on a worker and waiting for the
     /// paint thread ([`Backend::finish_pictures`]).
@@ -506,7 +506,7 @@ impl Backend {
             }
             Err(Refusal::Paused) if later.is_some() => {
                 // A picture with text waits for the paint thread, its permit
-                // with it.
+                // with it (LLP 1011.001 D3).
                 let (scene, scale, plan, source) = later.unwrap();
                 self.pictures.lock().unwrap().push(svg_picture::Pending {
                     permit,

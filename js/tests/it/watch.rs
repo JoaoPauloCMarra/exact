@@ -1,5 +1,5 @@
-//! Document watches and expected writes from TypeScript,
-//! through the native storage provider.
+//! Document watches and expected writes from TypeScript (LLP 1069.010.000
+//! D1, D2a), through the native storage provider.
 #![cfg(exact_js_engine)]
 use super::storage::{call, Root, GRANTS};
 use exact_runner::{DataSource, Store};
@@ -38,7 +38,7 @@ fn an_answer_watches_a_chosen_document_and_an_expected_write_refuses_a_change() 
     exact_data::documents::forget(9130);
 }
 
-/// Under `doc.keep` an answer lists what the host keeps,
+/// LLP 1069.010.000 D5: under `doc.keep` an answer lists what the host keeps,
 /// hears the list change, and forgets one; forgetting it again is `ENOENT`.
 #[test]
 fn an_answer_lists_and_forgets_what_the_app_keeps() {
@@ -61,7 +61,7 @@ fn an_answer_lists_and_forgets_what_the_app_keeps() {
     exact_data::documents::forget(9131);
 }
 
-/// The app's own `atomicWriteFile` of a kept file from
+/// LLP 1069.010.000 D4: the app's own `atomicWriteFile` of a kept file from
 /// TypeScript replaces it with a new file, and the entry is carried to it,
 /// so the next launch reopens what the app saved.
 #[cfg(unix)]

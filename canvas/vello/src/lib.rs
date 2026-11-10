@@ -1,4 +1,4 @@
-//! Canvas 2D on the GPU with vello: the recorder's lists replayed into
+//! Canvas 2D on the GPU with vello: LLP 1056's recorded lists replayed into
 //! a vello scene and rendered into the host's IOSurfaces, as a module the
 //! Apple host loads on demand (the GPU bake-off's vello candidate; ABI v2,
 //! `host/apple/Sources/ExactKit/Canvas2DGpu.swift`).

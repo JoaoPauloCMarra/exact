@@ -1,4 +1,4 @@
-//! A byte stream, natively (the amendment of 2026-10-23): a
+//! A byte stream, natively (LLP 1016.000, the amendment of 2026-10-23): a
 //! TypeScript stream's 2xx body that is not `text/event-stream`. Its reader
 //! appends each read to the one message the runner has not taken, so the
 //! messages follow the runner's pace, not the transport's chunking, and no

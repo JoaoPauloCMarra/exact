@@ -38,7 +38,7 @@ function ceilingOf(init) {
 }
 
 // Read a response's clone to its end, refused the moment it passes `limit`
-// (a response over its size limit is `refused` on every host).
+// (LLP 1109 D3: a response over its size limit is `refused` on every host).
 // A failed read lets both branches go at once: a branch's cancel settles only
 // when the other's does, so awaiting one would wait on a body that never ends.
 export async function within(response, limit) {
@@ -79,7 +79,7 @@ export function ownWithout(init, skip) {
 export const signalDeadline = { arm: null };
 
 // `read`: how the body is taken before the fetch answers, within the deadline (`exactBodyTo`'s writes it to a file).
-// `origin`: who asked it; a tool's, a wake's or the device's reach to a less public space is checked.
+// `origin`: who asked it (LLP 1133.036 D6); a tool's, a wake's or the device's reach to a less public space is checked.
 // `decided`: `fetchOf` has already armed the signal's deadline before the file work, or found the request has none
 // (ts-fetch.js), so it is not weighed again.
 export async function fetchWith(set, input, init = {}, expires = null, redirect = redirectOf(input, init), read = within, origin = 'app', decided = false) {
@@ -97,7 +97,7 @@ export async function fetchWith(set, input, init = {}, expires = null, redirect 
   const invalid = grantError(set);
   if (invalid) throw new FetchError('Refused', invalid);
   if (!asset && !admitsNetwork(set, value, 'fetch')) throw new FetchError('Refused', refusal('net.fetch'));
-  // A driver fault: the refused connection's failure, never sent.
+  // @ref LLP 1103 D1, D2 — a driver fault: the refused connection's failure, never sent.
   if (!asset && takeFault(value)) throw new FetchError('Network', faultMessage(value));
   const unreached = asset ? null : reachRefusal(value, origin);
   if (unreached) throw new FetchError('Refused', `NotAllowedError: ${unreached}`);
@@ -125,7 +125,7 @@ export async function fetchWith(set, input, init = {}, expires = null, redirect 
     // held the event loop past the deadline fire no timer first.
     if (until && performance.now() >= until.at) throw new FetchError('Timeout', `the request timed out after ${until.ms} ms`);
     const response = await browserFetch(typeof Request === 'function' && input instanceof Request ? input : value, { ...rest, ...(signal ? { signal } : {}), redirect });
-    // A redirect that left the grants names where it led, as
+    // A redirect that left the grants names where it led (podcast F5), as
     // the native executor does; the browser followed it to this last hop.
     if (response.url && (asset
       ? new URL(response.url).origin !== globalThis.location?.origin
@@ -135,7 +135,7 @@ export async function fetchWith(set, input, init = {}, expires = null, redirect 
     // Its clone is read whole before it answers, as the native executor
     // collects a body: within the deadline, so a stalled body is this fetch's
     // Timeout, and a body the network cuts off is its Network failure
-    // (`failure(x)`'s `offline`); one over its ceiling is
+    // (`failure(x)`'s `offline`, LLP 1109 D3); one over its ceiling is
     // Refused, and the response is let go. The response keeps its URL,
     // type and null body, and its own read is served from what the clone took.
     await read(response, ceiling);
@@ -198,8 +198,8 @@ export const inOverlay = api => {
   return e;
 };
 const effect = api => { if (overlaying.on) throw inOverlay(api); };
-// The `secret.keep` names whose line carries a presence policy, each with whether the person may
-// leave it plain (`optional`). The web keeps no locked secret: a name that must be locked is never kept here.
+// The `secret.keep` names whose line carries a presence policy (LLP 1133.010 D4), each with whether the person may
+// leave it plain (`optional`). The web keeps no locked secret (D15): a name that must be locked is never kept here.
 const mustLock = (set, name) => (set?.entries ?? []).some(([, source, grant]) => {
   const words = source.split(/\s+/);
   return grant?.[0] === 'secret-keep' && words[1] === String(name) && words.length > 2 && words[3] !== 'optional';

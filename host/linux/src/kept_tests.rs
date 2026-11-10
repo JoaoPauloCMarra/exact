@@ -29,7 +29,7 @@ fn env<'a>(pairs: &'a [(&'a str, &'a str)]) -> impl Fn(&str) -> Option<String> +
     }
 }
 
-/// A desktop session keeps; a run with no display, or no desktop, does not.
+/// D6: a desktop session keeps; a run with no display, or no desktop, does not.
 #[test]
 fn only_a_desktop_session_keeps() {
     assert!(desktop_session(env(&[("XDG_SESSION_TYPE", "wayland")])));
@@ -332,7 +332,7 @@ fn chosen_documents_outlast_the_launch_in_a_desktop_session() {
             recheck(0);
             assert!(listed().is_empty());
             assert!(announced.load(Ordering::SeqCst) > before);
-            // Live access lasts while the app runs.
+            // Live access lasts while the app runs (D4).
             read(&format!("{folder}/a.md")).unwrap();
         }
         _ => {

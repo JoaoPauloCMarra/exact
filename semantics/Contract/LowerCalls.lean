@@ -592,7 +592,7 @@ theorem case_stdlib (ih : AllOk fuel) {name args ca ts} (hfd : p.fns.find? (·.n
     | error e => rw [h2] at hst; cases hst
     | ok v => exact ⟨v, (hinv v).mpr ⟨vs, h1, h2⟩⟩
 
-/-- `[a, b]`: the items, left to right, then `List n`. -/
+/-- `[a, b]` (LLP 1088 §9.1): the items, left to right, then `List n`. -/
 theorem case_list (ih : AllOk fuel) {items} (hc : compile (fuel + 1) p depth sc n (.list items) = .ok (c, t))
     (hx : Ctx env inFn ls venv L p sc n) : ExprSpec env inFn ls venv P L (.list items) c t := by
   rw [compile.eq_def] at hc

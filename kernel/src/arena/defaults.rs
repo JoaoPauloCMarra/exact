@@ -1,4 +1,4 @@
-//! Live platform defaults below authored rows.
+//! Live platform defaults below authored rows. @ref LLP 1115.000 D2, D4.13, D17.
 use super::*;
 use crate::style::metrics::{self, Column};
 use std::borrow::Cow;
@@ -189,7 +189,7 @@ impl NodeArena {
     /// The slot whose own row supplies `id` for `slot`: the slot itself when
     /// it sets the row; for a row the schema marks inherited, the nearest
     /// logical ancestor that does; `None` when the initial value applies
-    /// (CSS inheritance).
+    /// (CSS inheritance, LLP 1035.000 D1).
     pub fn inherited_source(&self, slot: u32, id: StyleId) -> Option<u32> {
         let mut cur = Some(slot);
         while let Some(s) = cur {
@@ -230,8 +230,8 @@ impl NodeArena {
         out
     }
 
-    /// [`Self::computed_style`] as CSS computes it, before Bold Text: what a
-    /// cascade of its own (an SVG's) starts from.
+    /// [`Self::computed_style`] as CSS computes it, before Bold Text (LLP
+    /// 1115.000 D12.3): what a cascade of its own (an SVG's) starts from.
     pub(crate) fn computed_rows(&self, slot: u32, rows: StyleMask) -> StyleProps {
         let mut out = self.effective_style(slot).into_owned();
         self.copy_inherited(slot, rows, |from, mask| out.copy_rows(from, mask));
@@ -258,7 +258,8 @@ impl NodeArena {
             }
             cur = self.parents[s as usize];
         }
-        // A bare `font-size` style fills what nothing above says.
+        // A bare `font-size` style fills what nothing above says (LLP
+        // 1115.000 D12.2).
         if let Some((_, style)) = self.bare_text_style(slot, id) {
             return style;
         }
@@ -268,8 +269,8 @@ impl NodeArena {
         &self.styles[slot as usize]
     }
 
-    /// The slot whose text style supplies inherited row `id` for `slot`:
-    /// one that names it through the `font`
+    /// The slot whose text style supplies inherited row `id` for `slot`
+    /// (LLP 1115.000 D12.2): one that names it through the `font`
     /// shorthand, where nothing written stops the walk first, or the
     /// nearest bare `font-size` style when nothing above says the row.
     pub fn text_style_source(&self, slot: u32, id: StyleId) -> Option<u32> {
@@ -336,7 +337,7 @@ impl NodeArena {
             .minus(self.styles[slot as usize].mask);
         let mut cur = Some(slot);
         // Per row, the nearest bare `font-size` style on the way up whose
-        // node does not write the row: a style gives
+        // node does not write the row (LLP 1115.000 D12.2): a style gives
         // two rows, so two fills at most.
         let mut bare: [Option<(&StyleProps, StyleMask)>; 2] = [None, None];
         let mut claimed = StyleMask::default();

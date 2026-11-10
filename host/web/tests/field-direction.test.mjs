@@ -1,4 +1,4 @@
-// In a real browser, the definition Apple's plain fields follow (FieldDirectionMacTests,
+// LLP 1001 §1 in a real browser, the definition Apple's plain fields follow (FieldDirectionMacTests,
 // FieldDirectionIOSTests): an `input` or a `textarea`, of either appearance, takes CSS `direction` as its
 // text's base direction (`unicode-bidi: normal`, no `dir="auto"`, so no first strong character picks it),
 // and an unsaid `text-align` is `start`, the right under `rtl`; one said stands. The app is compiled from

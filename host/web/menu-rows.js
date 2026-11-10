@@ -1,4 +1,4 @@
-// The menu rule: a popover a
+// LLP 1021, exact2's menu rule (theme2 2026-10-21 19:47, 22:05): a popover a
 // row of a menu (`role="menu"`) opens, other than the menu itself or a
 // submenu (itself a menu), is opened as if by the menu's own invoker
 // (`showPopover({ source })`): HTML would nest it in the menu, and the menu

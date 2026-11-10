@@ -46,7 +46,7 @@ test('web visibility and page events reach every canvas under either clock', () 
     let scheduled = 0;
     const document = {hidden:false, addEventListener(name, fn) { listeners[name] = fn; }};
     const window = {addEventListener(name, fn) { listeners[name] = fn; }};
-    // `recoveringDevice` is the host's in-flight device recovery; none here,
+    // `recoveringDevice` is the host's in-flight device recovery (H1); none here,
     // so lifecycle codes deliver synchronously.
     new Function('document','window','surfaces','gpu','exact','raf','cancelAnimationFrame','schedule','recoveringDevice', code)(
       document, window, new Map([[1, {id:11}], [2, {id:22}], [3, {id:0}]]),
@@ -94,7 +94,7 @@ enum ExactEnv { static let agentMode = false }
 final class Owner { static let shared = Owner(); func callMain<T>(_ body: () -> T) -> T { Thread.isMainThread ? body() : DispatchQueue.main.sync(execute: body) } }
 final class Frames { func requestCanvas() {} }
 final class Session { let frames = Frames() }
-// One artifact: each canvas's entry names the module that made it.
+// One artifact (LLP 1009 D6): each canvas's entry names the module that made it.
 final class GpuModule { var lifecycle: ((UInt32, UInt32) -> Void)? }
 final class CanvasesHost {
     final class Entry { let id: UInt32 = 1; var module: GpuModule? }
@@ -240,7 +240,7 @@ final class AVAudioSession {
 enum AudioSession { static func activate() throws { let s = AVAudioSession.sharedInstance(); try s.setCategory(.ambient); try s.setActive(true) } }
 final class Frames { func requestCanvas() {} }
 final class Session { let frames = Frames() }
-// One artifact: each canvas's entry names the module that made it.
+// One artifact (LLP 1009 D6): each canvas's entry names the module that made it.
 final class GpuModule { var lifecycle: ((UInt32, UInt32) -> Void)? }
 final class CanvasesHost {
     final class Entry { let id: UInt32 = 1; var module: GpuModule? }

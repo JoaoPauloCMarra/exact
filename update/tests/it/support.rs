@@ -1,5 +1,7 @@
 //! The store's test harness: an in-memory origin that publishes bundles as
 //! `exact deploy` does, and store directories that remove themselves.
+//!
+//! @ref LLP 1026 D9–D12 / LLP 1030 D3a, D5, D9 / LLP 1030.000 §4 stage 4
 
 use ed25519_dalek::{Signer, SigningKey};
 use exact_update::{canonical_bytes, sha256_hex, Check, Embedded, Store};
@@ -14,7 +16,7 @@ pub(crate) const EMBEDDED_SEQ: u64 = 3;
 
 // ---------------------------------------------------------------- the origin
 
-/// One published bundle, as `exact deploy` would write it.
+/// One published bundle, as `exact deploy` would write it (LLP 1030.000 D3).
 pub(crate) struct Bundle {
     pub(crate) app: String,
     pub(crate) cohort: String,

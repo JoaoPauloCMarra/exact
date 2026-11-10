@@ -1,4 +1,4 @@
-//! What this binary knows about its own delivery.
+//! What this binary knows about its own delivery (LLP 1030 D4, D7).
 //!
 //! Two facts are the binary's and never change while it runs — `L`, whether
 //! an update store is linked at all, and `E`, which executors it links —
@@ -14,18 +14,18 @@
 //!
 //! The app reads these through one resource, `exactDelivery`, which the
 //! runner answers itself before the data seam; the agent reads the same
-//! facts through `state.delivery` (the agent API's eight operations, unchanged).
+//! facts through `state.delivery` (LLP 1012's eight operations, unchanged).
 
 use exact_plan::Value;
 
 /// The source name a Contract app declares to read these facts:
-/// `resource delivery = exactDelivery()`. The natural spelling is a resource
-/// `delivery` with commands `delivery.check`/`delivery.activate`; a
+/// `resource delivery = exactDelivery()`. LLP 1030 D7 spells the resource
+/// `delivery` and its commands `delivery.check`/`delivery.activate`; a
 /// Contract identifier holds no dot, so the source is `exactDelivery` and
 /// the commands are `deliveryCheck` and `deliveryActivate`.
 pub const SOURCE: &str = "exactDelivery";
 
-/// Refuse a bake produced only for compatibility analysis.
+/// Refuse a bake produced only for compatibility analysis (LLP 1030 D3a).
 /// Its receipt remains readable by tooling, but no host may launch it.
 /// Only the binary's immediate `embedded.analysis: true` marks this policy;
 /// a nested publisher receipt or ordinary release metadata does not.
@@ -40,10 +40,10 @@ pub fn refuse_analysis(json: &str) -> Result<(), &'static str> {
 /// Whether the binary was baked with `EXACT_UPDATE_TRUST=production`: its
 /// `compat.json`'s own `embedded.trust`, the build's resolved trust, which
 /// bake records beside the cohort id (an updater-free binary's
-/// `inputs.trust` is null). Such a build never enters agent
-/// mode: `EXACT_AGENT` is ignored there, so no
+/// `inputs.trust` is null, LLP 1030 D4). Such a build never enters agent
+/// mode (LLP 1069.007 D2, ruled): `EXACT_AGENT` is ignored there, so no
 /// clock, store, fact or request substitute is reachable in a shipped
-/// binary; nor does it take a development override.
+/// binary; nor does it take a development override (LLP 1024 D5).
 pub fn production(json: &str) -> bool {
     member(json, "embedded").and_then(|embedded| member(embedded, "trust"))
         == Some("\"production\"")
@@ -64,14 +64,14 @@ pub const FIELDS: [&str; 7] = [
 /// The delivery facts, as the runner holds them.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Delivery {
-    /// The cohort this binary belongs to: bake's digest of
+    /// The cohort this binary belongs to (LLP 1030 D3a): bake's digest of
     /// everything a bundle may depend on and cannot replace. Empty until a
     /// host hands the runner its `compat.json`.
     pub compatibility_id: String,
-    /// `L`: `'0'` — no update store is linked; `'A'` — the
+    /// `L` (LLP 1030 D4): `'0'` — no update store is linked; `'A'` — the
     /// store, selection, signing, anti-rollback, crash fallback.
     pub store: char,
-    /// `E`: the executors this binary links, sorted.
+    /// `E` (LLP 1030 D4): the executors this binary links, sorted.
     pub executors: Vec<String>,
     /// The stream this client belongs to: `"embedded"` until a host knows
     /// better, else `"<channel>/<compatibilityId>"`.
@@ -85,7 +85,7 @@ pub struct Delivery {
     /// The sunset card, when the stream has one.
     pub sunset: Option<String>,
     /// Which of the app's data sources run on an interpreter rather than as
-    /// native code, sorted.
+    /// native code (LLP 1029 D2), sorted.
     pub interpreted: Vec<String>,
 }
 
@@ -115,7 +115,7 @@ impl Delivery {
             "seq" => Value::Number(self.seq as f64),
             "embeddedSeq" => Value::Number(self.embedded_seq as f64),
             "staged" => Value::Bool(self.staged),
-            // A resource has no absence: no sunset is "".
+            // A resource has no absence (LLP 1004 D3): no sunset is "".
             "sunset" => Value::str(self.sunset.as_deref().unwrap_or("")),
             "interpreted" => Value::list(self.interpreted.iter().map(|s| Value::str(s)).collect()),
             "compatibilityId" => Value::str(&self.compatibility_id),

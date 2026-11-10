@@ -1,8 +1,8 @@
 // Paragraphs by where they sit in their scroller's content, so a scroll
 // frame's text passes (`paintVisibleText`, `refreshVisibleText`) visit the
-// ones near each scrollport, not every paragraph of a long list: an inbox
-// can keep ~2,600 that are never rastered, and visiting each, twice a
-// frame, was most of its main thread while scrolling.
+// ones near each scrollport, not every paragraph of a long list: r24's inbox
+// keeps ~2,600 that are never rastered, and visiting each, twice a frame,
+// was most of its main thread while scrolling.
 #if os(iOS) || os(tvOS)
 import UIKit
 
@@ -43,7 +43,7 @@ final class TextIndex {
     /// viewport's place, a route's or a sheet's view: `DocumentMountIOS.swift`,
     /// `PresentationMount`) is a port that does not scroll: what is outside
     /// its bounds is off screen. Without them every paragraph of a list in a
-    /// route was visited every pass (an inbox's 3,300, most of a frame).
+    /// route was visited every pass (r27's inbox: 3,300, most of a frame).
     private final class Port {
         weak var scroller: UIView?
         /// By `minY`.

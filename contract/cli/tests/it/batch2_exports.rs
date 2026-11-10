@@ -1,10 +1,11 @@
-//! `@exact/cards` exports EmptyState, and `@exact/lists` MenuItem and
-//! MenuGroup. A consumer app outside the repository, both packages installed
-//! under its `node_modules` as the in-repo source, `use`s the three from
-//! their packages as the clone does: an empty state with every piece and one
-//! with the message alone, and a group holding two items in its slot. It
-//! compiles, and its plan holds the three components' own nodes, each named
-//! in the source map by its declaring identity.
+//! LLP 1121 stage 15 B batch 2: `@exact/cards` exports EmptyState, and
+//! `@exact/lists` MenuItem and MenuGroup. A consumer app outside the
+//! repository, both packages installed under its `node_modules` as the
+//! in-repo source, `use`s the three from their packages as the clone does:
+//! an empty state with every piece and one with the message alone, and a
+//! group holding two items in its slot. It compiles, and its plan holds the
+//! three components' own nodes, each named in the source map by its
+//! declaring identity.
 #![cfg(unix)]
 
 use std::path::{Path, PathBuf};

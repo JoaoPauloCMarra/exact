@@ -1,4 +1,4 @@
-//! Through the Hermes bytecode executor, runner and
+//! LLP 1069.005 D2/D3 through the Hermes bytecode executor, runner and
 //! bake: secure randomness is a counted device read, refused during module
 //! initialization, and never compiled into a plan. `js/web/tests/it/browser.rs`
 //! holds the browser realms to the same answers.
@@ -145,7 +145,7 @@ fn bake_compiles_no_random_value_and_the_device_asks() {
     assert_eq!(row("id").initial.len, 0, "a draw is not compiled");
     assert!(row("id").reader, "and it is the device's to answer");
     assert!(row("plain").initial.len > 0 && !row("plain").reader);
-    // A digest is pure, so bake compiles its value like any other.
+    // D1: a digest is pure, so bake compiles its value like any other.
     assert!(row("abc").initial.len > 0 && !row("abc").reader);
 
     let runner = Runner::boot(

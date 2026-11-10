@@ -368,7 +368,7 @@ async function rejects(action, matches) {
   const unsupported=classifyArtifacts(shader,installed);
   const grants=structuredClone(moved);grants.graph.artifacts[0].requires.grantCeiling='net.fetch https://new/';
   const refused=classifyArtifacts(grants,installed);
-  // A TypeScript bundle on a newer prelude (`exactBodyFrom`, then
+  // A TypeScript bundle on a newer prelude (LLP 1108 D6 R2: `exactBodyFrom`, then
   // `redirect`) is no bundle for a cohort whose prelude predates it, and is for one
   // as new or newer: runtime 1 would follow a redirect a runtime-2 bundle refused.
   const runtime=structuredClone(moved);runtime.graph.artifacts[0].requires.typescriptRuntime=2;
@@ -983,7 +983,7 @@ async function rejects(action, matches) {
 }
 
 {
-  // The dry run ends with what the app can reach.
+  // LLP 1069.008 D7: the dry run ends with what the app can reach.
   const reach = [
     { grant: 'net.fetch https://api.example.com/', purpose: null, enforced: 'runtime (all hosts); CSP (served web)' },
     { grant: 'device.microphone purpose.microphone', purpose: 'Records your takes.', enforced: 'OS prompt (iOS, macOS); Permissions-Policy (served web; a static dist sends none); declared by app.ts' },

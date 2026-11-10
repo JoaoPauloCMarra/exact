@@ -1,13 +1,13 @@
-// @exact/sign-in on iOS and macOS: the capabilities
+// @exact/sign-in on iOS and macOS (LLP 1133.014 D3, D5, D7): the capabilities
 // this build can offer and the providers' buttons. The identity member's
 // requests (Apple's in passkeys' controller through the session's request
-// table, Google's through the host's auth session) are
-// not built: a request reaching this implementation fails
+// table, Google's through the host's auth session, D10 items 2 and 3) are
+// stage 2's and not built: a request reaching this implementation fails
 // `NotSupportedError`. Under the agent the substitute answers it.
 //
 // - `getIdentityCapabilities`: Apple where the build carries
 //   `com.apple.developer.applesignin` (on macOS only a build whose profile
-//   authorizes it; read with `SecTaskCopyValueForEntitlement`), active,
+//   authorizes it, D7; read with `SecTaskCopyValueForEntitlement`), active,
 //   passive and beside a passkey; Google active, through a browser session.
 // - `exact-sign-in-button`: Apple's `ASAuthorizationAppleIDButton`, its
 //   type from `context` and its style from the appearance (black in light,
@@ -46,8 +46,8 @@ public final class SignInModule: NSObject, ExactPackage {
     public func later(_ name: String, _ args: [String: Any], preferred: Any?, reply: @escaping ([String: Any]) -> Void) {
         switch name {
         case "getIdentityCapabilities": reply(capabilities())
-        case "preventSilentAccess": reply([:]) // neither Apple provider signs in without UI
-        default: reply(["error": "NotSupportedError", "message": "\(name) is not built on Apple yet"])
+        case "preventSilentAccess": reply([:]) // neither Apple provider signs in without UI (D1)
+        default: reply(["error": "NotSupportedError", "message": "\(name) is not built on Apple yet (LLP 1133.014 §11 stage 2)"])
         }
     }
 

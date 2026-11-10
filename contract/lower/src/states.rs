@@ -1,4 +1,4 @@
-//! State parts: a node's or its class's
+//! State parts (LLP 1121 D8, stage 8 A): a node's or its class's
 //! `:disabled`, `:checked`, `:active`, `:hover` and `:focus-visible`
 //! blocks, carried as attributes named for the state and the row
 //! (`:disabled background-color`, `contract_syntax::state`).
@@ -8,8 +8,8 @@
 //!   where B is the base the class and the node compose (a `border-color` its
 //!   four sides, a side a `border` writes its component), so a state row
 //!   overrides each side the base wrote, longhand or not.
-//! - `:active` lowers to the press paint: its `background-color`, `color`
-//!   and `-exact-press-scale` to
+//! - `:active` lowers to the press paint (LLP 1061 D7, D8 as amended
+//!   2026-10-18): its `background-color`, `color` and `-exact-press-scale` to
 //!   the node's `-exact-press-` rows, its `opacity` to the press's absolute
 //!   target (`-exact-press-opacity-to`, lowering's alone), each row keeping
 //!   its `:active` span; the host's one press shows them.
@@ -38,7 +38,7 @@ const RUNNER_ROWS: [&str; 6] = [
 const HOST_ROWS: [&str; 4] = ["background-color", "border-color", "opacity", "box-shadow"];
 
 /// The rows `:active` takes, and the press paint's row each lowers to: the
-/// press's colour reaches the subtree, so `color` is one.
+/// press's colour reaches the subtree, so `color` is one (LLP 1061 D7).
 const ACTIVE_ROWS: [(&str, &[exact_kernel::StyleId]); 4] = [
     (
         "background-color",
@@ -97,7 +97,7 @@ pub(crate) struct Folded {
     pub folds: Vec<Fold>,
 }
 
-/// Where a folded row's value comes from:
+/// Where a folded row's value comes from (LLP 1122's queue item (2)):
 /// the base's attribute that wrote B, where an author wrote it (its span
 /// and name as written; none for what the node takes unwritten, `none`, a
 /// metric the compiler writes), and each `:disabled` or `:checked` part
@@ -137,10 +137,11 @@ pub(crate) fn refusal(state: &str, row: &Attr, values: bool) -> Option<LowerErro
         };
         let why = match (state, row.name.as_str()) {
             ("active", "border-color" | "box-shadow") => {
-                " and is the host's press, whose paint draws no border or shadow yet".to_string()
+                " and is the host's press, whose paint draws no border or shadow yet (LLP 1061 D7)"
+                    .to_string()
             }
             (_, "-exact-press-scale") => " and a press scale is `:active`'s".to_string(),
-            ("active", _) => " and is the host's press".to_string(),
+            ("active", _) => " and is the host's press (LLP 1061 D7)".to_string(),
             _ if host => " and never changes what a child inherits".to_string(),
             _ => String::new(),
         };
@@ -435,7 +436,7 @@ impl Lowerer<'_> {
                 };
                 return err(
                     "lower-state-target",
-                    format!("a state part on {why}: its states are the platform's; style it with `accent-color`, or a box of your own"),
+                    format!("a state part on {why}: its states are the platform's (LLP 1121 D8); style it with `accent-color`, or a box of your own"),
                     row.span,
                 );
             }
@@ -454,8 +455,8 @@ impl Lowerer<'_> {
                 return Err(e);
             }
         }
-        // `:active` is the press the pressed paint shows on: the same paint
-        // said twice is refused, naming both.
+        // `:active` is the press D7's pressed paint shows on (theme2's 05:28
+        // ruling (3)): the same paint said twice is refused, naming both.
         for (state, row, _) in parts.iter().filter(|(s, ..)| *s == "active") {
             let paint = match row.name.as_str() {
                 "opacity" => "-exact-press-opacity",
@@ -465,7 +466,7 @@ impl Lowerer<'_> {
             if base.iter().any(|a| a.name == paint) {
                 return err(
                     "lower-state-press-paint",
-                    format!("`{}` in `:{state}` and `{paint}` both say the press's look: keep one spelling", row.name),
+                    format!("`{}` in `:{state}` and `{paint}` both say the press's look: keep one spelling (LLP 1121 D8, LLP 1061 D7)", row.name),
                     row.span,
                 );
             }

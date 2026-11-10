@@ -1,5 +1,5 @@
 // Shelf: a reading tracker, and the recipe for an iPhone app in Exact. Copy from
-// here ("write the web, ship the platform").
+// here (LLP 1115, "write the web, ship the platform").
 //
 // Say what a thing is; leave how it looks unsaid. This file writes no colour and
 // no font size or weight: where it must, it names a role (`-exact-secondary-label`,
@@ -29,12 +29,12 @@
 // alerts take it too.) Layout (flex, gap, padding) is
 // CSS and the author's; the web host draws the same file as a web page.
 //
-// The camera, barcodes and text come from packages: Scan
+// The camera, barcodes and text come from packages (LLP 1133.027 §10): Scan
 // Barcode reads a book's ISBN off the back camera and looks it up; Add Quote
 // from Photo reads a page's text into the notes. Each is shown only where its
 // package says it works here.
 //
-// NFC: Tag This Book writes a sticker inside a book, and
+// NFC (LLP 1133.035 §11): Tag This Book writes a sticker inside a book, and
 // Scan reads one back and opens its book. iOS draws its own sheet while the
 // phone waits for a tag (`readerUI` `system`); Android and the web draw
 // nothing, so the app shows its own panel there, with the same words.
@@ -182,7 +182,7 @@ component Shelf
   derive inProgress = lib.books.filter(b => b.status == "reading")
   derive indexKey = lib.books.map(b => `${b.id}|${b.title}|${b.author}|${b.status}`).join("\n")
 
-  // The system's ways in: every book in its search, and
+  // The system's ways in (LLP 1133.023 §11): every book in its search, and
   // the newest book being read on the icon's menu, after the manifest's Add
   // Book. Set once the library has loaded, so the empty placeholder never
   // clears what the last launch set.
@@ -210,8 +210,8 @@ component Shelf
   task panel key=panelShown
     after(1, syncPanel)
 
-  // What Shortcuts, Siri and an agent may do; app.json's `intents` gives
-  // each its face.
+  // What Shortcuts, Siri and an agent may do (LLP 1111 D2; LLP 1133.023
+  // §11); app.json's `intents` gives each its face.
   tool logPages writes idempotent closed "Set the page you're on in a book." = logPages
     fails when match logged { case some(a) => not a.ok, case none => false }
   tool addToShelf writes additive closed "Add a book to your shelf." = addTitled
@@ -1103,8 +1103,8 @@ component Empty
       text message color="-exact-secondary-label" text-align="center" testId=`${tid}-message`
 
 // A determinate progress bar, 0 to 100: the platform's own (`UIProgressView`
-// in the tint), which says its value itself. It is as wide as its
-// column with nothing written.
+// in the tint, LLP 1116 D8), which says its value itself. It is as wide as its
+// column with nothing written (LLP 1115.000 D10.2).
 component Meter
   props
     value: number

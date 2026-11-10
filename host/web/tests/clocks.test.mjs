@@ -1,4 +1,4 @@
-// Synced animations in a real browser: navigation.js's
+// Synced animations in a real browser (LLP 1055.002): navigation.js's
 // `animationClocks` sets each joined animation's `startTime` once, so two
 // pulses that mounted apart share one phase; the CSS play state still
 // pauses and resumes them, and a resumed one rejoins the phase.

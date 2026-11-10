@@ -1,7 +1,7 @@
-// The leaves: a paragraph as one single-line `Text` per kernel line,
+// The leaves: a paragraph as one single-line `Text` per kernel line (D4),
 // an image from the bundle or the app group, a symbol, and the platform's
-// live time and progress. Text and symbols are the accented group:
-// the glyphs take `widgetAccentable`; a raster image stays in the
+// live time and progress (D6). Text and symbols are the accented group
+// (D5): the glyphs take `widgetAccentable`; a raster image stays in the
 // default group, desaturated unless the author says otherwise.
 #if canImport(WidgetKit)
 import SwiftUI
@@ -44,7 +44,7 @@ struct SnapshotTextView: View {
 
     /// The line's runs, each in the font the kernel measured it in and its
     /// own colour or the paragraph's, concatenated into one `Text`. The
-    /// text is the line's `Line.text`: a clamped line's cut and "…" come from
+    /// text is WP1's `Line.text`: a clamped line's cut and "…" come from
     /// there. A run's background and `href` are refused by the profile.
     private func text(_ line: HeadlessSession.Line) -> Text {
         let dark = scheme == .dark
@@ -78,7 +78,7 @@ package enum SnapshotTextPaint {
     }
 }
 
-/// Under the accented rendering mode, text and symbols are the accented
+/// D5: under the accented rendering mode, text and symbols are the accented
 /// group (their glyphs take the tint); a raster image is the default
 /// group, desaturated unless the author wrote `data-rendering="full-color"`.
 package enum SnapshotAccent {
@@ -94,7 +94,7 @@ package enum SnapshotAccent {
     }
 }
 
-/// `time` and `progress` as the platform's live views, which update
+/// D6: `time` and `progress` as the platform's live views, which update
 /// with no code running. A `time` has `datetime` (an instant: epoch
 /// milliseconds, or ISO 8601 with or without fractional seconds) and
 /// `format` (the prop `timeFormat` on the wire): `relative` is
@@ -288,7 +288,7 @@ struct SnapshotImageView: View {
             .font(.system(size: points, weight: Font.Weight(css: Int(weight))))
             .foregroundStyle(ink)
         } else if let commands = node.props["symbolPath"] {
-            // An icon with no SF Symbol draws its own path, as the page hosts do: its
+            // An icon with no SF Symbol draws its own path (LLP 1121 D10, stage 9 A), as the page hosts do: its
             // em square placed by `object-fit` in the box, the viewBox met in that square, each path filled
             // by its rule (nonzero, or even-odd by `symbolFillRule`) into one mask that its tint (else its
             // colour) shows through once.
@@ -318,7 +318,7 @@ private struct IconShape: Shape {
     }
 }
 
-/// Raster decoding, bounded (an extension's memory ceiling): ImageIO's
+/// Raster decoding, bounded (D8: an extension's memory ceiling): ImageIO's
 /// thumbnail at the pixels the box shows, never the full image, kept for
 /// the invocation under a decoded-byte budget (the oldest evicted past it;
 /// an image larger than the budget is never retained) and released with
@@ -456,7 +456,7 @@ public final class SnapshotRasters {
 /// CSS `object-fit` over the image's natural size: `fill` stretches,
 /// `contain` and `cover` keep the aspect, `scale-down` keeps the natural
 /// size when it fits, else contains; `none` is the profile's to refuse and
-/// draws as `scale-down` here. Under the accented mode the raster is
+/// draws as `scale-down` here. D5: under the accented mode the raster is
 /// desaturated (the default group keeps its detail) unless the author
 /// asked for full colour; the modifier is iOS 18's, and older systems draw
 /// the default.

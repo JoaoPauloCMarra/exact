@@ -1,8 +1,9 @@
-// The development server's install pages and its Mac-local iOS build, for
-// either dev loop: the JS target's (host/web-js/dev.mjs)
+// The development server's install pages and its Mac-local iOS build (LLP
+// 1030.003 D6a/D6b), for either dev loop: the JS target's (host/web-js/dev.mjs)
 // and the resident wasm loop (host/web/dev.mjs). Only a page read over
 // loopback, from a loopback peer, carries the per-process token that starts
 // a build; every reader gets the server's addresses.
+// @ref LLP 1030.003#d6b--local-ios-installation
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { resolve } from 'node:path';

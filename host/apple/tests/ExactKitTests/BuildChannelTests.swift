@@ -5,7 +5,7 @@ import Foundation
 import XCTest
 @testable import ExactKit
 
-// The build channel's host half: a pin read as the server
+// The build channel's host half (LLP 1122 D4): a pin read as the server
 // sends it (scripts/tamber-builds.mjs `pinRefused`), the commands dispatched
 // before generation handling, the process id the server accepts, a live
 // batch's design digest, a batch's moved facts, and the plan's own design
@@ -112,7 +112,7 @@ final class BuildChannelTests: XCTestCase {
     /// baked compat), which this channel, the frame sampler, hatch
     /// diagnostics and the module override follow, is the build's own trust,
     /// `embedded.trust`: an updater-free (L=0) production bake records none
-    /// in its cohort and is still production, and a cohort's trust
+    /// in its cohort and is still production (#948), and a cohort's trust
     /// alone does not make a build production.
     func testProductionBakeIsTheBuildsTrustEvenWithNoUpdater() throws {
         func compat(_ json: String) throws -> [String: Any] {

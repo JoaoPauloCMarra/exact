@@ -1,8 +1,8 @@
-//! Document watches. The answers' watch
+//! Document watches (@ref LLP 1069.010.000 D1, D2). The answers' watch
 //! topics name `doc:` paths; this keeps one inotify watch per folder they
 //! live in (and, for a recursive watch, per folder beneath it), and each
 //! change announces the watches it covers. The runner then asks again the
-//! answers that watch them. Watching the folder, not the
+//! answers that watch them (LLP 1016.002). Watching the folder, not the
 //! file, sees an atomic replace (a new inode moved onto the name). The
 //! host built for macOS (headless) has no inotify: there a watch is
 //! accepted and never announces.
@@ -35,7 +35,8 @@ struct Shared {
 #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 impl Shared {
     fn changed(&self, path: &Path) {
-        // The person cleared or changed the desktop's recent files.
+        // The person cleared or changed the desktop's recent files (LLP
+        // 1069.010.000 D6).
         if crate::kept::is_store(path) {
             crate::kept::recheck(self.owner);
         }
@@ -322,7 +323,7 @@ mod tests {
     /// A file written into a watched folder, and an atomic replace of a
     /// watched file, each announce the watch; a sibling folder's change
     /// announces nothing, and a grant that does not cover the path watches
-    /// nothing.
+    /// nothing (LLP 1069.010.000 D1).
     #[test]
     fn inotify_announces_a_change_in_a_watched_folder() {
         let root = std::env::temp_dir().join(format!("exact-linux-watch-{}", std::process::id()));

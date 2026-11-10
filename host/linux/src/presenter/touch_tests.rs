@@ -1,4 +1,4 @@
-//! A finger is a finger: what a shell that names
+//! A finger is a finger (LLP 1115.001 D7.4, D7.6): what a shell that names
 //! the pointer changes, and that a mouse, which is what the pointer is until
 //! one does, is as it was.
 use super::*;
@@ -330,9 +330,10 @@ fn a_tap_that_drifts_inside_the_systems_slop_still_presses() {
     assert_eq!(log(&p), "0");
 }
 
-/// `pointerdown` and `pointerup` bubble, innermost first: a box hearing only `pointermove` holds
-/// the moves and takes nothing from its ancestor's down and up; the up comes to every node the down
-/// passed, wherever the pointer lifts.
+/// `pointerdown` and `pointerup` bubble, innermost first (Charlie,
+/// 2026-10-15): a box hearing only `pointermove` holds the moves and takes
+/// nothing from its ancestor's down and up; the up comes to every node the
+/// down passed, wherever the pointer lifts.
 #[test]
 fn the_down_and_the_up_bubble_and_the_innermost_holds_the_moves() {
     const NESTED: &str = r#"component App
@@ -361,8 +362,8 @@ fn the_down_and_the_up_bubble_and_the_innermost_holds_the_moves() {
     );
 }
 
-/// `stopPropagation()` ends one dispatch and nothing else: a
-/// down stopped in the middle never
+/// `stopPropagation()` ends one dispatch and nothing else (decided under
+/// Charlie's delegation, 2026-10-15): a down stopped in the middle never
 /// reaches the root, yet its up does and the pad keeps the moves; a stopped
 /// wheel never reaches the root and still scrolls.
 #[test]

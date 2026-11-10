@@ -1,8 +1,10 @@
 //! The resolved scene: one `svg`'s elements with inheritance, lengths,
 //! transforms, paint and presented motion values resolved, which every
 //! native host paints without asking a node anything again.
-//! Lengths resolve against the nearest viewport, transforms as the
-//! transform-origin sandwich, and `display` and `visibility` as SVG 2 says.
+//!
+//! @ref LLP 1055.000 D1 (one resolver in Rust), D4 (lengths against the
+//! nearest viewport), D5 (the transform sandwich), D19 (`display`,
+//! `visibility`)
 //!
 //! Inherited rows are carried down the walk, not looked up per node, so an
 //! instance (a `use`, later) can inherit from somewhere other than its
@@ -40,7 +42,7 @@ pub use text::{TextChunk, TextItem, TextRun};
 
 /// What a host's motion engine presents: a node's value for a property (a
 /// running transition's or a sampled animation's), and a path's `d` while a
-/// transition moves it; `None` shows the row. A closure
+/// transition moves it (LLP 1055.000 D15); `None` shows the row. A closure
 /// over the values is one that presents no path.
 pub trait Present {
     /// The presented value of `p` on `key`.
@@ -73,22 +75,21 @@ pub struct Scene {
     /// The elements, in paint order.
     pub items: Vec<Item>,
     /// What this host cannot draw and so leaves out, by name: a
-    /// `foreignObject`, which is the web's alone.
+    /// `foreignObject` (LLP 1055.000 D13), which is the web's alone.
     pub refused: Option<&'static str>,
-    /// The cost limit the scene passed; `items` is then
+    /// The cost limit the scene passed (LLP 1011.001 D2); `items` is then
     /// empty.
     pub over: Option<Limit>,
 }
 
 /// The refusal a native host reports for a `foreignObject`.
-pub const FOREIGN_OBJECT: &str =
-    "`foreignObject` renders on the web only: on this host, position a box over the `svg` instead";
+pub const FOREIGN_OBJECT: &str = "`foreignObject` renders on the web only (LLP 1055.000 D13): on this host, position a box over the `svg` instead";
 
 /// One rendered element.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Item {
     /// The element's node (for an instance under a `use`, the target's
-    /// node: events on it go to the `use`).
+    /// node: events on it go to the `use`, LLP 1055.000 D8).
     pub id: ViewId,
     /// A key unique in the scene: the node id, or for an instance the node
     /// id mixed with the `use`s above it, so two instances of one node are
@@ -105,13 +106,14 @@ pub struct Item {
     pub ctm: Affine,
     /// `clip-path: url(#…)`: the clip in the element's user space.
     pub clip: Option<Box<Clip>>,
-    /// `mask: url(#…)`: the mask in the element's user space, applied inside
-    /// the clip.
+    /// `mask: url(#…)`: the mask in the element's user space (LLP
+    /// 1055.000 D10), applied inside the clip.
     pub mask: Option<Box<Mask>>,
-    /// `filter`: the chain, in the element's user space, applied before the clip and the mask.
+    /// `filter`: the chain, in the element's user space (LLP 1055.000
+    /// D14), applied before the clip and the mask.
     pub filter: Option<Box<super::filter::Filter>>,
     /// `mix-blend-mode`, as an index into `filter::BLEND_MODES` (0 is
-    /// `normal`), and `isolation: isolate`.
+    /// `normal`), and `isolation: isolate` (LLP 1055.000 D19).
     pub blend: u8,
     /// `isolation: isolate`: the element's content blends within it.
     pub isolate: bool,
@@ -179,7 +181,7 @@ pub enum Kind {
     },
     /// A shape.
     Shape(Box<Shape>),
-    /// A `text` element.
+    /// A `text` element (LLP 1055.000 D11).
     Text(Box<TextItem>),
 }
 
@@ -192,10 +194,10 @@ pub struct ShapePaint {
     pub color: ColorValue,
     /// Zero to one.
     pub opacity: f32,
-    /// A gradient in the shape's user space.
+    /// A gradient in the shape's user space (LLP 1055.000 D7).
     pub server: Option<Box<super::server::Server>>,
-    /// A pattern, whose pattern space maps to the shape's user space. `color`
-    /// and `server` are unused beside it.
+    /// A pattern, whose pattern space maps to the shape's user space (LLP
+    /// 1055.000 D7). `color` and `server` are unused beside it.
     pub pattern: Option<Box<Pattern>>,
 }
 
@@ -233,14 +235,14 @@ pub struct Shape {
     /// `paint-order`: fill (0), stroke (1), markers (2), first to last.
     pub order: [u8; 3],
     /// `pointer-events`, with what it reads: whether the shape is visible
-    /// and which of its paints are set.
+    /// and which of its paints are set (LLP 1055.000 D17).
     pub pointer_events: crate::generated::PointerEvents,
     /// `visibility: visible`.
     pub visible: bool,
     /// Whether `fill` and `stroke` are other than `none`.
     pub painted: (bool, bool),
     /// Marker instances at its vertices, in its user space, painted where
-    /// `paint-order` puts markers. They take no hits.
+    /// `paint-order` puts markers (LLP 1055.000 D9). They take no hits.
     pub markers: Vec<Item>,
 }
 
@@ -358,7 +360,7 @@ impl Resolver<'_, '_> {
 
     /// The inherited properties an animation or transition is moving on
     /// this node, over its computed style: its descendants inherit the
-    /// presented value, as CSS's computed value.
+    /// presented value, as CSS's computed value (LLP 1055.000 D15).
     ///
     /// A node's own presented value counts only where the node sets the row
     /// or animates the property itself: otherwise its engine slot holds the
@@ -530,8 +532,8 @@ impl Resolver<'_, '_> {
     /// The element's transform, or `None` when every part is the identity.
     fn transform(&self, node: &NodeRef<'_>, style: &StyleProps, vp: Viewport) -> Option<Transform> {
         let key = node.key;
-        // Lengths, then percentages of the reference box
-        // (CSS Transforms 1 §4, as `transform-origin`'s).
+        // Lengths, then percentages of the reference box (CSS Transforms 1
+        // §4, as `transform-origin`'s; chess diary #4).
         let (translate, percent) = self.value(key, Property::Translate).map_or(
             (
                 (style.translate.x, style.translate.y),
@@ -548,7 +550,7 @@ impl Resolver<'_, '_> {
         let matrix = style.transform.matrix();
         // An animated element keeps its transform (its origin) even at the
         // identity: a host that plays the animation itself needs somewhere
-        // to play it (Apple's transform pair).
+        // to play it (Apple's transform pair, LLP 1055.001).
         if translate == (0.0, 0.0)
             && percent == (0.0, 0.0)
             && rotate == 0.0
@@ -658,7 +660,7 @@ impl Resolver<'_, '_> {
         style: &StyleProps,
         vp: Viewport,
     ) -> Option<(Path, Option<Circle>)> {
-        // Geometry rows moving under an animation
+        // @ref LLP 1055.000 D15 — geometry rows moving under an animation
         // or transition: their presented lengths, in user units.
         const MOVING: [(Property, StyleId); 6] = [
             (Property::Cx, StyleId::Cx),
@@ -711,7 +713,7 @@ impl Resolver<'_, '_> {
         let hidden = style.visibility != Visibility::Visible;
         let bbox = path.bounds();
         // A pattern paint's tile, resolved first: `Some(None)` paints
-        // nothing, `None` is not a pattern.
+        // nothing, `None` is not a pattern (LLP 1055.000 D7).
         let mut patterns = [None, None];
         for (slot, p) in patterns.iter_mut().zip([&style.fill, &style.stroke]) {
             if let (Paint::Url(id, _), false) = (p, hidden) {
@@ -881,7 +883,7 @@ impl Resolver<'_, '_> {
     /// A `use`: an instance of its target, inheriting from the `use` (SVG 2
     /// §5.6), placed at `x`/`y`. A `symbol` (or `svg`) target is a viewport
     /// sized by the `use`'s `width`/`height` (`auto` is 100%) under the
-    /// target's view box. A missing target, or one whose
+    /// target's view box (LLP 1055.000 D8). A missing target, or one whose
     /// instance would contain this `use`, renders nothing.
     fn instance(
         &mut self,

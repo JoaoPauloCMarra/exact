@@ -1,11 +1,11 @@
-//! A row whose tap area is a `button` or `link`
+//! @ref LLP 1116.021 D4 — a row whose tap area is a `button` or `link`
 //! holding its title, with a later text beside it as the value (a checkbox,
 //! the item's name as the button that toggles it, its quantity): the button
 //! is the title, as a hand-built cell's title label is. It grows, its face
 //! is leading and centred in the row's height, and the later text is the
 //! value at the far edge. Before, the first `text` straight in the row was
 //! the title, so the quantity grew mid-row and the name sat centred at the
-//! top of its button.
+//! top of its button (grocery-list, round 19).
 //!
 //! A lone button row stays an action cell (`actions::action_cell`); a
 //! button that lays out as a column is a stack of lines (`super::stacks`).

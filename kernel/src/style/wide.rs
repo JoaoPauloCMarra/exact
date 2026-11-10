@@ -1,4 +1,4 @@
-//! Colours in their own spaces, alone or as a half of
+//! Colours in their own spaces (LLP 1100 D2), alone or as a half of
 //! `light-dark()`, interned as `ColorValue::Wide(id)`.
 
 use super::{Color, ColorValue};
@@ -40,7 +40,7 @@ impl WideValue {
     }
 }
 
-/// What this host can show, when not every colour: others
+/// What this host can show, when not every colour (LLP 1100 D1): others
 /// are refused as invalid.
 static AVAILABLE: std::sync::OnceLock<fn(&Wide) -> bool> = std::sync::OnceLock::new();
 
@@ -50,7 +50,7 @@ pub fn set_available(shows: fn(&Wide) -> bool) {
 }
 
 /// Whether this host shows only some colours; then it shows no profile's
-/// colour either.
+/// colour either (LLP 1100 D10).
 pub fn limited() -> bool {
     AVAILABLE.get().is_some()
 }
@@ -74,7 +74,7 @@ pub type Lookup<'a> = &'a dyn Fn(u16) -> Option<Arc<WideValue>>;
 
 /// The wide colours some ids named when captured, by value: what a host
 /// keeps beside paint it retains with ids in it (a gradient, whose ramp
-/// needs each stop's exact colour), so it holds no slot.
+/// needs each stop's exact colour), so it holds no slot (LLP 1121 stage 4).
 /// After a sweep the ids mean nothing to the table; the paint reads its own
 /// stops through [`get`](Self::get) and nothing else.
 #[derive(Debug, Clone, Default)]

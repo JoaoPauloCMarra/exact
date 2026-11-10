@@ -1,4 +1,4 @@
-// The conformance fixture: @exact/camera's names and view
+// The conformance fixture (LLP 1133.001 D7): @exact/camera's names and view
 // over @exact/media-capture's video half, each answer shown by testId for the
 // suite. The viewfinder can be hidden by `display: none` and removed.
 use getUserMedia, applyConstraints, stopTrack, mediaStreamTrack, enumerateDevices, cameraStatus, MediaStream, MediaStreamTrack, MediaDeviceList, CameraStatus from "@exact/media-capture"
@@ -27,7 +27,7 @@ component Fixture
       case none
         track = ""
   // The Mac's own camera, never a phone's through Continuity Camera, for a person's run of the Apple suite.
-  // Both kinds at once: one request to the platform.
+  // Both kinds at once: one request to the platform (D3).
   action openBoth
     send opened = getUserMedia(audio=true, video=true)
   action openBuiltIn

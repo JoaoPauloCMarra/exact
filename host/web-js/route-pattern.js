@@ -17,7 +17,7 @@ export function canonical(location) {
   });
   return "/" + segs.join("/") + (query ? "?" + enc(query, b => b < 0x21 || b > 0x7e || "\"#<>'".includes(String.fromCharCode(b))) : "");
 }
-/** `fragment_of` (route/src/location.rs): what follows the first `#`, the fragment percent-encode set applied. */
+/** `fragment_of` (route/src/location.rs): what follows the first `#`, the fragment percent-encode set applied (LLP 1153 D5). */
 export const fragmentOf = location => { const s = clean(location), at = s.indexOf("#"); return at < 0 ? "" : enc(s.slice(at + 1), b => b < 0x21 || b > 0x7e || '"<>`'.includes(String.fromCharCode(b))); };
 /** `location_of` (route/src/location.rs): an incoming URL uses the router's path serializer, its fragment kept. */
 export function locationOf(href) {

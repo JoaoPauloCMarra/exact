@@ -1,8 +1,8 @@
-// A Markdown editor's inline atoms in the text view: each pill is its
-// attachment's picture, which takes no events, so the
-// text view finds the atom under a press itself, shows the arrow and
-// the `title` tooltip over it on the Mac, and gives assistive
-// technology an element for it, after the field: on the Mac its host
+// A Markdown editor's inline atoms in the text view (LLP 1045.000 §4, §10
+// Q9): each pill is its attachment's picture, which takes no events, so the
+// text view finds the atom under a press itself (D7), shows the arrow and
+// the `title` tooltip over it on the Mac (D2), and gives assistive
+// technology an element for it (D8), after the field: on the Mac its host
 // lists it (`NodeView.atomHost`), as VoiceOver's next-item command passes
 // over a text view's own children; on iOS it follows the text view in its
 // node, as UIKit visits no element's own elements.
@@ -49,7 +49,7 @@ extension TextArea {
     }
 
     /// The pointer is at `point` (nil: it left): a pill it moves onto or off
-    /// draws its kind's `:hover` paint or stops, by a restyle.
+    /// draws its kind's `:hover` paint or stops (D4), by a restyle.
     package func hoverAtom(at point: CGPoint?) {
         let start = point.flatMap { atom(at: $0) }?.range.location
         guard start != hoveredAtom else { return }
@@ -60,7 +60,7 @@ extension TextArea {
     private var atomsHover: Bool { markup?.atoms.styles.contains(":hover\"") == true }
 
     /// A press on an atom: it is selected, then the field's `atompress`
-    /// carries it. The modifiers held: Shift, Control, Option, Command.
+    /// carries it (D5, D7). The modifiers held: Shift, Control, Option, Command.
     package func pressAtom(_ range: NSRange, held: (shift: Bool, ctrl: Bool, alt: Bool, meta: Bool) = (false, false, false, false)) {
         guard let owner, let storage = atomStorage, let atom = storage.attribute(.markupAtom, at: range.location, effectiveRange: nil) as? MarkupAtom else { return }
         #if os(macOS)
@@ -120,7 +120,7 @@ extension TextArea {
 
 #if os(macOS)
 extension TextArea: NSViewToolTipOwner {
-    /// A pill's `title`, for the tooltip rectangle under `point`.
+    /// A pill's `title` (D2), for the tooltip rectangle under `point`.
     package func view(_ view: NSView, stringForToolTip tag: NSView.ToolTipTag, point: NSPoint, userData: UnsafeMutableRawPointer?) -> String {
         atom(at: point)?.atom.title ?? ""
     }
@@ -201,8 +201,8 @@ extension TextArea {
 }
 
 extension NodeView {
-    /// The node whose elements list this field's atoms, after the field:
-    /// its nearest ancestor that holds more than the
+    /// The node whose elements list this field's atoms, after the field (LLP
+    /// 1045.000 D8, §10 Q10): its nearest ancestor that holds more than the
     /// field, or that is an element. VoiceOver's next-item command passes over
     /// a text view's own children, and reads a scroll area that holds more
     /// than one item only when the person interacts with it; one that holds a
@@ -419,11 +419,11 @@ extension NodeView {
         return (detail, NSRange(location: start, length: end - start))
     }
 
-    /// A Markdown reader's `rangeFrame` over source offsets: the union
+    /// A Markdown reader's `rangeFrame` over source offsets (D7): the union
     /// of the pills whose source ranges meet `start..<end`; collapsed at a
     /// pill's edge, that edge, on the side the paragraph's direction puts
     /// it. Nil where no pill is, and on the Mac for a paragraph its region
-    /// reader draws (64 KB of text, or 16 KB in 256 runs or more,
+    /// reader draws (LLP 1072: 64 KB of text, or 16 KB in 256 runs or more,
     /// a Markdown text being a run per piece), which lays out off the main
     /// thread.
     func readerAtomFrame(_ start: Int, _ end: Int) -> CGRect? {
@@ -464,7 +464,7 @@ extension NodeView {
 }
 
 extension ExactSession {
-    /// An atom's press, to a node that hears `atompress` (host kind 59).
+    /// An atom's press, to a node that hears `atompress` (host kind 59, LLP 1045.000 D7).
     package func atomPress(node: UInt32, payload: String) {
         guard booted, state != .destroyed, presenter.views[node]?.handlers.contains("atompress") == true else { return }
         apply(runtime.fieldEvent(node, 59, payload, now: now()))

@@ -1,9 +1,10 @@
-//! The CSS importers and the dial marks on large inputs: each path linear, a
-//! large valid input read as it should be, and a shape that multiplies cut
-//! off rather than run. Linear is held as a ratio, not a wall clock: an input
-//! four times the size takes under eight times as long (four for a linear
-//! path, sixteen for a quadratic one), each the best of three in the thread's
-//! own CPU time, which a loaded machine leaves be.
+//! The CSS importers and the dial marks on large inputs (rt1's QUEUE entry,
+//! from E23 round 5): each path linear, a large valid input read as it should
+//! be, and a shape that multiplies cut off rather than run. Linear is held as
+//! a ratio, not a wall clock: an input four times the size takes under eight
+//! times as long (four for a linear path, sixteen for a quadratic one), each
+//! the best of three in the thread's own CPU time, which a loaded machine
+//! leaves be.
 
 use crate::common::vocab;
 use exact_tamber::import::{css_blocks, css_read, marks_of, shadcn, tailwind};

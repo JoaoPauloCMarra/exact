@@ -1,4 +1,4 @@
-// The same module answers now, fetches, and reads a saved file.
+// LLP 1126.000 WP5: the same module answers now, fetches, and reads a saved file.
 const appId = 'test.widget-js';
 const grants = 'net.fetch https://widget.test\nfs.read app:/data\nfs.write app:/data\nsecret.keep session\n';
 const row = (date: number, title: string) => [{date, props: {title}}];

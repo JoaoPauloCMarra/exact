@@ -1,4 +1,4 @@
-// A sheet the JS runtime removes slides down first (navigation.js `sheetLeaves`): a keyed row that
+// A sheet the JS runtime removes slides down first (navigation.js `sheetLeaves`, LLP 1115.000 D4.8): a keyed row that
 // is a sheet the look draws stays, leaving, until its animation ends, whether the loop keeps a row beside it or
 // replaces all it holds (the runtime's fast path empties such a parent at once). It keeps its ids while it leaves, and
 // a focus the same commit asks for by an id it shares lands on the live route's. Build exact-web-js once before

@@ -1,5 +1,5 @@
 //! Infer action interfaces once, then propagate requirements over bindings.
-//! Invocation, declaration and binding are named in one diagnostic.
+//! @ref LLP 1035.005 D2: invocation, declaration and binding in one diagnostic.
 
 use super::{handler_arity, AnalyzeError, Related, HANDLERS};
 use contract_syntax::{Component, Expr, File, Node, Span};
@@ -135,8 +135,8 @@ pub(super) fn check(file: &File, types: &Types, expanded: &Component) -> Result<
     for (ci, c) in file.components.iter().enumerate() {
         let scoped = if ci == 0 { expanded } else { c };
         let mut scope = types.component_scope(scoped, &types.components[ci]);
-        // The component's `provide` section covers its whole view;
-        // a slot fill is walked in its caller's view.
+        // The component's `provide` section covers its whole view (LLP
+        // 1035.005.000 D9); a slot fill is walked in its caller's view.
         let mut providers: Vec<_> = c
             .provides
             .iter()

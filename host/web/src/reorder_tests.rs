@@ -412,8 +412,8 @@ fn remeasure(h: &mut Host<Rows>, b: ReorderBinding, source: f64) {
 }
 #[test]
 fn a_float_noise_remeasure_of_the_translated_source_keeps_the_preview() {
-    // The source row, measured through its preview translate, can come back
-    // 76 as 75.99998, which must not end the drag; a real change still does.
+    // habits F10: the source row, measured through its preview translate,
+    // came back 76 as 75.99998 and ended the drag; a real change still does.
     for (size, drops) in [(20. - 1.5e-5, true), (25., false)] {
         let (mut h, b) = fixture();
         begin(&mut h, b);
@@ -431,7 +431,7 @@ fn a_float_noise_remeasure_of_the_translated_source_keeps_the_preview() {
     }
 }
 
-/// Two grouped lists: a ghost's begin, op 21 naming the
+/// Two grouped lists (LLP 1094 D5): a ghost's begin, op 21 naming the
 /// target by its view id, and the drop on it.
 struct Board(Vec<(String, String)>);
 impl DataSource for Board {

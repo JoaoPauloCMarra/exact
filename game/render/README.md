@@ -42,7 +42,7 @@ frame. `module!(Game, hooks = Effects, shaders = SHADERS)` exports a hooked canv
 add `assets` for engine-drawn custom model materials, and `audio` for audio support.
 A game names its hooks and shader pack in `app.json`'s `game.render` and the bake
 writes that line ([game README](../README.md#exact2-integration)).
-See `tests/hooks.rs` for the independent public fixture.
+See LLP 1046.006.000 and `tests/hooks.rs` for the independent public fixture.
 
 Hooks borrow `RenderWorld` for immutable extraction and `FrameView` for the exact
 engine camera, interpolation, viewport/capacity and clock-reset facts. Register
@@ -1042,7 +1042,8 @@ bun games/greybox/proof.mjs macos
 
 GPU tests explicitly skip without an adapter; geometry and shader validation still
 run. Set `EXACT_GPU_OUT` for image artifacts. The current game proofs pin native
-and browser hashes. [Game README](../README.md) covers clock, save and dev carry.
+and browser hashes. [Game README](../README.md) covers clock, save and dev carry;
+[ergonomics diary](../diaries/002-ergonomics.md) retains experiment history.
 
 
 `Environment` is re-exported from the engine. A frame carries it once, including

@@ -4,8 +4,11 @@
 //! display already consume. The device is created at boot; vello's
 //! pipelines are compiled then, behind a wgpu pipeline cache persisted to
 //! disk where the driver supports one (Vulkan), so only the first launch on
-//! a machine pays for the shaders. wgpu is the one GPU API on every host;
-//! compiling shaders on the boot path is a deliberate trade.
+//! a machine pays for the shaders.
+//!
+//! @ref LLP 1015 §2 (r2: the GPU painter); LLP 1009 D1 (wgpu is the one
+//! GPU API on every host) and D5 (shaders — here on the boot path, the
+//! trade Charlie took 2026-08-29)
 
 #![allow(unsafe_code)]
 
@@ -60,11 +63,11 @@ pub struct Gpu {
     /// Image brushes by the picture's address, each entry holding the
     /// picture so the address cannot be reused while the brush is cached.
     images: ImageCache,
-    /// 2D canvas snapshots as image brushes, by snapshot identity: a new
-    /// revision is a new `Arc`, so a new upload.
+    /// 2D canvas snapshots as image brushes, by snapshot identity (LLP 1056
+    /// D7): a new revision is a new `Arc`, so a new upload.
     canvas_brushes: std::collections::HashMap<usize, (Arc<Pixmap>, vello::peniko::ImageBrush)>,
     /// The clip and opacity layers open in the scene (a backdrop flush
-    /// pushes them again).
+    /// pushes them again, LLP 1053.000 D2).
     layers: Vec<backdrop::Layer>,
     rows: rows::Rows,
     /// The adapter's name.
@@ -501,7 +504,7 @@ impl Backend for Gpu {
         self.scene.fill(Fill::NonZero, a, color(c), None, &shape(s));
     }
 
-    // An SVG shape: fill under stroke.
+    // @ref LLP 1055 D4 — an SVG shape: fill under stroke.
     fn svg_path(&mut self, s: &crate::paint::SvgPaint<'_>, ts: Transform) {
         let mut p = BezPath::new();
         for seg in &s.path.0 {
@@ -517,12 +520,12 @@ impl Backend for Gpu {
             }
         }
         let a = self.affine(ts);
-        // A gradient is a peniko brush in the path's
+        // @ref LLP 1055.000 D7 — a gradient is a peniko brush in the path's
         // space, interpolated unpremultiplied as Chrome's SVG gradients are.
         let brush = |ink: &crate::paint::Ink<'_>| -> (vello::peniko::Brush, Option<Affine>) {
             match ink {
                 crate::paint::Ink::Solid(c) => (color(*c).into(), None),
-                // A pattern's tile as a repeating image brush.
+                // @ref LLP 1055.000 D7 — a pattern's tile as a repeating image brush.
                 crate::paint::Ink::Pattern {
                     tile,
                     transform: t,
@@ -801,7 +804,7 @@ impl Backend for Gpu {
         self.island_image(image, dst, Transform::identity(), 0);
     }
 
-    // An island in its element's user space.
+    // @ref LLP 1055.000 D14 — an island in its element's user space.
     fn island_image(&mut self, image: Arc<Pixmap>, dst: Rect4, ts: Transform, mode: u8) {
         let clips: &[Shape] = &[];
         struct Pixels(Arc<Pixmap>);
@@ -828,7 +831,7 @@ impl Backend for Gpu {
         let place = a
             * Affine::translate((dst.0 as f64, dst.1 as f64))
             * Affine::scale_non_uniform(dst.2 as f64 / nw, dst.3 as f64 / nh);
-        // `mix-blend-mode`, as a blended layer.
+        // @ref LLP 1055.000 D19 — `mix-blend-mode`, as a blended layer.
         if mode != 0 {
             use vello::peniko::Mix as M;
             let mix = [
@@ -947,7 +950,7 @@ impl Backend for Gpu {
         true
     }
 
-    // An SVG clip: its shapes as one clip layer
+    // @ref LLP 1055.000 D10 — an SVG clip: its shapes as one clip layer
     // (a union under one rule), its own clip a layer inside it.
     fn push_svg_clip(&mut self, clip: &exact_kernel::svg::scene::Clip, ts: Transform) -> usize {
         let a = self.affine(ts);

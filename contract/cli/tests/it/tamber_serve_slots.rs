@@ -1,4 +1,4 @@
-//! The design server's slot check: a
+//! The design server's slot check (LLP 1139 D4, LLP 1121 stage 12 D2): a
 //! write or a scrub's resting value that would hide an exported library
 //! component's slot fill (a node of its chain `opacity: 0`, `width: 0` …,
 //! in any tuple or scale column) is refused, with the compiler's own
@@ -107,7 +107,7 @@ fn a_write_to_a_base_name_a_chain_reaches_through_an_alias_is_checked_one_reachi
     // `space.md` 0: `lib.w` is `space.md`, the chain's width 0.
     let (base, _) = s.ask(json!({"method": "transaction", "client": "t", "files": files(), "ops": [{"op": "set-token", "name": "space.md", "value": "0px"}]}));
     assert_eq!(refusals(&base).len(), 1, "{base}");
-    // (said in the app's design, never a package's, at the line the write gives `space.md`)
+    // (said in the app's design, never a package's, at the line the write gives `space.md`: reload1's 7dbd6b76ae)
     let at = &base["error"]["diagnostics"][0];
     let line = std::fs::read_to_string(dir.join("app.tamber"))
         .unwrap()
@@ -149,7 +149,7 @@ fn a_set_param_that_hides_a_library_slot_is_refused_too() {
 }
 
 /// The check's cost on a candidate fold, as a scrub's verify pays it:
-/// under 25 ms on this fixture (about 10 on the Bluesky clone).
+/// under 25 ms on this fixture (theme2's figure is about 10 on the clone).
 #[test]
 fn the_slot_check_is_cheap() {
     let dir = app("cost", DESIGN);
@@ -288,7 +288,7 @@ fn a_package_default_the_app_replaced_selects_no_chain() {
 #[test]
 fn a_write_to_a_token_a_rows_expression_names_is_checked() {
     // The chain's width an expression over `lib.w`, which the compiler can't fold on a chain row and refuses as
-    // written: a write to `lib.w` reaches it, refused in the compiler's own words.
+    // written (reload1's 64d8760971): a write to `lib.w` reaches it, refused in the compiler's own words.
     let dir = app("expr", DESIGN);
     std::fs::write(
         dir.join("node_modules/@acme/lib/index.contract"),
@@ -344,11 +344,11 @@ fn a_base_name_reached_only_through_the_apps_own_aliases_is_checked() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The check's budget (about 10 ms a candidate) for the check alone, on a
+/// theme2's bar (about 10 ms a candidate) for the check alone, on a
 /// clone-sized design: the Bluesky clone's whole design as the app's, the
 /// library package beside it; warm, the median of five, for a touched name
 /// that reaches the chain and for every chain at once. The figures are
-/// printed.
+/// printed for the review record.
 #[test]
 fn the_slot_check_alone_is_under_ten_milliseconds_on_a_clone_sized_design() {
     let clone = include_str!("../../../../tamber/tests/fmt/bluesky-clone.tamber");
@@ -380,10 +380,10 @@ fn the_slot_check_alone_is_under_ten_milliseconds_on_a_clone_sized_design() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// check_slots on the clone's design with the real `@exact/cards` and
-/// `@exact/actions` (their chains, as apps/library-gate uses every exported
-/// component). Needs the workspace's packages installed (`bun install`), so
-/// run by hand:
+/// The lead's 10:15Z ask (stage 12 gate, iosfix's file): check_slots on the
+/// clone's design with the real `@exact/cards` and `@exact/actions` (their
+/// chains, as apps/library-gate uses every exported component). Needs the
+/// workspace's packages installed (`bun install`), so run by hand:
 /// `cargo test -p contract --test it real_packages -- --ignored --nocapture`.
 #[test]
 #[ignore = "needs bun install's node_modules/@exact; run by hand for the gate's figure"]

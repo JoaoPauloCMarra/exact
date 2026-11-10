@@ -1,4 +1,4 @@
-// Pairing through the wire: a code minted locally, a
+// Pairing through the wire (LLP 1121 stage 10 A2): a code minted locally, a
 // token for it once, at its scope, under the client name its token gives;
 // local-only methods; no cookie and no remote request but `pair` without a
 // token; revoke and expiry ending the client's streams, polls, scrub, pins
@@ -26,7 +26,7 @@ beforeAll(async () => {
     appDir: dir, log: line => logged.push(line), settle: 100, pairTtlMs: 3600_000, clock: () => now,
     scrub: { preview: async () => ({}), restore: () => { restores++; } },
   });
-  // `remote` stands in for the remote listener: the request came from off this machine.
+  // `remote` stands in for B's listener: the request came from off this machine.
   server.on('request', async (req, res) => {
     const access = flags ?? (remote ? { local: false, remote: true, peer: '192.0.2.7' } : gate.check(req));
     if (!(await tamber.handle(req, res, new URL(req.url, 'http://x'), access))) { res.writeHead(404); res.end(); }
@@ -49,7 +49,7 @@ const post = async (request, token = local, path = '/__tamber', more = {}) => {
 };
 // Each pairing from a peer of its own: a peer gets five attempts a minute.
 let peers = 0;
-// Each from the remote TLS door, as a remote peer comes (plain HTTP from off this
+// Each from B's TLS door, as a remote peer comes (plain HTTP from off this
 // machine reaches nothing of the wire: the test below).
 const fromPeer = async fn => { flags = { local: false, remote: true, peer: `203.0.113.${++peers}` }; try { return await fn(); } finally { flags = null; } };
 const paired = async (scope, name) => {
@@ -74,7 +74,7 @@ test("the local token's body may be 16 MiB (a CLI import's sources); a paired cl
   expect(local.status, JSON.stringify(local).slice(0, 300)).toBe(200);
   expect(local.ok.ops.length).toBeGreaterThan(2000);
   await post({ method: 'drop', client: 'big-local', proposal: local.ok.proposal });
-  // Past 1 MiB the local token reaches only an import.
+  // Past 1 MiB the local token reaches only an import (Astra's round 2).
   const review = { importer: 'dtcg', tokens: 1, offers: [], note: 'n'.repeat(2 << 20) };
   const big = await post({ method: 'propose', hold: true, client: 'big-local', ops: [{ op: 'set-token', name: 'ink', value: '#111111' }], review });
   expect(big.status).toBe(413);
@@ -153,7 +153,7 @@ test('revoke ends the client\'s subscription, long poll, scrub and pins at once,
   const scrub = await post({ method: 'scrub', client: 'x', ops: [{ op: 'set-token', name: 'ink', value: '#222222' }], files }, p.token);
   expect(scrub.ok).toBeTruthy();
   const held = await post({ method: 'propose', hold: true, client: 'x', ops: [{ op: 'set-token', name: 'ink', value: '#333333' }] }, p.token);
-  // The canvas gateway's end, as the gateway subscribes it.
+  // The canvas gateway's end, as stage 10 C subscribes it.
   const gateway = [];
   tamber.pairing.onEnd(p.client, why => gateway.push(why));
   // Once the scrub's and the proposal's events are out, a poll that waits.
@@ -404,7 +404,7 @@ test('a scrub update or a held proposal past its client\'s deadline: the scrub e
 });
 
 
-// `navigate` (*1.14*) needs write and a present client, goes to
+// LLP 1122 T7 (*1.14*): `navigate` needs write and a present client, goes to
 // one build that can, a location on its own origin only, and is journaled
 // with its client; a build that can't is 409 naming it (the tool then
 // reloads that copy's frame instead).

@@ -1,4 +1,4 @@
-# The Tamber binding host on Android's Canvas host: one library with
+# The Tamber binding host on Android's Canvas host (LLP 1121 D12): one library with
 # the runner, the kernel, the data crate, the baked plan (written by build.rs,
 # never committed) and the host's JNI, which the reader (host/android) loads as
 # libexactcanvas.so. Off Android the library is empty: the Canvas host is

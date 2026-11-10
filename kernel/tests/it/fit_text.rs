@@ -1,8 +1,8 @@
-//! `-exact-fit: shrink`. A text too wide for its box is
+//! LLP 1116.001 D1.4: `-exact-fit: shrink`. A text too wide for its box is
 //! measured at the scale that fits it, down to half its size, as UIKit's
 //! `adjustsFontSizeToFitWidth` with a 0.5 `minimumScaleFactor`; the scale is
 //! the kernel's, published to every host, and the runs a painter reads are
-//! at it. Without it, a stopwatch at the largest text size showed only ":48.".
+//! at it. The stopwatch at the largest text size showed only ":48." (round 3).
 use exact_kernel::*;
 
 /// "00:00:48.12" at 40 points: 11 glyphs of 24 = 264 wide, 48 high.
@@ -207,7 +207,7 @@ fn a_new_scale_in_a_box_that_held_is_published() {
     assert!(receipt.updated.contains(&node.key));
 }
 
-/// A stopwatch's shape: a page whose column holds a fitted
+/// The stopwatch's shape (round 13): a page whose column holds a fitted
 /// readout above a list, whose rows are flex rows of a flexing label and two
 /// times. A row added as the readout changes took the readout's runs for its
 /// label's: the label was measured at the readout's size, so a lap row was 92

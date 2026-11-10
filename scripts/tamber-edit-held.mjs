@@ -1,4 +1,4 @@
-// `edit-held` (tamber/1.17): one value of a held proposal changed, the rest as it
+// `edit-held` (tamber/1.17, LLP 1122; theme2's ruling 2026-10-24): one value of a held proposal changed, the rest as it
 // is held. A `{client, proposal, index, when?, value, items?}` request sends no ops: the server keeps the proposal held but busy,
 // sets the op's value (its own, or its `when`th branch's), keeps `items`, and holds that again in its place on the
 // files as they are, as `accept`'s recompute does: the original client's still (its owner, who may accept or drop

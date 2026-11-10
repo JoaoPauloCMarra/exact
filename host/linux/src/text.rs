@@ -1,7 +1,9 @@
-//! Text: Parley, one engine for measuring and painting — measuring with
-//! one engine and painting with another makes every difference a bug.
-//! Fontique finds the faces and swash rasterizes them. Each kernel has its
-//! measurer injected.
+//! Text: Parley, one engine for measuring and painting — the lesson of
+//! LLP 1008 §3 (measure with one engine, paint with another, and every
+//! difference is a bug), in Rust this time (LLP 1085.000: Parley in place
+//! of cosmic-text; fontique finds the faces, swash rasterizes them).
+//!
+//! @ref LLP 1015 §3; LLP 1001 §6 (a per-kernel injected measurer)
 //!
 //! A [`Paragraph`] is a width-specific snapshot sharing an immutable full
 //! Parley shape and its font catalog. Line and glyph vectors and CSS
@@ -75,9 +77,9 @@ pub struct Run {
     pub family: u16,
     /// Italic.
     pub italic: bool,
-    /// CSS `font-stretch`, percent of normal width.
+    /// CSS `font-stretch`, percent of normal width (LLP 1019 D8).
     pub stretch: f32,
-    /// CSS `font-variation-settings`.
+    /// CSS `font-variation-settings` (LLP 1019 D9).
     pub variations: exact_kernel::style::FontVariations,
     /// CSS `font-optical-sizing: auto`: a face's `opsz` is the size.
     pub optical_sizing: bool,
@@ -85,12 +87,12 @@ pub struct Run {
     pub line_height: Option<f32>,
     /// Points per glyph.
     pub letter_spacing: f32,
-    /// CSS `font-variant-numeric` bits: 1 is `tabular-nums`.
+    /// CSS `font-variant-numeric` bits (LLP 1053 G4): 1 is `tabular-nums`.
     pub font_variant_numeric: u8,
     /// CSS `font-variant-ligatures` as `FontVariantLigatures`' bits.
     pub font_variant_ligatures: u8,
     /// A Markdown list item's head indent, points: where its paragraph's
-    /// lines start.
+    /// lines start (LLP 1045 D4).
     pub indent: f32,
     /// A Markdown list item's marker, hung before the indent.
     pub hang: bool,
@@ -99,10 +101,10 @@ pub struct Run {
     pub mark: u8,
     /// A Markdown link's target ([`markup::target`]); empty otherwise.
     pub href: String,
-    /// Bold Text weights this run (`TextStyle::bold_text`):
-    /// a Markdown piece's own weight takes the step too.
+    /// Bold Text weights this run (`TextStyle::bold_text`, LLP 1115.000
+    /// D12.3): a Markdown piece's own weight takes the step too.
     pub bold_text: bool,
-    /// An image in the paragraph: the box reserved in place of
+    /// An image in the paragraph (LLP 1011.002): the box reserved in place of
     /// this run's text, which is shaped as none.
     pub inline: Option<exact_kernel::InlineBox>,
 }
@@ -199,7 +201,7 @@ pub struct Spec {
 }
 
 impl Spec {
-    /// CSS white space collapsing, before shaping: the shaper
+    /// CSS white space collapsing, before shaping (LLP 1053 G5): the shaper
     /// shapes what it is given, the browser collapses first. Collapsed runs are
     /// the spec's identity, so equal renderings share one shape.
     pub fn collapse_white_space(mut self) -> Self {
@@ -228,7 +230,7 @@ impl Spec {
     }
 
     /// A `markup="markdown"` paragraph's: its one run of source expanded
-    /// into pieces, which keep their own lines — the source
+    /// into pieces (LLP 1045 D3), which keep their own lines — the source
     /// is never collapsed, as on Apple.
     pub fn markdown(mut self) -> Self {
         if let [source] = self.runs.as_slice() {
@@ -241,10 +243,10 @@ impl Spec {
     pub fn from_request(request: &TextMeasureRequest<'_>) -> Spec {
         // A soft hyphen breaks and shows here as on every host; `auto`'s own
         // hyphenation points need a language's patterns, which this pure-Rust
-        // host does not carry.
+        // host does not carry (LLP 1001).
         static AUTO: std::sync::Once = std::sync::Once::new();
         if request.paragraph.hyphens == exact_kernel::Hyphens::Auto {
-            AUTO.call_once(|| eprintln!("[Text] hyphens-auto: Linux has no hyphenation dictionary; `hyphens: auto` breaks only at soft hyphens, as `manual`"));
+            AUTO.call_once(|| eprintln!("[Text] hyphens-auto: Linux has no hyphenation dictionary; `hyphens: auto` breaks only at soft hyphens, as `manual` (LLP 1001)"));
         }
         let spec = Spec {
             strut: Run::from_style("", request.paragraph.strut),
@@ -275,9 +277,9 @@ impl Spec {
 pub struct Paragraph {
     /// Width-independent canonical text, shape and catalog.
     source: Rc<ShapedSource>,
-    /// This width's lines and glyphs. A width only measured keeps none:
-    /// the first paint breaks the shared shape at `remake` again and keeps
-    /// them.
+    /// This width's lines and glyphs. A width only measured keeps none (the
+    /// storage spike's arrangement (c)): the first paint breaks the shared
+    /// shape at `remake` again and keeps them (b).
     record: std::cell::OnceCell<Arc<Lines>>,
     /// The lines its measure broke, held until this frame's paint takes
     /// them for `record` ([`TextEngine::finish_text_frame`] drops any left),
@@ -297,7 +299,7 @@ pub struct Paragraph {
     pub first_baseline: f32,
     /// CSS shared-baseline placement for each wrapped line, used by both painters.
     baselines: Arc<Vec<f32>>,
-    /// Each wrapped line box's bottom: where a column may end.
+    /// Each wrapped line box's bottom (LLP 1093 D6): where a column may end.
     bottoms: Arc<Vec<f32>>,
     ink: RefCell<ink::Cache>,
     ellipsized: RefCell<Option<(f32, Rc<Paragraph>)>>,
@@ -361,7 +363,7 @@ impl Paragraph {
         &self.baselines
     }
 
-    /// Each wrapped line box's bottom, in the same order.
+    /// Each wrapped line box's bottom, in the same order (LLP 1093 D6).
     pub fn line_bottoms(&self) -> &[f32] {
         &self.bottoms
     }
@@ -403,7 +405,7 @@ impl Paragraph {
         self.resident_capacity_bytes + self.lines_capacity_bytes() + self.ink_capacity_bytes()
     }
 
-    /// CSS inline backgrounds: each run's `background-color`
+    /// CSS inline backgrounds (LLP 1053 §0): each run's `background-color`
     /// covers each of its line fragments, its glyphs' advance across and its
     /// own font's content area down; touching spans of one colour join.
     /// Rectangles are in points from the paragraph's top-left, in paint order.
@@ -503,7 +505,7 @@ pub(crate) enum FamilyChoice {
     Declared(String),
 }
 
-/// Canvas 2D's own fonts: the catalog's faces and family
+/// Canvas 2D's own fonts (LLP 1056 D8): the catalog's faces and family
 /// choices for `plan`, detached from its `Rc` caches so the canvas text
 /// engine can live behind a `Mutex`, with each family name a canvas `font`
 /// may give (the generics and the plan's declared families).
@@ -562,7 +564,7 @@ pub struct GlyphRun {
     /// a face's axis rather than synthesized.
     pub synthesis: fontique::Synthesis,
     /// The run's `font-variation-settings`, set after `synthesis` and
-    /// optical size, in the axes' own units.
+    /// optical size, in the axes' own units (LLP 1019 D9).
     pub variations: exact_kernel::style::FontVariations,
     /// Whether `opsz` is the size (`font-optical-sizing: auto`).
     pub optical_sizing: bool,
@@ -656,7 +658,7 @@ impl TextEngine {
 
     /// A fresh, plan-scoped catalog. Registration failure leaves that stack
     /// on the system last resort and names the refused identity on stderr;
-    /// boot still presents.
+    /// boot still presents (LLP 1019 D5).
     pub fn shared_for_plan(plan: &Plan, assets: &Path) -> Shared {
         Self::shared_for_assets(plan, &Assets::embedded(assets.to_path_buf()))
     }
@@ -670,7 +672,7 @@ impl TextEngine {
     }
 
     /// Replace the complete catalog and every family-bearing cache. This is
-    /// the plan-identity boundary on a dev reload.
+    /// the plan-identity boundary on a dev reload (LLP 1019 D4).
     pub fn install_plan(&mut self, plan: &Plan, assets: &Path) {
         self.install_plan_assets(plan, &Assets::embedded(assets.to_path_buf()));
     }
@@ -934,8 +936,8 @@ impl TextEngine {
         self.measure_for(spec, width, key)
     }
 
-    /// Each inline box's top left in `paragraph`, in run order:
-    /// its line's baseline less its height above it.
+    /// Each inline box's top left in `paragraph`, in run order (LLP
+    /// 1011.002 D2): its line's baseline less its height above it.
     fn inline_box_origins(&mut self, paragraph: &Paragraph, origins: &mut Vec<(f32, f32)>) {
         let lines = paragraph.lines();
         let spec = &paragraph.source.spec;
@@ -1224,7 +1226,7 @@ impl TextMeasurer for Measurer {
         crate::paint::control::field_chrome(request.font.size, request.labelled)
     }
 
-    /// The shell's own field measures a field it hosts.
+    /// The shell's own field measures a field it hosts (LLP 1115.001 D8).
     fn field_text(
         &mut self,
         kind: exact_kernel::FieldKind,
@@ -1269,7 +1271,7 @@ impl TextMeasurer for Measurer {
         Some(engine.measure_for(&spec, width, key))
     }
 
-    /// The line boxes of the paragraph the measure built.
+    /// @ref LLP 1093 D6 — the line boxes of the paragraph the measure built.
     fn lines(
         &mut self,
         stamp: &ParagraphStamp,
@@ -1286,7 +1288,7 @@ impl TextMeasurer for Measurer {
         }
     }
 
-    /// Each image's box in the paragraph the
+    /// @ref LLP 1011.002 D2 — each image's box in the paragraph the
     /// measure built.
     fn inline_boxes(
         &mut self,

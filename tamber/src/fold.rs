@@ -1,7 +1,7 @@
-//! The build's one evaluator: a colour value
+//! The build's one evaluator (LLP 1121 D7, §3 "Folding"): a colour value
 //! over literals, dials and other tokens, folded in f64 to a form the
 //! kernel already has. Only a legacy result is quantised, once, to 8-bit
-//! sRGB; every other result keeps its own space.
+//! sRGB; every other result keeps its own space (LLP 1100).
 
 use crate::color_fn;
 use crate::css::Item;
@@ -11,8 +11,8 @@ use exact_color::{Parsed, Rgba8, Space, Wide};
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Half {
     /// A legacy sRGB colour: `Fixed` in the kernel, 8-bit, beside the
-    /// unquantised value a further fold starts from (only the final legacy
-    /// result is quantised).
+    /// unquantised value a further fold starts from (§3: only the final
+    /// legacy result is quantised).
     Legacy(Rgba8, Wide),
     /// A colour in its own space: `Wide`.
     Wide(Wide),
@@ -84,7 +84,7 @@ pub(crate) trait Names {
     fn named(&mut self, name: &str) -> Result<Named, FoldError>;
 
     /// Whether `name` is a base name the design leaves unset, which an
-    /// expression keeps.
+    /// expression keeps (LLP 1121 D11, stage 12 B2).
     fn base(&mut self, _name: &str) -> bool {
         false
     }
@@ -186,7 +186,7 @@ pub(crate) fn per_side(
                     return fail(
                         "tamber-residual",
                         format!(
-                            "`{what}` over the host value `{}` does not fold at build, and a device evaluates none yet",
+                            "`{what}` over the host value `{}` does not fold at build, and a device evaluates none until LLP 1095 D10's mixes are built",
                             host.text()
                         ),
                     )
@@ -327,7 +327,7 @@ fn func(
         "-exact-platform-color" => platform(args, text, names),
         "var" => fail(
             "tamber-var",
-            "a token is named bare (`surface.card`), not through `var()`",
+            "a token is named bare (`surface.card`), not through `var()` (LLP 1121 D3)",
         ),
         "rgb" | "rgba" | "hsl" | "hsla" | "hwb" | "lab" | "lch" | "oklab" | "oklch" | "color" => {
             let from = matches!(args.first().and_then(|a| a.first()), Some(Item::Ident(w)) if w.eq_ignore_ascii_case("from"));
@@ -349,14 +349,14 @@ fn residual_pair(host: &Host) -> FoldError {
     FoldError {
         id: "tamber-residual",
         message: format!(
-            "`light-dark()` with the host value `{}` as a side has no form in the kernel yet",
+            "`light-dark()` with the host value `{}` as a side has no form in the kernel until LLP 1095 D10",
             host.text()
         ),
     }
 }
 
-/// `-exact-platform-color(ios <name>, macos <name>, web <name>, <fallback>)`,
-/// as the kernel reads it: each platform once, and a
+/// `-exact-platform-color(ios <name>, macos <name>, web <name>, <fallback>)`
+/// (LLP 1095 D3), as the kernel reads it: each platform once, and a
 /// fallback that is a legacy colour or a pair of them, which may name
 /// tokens and is folded here.
 fn platform(args: &[Vec<Item>], text: &str, names: &mut dyn Names) -> Result<Folded, FoldError> {

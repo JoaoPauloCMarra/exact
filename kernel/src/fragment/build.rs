@@ -1,4 +1,4 @@
-//! A container's flow thread as the walk reads it: its
+//! @ref LLP 1093 D3 — a container's flow thread as the walk reads it: its
 //! boxes in document order, as unbreakable *atoms* with a break point before
 //! each, and the boxes that own them.
 //!
@@ -30,7 +30,7 @@ pub(super) struct Atom {
     /// The break before this atom violates `break-*: avoid` (or lies inside
     /// a box with `break-inside: avoid`).
     pub avoid: bool,
-    /// A kernel-only monolithic box, journalled if it does not fit.
+    /// A kernel-only monolithic box (D10), journalled if it does not fit.
     pub refusal: Option<(u32, FragmentRefusal)>,
 }
 
@@ -69,7 +69,7 @@ pub(super) struct Absolute {
     pub slot: u32,
     pub x: f32,
     pub top: f32,
-    /// Its containing block lies inside the flow: it takes the
+    /// Its containing block lies inside the flow (D10.4): it takes the
     /// column holding its own top. Otherwise it is placed against the
     /// container (or beyond), as CSS places it.
     pub in_flow: bool,
@@ -117,7 +117,7 @@ pub(super) fn flow(arena: &NodeArena, tree: &LayoutTree, container: u32) -> Flow
 }
 
 /// A `text` that is itself a multi-column container: one paragraph whose
-/// lines flow through its columns.
+/// lines flow through its columns (D1).
 pub(super) fn text(
     arena: &NodeArena,
     slot: u32,
@@ -282,7 +282,7 @@ impl Builder<'_> {
     }
 
     // Whether an absolutely positioned box's containing block lies inside
-    // the flow: a positioned ancestor below the container.
+    // the flow: a positioned ancestor below the container (LLP 1074 T1).
     fn containing_block_in_flow(&self, slot: u32) -> bool {
         let mut at = self.arena.parent(slot);
         while let Some(s) = at {

@@ -1,4 +1,4 @@
-# Variable Type on Android's Canvas host: the library the
+# Variable Type on Android's Canvas host (LLP 1019 §13): the library the
 # reader (host/android) loads as libexactcanvas.so, with the baked plan and
 # its empty TypeScript data module. Off Android the library is empty.
 [package]

@@ -1,7 +1,7 @@
-//! RealWorld redirects after sign-in, publish and delete from its mutations'
-//! `then` actions, not from a polling tick; the signed-out guard stays on the
-//! tick. Driven offline: every source answers later, and the test lands the
-//! replies.
+//! LLP 1035.005.000 D7: RealWorld redirects after sign-in, publish and delete
+//! from its mutations' `then` actions (LLP 1016.001), not from a polling
+//! tick; the signed-out guard stays on the tick. Driven offline: every source
+//! answers later, and the test lands the replies.
 use exact_kernel::Kernel;
 use exact_runner::{
     agent, Answer, DataError, DataSource, Outcome, Request, Response, Runner, Store, Value,

@@ -1,5 +1,6 @@
 //! `Game::present`'s view of the world: deterministic simulation reads, and
 //! writes to presentation components on existing entities only.
+//! @ref llp/1046.008-game-presentation-seams.plan.md#amendment-2026-10-04
 use crate::{Affine3A, Component, Entity, Ref, RefMut, Resource, Rng, Target, Value, World};
 
 /// A component `Game::present` may write: one declared `#[derive(Presentation)]`.

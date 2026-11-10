@@ -1,4 +1,4 @@
-//! Module scope: each file's names are its own
+//! Module scope (LLP 1091 D1/D4/D5): each file's names are its own
 //! declarations and what its `use` lines name. The loader gives every
 //! declaration a program-unique name and rewrites each file through its own
 //! scope before the files are merged, so every later pass sees one flat
@@ -25,7 +25,7 @@ pub enum Kind {
     Style,
     /// `decoration`.
     Decoration,
-    /// `atom`.
+    /// `atom` (LLP 1045.000).
     Atom,
     /// `keyframes`.
     Keyframes,
@@ -105,8 +105,8 @@ pub struct Scope {
     /// a written type of one of these names is refused even when this file
     /// has a `fn` of the name, which is no type.
     pub foreign_shapes: std::collections::HashMap<String, String>,
-    /// The program-unique names that are native modules' sources and sends:
-    /// a resource or a `send` naming one in scope takes its
+    /// The program-unique names that are native modules' sources and sends
+    /// (LLP 1133.001): a resource or a `send` naming one in scope takes its
     /// name, where a data source's name is left as written.
     pub modules: std::collections::HashSet<String>,
 }
@@ -221,7 +221,7 @@ fn walk(file: &mut File, scope: &Scope, seen: Option<&mut Seen>) -> Result<(), S
         timelines,
         // A `@color-profile`'s dashed name is global, as in CSS.
         color_profiles: _,
-        // The theme's names are the app's, as roles are.
+        // The theme's names are the app's, as roles are (LLP 1095 D4).
         theme: _,
         design: _,
         package_designs: _,
@@ -361,7 +361,7 @@ impl Rewriter<'_> {
         // In the order the type checker brings them into scope: props and
         // injects (a members block's are its component's); each state, seen
         // by those after it; the members the component's other files
-        // declare; then the rest.
+        // declare (LLP 1091.002 D5); then the rest.
         let mark = self.locals.len();
         self.bind_callable(members.props.iter().cloned());
         self.bind_callable(props.iter().chain(injects.iter()).map(|p| p.name.clone()));
@@ -503,7 +503,7 @@ impl Rewriter<'_> {
                 }
                 _ if self.scope.builtin_types.contains(name.as_str()) || name == "action" => Ok(()),
                 // Nothing of the name here: another file's is refused with the
-                // rest of the file's missing names.
+                // rest of the file's missing names (§21).
                 None => self.scope.rename(Kind::Call, name, *span),
                 // A `fn` of the name here, which is no type: another file's
                 // shape of the name is not reachable past it by a `use`.
@@ -512,7 +512,7 @@ impl Rewriter<'_> {
                         self.scope.refused.borrow_mut().push(SyntaxError {
                             id: "contract-use-missing",
                             message: format!(
-                                "`{name}` is a shape declared in `{file}`, and this file's `{name}` is a `fn`; rename one, then name the shape in a `use`"
+                                "`{name}` is a shape declared in `{file}`, and this file's `{name}` is a `fn`; rename one, then name the shape in a `use` (LLP 1091 D1)"
                             ),
                             span: *span,
                         });
@@ -534,7 +534,7 @@ impl Rewriter<'_> {
                     self.bind([name.clone()]);
                 }
                 Stmt::Assign { expr, .. } => self.expr(expr)?,
-                // A send that answers nothing is a statement.
+                // A send that answers nothing is a statement (LLP 1133.004 D5).
                 Stmt::Command { name, args, .. } => {
                     self.scope.rename_source(name);
                     self.exprs(args)?
@@ -566,7 +566,7 @@ impl Rewriter<'_> {
                     self.unbind(inner);
                     self.stmts(none)?;
                 }
-                // The parser never makes a call; expansion does,
+                // The parser never makes a call (LLP 1089); expansion does,
                 // after every file is in one scope.
                 Stmt::Call { args, body, .. } => {
                     self.exprs(args)?;
@@ -677,7 +677,7 @@ impl Rewriter<'_> {
         Ok(())
     }
 
-    /// `class=Name` and `class=(c ? A : B)` name styles.
+    /// `class=Name` and `class=(c ? A : B)` name styles (LLP 1017 P6).
     fn class(&mut self, value: &mut Expr) -> R {
         match value {
             Expr::Ident(name, span) => self.scope.rename(Kind::Style, name, *span),
@@ -689,7 +689,7 @@ impl Rewriter<'_> {
         }
     }
 
-    /// The keyframes an `animation` literal names, where it is written.
+    /// The keyframes an `animation` literal names, where it is written (D5).
     /// In a shorthand that is each comma-separated animation's first word
     /// that is not one of CSS's animation keywords or a number, as CSS reads
     /// it; in `animation-name`, each item. A name computed as the app runs is
@@ -756,7 +756,7 @@ impl Rewriter<'_> {
             // when it is the name in every one, left when it is the name in
             // none, and where it is the name in some but not others and also
             // renamed keyframes, no rename is right, so the compile is
-            // refused.
+            // refused (LLP 1091 §20).
             let names: Vec<(usize, &str)> = if shorthand {
                 let roles = literal_roles(&tokens, HOLE);
                 // A computed comma may make more than one animation here, each
@@ -781,7 +781,7 @@ impl Rewriter<'_> {
                             return Err(SyntaxError {
                                 id: "contract-animation-ambiguous",
                                 message: format!(
-                                    "`{t}` beside a computed value is the animation's name or a keyword depending on the value when it runs, and `{t}` here is keyframes another file's `{t}` renamed; quote the name (`'{bare}'`) or name the keyframes otherwise"
+                                    "`{t}` beside a computed value is the animation's name or a keyword depending on the value when it runs, and `{t}` here is keyframes another file's `{t}` renamed; quote the name (`'{bare}'`) or name the keyframes otherwise (LLP 1091 D5)"
                                 ),
                                 span,
                             });
@@ -840,13 +840,13 @@ impl Rewriter<'_> {
         Ok(())
     }
 
-    /// A `-exact-clock(Name)` literal names a timeline where it is written; a
+    /// A `-exact-clock(Name)` literal names a timeline where it is written (D5); a
     /// bare name is the clock pass's.
     fn timeline(&mut self, value: &mut Expr) -> R {
         match value {
             // A bare name is the clock pass's to rewrite; one another file
             // declares and this file neither names nor binds is recorded with
-            // the file's other missing names.
+            // the file's other missing names (§21).
             Expr::Ident(name, span) => {
                 if !self.local(name) && self.scope.get(Kind::Timeline, name).is_none() {
                     self.scope.resolve(Kind::Timeline, name, *span)?;

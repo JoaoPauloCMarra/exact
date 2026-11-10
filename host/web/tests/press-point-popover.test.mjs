@@ -1,4 +1,4 @@
-// A popover opened at the press: its author reads the click's `clientX`/`clientY` and writes them as
+// A popover opened at the press (LLP 1021 D2): its author reads the click's `clientX`/`clientY` and writes them as
 // its `left`/`top`, as a page without Electron's `Menu.popup({x, y})` does. In the neutral look its invoker no longer
 // places it (neutral.css's `position-area` gives way), and where the point leaves too little room it opens the
 // other way from it, as a context menu at the pointer does (navigation.js `insetAt`), from where the insets are as

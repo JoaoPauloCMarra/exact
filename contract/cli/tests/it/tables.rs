@@ -1,4 +1,4 @@
-//! HTML's table and description list: each element is a
+//! HTML's table and description list (LLP 1153 D7): each element is a
 //! `View` its `semanticTag` names, a cell's `colspan`, `rowspan` and `scope`
 //! are props, and the compiler holds them to HTML's content model.
 

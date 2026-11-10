@@ -1,9 +1,9 @@
-//! A resource's local listener, natively: the stream's
+//! A resource's local listener, natively (LLP 1133.005): the stream's
 //! thread checks the address and its grant, opens the listener module and
-//! queues its events for the runner within its bounds, until the stream is
+//! queues its events for the runner within D3's bounds, until the stream is
 //! let go or the listener fails. Sends go to the module by connection.
 //!
-//! The module is a separate artifact: `libexact_listen.dylib` beside
+//! The module is a separate artifact (D13): `libexact_listen.dylib` beside
 //! the executable on macOS (`EXACT_LISTEN_DYLIB` names another), opened on
 //! the first listener; a host that links `exact-listen` installs its table
 //! instead ([`install`]: the Linux host, the tests).
@@ -131,10 +131,10 @@ fn open_library() -> Result<Module, String> {
     }
 }
 
-/// Undelivered events a listener may hold, and their bytes.
+/// Undelivered events a listener may hold, and their bytes (D3).
 const LISTENER_EVENTS: usize = 1024;
 const LISTENER_BYTES: usize = 4 << 20;
-/// Undelivered lines one connection may hold, and their bytes.
+/// Undelivered lines one connection may hold, and their bytes (D3).
 const CONNECTION_LINES: usize = 256;
 const CONNECTION_BYTES: usize = 1 << 20;
 
@@ -164,7 +164,7 @@ struct Context {
     done: Condvar,
 }
 
-/// The path with its existing ancestors resolved: `/tmp/…` and
+/// The path with its existing ancestors resolved (D4): `/tmp/…` and
 /// `/private/tmp/…` on macOS are one path.
 fn resolve(path: &Path) -> PathBuf {
     let mut rest = Vec::new();
@@ -278,7 +278,7 @@ fn wanted(shared: &Shared, ticket: u64) -> bool {
     !state.retired && (state.running.iter()).any(|run| run.ticket == ticket && !run.forgotten)
 }
 
-/// One event from the module: queued as a message, within its bounds.
+/// One event from the module: queued as a message, within D3's bounds.
 extern "C" fn emit(ctx: *mut c_void, kind: u32, id: u64, data: *const u8, len: usize) -> u32 {
     // SAFETY: `ctx` is the stream's `Context`, alive until the module is
     // closed; `data` points at `len` bytes for the call.
@@ -328,7 +328,7 @@ extern "C" fn emit(ctx: *mut c_void, kind: u32, id: u64, data: *const u8, len: u
 }
 
 /// Queue one event behind those the runner has not taken: 0 queued, 1
-/// gone, 2 past a bound (a connection or a line).
+/// gone, 2 past a bound (a connection or a line; D3).
 fn queue(shared: &Shared, ticket: u64, message: Message, bounded: bool) -> u32 {
     let mut state = shared.state.lock().unwrap();
     if state.retired {

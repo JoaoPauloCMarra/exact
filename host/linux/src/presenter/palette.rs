@@ -1,8 +1,8 @@
-//! The device's colours, from its shell: on Android the
+//! The device's colours, from its shell (LLP 1115.001 D4): on Android the
 //! reader resolves Material 3's colour roles for the device, light and
 //! dark, from the system's dynamic palette, and tells them whole at start
 //! and whenever they change. Here each of Exact's colour roles is given the
-//! Material role the table below names for it, and the set is reported through
+//! Material role D4's table names for it, and the set is reported through
 //! the door the Apple host reports its own through
 //! (`roles::set_reported`), so that a role an author wrote, and one the
 //! platform's defaults name, resolve to the device's colour.
@@ -18,8 +18,9 @@ use exact_kernel::ColorValue;
 
 /// Material 3's colour roles, every role of Compose's `ColorScheme`, in the
 /// order a shell tells them (`Native.colors`: all of them light, then all of
-/// them dark). The first twelve are those [`ROLES`] maps Exact's own roles to;
-/// the rest the Material look reads by Material's names ([`material`]).
+/// them dark). The first twelve are those D4 maps Exact's own roles to; the
+/// rest the Material look reads by Material's names ([`material`]; LLP
+/// 1115.001.001 D2.3).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Material {
     /// `primary`.
@@ -111,15 +112,15 @@ pub struct Palette {
 
 use Material::*;
 
-/// Exact's roles as Material's: the name an
+/// Exact's roles as Material's (LLP 1115.001 D4's table): the name an
 /// author writes, the Material role, and its opacity in percent.
 ///
-/// Four rows have no Material role of their own and are chosen here: `FieldText` and
+/// Four rows are not in D4's table and were chosen here: `FieldText` and
 /// `HighlightText` are text on a surface (`onSurface`),
 /// `-exact-opaque-separator` is the separator (`outlineVariant`, which is
 /// opaque already), and `-exact-tertiary-grouped-background` is the step
 /// above the secondary one (`surfaceContainerHigh`). The system hues other
-/// than red and blue are left out: they keep the table's pair.
+/// than red and blue are left out, as D4 rules: they keep the table's pair.
 const ROLES: &[(&str, Material, u32)] = &[
     ("Canvas", Surface, 100),
     ("-exact-background", Surface, 100),
@@ -140,9 +141,9 @@ const ROLES: &[(&str, Material, u32)] = &[
     ("-exact-link", Primary, 100),
     ("ButtonText", Primary, 100),
     ("-exact-system-blue", Primary, 100),
-    // A symbol nobody tinted: `primary`, as it was
-    // while its default was `AccentColor`. Material has no own role for an
-    // icon.
+    // A symbol nobody tinted (LLP 1115.000 D3.9): `primary`, as it was
+    // while its default was `AccentColor`. Material's own answer for an
+    // icon is LLP 1115.001's to give.
     ("-exact-symbol", Primary, 100),
     ("AccentColorText", OnPrimary, 100),
     ("Field", SurfaceContainerHighest, 100),
@@ -236,7 +237,7 @@ impl Palette {
 }
 
 /// The accent a control paints in where its node sets no `accent-color`
-/// ("one accent"), and what is drawn on it: the
+/// (LLP 1115.001 D4, "one accent"), and what is drawn on it: the
 /// `AccentColor` and `AccentColorText` roles as the host reported them.
 /// `None` on a host that reports nothing, whose painter keeps its own.
 pub(crate) fn reported_accent(dark: bool) -> Option<([u8; 4], [u8; 4])> {
@@ -260,12 +261,12 @@ pub(super) struct State {
 }
 
 impl<D: DataSource> Presenter<D> {
-    /// The device's palette, as its shell resolved it:
+    /// The device's palette, as its shell resolved it (LLP 1115.001 D4):
     /// told before the first frame and again, whole, whenever it changes (a
     /// new wallpaper changes the dynamic palette). Every role resolves to
     /// it from here on, and when anything resolves differently the page is
     /// painted again: paint motion re-targets (the first report corrects
-    /// in place, a later one transitions) and nothing kept
+    /// in place, a later one transitions, LLP 1095 D6) and nothing kept
     /// from a paint under the old colours stands.
     pub fn set_palette(&mut self, palette: &Palette) {
         let generation = palette.tell();

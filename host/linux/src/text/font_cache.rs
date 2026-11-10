@@ -1,11 +1,11 @@
 //! A font directory's faces, cached: a phone's `/system/fonts` holds about
 //! 300 files, and reading every one's tables on each launch was most of a
-//! cold start's text setup. The cache is a small text file in the
+//! cold start's text setup (LLP 1076). The cache is a small text file in the
 //! app's cache directory, keyed by the directory's listing (each file's
 //! path, length and modification time, subdirectories included), so a
 //! system update that changes a font reads the directory again.
 //!
-//! Each face is kept as fontique matches it ("The font
+//! Each face is kept as fontique matches it (LLP 1085.000 §4, "The font
 //! cache"): its family, width, style and weight, every variation axis, and
 //! where its charmap is. A cached launch registers the faces described and
 //! opens no font file; one is mapped when a shape first uses it.
@@ -40,7 +40,7 @@ pub(super) fn load(dir: &Path) -> Vec<Described> {
 }
 
 /// Every face under `dir`, read by fontique (the patched scan registers each
-/// file once; a face fontique refuses is not listed).
+/// file once; a face fontique refuses, LLP 1085.000 G2, is not listed).
 pub(super) fn scan(dir: &Path) -> Vec<Described> {
     let mut collection = super::fonts::empty_collection();
     collection.load_fonts_from_paths([dir]);

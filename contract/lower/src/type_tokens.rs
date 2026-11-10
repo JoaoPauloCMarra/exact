@@ -1,4 +1,4 @@
-//! Type and family tokens. `font="type.body"`
+//! Type and family tokens (LLP 1121 D3, D6; stage 6 C). `font="type.body"`
 //! writes only the longhands the token names: one row each, every row
 //! naming the token, and the kernel reads each row's part of its value
 //! (`exact_kernel::style::theme::typeface`). `font-family="family.text"` is
@@ -214,7 +214,8 @@ fn bundled_faces(
 /// too (`theme::rows`), so its words are the build's.
 /// A choice of a token and anything else is refused, and so is a token
 /// that varies by an app axis on a node with element children, which
-/// would inherit its rows (a pin re-selects a colour, not inherited type).
+/// would inherit its rows (theme2's ruling: a pin re-selects a colour,
+/// not inherited type).
 pub(crate) fn tokens_named(
     a: &Attr,
     kind: tamber::Kind,
@@ -294,7 +295,7 @@ pub(crate) fn tokens_named(
                 if rows.is_some() && written != rows {
                     return err(
                         "tamber-type-longhands",
-                        format!("`{name}` writes other longhands than another value `{}` may be (`{value}`): a type token's tuples, and the tokens one row chooses between, write the same longhands, since which rows a token writes is lowered", a.name),
+                        format!("`{name}` writes other longhands than another value `{}` may be (`{value}`): a type token's tuples, and the tokens one row chooses between, write the same longhands, since which rows a token writes is lowered (D6)", a.name),
                         *span,
                     );
                 }

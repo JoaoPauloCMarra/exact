@@ -3,7 +3,7 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// Sheets and their navigation stacks:
+/// Sheets and their navigation stacks (LLP 1075.003 §9, LLP 1035.003 D5):
 /// a second sheet waits for the first presentation, and Back inside a sheet
 /// preserves the background stack.
 final class ModalStackIOSTests: XCTestCase {
@@ -387,8 +387,8 @@ final class ModalStackIOSTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(Date().timeIntervalSince(started), 0.3)
     }
 
-    /// A root whose key names no route keeps what is left of
-    /// the stack it showed. A chat-rooms app keyed its list route
+    /// LLP 1035.001 D1: a root whose key names no route keeps what is left of
+    /// the stack it showed. Chat-rooms (bake-off round 6) keyed its list route
     /// "rooms" while its root named the visit, `${top(nav).id}`, "0" at the
     /// stack's root: its new-room sheet opened, and Cancel (the sheet's route
     /// gone, the key "0" again) left the sheet presented over a blank screen and
@@ -398,7 +398,7 @@ final class ModalStackIOSTests: XCTestCase {
     /// first fit boots its session (a navigation transition's end fits it,
     /// in the batch that installs the stack), and here that would be the
     /// test host's baked plan over these batches. A refused boot boots
-    /// nothing again.
+    /// nothing again (LLP 1031 D8).
     func testASheetWhoseRouteLeftWhileTheRootNamesNoRouteClosesAndLeavesItsBackgroundLive() throws {
         let session = ExactApp.shared.makeSession(label: "sheet-closed-root-names-none")
         sessions.append(session)

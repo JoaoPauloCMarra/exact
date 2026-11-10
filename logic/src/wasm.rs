@@ -5,7 +5,7 @@ use wasmi::{
     Config, Engine, Linker, Memory, Module, Store, StoreLimits, StoreLimitsBuilder, TypedFunc,
 };
 
-// A call's fuel is a base for any request plus an
+// @ref LLP 1029.000 — a call's fuel is a base for any request plus an
 // allowance for each byte the host hands it: a runaway loop stops at the
 // base, while decoding a large plan at activation is work in proportion to
 // what the host chose to send (Caltrain's 46 KB plan takes about 430 a byte).

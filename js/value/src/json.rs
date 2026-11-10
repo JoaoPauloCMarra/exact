@@ -1,4 +1,4 @@
-//! JSON as the seam carries it, without serde.
+//! JSON as the seam carries it, without serde (LLP 1047 §6).
 //!
 //! The value, its accessors and its compact text are serde_json 1.0's
 //! (`serde_json::Value` with its default `Map`): an object's keys are sorted
@@ -32,8 +32,8 @@ pub fn reply(bytes: &[u8], shape: &Shape) -> Result<Reply, Error> {
     Reply::decode(bytes, shape)
 }
 
-/// A runner value as the module sees it, by its declared shape:
-/// records are objects keyed by field name, lists arrays, `option`
+/// A runner value as the module sees it, by its declared shape (LLP 1027
+/// D2): records are objects keyed by field name, lists arrays, `option`
 /// `null` or the value, numbers finite.
 pub fn encode(v: &Value, shape: &Shape) -> Result<Json, String> {
     Ok(match (shape, v) {

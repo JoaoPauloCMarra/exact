@@ -1,4 +1,4 @@
-//! The top layer beside the neutral look's route header,
+//! The top layer beside the neutral look's route header (LLP 1115.000 D17),
 //! whose platform start is `position: sticky`: a binary of its own, because
 //! the metrics column is the process's. A popover keeps a sticky only its
 //! author wrote; the start's is no author's, so such a header with
@@ -56,7 +56,7 @@ fn route(popover: bool, sticky: bool) -> Kernel {
         ],
     ));
     if sticky {
-        // Written, as the runner marks a row its author wrote.
+        // Written, as the runner marks a row its author wrote (LLP 1115.000 D2).
         let mut patch = StyleProps::default();
         patch
             .set_dynamic(StyleId::PositionType, &StyleValue::Text("sticky".into()))

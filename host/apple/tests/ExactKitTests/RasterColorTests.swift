@@ -3,7 +3,7 @@ import ImageIO
 import CoreGraphics
 @testable import ExactKit
 
-/// Each color fixture decodes to the class, storage and
+/// LLP 1100 §9 V3: each color fixture decodes to the class, storage and
 /// colors its `.json` says. The expected values come from the standards'
 /// numbers (`host/apple/tests/ExactKitTests/ColorFixtures/make.swift`), so these hold the
 /// platform's decode and conversion to the standard, not to itself.
@@ -177,7 +177,7 @@ final class RasterColorTests: XCTestCase {
         XCTAssertNil(jpegHeader(Data([0xff, 0xd8, 0xff])))
     }
 
-    /// The agent's names for spaces are the standards'.
+    /// The agent's names for spaces are the standards' (LLP 1100 D1).
     func testColorSpacesAreNamedByTheirStandards() {
         XCTAssertEqual(colorSpaceName(CGColorSpace(name: CGColorSpace.extendedDisplayP3)!), "display-p3")
         XCTAssertEqual(colorSpaceName(CGColorSpace(name: CGColorSpace.dcip3)!), "--dci-p3")

@@ -50,9 +50,9 @@ struct Parsers {
 #[cfg(target_arch = "wasm32")]
 static LINKED: std::sync::OnceLock<Parsers> = std::sync::OnceLock::new();
 
-/// Link CSS grid's grammars (linked by use). A web artifact
+/// Link CSS grid's grammars (LLP 1047 D2, linked by use). A web artifact
 /// links them when its plan binds any grid row, and admission refuses such a
-/// plan before boot when they are absent. Native artifacts and the
+/// plan before boot when they are absent (D6). Native artifacts and the
 /// compiler parse directly.
 pub fn link() {
     #[cfg(target_arch = "wasm32")]

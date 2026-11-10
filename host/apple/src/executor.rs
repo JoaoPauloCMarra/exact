@@ -1,4 +1,4 @@
-//! Bounded native I/O. Unannotated requests and native
+//! Bounded native I/O (LLP 1016 / 1041). Unannotated requests and native
 //! continuations share one FIFO. Explicit independent HTTP uses six workers
 //! with separate transports; their held sockets cannot occupy the ordered lane.
 use exact_runner::{Outcome, RequestOut, Work};
@@ -36,14 +36,14 @@ impl Executor {
                 }
             }),
         );
-        // The Mac starts programs for data code; iOS and tvOS do not.
+        // The Mac starts programs for data code; iOS and tvOS do not (LLP 1133.007 §8).
         if cfg!(target_os = "macos") {
             core.allow_processes();
         }
         Self { core }
     }
-    /// Where the app's files are, for a request whose body is one of them:
-    /// set before the first request.
+    /// Where the app's files are, for a request whose body is one of them
+    /// (LLP 1108 D6 R2): set before the first request.
     pub fn set_app_roots(&self, roots: [std::path::PathBuf; 3]) {
         self.core.set_app_roots(roots);
     }
@@ -62,7 +62,7 @@ impl Executor {
         self.core.forget(held);
     }
     /// The uploads let go that had begun to go out, for
-    /// `Runner::uploads_started`.
+    /// `Runner::uploads_started` (LLP 1016.000 D10).
     pub fn let_go_started(&self, held: impl Fn(u64) -> bool) -> Vec<u64> {
         self.core.let_go_started(held)
     }
@@ -77,8 +77,8 @@ impl Executor {
         self.core.run_owned(request, work)
     }
     /// Settle a re-ask (`Dispatch::Again`) in its ordered place, with no
-    /// work; kept pending while the window is full. An error is
-    /// terminal, for the host to record.
+    /// work (LLP 1041 §8.4, amended 2026-10-09); kept pending while the
+    /// window is full. An error is terminal, for the host to record.
     pub fn again(&self, request: &RequestOut) -> Result<(), &'static str> {
         self.core.again(request.ticket)
     }
@@ -98,7 +98,8 @@ impl Executor {
     pub fn waker(&self) -> std::sync::Arc<dyn Fn() + Send + Sync> {
         self.core.waker()
     }
-    /// Send a mutation's or mapper call's socket batch whose commit stood:
+    /// Send a mutation's or mapper call's socket batch whose commit stood
+    /// (LLP 1016.000 D7):
     /// all of it, in order, or none. Each socket's frames sent and bytes
     /// buffered, for [`exact_runner::Runner::socket_published`].
     pub fn socket(&self, batch: &exact_runner::SocketSend) -> Result<Vec<(u64, u64, u64)>, String> {
@@ -108,7 +109,7 @@ impl Executor {
     pub fn socket_reader(&self) -> exact_runner::SocketReader {
         self.core.socket_reader()
     }
-    /// Each long poll's backoff wait, by its stream ticket, live.
+    /// Each long poll's backoff wait, by its stream ticket, live (D8).
     pub fn retry_reader(&self) -> exact_runner::RetryReader {
         self.core.retry_reader()
     }
@@ -116,13 +117,13 @@ impl Executor {
     pub fn listen_reader(&self) -> exact_runner::listen::ListenReader {
         self.core.listen_reader()
     }
-    /// The clock its process work keeps under the agent.
+    /// The clock its process work keeps under the agent (LLP 1133.007 §7).
     pub fn work_clock(&self) -> Option<std::sync::Arc<dyn exact_runner::WorkClock>> {
         self.core.work_clock()
     }
 }
 
-/// What the bridge asks of the I/O executor: the executor's
+/// What the bridge asks of the I/O executor (LLP 1047.001): the executor's
 /// own methods, behind a trait so that an archive that links no I/O names
 /// none of them, nor the transports and stores they reach.
 pub trait Io {
@@ -219,7 +220,7 @@ impl Io for Executor {
 }
 
 /// Whether this process's target has local network privacy, said once per
-/// launch: iOS, and macOS from 15 (TN3179). The iOS
+/// launch (LLP 1133.036 D6, D8): iOS, and macOS from 15 (TN3179). The iOS
 /// Simulator has none ("The simulator doesn't support local network
 /// privacy"), nor tvOS, so there the fact is `granted`. Under the agent the
 /// substitute's state stands for the fact on every target.
@@ -259,7 +260,7 @@ fn macos_major() -> u32 {
         .unwrap_or(0)
 }
 
-/// Evidence of the host's local-network fact, which
+/// Evidence of the host's local-network fact (LLP 1133.036 D8), which
 /// `@exact/local-network`'s browse or resolve reports through the host's
 /// `exact.localNetwork` notification: 0 `granted`, 2 `denied`. Answers 1
 /// if the fact moved.
@@ -277,7 +278,7 @@ pub fn report_local_network(state: u32) -> u32 {
 #[macro_export]
 macro_rules! local_network_exports {
     () => {
-        /// The package's evidence of the local-network fact.
+        /// The package's evidence of the local-network fact (LLP 1133.036 D8).
         #[no_mangle]
         pub extern "C" fn exact_local_network_report(state: u32) -> u32 {
             $crate::executor::report_local_network(state)

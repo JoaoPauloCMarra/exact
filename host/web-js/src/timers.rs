@@ -1,8 +1,8 @@
 //! A plan's timers on the JS target: each root task, in plan order, as
-//! `every` or `frames` from mount — or, for a task with a gate or a key,
-//! as `gated`, its gate and key compiled to functions
+//! `every` or `frames` from mount — or, for a task with a gate or a key
+//! (LLP 1092 D7–D10), as `gated`, its gate and key compiled to functions
 //! the commit's gate step calls (schedule.js). Each carries the task's name
-//! for the agent's `state.tasks`. Then each `sequence`, its
+//! for the agent's `state.tasks`. Then each `sequence` (LLP 1125 D2), its
 //! gate, key and `play` arguments compiled to functions transport.js's
 //! gate step calls. The `exactMIDI` and `exactTransport` readers are
 //! installed before the plan's resources, which ask them at boot.
@@ -43,7 +43,7 @@ pub(super) fn timers(em: &mut Em<'_>, body: &mut String) -> Result<(), String> {
             continue;
         }
         if t.frame {
-            // Once per presented frame, virtual frames on a seek.
+            // LLP 1073: once per presented frame, virtual frames on a seek.
             let frames = em.uses.rt("frames");
             let _ = write!(body, "{frames}(a_{},{name});", t.action.0);
             continue;
@@ -59,7 +59,7 @@ pub(super) fn timers(em: &mut Em<'_>, body: &mut String) -> Result<(), String> {
 }
 
 /// The `exactMIDI` readers, each its fields and a port list's port fields,
-/// and whether the plan uses MIDI, for midi.js; whether the
+/// and whether the plan uses MIDI, for midi.js (LLP 1125 D6); whether the
 /// module imports it.
 pub(super) fn midi(em: &mut Em<'_>, body: &mut String) -> Result<bool, String> {
     use exact_runner::midi::{FIELDS, PORT_FIELDS, SENT_FIELDS, SOURCE};

@@ -105,7 +105,7 @@ final class OverflowWrapTests: XCTestCase {
         XCTAssertEqual(engine.unbreakablePieces("two\u{00A0}words here"), ["two\u{00A0}words", "here"], "a no-break space joins")
     }
 
-    /// A path under `pre-wrap` breaks where Chrome's does. No line ends
+    /// #128: a path under `pre-wrap` breaks where Chrome's does. No line ends
     /// after a solidus before a letter (CFStringTokenizer's and CoreText's
     /// opportunity); a word too long for its line breaks inside at the room
     /// under `break-word` and `anywhere` alike, and the rest goes on to the

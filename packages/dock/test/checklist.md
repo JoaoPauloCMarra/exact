@@ -1,4 +1,4 @@
-# The desktop modules by hand
+# The desktop modules by hand (LLP 1133.025)
 
 `desktop.mjs` drives what the agent can on this Mac (`bun
 packages/dock/test/desktop.mjs macos`), and the absent cells (`web`,
@@ -27,7 +27,7 @@ built, then launch that app's bundle by hand (its path is printed).
    Items lists the fixture, and macOS shows its own notice. Log out and in:
    the fixture starts with no window and its star in the menu bar; Open
    shows it, and the login line reads "launched at login". Record whether
-   `keyAELaunchedAsLogInItem` was seen: "launched at login"
+   `keyAELaunchedAsLogInItem` was seen (D6, Q9): "launched at login"
    present means it was. Then Don't Open at Login, and confirm Login Items
    no longer lists it. Never leave the fixture registered.
 7. **Global shortcut.** With another app in front, press ⌃⌥⌘K: "Presses"
@@ -41,15 +41,15 @@ built, then launch that app's bundle by hand (its path is printed).
    kept `menubarfixture` bundle: no Dock icon, no menu bar, no window; the
    star's menu ends with "Quit menubarfixture", which quits it.
 
-## Windows (waits for a Windows test machine)
+## Windows (waits for the NucBox)
 
 Built for Windows so far: the host's services (`host/windows/src/desktop.rs`:
 `RegisterHotKey`, `FlashWindowEx`, the `Run` value) and the three packages'
 Rust (`packages/*/windows/lib.rs`), cross-checked on this Mac only. Not
 built: the notification-area icon, `keepRunning`, the launch with no window,
-one instance, the startup task and the modifier pair's hook. Run these in
-the Windows test machine's signed-in console session (`docs/testing.md`,
-"Windows: the test machine"), not over SSH, with a
+one instance, the startup task and the modifier pair's hook (LLP 1133.025
+§14, stage 2's as-built note). Run these in the NucBox's signed-in console
+session (`docs/testing.md`, "Windows: the NucBox"), not over SSH, with a
 development build of an app that depends on the three packages.
 
 1. **Global shortcut.** With Notepad in front, press the app's chord

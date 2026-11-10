@@ -1,10 +1,10 @@
-//! The kinds besides colour an importer proposes:
+//! The kinds besides colour an importer proposes (LLP 1121 D14, stage 6 H):
 //! lengths, numbers, type and families, shadows, durations and easings. A
 //! source's value is its token's when it folds as its kind beside the
 //! import's other tokens, checked as one design (which also says why one
-//! does not); a `var(--x)` in it is the token `--x` becomes, named bare.
-//! A value of these kinds has no dark side: only a colour's `light-dark()`
-//! has one.
+//! does not); a `var(--x)` in it is the token `--x` becomes, named bare
+//! (D3). A value of these kinds has no dark side: only a colour's
+//! `light-dark()` has one.
 
 use super::Mapped;
 use crate::Vocab;

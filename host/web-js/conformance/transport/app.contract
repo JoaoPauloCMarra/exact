@@ -1,5 +1,5 @@
 // data: caltrain
-// Synthetic conformance plan: a sequence on the wasm
+// Synthetic conformance plan: a sequence (LLP 1125 D2–D5) on the wasm
 // runner, the JS runtime and the Linux host, all under the driver: two
 // tracks of 3 and 4 beats against each other (polymeter), a count-in of
 // four hats from beat -4, a haptic on the 3-beat track, a step edited, a

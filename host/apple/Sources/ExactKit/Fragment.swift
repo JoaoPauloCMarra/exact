@@ -1,4 +1,4 @@
-// The runner's `scrollToFragment(visit, fragment,
+// @ref LLP 1153 D5 — the runner's `scrollToFragment(visit, fragment,
 // activation)`, sent once a route's data has arrived: the browser's "scroll
 // to the fragment" on a native host. The node with that HTML `id` in the
 // visit's own route (a route retained beneath may hold the same id; the id

@@ -1,4 +1,4 @@
-// A scrub's frame patched into a design: the dev loops set
+// A scrub's frame patched into a design (LLP 1121 D13): the dev loops set
 // the rows the design server's resident fold answers (`scrub-fold`'s
 // `values`) on the committed design, compiling nothing. The same rule as
 // host/web/src/dev.rs `Session::patch`, for a design a loop holds as JSON

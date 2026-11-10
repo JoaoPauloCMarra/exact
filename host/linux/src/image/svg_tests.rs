@@ -1,4 +1,4 @@
-//! An SVG file as an image on Linux: the header read, the
+//! An SVG file as an image on Linux (LLP 1011.001 §4): the header read, the
 //! plan at the box's pixels, the re-ask band, and a picture drawn through
 //! the loader on the worker and, with text, on the paint thread.
 use super::png_decode::inspect;
@@ -210,7 +210,7 @@ fn a_picture_with_text_waits_for_the_paint_thread_and_draws_with_its_fonts() {
     assert!(inked > 20 && inked < 40 * 20, "{inked} pixels inked");
 }
 
-/// A file past a cost limit: the decode is refused, so
+/// A file past a cost limit (LLP 1011.001 D2): the decode is refused, so
 /// no picture is made and the view keeps its refusal; nothing is asked again.
 #[test]
 fn a_picture_past_a_cost_limit_is_refused_by_the_loader() {

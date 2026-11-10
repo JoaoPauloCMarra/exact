@@ -7,7 +7,7 @@ import java.io.IOException
 import java.util.concurrent.CountDownLatch
 
 /**
- * The agent API's carrier in the reader (`--reader`): `scripts/agent.mjs android --reader`
+ * The agent API's carrier in the reader (LLP 1012; LLP 1107 D1's `--reader`): `scripts/agent.mjs android --reader`
  * drives the app this activity shows by the Linux host's own protocol, one JSON line a request and one its answer.
  * The lines cross a socket in the abstract namespace, [name], which adb forwards (`adb forward tcp:<port>
  * localabstract:<name>`); each request is answered on exact2's thread ([Exact.agent], [Native.agent]).
@@ -51,7 +51,7 @@ class AgentDrive(name: String) : Drive {
     }
 
     /**
-     * `tree --ax`: the accessibility tree Android has for the app, which exact2's
+     * `tree --ax` (LLP 1080.002; LLP 1115.001 D13): the accessibility tree Android has for the app, which exact2's
      * own handler cannot answer (it has no window). The reader answers a driver as it answers a service: exact2 is
      * asked for the tree, and each node's own `AccessibilityNodeInfo` is read back on the main thread
      * ([ExactActivity.ax]), stamped with the runner's epoch, incarnation and clock as every reply is.

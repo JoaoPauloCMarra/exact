@@ -1,6 +1,6 @@
 //! Segments, embeds, and plain text.
 //!
-//! A text segment is what one node paints; an image,
+//! @ref LLP 1045 D4, D7 — a text segment is what one node paints; an image,
 //! an embed and a table are the blocks text cannot be.
 
 use std::borrow::Cow;
@@ -349,8 +349,8 @@ pub fn plain(source: &str) -> String {
 }
 
 /// The plain text of `range` (UTF-16) of `source`, each atom the whole
-/// source recognizes inside it as its label (⌘⇧C of a selection): the
-/// atoms are found in the whole source, where a token's
+/// source recognizes inside it as its label (⌘⇧C of a selection, LLP
+/// 1045.000 D5): the atoms are found in the whole source, where a token's
 /// surroundings decide it, not in the fragment alone.
 pub fn plain_range(source: &str, range: crate::Range, atoms: &crate::Atoms) -> String {
     let units: Vec<u16> = source.encode_utf16().collect();
@@ -388,7 +388,7 @@ pub fn plain_range(source: &str, range: crate::Range, atoms: &crate::Atoms) -> S
     out
 }
 
-/// The plain text with each atom as its label (⌘⇧C).
+/// The plain text with each atom as its label (⌘⇧C, LLP 1045.000 D5).
 pub fn plain_with(source: &str, atoms: &crate::Atoms) -> String {
     let analysis = crate::style::analyze_with(source, None, atoms);
     let labels: Vec<String> = analysis

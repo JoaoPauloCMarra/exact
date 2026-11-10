@@ -1,4 +1,4 @@
-// The synthetic store @exact/purchases keeps under the agent on Android, in the drive's scratch tree,
+// The synthetic store @exact/purchases keeps under the agent on Android (LLP 1133.015 §9), in the drive's scratch tree,
 // behaving as Play does on the agent clock: a purchase's token is kept across renewals and no expiry is reported, so
 // a subscription leaves `listPurchases` at the next return to the foreground after its period, which the store keeps
 // privately; a pending purchase has its token and is listed `pending`; a purchase unacknowledged three days after it

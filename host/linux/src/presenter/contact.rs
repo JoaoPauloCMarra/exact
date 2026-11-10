@@ -6,7 +6,7 @@ use exact_motion::{HoldEnd, HoldStart, Value, VelocityTracker};
 #[derive(Clone, Copy)]
 pub(super) enum Candidate {
     Arrange(exact_runner::ReorderBinding),
-    /// A grip in a list with a `reorderGroup`.
+    /// A grip in a list with a `reorderGroup` (LLP 1094 D6).
     Group(exact_runner::ReorderBinding),
     Swipe(NodeKey),
     Pan(NodeKey),
@@ -25,12 +25,12 @@ impl Candidate {
             Candidate::Swipe(key) | Candidate::Pan(key) => key,
         }
     }
-    /// The candidate's own axis rule, at the slop.
+    /// The candidate's own axis rule, at the slop (LLP 1057.001 §1).
     fn accepts(&self, dx: f64, dy: f64) -> bool {
         match self {
             Candidate::Arrange(_) | Candidate::Height { .. } => dy.abs() > dx.abs(),
             Candidate::Swipe(_) => dx.abs() > dy.abs(),
-            // A grouped row lifts in any direction.
+            // A grouped row lifts in any direction (LLP 1094 D6).
             Candidate::Transform(_) | Candidate::Pan(_) | Candidate::Group(_) => true,
         }
     }
@@ -69,7 +69,7 @@ pub(super) struct Contact {
     /// A grouped row lifted: its ghost follows (`group.rs`).
     group: bool,
     panning: bool,
-    /// Every sample since down, for a pan's release velocity.
+    /// Every sample since down, for a pan's release velocity (LLP 1057 §10.6).
     pan_velocity: VelocityTracker,
     retained: Option<super::retained_action::RetainedContact>,
     feedback: Option<(NodeKey, PaintedBox)>,
@@ -249,8 +249,8 @@ impl<D: DataSource> Presenter<D> {
     pub(crate) fn contact_position(&self) -> Option<(f32, f32)> {
         self.contact.as_ref().map(|c| c.position)
     }
-    /// The agent's contact phase is done: its press lands at once,
-    /// the clock unmoved.
+    /// The agent's contact phase is done: its press lands at once (LLP
+    /// 1061 D2, D7), the clock unmoved.
     pub(crate) fn land_presses(&mut self) {
         self.host.land_presses();
         self.dirty = true;
@@ -289,7 +289,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// Every candidate of a contact on `hit`: innermost first, then reorder >
-    /// transform > height > pan > swipe on one node.
+    /// transform > height > pan > swipe on one node (LLP 1057.001 §1).
     pub(super) fn candidates(&self, hit: NodeKey) -> Vec<Candidate> {
         let ranked = [
             self.arrange_candidate(hit),
@@ -319,11 +319,11 @@ impl<D: DataSource> Presenter<D> {
         }
         None
     }
-    // Ordinary commits move layout, not a motion hold.
+    // @ref LLP 1043.000 §3 D8 — ordinary commits move layout, not a motion hold.
     // Nearest explicit pan handler owns one contact; an editor boundary stops
     // it. A press between keeps the contact only within the slop (the pan
     // that begins takes the press), as a draggable element hears a drag that
-    // starts on a button inside it.
+    // starts on a button inside it (LLP 1057.001 rule 3; kanban F6).
     fn pan_candidate(&self, hit: NodeKey) -> Option<Candidate> {
         let mut at = self.host.kernel().node_by_key(hit).map(|n| n.id);
         while let Some(id) = at {
@@ -435,15 +435,15 @@ impl<D: DataSource> Presenter<D> {
         false
     }
     /// Primary down shared by evdev, VNC, and explicitly labeled agent
-    /// synthesis; then the node's `pointerdown`, which the
+    /// synthesis; then the node's `pointerdown` (LLP 1005 §3), which the
     /// contact never waits for.
     pub fn pointer_down(&mut self, x: f32, y: f32, now_ms: f64) -> Result<bool, String> {
         self.touched();
         if self.overlay_pointer(0, x, y, now_ms) || self.scrollbar_pointer(0, x, y) {
             return Ok(true);
         }
-        // A hatch observes after this dispatch, and claims nothing;
-        // so for a move, an up and a cancel.
+        // A hatch observes after this dispatch, and claims nothing
+        // (LLP 1075.003.000.001 §2.2.2); so for a move, an up and a cancel.
         // Under an open surface of the top layer the page takes no touch.
         if self.alert_pointer(x, y, now_ms) || self.top_takes_pointer(now_ms) {
             return Ok(false);
@@ -646,7 +646,7 @@ impl<D: DataSource> Presenter<D> {
         }
         let pressed = self.handler_target(view, EventKind::Press);
         // `-exact-press-haptic` plays at the press, the host's own as the
-        // scale and paint below are.
+        // scale and paint below are (LLP 1077 D14; LLP 1061 D7).
         if let Some(id) = pressed {
             self.press_haptic(id);
         }
@@ -720,7 +720,7 @@ impl<D: DataSource> Presenter<D> {
         let moved = self.pointer_moved(x, y, now_ms, event_ms);
         // The device's motion belongs to this move alone, sent or not.
         self.clear_raw_motion();
-        // A node's `pointermove`, as pan's, per move.
+        // A node's `pointermove` (LLP 1056 §3 stage 3), as pan's, per move.
         let over = match moved.is_ok() {
             true => self.pointer_moved_over(x, y, now_ms),
             false => None,
@@ -737,7 +737,7 @@ impl<D: DataSource> Presenter<D> {
         event_ms: f64,
     ) -> Result<bool, String> {
         self.retire_pointer();
-        // A finger hovers nothing, down or lifted: what
+        // A finger hovers nothing, down or lifted (LLP 1115.001 D7.4): what
         // a mouse hovered before it came is left.
         let at = (!self.direct()).then_some((x, y));
         if let Some(error) = self.hover_at(at, now_ms) {
@@ -785,7 +785,7 @@ impl<D: DataSource> Presenter<D> {
             && dx.abs().max(dy.abs()) > slop
         {
             // The first candidate whose axis rule accepts begins; the ones
-            // before it fall away.
+            // before it fall away (LLP 1057.001 §1).
             let rest = std::mem::take(&mut contact.rest);
             if let Some(next) = contact
                 .candidate
@@ -1031,7 +1031,7 @@ impl<D: DataSource> Presenter<D> {
                 .as_ref()
                 .is_some_and(|h| matches!(h.kind, HeldKind::Arrange(_)));
         let result = if contact.group {
-            // Up anywhere drops on the sticky target.
+            // Up anywhere drops on the sticky target (LLP 1094 D8).
             self.end_group(true, now_ms)
         } else if let Some(held) = contact.hold {
             if !accepted {
@@ -1239,7 +1239,7 @@ impl<D: DataSource> Presenter<D> {
         } else {
             None
         };
-        // A cancel is an up.
+        // A cancel is an up (LLP 1005 §3).
         let at = contact.as_ref().map(|contact| contact.position);
         let mut result = self.pointer_lifted(at, now_ms).map_or(Ok(()), Err);
         let Some(contact) = contact else {

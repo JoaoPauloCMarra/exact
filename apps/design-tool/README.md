@@ -1,7 +1,7 @@
 # The design tool
 
-A live editor (a "living Figma") over an app's Tamber design.
-`bun exact.mjs tamber tool <app>` builds it if stale
+LLP 1122's "living Figma" over an app's Tamber design (LLP 1121), unnamed
+until §9 Q1 names it. `bun exact.mjs tamber tool <app>` builds it if stale
 and opens it at `http://127.0.0.1:7740/__tamber/tool/`, served by the app's
 design server; with the app's dev loop running, which holds the design,
 `--via <dev url>` reaches that loop's server instead. Development only: it
@@ -14,7 +14,7 @@ URL>` if that app's dev loop is running. A second `tamber tool` for the same
 app reuses the running one; for another app it is refused, naming the app
 whose design the port serves.
 
-- The canvas frames the running app on its dev loop's
+- The canvas (T2, LLP 1122 D3) frames the running app on its dev loop's
   port as `localhost`, at a phone, tablet or desktop size, with a link that
   opens it in a tab at the URL the dev loop prints (`hello.page`). The frame is sandboxed short of navigating the tool, and the
   tool never scripts it; only a loopback origin is framed, 127.0.0.1 as
@@ -27,7 +27,7 @@ whose design the port serves.
   may be framed by the tool's origin and its own, no other. With no dev loop
   (`tamber tool` alone), it says how to start one and open the tool through
   it (`--via`, after stopping this tool).
-- Builds lists every running copy the server knows
+- Builds (T2, LLP 1122 D4) lists every running copy the server knows
   (`hello.builds`, then the `builds` and `build-status` events), the frame's
   among them: its host and id, its effective scheme, contrast, mode and root
   font size from its own status (an app's own choice beats a pin), its pin,
@@ -37,21 +37,21 @@ whose design the port serves.
   is shown by name. The tool names itself on its long poll, so its pins hold
   while it runs and are handed back about 40 s after it closes (the 35 s
   presence lease and the server's 5 s sweep); it sends no unload request.
-- Scrubbing is chosen per edit ("Scrub live" on a dial
+- Scrubbing (T2, LLP 1122 D6) is chosen per edit ("Scrub live" on a dial
   or cell edit, never the default): each value the draft takes is a `scrub`
   frame previewed on every running copy and written to no file, while the
   tool says "Previewing". Keep is `scrub-release`, one write undone in one
   step (refused, it names who moved the file); Cancel is `scrub-cancel`
-  (Escape is not: it never ends a pending edit); an end the server makes (another write, idle 30 s, the
+  (Escape is not: it never ends a pending edit, the third pass's #7); an end the server makes (another write, idle 30 s, the
   tool gone) is said. An edit that rebuilds, or a tool with no dev loop,
   offers no scrub, and says why.
-- The edit dock: a grid cell pressed opens
+- The edit dock (the third hands-on pass's #7): a grid cell pressed opens
   its editor, with the edit's proposal, in one dock at the window's bottom
   (at most half of it); the cell gets an accent ring and `aria-current`, and
   stays clear of the dock. The press moves the focus into the editor; Close
   or Escape, only with nothing pending (no typed value, draft or scrub),
   ends the selection and gives the focus back to the cell.
-- The inspector: Inspect turns inspect mode on every
+- The inspector (T2b, LLP 1122 D5): Inspect turns inspect mode on every
   build that can (the wasm page now). The toggle follows the server's
   `inspect` events, so another client taking a build, or this tool's
   presence lapsing, shows at once. A click in one selects a view, and the
@@ -59,9 +59,9 @@ whose design the port serves.
   modes, and each row with where its value comes from. A row the node itself
   sets to a token offers that token's cell in the grid, on the branch that
   won for the selected copy (its modes, and the node's own `color-scheme`,
-  else its build's scheme), with the grid's edits and scrubs; an inherited or
+  else its build's scheme), with T1's edits and T2's scrubs; an inherited or
   derived row links its token; a style's or the tag's row says it comes with
-  template editing (below). A selection stops being current, and offers
+  template editing (T5). A selection stops being current, and offers
   nothing, when its build goes, reloads or moves on (a pin, a mode, a new
   plan or design), its page leaves inspect mode, or the design's axes
   change; it stays so until a new selection. A token's impact is its
@@ -88,7 +88,7 @@ whose design the port serves.
   `resolve`; a cell edits the branch it shows, and every edit is proposed
   (its diff and "live" or "rebuilds") before Apply writes it. Undo and redo
   are this run of the server's inverses: a new run starts them again.
-- The component panel (`components.ts`) lists every
+- The component panel (T3, LLP 1122 D7; `components.ts`) lists every
   component with params (`describe`'s `components`, a native view's
   declared in the design too), grouped and ordered as the dials are, each
   param with its declared control; `control=token`, the default, is a
@@ -98,10 +98,10 @@ whose design the port serves.
   with Reset (`unset-param`, one undo), and a literal that no longer
   follows the tokens its default reads is marked pinned.
 - A selected row that reads a param (the join's param rung) opens the param,
-  never the token it aliases: on the branch that won for the copy, its
+  never the token it aliases (D6): on the branch that won for the copy, its
   typed fields and "only this mode" as a token's, its edit `set-param`. The
   token it aliases directly is offered beside it.
-- Held states (`holds.ts`): Pressed, Hovered or Focused
+- Held states (T4, LLP 1122 D8; `holds.ts`): Pressed, Hovered or Focused
   holds that state on the selected copy (`hold`), one a build, a new one
   replacing the last; Let go ends it. The status says whether the build has
   confirmed it (Holding, then Held), where it is (here, the node its press
@@ -112,23 +112,23 @@ whose design the port serves.
   at its part's place; a host that reports none, or not their tokens, says
   provenance incomplete and leaves them read-only.
 - A style's state part row (an `:active` part's, the map's `state` and
-  `at`) is edited by `set-state` by default: "Edit Style :active row"
+  `at`) is edited by `set-state` by default (D6): "Edit Style :active row"
   opens a field from the value as written in the part (empty when it is not
   one literal), proposed as Rebuilds and applied; the token its whole value
   is, offered beside it. The edit is bound to the copy and the files it was
   opened on: a write since, or a stale or read-only copy, refuses Apply
   until the copy is selected and the row opened again. A part in a package
-  is read-only; an inline state row on a node waits for `set-row`.
-- A row its author wrote (`set-row`): where the map places it, the
+  is read-only; an inline state row on a node waits for `set-row` (T5).
+- A row its author wrote (T5, D6; `set-row`): where the map places it, the
   default edit is "Edit this template · N instances" (the node's own
   attribute, every copy of it) or "Edit style X" (in the style's own file,
   every node using it), the token its whole value is offered beside; the
   editor names the attribute it writes (a shorthand's whole for a longhand)
   and starts from the value as written. It rebuilds; the server refuses a
   file moved since the copy was compiled, a value the app does not build
-  with (its diagnostics shown) and a layout row, and the tool refuses
+  with (its diagnostics shown) and a layout row (D14), and the tool refuses
   an edit of files other than the ones the copy was selected under.
-- Moves (`moves.ts`): a template row's "Make it a
+- Moves (T5, D6's enumerated set; `moves.ts`): a template row's "Make it a
   param" (a new param of its component, its kind the row's, its default the
   value as written, the row reading it) and "Make it a token" (an
   unconditional value only); a param row's "Detach to this template" (the
@@ -136,7 +136,7 @@ whose design the port serves.
   alone left read, as the server names them, kept where another row reads
   it, refused where the app's design sets it). Each is one transaction and
   one undo.
-- Act first, re-scope after (`rescope.ts`): the last edit of a param
+- Act first, re-scope after (D6, `rescope.ts`): the last edit of a param
   whose value there aliases one token offers "Apply to the token … instead",
   and the last edit of a token that one param aliases there offers "Apply to
   … instead". The move is one transaction (the edit's inverse, then the same
@@ -171,14 +171,14 @@ whose design the port serves.
   and who made it; the server refuses a file that was not only the
   session's, and never pushes. History reads the design files' git log as
   token edits; Revert holds a past commit's inverse for review.
-- Agents are clients like the tool: each change says who
+- Agents are clients like the tool (LLP 1122 D10): each change says who
   made it, in that client's colour, and the grid outlines the cells it
   changed (by the latest client to change each), fading oldest first, one
   each 3 s. Proposals lists the held proposals, each with its
   proposer, diff and items: Accept, Accept picked (some items) or Drop. A
   proposal accepted in part, or whose files moved since it was held, comes
   back recomputed on today's files, to be reviewed and accepted again.
-- Import a theme: pick one shadcn CSS file or Tailwind v4
+- Import a theme (T1a, LLP 1122 D11): pick one shadcn CSS file or Tailwind v4
   sheet, or DTCG JSON (several files, a mode each) and the server's importer
   holds it as a proposal. Its review lists what it maps: each token with
   each mode's value and swatches (a reference to a token said, unpainted),
@@ -188,7 +188,7 @@ whose design the port serves.
   reason, and the count: source values = mapped + reported. Accepting is
   one transaction, and Undo one step. Astryx's import comes from its CLI
   (`bun exact.mjs tamber import astryx …`) and is reviewed the same way.
-- Pairing: the local tool's Clients panel mints a code at
+- Pairing (T6, LLP 1122 D12): the local tool's Clients panel mints a code at
   a scope ("Pair a client"), shows it with each remote door's address and
   certificate fingerprint, lists the paired clients and revokes one. On the
   other machine, open the door's address (`https://<host>:<port>/__tamber/tool/`,
@@ -197,7 +197,7 @@ whose design the port serves.
   at `propose` an edit is held for review. The canvas comes through the
   server's gateway on its own origin (a grant in the frame's `#g=`, dropped
   once entered); revoked, the tool says so and sends nothing more.
-- Several live copies: the canvas shows one copy,
+- Several live copies (T7, LLP 1122 §4 item 10): the canvas shows one copy,
   a grid of modes (Light, then dark at each value of an axis, at the app's
   own text size and larger; 6 copies by default, 4 or 8), or the selected
   view's states side by side (at rest, pressed, hovered, focused). Each copy
@@ -207,7 +207,7 @@ whose design the port serves.
   navigation, a copy you move leads the others (`navigate`, or a reload
   where its build can't). Through a paired server's gateway, at most 4
   show.
-- Exact's base scale and packages: `space.*` and
+- Exact's base scale and packages (LLP 1121 stage 11): `space.*` and
   `radius.*` are listed read-only, each platform's value and its source,
   the columns the app ships first; a package's tokens under their package.
   Set for this app writes the app's override line (`set-token`); Back to
@@ -216,7 +216,7 @@ whose design the port serves.
   run against `stub/tamber-stub.ts`, canned replies (`bun exact.mjs test`
   and `verify` run the three);
   `scripts/design-tool.test.mjs` (with its `-ops`, `-canvas` and `-scrub`
-  files, which run side by side) drives the built tool against a
+  files, which a lane runs side by side) drives the built tool against a
   real server on a copy of `apps/theme-fixture`. Both run on the checkout's own
   port (`EXACT_TOOL_PORT` names another), never a person's 7740: `bun
   exact.mjs test` here runs a copy staged for that origin

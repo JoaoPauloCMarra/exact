@@ -1,4 +1,4 @@
-// On the wire: held proposals of `set-row`s on styles
+// LLP 1121 stage 9 D2 on the wire: held proposals of `set-row`s on styles
 // with no `file` (scripts/tamber-server.mjs's base and guards).
 import { expect, test } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { developmentGate } from './install-page.mjs';
 import { tamberServer } from './tamber-server.mjs';
 
-// Two `set-row`s, one already as asked, are accepted: the
+// Review round 3: two `set-row`s, one already as asked, are accepted: the
 // source left as it was is guarded by the plan's digest, not dropped from
 // the base; edited by hand meanwhile, the proposal is planned again on the
 // fresh read (an inferred guard is never carried as the caller's).

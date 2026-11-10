@@ -1,4 +1,4 @@
-// `input type="number"` is a text field with an NSStepper
+// @ref LLP 1116.007 D4: `input type="number"` is a text field with an NSStepper
 // beside it, stepping the field's text by HTML's rules and saying so as
 // `input` then `change`; `appearance="textfield"`, any other `type` and a
 // field too narrow for both leave the bare field.
@@ -264,10 +264,10 @@ final class NumberStepperMacTests: XCTestCase {
         node.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: field))
     }
 
-    /// A typed 250 against a `max` of 99 saved 250 while the stepper's up arrow
-    /// was dimmed. The edit commits as the bound it passed, written into the
-    /// field and told as a step is: `input`, then the `change`. What was typed
-    /// while typing is unchanged.
+    /// LLP 1116.008 D5 (grocery-list, round 10): a typed 250 against a `max` of
+    /// 99 saved 250 while the stepper's up arrow was dimmed. The edit commits as
+    /// the bound it passed, written into the field and told as a step is:
+    /// `input`, then the `change`. What was typed while typing is unchanged.
     func testATypedValuePastABoundCommitsAsTheBoundAndTheFieldShowsIt() throws {
         let (node, heard, session) = fixture()
         defer { session.destroy() }

@@ -1,4 +1,4 @@
-//! The inheritance boundary of a platform field or button.
+//! The inheritance boundary of a platform field or button. @ref LLP 1104 D4.
 use super::*;
 use crate::{Appearance, ControlFont, FieldKind};
 
@@ -60,7 +60,7 @@ static WEB_BUTTON_START: std::sync::LazyLock<StyleProps> = std::sync::LazyLock::
     start
 });
 
-// A projection's face is still read as painted.
+// A projection's face is still read as painted (LLP 1069.011.000 D1).
 // Existing native tabs inherit a title transform from their tablist; do not
 // silently change that projection while adding UIButton's typography reset.
 fn projected(mut style: StyleProps) -> StyleProps {
@@ -73,15 +73,15 @@ static WEB_PROJECTED_BUTTON_START: std::sync::LazyLock<StyleProps> =
     std::sync::LazyLock::new(|| projected(WEB_BUTTON_START.clone()));
 
 /// The neutral look's sheet says more on a platform field or button than the
-/// reset does (`host/web/neutral.css`), and what it
+/// reset does (LLP 1115.000 D4 part B; `host/web/neutral.css`), and what it
 /// says stops at the control as the reset's rows do: its text sits on a line
 /// of the look's height (1.25 of its size, so a control is 36 px in every
 /// engine), a field's ink is the design's `FieldText` whatever the page's
-/// `color` (the label's where the design doesn't override it; motion and press
-/// start from it, as the field paints it), and a button's title is the look's
-/// weight. Each is a row of the schema's `metrics`, so a kernel that lays the
-/// control out (a host that paints its own) sizes the box the page draws.
-/// `[field, button, projected]`.
+/// `color` (LLP 1115 D4, LLP 1121 D9: the label's where the design doesn't
+/// override it; motion and press start from it, as the field paints it), and a
+/// button's title is the look's weight. Each is a row of the schema's
+/// `metrics`, so a kernel that lays the control out (a host that paints its
+/// own, D17) sizes the box the page draws. `[field, button, projected]`.
 static NEUTRAL_STARTS: std::sync::LazyLock<[StyleProps; 3]> = std::sync::LazyLock::new(|| {
     use crate::generated::{metric, MetricValue, METRICS};
     let number = |index: usize| match METRICS[index].neutral {
@@ -111,9 +111,9 @@ static NEUTRAL_STARTS: std::sync::LazyLock<[StyleProps; 3]> = std::sync::LazyLoc
 });
 
 impl NodeArena {
-    /// Native text controls have exactly this predicate. A
+    /// Native text controls have exactly this predicate (LLP 1104 D1). A
     /// `textfield` is the platform's field too, without a number field's
-    /// stepper; only `none` is the author's box.
+    /// stepper (LLP 1116.007 D4); only `none` is the author's box.
     pub fn is_native_text_control(&self, slot: u32) -> bool {
         self.node_type(slot) == NodeType::TextInput
             && self.style(slot).appearance != Appearance::None

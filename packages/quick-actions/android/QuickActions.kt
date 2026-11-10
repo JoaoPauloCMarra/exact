@@ -1,7 +1,7 @@
-// @exact/quick-actions on Android: the app's list as the launcher activity's dynamic
+// @exact/quick-actions on Android (LLP 1133.023 D3, D11, D17): the app's list as the launcher activity's dynamic
 // shortcuts (ShortcutManager.setDynamicShortcuts), after the manifest's static ones (`shortcuts.xml`, which the APK's
 // build writes), and a pin request through the launcher's own dialog. Each shortcut starts the launcher activity with
-// its location as the intent's data, which the reader takes as a link's.
+// its location as the intent's data, which the reader takes as a link's (D15 item 3).
 //
 // `setDynamicShortcuts` answers false when the call is rate-limited
 // (https://developer.android.com/reference/android/content/pm/ShortcutManager), so the list is kept and set again the
@@ -59,7 +59,7 @@ class QuickActionsModule(context: ExtensionContext) : ExactExtension(context) {
     }
 
     /** A shortcut item as the launcher's: its name and short name, its rank, and an intent opening its location. A
-     * location that is not an app path, or a missing name, is none. */
+     * location that is not an app path, or a missing name, is none (D3). */
     private fun info(id: String, item: JSONObject, index: Int): ShortcutInfo? {
         val name = item.optString("name")
         val url = item.optString("url")

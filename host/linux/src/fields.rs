@@ -1,4 +1,4 @@
-//! A text field the platform hosts. On Android an `input`
+//! A text field the platform hosts (LLP 1115.001 D8). On Android an `input`
 //! or a `textarea` is the framework's own `EditText`, laid over the box this
 //! host paints for it: its text, its caret, its selection and its keyboard
 //! are the platform's, and inside the field the text engine is the
@@ -41,7 +41,7 @@ pub struct FieldFace {
     pub family: String,
     /// Its axes as CSS writes `font-variation-settings` (`'wght' 650,
     /// 'wdth' 87.5`): the weight, `font-stretch` on `wdth` and the run's own
-    /// settings after them; empty when only the weight is set.
+    /// settings after them (LLP 1019 D9); empty when only the weight is set.
     pub axes: String,
 }
 

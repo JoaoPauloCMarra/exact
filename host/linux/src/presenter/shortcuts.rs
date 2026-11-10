@@ -8,10 +8,10 @@
 //! down and an up of that action that moves no focus, then its authored
 //! `press` if it has one, as the web's click runs both, so a focused world
 //! keeps its held keys and a shortcut and the world's own binding of the
-//! same chord never both act. A disabled button still takes
+//! same chord never both act (LLP 1132 D11). A disabled button still takes
 //! its key and presses nothing, as on the web. None behind the frontmost shown
-//! `aria-modal` view; never Enter or Space while the focus is
-//! a control those keys activate; a text field keeps its
+//! `aria-modal` view (gallery F22); never Enter or Space while the focus is
+//! a control those keys activate (onboarding F27); a text field keeps its
 //! typing, where only a Control or Meta chord, or Escape, is a shortcut.
 use super::*;
 use exact_runner::KeyModifiers;

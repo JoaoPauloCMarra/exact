@@ -364,7 +364,7 @@ fn tick(r: &mut Runner<Data>) {
 }
 
 /// A reply the source cannot take is let go, not restored as pending
-/// with nobody left to deliver it.
+/// with nobody left to deliver it (FRICTION F2 in the grnl port).
 #[test]
 fn a_reply_the_source_fails_to_parse_is_no_longer_pending() {
     let mut data = Data::new(records(1));
@@ -886,8 +886,8 @@ fn overrun() -> DataError {
     )
 }
 
-/// A turn over its budget in the first turn of an action's commit: the
-/// action stands, the resource keeps its value and reads as
+/// A turn over its budget in the first turn of an action's commit (theme2's
+/// 18:06 ruling): the action stands, the resource keeps its value and reads as
 /// an ask in flight (pending, no failure), and is asked again at 250 ms on the
 /// runner's own clock.
 #[test]
@@ -1035,7 +1035,7 @@ fn an_overrun_post_reply_fails_without_replaying_the_request() {
 
 /// A POST's reply that a worker-placed source takes in a later turn comes back
 /// as a continuation, and so does that turn's own wait: each is the rest of
-/// the reply's answer, so the app must still finish it until
+/// the reply's answer, so the app must still finish it (LLP 1146 D2) until
 /// the answer ends.
 #[test]
 fn a_post_s_reply_taken_in_later_turns_must_still_finish() {
@@ -1055,6 +1055,9 @@ fn a_post_s_reply_taken_in_later_turns_must_still_finish() {
     assert!(!r.pending_res[0], "answered");
     assert!(!r.must_finish());
 }
+
+// Round 1's findings on the first build (theme2's 18:55 condition (a)): each
+// test below was red on it (ad991effff..f9d20916a9).
 
 fn reply() -> Outcome {
     Outcome::Response(crate::Response {
@@ -1192,6 +1195,8 @@ fn reasks_fire_at_their_own_times_under_advance() {
     assert!(r.failed_resources()[0].1.contains("over the 100 ms budget"));
 }
 
+// Round 1 of the redesign (Astra): each red before its fix.
+
 /// Two re-asks whose commits are refused: the commit that fails the resource
 /// is the advance's receipt, so a host sees it leave `pending`.
 #[test]
@@ -1260,7 +1265,7 @@ fn a_refresh_replaces_another_invocations_wait() {
     assert_eq!(r.ticket_id(asked[0].ticket), 0);
 }
 
-/// A request kept across an argument change starts a
+/// A request kept across an argument change (LLP 1054.000.000 D3) starts a
 /// new streak: its first turn over budget waits 250 ms, not 1 s.
 #[test]
 fn new_arguments_on_a_kept_request_start_a_new_streak() {
@@ -1306,6 +1311,8 @@ fn a_store_readers_new_ask_keeps_its_streak() {
     r.fulfill(asked[0].ticket, reply()).unwrap();
     assert_eq!(r.timer_due_ms(), Some(r.now_ms() + 1000.));
 }
+
+// Round 2 of the redesign (Astra, Grok): each red before its fix.
 
 /// A spent streak's failing commit is made under its ask's origin and
 /// invocation, as each re-ask was: what it asks (here `watch`, which reads
@@ -1410,6 +1417,8 @@ fn a_slow_turn_does_not_spend_its_own_delay() {
     r.act("change", vec![Value::Number(1.)]).unwrap();
     assert_eq!(r.timer_due_ms(), Some(1650.));
 }
+
+// Round 3 of the redesign (Astra, Grok): each red before its fix.
 
 /// A refresh whose first pass hands out a request, asked again in a later pass
 /// and refused there by a turn over its budget, still replaces another

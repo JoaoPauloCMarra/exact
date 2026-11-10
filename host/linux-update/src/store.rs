@@ -1,5 +1,5 @@
-//! The update store on Linux, the client half of over-the-air updates:
-//! `exact_update::Client` behind a
+//! The update store on Linux (LLP 1026 D9/D11/D12; LLP 1030 D7; LLP
+//! 1030.000 §4 stage 4, the client half): `exact_update::Client` behind a
 //! lock the check's thread shares with the presenter, the check over
 //! ibex2's transport — rustls off Apple, the platform's on a Mac, the
 //! executor's own (`executor.rs`) — and its outcome delivered like a reply:
@@ -26,7 +26,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex, MutexGuard};
 
-/// The head is a pointer card; a file is a plan or an asset.
+/// The head is a pointer card (LLP 1026 D11); a file is a plan or an asset.
 const MAX_HEAD_BYTES: usize = exact_update::MAX_ENVELOPE_BYTES;
 const MAX_FILE_BYTES: usize = 64 * 1024 * 1024;
 
@@ -121,7 +121,7 @@ impl Updates {
         }
     }
 
-    /// The selection is booting: count it.
+    /// The selection is booting: count it (LLP 1026 D11).
     pub fn boot_started(&mut self) {
         let mut c = lock(&self.client);
         if let Err(e) = c.boot_started() {
@@ -148,7 +148,7 @@ impl Updates {
         self.note = Some(line);
     }
 
-    /// First pixel: the selection that booted is good.
+    /// First pixel: the selection that booted is good (LLP 1026 D11).
     pub fn boot_succeeded(&mut self) {
         let mut c = lock(&self.client);
         if let Err(e) = c.boot_succeeded(&self.generation) {
@@ -221,8 +221,8 @@ impl Updates {
         Ok(())
     }
 
-    /// What the store has to say, into a runner's delivery facts:
-    /// the stream, the running and embedded `seq`, whether an entry is
+    /// What the store has to say, into a runner's delivery facts (LLP 1030
+    /// D7): the stream, the running and embedded `seq`, whether an entry is
     /// staged, the sunset; the binary's own three are left as they were.
     pub(crate) fn staged_stream_into(&self, delivery: &mut Delivery) {
         let client = lock(&self.client);

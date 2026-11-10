@@ -4,9 +4,10 @@
   Linux host's painter keeps the crates.io vello. The fine, coarse and ptcl
   WGSL patches live in `canvas/vello/build.rs`, which compiles every kernel to
   a Metal library at build time.
-- **Why vendored:** the Canvas 2D GPU module (`canvas/vello`)
+- **Why vendored:** the Canvas 2D GPU module (`canvas/vello`, LLP 1056 §8.5)
   needs four things upstream does not do. Every change is marked `EXACT:` in
   the source.
+- **Owner:** Charlie Cheever (Canvas 2D on Apple).
 - **Replacement plan:** propose 1, 2 and 4 upstream; 3 is ours for as long as
   `rules/DEFERRED.md` refuses runtime shader compilation and wgpu has no
   Metal-library loader for vello.

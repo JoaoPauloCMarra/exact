@@ -670,10 +670,10 @@ test('E10 focused Contract buttons consume activation keys before the world', as
   assert.equal(f.events.at(-1).code,'KeyW');
 });
 
-// Presentation has its own settle budget once assets are in: right after Play
-// while 202 models upload, asset delivery can spend the agent's whole 2.5 s
-// settle budget, and a first frame still preparing would be reported
-// unsettled ("GPU is not settled: GPU presentation world").
+// The art pass's flake (garden diary, "GPU is not settled: GPU presentation
+// world" right after Play while 202 models uploaded): asset delivery spent the
+// agent's whole 2.5 s settle budget, so a first frame still preparing was
+// reported unsettled. Presentation now has its own budget once assets are in.
 test('a slow asset delivery leaves the first frame its own presentation budget', async () => {
   let clock = 0;
   const f = await fixture({ performance: { now: () => clock, getEntriesByName: () => [] },
@@ -689,7 +689,7 @@ test('a slow asset delivery leaves the first frame its own presentation budget',
   assert.equal(preparing, 0);
 });
 
-// `prefer gpu-tier` remakes renderers inside the module; no
+// LLP 1139.003 D2: `prefer gpu-tier` remakes renderers inside the module; no
 // world is captured, destroyed or created, so two instances of one name and a
 // world whose capture would fail keep running.
 test('prefer gpu-tier retiers every live world in place, duplicates and all', async () => {
@@ -706,7 +706,7 @@ test('prefer gpu-tier retiers every live world in place, duplicates and all', as
   assert.equal(f.exact.gpu.handle({op:'state',id:2,world:true},null,x=>x).world.tick,0);
 });
 
-// A world's render scale (its quality rung) is the canvas's backing store: the module
+// A world's render scale (its quality rung, LLP 1139.003 D3) is the canvas's backing store: the module
 // configures its drawable at that size, and a full-size backing store would leave it in one corner.
 test('the canvas backing store is the raster the module draws, at its render scale', async () => {
   const f=await fixture();

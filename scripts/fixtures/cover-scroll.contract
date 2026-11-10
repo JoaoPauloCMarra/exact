@@ -1,4 +1,4 @@
-// A large-title route's scroller under a `viewport-fit="cover"`
+// LLP 1123 D3: a large-title route's scroller under a `viewport-fit="cover"`
 // root, which spans the window, side insets included (the iPhone Duo's
 // status column, a phone's notch in landscape). UIKit insets it at its top
 // and bottom only, so its content, as wide as it, never scrolls sideways

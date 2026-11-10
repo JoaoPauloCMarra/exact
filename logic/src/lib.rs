@@ -1,5 +1,5 @@
 //! Optional Rust data executors: embedded first frame, replacement after first pixel.
-//! Independently built data modules, one encoded seam on every host.
+//! @ref LLP 1029.000 — independently built data modules, one encoded seam on every host.
 
 use exact_logic_abi as abi;
 #[doc(hidden)]
@@ -68,7 +68,7 @@ pub struct Swappable<D> {
     revision: Option<String>,
     plan: Option<Vec<u8>>,
     executor: Option<Box<dyn Executor>>,
-    /// The embedded crate's Canvas 2D roster, kept across a
+    /// The embedded crate's Canvas 2D roster (LLP 1056 D1), kept across a
     /// replacement: the roster is part of the binary.
     canvas_surfaces: Vec<(String, usize)>,
     /// The source the binary compiled natively, and how to make that source
@@ -554,7 +554,7 @@ impl<D: DataSource> DataSource for Swappable<D> {
         self.canvas_surfaces.clone()
     }
     /// A replaced Rust module does not draw yet: its canvases report the
-    /// error through `state`.
+    /// error through `state` (LLP 1056 stage 1; QUEUE).
     fn draw(
         &mut self,
         request: &exact_runner::DrawRequest<'_>,

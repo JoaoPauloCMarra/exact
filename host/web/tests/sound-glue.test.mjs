@@ -1,9 +1,9 @@
-// The web's output for the voice table, in Chrome,
+// The web's output for the voice table (LLP 1096 D6, D7, §5), in Chrome,
 // Firefox and WebKit: sound-glue.js over an OfflineAudioContext at 48 kHz,
 // rendered and read back by frame, its runner time mapped through an output
-// timestamp the test supplies; a voice's playback rate and pan;
-// a sequence's retraction before a voice starts, and its timed haptics;
-// the held voice of a `{0, 0}` timestamp; the Audio Session
+// timestamp the test supplies; a voice's playback rate and pan (LLP 1125
+// D10); a sequence's retraction before a voice starts, and its timed haptics
+// (LLP 1125 D3); the held voice of a `{0, 0}` timestamp; the Audio Session
 // API; and the drop before a user activation. Every engine comes from
 // Playwright (`bunx playwright@1.64.1 install chromium-headless-shell firefox
 // webkit`); an engine that is missing is skipped.

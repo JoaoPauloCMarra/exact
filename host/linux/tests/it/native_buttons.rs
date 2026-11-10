@@ -1,4 +1,4 @@
-//! On Linux a native button is a painted button that presses
+//! LLP 1069.011 on Linux: a native button is a painted button that presses
 //! (never toggles), sized as its title in its look's font plus the look's
 //! padding, its face never painted as children; `type` refuses it.
 
@@ -153,7 +153,7 @@ fn a_native_button_presses_is_sized_and_takes_no_value() {
     std::fs::remove_dir_all(dir).unwrap();
 }
 
-/// A native button is a button under a tab's role —
+/// LLP 1069.011.000 D1: a native button is a button under a tab's role —
 /// Enter presses it, as it presses a custom tab.
 #[test]
 fn a_native_tab_presses_on_enter_as_a_button_does() {
@@ -192,8 +192,8 @@ fn a_native_tab_presses_on_enter_as_a_button_does() {
     // A held key's repeats press it once, as a native `role="button"`'s do.
     p.type_key(tab, "Enter", "Enter", true, true).unwrap();
     p.type_key(tab, "Enter", "Enter", false, false).unwrap();
-    // Its face's title is as painted; this host
-    // exposes no accessibility tree to name it in.
+    // Its face's title is as painted (grok's code review); this host
+    // exposes no accessibility tree to name it in (LLP 1080.002 D2).
     let face = p.host().kernel().press_face(tab).and_then(|f| f.title);
     assert_eq!(face.as_deref(), Some("INBOX"));
     let ax = exact_linux::agent::handle(&mut p, r#"{"op":"tree","ax":true}"#);
@@ -359,7 +359,7 @@ fn native_and_bare_buttons_ring_on_focus_without_a_handler() {
     }
 }
 
-/// `outline="none"` takes the ring off a
+/// LLP 1104 D6 (amended 2026-11-05): `outline="none"` takes the ring off a
 /// keyboard-focused button, native or bare, as CSS's does; the focus stays.
 /// The same buttons without it ring.
 #[test]

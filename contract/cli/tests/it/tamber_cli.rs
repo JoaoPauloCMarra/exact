@@ -1,4 +1,4 @@
-//! `contract tamber check | eval | ir`: an app's design on its
+//! `contract tamber check | eval | ir` (LLP 1121 D2): an app's design on its
 //! own, found where the compiler finds it.
 
 use std::process::Command;

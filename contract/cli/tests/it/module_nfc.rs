@@ -1,6 +1,7 @@
-//! The repository's `@exact/nfc`, installed beside an app: the declared
-//! substitute's arrivals, a request let go on the data-code route, and the
-//! origin rule over every cause, whose kept request carries each origin that gave it
+//! LLP 1133.035 stage 0, through the repository's `@exact/nfc` installed
+//! beside an app: the declared substitute's arrivals (§10), a request let
+//! go on the data-code route (D16 item 4), and the origin rule over every
+//! cause (D16 item 6), whose kept request carries each origin that gave it
 //! arguments into the commit its answer makes.
 
 use exact_runner::{
@@ -62,7 +63,7 @@ component App
       text heard
 "#;
 
-/// The fixture tags the drives read.
+/// The fixture tags of §11's drives.
 const TAGS: &str = r#"[{"id":"blank","serialNumber":"04:a2","records":[]},
   {"id":"dune","serialNumber":"04:d1","records":[{"recordType":"url","data":"https://openlibrary.org/works/OL893415W"},
     {"recordType":"com.exact.shelf:book","data":{"base64":"Ym9vay0x"}}]},
@@ -356,7 +357,7 @@ thread_local! {
     static PARKED: std::cell::RefCell<Vec<(u64, u64)>> = Default::default();
 }
 
-/// A tag in the field reads into a waiting scan, raising `reading`,
+/// §10: a tag in the field reads into a waiting scan, raising `reading`,
 /// and a `once` scan answers `read` with the reading's id; a tag with no
 /// NDEF raises `readingerror`, and the scan goes on until the person's
 /// cancel; a tag outside a scan is the system's.
@@ -403,7 +404,7 @@ fn a_tag_in_the_field_reads_into_a_waiting_scan() {
     assert!(h.tickets("scan").is_empty());
 }
 
-/// An NDEF reader session never reports a tag with no NDEF, so on iOS
+/// D11: an NDEF reader session never reports a tag with no NDEF, so on iOS
 /// a tier 1 scan hears nothing of one; the system's `timeout` ends a scan.
 #[test]
 fn ios_reads_no_tag_without_ndef_and_its_scan_times_out() {
@@ -424,7 +425,7 @@ fn ios_reads_no_tag_without_ndef_and_its_scan_times_out() {
     );
 }
 
-/// Writes: a waiting write settles against the tag that arrives and
+/// §10's writes: a waiting write settles against the tag that arrives and
 /// raises no reading; the fixture then holds the records; a locked tag
 /// fails `NetworkError`; a newer write replaces the older; `abortWrite`
 /// and a cancel fail `AbortError`; a message with no record, `TypeError`.
@@ -502,7 +503,7 @@ fn abort_and_a_superseded_scan_leave_one_claim() {
     assert_eq!(h.nfc()["scans"], json!([]));
 }
 
-/// By `readerUI`: leaving the foreground ends a scan behind the
+/// D6 by `readerUI`: leaving the foreground ends a scan behind the
 /// system's sheet `interrupted`, and suspends one the app draws for, which
 /// on return reads a tag still in the field; a waiting write fails.
 #[test]
@@ -529,7 +530,7 @@ fn the_background_interrupts_or_suspends_by_reader_ui() {
     assert!(h.heard().contains("read r1"), "{} {}", h.heard(), h.logs());
 }
 
-/// A write data code started is let go with the request that
+/// D16 item 4: a write data code started is let go with the request that
 /// made it, so a later tag is not written; `ndefRecords` answers a kept
 /// reading's records with their bytes.
 #[test]
@@ -571,7 +572,7 @@ fn a_data_code_write_is_let_go_with_its_request() {
     );
 }
 
-/// Only the person scans or writes; a tool's request is refused
+/// D15: only the person scans or writes; a tool's request is refused
 /// `person-required`, and an absent target answers absence.
 #[test]
 fn a_tool_never_scans_and_an_absent_target_answers_absence() {
@@ -586,7 +587,7 @@ fn a_tool_never_scans_and_an_absent_target_answers_absence() {
     assert!(h.logs().contains("NotSupportedError"), "{}", h.logs());
 }
 
-/// The web starts at `prompt`: a scan holds the permission's ticket
+/// The web starts at `prompt` (D15): a scan holds the permission's ticket
 /// first, then its own.
 #[test]
 fn the_web_asks_before_its_first_scan() {
@@ -598,7 +599,7 @@ fn the_web_asks_before_its_first_scan() {
     assert_eq!(h.tickets("scan").len(), 1, "{}", h.logs());
 }
 
-/// A command is refused `person-required` from a tool or a
+/// D16 item 6: a command is refused `person-required` from a tool or a
 /// wake while a tag's lease is live; beside a tool's request still in
 /// flight; and when a parser yields it after a tool's newer arguments
 /// reached a kept request that a reading started. A reading's own command

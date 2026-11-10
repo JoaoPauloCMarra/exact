@@ -25,7 +25,7 @@ fn collection_edges_keep_the_compilers_refusal_for_a_plan_without_virtualization
     }
 }
 
-/// list.js reads `reach-margin` from the list's options.
+/// @ref LLP 1145 D4 — list.js reads `reach-margin` from the list's options.
 #[test]
 fn a_reach_margin_is_a_list_option() {
     let source = "component App\n  action more\n    let n = 1\n  view\n    list virtualized=true height=200 reachend=more reach-margin=\"0px 200%\"\n      for x in [1, 2] key=x\n        text `${x}`\n";
@@ -35,7 +35,7 @@ fn a_reach_margin_is_a_list_option() {
     assert!(js.contains("reach:\"0px 200%\""), "{js}");
 }
 
-/// list.js reads `keep-mounted` again at each update.
+/// @ref LLP 1010 §6.11 — list.js reads `keep-mounted` again at each update.
 #[test]
 fn keep_mounted_is_a_list_option_read_again() {
     let source = "component App\n  state ids = [1, 2]\n  view\n    list virtualized=true height=200 keep-mounted=[first(ids), ids.at(-1)]\n      for x in ids key=x\n        text `${x}`\n";
@@ -109,7 +109,7 @@ fn a_state_family_is_applied_as_css_when_it_changes() {
     assert!(js.contains("\"font-family\""), "{js}");
 }
 
-/// `font-variation-settings` is the property, literal or bound.
+/// LLP 1019 D9: `font-variation-settings` is the property, literal or bound.
 #[test]
 fn font_variation_settings_are_written_literal_and_bound() {
     let plan = contract::compile(
@@ -147,7 +147,7 @@ fn bubbling_focus_uses_the_dom_binder_without_a_wrapper_tab_stop() {
     assert!(!js.contains("\"tabindex\""), "{js}");
 }
 
-/// An `else` row's build-time answer is the bake's for every
+/// Review B4: an `else` row's build-time answer is the bake's for every
 /// launch (the runner never asks it again), so the JS target receives it
 /// settled (`res`'s last argument), while the resource it stands in for
 /// keeps its build-time answer as a first frame to ask again at launch.
@@ -202,7 +202,7 @@ fn a_runner_owned_resource_is_marked() {
     assert!(!full.contains(".r.owned"), "{full}");
 }
 
-/// A button's or a link's `outline="none"`
+/// LLP 1104 D6 (amended 2026-11-05): a button's or a link's `outline="none"`
 /// is its own `outline-style`, as a field's is.
 #[test]
 fn outline_none_is_any_focusable_elements_own_declaration() {
@@ -229,7 +229,7 @@ fn outline_none_is_any_focusable_elements_own_declaration() {
     }
 }
 
-/// `outline="none"` is the field's own `outline-style`, in its
+/// LLP 1104 D6: `outline="none"` is the field's own `outline-style`, in its
 /// class, which outranks the base sheet's `:focus-visible` restore
 /// (`#exact-root#exact-root .cN` over `#exact-root input:…`); a bound one is
 /// written where it changes, and a field without it declares none.
@@ -270,7 +270,7 @@ fn outline_none_is_a_fields_own_declaration() {
     );
 }
 
-/// A sheet's unsaid background is a row of its class, the page's
+/// LLP 1116.009 D3: a sheet's unsaid background is a row of its class, the page's
 /// own role with the table's fallback, so the route it covers is not seen through
 /// it; a page is not given one, and a row the author wrote is the only one.
 #[test]
@@ -301,7 +301,7 @@ fn a_modal_route_is_painted_by_its_class() {
     );
 }
 
-/// The shell centres a sheet's title unless the author flows the
+/// LLP 1116.009 D4: the shell centres a sheet's title unless the author flows the
 /// bar, so a header whose author wrote `justify-content` is named (from the
 /// plan's own `written` bit, which the template's kernel carries), and one that
 /// did not, or whose row the compiler implied, is not.
@@ -369,7 +369,7 @@ fn resize_is_written_as_css() {
     assert!(out.js.contains("\"resize\""), "{}", out.js);
 }
 
-/// A literal `value` on a `progress` is its `<progress>`'s
+/// LLP 1116 D8: a literal `value` on a `progress` is its `<progress>`'s
 /// attribute, as a bound one is its property; without it the browser draws
 /// an indeterminate bar.
 #[test]
@@ -385,7 +385,7 @@ fn a_literal_progress_value_is_its_attribute() {
     assert!(made.contains("\"max\":\"1\""), "{made}");
 }
 
-/// A radio group of radios is native buttons whose shell
+/// LLP 1116.004 D5.2: a radio group of radios is native buttons whose shell
 /// look is the segmented control, and its page loads the input piece, which
 /// gives it the arrow keys and one Tab stop, even when its radios are bare.
 #[test]
@@ -416,7 +416,7 @@ fn a_radio_group_is_native_radios_and_loads_the_input_piece() {
     );
 }
 
-/// A page with a `tablist` or a `menu` loads the input
+/// LLP 1115.000 D4.5: a page with a `tablist` or a `menu` loads the input
 /// piece, which gives each its arrow keys, even when nothing in it declares a
 /// press look; a page with neither does not.
 #[test]
@@ -449,7 +449,7 @@ fn aria_disabled_is_an_attribute_for_static_and_bound_values() {
     );
 }
 
-/// A literal `paragraphDirs` is the element's attribute from
+/// LLP 1045 D11: a literal `paragraphDirs` is the element's attribute from
 /// its creation, before the Markdown editor mounts and reads it; a bound one
 /// writes the same attribute.
 #[test]
@@ -801,7 +801,7 @@ component App
     assert!(js.contains("data-exact-list"), "{js}");
 }
 
-/// A tab panel's contents are built when it is first
+/// LLP 1075.003 §9.14: a tab panel's contents are built when it is first
 /// selected (`tp`), a virtualized list's rows too; the dev loop carries a
 /// panel component's state by the panel's `id`.
 #[test]
@@ -887,7 +887,7 @@ fn inline_time_does_not_reserve_a_css_box() {
     }
 }
 
-/// A symbol nobody tinted whose `color` its author
+/// LLP 1121 stage 9 B (D10): a symbol nobody tinted whose `color` its author
 /// wrote, on it or on the nearest node that sets one, is marked for
 /// symbols.js's sheet to draw it in that colour, a bound source too whatever
 /// names its role. Under a bound `color` the mark is symbols.js's to make
@@ -1184,8 +1184,8 @@ fn a_native_elements_own_role_is_not_restated() {
 
 /// A header's bound `appearance` says `none` as element.rs marks a written
 /// one (`data-exact-said~="appearance"`), so the bar's rules and
-/// navigation.js leave it the author's while it reads `none`,
-/// keeping the header's other said words.
+/// navigation.js leave it the author's while it reads `none` (LLP 1075.003
+/// §9.10), keeping the header's other said words.
 #[test]
 fn a_bound_appearance_marks_a_header_while_it_reads_none() {
     let plan = contract::compile(
@@ -1203,7 +1203,7 @@ fn a_bound_appearance_marks_a_header_while_it_reads_none() {
     );
 }
 
-/// A table and a description list are HTML's own
+/// @ref LLP 1153 D7.2 — a table and a description list are HTML's own
 /// elements, a cell's `colspan`, `rowspan` and `scope` their attributes, and
 /// `aria-sort` the attribute it is; the browser lays them out.
 #[test]

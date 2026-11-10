@@ -1,7 +1,7 @@
-//! The reader's own hatches, beside the app's Rust ones: on Android the Canvas
-//! reader runs the app's Kotlin hatches (`modules/android/*.kt`), so every
-//! moment a Rust hatch hears is told to it too, and what its handles ask comes
-//! back here by the node's number.
+//! The reader's own hatches, beside the app's Rust ones (@ref LLP 1115.001.000
+//! D4): on Android the Canvas reader runs the app's Kotlin hatches
+//! (`modules/android/*.kt`), so every moment a Rust hatch hears is told to
+//! it too, and what its handles ask comes back here by the node's number.
 //!
 //! The moments are words the host puts on the request channel
 //! (`Request::Hatch`), each led by its scope:

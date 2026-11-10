@@ -1,4 +1,4 @@
-// One neutral web presentation in Chrome, Firefox and WebKit.
+// LLP 1115.000 D4 part B: one neutral web presentation in Chrome, Firefox and WebKit.
 // The role and metric censuses hold the sheet to the schema; the browser oracle
 // keeps the same geometry, colours and author precedence in all three engines.
 import { test, expect } from 'bun:test';
@@ -46,7 +46,7 @@ test('the neutral sheet\'s colours are the role table\'s neutral column', () => 
   expect(body.match(/#[0-9a-f]{3,8}\b/gi)?.filter((hex) => !['#0000', '#fff'].includes(hex)) ?? []).toEqual([]);
 });
 
-// The look's metrics are rows of the schema (`metrics`, the neutral column), which the kernel sizes
+// LLP 1115.000 D17: the look's metrics are rows of the schema (`metrics`, the neutral column), which the kernel sizes
 // a control by and a host that paints its own controls draws from. The sheet stays CSS a person reads, so this holds
 // it to the table both ways: every length it writes is a row's, on a property that row is written on, and every row
 // is written. A length that follows from rows (a pill's radius, a thumb's travel) is named beside its reason.
@@ -324,7 +324,7 @@ for (const engine of ['chromium', 'firefox', 'webkit']) test(`${engine}: the neu
       await page.hover('#pressable-in');
       expect([at('disabled hover'), off, await page.evaluate(() => css('pressable-in', 'backgroundImage'))]).toEqual([at('disabled hover'), 'none', 'none']);
       await page.evaluate(() => document.getElementById('pressable-off').remove());
-      // A button its author filled washes in its own ink, at the filled button's share.
+      // A button its author filled washes in its own ink, at the filled button's share (LLP 1129 D1).
       await page.hover('#filled');
       const wash = await page.evaluate(() => [rgba(css('filled', 'backgroundImage').match(/rgba?\([^)]*\)|color\([^)]*\)/)[0]), color('filled')]);
       expect([at('filled'), wash[0]]).toEqual([at('filled'), [...wash[1].slice(0, 3), 0.12]]);
@@ -359,7 +359,7 @@ for (const engine of ['chromium', 'firefox', 'webkit']) test(`${engine}: the neu
       expect([at('bar press'), await press('bar-plain')]).toEqual([at('bar press'), ['0.65', 0, '1', 0]]);
 
       // Held, a plain, borderless, filled or glass button shows UIKit's highlight. Its face fades: a title, the name a
-      // sheet's bar draws in place of a symbol, and a symbol, by its tint, unless the symbol's colour
+      // sheet's bar draws in place of a symbol (LLP 1116.020 D2), and a symbol, by its tint, unless the symbol's colour
       // is its own, written inline (as the wasm runtime writes it) or in a class (the JS target's). The button itself,
       // and so its focus ring, keeps its opacity. A plain or borderless button takes no wash, hovered or held. A filled
       // one's fill is at 75% in light and mixed 20% with white in dark, the same for an opaque accent and a translucent
@@ -443,13 +443,13 @@ for (const engine of ['chromium', 'firefox', 'webkit']) test(`${engine}: the neu
       expect([at('menu row'), (await highlight('item-filled'))[1].slice(0, 2)]).toEqual([at('menu row'), [NONE, scheme === 'light' ? [0, 0, 0, 0.14] : [255, 255, 255, 0.16]]]);
       await page.evaluate(() => { for (const id of ['item-plain', 'item-filled', 'choices', 'held-looks', 'sheet-cancel']) document.getElementById(id).remove(); });
 
-      // A list's rows: under each row but the last one line in the separator's role, inside the
+      // A list's rows (LLP 1115.000 D16): under each row but the last one line in the separator's role, inside the
       // row's box (a row keeps its height); none beside a row whose author wrote its own top or bottom edge; a
       // windowed list's rows the same through their wrappers, its spacers none. A list with no mark is untouched.
       const LINE_BETWEEN = [scheme === 'light' ? [0, 0, 0, 0.12] : [255, 255, 255, 0.16], true, ['0px', '-1px', '0px', '0px']];
       expect([at('rows'), await page.evaluate(() => ['row-1', 'row-2', 'row-own', 'row-before', 'row-top', 'row-last'].map(separator))])
         .toEqual([at('rows'), [LINE_BETWEEN, LINE_BETWEEN, null, null, LINE_BETWEEN, null]]);
-      // A row's box is the cell's: its own edge is inside its height, and its content is inset 16.
+      // A row's box is the cell's (LLP 1138): its own edge is inside its height, and its content is inset 16.
       expect([at('row heights'), await page.evaluate(() => [box('row-1')[3], box('row-own')[3], box('rows')[3]])]).toEqual([at('row heights'), [44, 44, 264]]);
       expect([at('row inset'), await page.evaluate(() => [css('row-1', 'paddingLeft'), css('row-1', 'paddingRight')])]).toEqual([at('row inset'), ['16px', '16px']]);
       expect([at('windowed rows'), await page.evaluate(() => ['spacer', 'cell-a', 'cell-b', 'cell-c'].map(separator))]).toEqual([at('windowed rows'), [null, LINE_BETWEEN, null, null]]);
@@ -596,7 +596,7 @@ for (const engine of ['chromium', 'firefox', 'webkit']) test(`${engine}: the neu
   } finally { await browser.close(); }
 }, 90000);
 
-// A sheet in a narrow window is iOS's: from 12 px below the window's top to its bottom, over the tab bar, its top
+// A sheet in a narrow window (D4.8) is iOS's: from 12 px below the window's top to its bottom, over the tab bar, its top
 // corners a surface's. One that opens slides up from the window's bottom edge, unless the person asks for less motion.
 for (const engine of ['chromium', 'firefox', 'webkit']) test(`${engine}: a sheet in a narrow window rises from the bottom edge`, async () => {
   const browser = await launch(engine);
@@ -909,7 +909,7 @@ for (const engine of ['chromium', 'firefox', 'webkit']) test(`${engine}: a bar's
   } finally { await browser.close(); }
 }, 90000);
 
-// What the author writes wins. In CSS a minimum outranks a size and a border box is never narrower than
+// What the author writes wins (LLP 1115). In CSS a minimum outranks a size and a border box is never narrower than
 // its padding, so the look's floor and padding would redraw `button width=84 height=24` as 84 by 36. The hosts name a
 // written size (`data-exact-said`, host/web/src/element.rs) and the sheet steps aside on that axis. A written padding
 // is UIKit's `contentInsets`, which no floor raises in any style, so there the button is its title's line and that
@@ -945,7 +945,7 @@ for (const engine of ['chromium', 'firefox', 'webkit']) test(`${engine}: a size 
   } finally { await browser.close(); }
 }, 90000);
 
-// A sheet's bar says the name of a button whose face is only a symbol. A width its author wrote for
+// LLP 1116.020 D2: a sheet's bar says the name of a button whose face is only a symbol. A width its author wrote for
 // the symbol, inline (the wasm runtime) or in a class (the JS target), leaves the word its padding and its wash, as
 // UIKit sizes a bar item to its title: 16 px either side of the word, inside the bar, in either direction. Two long
 // names in a narrow bar both stay in it, each word ending in an ellipsis.

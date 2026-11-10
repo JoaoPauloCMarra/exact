@@ -1,6 +1,6 @@
-// A development page's storage is its app's own: every app
-// the dev server serves shares its origin, so an app could otherwise read an
-// earlier app's contacts.json, written under the same default app id. A
+// A development page's storage is its app's own (LLP 1116.004 D8): every app
+// the dev server serves shares its origin, and bake-off contacts read an
+// earlier round's contacts.json, written under the same default app id. A
 // development build writes the app directory's digest into the host files
 // that name a store (scripts/agent-launch.mjs `developmentStore`): its files,
 // databases and kept keys (storage-environment.js `storageKey`), its persisted
@@ -59,7 +59,7 @@ test('persisted state and the durable store are the app\'s own on a shared origi
   const [a, b, release] = apps;
   expect(a.rt.Kept('state')).toBe(`exact.state.@${appDigest(one)}/`);
   expect(release.rt.Kept('state')).toBe('exact.state.');
-  // The first app keeps a goal of 2500 and a token (an earlier app's goal must not read as its own).
+  // The first app keeps a goal of 2500 and a token (bake-off water-tracker: an earlier app's goal read as its own).
   const signal = v => ({ n: { v } });
   expect(a.persist.stored('goal', 2000, 'n')).toBe(2000);
   a.persist.keep(signal(2500), 'goal', 'n');

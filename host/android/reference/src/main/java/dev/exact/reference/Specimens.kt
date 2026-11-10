@@ -53,7 +53,7 @@ const val SPECIMEN = "specimen"
 /**
  * One specimen of `specimens.json` as a hand-built app writes it: Material's default component, in its default
  * theme on [scheme]. Each has a twin in `apps/material-specimens/specimens/<id>.contract`; a `defect-` id is the
- * specimen it names with one error planted, for the oracle's detection test.
+ * specimen it names with one error planted, for the oracle's detection test (LLP 1115.001.001 O1).
  */
 @Composable
 fun Specimen(id: String, scheme: ColorScheme) {

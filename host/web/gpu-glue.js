@@ -1,10 +1,10 @@
-// The GPU module's page side (host code): injected by glue.js
+// The GPU module's page side (host code, LLP 1009 D2/D4): injected by glue.js
 // after the first painted frame, only when the page has a canvas. It fetches
 // the app's GPU wasm (wgpu on the browser's WebGPU, wasm-bindgen glue) and
 // runs each canvas's surface: bind on new inputs, render while dirty or
 // wanted, resize from the element's box and devicePixelRatio.
 //
-// One artifact per instance: with no query this is the app's
+// One artifact per instance (LLP 1009 D6): with no query this is the app's
 // one module, `gpu.js`, and it is `exact.gpu`. An app with declared modules
 // loads gpu-modules.js instead, which imports this file once per artifact as
 // `gpu-glue.js?artifact=<stem>` — a URL is one module instance, so each
@@ -177,7 +177,7 @@ function size(el) {
 }
 
 // exact.now() follows each batch `at` marker while surface commits are applied.
-// The surfaces' clock: the page's in agent mode (the driver owns
+// The surfaces' clock: the page's in agent mode (LLP 1012: the driver owns
 // time, and a picture is a function of it), else the frame's.
 const clockFor = (frameNow) => exact.now?.() ?? frameNow;
 
@@ -268,7 +268,7 @@ function resetRecovery() {
 function fallback(entry) {
   if (entry.fallbackApplied) return;
   entry.fallbackApplied = true;
-  // No adapter: the canvas's box says why, and world requests are refused by type.
+  // No adapter: the canvas's box says why, and world requests are refused by type (LLP 1139.003 D1).
   if (api.recovery?.code === "no-adapter") { entry.unsupported = refusal(api.recovery.error); showRefusal(entry); }
   entry.terminal = true;
   entry.wants = false;
@@ -367,7 +367,7 @@ function recoverDevice() {
 }
 
 // A render records into the module's open frame; `flush` submits every
-// canvas recorded since the last one once. It runs before the
+// canvas recorded since the last one once (LLP 1009 D7). It runs before the
 // task that rendered ends, which is when the browser presents the canvases.
 function flush(module = gpu) {
   if (trapped()) return;
@@ -379,7 +379,7 @@ function flush(module = gpu) {
   }
 }
 
-// An HDR surface's headroom. The web has no headroom query:
+// An HDR surface's headroom (LLP 1100 D12b). The web has no headroom query:
 // 4 is near BT.2408's 203 cd/m² white under a 1000 cd/m² peak, and the
 // browser clips at the panel's own.
 function headroom(el) {
@@ -449,7 +449,7 @@ function frame(now) {
     more ||= entry.wants;
   }
   flush();
-  if (more) globalThis.exact.frames?.activity(); // a development page's sampler watches a canvas in motion
+  if (more) globalThis.exact.frames?.activity(); // a development page's sampler watches a canvas in motion (LLP 1079 D3)
   // Under the agent's clock a frame is asked for by `clock`, never by the
   // last frame: a surface that wants more renders again when time moves —
   // except in a live window (`perf frames live`), which runs this loop.
@@ -831,13 +831,13 @@ const api = {
     deliverPosts(name);
     return null;
   },
-  // The agent's substitute's sensor samples, a frame's at a
+  // The agent's substitute's sensor samples (LLP 1133.013 D6), a frame's at a
   // time, on the path posts take: `[{surface, event}]`, each event input JSON.
   sensors(events) {
     for (const { surface, event } of events) { const queued = posts.get(surface) ?? posts.set(surface, []).get(surface); if (queued.length < 1024) queued.push(event); } // a world's queue holds 1,024
     for (const name of new Set(events.map(e => e.surface))) deliverPosts(name);
   },
-  // The driver's `post`: a canvas's surface name, the page's
+  // The driver's `post` (LLP 1139.004 D1): a canvas's surface name, the page's
   // one world's, and whether posts to a name still wait for its canvas.
   surfaceOf: (view) => surfaces.get(view)?.name,
   liveSurface() {
@@ -860,7 +860,7 @@ const api = {
       messages(entry); schedule();
       return ok ? tagged({phase:request.phase, delivery:"recognized"}) : {error:gpu.gpu_error()};
     }
-    // The agent's pad: the world queues it as a host's pad event.
+    // The agent's pad (LLP 1127.003 D3): the world queues it as a host's pad event.
     if ((request.op === "type" && /^Gamepad/.test(request.key ?? "")) || (request.op === "tap" && request.stick !== undefined)) {
       if (!entry.wantsInput) return { error: `view ${request.id}'s surface does not take input` };
       const reply = agent(request.id, request) ?? { error: `view ${request.id} has no world` };
@@ -883,7 +883,7 @@ const api = {
       for (let i = 0; i < bytes.length; i += 8192) encoded += String.fromCharCode(...bytes.subarray(i, i + 8192));
       return tagged({ data: btoa(encoded), bytes: bytes.length, hash: state?.world?.hash, tick: state?.tick });
     }
-    // A look frame reads back on the page's next turn: the module
+    // A look frame (LLP 1127.000) reads back on the page's next turn: the module
     // answers `pending` until its maps land, and this waits, up to 5 s.
     if ((request.op === "screenshot" && request.form === "look") || (request.op === "state" && (request.look || request.draws || request.visible))) return recoveringDevice || recoveryTimer ? { unavailable: "no picture while the device recovers" } : (async () => {
       for (const end = performance.now() + 5000; performance.now() < end; await new Promise((r) => setTimeout(r, 4))) {
@@ -910,7 +910,7 @@ const api = {
     if (api.answers(request)) return restoreReply(reply);
     if (request.op === "tree") for (const node of reply.nodes ?? []) {
       const page = surfaces.get(node.id)?.refusalPage;
-      if (page) node.status = page.text; // the refusal page's role=status
+      if (page) node.status = page.text; // the refusal page's role=status (LLP 1139.003 D1)
       const summary = agent(node.id, { op: "tree", summary: true });
       if (summary?.world) node.world = summary.world;
     }
@@ -945,7 +945,7 @@ const api = {
       reply: world.length ? { world: world.map(({ canvas, tick, hash, quiescent, error, assets, changing }) => ({ canvas, tick, hash, quiescent, changing, ...(error ? {error, assets} : {}) })) } : {} };
   },
   surface(view, name, values) {
-    // The node's element hosts its surface <canvas> (glue.js).
+    // The node's element hosts its surface <canvas> (glue.js, LLP 1014 D2).
     const host = exact.views.get(view);
     const el = host?.matches("canvas") ? host : host?.querySelector(":scope > canvas[data-surface]");
     if (!el?.isConnected) return; // a queued surface can leave before its lazy module arrives
@@ -1025,7 +1025,7 @@ const api = {
   },
   // Dev only; callers serialize versions. Agent pages never receive automatic swaps.
   swap(version) { return exact.mutate(() => swap(version)); },
-  /// A shader's text — the dev loop's edit, or the first
+  /// A shader's text (LLP 1030 D8) — the dev loop's edit, or the first
   /// registration: validated, its interface checked against the module's;
   /// every surface renders again through the new pipeline. False, with the
   /// reason on the console, when the module refuses it.
@@ -1074,7 +1074,7 @@ const api = {
     schedule();
     return worlds;
   },
-  /// The agent's `prefer gpu-tier`: each canvas's renderer
+  /// The agent's `prefer gpu-tier` (LLP 1139.003 D2): each canvas's renderer
   /// is made again at the new tier's rung, on the same device, under the same
   /// world and surface; a rung is otherwise read once, when a renderer is made.
   retier(tier) {
@@ -1193,7 +1193,7 @@ async function swap(version) {
 const t0 = performance.now();
 try {
   const version = (stem === "gpu" ? exact.gpuVersion : exact.gpuVersions?.[stem]) ?? 0;
-  // The tier is chosen before the device is made, from the adapter's facts.
+  // The tier is chosen before the device is made, from the adapter's facts (LLP 1139.003 D2).
   tierCode = Math.max(0, TIERS.indexOf(await chooseTier(exact.pageFacts)));
   gpu = guardedModule(await loadModule(version));
   gpu.gpu_tier?.(tierCode);

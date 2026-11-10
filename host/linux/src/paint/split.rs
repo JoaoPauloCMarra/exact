@@ -1,5 +1,5 @@
-//! Windows list/details.
-//! Pane placement, list selection and the empty detail.
+//! @ref LLP 1115.004 D16 — Windows list/details.
+//! @ref LLP 1115.002 D4 — pane placement, list selection and the empty detail.
 use super::*;
 use crate::presenter::split::{Split, DIVIDER};
 

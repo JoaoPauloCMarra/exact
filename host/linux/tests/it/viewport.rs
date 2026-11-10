@@ -1,6 +1,6 @@
 use exact_runner::{DataError, Value};
 
-// Native layout and the resource share one viewport.
+// @ref LLP 1039 §5 — native layout and the resource share one viewport.
 #[test]
 fn viewport_resize_reanswers_before_native_layout() {
     struct FactsOnly;
@@ -94,8 +94,8 @@ fn resolved_language_switches_native_paragraph_direction() {
 }
 
 /// A route a bar covers at its bottom scrolls its last child clear of the
-/// bar: its extent's end padding is the engine's, the cover included,
-/// though the CSS padding published leaves the cover out.
+/// bar: its extent's end padding is the engine's, the cover included (LLP
+/// 1075.003 §3.5), though the CSS padding published leaves the cover out.
 #[test]
 fn a_covered_scrollers_extent_keeps_the_cover() {
     use exact_kernel::{HostCover, Kernel, NodeType, Offer, Op, StyleId, StyleProps, StyleValue};

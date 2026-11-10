@@ -1,4 +1,4 @@
-// A partitioned iframe's records reaching actions, driven by IframePartitionSessionTests.
+// A partitioned iframe's records reaching actions, driven by IframePartitionSessionTests (LLP 1020.002 D2).
 component App
   state title = ""
   state url = ""

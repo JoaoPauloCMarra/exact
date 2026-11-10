@@ -1,4 +1,4 @@
-// @exact/gamepad on Android: the fixture app made outside the repo and built as the
+// @exact/gamepad on Android (LLP 1133.022 §21 stage 2): the fixture app made outside the repo and built as the
 // Canvas reader's APK, which compiles the package's Kotlin; the roster binds the module and the manifest carries
 // `VIBRATE`, which `playEffect` derives.
 //

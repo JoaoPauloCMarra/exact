@@ -5,7 +5,7 @@ import CoreImage
 import UniformTypeIdentifiers
 @testable import ExactKit
 
-/// A photo the picker converts to JPEG keeps its color
+/// LLP 1100 D13: a photo the picker converts to JPEG keeps its color
 /// profile and, where the system can encode one, its gain map.
 final class PickerColorTests: XCTestCase {
     func testUnrestrictedFileInputOffersAnyItem() {

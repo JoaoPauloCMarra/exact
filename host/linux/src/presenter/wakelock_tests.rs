@@ -1,4 +1,4 @@
-//! `wakelock="screen"`: with a shell (Android's reader) a
+//! `wakelock="screen"` (LLP 1125 D11): with a shell (Android's reader) a
 //! statement told when it changes and anew to a reader made again; with
 //! none, one journal line.
 use super::*;

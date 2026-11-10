@@ -1,4 +1,4 @@
-// Real AppKit geometry and the first-frame seam.
+// @ref LLP 1104 D3–D6: real AppKit geometry and the first-frame seam.
 #if os(macOS)
 import AppKit
 import CExact
@@ -241,7 +241,7 @@ final class NativeFieldsMacTests: XCTestCase {
             XCTAssertEqual(line.maxY, 28, accuracy: 1, "\(appearance): the rect ends at the line box's bottom")
         }
     }
-    /// A native `input type="search"` is AppKit's search field
+    /// LLP 1115 D8: a native `input type="search"` is AppKit's search field
     /// (its magnifier and clear button, Escape clearing it), its text in the
     /// published content rect, which the kernel measured from the same
     /// class; drawn by the author (`appearance: none`) it is a plain field.
@@ -323,7 +323,7 @@ final class NativeFieldsMacTests: XCTestCase {
         node.applyProps(set: ["markup": "markdown"], clear: [])
         XCTAssertFalse(node.isNativeTextControl)
     }
-    /// The native editor's two background surfaces read Field;
+    /// LLP 1095 D4: the native editor's two background surfaces read Field;
     /// author-drawn and Markdown editors keep their transparent native views.
     func testTextareaThemeBackgroundAndRemoval() throws {
         _ = NSApplication.shared
@@ -370,7 +370,7 @@ final class NativeFieldsMacTests: XCTestCase {
         XCTAssertFalse(scroll.drawsBackground)
     }
 
-    /// AppKit asks only the first responder for a ring, so a
+    /// LLP 1104 D6: AppKit asks only the first responder for a ring, so a
     /// bare field (the field editor is first responder) and any textarea
     /// (its text view sits in a clip view) show Exact's ring; checked by
     /// screenshot on 2026-10-07, which the masks alone never drew.
@@ -416,7 +416,7 @@ final class NativeFieldsMacTests: XCTestCase {
             XCTAssertFalse(node.fieldFocused)
         }
     }
-    /// `outline: none` takes every ring off a focused field,
+    /// LLP 1104 D6: `outline: none` takes every ring off a focused field,
     /// Exact's and AppKit's, native or bare, single-line or not, while the
     /// field still takes the focus; unset, the ring is back at once.
     func testOutlineNoneDrawsNoRingOnAFocusedField() throws {
@@ -554,7 +554,7 @@ final class NativeFieldsMacTests: XCTestCase {
         return ((json?["slots"] as? [String: Any])?[name]).map { "\($0)" } ?? ""
     }
 
-    /// The focus ring leaves a border the author wrote
+    /// LLP 1115.000 D7.9: the focus ring leaves a border the author wrote
     /// alone, as a native control with a border of its own keeps it under
     /// AppKit's ring. A bare field's border was repainted two points wide
     /// in the focus colour, and a textarea's covered by a ring over it.
@@ -701,7 +701,7 @@ final class NativeFieldsMacTests: XCTestCase {
     }
 
 
-    /// An authored `::placeholder` colour is the placeholder's
+    /// LLP 1104 D3: an authored `::placeholder` colour is the placeholder's
     /// ink, its own alpha kept, on a native field, a bare one and a
     /// textarea; without the row each keeps AppKit's.
     func testAnAuthoredPlaceholderColourIsThePlaceholdersInk() throws {

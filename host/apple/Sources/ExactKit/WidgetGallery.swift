@@ -1,4 +1,4 @@
-// Development previews and agent reads use the same
+// @ref LLP 1126 D14 — development previews and agent reads use the same
 // headless entry and snapshot view. The running app keeps its presenter.
 #if EXACT_WIDGET_GALLERY && (os(iOS) || os(macOS))
 import Foundation
@@ -107,7 +107,7 @@ final class WidgetPreview: ObservableObject {
 }
 
 /// WidgetKit's container is supplied by the system only in an extension.
-/// These are the same family dimensions and mode stand-ins as the widget baseline.
+/// These are the same family dimensions and mode stand-ins as WP4's baseline.
 /// The mode is also passed to the actual driver; archive parity is a separate test.
 @MainActor
 struct WidgetPreviewView: View {
@@ -154,7 +154,7 @@ private struct WidgetGalleryCell: View {
     }
 }
 
-/// A Live Activity entry: its kind and preview state,
+/// A Live Activity entry (LLP 1126.001 WP10): its kind and preview state,
 /// from the bake's `plans/activities.json`.
 struct ActivityEntry {
     let kind: String

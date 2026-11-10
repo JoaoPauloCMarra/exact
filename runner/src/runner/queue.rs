@@ -1,4 +1,4 @@
-//! Sends that wait their turn: a `queue` mutation has one
+//! Sends that wait their turn (LLP 1092 D2–D4): a `queue` mutation has one
 //! request in flight; a later send waits, with the arguments it was made
 //! with, and is asked in a `next` commit of its own once the mutation is
 //! free — its reply landed or let go, and that reply's `then` run.
@@ -13,9 +13,9 @@ use super::*;
 use std::collections::VecDeque;
 use std::rc::Rc;
 
-/// At most this many sends wait per mutation; the send in
+/// At most this many sends wait per mutation (LLP 1092 D4); the send in
 /// flight does not count. One more refuses its action: dropping a write
-/// silently is the bug a queue removes.
+/// silently is the bug a queue removes (LLP 1041 D2).
 pub const QUEUE_BOUND: usize = 64;
 
 /// A send that waits: the source it names and its send-time arguments.
@@ -25,12 +25,12 @@ pub(super) struct Waiting {
     args: Vec<Value>,
     /// The origin of the commit that sent it, which its `next` runs under.
     origin: CallOrigin,
-    /// The invocation that commit was part of; 0 for none.
+    /// The invocation that commit was part of (LLP 1133.023 D7); 0 for none.
     id: u64,
 }
 
 /// The state a refused `next` saw. A standing commit that changes a slot,
-/// a resource or a derive value from it clears the stall; one that
+/// a resource or a derive value from it clears the stall (D3); one that
 /// changes none of them leaves the send waiting, so a permanently failing
 /// ask is not retried every frame.
 pub(super) struct Basis {
@@ -48,7 +48,7 @@ pub(super) struct Queues {
     pub(super) next_due: Vec<f64>,
     stalled: Vec<Option<Rc<Basis>>>,
     /// The last advance stopped on a `next`'s refusal: a frame's armed
-    /// frame tasks fire anyway.
+    /// frame tasks fire anyway (D3).
     pub(super) stopped_on_next: bool,
 }
 
@@ -95,7 +95,7 @@ impl Queues {
 }
 
 impl<D: DataSource> Runner<D> {
-    /// Whether `m` is free: no request of it in flight, neither its
+    /// Whether `m` is free (D3): no request of it in flight, neither its
     /// `then` nor its `next` armed, and not stalled. Checked from state,
     /// never from the kind of commit.
     fn idle(&self, m: usize) -> bool {
@@ -105,14 +105,14 @@ impl<D: DataSource> Runner<D> {
             && self.queues.stalled[m].is_none()
     }
 
-    /// Whether a send of queue mutation `m` made now is asked now:
+    /// Whether a send of queue mutation `m` made now is asked now (D2):
     /// `m` is free and no send waits before it.
     pub(super) fn asks_now(&self, m: usize) -> bool {
         self.idle(m) && !self.queues.waits(m)
     }
 
     /// A send of `m` that joins its queue: nothing is asked and nothing
-    /// read again until its turn. The 65th waiter refuses its action.
+    /// read again (D4) until its turn. The 65th waiter refuses its action.
     pub(super) fn wait_turn(
         &mut self,
         m: usize,
@@ -135,7 +135,7 @@ impl<D: DataSource> Runner<D> {
         Ok(())
     }
 
-    /// The scan, after every commit concludes, whether it stood or
+    /// The scan (D3), after every commit concludes, whether it stood or
     /// was refused: a stalled
     /// mutation whose basis a standing commit changed is let go, and a
     /// free mutation with a send waiting is due now.
@@ -200,7 +200,7 @@ impl<D: DataSource> Runner<D> {
             .map(|(m, at)| (m, *at))
     }
 
-    /// A `next` commit: `m`'s head, popped and asked as an action's
+    /// A `next` commit (D3): `m`'s head, popped and asked as an action's
     /// send is. Its own ask's refusal drops the head (it can never be
     /// asked) and the successor is due; any other refusal keeps the head
     /// and stalls `m` until a standing commit changes the state.
@@ -220,7 +220,8 @@ impl<D: DataSource> Runner<D> {
         self.conclude(checkpoint, &result, was_poisoned);
         self.arm_then(result.is_ok());
         // The commit that tells the view `pending` ended is the host's to
-        // apply, its refusal the host's to hear, as a failed reply's is.
+        // apply, its refusal the host's to hear, as a failed reply's is (b6
+        // review A4).
         let mut ended = None;
         if let Err(e) = &result {
             if self.poisoned {
@@ -333,7 +334,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Drop every waiting send — poison, or a reload that does not carry
-    /// them. They were never asked: no ticket, no source call, one
+    /// them (D4). They were never asked: no ticket, no source call, one
     /// journal line per mutation.
     pub(super) fn forget_waiting(&mut self) {
         for m in 0..self.queues.waiting.len() {
@@ -348,7 +349,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Each mutation with sends waiting, and how many (the agent's
-    /// `state.queued`).
+    /// `state.queued`, LLP 1092 D10).
     pub fn queued(&self) -> Vec<(String, usize)> {
         self.queues
             .waiting
@@ -376,7 +377,7 @@ pub(super) enum Asked {
 }
 
 impl<D: DataSource> Runner<D> {
-    /// Ask the source for one send of `m`: an answer now must
+    /// Ask the source for one send of `m` (LLP 1016 §4): an answer now must
     /// conform to the mutation's shape.
     pub(super) fn ask_send(
         &mut self,
@@ -392,7 +393,7 @@ impl<D: DataSource> Runner<D> {
         let answer = if Self::activity_send(source) {
             self.activity_request(source, args)
         } else if self.plan.module_named(source).is_some() {
-            // A native module's send: the runner's substitute.
+            // A native module's send (LLP 1133.002 D13): the runner's substitute.
             self.module_send(m, source, args)
         } else {
             let answer = self
@@ -401,8 +402,8 @@ impl<D: DataSource> Runner<D> {
             self.refuse_locked(answer)
         };
         // What its source staged on sockets goes out only with an answer
-        // now that conforms; what the turns after its
-        // source sent goes whatever it answers.
+        // now that conforms (LLP 1016.000 D7); what the turns after its
+        // source sent goes whatever it answers (the amendment of 2026-10-18).
         self.stage_answer(Target::Mutation(m));
         let staged = self.store.take_sockets();
         // A mutation's console lines, including a refusal, reach the agent's

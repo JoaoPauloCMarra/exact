@@ -4,7 +4,7 @@ import XCTest
 @testable import ExactGroupedLists
 import UIKit
 
-/// A large title survives a content swap under the bar
+/// LLP 1116.005 D4: a large title survives a content swap under the bar
 /// (`scripts/fixtures/still-title.contract`, chat-rooms' rooms screen). UIKit
 /// moves the large title into the content scroll view it follows; once a
 /// failed load's reason came between the header and the list, nothing

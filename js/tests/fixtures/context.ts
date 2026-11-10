@@ -1,6 +1,6 @@
 import { oauth } from "../../../packages/oauth/index.ts";
 // Answers that await a promise another answer made, then fetch their own
-// rows: each fetch after the await must be its own
+// rows (LLP 1133.002 D14): each fetch after the await must be its own
 // answer's, through `Promise.all` and an imported helper too. The test's
 // transport sees which answer each request arrives under.
 

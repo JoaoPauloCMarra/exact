@@ -1,4 +1,4 @@
-//! Declared pairs (`pair=`): a token says what it is drawn
+//! Declared pairs (LLP 1121 D3, `pair=`): a token says what it is drawn
 //! on, a colour token or a role, never itself (`tamber-pair`); a pair below
 //! WCAG's 4.5:1 in some tuple and scheme is warned of, once, at its lowest
 //! (`tamber-contrast`), a residual side read at its fallback; the warning
@@ -158,7 +158,7 @@ fn renaming_a_paired_background_renames_it_in_pair() {
     );
 }
 
-/// A type token in px is the author's choice not to scale
+/// Stage 6 C (D6): a type token in px is the author's choice not to scale
 /// with the person's text size: warned of, never refused; a text style or
 /// `rem` is not.
 #[test]

@@ -1,4 +1,4 @@
-// The Android manifest fragment's allow-list: what a package may add, and each refusal by name.
+// The Android manifest fragment's allow-list (LLP 1133.030 D9): what a package may add, and each refusal by name.
 import { test } from 'bun:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -122,7 +122,7 @@ test("device's normal permission is declared, and a runtime one refused", () => 
   assert.throws(() => fragmentPermissions(impl({ permissions: ['android.permission.ACCESS_FINE_LOCATION'] })), (e) => e.message.includes('ACCESS_FINE_LOCATION') && e.message.includes('normal permissions only'));
 });
 
-test('a query with a data scheme: SENDTO mailto: and smsto: only', () => {
+test('a query with a data scheme: SENDTO mailto: and smsto: only (LLP 1133.024 D22 item 6)', () => {
   const xml = manifestFragment(impl({ queries: [{ action: 'android.intent.action.SENDTO', scheme: 'mailto' }, { action: 'android.intent.action.SENDTO', scheme: 'smsto' }] }));
   assert.match(xml, /<intent><action android:name="android\.intent\.action\.SENDTO" \/><data android:scheme="mailto" \/><\/intent>/);
   assert.match(xml, /<data android:scheme="smsto" \/>/);

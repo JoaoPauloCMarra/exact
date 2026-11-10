@@ -1,4 +1,4 @@
-// Derived row state curried into an action prop.
+// @ref LLP 1017 P4a/P4c — derived row state curried into an action prop.
 routes nav
   tab home "/"
     post "/post/:post"

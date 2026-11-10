@@ -324,11 +324,12 @@ fn native_intersect_rotated_root_ratios_match_chrome() {
     }
 }
 
-/// The intersection observer reads where a block's subtree is shown as `frame`
-/// does. A block its host shows in place at half size scales the target and
-/// what its scroller shows of it alike (20 of 100 points: 0.2, not 0.8); a
-/// block the host lifts to the top layer is not clipped or moved by the
-/// scroller its logical ancestor is, and a block clips what it holds.
+/// LLP 1123 D2: the intersection observer reads where a block's subtree is
+/// shown as `frame` does. A block its host shows in place at half size
+/// scales the target and what its scroller shows of it alike (20 of 100
+/// points: 0.2, not 0.8); a block the host lifts to the top layer is not
+/// clipped or moved by the scroller its logical ancestor is, and a block
+/// clips what it holds.
 #[test]
 fn native_intersect_reads_a_block_where_its_host_shows_it() {
     let source = r#"component App

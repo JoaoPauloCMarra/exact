@@ -1,7 +1,7 @@
 //! SVG lengths: user units, `px`, the absolute units, and percentages of
 //! the nearest viewport.
 //!
-//! SVG 2 §8.9 (units), CSS Values 4 §6.2 (absolute
+//! @ref LLP 1055.000 D4; SVG 2 §8.9 (units), CSS Values 4 §6.2 (absolute
 //! lengths at 96 px per inch)
 
 use crate::style::{Dimension, Env};

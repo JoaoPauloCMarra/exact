@@ -1,6 +1,8 @@
 //! The store's files: writes that survive a crash, whole-or-absent
 //! temporaries, reads checked against their signed cards, and content kept
 //! once by digest.
+//!
+//! @ref LLP 1026 D11 (crash recovery; assets by digest)
 
 use crate::envelope::{sha256_hex, FileCard};
 use std::collections::BTreeSet;
@@ -10,7 +12,7 @@ use std::path::{Path, PathBuf};
 /// Refuse an unqualified durable-store platform before touching its directory.
 pub(super) fn require_durable_store() -> Result<(), String> {
     if cfg!(windows) {
-        Err("Windows durable update storage is unsupported; no store files were touched".into())
+        Err("Windows durable update storage is unsupported (LLP 1026 D11a); no store files were touched".into())
     } else {
         Ok(())
     }
@@ -121,8 +123,8 @@ pub(super) fn sync_dir(dir: &Path) -> Result<(), String> {
 /// Write a file whole or not at all: a temporary beside it, then a rename
 /// over the old one. `durable` syncs the temporary before the rename and the
 /// directory after it, so the rename survives a crash too; without the syncs
-/// a power loss can leave the new name holding no bytes (the record is the
-/// rollback floor).
+/// a power loss can leave the new name holding no bytes (LLP 1026 D11: the
+/// record is the rollback floor).
 pub(super) fn write_atomic(path: &Path, bytes: &[u8], durable: bool) -> Result<(), String> {
     let parent = path
         .parent()

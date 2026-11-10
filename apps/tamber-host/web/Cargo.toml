@@ -3,7 +3,7 @@ name = "tamber-host-web"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "The Tamber binding host on the web: one wasm with the runner, the kernel and the baked plan, whose resident loop serves the native clients' live edits"
+description = "The Tamber binding host on the web (LLP 1121 D12): one wasm with the runner, the kernel and the baked plan, whose resident loop serves the native clients' live edits"
 publish = false
 build = "build.rs"
 

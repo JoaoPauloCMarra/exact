@@ -1,9 +1,11 @@
-//! The build channel's presentation half: the frames the URL poller's worker took are applied here,
-//! on the presentation thread, and the reports they call for queued for its next tick
-//! (`crate::build_channel`). A `pin` sets what the agent's `prefer` sets — the system scheme and
-//! `prefers-color-scheme`, `prefers-contrast`, the window's modes, the root font size — each fact
-//! it does not name what the first pin replaced; a null pin hands all of them back. A `hold` holds
-//! a state as the real one (`held.rs`).
+//! The build channel's presentation half (LLP 1122 D4, LLP 1121 stage 4
+//! commit 5): the frames the URL poller's worker took are applied here, on
+//! the presentation thread, and the reports they call for queued for its
+//! next tick (`crate::build_channel`). A `pin` sets what the agent's
+//! `prefer` sets — the system scheme and `prefers-color-scheme`,
+//! `prefers-contrast`, the window's modes, the root font size — each fact
+//! it does not name what the first pin replaced; a null pin hands all of
+//! them back. A `hold` holds a state as the real one (`held.rs`).
 use super::*;
 use crate::build_channel::{Frame, Pin, Pinned};
 use serde_json::{json, Value};
@@ -200,8 +202,8 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    /// The live table: the server's snapshot, when
-    /// fetched, then the commands poll's batches in order,
+    /// The live table (LLP 1121 stage 4): the server's snapshot, when
+    /// fetched, then the commands poll's batches in order (LLP 1122 D4),
     /// so a value-only edit lands without a plan. A stale batch asks for
     /// the snapshot next tick; a structure refusal waits for its plan.
     pub(super) fn serve_live(&mut self) {
@@ -303,7 +305,7 @@ mod tests {
                 json!({"kind": "outline"}),
             ],
         ));
-        // No inspect mode on Linux: its commands are said unsupported.
+        // No inspect mode on Linux (LLP 1122 T2c): its commands are said unsupported.
         assert_eq!(
             reports[0],
             json!({"kind": "unsupported", "what": "inspect", "detail": null})

@@ -1,4 +1,4 @@
-//! The base scale in lowering:
+//! The base scale in lowering (LLP 1121 stage 11 B, theme2's condition (c)):
 //! the compiler knows the nine base names (`exact_kernel::style::scale`), so
 //! a view reading one compiles with no design defining it, as a role's name
 //! does, and the kernel reads its length in the process's column. The plan
@@ -49,8 +49,8 @@ pub(crate) fn values(text: &str) -> Option<Vec<String>> {
     Some(values)
 }
 
-/// A length token's value over base names the design leaves unset: its px
-/// in each column, by the column's name, as
+/// A length token's value over base names the design leaves unset (LLP
+/// 1121 D11, stage 12 B2): its px in each column, by the column's name, as
 /// that column's host folds it (`scale::evaluate`, the terminal's cells as
 /// px, which its spaces then round as every space there does). `None` for
 /// any other text.
@@ -84,8 +84,8 @@ pub(crate) fn unfolded(value: &str) -> Option<&'static str> {
         .map(|(name, _)| *name)
 }
 
-/// A shadow token's value over base names the design leaves unset: its
-/// text in each column, by the column's name, each
+/// A shadow token's value over base names the design leaves unset (LLP
+/// 1121 stage 12 B3): its text in each column, by the column's name, each
 /// length over one folded to px as that column's host folds it
 /// (`scale::fold_lengths`), `None` in a column it doesn't fold in. `None`
 /// for any other text.
@@ -105,8 +105,8 @@ pub(crate) fn shadow_columns(value: &str) -> Option<Vec<(&'static str, Option<St
 }
 
 /// Why a token over base names the design leaves unset is refused, with
-/// its id: a length's expression that doesn't fold in a column, or a
-/// shadow whose lengths don't fold in one, or whose px there the
+/// its id: a length's expression that doesn't fold in a column (stage 12
+/// B2), or a shadow whose lengths don't fold in one, or whose px there the
 /// row's codec refuses, a blur gone negative (B3). The first column it
 /// fails in is named, so no host meets a value it can't read. `None` for
 /// one every column reads, or any other value.
@@ -137,7 +137,7 @@ pub(crate) fn refusal(kind: tamber::Kind, name: &str, v: &str) -> Option<(&'stat
 }
 
 /// [`columns`], and a bare base name the design leaves unset's too: what a
-/// ranged param checks.
+/// ranged param checks (stage 12 B2, theme2's "ranges included").
 pub(crate) fn ranged(value: &str) -> Option<Vec<(&'static str, f32)>> {
     let value = value.trim();
     if !scale::is_base(value) {
@@ -157,7 +157,7 @@ pub(crate) fn px(n: f32) -> String {
 
 /// Value `v` of a token of `kind` in each column it is over base names in,
 /// by the column's name: a length's px, a shadow's text with its lengths
-/// px. `None` for one over no base name.
+/// px (stage 12 B3). `None` for one over no base name.
 fn by_column(kind: tamber::Kind, v: &str) -> Option<Vec<(&'static str, String)>> {
     match kind {
         tamber::Kind::BoxShadow | tamber::Kind::TextShadow => Some(
@@ -209,7 +209,7 @@ pub(crate) fn place(kind: tamber::Kind, values: &[String], px_text: &str) -> Opt
 
 /// The base names' lengths outside Exact (the DTCG export, `tamber gen`'s
 /// CSS), where no host's column applies: the neutral column's, the web's
-/// look, px at the default root, from the kernel's table.
+/// look (round 2, Astra 2), px at the default root, from the kernel's table.
 pub(crate) fn sizes() -> impl Iterator<Item = (String, String)> {
     scale::names().map(|n| {
         let px = match scale::of(n, Column::Neutral) {

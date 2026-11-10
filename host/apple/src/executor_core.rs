@@ -1,4 +1,4 @@
-//! Native transport scheduling shared by Apple and Linux.
+//! Native transport scheduling shared by Apple and Linux (LLP 1041 D1–D4).
 //! Only explicitly independent HTTP leaves the ordered lane. Each worker has
 //! its own bindings and transport, so held data cannot consume control leases.
 use exact_runner::{
@@ -21,8 +21,8 @@ const MAX_WORKERS: usize = 16 * WORKERS;
 static LIVE_WORKERS: AtomicUsize = AtomicUsize::new(0);
 const COUNTS: [usize; 2] = [16, 128];
 const ORDERED_READS: usize = 128;
-/// Re-ask markers in the ordered sequence at once:
-/// their own window beside the 128 real tickets, so that
+/// Re-ask markers in the ordered sequence at once (LLP 1041 §8.4, amended
+/// 2026-10-09): their own window beside the 128 real tickets, so that
 /// answers waiting on shared work never take the room that work needs.
 const AGAINS: usize = 128;
 /// What an `Again` marker retains until drained: its record, an empty body.
@@ -30,8 +30,8 @@ const AGAIN_BYTES: usize = std::mem::size_of::<Completed>();
 const ORDERED_WAITING_BYTES: usize = 64 << 20;
 /// Open streams, bounded apart from the independent lane's count: a stream
 /// holds a transport lease and a reader thread for as long as it is open,
-/// and must neither starve nor be starved by a lane of held replies.
-/// Its bytes stay on the lane.
+/// and must neither starve nor be starved by a lane of held replies
+/// (LLP 1016.000 D4; LLP 1069.004 As built). Its bytes stay on the lane.
 const STREAMS: usize = 16;
 const BYTES: [usize; 2] = [512 << 20, 64 << 20];
 const MAX_REQUEST: usize = 4 << 20;
@@ -74,7 +74,7 @@ struct Running {
     waiting: bool,
     /// An ordered safe read: once complete it holds no effect slot.
     read: bool,
-    /// The asynchronous core's; workers leave them be.
+    /// The asynchronous core's (LLP 1120 D3, D5); workers leave them be.
     /// The outcome is published.
     terminal: bool,
     /// Physical work still running: hops on the wire, a reader.
@@ -94,7 +94,7 @@ struct Completed {
     ticket: u64,
     outcome: Outcome,
     bytes: usize,
-    /// One message of a stream that is still open: its
+    /// One message of a stream that is still open (LLP 1016.000): its
     /// reservation stays with the running stream until the stream ends.
     message: bool,
     /// A stream's last outcome: draining it frees a stream slot.
@@ -104,8 +104,8 @@ struct Completed {
     light: bool,
     /// A re-ask's marker (counted in `agains`).
     again: bool,
-    /// A long poll's reply that is no event (`LONG_POLL_REPLY`):
-    /// an event that follows takes its place.
+    /// A long poll's reply that is no event (LLP 1016.000 D8,
+    /// `LONG_POLL_REPLY`): an event that follows takes its place.
     reply: bool,
 }
 /// A place behind the ordered barrier.
@@ -167,7 +167,7 @@ struct State {
     discard: Vec<OwnedWork>,
     notified: bool,
     wake: Option<Wake>,
-    /// The asynchronous core's bookkeeping; idle with workers.
+    /// The asynchronous core's bookkeeping (LLP 1120); idle with workers.
     book: asynch::Book,
 }
 struct Shared {
@@ -186,17 +186,17 @@ struct Shared {
     /// boot: opening makes the directories, and a cold boot opens no app
     /// storage (fieldnotes' `apple_module_replacement_…` test).
     roots: std::sync::OnceLock<Result<ibex2::stdlib::app_fs::AppDirectories, String>>,
-    /// Open two-way sockets by stream ticket (`stream.rs`).
+    /// Open two-way sockets by stream ticket (LLP 1016.000 D7; `stream.rs`).
     sockets: Mutex<std::collections::HashMap<u64, stream::Socket>>,
-    /// Long polls waiting to ask again, by stream ticket
-    /// (`executor_longpoll.rs`): the attempt, when it asks, and what failed.
+    /// Long polls waiting to ask again, by stream ticket (LLP 1016.000 D8;
+    /// `executor_longpoll.rs`): the attempt, when it asks, and what failed.
     retrying: Mutex<std::collections::HashMap<u64, (u32, std::time::Instant, String)>>,
-    /// What upload streams hold in memory (`stream.rs`).
+    /// What upload streams hold in memory (LLP 1016.000 D10; `stream.rs`).
     uploads: stream::Uploads,
     /// This, for a path that frees room uploads wait for holding only a
     /// reference (`complete`): it starts them (`stream::start_uploads`).
     me: std::sync::Weak<Shared>,
-    /// Child processes (`process.rs`).
+    /// Child processes (LLP 1133.007; `process.rs`).
     processes: process::Processes,
 }
 
@@ -211,15 +211,15 @@ impl Shared {
     }
 }
 
-/// Count/byte reservations last until the UI takes the result, not merely until
-/// transport finishes. Rejections return directly to the host: there is no
-/// unbounded queue of overload failures. Byte reservations cover owned
+/// Count/byte reservations last until the UI takes the result, not merely
+/// until transport finishes. Rejections return directly to the host: there
+/// is no unbounded queue of overload failures. Byte reservations cover owned
 /// request/result buffers, NOT arbitrary closure captures or allocations during
-/// native work. Those trusted-source costs are count/worker bounded only. On
-/// both lanes a waiting job is charged its request buffers, a running one its
-/// response ceiling, and a completed one what it retains; a worker waits for
-/// bytes rather than refusing. The ordered queue also bounds waiting request
-/// buffers, leaving room to start its head.
+/// native work. Those trusted-source costs are count/worker bounded only.
+/// On both lanes a waiting job is charged its request buffers, a running one
+/// its response ceiling, and a completed one what it retains; a worker waits
+/// for bytes rather than refusing (LLP 1041 §8.4, LLP 1054.000 R3). The ordered
+/// queue also bounds waiting request buffers, leaving room to start its head.
 pub(super) struct Core {
     shared: Arc<Shared>,
     disabled: bool,
@@ -233,7 +233,7 @@ pub(super) struct Core {
     grants: String,
     /// A stream's own transport (the platform's; a test's scripted one).
     stream_host: StreamHost,
-    /// The asynchronous core instead of workers, not yet started.
+    /// The asynchronous core instead of workers (LLP 1120), not yet started.
     machine: Option<Arc<asynch::Machine>>,
 }
 /// Makes the host (and its transport) an owner, a scoped grant or a stream
@@ -260,7 +260,7 @@ impl Core {
         )
     }
 
-    /// [`Core::start`], or, switched on, the machine: Apple's.
+    /// [`Core::start`], or, switched on, the machine (LLP 1120): Apple's.
     #[allow(dead_code)] // Apple's executor's; Linux's and the render host's are `start_on`
     pub(super) fn start_switched(b: Option<ibex2::host::Bindings>, g: &str, w: Wake) -> Self {
         Self::with_owners(owners(b), g, w)
@@ -268,7 +268,7 @@ impl Core {
 
     /// [`Core::start`] with every transport the other owners, scoped grants
     /// and streams open made by `host` (the Linux host's, and the render
-    /// host's).
+    /// host's, LLP 1048.000 D10).
     #[allow(dead_code)] // the Linux and render hosts' executors call it
     pub(super) fn start_on(
         bindings: Option<ibex2::host::Bindings>,
@@ -441,7 +441,7 @@ impl Core {
     }
 
     /// Where `app:/data`, `app:/cache` and `app:/tmp` are, for a request
-    /// whose body is one of the app's files. Set once,
+    /// whose body is one of the app's files (LLP 1108 D6 R2). Set once,
     /// before the first request; without it such a request is refused.
     pub(super) fn set_app_roots(&self, roots: [std::path::PathBuf; 3]) {
         let _ = self.shared.root_paths.set(roots);
@@ -471,7 +471,7 @@ impl Core {
         let ordered = r.request.is_ordered();
         let mut state = self.shared.state.lock().unwrap();
         // A deadline on work that cannot take one (a stream but an upload, a continuation, native work), or a
-        // long poll that is no stream's HTTP GET, is refused here, before any path.
+        // long poll that is no stream's HTTP GET (LLP 1016.000 D8), is refused here, before any path.
         let checked = r
             .request
             .long_poll_refusal()
@@ -527,7 +527,7 @@ impl Core {
         // them as it starts (`stream::start`).
         let waits = r.request.stream && r.request.upload_progress;
         // A process one-shot runs on a thread of its own with room of its
-        // own, so a slow one leaves the lane's requests theirs.
+        // own, so a slow one leaves the lane's requests theirs (LLP 1133.007 D3).
         let one_shot = r.request.is_process() && !r.request.stream;
         let admitted = (|| {
             let (lane, charge, limit) = checked?;
@@ -549,7 +549,7 @@ impl Core {
                 // every ordered ticket counts against its 128. Writes and
                 // opaque work keep the sixteen, counted over everything
                 // admitted but re-ask markers and finished reads, which
-                // hold no effect.
+                // hold no effect (LLP 1041 §8.4, amended 2026-10-09).
                 let full = if lane == 1 {
                     state.counts[1] - streams >= COUNTS[1]
                 } else if read(&r.request, work.is_some()) {
@@ -561,7 +561,7 @@ impl Core {
                 (full && !one_shot, if one_shot { 0 } else { charge })
             };
             // A parked upload's outstanding charge counts as taken, so a
-            // later request can't crowd it out.
+            // later request can't crowd it out (LLP 1120 §6 question 8).
             let parked = state.book.parked(lane, &state.jobs[lane]);
             if full || (!waits && charge > BYTES[lane].saturating_sub(state.bytes[lane] + parked)) {
                 return Err("native executor admission limit reached");
@@ -617,10 +617,10 @@ impl Core {
         }
         if r.request.stream || r.request.is_process() {
             // Never queued behind held replies: a stream opens on its own
-            // thread with its own transport, and reads there.
+            // thread with its own transport, and reads there (LLP 1067 D3).
             // An upload takes its place and thread once its budget has room.
             // A process request runs on a thread of its own, and only a
-            // child's stream takes a stream's place.
+            // child's stream takes a stream's place (LLP 1133.007).
             let upload = r.request.upload_progress;
             let stream = r.request.stream && !upload;
             state.streams += usize::from(stream);
@@ -632,7 +632,7 @@ impl Core {
                 charge: if waits || one_shot { 0 } else { charge },
                 limit,
                 abort: Some(abort.clone()),
-                // An app's abort ends a one-shot's child, as a forget does.
+                // An app's abort ends a one-shot's child, as a forget does (LLP 1133.007 D3).
                 exchange: (r.request.is_process() && !r.request.stream).then(|| abort.clone()),
                 forgotten: false,
                 stream,
@@ -790,7 +790,7 @@ impl Core {
     /// Settle `ticket`, a re-ask (`Dispatch::Again`), in its place in the
     /// ordered sequence, with no work: complete at once, charged one place
     /// in the markers' own window of 128 and its record's bytes, never the
-    /// sixteen or the 128 real tickets.
+    /// sixteen or the 128 real tickets (LLP 1041 §8.4, amended 2026-10-09).
     /// With its window full, or a refusal retained, it waits here, one
     /// record per ticket, and is placed oldest first when there is room and
     /// no fence (a drain, a forget, the fence lifting, each of which wakes
@@ -822,7 +822,7 @@ impl Core {
     }
 
     /// `notify`, as a handle another thread keeps (a native module's
-    /// announcements).
+    /// announcements, LLP 1016.002).
     pub(super) fn waker(&self) -> std::sync::Arc<dyn Fn() + Send + Sync> {
         let shared = self.shared.clone();
         std::sync::Arc::new(move || wake(&mut shared.state.lock().unwrap()))
@@ -1106,7 +1106,7 @@ fn reservation(request: &Request) -> Result<(usize, usize, usize), &'static str>
             || request.continuation.is_some()
             || request.is_native())
     {
-        return Err("a stream is independent HTTP");
+        return Err("a stream is independent HTTP (LLP 1016.000)");
     }
     let (lane, body) = match request.http {
         HttpScheduling::Ordered => (0, MAX_BODY),
@@ -1156,7 +1156,7 @@ fn reservation(request: &Request) -> Result<(usize, usize, usize), &'static str>
     // headers, error text and queue bookkeeping have a separate allowance.
     let limit = bytes + body.saturating_mul(2).max(32 << 10) + MAX_HEADERS * 2;
     // Admission charges the request buffers; the worker charges the
-    // ceiling when it starts the job, waiting for bytes.
+    // ceiling when it starts the job, waiting for bytes (LLP 1054.000 R3).
     // A ceiling the lane can never hold is refused here, not left waiting.
     if limit > BYTES[lane] {
         return Err("native response ceiling exceeds the lane's byte budget");
@@ -1332,7 +1332,7 @@ fn execute(
             |work| work(),
         );
     }
-    // Work beside a plain request is a driver fault's failure:
+    // Work beside a plain request is a driver fault's failure (LLP 1103 D1):
     // it runs instead of the transport, so the request never goes out.
     if let Some(work) = work {
         return work();
@@ -1357,7 +1357,7 @@ fn execute(
         Err(why) => return failed(FailureKind::Refused, why),
     };
     // The body from an app file, read now, as late as can be, and refused
-    // before anything is sent. The deadline or an abort
+    // before anything is sent (LLP 1108 D6 R2). The deadline or an abort
     // ends the request while the file is read, and nothing is sent.
     let ended = || {
         if deadline.as_ref().is_some_and(Deadline::passed) {
@@ -1374,7 +1374,7 @@ fn execute(
     if let Err(outcome) = body::resolve(files.roots, files.grants, &mut request, &ended) {
         return outcome;
     }
-    // The file a 2xx body goes to: staged before sending.
+    // The file a 2xx body goes to (LLP 1108 D6 R2): staged before sending.
     let staged = match body_to::stage(files.roots, files.grants, &request) {
         Ok(staged) => staged,
         Err(outcome) => return outcome,
@@ -1403,7 +1403,7 @@ fn execute(
             FailureKind::Timeout,
             format!("the request timed out after {} ms", timeout.unwrap_or(0)),
         ),
-        // A response over its size limit is the host
+        // @ref LLP 1109 D3 — a response over its size limit is the host
         // refusing it (`refused`), as the event stream, the socket and the
         // web say; ibex2 spells the overflow one way on every transport.
         Err(e) if !abort.signal().aborted() && e == ibex2::stdlib::fetch::over_limit(limit) => {
@@ -1413,8 +1413,8 @@ fn execute(
     }
 }
 
-// The process transport exists where a host starts programs;
-// elsewhere every request answers `Unsupported` and none of it links.
+// The process transport exists where a host starts programs (LLP 1133.007
+// §8); elsewhere every request answers `Unsupported` and none of it links.
 #[cfg_attr(
     any(target_os = "macos", target_os = "linux"),
     path = "executor_process.rs"

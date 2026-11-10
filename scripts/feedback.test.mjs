@@ -116,7 +116,7 @@ test('Needed lines are counted per capability across diaries; anything else in t
   ]);
 });
 
-test('the README goes beside the diary only with consent, its workarounds previewed first, once per text', async () => {
+test('the README goes beside the diary only with consent, its workarounds previewed first, once per text (LLP 1139.004 D5)', async () => {
   const { parent, dir } = app();
   try {
     writeFileSync(resolve(dir, '.exact/diary/2026-10-19-a.md'), '### Rough\n- a slow proof\n');

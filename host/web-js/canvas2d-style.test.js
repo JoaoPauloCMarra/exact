@@ -1,9 +1,9 @@
-// On the JS target, a canvas draws in its node's colour and direction (`currentColor`, `direction =
+// LLP 1056 D4 on the JS target: a canvas draws in its node's colour and direction (`currentColor`, `direction =
 // "inherit"`), so a change that changes them draws it again, cause "style", as the runner's canvases do: a commit's
 // bound colour, its `setScheme` (a host command, applied after the commit's settle), the modes it resolves, the
 // window's scheme, a development page's held scheme (the root's own style), a mode switch outside a commit and a
 // colour transition's end. A change that leaves them as they were draws nothing, and a commit that changes a canvas's
-// arguments and its colour draws it once, with both causes (causes coalesce).
+// arguments and its colour draws it once, with both causes (D4: causes coalesce).
 import { test, expect, mock } from "bun:test";
 import { parseColor } from "../../canvas/recorder.js";
 

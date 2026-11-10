@@ -1,4 +1,4 @@
-//! Another thread stops a running call: the bytecode's
+//! Another thread stops a running call (LLP 1048.000 D10): the bytecode's
 //! async break checks let Hermes stop a synchronous loop, and the call is
 //! refused while the module goes on answering.
 

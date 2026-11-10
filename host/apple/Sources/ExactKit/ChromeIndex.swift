@@ -3,7 +3,7 @@
 /// each used to read every view on every batch to find their own — a
 /// navigation stack, a popover, a tab list — and a reader's rows are none of
 /// those. A scrolling list applies a batch many times a second, so the passes
-/// were a fifth of its long frames. They visit what this names.
+/// were a fifth of its long frames (LLP 1044 F4). They visit what this names.
 struct ChromeIndex {
     static let keys = ["navigationBack", "inert", "popover", "popovertarget",
                        "contextTarget", "contextPopover", "toolbarPlacement", "accessibilityKeyShortcuts", "menuPlacement",

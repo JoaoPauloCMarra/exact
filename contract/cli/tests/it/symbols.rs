@@ -173,7 +173,7 @@ fn exact_ranges_cover_declarations_sources_locals_fields_and_ids() {
     assert_eq!(action.len(), 1);
     assert_eq!(target(&graph, action[0])["kind"], "action");
     // An action's effects are inferred and shown on its definition
-    //; nothing else carries `writes`.
+    // (LLP 1035.005.000 D1); nothing else carries `writes`.
     for (name, writes) in [
         ("edit", vec!["textValue"]),
         ("save", vec!["saved"]),
@@ -552,6 +552,7 @@ fn route_paths_and_router_slot_offsets_follow_the_type_checker() {
 
 #[test]
 fn a_let_is_a_local_for_its_block_and_a_record_names_its_shape_and_fields() {
+    // LLP 1035.005.000 D2 and D3.
     let fixture = Fixture::new("let-records");
     let graph = fixture.query(
         "shape F\n  title: string\n  done: bool\ncomponent App\n  state f = F(title=\"a\", done=false)\n  action go\n    let next = F(f, done=true)\n    f = next\n  view\n    text f.title\n",
@@ -582,7 +583,7 @@ fn a_let_is_a_local_for_its_block_and_a_record_names_its_shape_and_fields() {
 
 #[test]
 fn a_call_refers_to_its_callee_and_the_caller_writes_what_it_writes() {
-    // `symbols --name enter` answers what Enter touches.
+    // LLP 1089 D5: `symbols --name enter` answers what Enter touches.
     let source = r#"component App
   state sel = 0
   state seen = 0
@@ -626,7 +627,7 @@ component Row
 
 #[test]
 fn an_ambiguous_call_in_an_imported_component_is_refused_alike_with_its_declaration() {
-    // Build and navigation report the same refusal, its
+    // LLP 1089 D1: build and navigation report the same refusal, its
     // related location in the imported file where the prop is declared.
     let f = Fixture::new("ambiguous");
     let viewer = f.write(

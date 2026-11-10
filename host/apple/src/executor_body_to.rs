@@ -1,15 +1,16 @@
-//! A reply's body written to an app file: `fetch(url, {exactBodyTo:
-//! "app:/…"})` from TypeScript, `Request::body_to` from Rust. Before the
-//! request is sent, the worker admits `fs.write` on the path and creates a
-//! staging file beside it through the app's pinned directory handles (Ibex
-//! patch 19), so a denied path or a missing parent is the request's failure and
-//! nothing is sent. A 2xx body goes to the staging file a chunk at a time as it
-//! arrives, never held whole, and the staging file replaces the target once the
-//! body is complete. A failure, an abort, the deadline or a body over the bound
-//! drops the staging file, and the target is left as it was. A reply that is
-//! not 2xx is read into the response as any reply is, at most
-//! [`BODY_TO_HELD_BYTES`], and the file is untouched. The bytes written travel
-//! as the response's [`BODY_WRITTEN`] header.
+//! A reply's body written to an app file (LLP 1108 D6 R2, ruled 2026-10-26):
+//! `fetch(url, {exactBodyTo: "app:/…"})` from TypeScript, `Request::body_to`
+//! from Rust. Before the request is sent, the worker admits `fs.write` on the
+//! path and creates a staging file beside it through the app's pinned
+//! directory handles (Ibex patch 19), so a denied path or a missing parent is
+//! the request's failure and nothing is sent. A 2xx body goes to the staging
+//! file a chunk at a time as it arrives, never held whole, and the staging
+//! file replaces the target once the body is complete. A failure, an abort,
+//! the deadline or a body over the bound drops the staging file, and the
+//! target is left as it was. A reply that is not 2xx is read into the
+//! response as any reply is, at most [`BODY_TO_HELD_BYTES`], and the file is
+//! untouched. The bytes written travel as the response's [`BODY_WRITTEN`]
+//! header.
 //!
 //! Memory and the lane: the request is charged what it can hold, a reply that
 //! is not 2xx (`executor_core.rs` `reservation`), never the bound on what it

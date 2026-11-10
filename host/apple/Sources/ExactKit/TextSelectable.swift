@@ -1,4 +1,4 @@
-// Which text a reader can select:
+// @ref LLP 1115 D8, LLP 1115.000 D11.6 — which text a reader can select:
 // CSS `user-select`, its `auto` resolved as each platform resolves it.
 #if os(macOS)
 import AppKit
@@ -20,8 +20,8 @@ extension NodeView {
     /// What is left is `auto` with nothing above it, and the platform's.
     /// On iOS and tvOS it is not selectable: a hand-built screen's text is
     /// a `UILabel`, which selects nothing, and only text its author made
-    /// selectable is (`TextSelectionIOS.swift`). On the
-    /// Mac it is AppKit's, where a control's or the window
+    /// selectable is (LLP 1115.000 D11.6; `TextSelectionIOS.swift`). On the
+    /// Mac it is AppKit's (LLP 1115 D8), where a control's or the window
     /// chrome's label is not selectable (an `NSTextField` label, an
     /// `NSButton` title, a toolbar, a tab, a table row's cell) and a
     /// document's text is (an `NSTextView`):
@@ -36,7 +36,7 @@ extension NodeView {
         var document = false, chrome = false
         var current: AncestorView? = self
         while let view = current {
-            // Through a presented route's logical parents
+            // Through a presented route's logical parents (LLP 1123 D2)
             current = presenter?.eventParent(of: view) ?? view.superview
             guard let node = view as? NodeView else { continue }
             switch node.style["user_select"]?.string {

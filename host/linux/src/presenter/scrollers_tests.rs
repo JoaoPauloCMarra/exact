@@ -1,4 +1,4 @@
-//! The boundary with a shell that scrolls by itself:
+//! The boundary with a shell that scrolls by itself (LLP 1115.001 D7.3):
 //! which scrollers are under a point, what the shell is told of each, a
 //! touch a scroll won pressing nothing, and the app's own scroll moving a
 //! scroller's revision on so the shell's fling ends.
@@ -313,7 +313,7 @@ fn the_fixtures_list_its_strip_and_its_nested_scroller_are_told() {
     let chain: Vec<_> = under.chain.iter().map(|s| (s.id, s.axes)).collect();
     assert_eq!(chain, [(strip, (true, false)), (rows, (false, true))]);
     // 20 cards of 140 and 19 gaps of 8, in a list 368 wide whose row is
-    // inset 16 at each end (a cells list's row): 336.
+    // inset 16 at each end (a cells list's row, LLP 1138): 336.
     assert_eq!(under.chain[0].max.0, 20. * 140. + 19. * 8. - 336.);
     // The nested scroller hands off to the list.
     let (x, y) = middle(&mut p, nested);
@@ -425,7 +425,7 @@ fn native_intersect_samples_after_resize_handlers() {
     assert_eq!(p.host.runner().slot("ratio"), Some(&Value::Number(1.0)));
 }
 
-/// The agent's tap and a sticky box: a row whose middle the scroller's sticky dock or header
+/// The agent's tap and a sticky box (theme2's 14:49 ruling): a row whose middle the scroller's sticky dock or header
 /// covers is scrolled into the band the box leaves before the tap, and pressed; one in the clear moves nothing; a dock
 /// taller than the band it would leave scrolls nothing, and the tap refuses as before.
 #[test]
@@ -503,7 +503,7 @@ fn a_tap_scrolls_its_target_clear_of_a_sticky_box_of_its_own_scroller() {
 
 /// The same through a row's own box (a target wrapped in a column that clips, as a card does) and under a dock taller
 /// than half the port, a header across from it: the target is scrolled into the band between them, never under the
-/// header.
+/// header (Astra's rounds 1 and 2).
 #[test]
 fn a_tap_scrolls_a_wrapped_target_above_a_tall_sticky_dock() {
     let rows = (1..=20)
@@ -550,7 +550,7 @@ fn a_tap_scrolls_a_wrapped_target_above_a_tall_sticky_dock() {
 }
 
 /// A sticky box of the page itself (no scroll element: its constraint scroller is the root): a row under it is
-/// scrolled clear by the page.
+/// scrolled clear by the page (Grok's round 2).
 #[test]
 fn a_tap_scrolls_the_page_clear_of_its_own_sticky_header() {
     let rows = (1..=20)

@@ -284,7 +284,7 @@ impl Startup {
 }
 
 /// Startup and recovery upload CPU frames through WARP on the shared visual.
-/// Without either device, keep waiting for preparation.
+/// Without either device, keep waiting for preparation. @ref LLP 1149 D5.4, D6.3.
 pub(crate) struct DirectWindow {
     pub(crate) window: exact_ink::device::d3d11::Window,
     pub(crate) recovering: bool,
@@ -583,7 +583,7 @@ fn reserve_frame<D: DataSource>(p: &mut Presenter<D>, size: [u32; 2], reported: 
 }
 
 impl<D: DataSource> Presenter<D> {
-    /// Drain completed devices on an idle wake without painting.
+    /// Drain completed devices on an idle wake without painting. @ref LLP 1149 D11.
     pub fn collect_painter_retirement(
         &mut self,
         now: std::time::Instant,

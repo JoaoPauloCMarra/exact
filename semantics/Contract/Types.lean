@@ -98,7 +98,7 @@ def unsupportedTy (name : String) (ts : List Ty) : Option Ty :=
     match ts with | [.number, .number] => .some (.option .string) | _ => .none
   else .none
 
-/-- The router's verbs and reads (`Contract.Route`), at the
+/-- The router's verbs and reads (LLP 1038, `Contract.Route`), at the
 roster's types. -/
 def routerTy (name : String) (ts : List Ty) : Option Ty :=
   if name = "open" ∨ name = "push" ∨ name = "replace" ∨ name = "select" ∨ name = "go" then
@@ -172,7 +172,7 @@ def rosterTy (name : String) (ts : List Ty) : Option Ty :=
     | _ => .none
   else if name = "replaceAll" then
     match ts with | [.string, .string, .string] => .some .string | _ => .none
-  /- `includes` finds text in text or, by SameValueZero, a
+  /- LLP 1088 §9.1: `includes` finds text in text or, by SameValueZero, a
   string, number or bool in a list; `concat` joins two lists of one item
   type. -/
   else if name = "includes" then
@@ -182,7 +182,7 @@ def rosterTy (name : String) (ts : List Ty) : Option Ty :=
     | _ => .none
   else if name = "concat" then
     match ts with | [.list a, .list b] => (Ty.unify a b).map .list | _ => .none
-  /- `indexOf` takes what `includes` takes
+  /- LLP 1088 §9.1 (2026-10-04 note): `indexOf` takes what `includes` takes
   and answers a position; `split` cuts text into a list of text. -/
   else if name = "indexOf" then
     match ts with
@@ -300,7 +300,7 @@ inductive HasTy (p : Program) (G : Scope) : Scope → Expr → Ty → Prop
   | filter : p.fns.find? (·.name == "filter") = .none → ps.length ≤ 2 → HasTy p G Γ l (.list a) →
       HasTy p G (bindTy ps a Γ) body b → b.le .bool = true →
       HasTy p G Γ (.call "filter" [l, .arrow ps body]) (.list a)
-  /-- `sortBy`: a key of a number or a string, a literal
+  /-- `sortBy` (LLP 1116.016 §5): a key of a number or a string, a literal
   direction; the list's own type. -/
   | sortBy : p.fns.find? (·.name == "sortBy") = .none → ps.length ≤ 2 → HasTy p G Γ l (.list a) →
       HasTy p G (bindTy ps a Γ) body k → k.sortKey = true → sortDir dir = .ok d →
@@ -314,7 +314,7 @@ inductive HasTy (p : Program) (G : Scope) : Scope → Expr → Ty → Prop
   | failed : p.fns.find? (·.name == "failed") = .none → (isResource p x || isMutation p x) = true →
       lookupTy x Γ = .none → (lookupTy x G).isSome = true →
       HasTy p G Γ (.call "failed" [.var x]) .bool
-  /-- `failure(x)` names a resource in scope. -/
+  /-- `failure(x)` names a resource in scope (LLP 1109 D3). -/
   | failure : p.fns.find? (·.name == "failure") = .none → (isResource p x || isMutation p x) = true →
       lookupTy x Γ = .none → (lookupTy x G).isSome = true →
       HasTy p G Γ (.call "failure" [.var x]) (.option (.record "Failure"))
@@ -381,7 +381,7 @@ def StmtsTy (p : Program) (G : Scope) : Scope → List Stmt → Prop
   | Γ, .matchS s x sm nn :: rest =>
     (∃ a, HasTy p G Γ s (.option a) ∧ StmtsTy p G ((x, a) :: Γ) sm) ∧ StmtsTy p G Γ nn ∧
       StmtsTy p G Γ rest
-  /- A call names an action, its arguments each at most its
+  /- A call (LLP 1089 D9) names an action, its arguments each at most its
   parameter's type; the callee's body is typed as the action it is. -/
   | Γ, .call a args :: rest =>
     (∃ ad, p.actions.find? (·.name == a) = .some ad ∧
@@ -449,7 +449,8 @@ it is read, and a resource lives in the root). So settlement, which boot
 runs before the late slots are initialized, reads none of them. -/
 def settleScope (p : Program) : Scope := (compScope p).filter fun q => !lifted p q.1
 
-/-- A resource's arguments typed as `ts` in `G`. Over a list the list is a list of some `te`, and the key and
+/-- A resource's arguments typed as `ts` in `G`. Over a list (LLP 1017.000
+P4c, amended 2026-11-04) the list is a list of some `te`, and the key and
 the arguments are typed with the element bound to `e.item` at `te`. -/
 def ResTy (p : Program) (G : Scope) (r : ResourceDecl) (ts : List Ty) : Prop :=
   match r.each with
@@ -503,7 +504,7 @@ structure WellTyped (p : Program) : Prop where
   `lower-timer-literal`). -/
   taskLiterals : ∀ t ∈ p.tasks, ∃ b, t.ms = .num b
   /-- A gated task's gate and key are well typed (the compiler's
-  `type-task-gate`, `type-task-key`). -/
+  `type-task-gate`, `type-task-key`; LLP 1092 D9). -/
   taskGates : ∀ t ∈ p.tasks, ∀ e ∈ t.gate.toList ++ t.key.toList, ∃ u, HasTy p (compScope p) [] e u
   /-- A mutation's `then` names an action that takes no parameters: the
   clock runs it with none. -/

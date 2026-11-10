@@ -1,6 +1,7 @@
-//! The design server and `contract tamber` fold the app's design with its
-//! packages' tokens, as the build does, so an app token naming a package's is
-//! read and edited there too; a refusal in a package's design is said at its
+//! LLP 1121 stage 11 A2 (the part without a wire change): the design
+//! server and `contract tamber` fold the app's design with its packages'
+//! tokens, as the build does, so an app token naming a package's is read
+//! and edited there too; a refusal in a package's design is said at its
 //! line in that file.
 #![cfg(unix)]
 
@@ -892,10 +893,10 @@ fn no_answer_names_the_machines_directories() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// Only path metadata is named from the app's directory; what an author wrote,
-/// a path to the app's own directory in it too, comes back byte for byte (a
-/// proposal's diff, describe's metadata, a scrub's fold), to a local client as
-/// to any.
+/// Round 1 of the path fix: only path metadata is named from the app's
+/// directory; what an author wrote, a path to the app's own directory in it
+/// too, comes back byte for byte (a proposal's diff, describe's metadata,
+/// a scrub's fold), to a local client as to any.
 #[test]
 fn authored_text_holding_the_apps_path_is_kept() {
     let dir = app("authored-path", "tamber t\n\ntheme\n  ink = #111111\n");
@@ -936,10 +937,10 @@ fn authored_text_holding_the_apps_path_is_kept() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A package linked from outside the app. A motion token its view writes keeps
-/// its sites (`motion_sites` keeps the loader's paths through the join; the
-/// reply names them), and `explain` reads a param's default as written from
-/// where the file is.
+/// Round 2 of the path fix (Astra 2 and 3): a package linked from outside
+/// the app. A motion token its view writes keeps its sites (`motion_sites`
+/// keeps the loader's paths through the join; the reply names them), and
+/// `explain` reads a param's default as written from where the file is.
 #[test]
 fn a_package_linked_from_outside_keeps_its_motion_sites_and_its_defaults() {
     let dir = app(

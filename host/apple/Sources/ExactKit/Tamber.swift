@@ -1,11 +1,11 @@
-// The binding core on the Apple hosts: a design
+// The binding core on the Apple hosts (LLP 1121 D12, stage 5): a design
 // token by its name, resolved for a place in one session, for code outside
 // the plan. In the process (a host screen, a hatch's object):
 // `ExactTamber(view).color(.surfaceCard)`; a native module's library has the
 // same API over the hatches' host table (`tamberAnswer`).
 //
 // A colour is a dynamic provider over the view's traits, so scheme, contrast
-// and elevation resolve as the platform resolves them; what the session answered is
+// and elevation resolve as LLP 1095 D5 says; what the session answered is
 // kept until something it read moves (`inputs`: `setMode`, a pin above, a
 // live batch, the scheme, the root font size), which every batch checks, so
 // the provider reads the place's app tuple as it is now. `observe` hears it.
@@ -87,7 +87,7 @@ public struct ExactTamber {
     }
 
     /// `token`'s length here in points (a `rem` by the person's text size,
-    /// a text style at it); `fallback` where the plan lacks it.
+    /// a text style at it); `fallback` where the plan lacks it (stage 6 G).
     /// A value: read it again in `observe`.
     public func length(_ token: ExactTamberToken, fallback: CGFloat = 0) -> CGFloat {
         place.measure(.lengths, token.name)?.number.map { CGFloat($0) } ?? fallback
@@ -239,7 +239,7 @@ final class Tambers {
         var inputs: String
         var tints: [PlatformColor?]
         var colors: [String: BatchValue?]
-        /// The lengths, numbers and fonts asked of it, by kind.
+        /// The lengths, numbers and fonts asked of it (stage 6 G), by kind.
         var measures: [Measure: [String: BatchValue?]] = [:]
     }
 

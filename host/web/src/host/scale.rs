@@ -1,4 +1,4 @@
-//! The display's scale as a layout input: the page's
+//! The display's scale as a layout input (LLP 1115.000 D10.3): the page's
 //! `devicePixelRatio`, which a hairline (`-exact-hairline`) is one device
 //! pixel of. The glue says it after boot and when the page's facts change,
 //! beside the root font size.

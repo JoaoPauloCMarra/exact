@@ -1,4 +1,4 @@
-//! A path's `d` under `transition`.
+//! A path's `d` under `transition` (LLP 1055.000 D15).
 //!
 //! @ref CSS Transitions 1 §3 (starting, interrupting, reversing)
 //!
@@ -14,7 +14,7 @@
 //! two interpolate and a declaration covers `d`; otherwise the path changes
 //! at once and anything running stops. A change back to where a running
 //! transition began reverses it with CSS's shortening. `d` never springs as
-//! physics: a `-exact-spring()` plays its curve from rest.
+//! physics: a `-exact-spring()` plays its curve from rest (LLP 1062 D3).
 
 use super::{Engine, Live, Slot};
 use crate::path::PathValue;

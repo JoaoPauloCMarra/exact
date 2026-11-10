@@ -1,8 +1,10 @@
 //! The agent API's read operations, once, for every host.
 //!
+//! @ref LLP 1012 (agent API v1); `rules/DEFERRED.md` §Agent API
+//!
 //! `tree`, `state`, and `logs` are answered here from the runner and its
 //! kernel — never from a host's mirror of them (a projection that is a
-//! parallel reconstruction drifts from what it mirrors). The
+//! parallel reconstruction is the defect exact1's 0495 §4.1 names). The
 //! other five operations are the host's: `layout` and `screenshot` read what
 //! it renders, `tap` and `type` go through its real input path, `clock`
 //! moves its clocks (the runner's through `Runner::advance`; motion's through
@@ -22,7 +24,7 @@ mod lineage;
 mod looks;
 mod pending;
 mod row;
-/// A row's value as `node` prints it: the JS target's inspect table writes the same words.
+/// A row's value as `node` prints it: the JS target's inspect table (LLP 1122 T2b) writes the same words.
 pub use row::row_json;
 mod schedule;
 mod sound;
@@ -33,8 +35,8 @@ mod tree;
 
 /// Answer one request: `{"op":"tree"}`, `{"op":"state"}`,
 /// `{"op":"logs","since":N}`, `{"op":"node","id":V}` — the runner's half
-/// of `layout <node>` — or `{"op":"tags"}`, the identity
-/// a host stamps on its own replies. Anything else is an
+/// of `layout <node>` (LLP 1035.002 D1) — or `{"op":"tags"}`, the identity
+/// a host stamps on its own replies (D3). Anything else is an
 /// `{"error":…}`.
 pub fn handle<D: DataSource>(runner: &Runner<D>, request: &str) -> String {
     match field_str(request, "op").as_deref() {
@@ -43,23 +45,23 @@ pub fn handle<D: DataSource>(runner: &Runner<D>, request: &str) -> String {
         Some("tags") => tags(runner),
         Some("frames") => frames(runner, request, &|_| false),
         Some("holds") => holds(runner),
-        // The driver's fetch faults, a form of `prefer`:
-        // the network is the environment, as `online` is.
+        // @ref LLP 1103 D3 — the driver's fetch faults, a form of `prefer`:
+        // the network is the environment, as `online` is (LLP 1012 §1).
         Some("prefer") if after_key(request, "faults").is_some() => faults(runner, request),
         // Whether the app must finish work an answer started (`must_finish`):
         // what a host's quit waits for, cheaper than `state`.
         Some("background") => format!("{{\"mustFinish\":{}}}", runner.must_finish()),
-        // A polled module source's ask in flight:
+        // A polled module source's ask in flight (LLP 1133.009 D10 item 7):
         // what a jump waits for before it replies.
         Some("polls") => format!("{{\"asking\":{}}}", runner.polls_asking()),
-        // The requests the server holds and the replies landed for them:
-        // what `clock held` polls and a clock reply names,
+        // The requests the server holds and the replies landed for them (LLP
+        // 1016.000 D9): what `clock held` polls and a clock reply names,
         // cheaper than `state`.
         Some("held") => pending::held(runner),
         // The runner's outstanding work, which time-to-interactive waits on.
         Some("outstanding") => runner.outstanding().json(),
         Some("perf") => crate::perf::reply(runner, request),
-        // What `showPicker(id)` names: the file input's
+        // What `showPicker(id)` names (LLP 1069.002 D2): the file input's
         // view, `accept` and `multiple`, for the host that presents it.
         Some("picker") => match field_str(request, "id") {
             Some(id) => match runner
@@ -72,7 +74,7 @@ pub fn handle<D: DataSource>(runner: &Runner<D>, request: &str) -> String {
             },
             None => error("picker needs an id"),
         },
-        // Every view's plan site, and the plan's digest: what a
+        // Every view's plan site, and the plan's digest (LLP 1122 D5): what a
         // development page outlines by, without a node's whole explanation.
         Some("sites") => runner.view_sites_json(),
         // A view and each logical ancestor to the root with its plan site (null for none): what a development
@@ -107,8 +109,8 @@ pub fn handle<D: DataSource>(runner: &Runner<D>, request: &str) -> String {
     }
 }
 
-/// `{"epoch":E,"incarnation":I,"clock":C}`: what every reply carries.
-/// The runner's own replies are tagged where they are built;
+/// `{"epoch":E,"incarnation":I,"clock":C}`: what every reply carries (LLP
+/// 1035.002 D3). The runner's own replies are tagged where they are built;
 /// a host asks for this after an operation it answered itself.
 pub fn tags<D: DataSource>(runner: &Runner<D>) -> String {
     let kernel = runner.kernel();
@@ -120,7 +122,7 @@ pub fn tags<D: DataSource>(runner: &Runner<D>) -> String {
     )
 }
 
-/// The kernel's half of `layout agree`, a private
+/// The kernel's half of `layout agree` (LLP 1080.001 D2), a private
 /// message: `{"op":"frames","limit":N}` answers every live node in preorder
 /// as `[id, parent|null, x, y, w, h, bits]` — the parent-relative frame a
 /// host is sent, a block's root's in its block — with bit 1 for the node's own `display: none`, 2 for an
@@ -217,7 +219,7 @@ pub fn frames<D: DataSource>(
 
 /// `{"holds":[…],"tickets":[…]}`: the held device requests' tickets, and
 /// every ticket still pending, network and device — what a host's `clock
-/// settle` reports when a hold remains.
+/// settle` reports when a hold remains (LLP 1069.007 D3).
 pub fn holds<D: DataSource>(runner: &Runner<D>) -> String {
     let join = |tickets: &mut dyn Iterator<Item = u64>| {
         tickets.map(|t| t.to_string()).collect::<Vec<_>>().join(",")
@@ -232,7 +234,7 @@ pub fn holds<D: DataSource>(runner: &Runner<D>) -> String {
     )
 }
 
-/// `tap @t <choice>` and `type @t <value>`: the agent
+/// `tap @t <choice>` and `type @t <value>` (LLP 1069.007 D4): the agent
 /// answers held device request `t` — `{"op":"tap","ticket":7,"choice":
 /// "cancel"}`, `{"op":"type","ticket":7,"text":"…"}`. `None` when the
 /// request names no ticket (an ordinary `tap` or `type`). The hold is
@@ -244,9 +246,9 @@ pub fn answer<D: DataSource>(
     request: &str,
 ) -> Option<(String, Option<crate::Hold>)> {
     let op = field_str(request, "op")?;
-    // The picker's two writes: a `showPicker` is held for the agent,
-    // and each picked file is named
-    // under `app:/tmp/picked/` before a host copies it in.
+    // The picker's two writes (LLP 1069.002): under the agent a
+    // `showPicker` is held for the agent (D9), and each picked file is named
+    // under `app:/tmp/picked/` before a host copies it in (D3).
     if op == "showPicker" {
         let id = field_str(request, "id").unwrap_or_default();
         let Some(picker) = runner.device_links().picker else {
@@ -277,11 +279,11 @@ pub fn answer<D: DataSource>(
         let reply = runner.hold_frame_request(request);
         return Some((reply.unwrap_or_else(|e| error(&e)), None));
     }
-    // A module's listed entry: `tap @ref`, or a relaunch's launch flag.
+    // A module's listed entry: `tap @ref`, or a relaunch's launch flag (LLP 1133.004 §7).
     if let Some(reply) = runner.listed_op(&op, request) {
         return Some((reply.unwrap_or_else(|e| error(&e)), None));
     }
-    // A system's call of a tool, and the content index's query.
+    // A system's call of a tool, and the content index's query (LLP 1133.023 §10).
     if let Some(reply) = runner.call_agent(&op, request) {
         return Some((reply.unwrap_or_else(|e| error(&e)), None));
     }
@@ -311,8 +313,8 @@ pub fn answer<D: DataSource>(
     }
     match runner.answer_hold(ticket, &reply) {
         Ok(hold) => {
-            // A share has nothing to deliver but its journal line,
-            // so every host's answer is this one.
+            // A share has nothing to deliver but its journal line (LLP
+            // 1069.003 D2), so every host's answer is this one.
             if let ("share", crate::HoldAnswer::Choice(c), Some((_, answered))) = (
                 hold.capability.as_str(),
                 &reply,
@@ -328,7 +330,7 @@ pub fn answer<D: DataSource>(
                 s.push_str(&format!(",\"node\":{node}"));
             }
             // What the app asked for, for an arm that acts on it (an
-            // export's `from`): the hold's summary.
+            // export's `from`, LLP 1069.010 D3): the hold's summary.
             if hold.capability == "export" {
                 s.push_str(",\"request\":");
                 s.push_str(&hold.args);
@@ -355,7 +357,7 @@ pub fn error(message: &str) -> String {
 
 /// The view a request's `target` names — a view id, or a testId's first
 /// match in preorder on a selected route — and its depth; `None` when the
-/// request names none. Shared by `tree` and `perf`.
+/// request names none. Shared by `tree` and `perf` (LLP 1079 D2).
 pub(crate) fn target<D: DataSource>(
     runner: &Runner<D>,
     request: &str,
@@ -413,7 +415,7 @@ pub(crate) fn target<D: DataSource>(
 /// their schema names, the events it handles, `inactive` when it is under a
 /// route its navigation root has not selected, and `hidden` too when that
 /// route is not shown (any but one a sheet covers), `unopened` on a tab panel not
-/// yet built, its children — plus the kernel's epoch
+/// yet built (LLP 1075.003 §9.14), its children — plus the kernel's epoch
 /// and incarnation (the consistency token: nothing moves between two calls
 /// unless the agent moved it).
 pub fn tree<D: DataSource>(runner: &Runner<D>) -> String {
@@ -466,7 +468,7 @@ fn props_json(node: &NodeRef<'_>, s: &mut String) {
     }
 }
 
-/// A row's token, when it read one (from the token index): `"token":{"names":
+/// A row's token, when it read one (LLP 1121 D7's index): `"token":{"names":
 /// […],"text":…,"modes":"axis=value,…","implied":bool}`, `implied` for a
 /// boundary's row its author did not write.
 fn token_json<D: DataSource>(runner: &Runner<D>, id: u32, row: StyleId, s: &mut String) {
@@ -498,12 +500,12 @@ pub(super) fn token_fields(
     let _ = write!(s, ",\"implied\":{implied}}}");
 }
 
-/// One node, explained: every row it sets or inherits with
+/// One node, explained (LLP 1035.002 D1): every row it sets or inherits with
 /// where the value came from — `authored` (the own row), `inherited` from
-/// the ancestor whose own row won (CSS inheritance), the
-/// `style` or `heading` that gives it, or `initial`
+/// the ancestor whose own row won (CSS inheritance, LLP 1035.000 D1), the
+/// `style` or `heading` that gives it (LLP 1115.000 D12.2), or `initial`
 /// ([`source::write`]) — its props, the plan site it was instantiated from with the
-/// instance path to it, and the kernel's frames: `frame` relative to
+/// instance path to it (D6), and the kernel's frames: `frame` relative to
 /// the parent, `absolute` in the root's space or the viewport when the host
 /// places its block (as `frame()` reports it), `content` when it scrolls.
 /// Observations of the runner's memory, tagged with the epoch and
@@ -560,13 +562,13 @@ pub fn node<D: DataSource>(runner: &Runner<D>, id: u32) -> String {
         }
         s.push(']');
     }
-    // The app modes it is in: the window's, overridden by the
-    // pins above it (the selected node's tuple).
+    // The app modes it is in (LLP 1121 D5): the window's, overridden by the
+    // pins above it (LLP 1122 D5's selected node's tuple).
     if let Some(modes) = runner.modes_of_view_json(id) {
         s.push_str(",\"modes\":");
         s.push_str(&modes);
     }
-    // An own row the plan binds by an expression is `dynamic`; one it
+    // An own row the plan binds by an expression is `dynamic` (D5); one it
     // binds by a literal — or that a class expansion or the runner set — is
     // `authored`. The plan's bindings for this node's site say which.
     let plan = runner.plan();
@@ -594,15 +596,15 @@ pub fn node<D: DataSource>(runner: &Runner<D>, id: u32) -> String {
         quote(row.name(), &mut s);
         s.push_str(":{\"value\":");
         row::row_json(row, node.computed(row), &mut s);
-        // The token beside the value, from the index.
+        // @ref LLP 1121 D7 — the token beside the value, from the index.
         if own {
             token_json(runner, id, row, &mut s);
         }
         source::write(runner, &node, row, own, own && dynamic(row), &mut s);
     }
     s.push('}');
-    // Its state looks' rows, each as a style row is (its
-    // value, the token it read), for inspect on a held state.
+    // @ref LLP 1121 D8 — its state looks' rows, each as a style row is (its
+    // value, the token it read), for inspect on a held state (LLP 1122 D8).
     looks::write(runner, &node, &mut s);
     s.push_str(",\"props\":{");
     props_json(&node, &mut s);
@@ -624,7 +626,7 @@ pub fn node<D: DataSource>(runner: &Runner<D>, id: u32) -> String {
         num(absolute.width),
         num(absolute.height)
     );
-    // Leaf-local geometry, or why auto height refused it.
+    // @ref LLP 1043.000 §3 D4, §8 — leaf-local geometry, or why auto height refused it.
     if !node.flow_shapes().is_empty() {
         s.push_str(",\"flow_shapes\":[");
         for (i, shape) in node.flow_shapes().iter().enumerate() {
@@ -639,7 +641,7 @@ pub fn node<D: DataSource>(runner: &Runner<D>, id: u32) -> String {
         s.push_str(",\"flow_skipped\":");
         quote(refusal.message(), &mut s);
     }
-    // A box's fragments and a container's columns, in
+    // @ref LLP 1093 D12 — a box's fragments and a container's columns, in
     // the root's space as `absolute` is.
     let rect = |s: &mut String, x: f32, y: f32, w: f32, h: f32| {
         let _ = write!(
@@ -684,7 +686,7 @@ pub fn node<D: DataSource>(runner: &Runner<D>, id: u32) -> String {
             num(node.content.1 as f64)
         );
     }
-    // A 2D canvas's last list, readable (bounded: 200 lines,
+    // LLP 1056 §5: a 2D canvas's last list, readable (bounded: 200 lines,
     // 16 KiB), wherever inspection is linked.
     {
         if let Some(lines) = runner.canvas_describe(id) {
@@ -704,13 +706,13 @@ pub fn node<D: DataSource>(runner: &Runner<D>, id: u32) -> String {
 
 /// The state: the clock and every slot, derive, and resource by the name the
 /// plan declares, as typed JSON (records carry their field names); the
-/// requests in flight; the names the store holds; the active
-/// head's fields.
+/// requests in flight; the names the store holds (LLP 1018); the active
+/// head's fields (LLP 1048.003 D1).
 pub fn state<D: DataSource>(runner: &Runner<D>) -> String {
     state_with(runner, "{}")
 }
 
-/// [`state`] for a request, which may ask `"sounds":"all"`.
+/// [`state`] for a request, which may ask `"sounds":"all"` (LLP 1096 D10).
 fn state_with<D: DataSource>(runner: &Runner<D>, request: &str) -> String {
     let plan = runner.plan();
     let mut s = String::new();
@@ -724,7 +726,7 @@ fn state_with<D: DataSource>(runner: &Runner<D>, request: &str) -> String {
     let mut first = true;
     for (i, row) in plan.slots.iter().enumerate() {
         if row.owner.is_some() {
-            // A row slot has a value per row, not one here.
+            // A row slot has a value per row, not one here (LLP 1017 P4c).
             continue;
         }
         if !first {
@@ -742,7 +744,7 @@ fn state_with<D: DataSource>(runner: &Runner<D>, request: &str) -> String {
     quote(runner.resolved_locale(), &mut s);
     s.push_str(",\"dir\":");
     quote(runner.direction(), &mut s);
-    // The host's date and place facts, so two agent
+    // The host's date and place facts (LLP 1027.000.000 D3), so two agent
     // runs compare without an app that declares `exactTime`.
     let (time, place) = (runner.wall_time(), runner.place());
     let _ = write!(
@@ -755,7 +757,7 @@ fn state_with<D: DataSource>(runner: &Runner<D>, request: &str) -> String {
     s.push_str(",\"timeZone\":");
     quote(&place.time_zone, &mut s);
     let _ = write!(s, ",\"seed\":{}", num(place.seed));
-    // The device facts, by their web names,
+    // The device facts (LLP 1069.000; LLP 1069.007 D2), by their web names,
     // whether or not the app declares a source that reads them.
     let (media, page, fold) = (
         runner.viewport().preferences,
@@ -800,7 +802,7 @@ fn state_with<D: DataSource>(runner: &Runner<D>, request: &str) -> String {
     s.push_str(",\"gpuTier\":");
     quote(page.gpu_tier(), &mut s);
     s.push('}');
-    // The driver's fetch faults, when any are armed or spent.
+    // The driver's fetch faults (LLP 1103 D3), when any are armed or spent.
     if !runner.faults().is_empty() {
         s.push_str(",\"faults\":");
         s.push_str(&runner.faults().json());
@@ -850,8 +852,8 @@ fn state_with<D: DataSource>(runner: &Runner<D>, request: &str) -> String {
         }
         s.push(']');
     }
-    // Why each failed resource failed, so a shape refusal does not show only
-    // in the journal while the view keeps its placeholder.
+    // Why each failed resource failed (app farm round 1: a shape refusal
+    // showed only in the journal while the view kept its placeholder).
     let _ = write!(s, ",\"mutationRequests\":{}", runner.mutation_requests());
     let failed = runner.failed_resources();
     if !failed.is_empty() {
@@ -872,11 +874,11 @@ fn state_with<D: DataSource>(runner: &Runner<D>, request: &str) -> String {
     pending::state(runner, &mut s);
     s.push(',');
     streams::state(runner, &mut s);
-    // Native modules, as the runner answers them.
+    // Native modules, as the runner answers them (LLP 1133.002 §6).
     if let Some(extensions) = runner.extensions_json() {
         let _ = write!(s, ",\"extensions\":{extensions}");
     }
-    // The documents the answers watch, whether or not
+    // The documents the answers watch (LLP 1069.010.000 D1), whether or not
     // the host can listen for them.
     s.push_str(",\"watches\":[");
     let watches = runner.watched_topics();
@@ -894,7 +896,7 @@ fn state_with<D: DataSource>(runner: &Runner<D>, request: &str) -> String {
         let _ = write!(s, ",\"recursive\":{recursive}}}");
     }
     s.push(']');
-    // The module's background storage, where it has any.
+    // The module's background storage (LLP 1097 D8), where it has any.
     if let Some(b) = runner.background_state() {
         let _ = write!(
             s,
@@ -909,9 +911,9 @@ fn state_with<D: DataSource>(runner: &Runner<D>, request: &str) -> String {
     }
     schedule::tasks(runner, &mut s);
     schedule::queued(runner, &mut s);
-    // What a module's declared substitute keeps.
+    // What a module's declared substitute keeps (LLP 1133.004 §7).
     runner.declared_state_json(&mut s);
-    // The wake running, else the last.
+    // The wake running, else the last (LLP 1133.017 §10).
     if let Some(wake) = runner.wake_state() {
         s.push_str(",\"wake\":");
         s.push_str(&wake.to_string());
@@ -921,7 +923,7 @@ fn state_with<D: DataSource>(runner: &Runner<D>, request: &str) -> String {
     crate::orientation::state(runner, &mut s);
     crate::desktop::state(runner, &mut s);
     transport::state(runner, request, &mut s);
-    // The store's names, never its values.
+    // The store's names, never its values (LLP 1018 D5).
     s.push_str(",\"store\":[");
     for (i, name) in runner.store_names().iter().enumerate() {
         if i > 0 {
@@ -954,16 +956,16 @@ fn state_with<D: DataSource>(runner: &Runner<D>, request: &str) -> String {
     s.push_str(",\"logic\":");
     logic(runner, &mut s);
     // Each virtualized list's snapshot, nested ones included: its axis, its
-    // count, its offset's extent and its mounted rows.
+    // count, its offset's extent and its mounted rows (LLP 1070 G3).
     s.push_str(",\"collections\":");
     s.push_str(&runner.collections_json());
-    // The reorder session, if one is under way.
+    // The reorder session, if one is under way (LLP 1094 D12).
     s.push_str(",\"reorder\":");
     s.push_str(&runner.reorder_json());
-    // Each list's latest scrollIntoView and how it stands.
+    // Each list's latest scrollIntoView and how it stands (LLP 1070.000).
     s.push_str(",\"scrollIntoView\":");
     s.push_str(&runner.into_view_json());
-    // Where each inner list's reader was when its outer row left.
+    // Where each inner list's reader was when its outer row left (Q1).
     s.push_str(",\"kept\":");
     s.push_str(&runner.kept_positions_json());
     s.push_str(",\"canvas\":");
@@ -1013,7 +1015,7 @@ fn logic<D: DataSource>(runner: &Runner<D>, s: &mut String) {
     let _ = write!(s, ",\"ready\":{}}}", source.ready());
 }
 
-/// `state.delivery`: the `delivery` resource's own fields,
+/// `state.delivery` (LLP 1030 D7): the `delivery` resource's own fields,
 /// mirrored for a smoke test, `metrics.mjs`, and a developer's eyes —
 /// whether the app declares that resource or not — plus what only the agent
 /// needs: the compatibility id, `L` (is there an update store), and `E`
@@ -1028,7 +1030,7 @@ fn delivery<D: DataSource>(runner: &Runner<D>, s: &mut String) {
         ",\"seq\":{},\"embeddedSeq\":{},\"staged\":{},\"sunset\":",
         d.seq, d.embedded_seq, d.staged
     );
-    // A resource has no absence, and this mirrors the
+    // A resource has no absence (LLP 1004 D3), and this mirrors the
     // resource: no sunset is "".
     quote(d.sunset.as_deref().unwrap_or(""), s);
     s.push_str(",\"interpreted\":[");
@@ -1273,7 +1275,7 @@ fn ids(ids: &[u32], out: &mut String) {
     out.push(']');
 }
 
-/// `prefer` with `faults`: `{"fail": prefix, "times"?: n}`
+/// `prefer` with `faults` (LLP 1103 D3): `{"fail": prefix, "times"?: n}`
 /// arms a prefix, `{"pass": prefix}` stops it failing; either way, and with
 /// neither, the reply is the session's table as `state.faults` shows it.
 fn faults<D: DataSource>(runner: &Runner<D>, request: &str) -> String {

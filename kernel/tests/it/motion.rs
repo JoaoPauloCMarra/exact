@@ -316,14 +316,14 @@ fn inline_detached_and_reused_keys_are_ineligible_but_numeric_roots_are_allowed(
 
 #[test]
 fn height_transition_roundtrips_exwf_without_changing_previous_property_codes() {
-    // A path's `d` rides past the wire's codes.
+    // A path's `d` rides past the wire's codes (LLP 1055.000 D15).
     for (code, property) in Property::ALL
         .into_iter()
         .enumerate()
         .chain([(Property::D as usize, Property::D)])
     {
         if property == Property::ShadowColor {
-            continue; // named only by `box-shadow`; refused on the wire
+            continue; // named only by `box-shadow`; refused on the wire (LLP 1062)
         }
         assert_eq!(property as usize, code);
         let rows = Transitions(vec![Transition::new(
@@ -469,8 +469,8 @@ fn a_created_node_takes_its_style_without_a_transition() {
     let (_, mut engine, node) = boot(linear_all(1.0));
     assert!(engine.quiescent());
     let painted = engine.frame();
-    // The four; `transition: all` covers the colours too, which the paint
-    // pass owns.
+    // The four; `transition: all` covers the colours too (LLP 1055.000
+    // D6), which the paint pass owns (LLP 1062 D2).
     assert_eq!(
         painted.len(),
         4,

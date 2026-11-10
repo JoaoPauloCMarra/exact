@@ -1,4 +1,4 @@
-// A reply's parse that read the store makes a store reader, though its answer is refused: a Rust
+// A reply's parse that read the store makes a store reader, though its answer is refused (LLP 1146 §2.3): a Rust
 // source's parse says it read (`store`), its value falls outside the resource's shape, and the refused commit takes
 // back the mark the parse made; a store write outside a commit must still ask the resource again.
 import { test, expect } from 'bun:test';

@@ -1,6 +1,6 @@
 // The component panel's words for a param's winning level (apps/design-tool/components.ts `LEVEL_WORDS`), one for
-// each raw level the protocol lists on `resolve`'s tuples (docs/tamber-protocol.md), and none
-// more.
+// each raw level the protocol lists on `resolve`'s tuples (docs/tamber-protocol.md, stage 12 B2-levels), and none
+// more (review2's condition on stage 12 D's tool plan).
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { LEVEL_WORDS, levelWords } from '../apps/design-tool/components.ts';

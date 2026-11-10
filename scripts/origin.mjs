@@ -1,5 +1,6 @@
-// The origin adapter `exact deploy` publishes through: the static host
-// that serves the web app at its root, content-addressed blobs under `.exact/blobs/<sha256>`, and one directory
+// The origin adapter `exact deploy` publishes through (LLP 1030.000 D3 item
+// 5, D7; LLP 1030 D3a): the static host that serves the web app at its root,
+// content-addressed blobs under `.exact/blobs/<sha256>`, and one directory
 // per stream — `.exact/<channel>/<compatibilityId>/` — holding the signed
 // head `exact.json` and `releases/<release>.json` (the immutable prepared
 // record of each publish). A client resolves the head's relative `url`s to
@@ -24,7 +25,7 @@ import { extname, resolve } from 'node:path';
 import { canonical, matchPattern } from '../host/web-js/route-pattern.js';
 import { filesystem, filesystemLock } from './filesystem.mjs';
 
-/** SHA-256, lowercase hex — the digest every card and blob name carries. */
+/** SHA-256, lowercase hex — the digest every card and blob name carries (LLP 1023 D2). */
 export const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
 /** A transport or filesystem availability failure. Classifiers turn only
@@ -62,7 +63,7 @@ export function validateChannel(channel) {
   return channel;
 }
 
-/** The stream's directory on the origin, relative to its root. */
+/** The stream's directory on the origin, relative to its root (LLP 1030.000 D7). */
 export const streamPath = ({ channel, compatibilityId }) => `.exact/${channel}/${compatibilityId}`;
 
 /** The blob's path on the origin: content-addressed, immutable. */
@@ -73,7 +74,7 @@ export const blobPath = (digest) => `.exact/blobs/${digest}`;
 export const webRootStream = { channel: 'root', compatibilityId: 'web' };
 export const webRootPath = `${streamPath(webRootStream)}/exact.json`;
 export const webReleasePath = (id) => `.exact/root/web/releases/${id}`;
-// The directory origin, dev and static
+// @ref LLP 1038 D7; LLP 1023 §7 — the directory origin, dev and static
 // server share this document fallback. Try a public file first; absent
 // extensionless paths are locations. Reserved/private paths stay files.
 // Inspect the raw request target before WHATWG URL removes dot segments.

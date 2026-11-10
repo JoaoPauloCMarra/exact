@@ -1,4 +1,4 @@
-//! A resource over a list: a
+//! A resource over a list (LLP 1017.000 P4c, amended 2026-11-04): a
 //! resource for each element, keyed (`each.js`), whose arguments read the
 //! element as `p0`; each shows its type's zero until it answers.
 

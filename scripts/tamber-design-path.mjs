@@ -1,6 +1,6 @@
-// The app's design file, as the compiler finds it, read as the
+// The app's design file, as the compiler finds it (LLP 1121 D2), read as the
 // wire reads it: `app.json` only as a regular file of at most 1 MiB, so a
-// FIFO or a giant there never stalls the server.
+// FIFO or a giant there never stalls the server (stage 10b's review).
 
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';

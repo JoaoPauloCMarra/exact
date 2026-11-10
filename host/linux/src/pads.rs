@@ -1,4 +1,4 @@
-//! The process's one pad registry: the pads
+//! The process's one pad registry (LLP 1133.022 D4, D10 item 1): the pads
 //! the host reads (evdev on Linux, XInput's slots on Windows), each by its
 //! slot index, its identity and latest standard reading, the pad in use
 //! (`current`), and the outputs a package claims.
@@ -56,7 +56,7 @@ pub struct Identity {
 }
 
 impl Identity {
-    /// The face buttons' scheme: by vendor; XInput's pads are Xbox-class.
+    /// The face buttons' scheme (D2): by vendor; XInput's pads are Xbox-class.
     pub fn family(&self) -> &'static str {
         match self.vendor {
             _ if self.user_index.is_some() => "xbox",

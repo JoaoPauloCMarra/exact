@@ -1,12 +1,12 @@
-// ExactIOS: the standalone iOS app as an adapter over ExactKit — a scene,
-// a window, one session, one view, the default services, the
+// ExactIOS: the standalone iOS app as an adapter over ExactKit (LLP 1031
+// D1) — a scene, a window, one session, one view, the default services, the
 // dev menu. Host glue; the app is the static library (runner + kernel +
 // data crate + baked plan), the same archive the macOS adapter links, built
 // for the iOS target.
 //
 // EXACT_SMOKE=1 prints the boot time and the startup phases after the first
 // frames and exits. EXACT_AGENT=1 with EXACT_AGENT_SOCKET=<path> is the agent
-// API (`Agent.swift`, `AgentIOS.swift`): the driver owns the clock
+// API (LLP 1012, `Agent.swift`, `AgentIOS.swift`): the driver owns the clock
 // and drives the app over a Unix socket. `xcrun simctl launch` passes the
 // environment through as SIMCTL_CHILD_*; `bun host/apple/build.mjs --ios`
 // builds, bundles, installs, and launches.
@@ -53,7 +53,7 @@ final class Adapter: ExactSessionDelegate {
             case "light": window?.overrideUserInterfaceStyle = .light
             default: window?.overrideUserInterfaceStyle = .unspecified
             }
-        // The app's page in Settings; under the agent, journaled only.
+        // The app's page in Settings (LLP 1133.002 D11); under the agent, journaled only.
         // `change` at the second argument's id hears whether it opened (OpenURL.swift `answerOpenURL`).
         case "openURL" where args.first as? String == UIApplication.openSettingsURLString:
             let answer = { (opened: Bool) in session.answerOpenURL(args, opened: opened) }
@@ -70,14 +70,14 @@ final class Adapter: ExactSessionDelegate {
                 fputs("exact: openURL requires an external web, email or telephone URL\n", stderr)
                 return answer(false)
             }
-            // Under the agent the drive keeps its app: opening another would suspend this one.
+            // Under the agent the drive keeps its app: opening another would suspend this one (LLP 1143 D1).
             if agentMode { session.log("openURL \(value): opens outside the app (not under the agent)"); return answer(true) }
             UIApplication.shared.open(url, options: [:], completionHandler: answer)
         // A scene is the system's to close; an app cannot (studio diary R17).
         case "close": session.log("close: unsupported: iOS closes a scene, an app does not")
-        // Bare `focus()`: a phone app is in front or not running.
+        // Bare `focus()`: a phone app is in front or not running (LLP 1133.005 D10).
         case "focus": session.log("focus window: unsupported: an iOS app is in front or not running")
-        // A scene's full screen and opacity are the system's.
+        // A scene's full screen and opacity are the system's (LLP 1069.010).
         case "exitFullscreen", "setWindowOpacity": session.log("\(name): unsupported: iOS has no window an app fades or takes out of full screen")
         default: FileHandle.standardError.write(Data("exact: unknown command \(name)\n".utf8))
         }
@@ -96,7 +96,7 @@ final class Adapter: ExactSessionDelegate {
 let adapter = Adapter()
 // A session creates UIKit scroll views. Construct it only after UIKit starts:
 // pre-UIApplicationMain creation reproduces the physical delayed-touch crash
-// even with a plain plan and no dev menu (timing reduction).
+// even with a plain plan and no dev menu (@ref LLP 1012, timing reduction).
 nonisolated(unsafe) var session: ExactSession!
 /// The view, made when the scene connects: UIKit's window comes with its
 /// scene, not before.
@@ -104,9 +104,9 @@ nonisolated(unsafe) var exactView: ExactView!
 nonisolated(unsafe) var devPlanPath: String?
 nonisolated(unsafe) var planWatch: DispatchSourceTimer?
 
-/// The dev loop (here): EXACT_DEV_PLAN names the plan the
+/// The dev loop (LLP 1007 §6, here): EXACT_DEV_PLAN names the plan the
 /// resident compiler writes; when it changes, restart from it, state carried.
-/// A URL is the wire form: the app's one connection.
+/// A URL is the wire form (LLP 1023 Stage 1): the app's one connection.
 func watchPlan() {
     guard let planPath = environment["EXACT_DEV_PLAN"] else { return }
     if planPath.hasPrefix("http://") || planPath.hasPrefix("https://") {
@@ -145,7 +145,7 @@ func agentReady() {
 /// the view's first layout (`ExactView.fit`).
 /// The build's launch colour (the manifest's `launch`); unset, the
 /// platform's background, as the system's own launch screen then is and
-/// the view under it (`ExactView`): never a fixed white.
+/// the view under it (`ExactView`): never a fixed white (LLP 1115 D2).
 let launchColor = launchScreenColor ?? .platformBackground(in: nil)
 
 final class Controller: UIViewController {
@@ -159,9 +159,9 @@ final class Controller: UIViewController {
     // tvOS has no pointer lock, nor a status bar.
     #if !os(tvOS)
     override var prefersPointerLocked: Bool { ExactPointerLock.preferred }
-    /// The style the app declared; `onStatusBarStyle` says when.
+    /// The style the app declared (LLP 1105 D6); `onStatusBarStyle` says when.
     override var preferredStatusBarStyle: UIStatusBarStyle { exactView.statusBarStyle }
-    /// The session's orientation lock.
+    /// The session's orientation lock (LLP 1133.029 D5).
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         exactView?.orientationMask ?? super.supportedInterfaceOrientations
     }
@@ -200,7 +200,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         ExactEnv.stamp("didFinishLaunching")
-        // EXACT_PLAN naming a local bake with its module is the
+        // EXACT_PLAN naming a local bake with its module (LLP 1116.003) is the
         // launch generation: the view's first layout boots it fresh, as a
         // build that baked it would, nothing carried from the embedded plan.
         if let path = environment["EXACT_PLAN"], ExactDevelopmentPlan(path).hasModule {
@@ -209,15 +209,15 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         session = exact.makeSession(delegate: adapter, label: "main")
         #if !os(tvOS)
         exact.installNotificationClicks()
-        // A wake that launched the app with no scene boots it with none.
+        // A wake that launched the app with no scene boots it with none (LLP 1133.017 D7).
         exact.installWakes { session.bootForWake() }
-        // A tool call that launched the app with no scene boots it the same way.
+        // A tool call that launched the app with no scene boots it the same way (LLP 1133.023 D7).
         exact.installReach { session.bootForWake() }
         #endif
-        // The one session owns its window and the process.
+        // The one session owns its window and the process (LLP 1075.003.000.001 §2.1.1).
         session.hatchesOwnWindow = true
         session.hatchesOwnProcess = true
-        // `SIGUSR1` saves its trace: a simulator app is a Mac process.
+        // `SIGUSR1` saves its trace (LLP 1142 D5): a simulator app is a Mac process.
         TraceSignal.install { session }
         if ExactEnv.agentFreezes { session.clock = 0 }
         ExactLaunch.shared.didFinishLaunching()
@@ -269,7 +269,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let ws = scene as? UIWindowScene else { return }
         ExactEnv.stamp("scene")
         ExactLaunch.shared.sceneConnected()
-        // consume the launch URL before constructing the view.
+        // @ref LLP 1038 D8 — consume the launch URL before constructing the view.
         #if !os(tvOS)
         let notificationResponse = connectionOptions.notificationResponse
         if let notificationResponse { exact.openNotification(notificationResponse) }
@@ -279,13 +279,13 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             .compactMap(\.webpageURL).sorted { $0.absoluteString < $1.absoluteString }
         let incoming = !contexts.isEmpty ? contexts : !activities.isEmpty ? activities
             : environment["EXACT_LAUNCH_URL"].flatMap { URL(string: $0) }.map { [$0] } ?? []
-        // A quick action or a search result that launched the app is its launch location.
+        // A quick action or a search result that launched the app is its launch location (LLP 1133.023 D3, D4).
         #if !os(tvOS)
         if let item = connectionOptions.shortcutItem, let location = ExactShortcuts.location(of: item) { ExactContentIndex.open(location) }
         for activity in connectionOptions.userActivities { if let location = ExactContentIndex.location(of: activity) { ExactContentIndex.open(location) } }
         #endif
-        // A file is a document from Files ("Open in"), opened in place;
-        // it lands once the session has booted.
+        // A file is a document from Files ("Open in"), opened in place
+        // (LLP 1069.010 slice 4); it lands once the session has booted.
         IncomingURLBatch.deliver(incoming, development: ExactDevelopmentLink.claims,
             document: { ExactIOS.session.openDocument($0) }, location: { ExactIOS.session.openURL($0) })
         ExactEnv.stamp("before boot")
@@ -297,7 +297,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         exactView = ExactView(session: ExactIOS.session)
         // The root's background into the safe areas (`Presenter.paintCanvas`).
         exactView.onCanvasColor = { [weak w] color in w?.backgroundColor = color; w?.rootViewController?.view.backgroundColor = color }
-        // The head's title is the scene's: the app switcher's name for it.
+        // The head's title is the scene's (LLP 1048.003 D1): the app switcher's name for it.
         exactView.onTitle = { [weak ws] title in ws?.title = title }
         watchPlan()
         // EXACT_PLAN=<file> boots that plan instead of the one baked into the
@@ -332,7 +332,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         #endif
     }
     #if !os(tvOS)
-    /// A quick action while the app runs.
+    /// A quick action while the app runs (LLP 1133.023 D3).
     func windowScene(_ windowScene: UIWindowScene, performActionFor shortcutItem: UIApplicationShortcutItem, completionHandler: @escaping (Bool) -> Void) {
         guard let location = ExactShortcuts.location(of: shortcutItem) else { return completionHandler(false) }
         ExactContentIndex.open(location)

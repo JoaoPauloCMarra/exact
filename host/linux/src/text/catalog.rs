@@ -98,7 +98,7 @@ pub(super) struct Placement {
 pub(super) struct Catalog {
     pub(super) fonts: FontContext,
     pub(super) layout: LayoutContext<u32>,
-    /// Each file-backed blob's path.
+    /// Each file-backed blob's path (LLP 1076 §3.3).
     pub(super) files: Arc<HashMap<u64, Arc<Path>>>,
     pub(super) locale: String,
     scale: ScaleContext,
@@ -342,7 +342,7 @@ impl Catalog {
         let mut declared: Vec<(usize, String, Staged)> = Vec::new();
         for (stack_index, stack) in plan.stacks.iter().enumerate() {
             if stack.members.len > 1 {
-                eprintln!("[Fonts] font-stack-fallback: stack={stack_index}; Linux selects the first installed CSS family; missing glyphs use the platform's per-script fallback, not the remaining authored families");
+                eprintln!("[Fonts] font-stack-fallback: stack={stack_index}; Linux selects the first installed CSS family; missing glyphs use the platform's per-script fallback, not the remaining authored families (LLP 1001)");
             }
             for member_id in stack.members.iter() {
                 let member = plan.stack_member(member_id);
@@ -382,7 +382,7 @@ impl Catalog {
                         },
                     };
                     // One face per declared file; fontique admits it or not
-                    // (a face no engine can scale is refused).
+                    // (a face no engine can scale is refused, LLP 1085.000 G2).
                     let Some(parsed) = fontique::FontInfo::from_source(source.clone(), 0) else {
                         failed = true;
                         break;
@@ -396,7 +396,7 @@ impl Catalog {
                     } else {
                         FontStyle::Normal
                     };
-                    // The face's `@font-face` descriptors: one
+                    // The face's `@font-face` descriptors (LLP 1019 D2): one
                     // weight pins `wght`, a range draws each request on it,
                     // and a width range does the same on `wdth`.
                     let stretch = |tenths: u16| f32::from(tenths) / 10.0;
@@ -765,14 +765,15 @@ impl Catalog {
         glyph
     }
     /// The file and collection index a face was registered from (a platform
-    /// painter loads it by path).
+    /// painter loads it by path; LLP 1076 §3.3).
     pub(super) fn file(&self, font: &FontData) -> Option<(Arc<str>, u32)> {
         self.files
             .get(&font.data.id())
             .map(|p| (Arc::from(p.to_string_lossy().as_ref()), font.index))
     }
     /// Drop Parley's scratch after a giant paragraph: it keeps its high-water
-    /// allocations (about 50 MiB after a 1 MiB paragraph), and a new one costs about 60 µs.
+    /// allocations (about 50 MiB after a 1 MiB paragraph; the storage
+    /// spike), and a new one costs about 60 µs.
     pub(super) fn release_scratch(&mut self, text_bytes: usize) {
         if text_bytes >= 256 * 1024 {
             self.layout = LayoutContext::new();
@@ -827,7 +828,7 @@ fn sans_family(
 
 /// The families `sans-serif` prefers on `os` (`std::env::consts::OS`), first
 /// present wins. Windows: its UI font, Segoe UI Variable on Windows 11 and
-/// Segoe UI on Windows 10, whose `opsz` then follows the
+/// Segoe UI on Windows 10 (LLP 1115.004 D6.1), whose `opsz` then follows the
 /// size as for any face with the axis (`shaping.rs`). The file's typographic
 /// family is "Segoe UI Variable"; "Segoe UI Variable Text" is its text
 /// instance's legacy family, should a face carry only that. Elsewhere,

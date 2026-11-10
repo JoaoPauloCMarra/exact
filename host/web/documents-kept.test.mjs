@@ -1,4 +1,4 @@
-// On the web, a document an app granted `doc.keep`
+// LLP 1069.010.000 D4–D7 on the web: a document an app granted `doc.keep`
 // chose is its FileSystemHandle kept in IndexedDB, so after a reload it
 // lists and reads at the same path; a permission the browser withholds
 // refuses `EACCES` until `requestPermission` asks again under a press; and

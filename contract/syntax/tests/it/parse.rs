@@ -195,7 +195,7 @@ fn a_task_fires_once_with_after() {
     assert_eq!(e.id, "syntax-duplicate-declaration");
 }
 
-// `frame` in `every`'s first place is a word, even
+// @ref LLP 1073 D1 — `frame` in `every`'s first place is a word, even
 // beside a slot of that name; `after(frame, …)` is refused.
 #[test]
 fn a_task_fires_each_frame_with_every_frame() {
@@ -335,7 +335,7 @@ fn rejections_carry_stable_ids_and_spans() {
             3,
         ),
         // A list literal's items are separated by commas, and the web's
-        // spread is refused with the `concat` it means.
+        // spread is refused with the `concat` it means (LLP 1088 §9.1).
         ("component A\n  derive xs = [1 2]\n", "syntax-expected", 2),
         (
             "component A\n  derive xs = [...ys, 1]\n",
@@ -352,7 +352,7 @@ fn rejections_carry_stable_ids_and_spans() {
 
 #[test]
 fn an_elements_attributes_continue_on_deeper_lines_that_begin_with_name_equals() {
-    // `name=` on a deeper line continues the attribute
+    // LLP 1035.005 D1: `name=` on a deeper line continues the attribute
     // list; a child begins with a tag, so one-token lookahead decides.
     let src = "component A\n  state n = 0\n  action go\n    n = 1\n  view\n    button press=go\n      testId=\"go\" aria-label=\"Go\"\n      width=40\n      text \"a\"\n        font-size=12\n      text \"b\"\n";
     let file = parse(src).unwrap();
@@ -475,7 +475,7 @@ fn send_is_a_name_everywhere_but_where_the_send_statement_starts() {
 
 #[test]
 fn let_starts_a_statement_only_before_a_name_and_records_build_with_named_arguments() {
-    // `let` statements and records built with named arguments.
+    // LLP 1035.005.000 D2 and D3.
     let src = "component A\n  state let = 0\n  action go\n    let next = F(base, title=\"a\")\n    if next.pinned\n      let word = \"b\"\n    let = 1\n  view\n    text \"a\"\n";
     let file = parse(src).unwrap();
     let body = &file.components[0].actions[0].body;
@@ -574,7 +574,7 @@ fn template_text_decodes_the_escapes_a_string_does_and_escaped_interpolation_is_
 
 #[test]
 fn a_mutations_clauses_may_continue_on_indented_lines() {
-    // `then` on the next line is a clause, not `syntax-expected-section`.
+    // The codeedit diary: `then` on the next line was `syntax-expected-section`.
     let src = "component A\n  mutation edited as shape Jump refreshes page\n    then followEdit\n  mutation saved as shape Ok\n    queue\n    refreshes files, page\n    then reload\n  state n = 0\n  view\n    text \"a\"\n";
     let file = parse(src).unwrap();
     let a = &file.components[0];
@@ -603,7 +603,7 @@ fn a_mutations_clauses_may_continue_on_indented_lines() {
     assert!(err.message.contains("in that order"), "{}", err.message);
 }
 
-/// A `-` against a number, straight after an
+/// Round 12 (LLP 1116.010 D3): a `-` against a number, straight after an
 /// attribute's `=`, is the negative literal, the number it is as `40` is.
 #[test]
 fn a_negative_number_after_an_attributes_equals_is_a_number_literal() {

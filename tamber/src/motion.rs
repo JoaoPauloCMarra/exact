@@ -1,4 +1,4 @@
-//! Motion tokens: a `duration` is a CSS
+//! Motion tokens (LLP 1121 D3, D13; stage 6 E): a `duration` is a CSS
 //! time, an `easing` a keyword or an easing function. Each is a component
 //! of a `transition` or `animation` value, substituted into it at build, so
 //! it has one value (no `when`) and an edit to it rebuilds.

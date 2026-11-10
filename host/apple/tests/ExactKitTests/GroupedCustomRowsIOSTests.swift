@@ -5,7 +5,7 @@ import XCTest
 @testable import ExactGroupedLists
 
 /// A custom grouped row, its views carried into a list cell, drawn as a
-/// standard cell beside it is. UIKit, so a simulator
+/// standard cell beside it is (Harmony, 2026-10-21). UIKit, so a simulator
 /// runs it.
 final class GroupedCustomRowsIOSTests: GroupedListFixture {
     /// A custom row first, a standard row of the same symbol after it.
@@ -171,7 +171,7 @@ final class GroupedCustomRowsIOSTests: GroupedListFixture {
     /// which is no resize: the layout already knows each row's height. When
     /// it was one, two cells handed back and forth between rows of two
     /// heights at a long list's bottom edge laid the list out again on every
-    /// turn, and Hackers' feed spun a core at rest.
+    /// turn, and Hackers' feed spun a core at rest (LLP 1141.001 D13).
     func testACellTakingAnotherRowsHeightLaysNothingOutAgain() throws {
         let p = presenter {
             var m = self.model()
@@ -249,8 +249,8 @@ final class GroupedCustomRowsIOSTests: GroupedListFixture {
         XCTAssertTrue(try XCTUnwrap(p.views[11]).superview === b.contentView, "its neighbour still in its cell")
     }
 
-    /// A swipe row inserted while a sheet is up (a contact its
-    /// form saves) offers its actions once the sheet closes.
+    /// A swipe row inserted while a sheet is up (r25's contacts: the
+    /// contact its form saves) offers its actions once the sheet closes.
     /// The sheet made it inert as it was mounted, and the batches after
     /// change nothing in it, so its row keeps what it read then: only the
     /// row's own `inert` may take its actions away.
@@ -308,7 +308,7 @@ final class GroupedCustomRowsIOSTests: GroupedListFixture {
         let trailing = try list(p).swipeActions(at: IndexPath(item: 0, section: 0), leading: false)
         XCTAssertEqual(trailing?.actions.count, 1, "its Delete, as the rows that were there before the sheet")
         // Its cell, configured under the sheet, takes a tap and is an element
-        // (a saved expense must open and be read without a relaunch).
+        // (r28's expenses: a saved expense neither opened nor was read until relaunch).
         try list(p).collection.layoutIfNeeded()
         let cell = try XCTUnwrap(list(p).cell(21))
         XCTAssertTrue(cell.isUserInteractionEnabled, "a tap reaches it")

@@ -1,4 +1,4 @@
-// Held states in a real browser: the input
+// Held states in a real browser (LLP 1122 D8, LLP 1121 stage 8 E): the input
 // glue's `hold`, which the build channel's `hold` and the agent's `holdState`
 // call. `active` holds the press of the node the press resolves to (its paint,
 // as a real press shows it); `hover` and `focus-visible` hold that node's look

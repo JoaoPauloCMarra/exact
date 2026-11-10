@@ -1,4 +1,4 @@
-// Every name is opened relative to an owned directory.
+// @ref LLP 1030.002 D1 — every name is opened relative to an owned directory.
 use crate::Kind;
 use std::ffi::{CStr, CString};
 use std::fs::File;

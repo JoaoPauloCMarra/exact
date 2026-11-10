@@ -1,4 +1,4 @@
-// worker-owned SQLite capability.
+// @ref LLP 1027 D10 — worker-owned SQLite capability.
 import { authorize } from './storage-fs.js';
 
 // Owners exist before their first query, but workers still start lazily.

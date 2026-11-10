@@ -1,8 +1,9 @@
-// A `list` as a table: one session's virtualized list in a view-based
-// `NSTableView` inside the real host, the runner still making and removing
-// the rows. Each test is one of its questions (rows arriving and leaving,
-// heights from layout, selection across a row's reuse, a control's own
-// clicks). A fixture, in no app: `TableHost.show` is called from here alone.
+// @ref LLP 1115.002 D5 — stage 3a, the gate for a `list` as a table: one
+// session's virtualized list in a view-based `NSTableView` inside the real
+// host, the runner still making and removing the rows. Each test is one of
+// the gate's questions (rows arriving and leaving, heights from layout,
+// selection across a row's reuse, a control's own clicks). A fixture, in no
+// app: `TableHost.show` is called from here alone.
 #if os(macOS)
 import AppKit
 import XCTest
@@ -158,7 +159,7 @@ final class TableFeedMacTests: XCTestCase {
     private var fixture: TableFixture?
     override func tearDown() { fixture?.close(); fixture = nil; super.tearDown() }
 
-    /// What holds at every offset: the table has a row for every
+    /// What the gate holds at every offset: the table has a row for every
     /// item and is as long as the list; every row the port shows has a cell
     /// holding the runner's own row for that item, where layout put it; and
     /// a mounted row the table has no cell for is in the document.

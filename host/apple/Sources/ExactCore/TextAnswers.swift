@@ -1,5 +1,5 @@
 // What measuring a paragraph answered, kept where both of a session's text
-// engines read it: the measurer, on the owner thread, answers
+// engines read it (LLP 1072 §8.1): the measurer, on the owner thread, answers
 // a paragraph it has answered before without typesetting it again, and the
 // painter, on main, takes the line breaks its pixels are made from. Plain
 // values under one lock; no CoreText layout object is kept or crosses a thread.
@@ -39,7 +39,7 @@ package enum TextAnswerKey {
         put(Int32(truncatingIfNeeded: space), &out)
         put(Int32(bitPattern: Float(indent).bitPattern), &out); put(Int32(truncatingIfNeeded: hyphens), &out)
     }
-    /// An image's box, as a spec's run and a request's both carry it.
+    /// An image's box (LLP 1011.002), as a spec's run and a request's both carry it.
     private static func box(_ width: Double, _ height: Double, _ align: Int, _ shift: Double, _ out: inout [UInt8]) {
         out.append(3); put(width.bitPattern, &out); put(height.bitPattern, &out)
         put(Int32(truncatingIfNeeded: align), &out); put(shift.bitPattern, &out)
@@ -62,7 +62,7 @@ package enum TextAnswerKey {
             fields(single(r.size), Int32(truncatingIfNeeded: r.weight), Int32(truncatingIfNeeded: r.family), r.italic,
                    r.lineHeight.map(single), single(r.letterSpacing), Int32(truncatingIfNeeded: r.numeric),
                    Int32(truncatingIfNeeded: r.ligatures), single(r.stretch), r.variations, &out)
-            // A list item's lines start at its indent: only an
+            // A list item's lines start at its indent (LLP 1045 D4): only an
             // expanded Markdown spec has one, never a request's plain runs.
             if r.indent != 0 || r.hang { out.append(r.hang ? 2 : 1); put(single(r.indent).bitPattern, &out) }
             if let b = r.box { box(single(b.width), single(b.height), b.align, single(b.shift), &out) }
@@ -152,7 +152,7 @@ package final class TextAnswers: @unchecked Sendable {
         /// buffer is reused for every lookup and is as large as its longest.
         init(hash: Int, key: [UInt8]) { self.hash = hash; self.key = key.withUnsafeBufferPointer { Array($0) } }
     }
-    /// A layout pass offers one paragraph several sizes.
+    /// A layout pass offers one paragraph several sizes (LLP 1044 F6).
     package static let offersPerParagraph = 8
     /// About 3,500 paragraphs of a sentence or two, each offered two or
     /// three sizes: a thousand-row list's travel out and back.

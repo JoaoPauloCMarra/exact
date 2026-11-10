@@ -399,7 +399,7 @@ impl RegionState {
             current || selected.is_none(),
             &mut changed,
         );
-        // Resolve only after the selected projection.
+        // @ref LLP 1043.000 §3 D4 — resolve only after the selected projection.
         let (flow_changed, flow_skipped) =
             crate::flow::resolve_region(arena, root, shell_frames, &frames);
         if let Some(accepted) = next_accepted {
@@ -794,7 +794,7 @@ fn validate(arena: &NodeArena, b: ContentRegion) -> Result<(), LayoutError> {
             return Err(bad());
         }
         // In the top layer the owner is laid out in its own block, after
-        // the region's shell: no trial can place it. Whether
+        // the region's shell: no trial can place it (stage 14 B). Whether
         // it is in the top layer now, not whether the last layout's block
         // still stands (a host's block is refused beside a region anyway).
         if arena.top_layer_slots.contains(s) {
@@ -838,7 +838,7 @@ fn validate(arena: &NodeArena, b: ContentRegion) -> Result<(), LayoutError> {
     {
         return Err(bad());
     }
-    // A trial lays the owner out as the top of its own tree,
+    // @ref LLP 1074 T1 — a trial lays the owner out as the top of its own tree,
     // where it contains every absolutely positioned descendant; the ordinary
     // tree agrees only if the owner is positioned there too, or nothing
     // absolute is under it. The compiler positions a clipping box only when

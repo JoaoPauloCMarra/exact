@@ -1,5 +1,5 @@
 //! A root task's timer row: its schedule and, for a gated task, its gate
-//! and key as plan code, compiled the way a slot's
+//! and key as plan code (LLP 1092 D9), compiled the way a slot's
 //! initializer is and evaluated by the runner at each commit.
 
 use crate::{err_one, LowerError, Lowerer};
@@ -111,7 +111,7 @@ impl Lowerer<'_> {
                     .map_err(|e| vec![e])
             };
             let gate = code(self, &t.gate)?;
-            // `key=` alone is `when true key=…`.
+            // `key=` alone is `when true key=…` (D7).
             let gate = gate.or_else(|| {
                 t.key
                     .is_some()
@@ -123,10 +123,10 @@ impl Lowerer<'_> {
         Ok(())
     }
 
-    /// Every sequence of the root, in declaration order: its
+    /// Every sequence of the root (LLP 1125 D2), in declaration order: its
     /// gate and key as a task's, and each `play` argument as plan code, an
-    /// omitted one a constant: `bpm=` 120, the prior that clock in
-    /// (`clock=`) plays at until it has heard enough ticks.
+    /// omitted one a constant: `bpm=` 120, the prior that clock in (`clock=`,
+    /// D9) plays at until it has heard enough ticks.
     pub(crate) fn sequences(
         &mut self,
         sequences: &[Sequence],

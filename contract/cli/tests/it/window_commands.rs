@@ -1,4 +1,4 @@
-//! A quit the app holds leaves full screen and fades its
+//! LLP 1069.010: a quit the app holds leaves full screen and fades its
 //! window first, by two host commands.
 
 use exact_kernel::Kernel;

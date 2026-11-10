@@ -1,16 +1,16 @@
-//! What of an app's structure a host projects into its platform's bars:
-//! a route's `header` as its navigation bar or top app
+//! What of an app's structure a host projects into its platform's bars
+//! (LLP 1115.001 D11): a route's `header` as its navigation bar or top app
 //! bar, and a navigation root's `tablist` as its tab bar or navigation bar.
 //! One rule for every host that has such bars, beside the grouped list's
 //! (`grouped.rs`): what each bar looks like is the platform's (UIKit's on
 //! iOS, Material's on Android), and what counts as one is decided here.
 //!
-//! **A header-shaped route** is one whose first child is a
+//! **A header-shaped route** (LLP 1035.001 D9) is one whose first child is a
 //! `header` holding exactly one heading. The heading is the bar's title, at
 //! its level; the header's buttons are the bar's items, those before the
 //! heading leading and those after it trailing, and so is a readout (an
 //! element whose role is `status`, which nothing presses: a "● Clock" the
-//! bar shows as written); its `input type="search"`
+//! bar shows as written, LLP 1075.003 §9.15); its `input type="search"`
 //! is the bar's search field and its `tablist` the title's segments. A
 //! pressable around the heading is the title itself, tapped. The stack's
 //! Back control is the platform's own Back where the platform has one for
@@ -23,7 +23,7 @@
 //! about its own nodes as words ([`header_shape_words`]), so the two cannot
 //! disagree about the rule, only about a fact.
 //!
-//! **The root's tabs** are the tabpanels the root's own
+//! **The root's tabs** (LLP 1075.003 §3.7) are the tabpanels the root's own
 //! tablist's tabs name with `aria-controls`, in tab order
 //! ([`Kernel::root_tabs`]). A tablist or a panel inside a route is that
 //! route's, never the root's.
@@ -72,12 +72,12 @@ pub mod fact {
     pub const HIDDEN: u32 = 1 << 7;
     /// A route that says it has no bar (`navigationBar="none"`).
     pub const NO_BAR: u32 = 1 << 8;
-    /// The author wrote `appearance: none` on it: a
+    /// The author wrote `appearance: none` on it (LLP 1075.003 §9.10): a
     /// header that says so keeps its authored bar. Only a written one: a
     /// row the compiler implied is no opt-out.
     pub const AUTHORED: u32 = 1 << 9;
     /// Its role is `status`: a readout the bar shows as an item that is
-    /// not pressed.
+    /// not pressed (LLP 1075.003 §9.15).
     pub const STATUS: u32 = 1 << 10;
     /// A `popover` or a `dialog`: the top layer's when open, as on the web,
     /// so neither it nor what it holds is the bar's (a menu written in the
@@ -196,7 +196,7 @@ pub enum Bar {
 }
 
 impl Bar {
-    /// The bar is decided route by route. A route
+    /// LLP 1115.000 D5.2, D5.3: the bar is decided route by route. A route
     /// that says `navigationBar="none"` (`asked_none`) has none: no bar is
     /// something the author says, never inferred. A route whose `header` is
     /// the bar's (`header`) shows that. Any other pushed route shows the
@@ -334,11 +334,11 @@ pub fn header_shape<T: Tree>(
 
 /// The header a route's bar is projected from in the app: its shape
 /// ([`header_shape`]) unless the route says it has no bar
-/// (`navigationBar="none"`), where its header paints in
+/// (`navigationBar="none"`, LLP 1115.000 D5.2), where its header paints in
 /// the page as written, or its header is hidden as authored
-/// (`display: none`): a header the web does not show is no bar's. A header
-/// whose author wrote `appearance: none` keeps its authored bar on every
-/// host.
+/// (`display: none`): a header the web does not show is no bar's (LLP
+/// 1075.003 §9.10). A header whose author wrote `appearance: none` keeps
+/// its authored bar on every host (§9.10, Charlie's ruling for #393).
 pub fn header_bar<T: Tree>(
     tree: &T,
     route: T::Node,
@@ -503,7 +503,7 @@ impl Kernel {
         header_bar(&tree, route, back_is_platforms)
     }
 
-    /// The tabs of the navigation root `root`, or
+    /// The tabs of the navigation root `root` (LLP 1075.003 §3.7), or
     /// `None` when it has none (one stack): the first of its own tablists,
     /// in tree order, with a tab that names one of its own tabpanels. What
     /// is inside a route is that route's, and a tablist's own subtree holds

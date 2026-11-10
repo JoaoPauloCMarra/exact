@@ -1,5 +1,6 @@
-//! The kernel-free render, the differential check's fast lane: a document written from its runner's
-//! instance tree is the one a kernel's nodes give, byte for byte — the fixture's pages, and every
+//! The kernel-free render, the differential check's fast lane (LLP 1048.004
+//! D6): a document written from its runner's instance tree is the one a
+//! kernel's nodes give, byte for byte — the fixture's pages, and every
 //! corpus and conformance plan's first page.
 
 use super::{plan, warm_transport, Blog, Post, SITE};
@@ -160,12 +161,12 @@ fn every_corpus_and_conformance_plan_is_the_same_without_a_kernel() {
             Err(why) => skipped.push(format!("{what}: {why}")),
         }
     }
-    // Every plan a kernel renders is written without one too (virtualized
-    // lists and `id` references included),
+    // Every plan a kernel renders is written without one too (LLP
+    // 1048.004 stage 2: virtualized lists and `id` references included),
     // except one whose initializer reads a resource through a prop, which
-    // `projects_as_booted` sends to the kernel (budget.contract),
+    // `projects_as_booted` sends to the kernel (budget.contract, 976bef093),
     // and one with `rem` or `em` lengths, which the fold leaves to the
-    // kernel's inherited font sizes (rem.contract).
+    // kernel's inherited font sizes (rem.contract, 077fe52b4).
     assert!(
         skipped.iter().all(|why| why.ends_with("no kernel render")
             || why.ends_with("a slot's initializer reads a resource")

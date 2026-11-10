@@ -67,13 +67,13 @@ extension NodeView {
         // (`FieldComposition.swift`). Writing it first told the app its own
         // held value in place of the committed text.
         if !disabled { typedText(field?.text ?? "") }
-        if stepper != nil { updateNumberStepper() } // the stepper shows what the field holds
+        if stepper != nil { updateNumberStepper() } // the stepper shows what the field holds (LLP 1116.007 D4)
         if let f = field, f.markedTextRange == nil, let held = pendingValue { writeValue(held, into: f) }
         applyFieldDirection() // a `direction` that came while it composed
         // The edit's `input` ran: the field and what follows it are shown
         // again, as a browser scrolls a field into view as it is typed into,
         // so a hint the edit put under the field is not left under the keys
-        // (water-tracker's custom amount).
+        // (water-tracker's custom amount, LLP 1116.003 D2.1).
         if let p = presenter, p.keyboardInset > 0, p.editor === self {
             if ExactEnv.agentFreezes { p.reveal(self) } else { UIView.animate(withDuration: 0.25) { p.reveal(self) } }
         }
@@ -94,7 +94,7 @@ extension NodeView {
         presenter?.focus(id)
     }
     /// The selection moved: a person's non-collapsed one is a `select`
-    /// (`FieldSelections`).
+    /// (x2apps codeedit #2, `FieldSelections`).
     @objc package func textFieldDidChangeSelection(_ textField: UITextField) { presenter?.fieldSelections.changed(self) }
     @objc package func textFieldDidEndEditing(_ textField: UITextField) {
         presenter?.collections.pinsChanged()

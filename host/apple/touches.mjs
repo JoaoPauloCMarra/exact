@@ -1,4 +1,4 @@
-// The touch runner: real touches on iOS through XCTest's
+// The touch runner (LLP 1080.000 D1/D2): real touches on iOS through XCTest's
 // event synthesis, from an XCTest UI test (`touches.swift`) that stays alive
 // across agent sessions. Built from Xcode's own XCTRunner.app — no Xcode
 // project — installed on the destination, and started by xcodebuild, so
@@ -8,7 +8,7 @@
 // xcodebuild's 5 s start). One session per device at a time, held by a lock
 // file.
 //
-// Simulator only so far; a phone is not yet supported.
+// Simulator only so far; a phone is LLP 1080.000 stage 4.
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import { closeSync, cpSync, existsSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
@@ -29,7 +29,7 @@ const must = (cmd, args) => {
   return r.stdout;
 };
 
-/** The runner's identity (its cache key): its source as read now, the arch, the
+/** The runner's identity (D1's key): its source as read now, the arch, the
  * selected Xcode and its simulator SDK, each by its own file where it has
  * one (a launch compares it, so it costs a file read, not a tool's start). */
 export function runnerKey() {
@@ -110,7 +110,7 @@ async function within(promise, ms, onTimeout) {
 const alive = (pid) => { try { process.kill(pid, 0); return true; } catch { return false; } };
 
 /**
- * The lock that makes one session the device's only toucher. Taken
+ * The lock that makes one session the device's only toucher (D2). Taken
  * atomically (an exclusive create) with a token naming this session; any
  * live holder refuses, this process included, so two sessions in one
  * process cannot share a device either. A lock that vanished between the
@@ -208,7 +208,7 @@ async function keptRunner(udid, appId, key) {
 }
 
 // What starting an XCTest UI session turns on in a simulator's com.apple.Accessibility, and leaves on across
-// reboots. With ApplicationAccessibilityEnabled on, every app loads UIKit's accessibility runtime at launch: one app's
+// reboots. With ApplicationAccessibilityEnabled on, every app loads UIKit's accessibility runtime at launch: euxy's
 // main→didFinishLaunching went from 10 ms to 1.4 s (AccessibilityEnabled alone: 0.1 s; iPhone 17, iOS 27). A
 // session needs all three on (without them a kept runner's tap never finishes and a menu's rows are not found), so
 // it turns them on and puts them back at its end; a write takes effect at the next launch, with no reboot.
@@ -324,7 +324,7 @@ export async function openTouches({ udid, appId, foldable }) {
           // A simulator refuses `UseDestinationArtifacts` (device only), so
           // xcodebuild installs the target here: the runner itself, so one
           // runner serves every app (each session names its own) and the
-          // driver's app is never installed or launched by it.
+          // driver's app is never installed or launched by it (D1's order).
           IsUITestBundle: true, TestHostPath: app, TestBundlePath: '__TESTHOST__/PlugIns/ExactTouches.xctest', UITargetAppPath: app,
           TestingEnvironmentVariables: { EXACT_TOUCH_CONNECT: bridge.env.EXACT_AGENT_CONNECT, EXACT_TOUCH_TOKEN: bridge.env.EXACT_AGENT_TOKEN, EXACT_TOUCH_APP: appId },
         },
@@ -385,7 +385,7 @@ const sameAim = (a, b) => a.orientation === b.orientation && a.session === b.ses
   && ['w', 'h', 'x', 'y'].every((k) => a.screen[k] === b.screen[k]) && a.point[0] === b.point[0] && a.point[1] === b.point[1]
   && ['viewport', 'fixed', 'fixedAxes', 'display'].every(k => JSON.stringify(a[k]) === JSON.stringify(b[k]));
 
-/** SpringBoard reads and gestures over the session's existing runner. */
+/** SpringBoard reads and gestures over the session's existing runner (WP14). */
 export async function springboard(touches, request, alive) {
   const name = `SpringBoard ${request.action}`;
   if (!touches) throw new Error(`${name}: open the iOS session with touch: 'drag' or 'platform'`);
@@ -404,12 +404,12 @@ export const REACH_MS = 250;
  *  time: the touch is seen to begin a log read late, and the step's last request must land while the finger is down. */
 export const TICK_MARGIN = 150;
 
-/** A drag's bounds: each duration in ms; the travel is bounded so its moves fit the dispatch log's ring. */
+/** A drag's bounds (LLP 1080.000 §11): each duration in ms; the travel is bounded so its moves fit the dispatch log's ring (D5). */
 export const DRAG_BOUNDS = { press: 10000, hold: 10000, over: 2000, total: 10000 };
 
 /**
- * A real tap on view `id`, or with `drag` one whole
- * real gesture from it: the host aims (`at`, a viewport point, or the
+ * A real tap on view `id` (LLP 1080.000 D4/D5/D8), or with `drag` one whole
+ * real gesture from it (§11): the host aims (`at`, a viewport point, or the
  * target's middle), the aim is taken twice and must agree (orientation,
  * origin, size, point, session and display mapping), the runner checks the app is in the
  * foreground and injects, and the window's dispatch log must show exactly
@@ -431,7 +431,7 @@ export async function realTap({ ask, touches, id, at, rel, drag, abandon }) {
   const legs = drag?.path ? [drag, ...drag.path].map(({ dx, dy, press = 0, over = 250, hold = 0, during = [], tick }) => ({ dx, dy, press, over, hold, during, tick })) : null;
   let net = drag ? [drag.dx, drag.dy] : [0, 0];
   const what = drag ? `drag #${id}` : `tap #${id}`;
-  // A plain tap aims at the target's own press (never a control inside it its middle reaches);
+  // A plain tap aims at the target's own press (LLP 1012 §1: never a control inside it its middle reaches);
   // `rel` is a point in the target (`tap <target> at <x> <y>`), whatever a finger there reaches; a drag starts at the middle.
   const aimReq = { op: 'tap', id, aim: at ? { x: at[0], y: at[1] } : rel ? { at: rel } : drag ? true : { press: true } };
   // Wait out a fold cloak and a transition before aiming: either takes the touch or moves where it lands (cloak.mjs)
@@ -456,7 +456,7 @@ export async function realTap({ ask, touches, id, at, rel, drag, abandon }) {
     if (!(end[0] >= 0 && end[1] >= 0 && end[0] <= vw && end[1] <= vh)) throw new Error(`${what}: the drag would end at (${end}), outside the viewport (${vw} × ${vh})`);
     moves = drag.dx !== 0 || drag.dy !== 0;
     ms = drag.press + drag.hold + (moves ? drag.over : 0);
-    // Points per second: what XCTest's velocity measured as on a 3x simulator, whatever its header says.
+    // Points per second: what XCTest's velocity measured as on a 3x simulator, whatever its header says (§11).
     request = { op: 'drag', point: a.point, to: [a.point[0] + drag.dx, a.point[1] + drag.dy], press: drag.press / 1000, hold: drag.hold / 1000, velocity: moves ? Math.hypot(drag.dx, drag.dy) / (drag.over / 1000) : 0 };
     // Both ends in the screen's fixed space too, where XCTest's synthesizer plays the drag (touches.swift)
     if (a.fixed && a.fixedAxes) {
@@ -651,7 +651,7 @@ export async function realTap({ ask, touches, id, at, rel, drag, abandon }) {
         if (began.session !== a.session || began.generation !== a.generation) { throw touchError(began.session == null ? `${what}: the touch landed on ${began.view}, outside every session, not in ${a.session}` : `${what}: the touch landed in session ${began.session} (generation ${began.generation}), not ${a.session}`); }
         if (began.node !== a.hit) { throw touchError(`${what}: the touch landed on ${began.node == null ? began.view : `node #${began.node}`}, not on node #${a.hit} the aim hit-tested`); }
       }
-      // A grouped list's cells are all the list's node: the row and part too.
+      // A grouped list's cells are all the list's node: the row and part too (LLP 1084).
       if (a.projected && (began.projected?.row !== a.projected.row || began.projected?.part !== a.projected.part)) { throw touchError(`${what}: the touch landed on ${JSON.stringify(began.projected ?? null)} in the grouped list, not on ${JSON.stringify(a.projected)} the aim hit-tested`); }
       const moved = seen.filter((e) => e.phase === 'moved');
       const travel = [end.at[0] - began.at[0], end.at[1] - began.at[1]];
@@ -669,10 +669,10 @@ export async function realTap({ ask, touches, id, at, rel, drag, abandon }) {
         touch: { id: began.touch, began: began.t, ended: end.t, ...(began.dispatched != null ? { dispatched: began.dispatched } : {}), moved: moved.length, type: began.type, ...(drag ? { travel, lastMove: moved.at(-1)?.t ?? null } : {}) },
         ...(drag ? { drag: { dx: drag.dx, dy: drag.dy, press: drag.press, over: moves ? drag.over : 0, hold: drag.hold, ...(legs ? { path: legs.map(({during, tick, ...leg}) => leg) } : {}) } } : {}),
         ...(during.length ? { during } : {}), ...(reachedIn !== undefined ? { reached: reachedIn } : {}),
-        // The view the touch began on left the window before the lift: it had no lift, though another view may
+        // The view the touch began on left the window before the lift (D5): it had no lift, though another view may
         // have acted on the touch (a scroller under a drag, a press on its down), so the caller reads the state
         ...(end.viewGone ? { viewGone: true } : {}),
-        // A tap's down the window had only once the finger had lifted: the app's main thread busy, or the system
+        // A tap's down the window had only once the finger had lifted (D5): the app's main thread busy, or the system
         // slow to deliver it. A list cell's `UISwitch` takes a down and a lift that arrive together as no tap, so the
         // caller reads the state. A drag or a held contact says nothing: only a tap's were measured to lose anything.
         ...(!drag && began.dispatched >= end.t ? { downAfterLift: true } : {}),

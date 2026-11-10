@@ -1,4 +1,4 @@
-//! What a form control's `input` and `change` may carry:
+//! What a form control's `input` and `change` may carry (LLP 1069.001 D4):
 //! the payload its kind reports, held to HTML's rules on every host, so an
 //! action's parameter is never a string to parse and an agent's `type`
 //! fails the same way wherever it runs.
@@ -33,7 +33,7 @@ impl<D: DataSource> Runner<D> {
             )
             | (Some(ControlKind::Checkbox | ControlKind::Switch), ControlValue::Checked(_))
             | (Some(ControlKind::File), ControlValue::Files(_)) => Ok(value.value()),
-            // A select reports the chosen option's
+            // @ref LLP 1069.001 D4 — a select reports the chosen option's
             // value: one of its enabled options, as a menu could choose.
             (Some(ControlKind::Select), ControlValue::Text(chosen)) => {
                 let choices = self.kernel.select_choices(view);
@@ -50,8 +50,8 @@ impl<D: DataSource> Runner<D> {
                     ))),
                 }
             }
-            // A radio reports its own value as it becomes checked: HTML's
-            // `value`, `on` when it has none.
+            // A radio reports its own value as it becomes checked (x2apps
+            // survey #2): HTML's `value`, `on` when it has none.
             (Some(ControlKind::Radio), ControlValue::Text(text)) => {
                 let own = self.kernel.radio_value(view);
                 if *text != own {
@@ -62,7 +62,7 @@ impl<D: DataSource> Runner<D> {
                 Ok(value.value())
             }
             // A range reports a number, clamped and snapped as HTML does,
-            // whatever a host sent.
+            // whatever a host sent (LLP 1069.001 D4).
             (Some(ControlKind::Range), ControlValue::Text(text)) => {
                 let node = self.kernel.node(view).expect("a control");
                 let number = exact_num::parse_f64(text.trim())

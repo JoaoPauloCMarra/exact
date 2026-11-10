@@ -1,6 +1,6 @@
-// @exact/usb on the web: WebUSB (https://wicg.github.io/webusb/), the browser's chooser and its
+// @exact/usb on the web (LLP 1133.037 D13): WebUSB (https://wicg.github.io/webusb/), the browser's chooser and its
 // remembered devices, in the interface's shapes. The page runtime (host/web-js/modules.js) calls it outside the agent.
-// A device is opened once and each `open` is a lease on it; a claim belongs to the connection that made it, and
+// A device is opened once and each `open` is a lease on it (D5); a claim belongs to the connection that made it, and
 // another connection's claim of the same interface fails `NetworkError`, as a second tab's does.
 
 const b64 = bytes => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s); };
@@ -113,7 +113,7 @@ export function implementation({ changed }) {
       c.claimed.clear();
       const left = (leases.get(c.device) ?? 1) - 1;
       leases.set(c.device, left);
-      // The device closes with its last lease.
+      // The device closes with its last lease (D5).
       if (left === 0) { leases.delete(c.device); await c.device.close().catch(() => {}); }
       announce();
       return null;

@@ -1,6 +1,6 @@
 //! CSS easing functions.
 //!
-//! CSS Easing Functions Level 1 (`<easing-function>`).
+//! @ref LLP 1002 §2; CSS Easing Functions Level 1 (`<easing-function>`)
 //!
 //! Every curve here is CSS's, with CSS's output: `linear`, the four keyword
 //! cubic Béziers, `cubic-bezier()`, `steps()`, and `linear()`. The browser is

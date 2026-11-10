@@ -165,7 +165,7 @@ fn snapping_a_played_transition_retires_its_reader_tracks() {
 /// A look naming opacity that arrives while the reader plays the node's
 /// opacity transition (a `SetLooks` mid-track: a live design's, a new
 /// generation's) takes the track back: the engine samples it from where its
-/// curve is, so the look composes on its sample.
+/// curve is, so the look composes on its sample (LLP 1121 D8, stage 9 G2).
 #[test]
 fn a_look_arriving_mid_track_takes_the_readers_track_back() {
     use exact_kernel::{Op, StyleId, StyleProps, StyleValue, LOOK_HOVER};

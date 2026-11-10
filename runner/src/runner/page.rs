@@ -1,4 +1,5 @@
 //! Host-owned page answers; never baked or carried device data.
+//! @ref LLP 1069.000 D2
 use super::{DataError, DataSource, Runner, RunnerError};
 use crate::page::{Page, SOURCE};
 use exact_kernel::CommitReceipt;
@@ -21,7 +22,7 @@ impl<D: DataSource> Runner<D> {
             return Ok(None);
         }
         let previous = std::mem::replace(&mut self.page, page);
-        // The GPU tier is read through `exactViewport`.
+        // The GPU tier is read through `exactViewport` (LLP 1139.003 D2).
         let tier = previous.gpu_tier != page.gpu_tier;
         let which: Vec<usize> = (0..self.plan.resources.len())
             .filter(|i| {
@@ -31,7 +32,7 @@ impl<D: DataSource> Runner<D> {
             })
             .collect();
         // About to be suspended: a sequence stops in this commit, once it
-        // stands, and the commit carries its ends to the output.
+        // stands, and the commit carries its ends to the output (LLP 1125 D4).
         let result = if page.suspended && !previous.suspended && self.transport.playing() {
             self.transport.suspend = true;
             self.commit_again(which, "page").map(Some)

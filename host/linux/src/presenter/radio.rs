@@ -1,4 +1,4 @@
-//! `input type="radio"`, as Chrome runs one: a click
+//! `input type="radio"` (x2apps survey #2), as Chrome runs one: a click
 //! checks it and unchecks the rest of its available group at
 //! once, firing `input` then `change` with its value; a checked one takes
 //! no click. With one focused, the arrows move the focus and the check to

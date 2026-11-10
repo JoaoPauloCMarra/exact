@@ -187,7 +187,7 @@ fn a_fetched_plan_refused_at_boot_falls_back_to_baked() {
     let (presenter, error) = boot_presenter::<Named>(&mut config, size).unwrap();
     assert!(error.is_none(), "{error:?}");
     assert_eq!(presenter.node_count(), 1);
-    // The binary's facts reached the runner past the fallback.
+    // The binary's facts reached the runner past the fallback (LLP 1030 D7).
     assert_eq!(presenter.host().runner().delivery().store, '0');
 }
 
@@ -622,7 +622,7 @@ fn a_refused_initial_layout_releases_no_network_requests() {
     use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
     use std::sync::{Arc, OnceLock};
     // (origin, grants, the app's request's own path: the listener counts only requests to it, since a
-    // stranger on this machine can reach a reused ephemeral port.)
+    // stranger on this machine can reach a reused ephemeral port; QUEUE's stray request, 2026-09-09.)
     static ORIGIN: OnceLock<(String, String, String)> = OnceLock::new();
     struct Seed;
     impl DataSource for Seed {
@@ -729,7 +729,7 @@ fn a_refused_initial_layout_releases_no_network_requests() {
     ));
     let result = std::panic::catch_unwind(|| {
         let seed = contract::bake(
-            // Bake a placeholder keyed to this candidate's
+            // @ref LLP 1038 D5 — bake a placeholder keyed to this candidate's
             // delivery sequence, so a Later answer may retain it at boot.
             contract::compile(
                 &source

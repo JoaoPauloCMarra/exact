@@ -50,7 +50,7 @@ coverage, property results, refusals, timings and evaluators. Properties may hol
 be false, be counted only or remain unexercised. Suggestions are observed and
 code-consistent, not proved: the static walk widens frames, drops unsupported claims
 and counts both in the receipt. Suggestions never edit tests. Keep the receipt
-unchanged when you quote it; its digests identify the sources.
+unchanged in your diary; its digests identify the sources.
 
 “In the semantics' world” means seeded source answers arrive synchronously and
 never fail. The events are taps, typing, landing continuations and advancing the

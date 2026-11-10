@@ -181,7 +181,7 @@ fn fmt_keeps_a_state_part() {
 /// A `:hover` look is recorded on its node, its class's and its own rows
 /// composed by longhand, each a literal row; `:active` lowers to the press
 /// paint on the node, its class's then its own (the node's wins), with no
-/// look.
+/// look (LLP 1121 D8 as amended 2026-10-18).
 #[test]
 fn a_host_states_look_is_recorded_one_a_state() {
     let src = "style Card\n  background-color = \"#ffffff\"\n  :active\n    background-color = \"#eeeeee\"\n    opacity = 0.9\n  :hover\n    border-color = \"#cccccc\"\n\ncomponent App\n  state on = false\n  action go\n    on = !on\n  view\n    column class=Card press=go testId=\"card\"\n      :active\n        background-color = \"#dddddd\"\n        color = \"#ff0000\"\n      text \"c\"\n";
@@ -303,8 +303,8 @@ fn a_state_its_node_never_meets_is_linted() {
 }
 
 /// A node's own `:active` where it has no `press` never holds: the host's
-/// press needs one; a lint. A link with no `press` is linted as unreliable:
-/// only Apple presses it.
+/// press needs one (theme2's 07:06 question); a lint. A link with no `press`
+/// is linted as unreliable: only Apple presses it (theme2's 11:48).
 #[test]
 fn an_active_part_without_a_press_is_linted() {
     let src = "component App\n  state n = 0\n  state url = \"https://example.com\"\n  action go\n    n = n + 1\n  view\n    column\n      column testId=\"dead\"\n        :active\n          opacity = 0.5\n        text \"d\"\n      column press=go testId=\"live\"\n        :active\n          opacity = 0.5\n        text \"l\"\n      text \"link\" href=\"https://example.com\"\n        :active\n          opacity = 0.5\n      link href=\"https://example.com\"\n        :active\n          opacity = 0.5\n        text \"l\"\n      link href=url\n        :active\n          opacity = 0.5\n        text \"b\"\n";
@@ -333,7 +333,7 @@ fn an_active_part_without_a_press_is_linted() {
     );
 }
 
-/// A state that leaves a row unwritten in some arm keeps
+/// Review round 1: a state that leaves a row unwritten in some arm keeps
 /// the base's; a link keeps its colour, an `hr` its separator, unless the
 /// state holds; a `:checked` row is no disabled look.
 #[test]
@@ -405,8 +405,8 @@ fn round_one_refusals_and_typing() {
     assert_eq!(contract_syntax::fmt::format(&once).unwrap(), once);
 }
 
-/// A state row that computes a token's name keeps every colour token, as
-/// the node's own computed row does.
+/// Review round 1 (Astra): a state row that computes a token's name keeps
+/// every colour token, as the node's own computed row does (D7).
 #[test]
 fn a_computed_state_row_keeps_the_tokens_it_may_name() {
     let dir = std::env::temp_dir().join(format!("exact2-state-retained-{}", std::process::id()));
@@ -428,7 +428,7 @@ fn a_computed_state_row_keeps_the_tokens_it_may_name() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A grouped list's implied ground stays implied under a
+/// Review round 2: a grouped list's implied ground stays implied under a
 /// state; a `match` with no value in an arm and no base is said; a `match`
 /// arm with no value over a base keeps it; a refused look leaves a source
 /// map's sites in step.
@@ -460,7 +460,7 @@ fn round_two_edges() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A swipe row is still a row; a grouped section's header
+/// Review round 3: a swipe row is still a row; a grouped section's header
 /// text is none; a `match` binding the name its base reads keeps the base;
 /// an author's state colour over an implied one is written.
 #[test]
@@ -490,8 +490,8 @@ fn round_three_edges() {
     );
 }
 
-/// A param read only by a state part is reached (`PostButton.pressed`,
-/// read by `:active` alone), kept by the plan, and
+/// Stage 8 F: a param read only by a state part is reached (D15's
+/// `PostButton.pressed`, read by `:active` alone), kept by the plan, and
 /// named by the look's row as a static row names a token; one read by
 /// `:disabled` folds into the node's row.
 #[test]
@@ -561,14 +561,14 @@ fn a_param_read_only_by_a_state_part_is_reached() {
     assert!(o.contains("0.6") || o.contains("0.59999"), "{o}");
     // In a style's state part, which another component applies too, a
     // param is out of scope, as in a style's row; one component alone
-    // applying it reads its params.
+    // applying it reads its params (LLP 1139 D3).
     std::fs::write(dir.join("app.contract"), "component App\n  view\n    PostButton()\n    column class=Look\n      text \"x\"\n\nstyle Look\n  :active\n    background-color = \"param.fill\"\n\ncomponent PostButton\n  params\n    fill: color = \"accent.fill\"\n  view\n    column class=Look background-color=\"param.fill\"\n      text \"Post\"\n").unwrap();
     let e = contract::compile_path(&dir.join("app.contract")).unwrap_err();
     assert_eq!(e.id, "tamber-param-scope", "{e:?}");
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A run inside a paragraph has no box of its own on
+/// theme2's 08:13 ruling: a run inside a paragraph has no box of its own on
 /// every host, so a host-known part on it is `lower-state-target`; a
 /// runner-known one folds as on any node.
 #[test]

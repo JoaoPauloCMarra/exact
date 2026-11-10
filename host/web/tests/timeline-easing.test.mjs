@@ -1,4 +1,4 @@
-// A drag timeline's release on the web: a consumer plays a
+// A drag timeline's release on the web (LLP 1057.003 D3): a consumer plays a
 // copy of its keyframes with the `linear()` easing `timelineEasing` gives
 // for the spring's frames. The first tests evaluate that easing against the
 // directed progress written out by hand; the browser test holds it, between
@@ -358,7 +358,7 @@ check('a real commit rebinds a spring follower on the wasm and JS runtimes', asy
   try {
     writeFileSync(resolve(tmp, 'follower.contract'), FOLLOWER_SOURCE);
     run(compiler, ['build', resolve(tmp, 'follower.contract'), '-o', plan]);
-    // Use prepared Caltrain builds when both paths are set (the plan reads no app data), else build
+    // Use the lane's prepared Caltrain builds when both paths are set (the plan reads no app data), else build
     // Interaction Gallery's
     const { EXACT_MOTION_DIST: preparedWasm, EXACT_WEB_JS_DIST: preparedJs } = process.env;
     const prepared = Boolean(preparedWasm && preparedJs), app = prepared ? 'caltrain' : 'interaction-gallery';

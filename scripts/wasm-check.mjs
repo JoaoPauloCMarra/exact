@@ -1,14 +1,14 @@
 // The workspace crates a web app links for wasm32, checked for that target (`cargo check --target
 // wasm32-unknown-unknown`): caps.mjs runs `wasmCheck` before every push. A native build and its tests never compile
-// them for wasm, so a name only a `cfg(unix)` arm gives (a gallery's, 5540abbfc0) broke every wasm web build for 70
-// minutes, until a wasm build saw it.
+// them for wasm, so a name only a `cfg(unix)` arm gives (G2's gallery, 5540abbfc0) broke every wasm web build for 70
+// minutes, until the lane's wasm loop saw it.
 //
 // When it runs: when the target directory already holds this check, always (Cargo's fingerprints then decide what
 // changed, `include_str!` inputs and build scripts' too, and a check with nothing to do takes under a second); in a
 // target directory with none yet, when a change since origin/main touches Rust, Cargo or the toolchain, or any file
 // but a test inside a checked crate's directory (cold, the check takes about a minute and 300 MB, so a push of
 // scripts or docs alone does not pay it; an `include_str!` input outside the crates, docs/recipes' say, waits for the
-// next check here); with no origin/main, always. It leaves out the app crates themselves (two minutes cold, Caltrain's data) and the
+// next check here or the lane's); with no origin/main, always. What it leaves out is the lane's: the app crates themselves (two minutes cold, Caltrain's data) and the
 // GPU leaves (wgpu, three). EXACT_CAPS_WASM=0 skips it (a test that runs caps on this checkout for something else).
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
@@ -43,7 +43,7 @@ export function changedSince(root, base = 'origin/main') {
 }
 
 /** The workspace's library crates in the wasm32 graph of its web apps (`apps/<app>/web`, or `apps/<app>/app/web`
- * for an app beside its Snapback backend), the apps and vendored
+ * for an app beside its Snapback backend, Harmony's layout), the apps and vendored
  * crates aside; and Cargo's target directory. Throws rather than answering none. */
 export function wasmCrates(root) {
   const meta = JSON.parse(run(root, 'cargo', ['metadata', '--no-deps', '--offline', '--format-version', '1']).stdout);

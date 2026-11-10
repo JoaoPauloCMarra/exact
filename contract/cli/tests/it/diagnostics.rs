@@ -525,7 +525,7 @@ fn unknown_import_lists_only_target_exports_and_repairs_through_the_cli() {
     assert_eq!(expected.span.line, 3);
     assert_eq!(expected.file.as_deref(), Some(root.as_path()));
     // Only what barrel declares or itself names: Row, Item, Line and label
-    // reach it through Left and Right, which do not pass them on.
+    // reach it through Left and Right, which do not pass them on (LLP 1091 D1).
     assert_eq!(expected.message, "`./barrel.contract` declares no component, shape, style, function, keyframes, or timeline `Rwo`; available components: `Left`, `Right`, `Wrapper`");
     let output = app.run(&[root.to_str().unwrap(), "--json", "-o", "out.plan"]);
     let errors = diagnostics(&output, 1);
@@ -658,7 +658,7 @@ fn plan_writes(plan: &exact_plan::Plan) -> Vec<(String, Vec<String>)> {
         .collect()
 }
 
-// Effects are inferred; the clause is refused.
+// @ref LLP 1035.005.000 D1 — effects are inferred; the clause is refused.
 #[test]
 fn an_imported_writes_clause_is_refused_at_its_token_and_symbols_show_the_inferred_effects() {
     let app = App::new("action-effects");
@@ -749,7 +749,7 @@ fn the_plans_allowlist_is_every_slot_the_body_writes_or_sends_in_slot_order() {
 fn missing_providers_report_every_absent_inject_on_the_use_path() {
     let app = App::new("missing-provides");
     // A sibling component's `provide` section cannot satisfy the use
-    // (a section covers its own component's view).
+    // (LLP 1035.005.000 D9: a section covers its own component's view).
     let sibling = "use Row from \"./lib/row.contract\"\ncomponent App\n  view\n    view\n      Other()\n      Row()\ncomponent Other\n  provide\n    locale = \"Sibling\"\n  view\n    text \"Other branch\"\n";
     let root = app.write("app.contract", sibling);
     app.write("lib/card.contract", "component Card\n  inject\n    theme: string\n    locale: string\n    density: number\n  view\n    text `${theme} ${locale} ${density}`\n");
@@ -1364,7 +1364,7 @@ fn scroll_payload_arity_is_a_diagnostic() {
     }
 }
 
-/// Refusals that name the fix, each asserted whole.
+/// LLP 1088 D4, D7.1, D7.4: refusals that name the fix, each asserted whole.
 #[test]
 fn refusals_from_the_app_diaries_name_the_fix() {
     let refused = |src: &str| {
@@ -1374,7 +1374,7 @@ fn refusals_from_the_app_diaries_name_the_fix() {
     let says = |src: &str, id: &str, message: &str| {
         assert_eq!(refused(src), (id.to_string(), message.to_string()), "{src}");
     };
-    // An initializer's scope is said, not guessed at.
+    // D4 (kanban F5): an initializer's scope is said, not guessed at.
     let reads = "a state's initializer runs before any resource answers, and reads only props, injects and earlier states";
     says(
         "shape Col\n  id: string\nshape Board\n  cols: Col[]\ncomponent App\n  resource board = loadBoard() as shape Board\n  resource boardX = loadBoard() as shape Board\n  state scrolls = board.cols.map(c => c.id)\n  view\n    text \"a\"\n",
@@ -1397,7 +1397,7 @@ fn refusals_from_the_app_diaries_name_the_fix() {
         "type-initializer-scope",
         &format!("`twice` is a derive; {reads}. Make `x` a derive too, or start it from a value and write it in an action"),
     );
-    // The declaration that fits, payload named and typed.
+    // D7.1 (pomodoro F1): the declaration that fits, payload named and typed.
     says(
         "shape Task\n  id: string\n  done: bool\ncomponent App\n  resource tasks = loadTasks() as shape Task[]\n  action flipTask(id: string)\n    refresh tasks\n  view\n    column\n      for t in tasks key=t.id\n        input type=\"checkbox\" checked=t.done change=flipTask(t.id)\n",
         "analyze-handler-arity",
@@ -1413,7 +1413,7 @@ fn refusals_from_the_app_diaries_name_the_fix() {
         "analyze-handler-arity",
         "`press=save(\"a\")` calls `save` with `\"a\"` and nothing more; declare `action save(id: string)`, or `action save(id: string, event: MouseEvent)` for its `MouseEvent`",
     );
-    // The web's spellings, rewritten.
+    // D7.4 (ledger F3, hn-reader F2): the web's spellings, rewritten.
     says(
         "style Card\n  background-color: \"#fff\"\ncomponent App\n  view\n    text \"a\" class=Card\n",
         "syntax-expected-attr",
@@ -1453,7 +1453,7 @@ fn refusals_from_the_app_diaries_name_the_fix() {
             "write `s.replaceAll(find, with)`",
         ),
         ("substring(s, 1)", "write `s.slice(start, end)`"),
-        ("padStart(s, 2, \"0\")", "pad in the data module"),
+        ("padStart(s, 2, \"0\")", "LLP 1088 D2 defers it"),
         ("parseInt(s)", "write `parseNumber(s)` for `parseInt`"),
         ("Number(s)", "`none` for anything else"),
         ("random()", "random-rolls.md"),

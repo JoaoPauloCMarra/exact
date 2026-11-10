@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * evidence — what has been run against an app's current sources.
+ * evidence — what has been run against an app's current sources (LLP 1146 D2).
  *
  * Each drive and test run (`agent.mjs`, `verify`) appends a line to `<app>/.exact/runs.jsonl`: when, on which host and
  * target, on which clock, what ran, what it found, the commit, and the build it ran on, named by the digest of that

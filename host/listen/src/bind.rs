@@ -1,4 +1,4 @@
-//! Paths: the directory, the staging name, publication and removal.
+//! D4: the directory, the staging name, publication and removal.
 //!
 //! The parent directory is the user's own and `0700`, so nobody else can
 //! create, rename or remove an entry in it. The socket is bound under a
@@ -8,7 +8,7 @@
 //! removal run under an exclusive `flock` on `<path>.lock`, so a listener
 //! never removes a newer one's socket between its inode check and its
 //! `unlink`. A program that publishes on the path without the lock can still
-//! race that check, a declared limit.
+//! race that check, a declared limit (LLP 1133.005 §10).
 use std::fs;
 use std::io;
 use std::os::unix::fs::{DirBuilderExt, MetadataExt, OpenOptionsExt, PermissionsExt};
@@ -16,10 +16,10 @@ use std::os::unix::io::AsRawFd;
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::{Path, PathBuf};
 
-/// Why binding failed, as the `error` event names it.
+/// Why binding failed, as the `error` event names it (D1).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Failure {
-    /// Outside the path checks.
+    /// Outside D4's checks.
     Refused(String),
     /// A live socket holds the path and `takeover` is not set.
     AddressInUse(String),
@@ -221,7 +221,7 @@ pub struct Bound {
     pub took_over: bool,
 }
 
-/// Bind and publish at `path`, under the lock. `link` claims a free
+/// Bind and publish at `path` (D4), under the lock. `link` claims a free
 /// path; a stale socket, and a live one under `takeover`, is replaced by
 /// `rename`. Without `takeover` a live socket is `AddressInUse`. `over`: a
 /// listener of this process holds the path, so it is replaced unasked.
@@ -287,7 +287,7 @@ pub fn unpublish(path: &Path, ours: Identity) {
 
 /// The files this process has published and not removed: removed at its
 /// exit too, so a host that exits without closing its sessions (a drive's
-/// end, `exit()`) leaves no socket behind. A crash still leaves a stale
+/// end, `exit()`) leaves no socket behind (D4). A crash still leaves a stale
 /// one, which the next listener replaces.
 static PUBLISHED: std::sync::Mutex<Vec<(PathBuf, Identity)>> = std::sync::Mutex::new(Vec::new());
 
@@ -335,7 +335,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "binds real unix sockets; `cargo test -- --ignored` runs it"]
+    #[ignore = "async lane: binds real unix sockets"]
     fn a_missing_directory_is_made_private() {
         let d = dir("make");
         let path = d.join("a.sock");
@@ -351,7 +351,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "binds real unix sockets; `cargo test -- --ignored` runs it"]
+    #[ignore = "async lane: binds real unix sockets"]
     fn a_symlinked_or_plain_file_is_refused() {
         let d = dir("refuse");
         fs::create_dir(&d).unwrap();
@@ -371,7 +371,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "binds real unix sockets; `cargo test -- --ignored` runs it"]
+    #[ignore = "async lane: binds real unix sockets"]
     fn live_stale_and_takeover() {
         let d = dir("live");
         let path = d.join("a.sock");

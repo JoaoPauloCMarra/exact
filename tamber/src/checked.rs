@@ -1,5 +1,5 @@
 //! The last few designs a server's reads checked, with their answers
-//! (`check_design_cached`):
+//! (theme2's condition on the counts' dial influence; `check_design_cached`):
 //! a design asked about again, unchanged, is answered from here, so a client
 //! asking (`describe`, `resolve`, a scrub's frame) can't make the server fold
 //! the same design, its dial influence included, again and again. Keyed by the whole input (the design, the

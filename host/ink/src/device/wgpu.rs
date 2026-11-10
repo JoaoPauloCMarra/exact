@@ -1,4 +1,4 @@
-//! The portable device, the control the direct devices are measured against.
+//! The portable device and S0 control. @ref LLP 1149 D5.1, D6.3, D11.
 
 use super::{check_region, texture_ids};
 use super::{Device, Error, Format, Info, Result, Submission, TextureDesc};

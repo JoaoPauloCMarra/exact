@@ -1,4 +1,4 @@
-// One list's rows in a real, view-based
+// @ref LLP 1115.002 D5 — one list's rows in a real, view-based
 // `NSTableView`, fed by the runner (`TableHost` says which lists; this is
 // one list's feed). The runner still owns which rows are mounted and layout
 // still owns every size; the table owns its cells, its selection and its
@@ -10,7 +10,7 @@
 // stay the runner's, and the table is put where its rows that show are
 // where layout has them.
 //
-// What keeps the feed's cost a frame down (measured):
+// What the feed costs a frame is what stage 3b cut (measured, D5):
 // - A mounted row of a list the runner windows goes straight into its cell
 //   and stays there until the runner destroys it. The table keeps a row
 //   view for every row of the mounted run the port is in, not only for the
@@ -475,7 +475,7 @@ final class TableFeed: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         // none (`display: none`) is no row, and neither is a positioned
         // one, which stays in the document as the presenter has it. The
         // host is not told a child's `position`. It is told its paint rank
-        // among its siblings: none for a plain box in the flow,
+        // among its siblings (LLP 1083): none for a plain box in the flow,
         // some for a positioned box and for a scroller in the flow (a row
         // that swipes). So a ranked child is a row where it stands in the
         // flow: after the row before it and before the next plain box.
@@ -822,7 +822,7 @@ final class TableFeed: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         // is the mouse's alone, and so is every other row's press here.
         if let mounted, table.keying, navigates(mounted) { pressRow(row) }
         // The person took the selection off its row (a Command-click): a
-        // split's pane then shows nothing (SplitMac.swift).
+        // split's pane then shows nothing (LLP 1115.002 D4, SplitMac.swift).
         if row < 0 { presenter?.navigation.split.deselected(id) }
     }
     /// The split's word on the selection (SplitMac.swift): the row whose

@@ -1,5 +1,8 @@
 //! The compiler as one call.
 //!
+//! @ref LLP 1004 D2 (the driver) / D4 (constant resources are compiled data)
+//! / D6 (the corpus)
+//!
 //! `compile` runs the four passes and returns a validated plan whose bytes
 //! are a pure function of the source. `bake` then boots the runner once
 //! against the app's data source and writes every resource's boot value into
@@ -11,7 +14,7 @@ mod activities;
 mod excerpt;
 pub use excerpt::excerpt;
 
-/// Whether an attribute writes paint rows alone: `set-row`
+/// Whether an attribute writes paint rows alone (LLP 1122 D14): `set-row`
 /// edits one; a layout row, a prop or a handler is the author's. The source
 /// map marks a written row that is not (`layout`).
 pub fn paint_row(a: &contract_syntax::Attr) -> bool {
@@ -19,12 +22,12 @@ pub fn paint_row(a: &contract_syntax::Attr) -> bool {
     !rows.is_empty() && !rows.iter().any(|r| r.affects_layout())
 }
 mod declaration;
-/// A faced tool's signature and digest.
+/// A faced tool's signature and digest (LLP 1133.023 D8).
 pub mod faces;
 pub mod functions;
 pub mod gallery;
 mod grants;
-/// The Lean backend: a program as a term of `semantics/` (see
+/// The Lean backend: a program as a term of `semantics/` (LLP-free; see
 /// `semantics/README.md`).
 pub mod lean;
 mod logic;
@@ -56,7 +59,7 @@ pub use tests_json::{authored_json, tests_json};
 pub mod snapshot;
 pub mod tamber_levels;
 pub mod tamber_params;
-/// `uses` (commit 6): where the app reads a token.
+/// `uses` (LLP 1121 stage 4, commit 6): where the app reads a token.
 pub mod tamber_uses;
 pub mod terminal;
 mod typescript;
@@ -78,9 +81,9 @@ pub use sources::{
 };
 pub use symbols::symbols_json;
 pub use typescript::{design_exports, typescript, typescript_exporting};
-/// The app's strings tables, `None` for an app without a
+/// The app's strings tables (LLP 1060 D1), `None` for an app without a
 /// `strings` directory, every refusal in one message: the bake reads grant
-/// purposes from them.
+/// purposes from them (LLP 1069.008 D1).
 pub fn strings_tables(app_root: &Path) -> Result<Option<std::sync::Arc<Strings>>, String> {
     strings::load(app_root, &app_root.join("app.contract")).map_err(|all| {
         all.iter()
@@ -95,7 +98,7 @@ use exact_plan::builder::PlanBuilder;
 use exact_plan::{Plan, ResourcesId};
 use exact_runner::{Runner, RunnerError};
 use std::path::{Path, PathBuf};
-/// A refusal from `bake`: the runner's, or the layout lint's.
+/// A refusal from `bake`: the runner's, or the layout lint's (LLP 1017 P1d).
 #[derive(Debug)]
 pub enum BakeError {
     /// The runner refused to boot or to settle.
@@ -167,7 +170,7 @@ pub struct CompileError {
     pub related: Box<[RelatedLocation]>,
 }
 impl CompileError {
-    /// A warning: lowering's non-fatal diagnostic, which fails
+    /// A warning (LLP 1116 D6): lowering's non-fatal diagnostic, which fails
     /// no build and no test and is reported after the refusals.
     pub fn warning(e: contract_lower::LowerError) -> CompileError {
         CompileError {
@@ -179,11 +182,11 @@ impl CompileError {
     pub fn is_warning(&self) -> bool {
         self.pass == "warning"
     }
-    /// A machine-readable diagnostic. Columns are one-based
+    /// A machine-readable diagnostic (LLP 1035.005 D2). Columns are one-based
     /// UTF-8 byte offsets with an exclusive end; zero means no source range.
     /// Standalone source has a null file. Every related location owns its file;
     /// no location is guessed from message text. `severity` is `"error"` for
-    /// a refusal and `"warning"` for a warning.
+    /// a refusal and `"warning"` for a warning (LLP 1116 D6).
     pub fn to_json(&self) -> String {
         serde_json::json!({
             "id": self.id,
@@ -261,10 +264,10 @@ impl From<contract_analyze::AnalyzeError> for CompileError {
     }
 }
 from_pass!(contract_lower::LowerError, "lower");
-/// A source text's components' `param.` names as their tokens, as the loader
-/// writes them for a file; a text with no path is `app.contract`, as an
-/// app's root is. A text with no path has no members files either, so one
-/// that names any is refused.
+/// A source text's components' `param.` names as their tokens (LLP 1121
+/// D15), as the loader writes them for a file; a text with no path is
+/// `app.contract`, as an app's root is. A text with no path has no members
+/// files either, so one that names any is refused.
 pub(crate) fn params(file: &mut contract_syntax::File) -> Result<(), CompileError> {
     sources::standalone_members(file)?;
     for c in &mut file.components {
@@ -279,7 +282,7 @@ pub(crate) fn params(file: &mut contract_syntax::File) -> Result<(), CompileErro
         None => Ok(()),
     }
 }
-/// A source text's `var()`s as its tokens, as the loader
+/// A source text's `var()`s as its tokens (LLP 1153 D6), as the loader
 /// writes them for a file, from the one design a text has, its inline
 /// `theme`: the first row refused, or the warning for a fallback dropped.
 fn vars(file: &mut contract_syntax::File) -> Result<Vec<CompileError>, CompileError> {
@@ -315,7 +318,7 @@ pub fn compile(src: &str) -> Result<Plan, CompileError> {
     }
     compile_file(file, None)
 }
-/// [`compile`], with the warnings beside its result: every
+/// [`compile`], with the warnings beside its result (LLP 1116 D6): every
 /// one the text earns once it type-checks, whether it then compiled or not.
 pub fn compile_warned(src: &str) -> (Result<Plan, CompileError>, Vec<CompileError>) {
     let mut warned = Vec::new();
@@ -341,7 +344,7 @@ pub fn compile_warned(src: &str) -> (Result<Plan, CompileError>, Vec<CompileErro
         });
     (result, warned)
 }
-/// [`compile`] for a terminal entry: the terminal admission
+/// [`compile`] for a terminal entry (LLP 1101): the terminal admission
 /// profile first, then the plan with the terminal's field sheet — what
 /// [`compile_path_terminal`] does for a file, for a test's source text.
 pub fn compile_terminal(src: &str) -> Result<Plan, CompileError> {
@@ -357,13 +360,14 @@ pub fn compile_terminal(src: &str) -> Result<Plan, CompileError> {
         .map(|(plan, _)| plan)
         .map_err(first)
 }
-/// Compile a file by path, resolving every `use … from "./other.contract"`:
-/// the used file is loaded the same way, transitively, and all of its
-/// declarations — shapes, styles, components — are merged into the using
-/// file after its own, each file's names its own, so the using file's first
-/// component stays the root and a used component is a child. The named
-/// declaration must exist in the used file; one name brought from two files'
-/// declarations, however alike, is refused; a cycle is refused.
+/// Compile a file by path, resolving every `use … from "./other.contract"`
+/// (LLP 1017 P8): the used file is loaded the same way, transitively, and
+/// all of its declarations — shapes, styles, components — are merged into
+/// the using file after its own, each file's names its own (LLP 1091), so
+/// the using file's first component stays the root and a used component is
+/// a child. The named declaration must exist in the used file; one name
+/// brought from two files' declarations, however alike, is refused; a cycle
+/// is refused.
 pub fn compile_path(path: &Path) -> Result<Plan, CompileError> {
     compile_path_source(path, &read_source(path)?)
 }
@@ -435,7 +439,7 @@ pub fn compile_path_source_mapped(
 }
 
 /// Every source compiling `path` reads, the root first, with where each came
-/// from, and the loader's refusals if it stopped: what a
+/// from, and the loader's refusals if it stopped (LLP 1091 D10): what a
 /// capture copies, a watcher watches, and a deploy freezes.
 pub fn source_graph(path: &Path) -> SourceGraph {
     source_graph_base(path).map_or_else(|refused| refused, |base| base.tail())
@@ -444,7 +448,7 @@ pub fn source_graph(path: &Path) -> SourceGraph {
 /// [`source_graph`]'s Contract half ([`sources::GraphBase`]), which reads no design file, or its refusal (the root
 /// unreadable) as the whole graph: the design server's walk keeps it across a design-only edit.
 pub fn source_graph_base(path: &Path) -> Result<GraphBase, SourceGraph> {
-    // The server's planned text of the root, where it has one.
+    // The server's planned text of the root, where it has one (stage 8 D).
     let refused = |message: String| SourceGraph {
         sources: Vec::new(),
         packages: Vec::new(),
@@ -484,10 +488,10 @@ pub fn unreached(path: &Path) -> Vec<PathBuf> {
 /// A file [`fix_uses`] wrote, and the `use` lines it wrote there.
 pub type WrittenUses = (PathBuf, Vec<String>);
 
-/// Write the `use` lines each file of the program rooted at `path` lacks, as
-/// a `contract-use-missing` names them: each file written, with its lines,
-/// and the refusals no line answers (a name two files declare, a generated
-/// name), which stay the author's.
+/// Write the `use` lines each file of the program rooted at `path` lacks
+/// (LLP 1091 D1), as `contract-use-missing` names them: each file written,
+/// with its lines, and the refusals no line answers (a name two files
+/// declare, a generated name), which stay the author's.
 pub fn fix_uses(path: &Path) -> Result<(Vec<WrittenUses>, Vec<CompileError>), Vec<CompileError>> {
     let source_root = path
         .parent()
@@ -541,7 +545,7 @@ pub fn fix_uses(path: &Path) -> Result<(Vec<WrittenUses>, Vec<CompileError>), Ve
 }
 
 /// For a build script: `cargo:rerun-if-changed` for every source compiling
-/// `path` reads, and each package's `package.json`, so an
+/// `path` reads, and each package's `package.json` (LLP 1091 D10), so an
 /// edit to a used file or a library rebuilds the plan, not only an edit to
 /// the root.
 pub fn rerun_if_changed(path: &Path) {
@@ -563,7 +567,7 @@ pub fn rerun_if_changed(path: &Path) {
     // A nearer `node_modules` an install could create or fill: installing
     // edits the `package.json` and lockfile beside it, which exist.
     for consulted in graph.consulted.iter().filter(|path| !path.exists()) {
-        // A package's design not there yet: its directory,
+        // A package's design not there yet (LLP 1121 D11): its directory,
         // which making it changes.
         if consulted.extension().is_some_and(|e| e == "tamber") {
             if let Some(dir) = consulted.parent().filter(|d| d.is_dir()) {
@@ -590,8 +594,8 @@ pub fn rerun_if_changed(path: &Path) {
 /// (`.shells/surfaces.json`, written by its last GPU build), apart from the
 /// compile: the author's commands report them as warnings while the game's
 /// Rust is newer than the declaration, and `contract types`/`rust` never
-/// stop on them. A bake checks them as errors, against the declaration its
-/// GPU build has just written.
+/// stop on them (the platformer's diary, R4). A bake checks them as errors,
+/// against the declaration its GPU build has just written.
 pub struct SurfaceFindings {
     /// Every call the declaration refuses.
     pub findings: Vec<CompileError>,
@@ -632,7 +636,7 @@ pub fn resource_clock_warnings(path: &Path) -> Result<Vec<CompileError>, Vec<Com
         .collect())
 }
 
-/// Compile a terminal entry: the terminal profile's refusals,
+/// Compile a terminal entry (LLP 1101 D2): the terminal profile's refusals,
 /// every one, then the ordinary compile.
 pub fn compile_path_terminal(path: &Path) -> Result<Plan, Vec<CompileError>> {
     let src = read_source(path).map_err(|e| vec![e])?;
@@ -647,10 +651,10 @@ pub fn compile_path_terminal(path: &Path) -> Result<Plan, Vec<CompileError>> {
         .map(|(plan, _)| plan)
 }
 
-/// Compile an app's watch entry: its own file, whose first
-/// component is the root, refused by the watch's admission and then
+/// Compile an app's watch entry (LLP 1126.002 D4): its own file, whose first
+/// component is the root, refused by the watch's admission (D9) and then
 /// compiled as a whole live plan with the main plan's checks, as a terminal
-/// entry is its own file.
+/// entry is its own file (LLP 1101 D2).
 pub fn compile_watch(app: &Path, entry: &manifest::WatchEntry) -> Result<Plan, Vec<CompileError>> {
     let path = app.join(&entry.source);
     let src = read_source(&path).map_err(|e| vec![e])?;
@@ -679,12 +683,12 @@ pub fn compile_watch(app: &Path, entry: &manifest::WatchEntry) -> Result<Plan, V
 }
 
 /// The buttons whose `aria-keyshortcuts` chord types a key the game's
-/// `Actions` also bind, as warnings: on every host the
+/// `Actions` also bind (LLP 1132 D11), as warnings: on every host the
 /// shortcut takes that press, the key with exactly the chord's modifiers,
 /// first, so the world does not hear it while the button shows; the key
 /// with other modifiers still reaches the world. With a stale or missing
 /// `.shells/keys.json`, a warning saying so. In an app with a Windows host,
-/// the chords that never reach it there. Empty for an
+/// the chords that never reach it there (LLP 1115.004 D9.6). Empty for an
 /// app that declares no shortcut.
 pub fn shortcut_findings(path: &Path) -> Result<Vec<CompileError>, Vec<CompileError>> {
     let src = read_source(path).map_err(|e| vec![e])?;
@@ -767,14 +771,14 @@ pub fn compile_path_all_unchecked(
 }
 
 /// What a build's result and warnings are: the plan or the refusals, and
-/// beside either the warnings, which never fail it.
+/// beside either the warnings (LLP 1116 D6), which never fail it.
 pub type Warned = (
     Result<(Plan, Option<SourceMap>), Vec<CompileError>>,
     Vec<CompileError>,
 );
 
-/// [`compile_path_all_unchecked`], with the warnings beside the result:
-/// every one the checked file earns, at most
+/// [`compile_path_all_unchecked`], with the warnings beside the result
+/// (LLP 1116 D6): every one the checked file earns, at most
 /// [`contract_lower::MAX_WARNINGS`], whether lowering then succeeded or
 /// refused. A file the type checker refuses has none.
 pub fn compile_path_all_warned(path: &Path, mapped: bool) -> Warned {
@@ -784,7 +788,7 @@ pub fn compile_path_all_warned(path: &Path, mapped: bool) -> Warned {
 /// [`compile_path_all`], surface arguments checked, with the warnings beside
 /// the result as [`compile_path_all_warned`] gives them: what a build (the
 /// web's, a bake) prints, so they reach whoever ran it and not only
-/// `contract build`.
+/// `contract build` (LLP 1116.004 D7).
 pub fn compile_path_all_with_warnings(path: &Path, mapped: bool) -> Warned {
     compile_path_all_warned_with(path, mapped, true)
 }
@@ -831,9 +835,10 @@ pub fn web_only_said(said: &str) -> bool {
         .is_some_and(|(id, message)| contract_lower::warning_rank::web_only(id, message))
 }
 
-/// The one line a build's text says for its [`web_only`] warnings, the first
-/// as said and their number, at the first's place, so that many of them do
-/// not bury the warnings above them. `contract build --json` lists each.
+/// The one line a build's text says for its [`web_only`] warnings, the
+/// first as said and their number, at the first's place: the euxy port's
+/// 21 of them buried the warnings above them. `contract build --json`
+/// lists each.
 pub fn web_only_line(first: &str, count: usize) -> String {
     let at = first.split_once(" warning [").map_or("", |(at, _)| at);
     let one = count == 1;
@@ -995,7 +1000,7 @@ fn compile_loaded(
 }
 
 fn compile_file(file: File, asset_root: Option<&Path>) -> Result<Plan, CompileError> {
-    // Media alone: a text has no app, so no `file_handlers`.
+    // Media alone: a text has no app, so no `file_handlers` (LLP 1069.002 D1).
     picker::check(&file, None)
         .and(orientationlock::check(&file, None))
         .map_err(first)?;
@@ -1021,7 +1026,7 @@ fn compile_file_output(
 }
 
 /// [`compile_file_output`], adding to `warned`, when given, the warnings of
-/// a file the type checker accepts. After analysis succeeds,
+/// a file the type checker accepts (LLP 1116 D6). After analysis succeeds,
 /// warnings use lowering's typography and control decisions, even if lowering
 /// refuses. An analysis failure uses the checked tree alone. A compile nobody
 /// reads warnings from does not look for them.
@@ -1124,7 +1129,7 @@ pub fn bake<D: DataSource>(mut plan: Plan, data: D) -> Result<Plan, BakeError> {
     let pending: Vec<String> = runner.pending().into_iter().map(|(n, _)| n).collect();
     let dated = runner.resources_reading_clock();
     // A resource over a list compiles nothing: its elements are the
-    // launch's to ask, and they follow the plan's rows.
+    // launch's to ask (LLP 1017.000 P4c), and they follow the plan's rows.
     for i in 0..runner.declared_resources().len() {
         if runner.plan().resources[i].each.len != 0 {
             continue;
@@ -1133,23 +1138,26 @@ pub fn bake<D: DataSource>(mut plan: Plan, data: D) -> Result<Plan, BakeError> {
             .plan()
             .str(runner.plan().resources[i].name)
             .to_string();
-        // A resource that observed secrets or external storage is the
-        // device's to answer, not the build's: the bake's store is empty by
+        // A resource that observed secrets or external storage is the device's to answer,
+        // not the build's (LLP 1018 D4): the bake's store is empty by
         // construction, so what is compiled for it is the empty-store answer
         // — the fresh install's first frame, never a developer's session —
-        // and the row says so (`reader`), so the runner treats that value as
-        // a placeholder: a kept answer from the device beats it, and a data
-        // source not ready at boot is asked again at `data_ready`.
+        // and the row says so (`reader`, LLP 1027 D4 as ruled 2026-09-03),
+        // so the runner treats that value as a placeholder: a kept answer
+        // from the device beats it, and a data source not ready at boot is
+        // asked again at `data_ready`.
         if runner.resource_reads_store(&name) {
             b.set_resource_reader(ResourcesId(i as u32), true);
         }
-        // A source that answers later at build shows its placeholder there;
-        // that is not its answer, so a launch asks it. Nor is any
-        // placeholder, even one shown without a ticket (a source not ready).
-        // Nor is an answer that drew randomness: its value would be one draw
-        // every install shares. Nor is an answer asked at the bake's date,
-        // which is unknown (zero): a launch would show it as the device's, as
-        // a fresh install's "edited 20743d ago".
+        // @ref LLP 1048.003 D6 — a source that answers later at build shows
+        // its placeholder there; that is not its answer, so a launch asks it.
+        // @ref LLP 1054.000.002 D4 — nor is any placeholder, even one shown
+        // without a ticket (a source not ready).
+        // @ref LLP 1069.005 D2 — nor is an answer that drew randomness: its
+        // value would be one draw every install shares.
+        // @ref LLP 1027.000.000 D2 — nor is an answer asked at the bake's
+        // date, which is unknown (zero): a launch would show it as the
+        // device's, as a fresh install's "edited 20743d ago".
         if pending.contains(&name)
             || runner.resource_is_placeholder(&name)
             || runner.resource_draws_entropy(&name)
@@ -1159,7 +1167,7 @@ pub fn bake<D: DataSource>(mut plan: Plan, data: D) -> Result<Plan, BakeError> {
         }
         if let Some(v) = runner.resource(&name) {
             b.set_resource_initial(ResourcesId(i as u32), v);
-            // The compiled value is keyed by evaluated arguments.
+            // @ref LLP 1038 D5 — the compiled value is keyed by evaluated arguments.
             b.set_resource_initial_args(
                 ResourcesId(i as u32),
                 runner.resource_args(&name).expect("settled resource"),
@@ -1170,14 +1178,14 @@ pub fn bake<D: DataSource>(mut plan: Plan, data: D) -> Result<Plan, BakeError> {
         .map_err(|e| BakeError::Runner(RunnerError::Plan(e)))
 }
 
-/// The bake's refusals for a build that does not bake — the web's JS target,
-/// whose page asks its data module after it boots: the same shape checks and
-/// the same layout lint, at the same point, so the web loop fails where a
-/// native bake would. The frame linted is the one that page shows first —
-/// every app source not yet answering, each resource at its placeholder.
-/// What only an answer shows is the native bake's alone, and a boot that
-/// needs an answer to finish (an `else source()` row) is not refused here:
-/// the page's own boot reports it.
+/// The bake's refusals for a build that does not bake — the web's JS target
+/// (LLP 1071), whose page asks its data module after it boots: the same
+/// shape checks and the same layout lint, at the same point, so the web
+/// loop fails where a native bake would (files diary F13). The frame linted
+/// is the one that page shows first — every app source not yet answering,
+/// each resource at its placeholder. What only an answer shows is the
+/// native bake's alone, and a boot that needs an answer to finish (an
+/// `else source()` row) is not refused here: the page's own boot reports it.
 pub fn check(plan: &Plan) -> Result<(), BakeError> {
     struct Unanswered;
     impl DataSource for Unanswered {
@@ -1259,7 +1267,7 @@ fn first_frame<D: DataSource>(
         "/",
     )?;
     // A binding that traps on the baked answers fails the build, where the
-    // runner would unset its row and go on.
+    // runner would unset its row and go on (LLP 1017.003 D3).
     if let Some(line) = runner.journal().find(|l| l.contains(" trapped Trap(")) {
         let site = line
             .split("(site ")
@@ -1275,10 +1283,11 @@ fn first_frame<D: DataSource>(
     Ok(runner)
 }
 
-/// The runner's own sources (delivery, viewport, page) are answered by the
-/// runner, not by the data crate, so the fields each can fill are a closed
-/// set — a declared field it does not know would refuse every boot on every
-/// device, which is a build-time refusal here instead, naming the field.
+/// The runner's own sources (LLP 1030 D7 delivery; LLP 1039 D1 viewport;
+/// LLP 1069.000 D2 page) are answered by the runner, not by the data crate,
+/// so the fields each can fill are a closed set — a declared field it does
+/// not know would refuse every boot on every device, which is a build-time
+/// refusal here instead, naming the field.
 fn fact_shape(
     plan: &Plan,
     source: &str,
@@ -1318,7 +1327,7 @@ fn fact_shape(
     Ok(())
 }
 
-/// The layout lint: the compiler cannot see layout, bake can.
+/// The layout lint (LLP 1017 P1d): the compiler cannot see layout, bake can.
 /// The first frame is laid out at [`LINT_VIEWPORT`] on the monospace
 /// measurer, and two things the diaries lost hours to are refused with the
 /// node's name: a `scroll` that is exactly as tall as its children with
@@ -1330,8 +1339,8 @@ fn fact_shape(
 /// placeholder is not given: an empty list's `scroll`, or a button whose
 /// label is a resource's empty zero. What stays is a pressable whose zero
 /// area is its own style's — `display: none` on it or an ancestor, a zero
-/// `width` or `height` — which no answer changes (a hidden shortcut button,
-/// say).
+/// `width` or `height` — which no answer changes (files diary F13: a hidden
+/// shortcut button).
 fn lint<D: DataSource>(runner: &mut Runner<D>, answered: bool) -> Result<(), BakeError> {
     let (w, h) = LINT_VIEWPORT;
     let roots = runner.roots();
@@ -1442,7 +1451,7 @@ fn lint<D: DataSource>(runner: &mut Runner<D>, answered: bool) -> Result<(), Bak
     Ok(())
 }
 
-/// Whether a node is in the split's own placeholder: no box
+/// Whether a node is in the split's own placeholder (LLP 1116.006 D2): no box
 /// but where a wide window's split shows it, which this layout is not.
 fn in_placeholder(kernel: &Kernel, node: exact_kernel::NodeRef<'_>) -> bool {
     let mut at = Some(node);

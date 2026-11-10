@@ -1,4 +1,4 @@
-//! Clock in through a runner: the tempo window, Start with a
+//! Clock in through a runner (LLP 1125 D9): the tempo window, Start with a
 //! running clock and from rest, a count-in counted in ticks, Stop, Continue
 //! and Song Position, a tempo change's re-anchoring and jitter's none, a key
 //! restart, the gate while waiting, clock out ignored, the inputs opened,
@@ -418,7 +418,7 @@ fn a_tempo_change_re_anchors_and_jitter_does_not() {
     assert!(said(&r)
         .iter()
         .any(|l| l.starts_with("sounds retracted") && l.ends_with("(clock)")));
-    // The answer moves by half a beat a minute or more.
+    // The answer moves by half a beat a minute or more (rulings #7).
     assert!(matches!(answered(&r)[2], Value::Number(b) if (b - 100.0).abs() < 0.5));
     assert_eq!(r.transport().follower().unwrap().estimate, Some(100.0));
     // The last kicks fall 75 ms (1/8 beat) apart.
@@ -573,7 +573,7 @@ fn once(r: &Runner<Granted>) {
     }
 }
 
-/// A hit kept within the hold at one re-anchor is
+/// Review round 1 (Astra): a hit kept within the hold at one re-anchor is
 /// not issued again at the next, whose segment puts its beat after the band.
 #[test]
 fn consecutive_re_anchors_issue_a_kept_hit_once() {
@@ -592,7 +592,7 @@ fn consecutive_re_anchors_issue_a_kept_hit_once() {
     assert_eq!((kicks.len(), ons.len()), (1, 1), "{kicks:?} {ons:?}");
 }
 
-/// A note due exactly at the hold's edge is
+/// Review round 1 (Astra, Grok): a note due exactly at the hold's edge is
 /// handed already; a re-anchor neither takes it back nor queues it again.
 #[test]
 fn a_note_at_the_hold_s_edge_is_kept_and_not_queued_again() {
@@ -610,7 +610,7 @@ fn a_note_at_the_hold_s_edge_is_kept_and_not_queued_again() {
     let (kicks, ons) = played(&r);
     let near = |list: &[f64]| list.iter().filter(|&&at| (at - 60.0).abs() < 15.0).count();
     assert_eq!((near(&kicks), near(&ons)), (1, 1), "{kicks:?} {ons:?}");
-    // At 100 bpm, ticks through 550, the next delivery at 575 with a
+    // Grok's: 100 bpm, ticks through 550, the next delivery at 575 with a
     // tick stamped 573: beat 1 is queued once.
     let mut r = boot(&SOURCE.replace("prior = 120", "prior = 100"));
     r.act("start", vec![]).unwrap();
@@ -647,7 +647,7 @@ fn jittered_single_tick_deliveries_play_each_step_once() {
     assert!(played(&r).0.len() > 15);
 }
 
-/// A sequence that followed a clock and stopped, by
+/// Review round 1 (Grok): a sequence that followed a clock and stopped, by
 /// its gate or its end, answers as an internal clock again.
 #[test]
 fn a_stopped_follower_answers_internal() {
@@ -676,7 +676,7 @@ fn a_stopped_follower_answers_internal() {
     }
 }
 
-/// Start or Continue while playing, in a delivery
+/// Review round 2 (Grok): Start or Continue while playing, in a delivery
 /// whose newest stamp is a hit's time, takes that hit back with the rest:
 /// its sample and its note (60 ms late, still waiting) play once, from the
 /// new downbeat.
@@ -703,7 +703,7 @@ fn start_again_on_a_hit_s_time_takes_it_back() {
     }
 }
 
-/// A clock that stalls and comes back revisits no
+/// Review round 2 (Astra): a clock that stalls and comes back revisits no
 /// beat it played, however long the gap.
 #[test]
 fn a_gap_revisits_no_beat_played() {

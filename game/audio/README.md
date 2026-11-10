@@ -260,4 +260,4 @@ the sampled one; their proofs check silent seekable execution, and with
 phone interruption test. Simulation/save pins live in the game's `pins.json`.
 
 For commands and executor selection see [the game map](../README.md); dated
-measurements belong in [bench](../bench/README.md).
+measurements belong in [bench](../bench/README.md) or the [diaries](../diaries/README.md).

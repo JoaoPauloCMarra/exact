@@ -715,7 +715,7 @@ component Viewer
         panX = 0
         panY = 0
 
-  // A pinch's scale is adopted between Fit and 4×.
+  // A pinch's scale is adopted between Fit and 4× (LLP 1057.001 §4).
   action releasePhoto(x: number, y: number, scale: number, vx: number, vy: number, vscale: number)
     zoom = photoZoom(scale)
     panX = geometryReady ? photoClamp(x, viewer.naturalWidth, fit, photoZoom(scale), portWidth) : 0

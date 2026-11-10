@@ -3,7 +3,7 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// The native fixture's own plan and hatch module,
+/// LLP 1075.003 Stage 1 over the native fixture's own plan and hatch module,
 /// which `build.mjs --test --ios` compiles for this simulator: Exact's bar on
 /// frame one from the authored header, the content area it leaves, Back as
 /// UIKit's back button, the forwarded delegate, and the module's hatches —
@@ -33,7 +33,7 @@ final class NavigationBarIOSTests: XCTestCase {
         return nil
     }
 
-    /// The keyboard-service retries a decision and a run may take.
+    /// The keyboard-service retries a decision and a run may take (theme2 and the lead, 2026-10-26).
     private static let retriesPerDecision = 2, retriesPerRun = 4
 
     /// A hang guard, not a deadline: how long a step may take before the wait reads as a hang.
@@ -270,7 +270,7 @@ final class NavigationBarIOSTests: XCTestCase {
                 let dropped = serviceDropped && issuesBeforeDrop == 0
                 if serviceDropped, issuesBeforeDrop > 0 { XCTFail("\(name): a keyboard-service drop came after this attempt had failed; not retried") }
                 serviceDropped = false
-                // Handoff ends with the keyboard up: it goes down, did-hide come, before the window does.
+                // Handoff ends with the keyboard up: it goes down, did-hide come, before the window does (#1056).
                 let finalHidden = decision == "handoff" ? awaiting(UIResponder.keyboardDidHideNotification) : nil
                 window?.endEditing(true)
                 if let finalHidden { settle("\(name)'s keyboard to hide before its window goes", cleanup: true) { finalHidden.fired || !keyboardUp } }
@@ -413,7 +413,7 @@ final class NavigationBarIOSTests: XCTestCase {
         app.interactive = false
         app.usesAnimator = false
         // A zero inset can precede did-hide: the pop's keyboard is down, did-hide come, before the next fixture replaces
-        // this window and claims keyboard focus.
+        // this window and claims keyboard focus (#1056).
         let popHidden = decision == "handoff" ? nil : awaiting(UIResponder.keyboardDidHideNotification)
         nav.popViewController(animated: true)
         XCTAssertEqual(finished(nav, "the native pop to end"), false, "the native pop completed, not cancelled or missing")
@@ -661,9 +661,10 @@ final class NavigationBarIOSTests: XCTestCase {
         until("Compose pressed once") { state(session, "composed") as? Double == 1 }
     }
 
-    /// A real touch on a header button the bar draws aims at its bar item,
-    /// where a person touches it, never at the hidden authored node in the
-    /// content.
+    /// LLP 1116.003 (r5 weather's Cities, r5 mood journal's sheet Save:
+    /// "ScrollView covers its middle"): a real touch on a header button the
+    /// bar draws aims at its bar item, where a person touches it, never at
+    /// the hidden authored node in the content.
     func testARealTouchAimsAtTheBarItemUIKitDraws() throws {
         let session = try fixture("bar-aim", module: false)
         let nav = try XCTUnwrap(session.presenter.navigation.primaryNavigation)
@@ -731,7 +732,7 @@ final class NavigationBarIOSTests: XCTestCase {
     }
 
     /// A bar item takes the colour its author wrote on its button, or the
-    /// tint written on its symbol: a header's Cancel in the
+    /// tint written on its symbol (LLP 1115.000 D2): a header's Cancel in the
     /// app's accent, a Delete in the platform's red. A colour the button
     /// only inherits, or one the compiler implied, leaves UIKit's.
     func testABarItemTakesItsButtonsAuthoredColour() throws {
@@ -776,7 +777,7 @@ final class NavigationBarIOSTests: XCTestCase {
         XCTAssertNil(try item(12).tint, "a color the symbol was only given (a sheet's) is UIKit's")
     }
 
-    /// A button whose one child is a filled box is an
+    /// LLP 1075.003 §9.6: a button whose one child is a filled box is an
     /// image item drawn from it; a popover's invoker is an item whose menu,
     /// titled by the popover's `aria-label`, holds the popover's rows, each
     /// pressing its authored button.
@@ -822,8 +823,8 @@ final class NavigationBarIOSTests: XCTestCase {
         XCTAssertNil(retitled.action, "UIKit still opens the menu on a tap")
     }
 
-    /// Only a menu-shaped popover is a bar item's pull-down. An
-    /// item opening any other popover (a chat app's pins and members) is a plain
+    /// LLP 1021 D3: only a menu-shaped popover is a bar item's pull-down. An
+    /// item opening any other popover (Harmony's pins and members) is a plain
     /// item whose tap opens the popover itself, lifted and anchored under the
     /// item, as a native button in the page opens one; a second tap closes it.
     func testABarItemOpeningAPopoverThatIsNoMenuOpensItFromTheItem() throws {
@@ -837,7 +838,7 @@ final class NavigationBarIOSTests: XCTestCase {
         XCTAssertNil(about.menu, "no pull-down: its popover is no menu")
         XCTAssertNotNil(about.action)
         let pop = try node(session, "plain-about")
-        // Opening it moves nothing around where it was written (a chat app's composer would jump).
+        // Opening it moves nothing around where it was written (Harmony's room composer jumped).
         let route = try node(session, "route-plain")
         func frames() -> [String: CGRect] {
             var out: [String: CGRect] = [:]
@@ -882,7 +883,7 @@ final class NavigationBarIOSTests: XCTestCase {
         until("an invocation after a press opens it") { session.presenter.menus.isOpen(pop) }
     }
 
-    /// A header's `input type="search"` is the item's
+    /// LLP 1075.003 §9.6: a header's `input type="search"` is the item's
     /// search controller; what the reader types is the field's `input`.
     func testAHeaderSearchFieldIsTheItemsSearchControllerAndTypingIsItsInput() throws {
         let session = try fixture("bar-search", module: false)
@@ -890,7 +891,7 @@ final class NavigationBarIOSTests: XCTestCase {
         let top = try XCTUnwrap(nav.topViewController)
         let search = try XCTUnwrap(top.navigationItem.searchController, "the header's search field")
         XCTAssertEqual(search.searchBar.placeholder, "Search the fixture")
-        // Where the field goes and whether it hides as
+        // LLP 1115.000 D11.2: where the field goes and whether it hides as
         // the content scrolls are UIKit's own answers, not pinned by Exact.
         XCTAssertEqual(top.navigationItem.preferredSearchBarPlacement, .automatic, "UIKit's placement")
         XCTAssertTrue(top.navigationItem.hidesSearchBarWhenScrolling, "it hides on scroll, as UIKit's does")
@@ -916,7 +917,7 @@ final class NavigationBarIOSTests: XCTestCase {
         search.searchBar.delegate?.searchBar?(search.searchBar, textDidChange: "abc")
         until("the field's input ran with the text") { state(session, "query") as? String == "abc" }
         XCTAssertFalse(top.navigationItem.hidesSearchBarWhenScrolling, "a search in effect keeps its field in view, as UIKit keeps an active search's")
-        // The keyboard's Search key puts the keyboard
+        // LLP 1115.000 D9.2: the keyboard's Search key puts the keyboard
         // away, as a hand-built search bar's delegate does, and the search
         // stays as typed.
         let field = search.searchBar.searchTextField
@@ -930,8 +931,8 @@ final class NavigationBarIOSTests: XCTestCase {
         search.searchBar.delegate?.searchBar?(search.searchBar, textDidChange: "")
         until("clearing the search field reaches its input handler") { state(session, "query") as? String == "" }
         // The app's write shows in the field the reader is typing in, as an
-        // input's does (a Clear Search button that empties the query empties
-        // the field, so the next keys do not add to the old text).
+        // input's does (r25's contacts: a Clear Search button emptied the
+        // query and the field kept the text, the next keys added to it).
         search.searchBar.text = "zzz"
         search.searchBar.delegate?.searchBar?(search.searchBar, textDidChange: "zzz")
         until("the typed query reaches the app") { state(session, "query") as? String == "zzz" }
@@ -955,7 +956,7 @@ final class NavigationBarIOSTests: XCTestCase {
         }
         func ink() -> UIColor? { field.attributedPlaceholder?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? UIColor }
         // Unsaid, the search field's own ink, darker than a text field's
-        // `placeholderText`.
+        // `placeholderText` (LLP 1104 D3, amended 2026-10-16).
         XCTAssertNotEqual(ink()?.resolvedColor(with: field.traitCollection), UIColor.placeholderText.resolvedColor(with: field.traitCollection))
         let red: [String: BatchValue] = ["placeholder_color": .array([.number(255), .number(0), .number(0), .number(255)])]
         source.applyStyle(red)
@@ -977,7 +978,7 @@ final class NavigationBarIOSTests: XCTestCase {
         XCTAssertEqual(ink(), authored)
     }
 
-    /// A header's text tablist is the item's title view,
+    /// LLP 1075.003 §9.8: a header's text tablist is the item's title view,
     /// a segmented control; a segment's tap presses its tab.
     func testAHeaderTablistIsTheItemsSegmentedTitleView() throws {
         let session = try fixture("bar-segments", module: false)
@@ -1004,7 +1005,7 @@ final class NavigationBarIOSTests: XCTestCase {
         XCTAssertEqual(tapped["native"] as? String, "segmented-control")
         until("the agent presses the header projection") { state(session, "segment") as? String == "all" && control.selectedSegmentIndex == 0 }
 
-        // The title takes its own width, the size UIKit
+        // LLP 1115.000 D11.6: the title takes its own width, the size UIKit
         // fits it to. Exact held each segment to 90 points at least, so two
         // short titles made a control 180 wide.
         let own = { control.sizeThatFits(CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)).width }
@@ -1124,7 +1125,7 @@ final class NavigationBarIOSTests: XCTestCase {
         XCTAssertEqual(backs(session), 1, "Back once")
     }
 
-    /// A pushed route that declares no Back control still has
+    /// LLP 1115 D5: a pushed route that declares no Back control still has
     /// UIKit's back button and edge swipe, as a hand-built screen does, and
     /// a completed pop goes back as the web's history Back does: the root's
     /// `navigate` with the location beneath, once, and no Back is pressed.
@@ -1153,7 +1154,7 @@ final class NavigationBarIOSTests: XCTestCase {
         XCTAssertFalse(journal(session).contains("back gesture refused"))
     }
 
-    /// A root that names no Back control (`navigationBack`
+    /// LLP 1116 D6: a root that names no Back control (`navigationBack`
     /// left out, which the compiler lowers to the empty name) keeps the
     /// native stack, and a pushed route's system Back goes by the root's
     /// `navigate` even where an element is `id="back"`: no control is named.
@@ -1183,7 +1184,7 @@ final class NavigationBarIOSTests: XCTestCase {
         XCTAssertEqual(backs(session), 0, "nothing named, nothing pressed")
     }
 
-    /// A bar item's, the search field's, a title segment's and
+    /// LLP 1116 D2: a bar item's, the search field's, a title segment's and
     /// a tab bar item's `accessibilityIdentifier` is its authored `testId`,
     /// so XCUITest and Maestro address them as any other node.
     func testBarItemsTheSearchFieldSegmentsAndTabsCarryTheirTestIds() throws {
@@ -1202,7 +1203,7 @@ final class NavigationBarIOSTests: XCTestCase {
         XCTAssertEqual(tabs.viewControllers?.map(\.tabBarItem.accessibilityIdentifier), ["tab-home", "tab-second"])
     }
 
-    /// With no `navigate` handler on the root: the button and
+    /// LLP 1115 D5 with no `navigate` handler on the root: the button and
     /// the edge swipe still go, and a completed pop is the runner's own
     /// `back` (`host back` in the journal), with nothing dispatched.
     func testAPushedRouteWithNoBackControlAndNoNavigateHandlerIsTheRunnersOwnBack() throws {

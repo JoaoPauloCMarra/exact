@@ -126,15 +126,16 @@ struct Parser {
     last: usize,
     /// Free calls of a method's name (`trim(s)`), each with its refusal: refused
     /// at the end of the file unless the file declares a `fn`, shape or action
-    /// of that name.
+    /// of that name (LLP 1116.015 D2).
     free: Vec<(String, SyntaxError, Vec<crate::migrate::Edit>, bool)>,
     retired: Vec<SyntaxError>,
     edits: Vec<crate::migrate::Edit>,
     /// Method calls (`s.trim()`, `xs.length`): refused at the end of the file
     /// when it declares a `fn`, shape or action of that name, which the
-    /// rewritten call would reach where TypeScript's method never would.
+    /// rewritten call would reach where TypeScript's method never would
+    /// (LLP 1116.016 D2).
     methods: Vec<(String, Span, bool)>,
-    /// Whether the parser is in a members block: each
+    /// Whether the parser is in a members block (LLP 1091.002): each
     /// `free` and `methods` entry records it.
     in_block: bool,
     /// Whether a refused component member is recorded and skipped.
@@ -366,8 +367,8 @@ impl Parser {
                                 .any(|c| c.actions.iter().any(|a| a.name == name))
                     };
                     // Whether a method's name is an action is the whole
-                    // component's to decide where another file may declare it:
-                    // in a members block, and anywhere in a
+                    // component's to decide where another file may declare it
+                    // (LLP 1091.002): in a members block, and anywhere in a
                     // file whose components list members files.
                     let host = file.components.iter().any(|c| !c.members.lines.is_empty());
                     let mut deferred = Vec::new();
@@ -610,10 +611,10 @@ impl Parser {
         Ok(true)
     }
 
-    /// `use A, B as C from "./file.contract"`.
+    /// `use A, B as C from "./file.contract"` (LLP 1017 P8, LLP 1091 D2).
     /// Only a `.contract` file may be used: no TypeScript, no behaviours —
     /// data comes from the app's data source and formatting from the roster
-    /// or a `fn`.
+    /// or a `fn` (LLP 1004 D4).
     fn use_decl(&mut self) -> R<UseDecl> {
         let span = self.expect_word("use")?;
         let mut names = Vec::new();
@@ -651,7 +652,7 @@ impl Parser {
             }
         };
         // A relative path names a `.contract` file; `exact:name` and a
-        // package name are resolved by the driver. Any other
+        // package name are resolved by the driver (LLP 1091 D8/D9). Any other
         // file — TypeScript, JavaScript, JSON — is never Contract's to load.
         let relative = path.starts_with("./") || path.starts_with("../");
         let other = [".ts", ".tsx", ".js", ".mjs", ".cjs", ".json"]
@@ -660,7 +661,7 @@ impl Parser {
         if (relative && !path.ends_with(".contract")) || other {
             return Err(SyntaxError {
                 id: "contract-no-imports",
-                message: format!("`use … from \"{path}\"` is not admitted: only a `.contract` file may be used — data comes from the app's Rust data source and formatting from the stdlib roster"),
+                message: format!("`use … from \"{path}\"` is not admitted: only a `.contract` file may be used — data comes from the app's Rust data source and formatting from the stdlib roster (LLP 1004 D4)"),
                 span,
             });
         }
@@ -668,7 +669,7 @@ impl Parser {
         Ok(UseDecl { names, path, span })
     }
 
-    /// `fn name(param: type, …): type = expr`.
+    /// `fn name(param: type, …): type = expr` (LLP 1017 P5).
     fn fn_decl(&mut self) -> R<FnDecl> {
         let span = self.expect_word("fn")?;
         let name = self.named_ident(span)?;
@@ -694,7 +695,7 @@ impl Parser {
         self.expect_punct(":")?;
         let ret = self.type_expr()?;
         self.expect_punct("=")?;
-        // The body may start on the next line, indented: one
+        // LLP 1116.017 D2: the body may start on the next line, indented: one
         // expression, as after `= (`.
         let body = if matches!(self.peek_kind(), TokenKind::Newline)
             && matches!(self.peek2(), TokenKind::Indent)
@@ -726,7 +727,7 @@ impl Parser {
         })
     }
 
-    /// `style Name` then lines of `attr=literal`.
+    /// `style Name` then lines of `attr=literal` (LLP 1017 P6).
     fn style(&mut self) -> R<StyleDecl> {
         let span = self.expect_word("style")?;
         let name = self.named_ident(span)?;
@@ -755,8 +756,8 @@ impl Parser {
         while !matches!(self.peek_kind(), TokenKind::Newline | TokenKind::Eof) {
             let (aname, aspan) = match (self.peek_kind().clone(), self.peek2().clone()) {
                 (TokenKind::Ident(n), TokenKind::Punct("=")) => (n, self.next().span),
-                // CSS's `background-color: "…"`: the row it meant,
-                // rewritten.
+                // CSS's `background-color: "…"` (ledger F3): the row it meant,
+                // rewritten (LLP 1088 D7.4).
                 (TokenKind::Ident(n), TokenKind::Punct(":")) => {
                     let value = match &self.tokens[(self.pos + 2).min(self.tokens.len() - 1)].kind {
                         TokenKind::Str(v) => format!("{v:?}"),
@@ -802,7 +803,7 @@ impl Parser {
                 }
                 other => other,
             };
-            // A `timeline`'s name is a constant too.
+            // A `timeline`'s name is a constant too (LLP 1055.002 D2).
             let timeline = matches!(aname.as_str(), "animation-timeline" | "animationTimeline")
                 && matches!(value, Expr::Ident(..));
             if !timeline && !matches!(value, Expr::Number(..) | Expr::Str(..) | Expr::Bool(..)) {
@@ -847,7 +848,7 @@ impl Parser {
 
     fn type_expr(&mut self) -> R<TypeExpr> {
         // `action` is a keyword everywhere else; as a prop type it names an
-        // action reference (children are views over their props).
+        // action reference (LLP 1004 D3: children are views over their props).
         if self.at_ident("action") {
             let span = self.next().span;
             return Ok(TypeExpr::Named("action".into(), span));
@@ -880,7 +881,7 @@ impl Parser {
                 self.expect_punct(">")?;
                 TypeExpr::Option(Box::new(inner), span)
             }
-            // A list type is `T[]`.
+            // @ref LLP 1116.015 D2 — a list type is `T[]`.
             "list" if self.at_punct("<") => {
                 let open = self.next().span;
                 let inner = self.type_expr()?;
@@ -913,7 +914,7 @@ impl Parser {
         let source = self.source_ident(span)?;
         self.expect_punct("(")?;
         let mut args = self.call_args()?;
-        //c (amended 2026-11-04) — one request for each
+        // @ref LLP 1017.000 P4c (amended 2026-11-04) — one request for each
         // element of a list, keyed as a `for` row is.
         let each = if self.at_ident("for") {
             let at = self.next().span;
@@ -942,7 +943,7 @@ impl Parser {
         } else {
             None
         };
-        // Context remains ordinary source arguments.
+        // @ref LLP 1027.005 D1/D6 — context remains ordinary source arguments.
         let identity = if self.at_ident("with") {
             self.next();
             let identity = args.len();
@@ -959,7 +960,7 @@ impl Parser {
         self.expect_word("as")?;
         self.expect_word("shape")?;
         let shape = self.type_expr()?;
-        // What shows until the source answers.
+        // @ref LLP 1048.003 D6 — what shows until the source answers.
         let placeholder = if self.at_ident("else") {
             if each.is_some() {
                 return self.err(
@@ -970,7 +971,7 @@ impl Parser {
             self.next();
             let at = self.peek().span;
             if !matches!(self.peek_kind(), TokenKind::Ident(_)) {
-                // `else []`, `else ""`: a value, where a call goes.
+                // `else []`, `else ""` (app farm round 1): a value, where a call goes.
                 return self.err(
                     "syntax-placeholder-call",
                     "a resource's `else` is a call: `else empty()` is its shape's zero (`[]` for a list, `\"\"` for text), with `field=constant` overrides for a record, or `else source(values…)`",
@@ -1026,7 +1027,7 @@ impl Parser {
             }
             self.expect_punct(")")?;
         }
-        // The body is the one statement of effects.
+        // @ref LLP 1035.005.000 D1 — the body is the one statement of effects.
         if self.at_ident("writes") {
             return self.err(
                 "syntax-writes-clause",
@@ -1137,14 +1138,14 @@ impl Parser {
             });
         }
         // `refresh` starts a statement only before a name, as `send` and
-        // `let` do: `refresh = x` assigns a state so named.
+        // `let` do (LLP 1088 D5): `refresh = x` assigns a state so named.
         if self.at_ident("refresh") && matches!(self.peek2(), TokenKind::Ident(_)) {
             let span = self.expect_word("refresh")?;
             let target = self.named_ident(span)?;
             self.newline()?;
             return Ok(Stmt::Refresh { target, span });
         }
-        // `let` starts a statement only before a
+        // @ref LLP 1035.005.000 D2 — `let` starts a statement only before a
         // name, as `send` does; `let = x` assigns a state named `let`.
         if self.at_ident("let") && matches!(self.peek2(), TokenKind::Ident(_)) {
             self.next();
@@ -1228,7 +1229,7 @@ impl Parser {
             );
         }
         match word.as_str() {
-            // `provide` is a component section;
+            // @ref LLP 1035.005.000 D9 — `provide` is a component section;
             // the nested view form, whose scope was its subtree, is gone.
             "provide" => {
                 let name = match self.peek2() {
@@ -1252,7 +1253,7 @@ impl Parser {
             }
             "if" => self.node_if(span),
             "for" => self.node_for(span),
-            // The view's former words, refused with the edit.
+            // @ref LLP 1116.015 D1 — the view's former words, refused with the edit.
             "when" => {
                 self.retired_view(span, "if");
                 self.node_if(span)
@@ -1268,7 +1269,7 @@ impl Parser {
             ),
             "map" | "filter" if matches!(self.peek2(), TokenKind::Punct("(")) => self.err(
                 "syntax-map-view",
-                format!("`{word}` makes a value, not view nodes: repeat children with `for x in xs key=x.id`"),
+                format!("`{word}` makes a value, not view nodes: repeat children with `for x in xs key=x.id` (LLP 1017.003)"),
             ),
             // `xs.map(x => …)` as a view line: the JSX habit, as a method call.
             _ if matches!(self.peek2(), TokenKind::Punct("."))
@@ -1279,7 +1280,7 @@ impl Parser {
             {
                 self.err(
                     "syntax-map-view",
-                    format!("`{word}.map(…)` makes a value, not view nodes: repeat children with `for x in {word} key=x.id`"),
+                    format!("`{word}.map(…)` makes a value, not view nodes: repeat children with `for x in {word} key=x.id` (LLP 1017.003)"),
                 )
             }
             _ if word.chars().next().is_some_and(char::is_uppercase) => self.node_use(word, span),

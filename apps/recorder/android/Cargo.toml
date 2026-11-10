@@ -1,4 +1,4 @@
-# The recorder on Android's Canvas host:
+# The recorder on Android's Canvas host (LLP 1076 §3.3; LLP 1133.009 stage 4):
 # one library with the runner, the kernel, the baked plan, the app's
 # TypeScript data module as Hermes bytecode (both written by build.rs, never
 # committed), the lean Hermes VM that runs it, and the host's JNI, which the

@@ -1,4 +1,4 @@
-//! A dev generation with requests in flight: refused while
+//! A dev generation with requests in flight (LLP 1007 §6): refused while
 //! they are out, asked again, and after `LET_GO_AFTER` swapped anyway.
 use super::*;
 use exact_runner::{Answer, DataError, Store, Value};
@@ -80,7 +80,7 @@ fn an_update_refuses_and_a_dev_generation_lets_requests_go_after_its_window() {
     assert_eq!(p.host.runner().slot("typed"), Some(&Value::str("ada")));
 }
 
-/// On the Android reader, a host that turns only when woken is
+/// LLP 1122 D4 on the Android reader: a host that turns only when woken is
 /// told when the development poll wants its next turn, and is woken through
 /// the executor's fd when the poll's answer lands.
 #[test]
@@ -165,7 +165,8 @@ fn poll_until(p: &mut Presenter<Held>, served: &std::sync::atomic::AtomicUsize, 
     assert!(served.load(std::sync::atomic::Ordering::SeqCst) >= answers);
 }
 
-/// A dev loop whose producers are starting: the presenter's poll, which the Linux display and the
+/// A dev loop whose producers are starting (dtool2's pass 3 #8; theme2's
+/// condition c): the presenter's poll, which the Linux display and the
 /// Android reader's canvas host both turn, says its status once however
 /// many answers come; and not at all when the boot's fetch said it already.
 #[test]

@@ -1,9 +1,9 @@
-//! A package design's icon tokens (*tamber/1.16*). A package's `icons`
-//! block names its icons under its namespace; one may name its own package's
-//! icons and no other; the app overrides one by full name, whole; the plan
-//! keeps one only when it is read. An SVG path is relative to the `assets/` of
-//! the root whose file writes it, so a package's reads the package's, and
-//! must be a one-colour template in v1.
+//! LLP 1121 stage 13: a package design's icon tokens (*tamber/1.16*). A
+//! package's `icons` block names its icons under its namespace; one may name
+//! its own package's icons and no other; the app overrides one by full name,
+//! whole; D7 keeps one only when it is read. An SVG path is relative to the
+//! `assets/` of the root whose file writes it, so a package's reads the
+//! package's, and must be a one-colour template in v1 (theme2's Q2 (a)).
 //! describe's and explain's icon rows name a package icon's package and
 //! file, and explain gives `package_value` under an app override.
 #![cfg(unix)]
@@ -182,7 +182,7 @@ fn a_package_svg_is_read_from_the_packages_assets() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The web, which alone draws an SVG as written, stages
+/// theme2's Q2 (a): the web, which alone draws an SVG as written, stages
 /// the app's `assets/` only, so a package's must be a template.
 #[test]
 fn a_packages_svg_of_more_than_one_colour_is_refused() {
@@ -312,7 +312,7 @@ fn describe_and_explain_name_a_package_icons_package_and_file() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The levels walker reads a package's icons as its
+/// The levels walker (stage 12 B2-levels) reads a package's icons as its
 /// tokens: an app param naming one reaches the package's line.
 #[test]
 fn a_param_naming_a_package_icon_reaches_its_line() {
@@ -363,11 +363,12 @@ fn a_writes_check_reads_a_package_defaults_svg_in_the_package() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// In a package's Contract component, a literal `icon(svg …)` default
-/// written in the package's `.contract` reads the package's `assets/`,
-/// whether or not the package ships a design, never the app's same-named
-/// file; an app's `params` line setting it reads the app's. The source
-/// graph lists the package's file, and a write's check reads it there.
+/// theme2's Q1 for a package's Contract component (the lead's ruling on
+/// round 1's open question): a literal `icon(svg …)` default written in a
+/// package's `.contract` reads the package's `assets/`, whether or not the
+/// package ships a design, never the app's same-named file; an app's
+/// `params` line setting it reads the app's. The source graph lists the
+/// package's file, and a write's check reads it there.
 #[test]
 fn a_package_contracts_icon_param_reads_its_packages_assets() {
     let dir = reading("pkgicon-contract", APP, "reading.star", STAR);
@@ -440,7 +441,7 @@ fn a_package_contracts_icon_param_reads_its_packages_assets() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A package component's icon param may name its own
+/// Round 1, Astra 1: a package component's icon param may name its own
 /// package's icon, drawn from the package's file.
 #[test]
 fn a_package_param_may_name_its_own_packages_icon() {
@@ -462,7 +463,7 @@ fn a_package_param_may_name_its_own_packages_icon() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A write's plan folds the package's icons beside the
+/// Round 1, Astra 2: a write's plan folds the package's icons beside the
 /// app's design, so an app icon naming one doesn't refuse an unrelated
 /// write.
 #[test]
@@ -480,7 +481,7 @@ fn a_write_folds_the_packages_icons() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A package's SVG that links out of its
+/// Round 1, Astra 4 = Grok 2: a package's SVG that links out of its
 /// `assets/` (to the app's file, or a linked `assets/` into another
 /// package) is refused in the build, drawn as none, and no source.
 #[test]
@@ -553,7 +554,7 @@ fn a_package_svg_linked_out_of_its_package_is_refused() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// With no app design and no params, a package's design
+/// Round 1, Astra 5: with no app design and no params, a package's design
 /// still lists the SVGs its icons read.
 #[test]
 fn a_package_only_design_lists_its_svgs() {
@@ -571,7 +572,7 @@ fn a_package_only_design_lists_its_svgs() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The local wire's watcher's `hello {paths: true}` gives
+/// Round 1, Astra 6: the local wire's watcher's `hello {paths: true}` gives
 /// each package its SVGs' digest, which an edit of one moves.
 #[test]
 fn a_package_svg_edit_moves_its_assets_digest() {
@@ -607,7 +608,7 @@ fn a_package_svg_edit_moves_its_assets_digest() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A vendored package's assets are its own, whichever
+/// Round 2, Astra 1: a vendored package's assets are its own, whichever
 /// route reached it: inside another package, by that package's relative
 /// `use`, and inside the app, by the app's; each beside a same-named SVG
 /// of the package around it and of the app, drawn otherwise.
@@ -676,7 +677,7 @@ fn a_vendored_packages_icon_default_reads_its_own_assets() {
     }
 }
 
-/// A dangling link in a package's `assets/` leaves it (it
+/// Round 2, R2-3: a dangling link in a package's `assets/` leaves it (it
 /// can't be told inside), not missing.
 #[test]
 fn a_dangling_link_in_a_packages_assets_leaves_it() {
@@ -689,7 +690,7 @@ fn a_dangling_link_in_a_packages_assets_leaves_it() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A package with no design whose SVGs the build reads (a
+/// Round 2, R2-4: a package with no design whose SVGs the build reads (a
 /// Contract component's icon param) is listed in `watch.assets`, its
 /// digest moved by an edit.
 #[test]
@@ -717,7 +718,7 @@ fn a_contract_only_packages_svgs_are_watched() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A package vendored in the app and reached by a relative
+/// Round 3, R3-3: a package vendored in the app and reached by a relative
 /// `use` owns its SVG in the graph (its origin, its manifest consulted) and
 /// on the local wire (`watch.assets`, its directory watched), so an edit of
 /// it moves its digest.
@@ -786,7 +787,7 @@ fn an_app_vendored_packages_svg_is_its_packages() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// An app-vendored package whose SVG isn't
+/// Narrow re-check, Astra RE-1: an app-vendored package whose SVG isn't
 /// there yet still owns it: its manifest an input, its directory watched,
 /// listed in `watch.assets`, so making the SVG moves the digest.
 #[test]
@@ -846,8 +847,8 @@ fn an_app_vendored_packages_missing_svg_is_still_watched() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A kept icon's path, read through `exact_runner::icon_of` (the one
-/// reader of an `icons` row, which strips an even-odd icon's marker).
+/// A kept icon's path, read through `exact_runner::icon_of` (stage 14 C2:
+/// the one reader of an `icons` row, which strips an even-odd icon's marker).
 fn icon_path<'a>(plan: &'a exact_plan::Plan, row: &exact_plan::IconsRow) -> &'a str {
     exact_runner::icon_of(plan, row).map_or("", |icon| icon.path)
 }

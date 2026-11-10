@@ -1,4 +1,4 @@
-// The design of @exact/scale-fixture-cards: its tokens under its name, its
+// The design of @exact/scale-fixture-cards (LLP 1121 D11): its tokens under its name, its
 // spacing and corner the base scale's, which the app may set for every
 // package at once.
 tamber scale-fixture-cards

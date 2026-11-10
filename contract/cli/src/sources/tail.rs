@@ -17,14 +17,14 @@ pub struct GraphBase {
     pub(super) loaded_identities: Vec<String>,
     pub(super) identities: Vec<String>,
     pub(super) errors: Vec<CompileError>,
-    /// The app's directory, which the library's files are read by (a private package's library is
-    /// read only where its design is, so with the designs).
+    /// The app's directory, which the library's files are read by (LLP 1139 D0: a private package's,
+    /// only where its design is, so read with the designs).
     pub(super) app_root: PathBuf,
 }
 
 impl GraphBase {
     /// What the compile load reads from the app's design, the app's Contract sources and its packages' designs aside
-    /// (the design server keys the app's params by it with those): whether there is a design and it
+    /// (the design server keys the app's params by it with those, LLP 1121 D15): whether there is a design and it
     /// parses, its native components' params and their refusals (`params::design_tokens`), and the motion tokens it
     /// writes into the views (`motion::tokens`), each from the function the load calls, as text. A value no param or
     /// motion token reads (a colour) leaves it as it was.
@@ -81,8 +81,8 @@ impl GraphBase {
     pub fn tail(&self) -> SourceGraph {
         let root_key = &self.root_key;
         let mut sources = self.base.clone();
-        // A package design's components' too: an icon param's SVG is read by
-        // the build as the app's own are.
+        // A package design's components' too (stage 12 B1 round 3): an icon
+        // param's SVG is read by the build as the app's own are.
         let package_designs: Vec<_> = packages::read(&self.sources, false)
             .unwrap_or_default()
             .into_iter()
@@ -99,20 +99,20 @@ impl GraphBase {
             )
             .collect();
         // The app's design is a source too: a capture copies it, a watcher
-        // watches it.
+        // watches it (LLP 1121 D2).
         let design = design_path(root_key);
-        // An icon token's SVG too, which the build reads.
+        // An icon token's SVG too, which the build reads (LLP 1121 D10).
         let text = match design
             .as_ref()
             .and_then(|d| std::fs::read_to_string(d).ok())
         {
             Some(text) => Some(text),
-            // Its packages' designs alone fold too: their icons' SVGs are read.
+            // Its packages' designs alone fold too: their icons' SVGs are read (round 1, Astra 5).
             None => (!params.is_empty() || !package_designs.is_empty())
                 .then(|| "tamber app\n".to_string()),
         };
-        // With its packages' tokens, which an app token may name; a
-        // package's SVG under its root, a source of the package.
+        // With its packages' tokens, which an app token may name (D11); a
+        // package's SVG under its root, a source of the package (stage 13).
         let icons: Vec<(PathBuf, Option<Origin>, Option<Origin>)> = text
             .and_then(|text| exact_tamber::parse(&text).ok())
             .and_then(|d| contract_lower::with_package_designs(Some(d), &package_designs))
@@ -128,7 +128,7 @@ impl GraphBase {
                 // package may ship no design).
                 let all = packages::packages(&self.sources).0;
                 // One vendored in the app and reached by a relative `use` is no resolved
-                // package, but the named package its identity names.
+                // package, but the named package its identity names (round 3, R3-3).
                 let origin = |i| {
                     let (name, root) =
                         contract_lower::icons::written_in(i, &package_designs, &params)?;
@@ -143,7 +143,7 @@ impl GraphBase {
                         let home = home(i);
                         let path = home.svg(i.svg.as_ref()?)?;
                         // A package's link out of its `assets/` is refused by the build: its bytes are
-                        // no source, but the link is looked at, so mending it rebuilds.
+                        // no source, but the link is looked at, so mending it rebuilds (round 1, Astra 4).
                         let owner = origin(i);
                         let origin =
                             (!home.leaves(&path)).then(|| owner.clone().unwrap_or(Origin::App));
@@ -154,8 +154,8 @@ impl GraphBase {
             .unwrap_or_default();
         // One not there yet is looked for, as a hidden import is, so making it
         // rebuilds.
-        // Each package an SVG is read from owns it there or not: its manifest an
-        // input, its directory watched.
+        // Each package an SVG is read from owns it there or not (narrow re-check,
+        // Astra RE-1): its manifest an input, its directory watched.
         let mut owners: Vec<Package> = Vec::new();
         for (_, _, owner) in &icons {
             if let Some(Origin::Package {
@@ -183,11 +183,11 @@ impl GraphBase {
             path,
             origin: Origin::App,
         }));
-        // Each linked package's design too; one not there yet is looked for, so
-        // adding it rebuilds.
+        // Each linked package's design too (D11); one not there yet is looked
+        // for, so adding it rebuilds.
         let (designs, unmade) = packages::sources(&self.sources);
         sources.extend(designs);
-        // The files that say which components are the library's.
+        // The files that say which components are the library's (LLP 1139 D0).
         let library = library::read(&self.sources, &self.app_root).read;
         let missing: Vec<PathBuf> = missing.into_iter().chain(unmade).collect();
         sources.extend(icons.into_iter().filter_map(|(path, origin, _)| {
@@ -197,7 +197,7 @@ impl GraphBase {
             })
         }));
         // A named package's manifest an icon's SVG is owned by (one vendored in
-        // the app) is read for its name: an input.
+        // the app) is read for its name: an input (round 3, R3-3).
         let manifests: Vec<PathBuf> = owners.iter().map(|p| p.manifest.clone()).collect();
         let mut consulted: Vec<PathBuf> = self
             .sources

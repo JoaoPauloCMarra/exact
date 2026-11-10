@@ -1,4 +1,4 @@
-//! Sparse, derived exclusions in leaf coordinates.
+//! @ref LLP 1043.000 §3 D1–D4, §8 — sparse, derived exclusions in leaf coordinates.
 //!
 //! Frame publication collects exclusions in preorder. This second pass visits
 //! only their wrapping contexts, skipping hidden and exclusion-owned subtrees.
@@ -126,7 +126,7 @@ pub(crate) fn contexts(arena: &NodeArena, exclusions: &[u32]) -> Contexts {
         let Some(context) = arena.parent(exclusion) else {
             continue;
         };
-        // The exclusion is placed against its containing
+        // @ref LLP 1074 T1 — the exclusion is placed against its containing
         // block. Auto-height flow is proven only where that is the context.
         let contains = arena.is_root(context)
             || crate::style::top_layer::layout_position(arena, context) != PositionType::Static;
@@ -201,7 +201,7 @@ pub(crate) fn visible_exclusions(arena: &NodeArena, root: u32) -> Vec<u32> {
                     return true;
                 }
                 // Another layout's: an exclusion shapes no text across a
-                // host's containing block.
+                // host's containing block (LLP 1115.002 D8.2).
                 if arena.blocks.holds(at) {
                     return false;
                 }
@@ -468,7 +468,7 @@ pub(crate) fn shapes_eq(a: &[FlowShape], b: &[FlowShape]) -> bool {
 
 /// The region path publishes frames separately; carry the same height proof and
 /// use only selected live keys, never the unselected placeholder/content branch.
-/// RegionLayoutReceipt.shell carries both flow lists.
+/// @ref LLP 1043.000 §3 D4 — RegionLayoutReceipt.shell carries both flow lists.
 pub(crate) fn resolve_region(
     arena: &mut NodeArena,
     root: u32,

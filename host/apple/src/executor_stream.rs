@@ -1,15 +1,16 @@
-//! Answers that keep coming, natively: a streamed `fetch` whose body is
-//! server-sent events, opened by the worker that owns the transport and read on
-//! a thread of its own, so an open stream holds no I/O worker. Each event is
-//! one `Outcome::Message` to the ticket; anything that ends the body ends the
-//! stream. The host never reconnects on its own.
+//! Answers that keep coming, natively (LLP 1016.000 D3; LLP 1069.004 slice
+//! 2): a streamed `fetch` whose body is server-sent events, opened by the
+//! worker that owns the transport and read on a thread of its own, so an
+//! open stream holds no I/O worker (LLP 1067 D3). Each event is one
+//! `Outcome::Message` to the ticket; anything that ends the body ends the
+//! stream. The host never reconnects on its own (1069.004 slice 2).
 //!
-//! A `ws:` or `wss:` URL is a WebSocket instead, admitted
+//! A `ws:` or `wss:` URL is a WebSocket instead (1069.004 slice 3), admitted
 //! by `net.websocket`: each text message is one `Message`, and the far
 //! side's close, a binary message or one over the ceiling ends it. Nothing
 //! is sent: the request's method, headers and body are not used, as a
 //! browser's `WebSocket` could not send them either. A request that says
-//! `socket` owns a two-way socket instead (`socket.rs`).
+//! `socket` owns a two-way socket instead (LLP 1016.000 D7; `socket.rs`).
 //! A request that says `bytes` reads a 2xx body that is not
 //! `text/event-stream` as a byte stream instead of one answer (`bytes.rs`).
 //! An upload (`upload_progress`) delivers the body's bytes sent as they go
@@ -36,12 +37,12 @@ enum Opened {
     Events(StreamingResponse, usize),
     Bytes(StreamingResponse, usize),
     Socket(Box<dyn MessageSource>, usize),
-    /// A long poll, asked by its own loop: its first request and per-reply ceiling.
+    /// A long poll (LLP 1016.000 D8), asked by its own loop: its first request and per-reply ceiling.
     LongPoll(Request, usize),
 }
 pub(super) use socket::{close as close_sockets, release, Socket};
 
-/// A WebSocket's URL (the scheme is the whole spelling).
+/// A WebSocket's URL (the scheme is the whole spelling: LLP 1069.004).
 pub(super) fn is_socket(url: &str) -> bool {
     let scheme = url.split(':').next().unwrap_or("");
     scheme.eq_ignore_ascii_case("ws") || scheme.eq_ignore_ascii_case("wss")
@@ -83,7 +84,7 @@ fn opened(
     if shared.abort.signal().aborted() {
         abort.abort();
     }
-    // A local listener, on this thread until it is let go.
+    // A local listener (LLP 1133.005), on this thread until it is let go.
     if request.listen.is_some() {
         return listen::run(shared, ticket, request, grants, abort);
     }
@@ -118,7 +119,7 @@ fn opened(
                 Ok((Opened::LongPoll(request.clone(), limit), b))
             }
             Ok(b) if is_socket(&request.url) => open_socket(&b, request, &abort).map(|s| (s, b)),
-            // A body from an app file, read as the stream opens.
+            // A body from an app file, read as the stream opens (LLP 1108 D6 R2).
             Ok(b) => {
                 super::body::resolve(shared.roots_for(&request), grants, &mut request, &|| {
                     abort
@@ -224,13 +225,13 @@ fn read_socket(
 
 /// One message of the open stream `ticket`, false once nobody wants more
 /// (forgotten, retired, ended). The newest undelivered message per ticket is
-/// kept and the ones it replaces are counted on it: display
+/// kept and the ones it replaces are counted on it (LLP 1016.000 D4): display
 /// data coalesces, and a log sees the gap and re-asks from its cursor.
 fn message(shared: &Shared, ticket: u64, message: Message) -> bool {
     deliver(shared, ticket, message, false)
 }
 
-/// A long poll's reply that is no event: a message of the
+/// A long poll's reply that is no event (LLP 1016.000 D8): a message of the
 /// reserved event `LONG_POLL_REPLY`, which never takes an event's place nor
 /// counts as one dropped, and which an event that follows replaces.
 fn reply(shared: &Shared, ticket: u64) -> bool {
@@ -260,7 +261,7 @@ fn deliver(shared: &Shared, ticket: u64, mut message: Message, reply: bool) -> b
         return false;
     };
     // An upload's start is never folded into another message, nor another
-    // into it: it says the upload reached the network.
+    // into it (LLP 1016.000 D10): it says the upload reached the network.
     let start =
         |done: &Completed| matches!(&done.outcome, Outcome::Message(m) if m.upload_started());
     let waiting = (state.completed[lane].iter_mut())

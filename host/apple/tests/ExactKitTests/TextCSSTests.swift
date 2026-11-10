@@ -1,4 +1,4 @@
-// CSS white space, `nowrap`, `pre-line`, `text-overflow: ellipsis`
+// LLP 1053 §0 G4, G5: CSS white space, `nowrap`, `pre-line`, `text-overflow: ellipsis`
 // without `line-clamp`, and `tabular-nums`, as the browser renders them.
 import XCTest
 import CoreText
@@ -106,7 +106,7 @@ final class TextCSSTests: XCTestCase {
     /// CSS Text 3 §4.1.2 removes collapsible spaces at a soft line break and
     /// hangs `pre-wrap`'s there; Core Text keeps their advance in the line's
     /// typographic width. Before a forced break, which the paragraph's end
-    /// also is, `pre-wrap`'s spaces conditionally hang: only as far as
+    /// also is (§5), `pre-wrap`'s spaces conditionally hang: only as far as
     /// they would not fit. `pre`'s count.
     func testAWrappedLinesTrailingSpaceTakesNoWidth() {
         let first = width("word word", numeric: 0)
@@ -125,7 +125,7 @@ final class TextCSSTests: XCTestCase {
                        "pre-wrap without: the spaces past the room hang")
         XCTAssertEqual(engine.paragraph(spec([run("word   \nx")], whiteSpace: 4), width: word + 1).width, spaced, accuracy: 1.0 / 64,
                        "pre: they count")
-        // Max-content counts them. Chrome (156, 14px Helvetica): a pre-wrap "Say " is 28.02 px wide, "Say" 24.13
+        // §8.2 counts them in max-content. Chrome (156, 14px Helvetica): a pre-wrap "Say " is 28.02 px wide, "Say" 24.13
         XCTAssertEqual(engine.paragraph(spec([run("word   ")], whiteSpace: 1), width: .infinity).width, spaced, accuracy: 1.0 / 64,
                        "pre-wrap at the paragraph's end, max-content: the spaces count")
         XCTAssertEqual(engine.paragraph(spec([run("word   ")], whiteSpace: 1), width: spaced).width, spaced, accuracy: 1.0 / 64,
@@ -178,7 +178,7 @@ final class TextCSSTests: XCTestCase {
         XCTAssertEqual(start(make("שלום ", align: 0, rtl: true), in: 100), space, accuracy: 0.02, "rtl left: the space starts at the left edge")
         XCTAssertEqual(start(make("שלום ", align: 1, rtl: true), in: 100), (100 - shalom - space) / 2 + space, accuracy: 0.02, "rtl centred")
         XCTAssertEqual(start(make("שלום ", align: 0, rtl: true)), space, accuracy: 0.02, "rtl shrink-to-fit, left: the space fills the box")
-        // Min-content leaves out what conditionally hangs (Chrome: 24.13)
+        // §8.2: min-content leaves out what conditionally hangs (Chrome: 24.13)
         XCTAssertEqual(engine.minContentWidth(make("Say ")), say, accuracy: 1.0 / 64, "min-content")
     }
 
@@ -200,7 +200,7 @@ final class TextCSSTests: XCTestCase {
         XCTAssertEqual(engine.paragraph(s, width: width("one two", numeric: 0) + 1).lines.count, 3, "and it wraps")
     }
 
-    /// `white-space: pre`: preserve × nowrap. Chrome's widths
+    /// `white-space: pre` (LLP 1053 G5): preserve × nowrap. Chrome's widths
     /// (13px system-ui, headless Chrome 154, `getBoundingClientRect` of an
     /// inline-block, scripts/fixtures/pre.contract's cases): kept spaces,
     /// trailing ones included, and lines only where a line feed is.
@@ -227,7 +227,7 @@ final class TextCSSTests: XCTestCase {
 
     /// Tab stops every eight spaces of the face (CSS `tab-size: 8`), from the
     /// line's start. Chrome's widths, 13px DejaVu Sans (the pinned fixture
-    /// face, as a web font): system-ui's are declared apart.
+    /// face, as a web font): system-ui's are declared apart (LLP 1053 §0 r3).
     func testTabsStopEveryEightSpacesAsChromeDoes() throws {
         let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
             .appendingPathComponent("../../../../scripts/fixtures/fonts/assets/DejaVuSans.ttf").standardized
@@ -299,7 +299,7 @@ final class TextCSSTests: XCTestCase {
         XCTAssertEqual(drawn(700), 600, "700 matches the 600 face, drawn at its declared weight")
     }
 
-    /// `font-variation-settings` draws after the weight, the
+    /// LLP 1019 D9: `font-variation-settings` draws after the weight, the
     /// width and the size, each axis it names winning; `font-stretch` on a
     /// platform face is its `wdth`, as Chrome and WebKit set San Francisco's;
     /// `font-optical-sizing: none` leaves `opsz` to the face.
@@ -345,7 +345,7 @@ final class TextCSSTests: XCTestCase {
         XCTAssertGreaterThan(width(0, 400, 100, own), width(0, 400, 100))
     }
 
-    /// A face declared over a weight range and a width range
+    /// LLP 1019 D2, D8: a face declared over a weight range and a width range
     /// draws each request on `wght` and `wdth`, clamped to the ranges, as a
     /// browser draws an `@font-face` with range descriptors; matching treats
     /// a range as its value nearest the request (CSS Fonts 4 §5.2).
@@ -501,8 +501,8 @@ final class TextCSSTests: XCTestCase {
     #endif
 
     /// A clamp's last line wider than its box, one word longer than the
-    /// line, ends in "…" as UILabel's tail truncation does (in a notes app at
-    /// the largest text size, "Packing" would run over the row's time);
+    /// line, ends in "…" as UILabel's tail truncation does (notes at the
+    /// largest text size, round 22: "Packing" ran over the row's time);
     /// layout keeps the word's width, as CSS measures it.
     func testLineClampTruncatesAWordLongerThanItsLastLine() {
         let clamped = Spec(runs: [run("Packing")], align: 0, lineClamp: 1, color: [0, 0, 0, 255])

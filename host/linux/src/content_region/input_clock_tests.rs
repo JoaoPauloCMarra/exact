@@ -119,7 +119,7 @@ fn review_timer_error_does_not_accept_an_invalidated_press_or_swipe() {
 }
 
 #[test]
-#[ignore = "known gap: hidden pending content lacks a final paint offer"]
+#[ignore = "QUEUE: hidden pending content lacks a final paint offer"]
 fn review_hidden_pending_content_paints() {
     let _service = crate::content_region::test_service();
     let mut p = actions::boot(&actions::source(), true, actions::Rows::default());

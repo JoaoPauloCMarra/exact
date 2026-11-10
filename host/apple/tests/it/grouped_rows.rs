@@ -41,7 +41,7 @@ fn horizontal_padding_and_native_card_margins_each_reduce_the_row_once() {
                     );
                 }
                 // Unequal card margins are LTR's alone: under RTL the kernel
-                // swaps them, padding or none.
+                // swaps them, padding or none (QUEUE.md).
                 let uneven = if direction == "ltr" {
                     [20.0, 16.0]
                 } else {
@@ -82,7 +82,7 @@ fn horizontal_padding_and_native_card_margins_each_reduce_the_row_once() {
 /// UIKit's content configuration draws none of a row's box, so a row of a
 /// standard cell's parts whose author wrote an edge of it, or its
 /// background image, is carried as its own views, as every other host
-/// draws it; a row with none is the standard cell.
+/// draws it (LLP 1084 D7); a row with none is the standard cell.
 #[test]
 fn a_row_with_an_authored_edge_is_carried() {
     let src = r##"component Form

@@ -1,4 +1,4 @@
-//! `state … persist`: which states a launch may keep.
+//! `state … persist` (LLP 1116 D5): which states a launch may keep.
 //!
 //! A persisted state is a small setting the host keeps across launches —
 //! a number, string or bool, or an option or list of those — and only the

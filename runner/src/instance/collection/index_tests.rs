@@ -394,7 +394,7 @@ fn anchors_preserve_key_and_offset_through_prepend_reorder_and_height_changes() 
 }
 
 /// At its start a list anchors nothing, as CSS scroll anchoring selects no
-/// anchor at a zero offset: a row inserted on top shows. An end it
+/// anchor at a zero offset: a row inserted on top shows (mail F8). An end it
 /// follows still wins where the start is also the end.
 #[test]
 fn a_list_at_its_start_shows_rows_inserted_above() {
@@ -658,8 +658,8 @@ fn invalid_numbers_and_duplicates_leave_index_unchanged() {
         assert_eq!(index.total_height(), 30.0);
         assert_eq!(index.measurement_token("k0"), Some(token));
         assert!(index.row_at(bad).is_err());
-        // A negative offset is a port in the padding before the first row:
-        // at the rows' start.
+        // A negative offset is a port in the padding before the first row
+        // (LLP 1010 §6.9): at the rows' start.
         if bad < 0.0 && bad.is_finite() {
             assert_eq!(index.window(bad, 10.0, [None; 2]).unwrap().offset, 0.0);
             assert!(index.capture_anchor(bad, 10.0, false).is_ok());
@@ -1031,7 +1031,7 @@ fn a_splice_equals_the_replacement_and_refuses_a_repeat_untouched() {
     }
 }
 
-/// The padding after the last row extends the scroll range,
+/// The padding after the last row (LLP 1010 §6.9) extends the scroll range,
 /// not the rows: an offset past the rows' end keeps the last row in the
 /// window, follows the end there, and is where a followed end restores to.
 #[test]
@@ -1058,7 +1058,7 @@ fn trailing_padding_extends_the_range_past_the_rows() {
 }
 
 /// A list shorter than its port and paddings ends in the padding before its
-/// first row: the range's end is negative, down to that
+/// first row (LLP 1010 §6.9): the range's end is negative, down to that
 /// padding; a port there follows the end, one above it does not, and the
 /// window still starts at the first row.
 #[test]

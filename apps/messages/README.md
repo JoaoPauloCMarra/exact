@@ -10,7 +10,7 @@ reference's MIT license is in `assets/reference-LICENSE.txt`.
 
 It is a pixel-match port of that reference, with its colours and sizes written
 out in hex and points, not a style guide: a new app leaves those unsaid and names
-colour roles (`docs/contract-for-agents.md`, "Prefer native controls").
+colour roles (LLP 1115, `docs/contract-for-agents.md`, "Prefer native controls").
 
 Run from the repository root in two terminals:
 

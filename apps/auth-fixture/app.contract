@@ -1,22 +1,22 @@
-// The auth fixture: an OAuth sign-in with PAR, DPoP and
+// The auth fixture (LLP 1069.006): an OAuth sign-in with PAR, DPoP and
 // PKCE against a local fixture authorization server (`fixture.mjs`),
 // the way the Bluesky port would sign in. Preparing does discovery, the
 // DPoP key and PAR; the press opens the system browser (a popup on the
 // web) with `openAuthSession`, and its answer exchanges the code.
 //
-// Passkeys against the same server's relying party: a
+// Passkeys (LLP 1133.011 §10) against the same server's relying party: a
 // button registers one, another signs in with one, a third has the server
 // forget the one signed in with (drive 9's signal), and while the sign-in
 // screen shows, a conditional `get` offers them in the username field's
 // suggestions. Each ceremony is data code's (`app.ts`); the view reads only
 // what the server answered.
 //
-// Sign-in: the providers' own buttons, each an action
+// Sign-in (LLP 1133.014 §10): the providers' own buttons, each an action
 // whose data code asks `get` with a nonce fetched when the screen showed,
 // and, where the target offers it, one passive request beside a passkey
 // when the sign-in screen shows. The view reads the server's account only.
 //
-// "Check this build" proves to the server that this is
+// "Check this build" (LLP 1133.028 §8.1) proves to the server that this is
 // a genuine build on a genuine device; the row shows the server's verdict.
 
 use getClientCapabilities, ClientCapabilities from "@exact/passkeys"
@@ -79,7 +79,7 @@ component AuthFixture
     send identity = signInWith("google")
   action prepare
     send prepared = prepareSignIn(time.epochAtZero + performanceNow())
-  // A desktop's loopback callback, signed in by the same press.
+  // A desktop's loopback callback (LLP 1133.005 D9), signed in by the same press.
   action prepareLoopback
     send prepared = prepareLoopbackSignIn(time.epochAtZero + performanceNow())
   action signIn
@@ -94,7 +94,7 @@ component AuthFixture
     // A ceremony or a check in flight is for the session that is ending.
     send passkey = passkeyIdle()
     send checked = passkeyIdle()
-    // So is a sign-in whose sheet is still up, whose answer is then dropped.
+    // So is a sign-in whose sheet is still up, whose answer is then dropped (LLP 1133.014 D12).
     send identity = passkeyIdle()
   action setUsername(value)
     username = value

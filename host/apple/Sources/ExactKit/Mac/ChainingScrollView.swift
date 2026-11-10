@@ -1,7 +1,7 @@
 #if os(macOS)
 import AppKit
 
-/// A `scroll` node's scroll view. AppKit scrolls it: its
+/// A `scroll` node's scroll view. AppKit scrolls it (LLP 1115.000 D8.2): its
 /// momentum, its wheel step, its rubber band. What is decided here is whose
 /// a wheel event is. One this view cannot take in its dominant direction —
 /// nothing to scroll, or a gesture that begins at that edge — goes to the
@@ -24,7 +24,7 @@ package final class ChainingScrollView: NSScrollView {
     /// (`MouseChainMac`): one already out hears no up, and AppKit also asks
     /// here when it frees the parent (`-[NSView _finalize]`). A view that
     /// stayed would reach its own dealloc still a subview, which AppKit
-    /// raises (an app aborted on a thread change).
+    /// raises (the T3 Code clone's abort on a thread change, X87).
     package override func removeFromSuperview() {
         if mouseHeld, window != nil {
             removeAfterMouseUp = true
@@ -61,7 +61,7 @@ package final class ChainingScrollView: NSScrollView {
     /// The override below only *routes*: a gesture it keeps goes to `super`
     /// whole, which is the contract AppKit asks for. Compatible, so a
     /// contained scroller moves on AppKit's scrolling thread and the main
-    /// thread follows it.
+    /// thread follows it (LLP 1002 D4; LLP 1044 F3).
     package override class var isCompatibleWithResponsiveScrolling: Bool { true }
 
     private var styleObserver: NSObjectProtocol?
@@ -110,13 +110,13 @@ package final class ChainingScrollView: NSScrollView {
     /// and animates a notch; and a gesture the agent hands over whole from
     /// one call is not tracked as the event queue's is: measured on macOS
     /// 27.0, AppKit applies one event of it). For a person a `scroll` node
-    /// is scrolled by AppKit, as the page is, and so it
+    /// is scrolled by AppKit (LLP 1115.000 D8.2), as the page is, and so it
     /// is while a drive holds the frames for a person's own flings (`perf
-    /// frames hold` under platform timing): momentum and rubber
+    /// frames hold` under platform timing, LLP 1144 D1): momentum and rubber
     /// band included.
     static var appliesAtOnce = ExactEnv.agentFreezes
-    /// The driver's trackpad gesture (`tap … wheel … fling|hold|release`)
-    /// comes through the window server, whose gesture AppKit
+    /// The driver's trackpad gesture (`tap … wheel … fling|hold|release`,
+    /// LLP 1142 D3) comes through the window server, whose gesture AppKit
     /// tracks as a person's, marked with this in `kCGEventSourceUserData`.
     /// It is AppKit's to run under the agent too.
     static let driverMark: Int64 = 0x4558_4143_5444
@@ -150,7 +150,7 @@ package final class ChainingScrollView: NSScrollView {
     enum Routing: Equatable {
         /// Hand it to `NSScrollView`: this view scrolls, and its scrolling,
         /// its momentum, its wheel step and its rubber band are AppKit's to
-        /// run.
+        /// run (LLP 1115.000 D8.2).
         case appKit
         /// Scroll this view by hand, at once: the agent's wheel
         /// (`appliesAtOnce`).
@@ -196,8 +196,8 @@ package final class ChainingScrollView: NSScrollView {
         if dx == 0 && dy == 0 {
             return (containX || containY) && phased ? .appKit : .drop
         }
-        // A wheel with no phases is its own gesture and is not split
-        // (Chrome's rule, as measured): the deepest scroller
+        // A wheel with no phases is its own gesture and is not split (LLP
+        // 1070 G2, Chrome's rule, measured in its §2): the deepest scroller
         // that can take any of its components takes it; one that can take
         // none chains, unless the tick's axis is contained here. A mouse
         // wheel does not rubber-band on this platform, whoever scrolls it.
@@ -237,7 +237,7 @@ package final class ChainingScrollView: NSScrollView {
         scrolls && delta != 0 && limit > 0 && ((delta < 0 && origin < limit) || (delta > 0 && origin > 0))
     }
 
-    /// Chrome's wheel scroll latching for a trackpad gesture:
+    /// Chrome's wheel scroll latching for a trackpad gesture (LLP 1070 G1):
     /// the gesture belongs to one scroller from its first moving event to
     /// its end, momentum included, and is never handed on mid-gesture. The
     /// owner is the first scroller, innermost out, whose routing of that

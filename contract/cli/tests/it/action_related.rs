@@ -5,7 +5,7 @@ use std::{path::PathBuf, process::Command};
 fn root(binding: &str, children: &str) -> String {
     format!("component App\n  state n = 0\n  action zero\n    n = 0\n  action one(x: number)\n    n = x\n  action two(x: number, y: number)\n    n = x + y\n  view\n    {binding}\n{children}")
 }
-/// The root with a `provide` section over `view`.
+/// The root with a `provide` section (LLP 1035.005.000 D9) over `view`.
 fn provided(provide: &str, view: &str, children: &str) -> String {
     root(view, children).replacen(
         "  view\n",
@@ -71,7 +71,7 @@ fn injected_requirements_cross_wrappers_and_use_the_nearest_provider() {
     let plain = children("");
     refusal(&provided("callback = one", "Wrap()", &plain));
     contract::compile(&provided("callback = zero", "Wrap()", &plain)).unwrap();
-    // A nearer component's section shadows an outer one's.
+    // A nearer component's section shadows an outer one's (LLP 1035.005.000 D9).
     let inner = |value: &str| children(&format!("  provide\n    callback = {value}\n"));
     contract::compile(&provided("callback = one", "Wrap()", &inner("idle"))).unwrap();
     let error = refusal(&provided("callback = zero", "Wrap()", &inner("single")));
@@ -140,7 +140,7 @@ fn navigate_optional_arity_survives_multiple_bindings_and_intersection() {
 #[test]
 fn all_event_payload_arities_share_the_lowering_rule() {
     // `press` may also hand on its `MouseEvent` (`handler_accepts`), and
-    // `reorderdrop` its `ReorderEvent` after the two keys.
+    // `reorderdrop` its `ReorderEvent` after the two keys (LLP 1094 D2).
     assert_eq!(contract_analyze::handler_arity("press", 0), Some(0..=1));
     assert_eq!(
         contract_analyze::handler_arity("reorderdrop", 0),

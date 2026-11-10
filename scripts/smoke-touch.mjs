@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
-// Real touches on an iOS simulator: Caltrain driven
+// Real touches on an iOS simulator (LLP 1080.000 §5–§6): Caltrain driven
 // through the touch runner (`--touch platform`), in both timing modes. Each
 // `tap` must reply `delivery: platform` with the touch the app's window
 // dispatched; what the tap did is read from `tree`, never from the reply.
-// A held contact is one real touch played at its lift; a whole real drag
-// (`tap … drag`) scrolls the stations, with a read while the finger is
+// A held contact is one real touch played at its lift (§14); a whole real drag
+// (`tap … drag`, §11) scrolls the stations, with a read while the finger is
 // down, and a still press opens them as a tap does. Prints the runner's
-// start and per-tap times as observations, never a gate. A runner that
+// start and per-tap times (G2) as observations, never a gate. A runner that
 // does not start fails: this simulator is the supported destination. Then a
-// grouped list (`contract/corpus/grouped-touch.contract`, in
+// grouped list (LLP 1084, `contract/corpus/grouped-touch.contract`, in
 // Caltrain's bundle): a real tap on a row's switch, detail button or row
 // lands on the cell or accessory UIKit draws, not the hidden authored node.
 // The final activity archive phase requires --build for its gallery variant;
@@ -52,7 +52,7 @@ try {
 if (argv.includes('--build')) {
   const built = spawnSync('bun', ['host/apple/build.mjs', '--ios', 'caltrain-apple', '--no-install'], { cwd: ROOT, stdio: 'inherit' });
   if (built.status !== 0) throw Error('FAIL ios-touch build: host/apple/build.mjs --ios caltrain-apple --no-install');
-  // The refusal scan uses this iOS app, its extension and its packaged arm.
+  // WP9's refusal scan uses this iOS app, its extension and its packaged arm.
   const bundle = appleArtifacts(resolveApp('caltrain'), { destination: 'ios-simulator' }).bundle;
   const refused = spawnSync('bun', ['test', 'host/apple/link.test.mjs'], { cwd: ROOT, stdio: 'inherit', env: { ...process.env, EXACT_ACTIVITY_APP: bundle } });
   if (refused.status !== 0) throw Error('FAIL ios-touch activity refusals');
@@ -73,7 +73,7 @@ for (const timing of ['agent', 'platform']) {
       check(r.delivery === 'platform' && r.landed?.session === 'main' && r.touch?.type === 'direct', `${timing}: tap ${target} was not a real touch: ${JSON.stringify(r)}`);
       return r;
     };
-    // A still press: the finger down 300 ms, a read inside that hold, then up, presses as a tap does.
+    // A still press (§11): the finger down 300 ms, a read inside that hold, then up, presses as a tap does.
     const still = await s.tap('change-station', { drag: { dx: 0, dy: 0, hold: 300, during: [async () => (await s.tree()).nodes.length] } });
     check(still.delivery === 'platform' && still.touch?.moved === 0 && still.during?.[0] > 0, `${timing}: a still press was not one real touch with a read while down: ${JSON.stringify(still)}`);
     // Settle the push the press started in either timing: a real touch played while it moves can be lost
@@ -121,7 +121,7 @@ for (const timing of ['agent', 'platform']) {
     if (timing === 'platform') await s.clock('settle');
     tree = await s.tree();
     check(byTestId(tree, 'station-name')?.props.text === 'Palo Alto', `${timing}: after a real tap on station-paloalto the station is ${byTestId(tree, 'station-name')?.props.text}`);
-    // A held contact is one real touch, played whole at its lift: the runner holds none across requests (P3).
+    // A held contact is one real touch, played whole at its lift (LLP 1080.000 §14): the runner holds none across requests (P3).
     const down = await s.tap('station-name', { down: true });
     await s.pointer('hold', { ms: 600 });
     const up = await s.pointer('up');
@@ -232,7 +232,7 @@ console.log(`touch smoke: ${failures.length ? `${failures.length} failure(s)` : 
 for (const f of failures) console.error(`FAIL ios-touch ${f}`);
 process.exitCode = failures.length ? 1 : 0;
 
-// Compare through the touch step's runner, then end from a fresh app.
+// LLP 1126.001 WP14: compare through the touch step's runner, then end from a fresh app.
 async function archiveActivities(udid, check) {
   const dir = mkdtempSync(resolve(ROOT, 'target/ios-touch-archive-'));
   console.log(`activity archive: ${dir}`);

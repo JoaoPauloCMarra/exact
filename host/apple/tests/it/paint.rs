@@ -1,4 +1,4 @@
-//! Paint motion on the Apple host's batch: a box
+//! Paint motion on the Apple host's batch (LLP 1055.000 D6, LLP 1062): a box
 //! whose paint the engine is moving is re-sent its `style` with the
 //! presented values over its rows; when they arrive, the rows show again.
 //! An inheriting view — and an inline run, through its paragraph — shows an
@@ -130,11 +130,11 @@ fn the_appearance_retargets_light_dark_first_quietly_then_moving() {
     );
 }
 
-/// A keyframe's `light-dark()` colour is the presenter's
+/// LLP 1062 D9: a keyframe's `light-dark()` colour is the presenter's
 /// appearance when it starts; the first report corrects boot's light guess
 /// in place, and a later flip leaves a playing animation as Chrome does.
 /// (The text's own colour is fixed: its initial `CanvasText` would cross as
-/// a reference the presenter resolves white in dark itself.)
+/// a reference the presenter resolves white in dark itself, LLP 1095 D8.)
 #[test]
 fn a_light_dark_keyframe_follows_the_presenter_appearance() {
     let plan = contract::compile(
@@ -198,7 +198,7 @@ fn boot(src: &str) -> Host<NoData> {
 /// A `currentcolor` border side paints the animating `color` frame by
 /// frame, as CSS's used value does; a side with its own colour keeps it.
 /// An inline run that inherits the colour follows it too, through its
-/// paragraph.
+/// paragraph (LLP 1062 D5).
 #[test]
 fn currentcolor_borders_and_inline_runs_follow_an_animating_color() {
     let mut host = boot(INHERITING);
@@ -249,7 +249,7 @@ fn currentcolor_borders_and_inline_runs_follow_an_animating_color() {
 }
 
 /// An exit animation animates a colour its node never transitioned: the
-/// exit's keyframes own it while the node lives.
+/// exit's keyframes own it while the node lives (LLP 1063).
 #[test]
 fn an_exit_animates_a_colour_the_node_never_transitioned() {
     let mut host = boot(
@@ -268,7 +268,7 @@ fn an_exit_animates_a_colour_the_node_never_transitioned() {
     );
 }
 
-/// A view whose own appearance differs from the session's (a
+/// LLP 1062 D4: a view whose own appearance differs from the session's (a
 /// sheet with an override, say) reports it, and its node's `light-dark()`
 /// colours resolve by it: the first report corrects in place, keyframes
 /// included; one that agrees with the session again transitions back.
@@ -304,7 +304,7 @@ fn a_view_in_its_own_appearance_resolves_by_it() {
     );
 }
 
-/// A subtree whose `color-scheme` turns dark moves its
+/// LLP 1034 §8: a subtree whose `color-scheme` turns dark moves its
 /// `light-dark()` colours under their transitions, as an appearance change
 /// does; the view's report that follows (what UIKit's override makes it say)
 /// is a confirmation, not a first report's correction, so it does not snap.
@@ -368,7 +368,7 @@ fn a_side_that_stays_currentcolor_follows_color_and_one_that_becomes_it_moves() 
 }
 
 /// An SVG shape's `light-dark()` fill transitions when the appearance
-/// changes, as a box's colour does: the scene
+/// changes, as a box's colour does (LLP 1055.000 D6, LLP 1062 D4): the scene
 /// is re-sent with the moving value.
 #[test]
 fn an_svg_fill_moves_between_its_light_dark_pair() {
@@ -451,7 +451,7 @@ fn cancelling_color_motion_restores_inheriting_views_and_inline_runs() {
     );
 }
 
-/// A radius that is a calculation with a percentage crosses to
+/// LLP 1116 D5: a radius that is a calculation with a percentage crosses to
 /// Swift as a handle on the kernel's evaluator, the environment's inset in
 /// it: `min(50%, calc(env(safe-area-inset-top) + 10px))` is half the basis up
 /// to 60 points, then 30.

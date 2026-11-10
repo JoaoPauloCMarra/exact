@@ -1,6 +1,9 @@
 //! Input: evdev, read directly — pointer motion, buttons, wheels, keys,
 //! gamepads — with a US keymap for typing. No libinput (nothing to link), so no
-//! pointer acceleration, touchpad gestures, or hotplug: declared trades.
+//! pointer acceleration, touchpad gestures, or hotplug: the trades LLP 1015
+//! §7 declares.
+//!
+//! @ref LLP 1015 §6
 
 #![allow(unsafe_code)]
 
@@ -25,7 +28,8 @@ pub enum InputEvent {
     Button(bool),
     /// The secondary (2), middle (4), back (8) or forward (16) button, by
     /// its `PointerEvent.buttons` bit, went down (`true`) or up. Back and
-    /// Forward are the last two's default action on their release.
+    /// Forward are the last two's default action on their release (LLP
+    /// 1115.000 D5.5).
     Aux(u32, bool),
     /// Carrier/device loss cancels without manufacturing a successful release.
     Cancel,
@@ -58,7 +62,7 @@ pub enum InputEvent {
 }
 
 /// US keyboard state shared by evdev and VNC. Shift sides are independent.
-/// A Ctrl/Meta chord passes: it is a `key` handler's (⌘S), and
+/// A Ctrl/Meta chord passes: it is a `key` handler's (⌘S, kanban F27), and
 /// the presenter keeps it from typing or starting a game action
 /// (`hardware_key`).
 #[derive(Default)]

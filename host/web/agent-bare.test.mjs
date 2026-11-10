@@ -1,4 +1,4 @@
-// The driver's shared layout names why the default is bare.
+// @ref LLP 1104 D2 — the driver's shared layout names why the default is bare.
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
@@ -41,7 +41,7 @@ test('layout joins a bare reason only to the matching plan site on every carrier
   }
 });
 
-test('an `:active` row lowered to the press paint carries its part and where it is written', () => {
+test('an `:active` row lowered to the press paint carries its part and where it is written (LLP 1121 D8)', () => {
   const digest = 'c'.repeat(64), reader = sourceMapReader(null);
   const part = { file: '/app/app.contract', line: 6, col: 9, end_col: 20 };
   reader.add({ digest, nodes: [{ file: '/app/app.contract', line: 4, col: 5, end_col: 11, component: 'App', chain: [],

@@ -1,16 +1,17 @@
-// A hosted relay's connector. Behind a NAT the design server can't be
-// reached, so it dials out: it holds a few idle TLS connections to the
-// relay's control endpoint, and the relay hands each a client's TCP
-// stream, unopened. The client's TLS ends here, in the same listener
-// `--remote` uses (scripts/tamber-remote.mjs), so the relay never
+// A hosted relay's connector (LLP 1121 §5 stage 10c R1; rt1's plan,
+// ~/x2theme/rt1-s10c-plan.md, theme2's 20:45 approval). Behind a NAT the
+// design server can't be reached, so it dials out: it holds a few idle TLS
+// connections to the relay's control endpoint, and the relay hands each a
+// client's TCP stream, unopened. The client's TLS ends here, in the same
+// listener `--remote` uses (scripts/tamber-remote.mjs), so the relay never
 // sees a token, a design or a canvas; it reads the ClientHello's SNI only.
 //
 // The connector's own protocol, outside tamber/1 (`EXACT-RELAY/1`), on a
 // connection whose relay certificate verified by WebPKI (no flag turns that
-// off):
+// off: theme2's condition 4):
 //   connector: `EXACT-RELAY/1 <account>\r\nauthorization: Bearer <token>\r\n`
 //              `run: <id>\r\n` (one random id a run, on every connection: the
-//              relay's one session for it), (`names: <tool> <canvas>\r\n`
+//              relay's one session for it, R3), (`names: <tool> <canvas>\r\n`
 //              with names of its own, or once the relay has named the run's),
 //              `\r\n`
 //   relay:     `READY <tool> <canvas>\n`, then idle; or `REFUSED <why>\n`
@@ -34,7 +35,7 @@ export const LINE = 1024; // (a header line longer than this is no relay's)
 
 /** `--relay host[:port]` and `--relay-account <label>`, with the
  * certificate for the relay's names (`--relay-cert`, `--relay-key`, PEM
- * files: the developer's own, else one got by ACME), and `--relay-name <tool>
+ * files: the developer's own until R2 gets one), and `--relay-name <tool>
  * <canvas>`'s names of the developer's own domain; the account's token from
  * `EXACT_RELAY_TOKEN`, else `~/.exact/relay/<account>/token`, which only its
  * owner may read. Null without `--relay`. */
@@ -47,7 +48,7 @@ export function relayArgs(argv, { env = process.env, home = homedir() } = {}) {
   const account = value('--relay-account');
   if (!account || !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(account)) throw new Error('--relay needs --relay-account <label>, the account the relay gave you (lowercase letters, digits and -)');
   // The certificate: the developer's own (`--relay-cert`/`--relay-key`), or
-  // got here by ACME: through the relay for its names, or with names of
+  // got here by ACME (R2): through the relay for its names, or with names of
   // the developer's own domain, through their DNS by `--relay-dns-hook`, a
   // command run here (their credentials never pass through the relay).
   const cert = value('--relay-cert'), key = value('--relay-key');
@@ -85,7 +86,7 @@ export const parentOf = name => name.slice(name.indexOf('.') + 1);
 /** The ACME DNS-01 record `record` = `value` put up (or taken down,
  * `clear`) by the relay, over a connection of its own: the connector's
  * handshake with a `txt:` line, the relay answering `TXT-OK` or `REFUSED
- * <why>` (only names under the connector's own account). The
+ * <why>` (only names under the connector's own account, R3's rule). The
  * relay's certificate verified by WebPKI before the token goes, as a
  * pooled connection's. */
 export function relayTxt({ host, port, account, token }, record, value, { clear = false, connect = connectTLS, ms = 30_000, signal = null } = {}) {
@@ -199,7 +200,7 @@ const shown = (text, token) => (carries(text, token) ? '[withheld: it carries th
 export function connectRelay({ host, port, account, token, names = null }, { client, named: told = () => true, ended = () => {}, warn = console.error, connect = connectTLS, pool = POOL, backoffMs = BACKOFF_MS, greetMs = 10_000, clock = () => performance.now() } = {}) {
   const live = new Set();
   let closed = false, idle = 0, carried = 0, wait = 250, timer = null, budget = null, served = null;
-  // (this run's one id, on every connection: the relay gives all of them one session)
+  // (this run's one id, on every connection: the relay gives all of them one session, R3)
   const run = randomBytes(16).toString('hex');
   // (a relay's word that carries the token is never shown, logged or an origin)
   const clean = word => !carries(word, token);

@@ -1,5 +1,5 @@
-// A reduction of the real-finger crash.
-// Agent taps do not synthesize UIKit touch events.
+// A reduction of the real-finger crash, approved by Charlie 2026-09-07.
+// @ref LLP 1012 — agent taps do not synthesize UIKit touch events.
 // Default: UIKit only. --presenter also compiles the actual ExactKit sources
 // and links the client's archive; cases 0..5 do not create a runtime/session.
 // --early-session moves case 6's session creation before UIApplicationMain.

@@ -1,4 +1,4 @@
-# The Canvas gallery on the Linux host: one executable with the
+# The Canvas gallery on the Linux host (LLP 1056 §4): one executable with the
 # runner, the kernel, the baked plan and its TypeScript data module.
 [package]
 name = "canvas-gallery-linux"

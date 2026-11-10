@@ -1,6 +1,6 @@
 //! Basic shapes to paths, `pathLength`, and the `viewBox` transform.
 //!
-//! SVG 2 §10 (basic shapes and the paths they are
+//! @ref LLP 1055 D1; SVG 2 §10 (basic shapes and the paths they are
 //! equivalent to), §9.5.1 (`pathLength`), §8.2 (the viewBox equations)
 
 use super::length::{self, Viewport};

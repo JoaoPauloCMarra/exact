@@ -1,4 +1,4 @@
-// The resident's phase lines (dev-phase.mjs): a build
+// The resident's phase lines (dev-phase.mjs; dtool2's pass 3 #8): a build
 // says what it builds and how it went; a noisy build that succeeds is not
 // cut off for its output; one that fails says the compiler's own error,
 // plain, not the colours or the trace after it.

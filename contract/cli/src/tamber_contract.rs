@@ -1,9 +1,10 @@
-//! The design server's `.contract` files: the app's own Contract sources join
-//! the design's files (packages stay read-only), and `set-state style state row
-//! value` and `unset-state style state row` edit a row of a `style`'s state
-//! part. A written file goes through `contract fmt`; the whole app is compiled
-//! with it, in memory, before anything is written; its inverse is the preimage,
-//! restored line for line and byte for byte, bypassing fmt.
+//! The design server's `.contract` files (LLP 1121 stage 8 D, D13): the
+//! app's own Contract sources join the design's files (packages stay
+//! read-only), and `set-state style state row value` and `unset-state style
+//! state row` edit a row of a `style`'s state part (D8). A written file goes
+//! through `contract fmt`; the whole app is compiled with it, in memory,
+//! before anything is written; its inverse is the preimage, restored line
+//! for line and byte for byte, bypassing fmt (LLP 1122 D6).
 
 use crate::tamber_ops::{optional, required};
 use exact_tamber::Op;
@@ -27,7 +28,7 @@ pub(crate) enum ContractOp {
         state: String,
         row: String,
     },
-    /// `set-row` at an attribute's place: its file is named.
+    /// `set-row` at an attribute's place (LLP 1122 D6): its file is named.
     SetRowAt(crate::tamber_rows::AtRow),
     /// `set-row` on a `style`'s own row (a state part's is `SetState`).
     SetStyleRow {
@@ -35,7 +36,7 @@ pub(crate) enum ContractOp {
         row: String,
         value: String,
     },
-    /// A line added to a component's `params`.
+    /// A line added to a component's `params` (LLP 1121 D15).
     AddParam(crate::tamber_param_lines::ParamLine),
     /// A component's param's line taken out.
     RemoveParam { component: String, name: String },
@@ -68,7 +69,7 @@ impl ContractOp {
 /// server may write, and whether the graph loaded whole. A package's file
 /// is its package's: one in a directory, below the app's, whose
 /// `package.json` names a package (installed, linked or vendored, as a
-/// component's identity reads it), or one a `node_modules`
+/// component's identity reads it, LLP 1121 D15), or one a `node_modules`
 /// entry links to, however a `use` reached it. `graph` is the app's
 /// (`contract::source_graph` of its `app.contract`).
 pub(crate) fn owned(dir: &Path, graph: &contract::SourceGraph) -> (Vec<String>, bool) {
@@ -150,7 +151,7 @@ pub(crate) fn split(ops: &Value) -> Result<(Value, Vec<Named>), Value> {
         let state_op = matches!(v["op"].as_str(), Some("set-state" | "unset-state"));
         if state_op && v.get("node").is_some() {
             return Err(
-                json!({"message": "a state part written under a node is `set-row`'s; `set-state` and `unset-state` edit a `style`'s"}),
+                json!({"message": "a state part written under a node is `set-row`'s (LLP 1122 T5); `set-state` and `unset-state` edit a `style`'s"}),
             );
         }
         let op = match v["op"].as_str() {
@@ -260,7 +261,7 @@ pub(crate) fn string_literal(s: &str) -> String {
     out
 }
 
-/// A request's `state`, a state part's name, with or without its `:`.
+/// A request's `state`, one of D8's, with or without its `:`.
 fn state(v: &Value) -> Result<String, Value> {
     let s = required(v, "state")?;
     let s = s.strip_prefix(':').unwrap_or(&s).to_string();
@@ -548,7 +549,7 @@ pub(crate) fn file_of(
         .map(|(p, _)| p)
         .collect();
     let node = match what {
-        "style" => " (a node's own row is `set-row`'s at its place)",
+        "style" => " (a node's own row is `set-row`'s at its place, LLP 1122 T5)",
         _ => "",
     };
     match declares.as_slice() {
@@ -580,7 +581,7 @@ pub(crate) fn plan(
     for (path, before, _) in snap.iter().filter(|(p, ..)| p.ends_with(".contract")) {
         let mut after = before.clone();
         // Rows named by their place first, together, on the file the tool
-        // saw, then the rest by name.
+        // saw (LLP 1122 D6), then the rest by name.
         let placed: Vec<&crate::tamber_rows::AtRow> = ops
             .iter()
             .filter(|(p, _)| p == path)
@@ -629,7 +630,7 @@ pub(crate) fn plan(
             .find(|(p, ..)| p == design)
             .map(|(_, t, _)| t.clone());
         // A param the app sets a value for in its design is not detached
-        // Its value would be dropped unsaid.
+        // (LLP 1122 D6): its value would be dropped unsaid.
         let design_now = design_text.clone().or_else(|| {
             snap.iter()
                 .find(|(p, ..)| p == design)
@@ -648,7 +649,7 @@ pub(crate) fn plan(
                 if set.iter().any(|n| *n == full || *n == short) {
                     return Err(refuse(
                         path,
-                        format!("`{short}` has a value the app sets in `{design}`: unset it there first (or in the same transaction), then detach").into(),
+                        format!("`{short}` has a value the app sets in `{design}`: unset it there first (or in the same transaction), then detach (LLP 1122 D6)").into(),
                     ));
                 }
             }
@@ -660,8 +661,8 @@ pub(crate) fn plan(
             None => contract::compile_path_all(&root, false),
         });
         if let Err(all) = built {
-            // A param added or removed alone: the build refuses an unread one, so
-            // it goes with the row that reads it.
+            // A param added or removed alone: D15 refuses an unread one, so
+            // it goes with the row that reads it (LLP 1122 D6).
             let unread = |e: &&contract::CompileError| {
                 matches!(
                     e.id.as_ref(),
@@ -690,7 +691,7 @@ pub(crate) fn plan(
                 .iter()
                 .any(|e| unread(&e) && ours.iter().any(|o| names(&e.message, o)))
                 .then_some(
-                    "a param is added or removed with the set-row that starts or stops reading it, in the same transaction",
+                    "a param is added or removed with the set-row that starts or stops reading it, in the same transaction (LLP 1122 D6)",
                 );
             let shown = |f: &Option<Box<Path>>| {
                 f.as_deref()
@@ -719,7 +720,7 @@ pub(crate) fn plan(
         planned.diff.push_str(&file_diff(&path, before, &after));
         planned.files.push((path, after, vec![back]));
     }
-    // A state part compiles into rows and looks: the ordinary rebuild.
+    // A state part compiles into rows and looks: the ordinary rebuild (D13).
     planned.class = exact_tamber::Class::Rebuild;
     Ok(())
 }
@@ -773,7 +774,7 @@ pub(crate) fn files(
     for (named, op) in written {
         let file = file_of(named.as_deref(), &op, &texts)?;
         if !file.ends_with(".contract") || !texts.iter().any(|(f, _)| *f == file) {
-            // A package's source is its package's: edited there.
+            // A package's source is its package's (D15): edited there.
             return Err(
                 json!({"message": format!("`{file}` is no Contract source of the app's own: a package's file, or one outside the app, is edited in its own project")}),
             );

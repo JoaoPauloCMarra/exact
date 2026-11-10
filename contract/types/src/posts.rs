@@ -12,7 +12,7 @@ struct Targets<'a> {
     has_frames: bool,
 }
 
-/// A call refused as ambiguous (`ambiguous`) is not checked.
+/// A call refused as ambiguous (`ambiguous`, LLP 1089 D1) is not checked.
 pub(super) fn check_targets(file: &File, ambiguous: &BTreeSet<Span>, sink: &mut Sink) {
     let mut targets = Targets::default();
     for c in &file.components {

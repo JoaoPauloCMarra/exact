@@ -1,4 +1,4 @@
-//! A shape's storage is bounded by its text (the storage
+//! A shape's storage is bounded by its text (LLP 1085.000 §2 P3, the storage
 //! spike: cosmic-text held 246–300 bytes per byte of text at one width,
 //! Parley's shaping arrays 38–52). These replace the tests that pinned
 //! cosmic-text's span reservation: the property is the same, bounded bytes

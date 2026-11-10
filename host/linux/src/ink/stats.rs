@@ -1,4 +1,4 @@
-//! Completed-frame counters; a reader never borrows the painter.
+//! Completed-frame counters; a reader never borrows the painter. @ref LLP 1149 D8.
 use super::*;
 use exact_ink::atlas::Stats;
 use std::{cell::Cell, rc::Rc};

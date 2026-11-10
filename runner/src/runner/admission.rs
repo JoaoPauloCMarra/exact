@@ -7,7 +7,7 @@ use crate::FailureKind;
 impl<D: DataSource> Runner<D> {
     /// Ask `which` resources again in one commit — what a host fact that
     /// changed does, such as the delivery facts `set_delivery` hands the
-    /// runner. A refusal puts the store, the slots, and every
+    /// runner (LLP 1030 D7). A refusal puts the store, the slots, and every
     /// settled resource back as they were, and fails what was owed an ask
     /// ([`Runner::commit_again`]). `None` when the list is empty — there
     /// was nothing to ask.
@@ -125,7 +125,7 @@ impl<D: DataSource> Runner<D> {
             // run), so the host cancels it. Whether an answer is owed is the
             // pump's to say (`take_aborted_answer`), from what is pending
             // then: a refused commit may have put it back.
-            // A let-go write kept as module work is named
+            // A let-go write kept as module work (LLP 1146 D2) is named
             // for as long as it runs, past the retired records' cap.
             let ticket = match named {
                 Some(p) => p.ticket,
@@ -205,7 +205,7 @@ impl<D: DataSource> Runner<D> {
             self.explicit_aborts.push(ticket);
             // Kept module work is answered aborted too: its cancelled reply
             // never comes, and the let-go answer's continuation hears this
-            // as a browser's aborted fetch rejects.
+            // (LLP 1146 D2) as a browser's aborted fetch rejects.
             if !self.pending.iter().any(|p| p.ticket == ticket) && !self.is_module_work(ticket) {
                 continue;
             }
@@ -223,9 +223,9 @@ impl<D: DataSource> Runner<D> {
     /// Take one refusal for ordinary transactional parsing/settlement. A
     /// source that shapes the failure settles it like any reply. A failure
     /// it cannot take ends the request without automatically asking again:
-    /// earlier source turns may already have executed effects.
+    /// earlier source turns may already have executed effects (LLP 1041 D2).
     pub fn take_request_refusal(&mut self, allow_ordered: bool) -> Option<(u64, Outcome)> {
-        // An auth session's answer, settled by the runner or
+        // An auth session's answer (LLP 1069.006), settled by the runner or
         // reported by the host, rides the same path.
         if let Some(settled) = crate::auth::take_any_settled(self) {
             return Some(settled);
@@ -306,7 +306,7 @@ impl<D: DataSource> Runner<D> {
         self.sync_pending_flags();
         let name = self.target_name(target);
         // Why, on the line the test runner quotes for a mutation (which has
-        // no `state.failed`).
+        // no `state.failed`): sb4 farm wave 6, E3.
         let reason = why.message.clone();
         let mut again = Vec::new();
         let next = match target {
@@ -314,7 +314,7 @@ impl<D: DataSource> Runner<D> {
                 // Keep the standing answer's arguments. Failure suppresses
                 // another ask independently of that answer's store revision.
                 // An upload's failure is never asked again at its arguments,
-                // unless it never reached the network.
+                // unless it never reached the network (D10).
                 if upload {
                     self.upload_over(ticket, sent, super::UploadEnd::Failed(why.clone()));
                 }
@@ -322,7 +322,8 @@ impl<D: DataSource> Runner<D> {
                 self.failed_why[i] = Some(why);
                 self.count_failure(i);
                 // Unless a watched topic changed while it was in flight: the
-                // answer may differ now, so it is asked once more, forced.
+                // answer may differ now, so it is asked once more, forced
+                // (LLP 1016.002 D4).
                 if ask_again {
                     again.push(i);
                 }
@@ -619,7 +620,7 @@ mod tests {
         assert!(r.failed_resources().is_empty());
     }
 
-    /// Each refused answer is counted while measuring, a
+    /// LLP 1142 D4: each refused answer is counted while measuring, a
     /// success does not reset the count, and each failure line reaches the
     /// host once; a runner that measures nothing collects none of it.
     #[test]
@@ -673,7 +674,7 @@ mod tests {
         assert_eq!(alerts[1], "line 6");
     }
 
-    /// While measuring, every other journal line
+    /// LLP 1143 open question 1: while measuring, every other journal line
     /// reaches the host once, apart from the alerts, and nothing is queued
     /// for a runner that measures nothing.
     #[test]

@@ -51,7 +51,8 @@ impl<D: DataSource> Bridge<D> {
             })
     }
 
-    /// `exact_host_back`: the platform's own Back from visit `id`, a batch.
+    /// `exact_host_back`: the platform's own Back from visit `id` (LLP 1115
+    /// D5), a batch.
     pub fn host_back(&mut self, id: u64, now_ms: f64) -> u32 {
         let out = match self.host.as_mut() {
             Some(h) => h.host_back(id, now_ms),

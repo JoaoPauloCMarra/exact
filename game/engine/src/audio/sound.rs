@@ -1,6 +1,7 @@
 //! Sound definitions that are either synthesized or sampled, and their saved forms.
 //! Synth records, and voices using none of the sample-era fields, encode exactly as
 //! they did before samples existed, so synth-only saves and hashes are unchanged.
+//! @ref LLP 1046.003 §AU4 (saved forms)
 use super::{Synth, Voice};
 use crate::asset::SOUND_RATES;
 use crate::{Data, DataError, Reader, Writer};

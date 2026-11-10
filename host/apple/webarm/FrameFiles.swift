@@ -1,4 +1,4 @@
-// A bundled page's given files: each `app:/cache` or
+// A bundled page's given files (@ref LLP 1020.001 D7): each `app:/cache` or
 // `app:/tmp` file the page's query names is served to that frame's web view at
 // `exact-app://app/.exact/files/<token>`, read-only, until the frame is served
 // again or unmounts. The token is the page's only name for the file.

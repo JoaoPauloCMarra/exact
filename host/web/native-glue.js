@@ -1,4 +1,4 @@
-// Native modules on the web: the host
+// Native modules on the web (@ref LLP 1024 D2–D5, D7; LLP 1067 D5): the host
 // half of the app's module table. Loaded after first paint for an app with a
 // module artifact (`./modules/index.js`, the app's `modules/web/`), whose
 // exports are the table's names:
@@ -51,10 +51,10 @@ const artifact = () => globalThis.exact.nativeArtifact ??= new Promise((resolve,
   document.head.append(script);
 }).catch(error => { globalThis.exact.nativeArtifact = null; throw error; });
 
-// The artifact itself, for the page module's hatches.
+// The artifact itself, for the page module's hatches (LLP 1075.003.000).
 globalThis.exact.nativeModule = artifact;
 
-// `packages` (the JS target's views.js): the tags a package
+// `packages` (the JS target's views.js, LLP 1133.001 D1): the tags a package
 // serves, each made by its extension's implementation in the session, never
 // by the app's artifact, which such a tag does not load.
 globalThis.exact.nativeHost = ({ dispatch, log, packages = null }) => {
@@ -110,7 +110,7 @@ globalThis.exact.nativeHost = ({ dispatch, log, packages = null }) => {
     const st = el.exactNative;
     if (!st || st.destroyed) return;
     if (failure) return fail(st, failure.state ?? 'unavailable', failure.message);
-    // The name is a table key, checked again on plan bytes.
+    // The name is a table key, checked again on plan bytes (D2, D5).
     if (!/^[a-z][a-z0-9_]*(-[a-z][a-z0-9_]*)+$/.test(st.name)) return fail(st, 'error', `refused module name ${JSON.stringify(st.name)}`);
     if (!Object.hasOwn(table.roster, st.name)) return fail(st, 'error', `the module artifact has no factory for ${st.name}`);
     const mine = ++nonce;
@@ -134,7 +134,7 @@ globalThis.exact.nativeHost = ({ dispatch, log, packages = null }) => {
     st.nonce = mine;
     const { live, event } = events(el, st, mine);
     const handlers = Object.fromEntries(NAMES.map((name, kind) => [name, (payload) => event(kind, payload)]));
-    // An event the package declares beyond the nine
+    // An event the package declares beyond the nine (LLP 1133.021 §9 item 2)
     // rides the message kind; the plan's handler decodes its arguments.
     handlers.emit = (name, ...args) => event(8, JSON.stringify({ 'exact:event': String(name), args }));
     const props = el.getAttribute('data-nativeviewprops') ?? '{}';
@@ -165,14 +165,14 @@ globalThis.exact.nativeHost = ({ dispatch, log, packages = null }) => {
   };
 };
 
-// The same artifact answers `native.later` on the page, where
+// The same artifact answers `native.later` on the page (LLP 1067 D5), where
 // the browser's own capabilities are: an optional export
 //
 //   export async function later(request) → reply   // JSON in, JSON out
 //   export function connect({ changed, agent, now }) // optional: announce a
-//                                                   // device topic;
+//                                                   // device topic (LLP 1016.002);
 //                                                   // `agent`: substitute device
-//                                                   // input;
+//                                                   // input (LLP 1067.000 Q7);
 //                                                   // `now()`: the page's clock,
 //                                                   // the agent's under the agent
 //

@@ -1,4 +1,4 @@
-// Canvas 2D on Apple: the recorded lists replayed into a
+// @ref LLP 1056 D7 — Canvas 2D on Apple: the recorded lists replayed into a
 // Core Graphics bitmap per canvas, on the main thread, and shown as a layer's
 // contents in the canvas's content box, under its children. The list's
 // geometry is resolved (canvas/src/list.rs): paths arrive in canvas
@@ -98,7 +98,7 @@ struct Canvas2DState {
 let canvas2DSRGB = CGColorSpace(name: CGColorSpace.sRGB)!
 let canvas2DBitmapInfo = CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
 
-/// A canvas's getContext settings: `colorSpace:
+/// A canvas's getContext settings (LLP 1100 D12a): `colorSpace:
 /// "display-p3"` and `colorType: "float16"`.
 struct Canvas2DSpace: Equatable {
     var p3 = false, float16 = false
@@ -162,7 +162,7 @@ final class Canvas2DReplayer {
     /// so `reset` has nothing to clear. A draw that starts with
     /// `ctx.reset()` (the idiom for a canvas that redraws) otherwise writes
     /// every pixel of a fresh bitmap once for nothing: a third of a list
-    /// row's canvas replay at 3x.
+    /// row's canvas replay at 3x (LLP 1056 D10).
     private var blank = true
 
     convenience init(width: Int, height: Int, scale: Double, lifetime: UInt64, generation: UInt32, space: Canvas2DSpace = .srgb8) {

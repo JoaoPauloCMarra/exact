@@ -6,7 +6,7 @@ import {tmpdir} from 'node:os';
 import {completedWorldFrame, proofGame, worldPixels} from './proof.mjs';
 import {encodePng} from '../scripts/png.mjs';
 
-// A proof script need not sit at the game's root.
+// LLP 1132 D7: a proof script need not sit at the game's root.
 test('a proof script finds the game above it, or the one --app names', () => {
   const root = realpathSync(mkdtempSync(resolve(tmpdir(), 'proof-game-')));
   const game = resolve(root, 'reef'), tools = resolve(game, 'tools/playtest'), outside = resolve(root, 'scripts');

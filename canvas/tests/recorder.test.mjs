@@ -1,4 +1,4 @@
-// The TypeScript recorder against the shared cases: the same
+// The TypeScript recorder against the shared cases (LLP 1056 §4): the same
 // getters and throws Chrome gave, as the Rust recorder is held to them.
 import { test, expect } from 'bun:test';
 import { runCases } from './cases.mjs';

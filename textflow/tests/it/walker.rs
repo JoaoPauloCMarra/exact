@@ -451,7 +451,7 @@ fn pre_wrap_preserves_spaces_tabs_and_hangs_trailing_space() {
 
 #[test]
 fn pre_line_keeps_line_feeds_and_collapses_the_rest_as_chrome_renders() {
-    // Each source's lines as Chrome 154 renders them
+    // @ref LLP 1053 §0 G5 — each source's lines as Chrome 154 renders them
     // under `white-space: pre-line` (a monospace face; `None` is max-content,
     // a width is in characters), whitespace runs shown collapsed.
     let pre_line = Options {
@@ -522,7 +522,7 @@ fn nowrap_collapses_whitespace_and_never_soft_wraps() {
 
 #[test]
 fn pre_preserves_and_breaks_only_where_forced() {
-    // `pre` is preserve × nowrap: spaces and tabs are
+    // @ref LLP 1053 G5 — `pre` is preserve × nowrap: spaces and tabs are
     // text, a line feed ends a line, no width ends one, and a line's
     // trailing spaces are kept rather than hung.
     let text = "  one   two  \nthree four";

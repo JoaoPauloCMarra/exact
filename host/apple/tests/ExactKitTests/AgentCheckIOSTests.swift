@@ -10,7 +10,7 @@ private final class CheckScrollDecoration: UIView {
     }
 }
 
-/// `check` on UIKit: the observations the driver judges —
+/// `check` on UIKit (LLP 1116.003 D8): the observations the driver judges —
 /// a paragraph's ink and whether it fits its box, a control covered by
 /// another node, a target the author sized small, a view past the viewport's
 /// side, a card's fill without an edge (and what is no card), a disabled
@@ -64,7 +64,7 @@ final class AgentCheckIOSTests: XCTestCase {
         XCTAssertNotNil(try observed()["cover"], "an ordinary covering control remains a finding")
     }
 
-    /// A native button's title is the button's label (judged at 3:1 on its own fill, the ink rule) in a
+    /// A native button's title is the button's label (judged at 3:1 on its own fill, D3's ink rule) in a
     /// grouped list's cell as anywhere: the cell's part is reported for every view inside it, so it must not
     /// claim the title first (countdowns' indigo prominent button in dark read 3.5:1 against 4.5:1).
     func testANativeButtonsTitleInAGroupedRowIsItsLabel() throws {
@@ -107,10 +107,10 @@ final class AgentCheckIOSTests: XCTestCase {
         let title = try XCTUnwrap(items.first { $0["text"] as? String == "Prominent" }, "the title is observed: \(items)")
         XCTAssertEqual(title["label"] as? Bool, true, "a control's label, not the row's text: \(title)")
         XCTAssertEqual(title["of"] as? Int, 3, "of the button, not of row 99: \(title)")
-        XCTAssertEqual(title["onAccent"] as? Bool, true, "UIKit's ink on the accent's fill: \(title)")
+        XCTAssertEqual(title["onAccent"] as? Bool, true, "UIKit's ink on the accent's fill (LLP 1116.019 D3): \(title)")
     }
 
-    /// A `select` is UIKit's pop-up button, its value the button's title, drawn in the
+    /// LLP 1116.008 D7: a `select` is UIKit's pop-up button, its value the button's title, drawn in the
     /// accent UIKit tints it with: the platform's ink for the control, judged at 3:1 as a button's title
     /// is, in a grouped list's cell as anywhere (countdowns' and expense-tracker's system indigo in dark
     /// read 3.9:1 against 4.5:1, as body text of the row). A text of the row's own stays the row's.
@@ -159,7 +159,7 @@ final class AgentCheckIOSTests: XCTestCase {
         XCTAssertNil(title["label"], "a text of the row's own stays body text: \(title)")
     }
 
-    /// A text on a fill of the accent (a sent bubble) is observed as on it, so the judge
+    /// LLP 1116.020 D7: a text on a fill of the accent (a sent bubble) is observed as on it, so the judge
     /// holds white there to a filled button's 3:1; on a fill of its own colour it is not.
     func testATextOnTheAccentsFillIsObservedSo() throws {
         let tint: [String: Any] = ["sys": "@tint", "c": [[0, 136, 255, 255], [0, 145, 255, 255]]]
@@ -292,14 +292,14 @@ final class AgentCheckIOSTests: XCTestCase {
         XCTAssertEqual(try item(10)["x"] as? Double, 96, "b starts inside a: the driver finds them overlapping")
     }
 
-    /// A box whose content fits its parent and whose written padding
+    /// LLP 1116.009 D5 (focus-timer, recipe-finder, round 11): a box whose content fits its parent and whose written padding
     /// (content-box sizing) pushes it past the parent's content edge is observed, with the cause; border-box, a box that fits,
     /// padding the author did not write, and a parent that scrolls sideways on purpose are not. The presenter is never told a
     /// width, so the cause is read from the frames.
     func testAPaddedBoxPastItsParentIsObservedWithItsCause() throws {
         let fill: [Double] = [200, 200, 200, 255]
         let written: [String: Any] = ["written": ["padding_left", "padding_right"]]
-        // A press handler keeps each box a view of its own (an inert leaf box is a layer in its parent's).
+        // A press handler keeps each box a view of its own (an inert leaf box is a layer in its parent's, LLP 1068 §6.1).
         func box(_ id: Int, _ style: [String: Any]) -> [String: Any] { ["op": "create", "id": id, "kind": "view", "handlers": ["press"], "style": style.merging(["background_color": fill]) { a, _ in a }] }
         let column: [String: Any] = ["display": "flex", "padding_left": 16.0, "padding_right": 16.0]
         let pads: [String: Any] = ["padding_left": 24.0, "padding_right": 24.0]
@@ -343,7 +343,7 @@ final class AgentCheckIOSTests: XCTestCase {
         for id in [3, 4, 5, 6, 7] { XCTAssertNil(items.first { $0["id"] as? Int == id }?["padded"], "#\(id) is not padding past its parent") }
     }
 
-    /// A vertical scroll view holds no sideways overflow, its x
+    /// LLP 1116.020 D4 (focus-timer and trivia-quiz, round 18): a vertical scroll view holds no sideways overflow, its x
     /// `auto` by CSS's rule and not its author's, so a box past the screen's side inside it is observed; a scroll whose
     /// author wrote its `overflow-x` (a carousel, a swipe row) and an authored clip hold theirs.
     func testABoxPastTheScreenInAVerticalScrollIsObserved() throws {
@@ -373,7 +373,7 @@ final class AgentCheckIOSTests: XCTestCase {
         for id in [3, 4] { XCTAssertNil(items.first { $0["id"] as? Int == id }?["outX"], "#\(id) is held: \(items)") }
     }
 
-    /// An event-RSVP screen at the largest text size: a centred caption wider than its flex column runs past both of
+    /// Round 21's event-rsvp at the largest text size: a centred caption wider than its flex column runs past both of
     /// the column's sides (`spill`, the web's rule), and where its line is drawn (`ink`) is observed where that is not its
     /// box, so the driver finds two texts running into each other; one in a column that clips is held.
     func testATextPastItsColumnAndWhereItsLineIsDrawnAreObserved() throws {
@@ -408,11 +408,11 @@ final class AgentCheckIOSTests: XCTestCase {
         XCTAssertNil(try item(6)["spill"], "a column that clips holds it")
     }
 
-    /// A text stands on the nearest fill painted under it —
+    /// LLP 1116.006 D5: a text stands on the nearest fill painted under it —
     /// its own box's (a rounded bubble, whose corners show the page), a
     /// bubble column's, the page's — in each scheme; and a row its scroller
     /// cuts is presented only to the scroller's edge, so it overlaps nothing
-    /// past it (chat bubbles, a contacts list's rows).
+    /// past it (round 8's chat bubbles and contacts' rows).
     func testATextStandsOnTheFillUnderItAndARowItsScrollerCutsEndsThere() throws {
         let indigo: [[Double]] = [[88, 86, 214, 255], [142, 140, 240, 255]]
         let ink: [[Double]] = [[0, 0, 0, 255], [255, 255, 255, 255]]
@@ -479,7 +479,7 @@ final class AgentCheckIOSTests: XCTestCase {
         XCTAssertEqual((dark[6]?["fg"] as? [Double])?.prefix(3).map { $0 }, [255, 255, 255], "white ink on it, which the driver finds")
     }
 
-    /// A card's fill is observed with the part of it that is presented. One past its
+    /// LLP 1116.010 D2 (trivia, round 12): a card's fill is observed with the part of it that is presented. One past its
     /// scroller's edge (a Badge below the page's viewport) is not drawn, and the pixels there are the page's: the driver
     /// must not judge them as "a card that does not show".
     func testACardPastItsScrollersEdgeIsObservedWithNothingPresented() throws {
@@ -541,7 +541,7 @@ final class AgentCheckIOSTests: XCTestCase {
         XCTAssertNotNil(items.first { $0["id"] as? Int == 4 }?["fill"], "16 points in from them, a card: \(items)")
     }
 
-    /// A cover and the scroller that clears it: Shelf's
+    /// A cover and the scroller that clears it (LLP 1116.003): Shelf's
     /// Discover drew two false findings. Left, a scroller at its start whose
     /// row lies past its bottom, under the tab bar the agent paints below it:
     /// the scroller cuts the row away, so nothing covers it, and scrolling
@@ -724,9 +724,9 @@ final class AgentCheckIOSTests: XCTestCase {
         XCTAssertNil(beside["cover"], "\(beside)")
     }
 
-    /// What lies under UIKit's navigation bar (a row scrolled there) is covered, not presented: its `vis` is empty, or
-    /// only the part below the bar's edge, so the driver judges no contrast or overlap there; a text wholly below the
-    /// bar has none.
+    /// LLP 1116.007 D3.8: what lies under UIKit's navigation bar (a row scrolled there, round 9's book-club and
+    /// mood-journal) is covered, not presented: its `vis` is empty, or only the part below the bar's edge, so the
+    /// driver judges no contrast or overlap there; a text wholly below the bar has none.
     func testATextUnderANavigationBarIsPresentedOnlyBelowIt() throws {
         let agent = mounted([
             ["op": "create", "id": 1, "kind": "view"],
@@ -786,10 +786,12 @@ final class AgentCheckIOSTests: XCTestCase {
         }
     }
 
-    /// A native field's box is its kernel box and no taller, and a text under it in the same grouped row is not
-    /// covered. A touch the row leaves to no control goes to the row's one field (the cell is the field), a widening of
-    /// the field's target and nothing drawn over the text; `check` read it as the field covering "its middle". A text
-    /// under a button of the row is still covered, and a finger's touch on the text still reaches the field.
+    /// LLP 1116.009 D5 (round 11: book-club, expense-tracker, the grouped-form recipe's Quantity row, the dashboard
+    /// pattern's add sheet): a native field's box is its kernel box and no taller, and a text under it in the same
+    /// grouped row is not covered. A touch the row leaves to no control goes to the row's one field (the cell is the
+    /// field, LLP 1116.005 D2), a widening of the field's target and nothing drawn over the text; `check` read it as
+    /// the field covering "its middle". A text under a button of the row is still covered, and a finger's touch on the
+    /// text still reaches the field.
     func testATextInAFieldsGroupedRowIsNotCoveredByTheFieldItsTouchFallsTo() throws {
         ExactGroupedLists.install()
         let session = ExactApp.shared.makeSession(label: "agent-check-cell-field")

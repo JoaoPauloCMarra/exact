@@ -1,4 +1,4 @@
-// @exact/oauth's public API, for the type checker and for
+// @exact/oauth's public API (LLP 1146 D5), for the type checker and for
 // reading: `index.ts` implements it, and `test/types.ts`, given to the type
 // checker by a case in `test/oauth.test.ts`, confirms the two agree. The
 // recipe is docs/recipes/oauth.md.
@@ -108,11 +108,11 @@ export interface OAuthAuthorization {
 }
 
 export interface OAuthSignIn {
-  /** For an app that signs the person in with its own screens: sends the authorization request as the provider documents, and answers the URL it redirected to. Throw an `OAuthError` to say why it could not. */
+  /** For an app that signs the person in with its own screens (LLP 1146 D8): sends the authorization request as the provider documents, and answers the URL it redirected to. Throw an `OAuthError` to say why it could not. */
   authorize?: (request: OAuthAuthorization) => Promise<string>;
 }
 
-/** A failed authorized request. A resource source that throws it keeps its last answer. */
+/** A failed authorized request. A resource source that throws it keeps its last answer (LLP 1016 D4). */
 export declare class OAuthError extends Error {
   code: string;
   status: number;

@@ -1,8 +1,8 @@
-//! `fs` — delegating, **capability-bearing**.
+//! `fs` — delegating, **capability-bearing** (LLP 0059.000 §3.11).
 //!
 //! Promise-based only. **No synchronous variants**: `readFileSync` and its
 //! family are the largest single source of blocking in Node programs, and
-//! a synchronous host call is permitted only for an op that never
+//! LLP 0059.000 §1.1 permits a synchronous host call only for an op that never
 //! leaves the calling thread. This one leaves it. That is a deliberate
 //! divergence from Node and is documented as one.
 //!
@@ -14,6 +14,9 @@
 //! `app:/data`, `app:/cache`, and `app:/tmp` resolve through explicit host
 //! directory handles. Native absolute paths retain their separate grants.
 //! `run` is the shared executor for Rust and JavaScript callers.
+//!
+//! @ref LLP 0059.000#311-fs--delegating-capability-bearing-author-required — the surface
+//! @ref LLP 0067#3-the-check — per-prefix is a parameterized grant
 
 #[cfg(not(windows))]
 use std::path::Component;
@@ -24,7 +27,7 @@ use crate::boundary::HostError;
 use crate::grant::{Grant, PathPrefix};
 use crate::grant::{GrantSet, Operation};
 
-// The storage envelope is capped at 16 MiB. A readFile
+// @ref LLP 0068.001#4-bounded-access-and-image-work — the storage envelope is capped at 16 MiB. A readFile
 // result is {"base64":"..."}, whose fixed JSON overhead is 13 bytes.
 pub const RESULT_BYTES: usize = 16 << 20;
 pub const READ_BYTES: usize = ((RESULT_BYTES - 13) / 4) * 3;
@@ -152,7 +155,7 @@ pub enum FsOp {
     Rename,
     CopyFile,
     Realpath,
-    /// Exact patch 24: `stat` without following a
+    /// Exact patch 24 (exact2 LLP 1133.007 D6a): `stat` without following a
     /// link, a link's target, whether this user may read, write or execute a
     /// path, its permission bits, a symbolic link, a file's digest, and an
     /// advisory lock and its release.
@@ -489,8 +492,8 @@ pub enum FsResult {
     Stat(Stat),
 }
 
-/// The host's directories behind `home:/` and `bundle:/` (Exact patch 24):
-/// the person's home directory and the app's
+/// The host's directories behind `home:/` and `bundle:/` (Exact patch 24:
+/// exact2 LLP 1133.007 D6): the person's home directory and the app's
 /// installed bundle, read only. A host that has neither leaves them unset,
 /// and those paths refuse as unsupported.
 #[derive(Debug, Clone, Default)]
@@ -576,7 +579,7 @@ fn below(path: &str) -> Result<(super::app_fs::Below, PathBuf), HostError> {
     ))
 }
 
-/// A `home:` or `bundle:` operation (Exact patch 24):
+/// A `home:` or `bundle:` operation (exact2 LLP 1133.007 D6, Exact patch 24):
 /// admitted as spelt, a `bundle:` path read only, then run below its root's
 /// retained descriptor with every component opened `O_NOFOLLOW`, as an
 /// `app:/` path is. A link anywhere below the root, one a grant's holder
@@ -639,8 +642,8 @@ fn run_namespaced(
 /// Open `path` to read it, admitted under `fs.read` as `storage.fs` admits
 /// it: an `app:/` path through the app's directories, a `home:` or `bundle:`
 /// one below its root and a native one below its granted directory,
-/// `O_NOFOLLOW` all the way. What a child's stdin reads from (exact2's
-/// `exactStdinFrom`).
+/// `O_NOFOLLOW` all the way. What a child's stdin reads from (exact2 LLP
+/// 1133.007 D2's `exactStdinFrom`).
 pub fn open_read(
     grants: &GrantSet,
     directories: Option<&super::app_fs::AppDirectories>,
@@ -681,7 +684,7 @@ pub fn open_read(
     }
 }
 
-/// A native operation (Exact patch 24), admitted as
+/// A native operation (exact2 LLP 1133.007 D6a, Exact patch 24), admitted as
 /// spelt, then run below the directory a walk to each path starts from
 /// (`native_below`), every component below it opened `O_NOFOLLOW`
 /// (`app_fs::run_below`), as a `home:` path is. A link below that directory,
@@ -1097,7 +1100,7 @@ mod tests {
     }
 }
 
-// One provider contract for Rust consumers and the bindings.
+// @ref LLP 0068.001#3-chosen-document-provider — one provider contract for both doors.
 pub use super::documents::{
     copy_document, run_document, DocumentAccess, DocumentError, DocumentErrorKind, DocumentLease,
     Documents, DOCUMENT_PREFIX,

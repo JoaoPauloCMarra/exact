@@ -1,5 +1,5 @@
 //! The Canvas gallery on Linux: its TypeScript data module draws every
-//! canvas, replayed into tiny-skia.
+//! canvas (LLP 1056), replayed into tiny-skia.
 
 include!(concat!(env!("OUT_DIR"), "/module.rs"));
 const PLAN: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/app.plan"));

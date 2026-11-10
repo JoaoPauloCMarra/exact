@@ -1,4 +1,4 @@
-//! Work that outlives its answer. A request with effects
+//! Work that outlives its answer (LLP 1146 D2). A request with effects
 //! ([`crate::Request::has_effects`]) that the runner lets go runs to its
 //! end, as a browser lets a fetch finish: cancelling it would not undo what
 //! its server did. The source keeps it ([`DataSource::keep_sent`]), the host
@@ -115,7 +115,7 @@ impl<D: DataSource> Runner<D> {
     pub(super) fn let_go_request(&mut self, p: PendingReq) {
         // An upload let go before its reply is cut off; one the host refused
         // never reached the network and is not marked as asked; of any other
-        // the host says after the commit whether it had started.
+        // the host says after the commit whether it had started (LLP 1016.000 D10).
         if p.upload && p.sent {
             let end = super::UploadEnd::Failed(super::uploads::interrupted());
             self.upload_over(p.ticket, true, end);
@@ -167,11 +167,11 @@ impl<D: DataSource> Runner<D> {
 
     /// A reply's turn wrote the store, as a browser's continuation writes it
     /// outside every commit: each store reader that failed, but `except`, is
-    /// asked again. A write an action makes in a commit
+    /// asked again (LLP 1146 §2.3). A write an action makes in a commit
     /// leaves a failure standing until its arguments change or `refresh`.
     pub(super) fn ask_failed_readers(&mut self, except: Option<Target>) {
         for i in 0..self.failed_args.len() {
-            // (an upload's failure is never asked again at its arguments)
+            // (an upload's failure is never asked again at its arguments: D10)
             let failed =
                 self.store_readers[i] && self.failed_args[i].is_some() && !self.upload_failed(i);
             if failed && except != Some(Target::Resource(i)) {
@@ -288,7 +288,7 @@ impl<D: DataSource> Runner<D> {
         let mut now = Vec::new();
         if wrote {
             let revision = self.store.revision();
-            // An upload is asked once for its arguments.
+            // An upload is asked once for its arguments (LLP 1016.000 D10).
             let readers: Vec<usize> = (self.store_readers().into_iter())
                 .filter(|i| !self.upload_stands(*i))
                 .collect();

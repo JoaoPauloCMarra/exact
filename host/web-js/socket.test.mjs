@@ -268,7 +268,7 @@ export function answer(name: string, args: any): any {
     expect(ackLogs).toContain('mapper acked failed: ');
     expect(ackLogs).toContain('; socket frames were refused');
     // A resource's answer sends its request from its source and resolves
-    // with the reply; a continuation refuses; the socket's bounds hold per answer;
+    // with the reply; a continuation refuses; D7's bounds hold per answer;
     // and a refused commit takes back what its answer sent, and says so.
     await until(s => s.resources.answers === 'open');
     await browser.tap('ask');

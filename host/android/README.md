@@ -1,6 +1,6 @@
 # The Android reader
 
-The Kotlin side of Android's Canvas host.
+The Kotlin side of Android's Canvas host (LLP 1076 §3.3), in the repository by LLP 1115.001 D2 (Charlie, 2026-10-11).
 
 An app on Android is its Rust, built for `aarch64-linux-android` (`host/linux`: the runner, the kernel, layout, text
 and the paint walk), and this. The Rust records what it paints as an op stream (`host/linux/src/canvas.rs`). The
@@ -12,7 +12,7 @@ the stream or those calls, so both sides are built from one commit.
 
 | | |
 |---|---|
-| `canvas/` | the reader, an Android library, package `dev.exact.canvas`: `ExactActivity`, `ExactView`, `Native`, `Player` (the replay), `Owner` (exact2 on a thread of its own), `Layers`, `Natives` (hosted views), `Fields` (the app's text fields, each an `EditText`), `Surfaces` (the top layer's windows: a `Dialog`, a `PopupWindow`), `Bars` (the top app bar and the navigation bar, each a view over the page), `Keys`, `Scrolling`, `Device` and `Palette` (what the device says), `Requests` (what exact2 asks of it), `ExactTamber` (`Tamber.kt`: a native view's design tokens by name) |
+| `canvas/` | the reader, an Android library, package `dev.exact.canvas`: `ExactActivity`, `ExactView`, `Native`, `Player` (the replay), `Owner` (exact2 on a thread of its own), `Layers`, `Natives` (hosted views), `Fields` (the app's text fields, each an `EditText`), `Surfaces` (the top layer's windows: a `Dialog`, a `PopupWindow`), `Bars` (the top app bar and the navigation bar, each a view over the page), `Keys`, `Scrolling`, `Device` and `Palette` (what the device says), `Requests` (what exact2 asks of it), `ExactTamber` (`Tamber.kt`: a native view's design tokens by name, LLP 1121 D12) |
 | `app/` | the shell: one activity over the reader, packaging the app that `-Papp=<name>` names |
 | `gradlew`, `gradle/` | the Gradle wrapper (9.8.0), committed. Its jar is Gradle's own (sha256 `238e777f…`, as services.gradle.org publishes it) and the distribution's sha256 is pinned in `gradle-wrapper.properties` |
 
@@ -22,8 +22,11 @@ AppCompat or Material library.
 
 ## Where it came from
 
-The reader began as an Android Canvas benchmark's, outside this repository, and its history is not imported. What
-changed on the way in:
+The benchmark lane wrote it outside this repository. These are the files of
+`expo-build-1000:~/bench/lists/exact-v11/android/canvas` at commit `c30c683` (2026-10-11). That repository has no
+remote, and its history (55 commits) is not imported: for why a line is as it is, `git log -- android/canvas` there.
+
+What changed on the way in, one commit each:
 
 - `ExactCanvas.kt` (2,299 lines) is `Native.kt`, `Player.kt`, `ExactView.kt` and `ExactActivity.kt`: code moved by
   line range, not rewritten. `Player` is `internal` where it was file-private.
@@ -43,8 +46,8 @@ NDK (`ANDROID_NDK_HOME`, else the newest under the SDK), a JDK (17 or newer) and
    crate::exact_hatches())`, with a build script that bakes the plan and calls `contract::native::android_entry`,
    which writes the app's hatches' install (`hatches.rs`) and the plan's uses (`uses.txt`) beside it; `apps/caltrain/android` is the one to copy for an app whose data is Rust and
    `apps/shelf/android` for one whose data is TypeScript (three files each, and a line in the root `Cargo.toml`'s
-   `members`). A game's is generated in its `.shells/` (`game/app/shells.mjs`). An app with a GPU module (every game)
-   is built as a Linux bake is (`buildBake`): the module first, then the crate, whose bake records the
+   `members`). A game's is generated in its `.shells/` (`game/app/shells.mjs`). An app with a GPU module (LLP 1009;
+   every game) is built as a Linux bake is (`buildBake`): the module first, then the crate, whose bake records the
    module's product digest. The shared Linux/Android loader checks baked cards against that digest: on
    macOS, signed 64-bit Mach-O code omits the signature and normalizes its three size fields, matching
    the definition in `update/src/gpu.rs` through a parity-tested host copy; other files hash whole. Completed development receipts always
@@ -85,7 +88,7 @@ update` once its `app.json` names Android. That verb is `build <app> --apk --ins
 runs the tests, the first screen and the relaunch with screenshots light and dark, without `check`, which this host
 does not observe for yet.
 
-**In a dev loop**: give the launch the loop's page URL as `x_dev_plan` (exact2's `EXACT_DEV_PLAN`),
+**In a dev loop** (LLP 1122 D4): give the launch the loop's page URL as `x_dev_plan` (exact2's `EXACT_DEV_PLAN`),
 through `adb reverse` since the loop serves this Mac's loopback only: `adb reverse tcp:<port> tcp:<port>`, then
 `adb shell am start -S -n <app id>/dev.exact.app.MainActivity --es x_dev_plan http://127.0.0.1:<port>/` (`-S`:
 the environment is read once per process, so a running reader is stopped first). The reader
@@ -103,13 +106,13 @@ library goes into that APK unstripped (Shelf's is 69 MB there against 20.5 MB fr
 nothing a person sees; a cold start is measured with the stripped one. Shelf also needs the Android Hermes bundle,
 which copies between machines as its directory under `~/.cache/exact/hermes-android/` with `current` naming it.
 
-## A TypeScript data module
+## A TypeScript data module (LLP 1115.001 §5.2)
 
 Shelf (`apps/shelf`) is the app that defines "Android works", and its data is `app.ts`. Its library
 (`apps/shelf/android`) is Caltrain's with two differences: the build script is the Linux host's JavaScript bake
 (`exact_js_bake::build(.., "linux")`: the plan, the module as Hermes bytecode, its identity and grants), and the
 library links `exact-js` and with it the lean Hermes VM, from the Android Hermes bundle
-`bun scripts/hermes-android.mjs build` installs (`agent-android.mjs` hands it to Cargo).
+`bun scripts/hermes-android.mjs build` installs (LLP 1107 §4.1; `agent-android.mjs` hands it to Cargo).
 
 **The Canvas host needed nothing for it.** It boots through the Linux host's own door
 (`app::boot_presenter_with_painter`), so the module is made, activated after the first frame is recorded
@@ -154,10 +157,10 @@ journal to logcat as the host comes to hold each line, with the milliseconds sin
 above were read (`adb logcat -v time`, from ActivityManager's "Start proc" line). Without it nothing is read or
 written.
 
-Not there: `Intl` in a module (the bundle has ICU's Unicode and no Intl), and a picture from a URL
+Not there: `Intl` in a module (the bundle has ICU's Unicode and no Intl, LLP 1107 §4.1), and a picture from a URL
 (below, "Not done").
 
-## Driving the reader
+## Driving the reader (LLP 1107 D1)
 
     bun scripts/agent.mjs android --reader --app shelf --storage s1 "clock data" tree "tap add-book" \
         "type add-title Emma" state "screenshot out.png"
@@ -175,7 +178,7 @@ or root: any app on the phone can reach an abstract socket). adb forwards it; th
 call, `Native.agent(line)`, on exact2's thread, into `host/linux/src/canvas/agent.rs`, which hands it to the handler
 the headless carrier uses (`exact_linux::agent::handle`). The drive's `EXACT_AGENT` and `EXACT_AGENT_*` (its store,
 epoch, locale, seed and fetch faults), and a `--url`'s `EXACT_DEV_PLAN`, reach the app as `x_<name>` launch extras; a launch whose environment does
-not say `EXACT_AGENT=1` answers no request, and a production bake drops that variable.
+not say `EXACT_AGENT=1` answers no request, and a production bake drops that variable (LLP 1069.007 D2).
 
 **What the Canvas host adds to that handler**, which assumes a host with no display:
 
@@ -251,7 +254,7 @@ which Android keeps encrypted until the phone is first unlocked. The benchmark k
 so that it could run before that; a benchmark that still must run on a phone nobody unlocked needs a reader that
 does so, which this one no longer is.
 
-## Scrolling: who owns what
+## Scrolling: who owns what (LLP 1115.001 D7.1 to D7.3)
 
 A finger scrolls. The gesture and its physics are the reader's (`Scrolling.kt`), made of the platform's own classes
 and nothing imitated: the system's touch slop and fling velocities (`ViewConfiguration`), `VelocityTracker`,
@@ -268,7 +271,7 @@ Three calls cross, all in the view's pixels:
 
 | Call | Direction | What it says |
 |---|---|---|
-| `Native.under(x, y)` (`CanvasHost::under`, `Presenter::reader_under`) | reader asks, at a touch's down | Which scrollers are under the point, innermost first, then the page itself where the document is larger than the viewport (id 0). For each: its id, the axes it takes a drag from here on, its revision, its offset, its farthest offset and the box it shows in. Also the axes exact2's own gestures claim there: a swipe row sideways, a reorder grip or a height handle up and down, a transform drag both, a `pan` whatever its `touch-action` does not give to scrolling. And the hosted text field the touch is for (below) |
+| `Native.under(x, y)` (`CanvasHost::under`, `Presenter::reader_under`) | reader asks, at a touch's down | Which scrollers are under the point, innermost first, then the page itself where the document is larger than the viewport (id 0). For each: its id, the axes it takes a drag from here on, its revision, its offset, its farthest offset and the box it shows in. Also the axes exact2's own gestures claim there: a swipe row sideways, a reorder grip or a height handle up and down, a transform drag both, a `pan` whatever its `touch-action` does not give to scrolling. And, from D8 on, the hosted text field the touch is for (below) |
 | `Native.scrolled(id, dx, dy, rev)` (`CanvasHost::scrolled`, `Presenter::reader_scrolled`) | reader tells | It moved scroller `id` by that much, knowing revision `rev` of it. exact2 clamps the move to the scroller's travel |
 | `Native.scrollers()` (`CanvasHost::scrollers`, `Presenter::reader_scrollers`) | exact2 tells, with each stream | For every scroller it has told the reader of: its id, its axes, its revision, where it is, the offset its rows were last painted at, and its farthest offset. Null when nothing of it changed; a scroller it leaves out is gone, and the reader forgets it |
 
@@ -307,9 +310,9 @@ scrolls, with the theme's thumb, shown as the scroller moves and faded by `View`
 up or down, or the one a driver's `scroll` found under the centre (found again when its node is gone); it is what
 exact2 times its collection passes for and what the reader's row heuristics follow (`Native.feed`).
 
-Not built yet:
+Not built of D7:
 
-- **A scroller with no node of its own does not move at once**. The recorder gives a node only to a scroller
+- **A scroller with no node of its own does not move at once** (D7.2). The recorder gives a node only to a scroller
   that scrolls up and down, has rows, and is not itself inside another scroller's row. A list that scrolls sideways,
   a scroller nested in a list's row, and the page itself are drawn inside their surroundings, so they move when
   exact2's paint arrives; the frame waits up to 2 ms for it, as it does for a drag's moves. They have no stretch at
@@ -321,9 +324,9 @@ Not built yet:
 - A pressable under the finger shows its press at the down, not after the platform's tap delay, so a row may flash
   as a scroll starts.
 
-## The device's colours
+## The device's colours (LLP 1115.001 D4)
 
-An app's colour roles (`Canvas`, `-exact-secondary-label`, `AccentColor` and the rest) are the device's
+An app's colour roles (`Canvas`, `-exact-secondary-label`, `AccentColor` and the rest, LLP 1095) are the device's
 Material 3 colours, light and dark, from its dynamic palette. Nothing is tabled: the reader resolves them on the
 device and tells exact2, which reports them through the door the Apple host reports its own through
 (`roles::set_reported`).
@@ -359,21 +362,21 @@ on every configuration change. A new wallpaper changes the palette; the activity
 (`assetsPaths`), so Android makes it again and its reader, adopting the host that runs, tells the new palette. Both
 schemes are always told: night mode chooses between them in exact2.
 
-**Which of Exact's roles is which** is exact2's to say, in `host/linux/src/presenter/palette.rs`, which has the
-table of Material roles and the four rows it adds. A report paints the page again; a role the table leaves out (the system hues but red and
+**Which of Exact's roles is which** is exact2's to say, in `host/linux/src/presenter/palette.rs`, which has D4's
+table and the four rows it adds. A report paints the page again; a role D4 leaves out (the system hues but red and
 blue) keeps its table pair.
 
 **One accent.** A control, a focus ring and a filled button paint in the node's `accent-color` where it sets one, else
 in `AccentColor` as reported, with `AccentColorText` drawn on it (a check, a switch's thumb, a filled button's title):
 the device's `primary` and `onPrimary`. The painter's own blue is desktop Linux's alone, where nothing is reported.
-The controls' shapes are still the desktop painter's.
+The controls' shapes are still the desktop painter's (D9).
 
 **The launch window.** From Android 14 the launch theme names the platform's `system_surface_light` and
 `system_surface_dark` (`res/values-v34`, `values-night-v34`), the colour the first frame's unsaid background has, with
 the bars' icons set for it. On Android 12 and 13 the platform has no `surface` to name in a theme, and the launch
 window is the device theme's own day or night background (`?android:attr/colorBackground`).
 
-## The channel out
+## The channel out (LLP 1115.001 D5)
 
 Every other call here goes from the reader into exact2. What an app asks of the platform goes the other way, and all
 of it takes one channel: exact2's presenter **queues a request and wakes the reader**, the reader **takes the queue
@@ -399,14 +402,14 @@ capability has a call of its own.
 | 2 | a haptic (`haptic()`, a pressable's `-exact-press-haptic`) | one word: 1 `selection`, 2 `impact-light`, 3 `impact-medium` (and `impact`), 4 `impact-heavy`, 5 `impact-soft`, 6 `impact-rigid`, 7 `success`, 8 `warning`, 9 `error` | `View.performHapticFeedback` | none |
 | 3 | `copyText` | a string | the clipboard (`ClipboardManager`) | none |
 | 4 | `share` | one word saying which of the three the app gave (bit 0 the title, 1 the text, 2 the URL), then three strings: title, text, URL | the Sharesheet (`ACTION_SEND` in a chooser) | `shared`, `dismissed`, or why it could not be shown; exact2 journals `share: shared`, `share: dismissed` or `share: refused: …` |
-| 5 | whether Back has somewhere to go in the app | one word: 1 or 0 | registers its `OnBackInvokedCallback` while it has, and unregisters it while it has not, so Back at the first screen is the system's own and leaves with its animation | none |
-| 6 | the software keyboard | two words: 0 hidden, 1 shown for an `input`, 3 for a `textarea`; then the hosted field it is for, or 0 for a field exact2 paints | for a hosted field, that `EditText` takes the focus and shows its own keyboard (`Fields.focus`); else `Keys.show` | none |
-| 7 | the top layer's surface (below) | its serial; what it is (0 it closed, 1 an alert, 2 a menu); flags (bit 0 Back and Escape dismiss it, bit 1 a tap outside does, bits 2 and 3 the corner a menu grows from: its right side, its bottom); where its window goes in the activity's window and its size (x, y, width, height, pixels; an alert's place is the platform's); its container's corner radius and elevation in pixels, as float bits; a count, then that many words: its picture, an op stream of its own | makes, repaints, moves or dismisses that surface's window (`Surfaces.told`) | none by id: what happens in the window is told by `Native.surface` |
-| 8 | whether a displayed element says `wakelock="screen"` | one word: 1 or 0; a reader's view starts at 0, so a reader made again is told only a 1 | `View.setKeepScreenOn` on the reader's view, so the screen stays on while its window is shown | none |
-| 9 | a date or time control's picker | the control's node; then five strings: its kind (`date`, `time`, `datetime-local`), what it shows now, its `min`, `max` and `step`, each as HTML writes it; then its `accent-color`, opaque ARGB, or 0 for none | asks the node's Kotlin hatch, then shows the activity's `pickers`: Compose Material 3's where the app links it, else the framework's dialogs ("Pickers and hatches", below) | the value chosen in HTML's form, which exact2 sets as a person's choice (`input`, then `change`), or null when dismissed; exact2 journals `picker: dismissed for <node>` |
-| 10 | the moments the app's Kotlin hatches hear, and what their clock and input call back | for each, led by its scope: 1 the app or 3 a node, then its moment (0 built, 1 changed, 2 ended), the node, its box (four floats as bits, the document's points), its word and `id` as strings, the count of its `data-*` words and each name and value; 5 a tick, its ticket, the clock (an `f64`'s bits, high word first) and the commit; 6 an `after`, its ticket; 7 input, its ticket, the node, then 1 and a pointer's phase, points and whether it was handled, or 2 and a key's `key`, `code`, down, repeat and handled (`hatches/reader.rs`) | calls the app's `exact.app.Hatches` (`HatchReader.told`) | none: what a hatch asks goes by `Native.hatchAct` |
-| 11 | a call of a module a package implements here | one string: the runner's body, `{"extension", "source"\|"send", "args"}` or `{"extension", "release"}`; or a package picture the runner admitted, `{"extension", "picture", "width", "height", "fit", "owned", "agent"}` | calls the extension's `later` or `release`, or `picture` (`Extensions.call`, "Module implementations", below) | the reply's JSON, `{"error": code}` for a failure; null fails the call. A picture is answered by `Native.picture` with its `Bitmap`, or with an error code |
-| 13 | the session's orientation lock | 0 for none; or 1, the orientations its types allow as bits (portrait-primary 1, portrait-secondary 2, landscape-primary 4, landscape-secondary 8), whether a holder says `natural`, whether one says `current`, a count, and for each holder its node and its word as a string | sets the activity's `requestedOrientation` (`Orientation.told`): the manifest's mapping for the set, `locked` for `current`, the manifest's value for none; on a display 600 dp wide or wider only `current` | none by id: `Native.orientationApplied` reports what was asked, for `state.orientationlock.applied` |
+| 5 | whether Back has somewhere to go in the app (D6) | one word: 1 or 0 | registers its `OnBackInvokedCallback` while it has, and unregisters it while it has not, so Back at the first screen is the system's own and leaves with its animation | none |
+| 6 | the software keyboard | two words: 0 hidden, 1 shown for an `input`, 3 for a `textarea`; then the hosted field it is for (D8), or 0 for a field exact2 paints | for a hosted field, that `EditText` takes the focus and shows its own keyboard (`Fields.focus`); else `Keys.show` | none |
+| 7 | the top layer's surface (D10, below) | its serial; what it is (0 it closed, 1 an alert, 2 a menu); flags (bit 0 Back and Escape dismiss it, bit 1 a tap outside does, bits 2 and 3 the corner a menu grows from: its right side, its bottom); where its window goes in the activity's window and its size (x, y, width, height, pixels; an alert's place is the platform's); its container's corner radius and elevation in pixels, as float bits; a count, then that many words: its picture, an op stream of its own | makes, repaints, moves or dismisses that surface's window (`Surfaces.told`) | none by id: what happens in the window is told by `Native.surface` |
+| 8 | whether a displayed element says `wakelock="screen"` (LLP 1125 D11) | one word: 1 or 0; a reader's view starts at 0, so a reader made again is told only a 1 | `View.setKeepScreenOn` on the reader's view, so the screen stays on while its window is shown | none |
+| 9 | a date or time control's picker (LLP 1115.001.000 D1) | the control's node; then five strings: its kind (`date`, `time`, `datetime-local`), what it shows now, its `min`, `max` and `step`, each as HTML writes it; then its `accent-color`, opaque ARGB, or 0 for none | asks the node's Kotlin hatch (D3), then shows the activity's `pickers`: Compose Material 3's where the app links it, else the framework's dialogs ("Pickers and hatches", below) | the value chosen in HTML's form, which exact2 sets as a person's choice (`input`, then `change`), or null when dismissed; exact2 journals `picker: dismissed for <node>` |
+| 10 | the moments the app's Kotlin hatches hear, and what their clock and input call back (LLP 1115.001.000 D4) | for each, led by its scope: 1 the app or 3 a node, then its moment (0 built, 1 changed, 2 ended), the node, its box (four floats as bits, the document's points), its word and `id` as strings, the count of its `data-*` words and each name and value; 5 a tick, its ticket, the clock (an `f64`'s bits, high word first) and the commit; 6 an `after`, its ticket; 7 input, its ticket, the node, then 1 and a pointer's phase, points and whether it was handled, or 2 and a key's `key`, `code`, down, repeat and handled (`hatches/reader.rs`) | calls the app's `exact.app.Hatches` (`HatchReader.told`) | none: what a hatch asks goes by `Native.hatchAct` |
+| 11 | a call of a module a package implements here (LLP 1133.001 D5) | one string: the runner's body, `{"extension", "source"\|"send", "args"}` or `{"extension", "release"}`; or a package picture the runner admitted (LLP 1133.019 D11 item 1), `{"extension", "picture", "width", "height", "fit", "owned", "agent"}` | calls the extension's `later` or `release`, or `picture` (`Extensions.call`, "Module implementations", below) | the reply's JSON, `{"error": code}` for a failure; null fails the call. A picture is answered by `Native.picture` with its `Bitmap`, or with an error code |
+| 13 | the session's orientation lock (LLP 1133.029 D6) | 0 for none; or 1, the orientations its types allow as bits (portrait-primary 1, portrait-secondary 2, landscape-primary 4, landscape-secondary 8), whether a holder says `natural`, whether one says `current`, a count, and for each holder its node and its word as a string | sets the activity's `requestedOrientation` (`Orientation.told`): the manifest's mapping for the set, `locked` for `current`, the manifest's value for none; on a display 600 dp wide or wider only `current` | none by id: `Native.orientationApplied` reports what was asked, for `state.orientationlock.applied` |
 
 Kinds 5, 6, 7, 8 and 13 are statements of the app's state, told when it changes and anew to a reader made again; exact2
 reads them as the queue is taken (`Presenter::tell_shell`), Back, the wake lock and the orientation lock only after a
@@ -427,19 +430,20 @@ nothing for half a second, the answer is `dismissed`.
 **Adding a kind.** In exact2: a variant of `presenter::Request` with the next number, its words in `encode`, and
 where it is asked (`Presenter::request`, which wakes the reader); with an answer, a `Waiting` variant and its arm in
 `answer_request`. Here: its number and its arm in `Requests.perform`, and `Exact.answer` when it has one. Write the
-row above. What layout needs while it runs (a field's metrics) is not a request: a queue taken after the frame is
+row above. What layout needs while it runs (a field's metrics, D8) is not a request: a queue taken after the frame is
 too late for it.
 
 **Not on it yet:** the file pickers (`showPicker`, `saveFile`, the document pickers) are still refused, and the journal
-then says the channel does not carry them yet. `@exact/notifications` has no Android implementation yet.
-Accessibility events will take it too.
+then says the channel does not carry them yet. `@exact/notifications` has no Android implementation until LLP 1133.004
+stage 3. Accessibility events
+(D13) will take it too.
 
 `x_log_requests=1` at launch (exact2's `EXACT_LOG_REQUESTS`) logs each request as exact2 queues it and as the reader
 acts on it, with what `performHapticFeedback` returned: a haptic and a clipboard write show nowhere else.
 
-## Pickers and hatches
+## Pickers and hatches (LLP 1115.001.000)
 
-**A date or time control's picker**. A press on an `input type="date"`, `"time"` or `"datetime-local"` is
+**A date or time control's picker** (D1, D2). A press on an `input type="date"`, `"time"` or `"datetime-local"` is
 request kind 9 (above). The reader asks the node's hatch first, then shows `ExactActivity.pickers`: the shell's
 `MainActivity` gives Compose Material 3's `DatePickerDialog` and `TimePickerDialog` (`app/src/compose`, on the
 device's dynamic colours, in a `ComposeView` added for as long as the dialog is up) when the APK links Compose, and
@@ -452,14 +456,14 @@ has one, its primary roles that colour's tones. Under the agent a press holds th
 2026-10-23`, `tap @date clear`, `tap @date cancel`). `x_log_requests=1` logs each picker's first frame, from the
 request and from the touch (`Exact.touched`).
 
-**The field** is painted by exact2 as Material's filled text field, for a text field, a select and a date or
+**The field** (D6) is painted by exact2 as Material's filled text field, for a text field, a select and a date or
 time control alike. A date control shows its value as the device writes it: `Device.read` sends, with the other
 settings, the patterns `DateFormat.getBestDateTimePattern` picks for the locale and the person's clock, ICU's month
 and weekday names, eras and day periods, and the zero digit (`Device.dates`), and exact2 fills them in. A field's
 `placeholder` is its floating label, painted by exact2; a hosted `EditText` keeps it as its hint, in no colour, for
 TalkBack.
 
-**Hatches**. The app's Rust hatches (`modules/linux`, or Rust in `modules/android`) run on this host as on
+**Hatches** (D4, D5). The app's Rust hatches (`modules/linux`, or Rust in `modules/android`) run on this host as on
 Linux: `canvas_jni!`'s `hatches` hands the host their install, they connect as the reader takes its first requests
 after a displayed frame, and an overlay is painted as a canvas is, as a picture. Beside them, Kotlin in the app's
 `modules/android` defines `class exact.app.Hatches : ExactHatches()` (`Hatches.kt`), which hears the same moments
@@ -476,7 +480,7 @@ under `ExactHatch`, gives its `due` pickers titles, no weekends and a 24-hour cl
 turns on exact2's clock and stops at a tap. `bun scripts/exact.mjs hatch <word> <app>` writes the class for an app
 with an `android/` crate.
 
-An app's optional native module views live in the same `modules/android` source directory. Define
+An app's optional native module views (LLP 1024) live in the same `modules/android` source directory. Define
 `class exact.app.Modules : dev.exact.canvas.NativeModules` with a `modules: Map<String, NativeModule>` roster;
 the APK resolves it only at the first module view. Each module creates and updates its real Android `View`.
 `events(view, emit)` binds before its first update; call `emit("change", value)` or `emit("input", value)` with
@@ -485,10 +489,10 @@ Retired bindings and events for an old node allocation are ignored. A module but
 for an unscrolled tap that no long press took, at its painted position so a platform popup can anchor to it. Native drags, arbitrary
 pointer forwarding and zero-size service modules are not implemented by this button seam.
 
-## Module implementations
+## Module implementations (LLP 1133.001 D5)
 
 A package that implements a module on Android (`"platform": "android"` in its `exact.json`, with its `class` and its
-Kotlin under `sources.kotlin`) is compiled into the APK when the app binds it:
+Kotlin under `sources.kotlin`) is compiled into the APK when the app binds it (LLP 1133.001 D4):
 `agent-android.mjs` adds its Kotlin to the build (`-PextensionDirs`) with a roster it writes,
 `exact.app.ExactExtensions`, and the permissions the app's grant lines derive (the bake's `reach.android`, from
 `runner/src/device.rs`) to the release manifest (`-Ppermissions`). The class subclasses `ExactExtension`
@@ -499,10 +503,10 @@ the foreground or leaves it, `preferred(values)` for the agent's values, and `re
 again, which is where it reads again what the person changed in Settings, since Android sends no event for it. Its
 `ExtensionContext` gives the application, the activity in front, `agent`, `now()` (the session's clock, the agent's
 under the agent), `foreground`, `changed(topic)`, which asks the topic's readers again, `wake(event, args, id,
-ended)`, which raises one of the interface's wake events and hears its outcome (`woke(id, outcome)`
+ended)`, which raises one of the interface's wake events and hears its outcome (LLP 1133.017 D8; `woke(id, outcome)`
 too), and
 `requestPermissions(permissions, done)`: one platform request, answered by `onRequestPermissionsResult`, or by the
-next resume when a recreated activity lost the result. The activity binds the roster's names as it
+next resume when a recreated activity lost the result (LLP 1133.002 D9). The activity binds the roster's names as it
 is made (`Native.bindExtensions`). Outside the agent the host binds them as in production; under it, those a drive
 names (`--bind`) as in production and the rest told they run under the agent, which answer an interface that is its
 own substitute behind the runner's tickets; the substitute answers every other. Android runs one session a process,
@@ -510,13 +514,13 @@ which ends with the process: `destroy(done)` is not called.
 `openURL("app-settings:")` opens the app's page in Settings (`ACTION_APPLICATION_DETAILS_SETTINGS`), journaled only
 under the agent. `packages/geolocation/android/Geolocation.kt` is one. `permission(name)` and `askPermission(name,
 done)` read and ask a runtime permission with the one history every module shares: `denied` once a request was
-refused and the platform owes no rationale after it (the camera's uses it, geolocation's and
+refused and the platform owes no rationale after it (LLP 1133.008 D8 item 7; the camera's uses it, geolocation's and
 the microphone's still keep their own). `tracks` is the session's track table: a package that opens an input adds its
 tracks (`TrackEntry`, with `state` and, for a camera, `video`, the running capture), and one that consumes a track
 subscribes (`TrackConsumer.live` for audio, `liveVideo` for a camera, whose `VideoSource` takes CameraX use cases
 typed `Any`, so the reader links no CameraX).
 
-### Maven libraries: one locked, verified Gradle graph
+### Maven libraries: one locked, verified Gradle graph (LLP 1133.008 D8 item 5)
 
 An implementation may name Maven coordinates on Google's Maven and Maven Central in its `exact.json`,
 `"maven": ["androidx.camera:camera-camera2:1.6.2", …]` (`packages/camera`, `packages/media-capture`). It adds no
@@ -537,10 +541,10 @@ Gradle's own means:
   modules name libraries is refused before Gradle runs, with that command.
 
 An app with no Maven libraries resolves as before, unlocked and unverified. Two such builds at once on one checkout
-would share the placed verification file. A library that is not on those repositories stays a pinned
-entry of `artifacts`. `packages/camera/test/android.mjs` checks each step on a fixture app with CameraX and Compose.
+would share the placed verification file. A library that is not on those repositories stays LLP 1133.001 D9's pinned
+`artifacts`. `packages/camera/test/android.mjs` checks each step on a fixture app with CameraX and Compose.
 
-## Text fields
+## Text fields (LLP 1115.001 D8)
 
 Each `input` of a text type and each `textarea` is the framework's own `android.widget.EditText` (`Fields.kt`), with
 no background of its own, over the container exact2 paints for it. No library: the one subclass (`FieldText`) only
@@ -566,14 +570,14 @@ it returns:
 An `EditText` of that thread's own, never attached, is set as the field is (no background, no padding, no font
 padding, the field's size, weight, slant, tracking, line height and face) and measured; the answer is its width,
 height and first baseline in pixels. A single line is as long as its text; a `textarea` wraps at the width
-offered. Each distinct question is asked once (a form of twenty fields in one font asks two). It is no request:
+offered. Each distinct question is asked once (a form of twenty fields in one font asks two). It is no request (D5):
 that queue is taken after the frame. The container's own insets are still the painter's (its border and padding,
 `field_chrome`); the `EditText` has none.
 
 **What exact2 tells** (`Native.fields(): IntArray?`, null while nothing changed; taken with each stream, before the
 stream is drawn). A count, then for each live field, in tree order:
 
-- its id; its **generation**, moved on when its node is renewed for another row's item: the view then
+- its id; its **generation**, moved on when its node is renewed for another row's item (LLP 1078): the view then
   starts over, with no text, selection or undo of the last item's; flags (bit 0 it was painted and the box that
   follows is where it goes, bit 1 it takes no touch and no focus: disabled, or under a route that covers it); and
   the scroller whose rows it was painted among (0: none);
@@ -638,7 +642,7 @@ ScrollView would.
 | `Native.fieldComposing(id, generation, composing, value)` | the field's text began to compose, holding `value`, or its composition ended, committed or cancelled: before the edit that began or ended it | while it composes a statement says the field's own text, and the app's value is held; once it ends, the value the app then shows |
 | `Native.fieldSelected(id, generation, start, end)` | the selection moved with no edit | kept for the next `input`; `select` fires for a range |
 | `Native.fieldAction(id, generation, action)` | the action key, or Enter or Tab on a hardware keyboard: 0 Enter with no action, 2 done, 3 go, 4 next, 5 previous, 6 search, 7 send, 16 Tab, 17 Shift+Tab | Enter's `key` handlers, then `change` and `submit` for a single line; then `next` and `previous` move to the field after or before (the focus leaves where there is none), and `done`, `go`, `search` and `send` leave the field, which puts the keyboard away. Tab is the page's own Tab |
-| `Native.fieldInput(id, generation)` | a finger came down in the field (it is the field's), or a key went down in it | real input on the field: a state held on it (`hold`, `holdState`) lets go |
+| `Native.fieldInput(id, generation)` | a finger came down in the field (it is the field's), or a key went down in it | real input on the field: a state held on it (LLP 1122 D8, `hold`, `holdState`) lets go |
 
 What a call says of a generation exact2 has moved on from is dropped.
 
@@ -647,7 +651,7 @@ exact2 has reached beside the value the app then shows. The reader takes a told 
 field's newest edit and differs from what the field holds. So a commit that sets the value the field already has
 changes nothing in it (its composition and its selection stand), and one that sets another replaces the text where
 it stands (the field keeps its undo), puts the caret where it was among the text after it, and restarts the
-keyboard. **The app's value never ends a composition**: Contract gives an action no way
+keyboard. **The app's value never ends a composition** (LLP 1115.000 §5, ruling 6): Contract gives an action no way
 to know text is composing, and Android's keyboards compose ordinary words, so an action that rewrites what it hears
 would end every word at its first letter. The field says when its text begins to compose and when that ends
 (`Native.fieldComposing`). While it composes exact2 holds a value the app writes and tells the field its own text,
@@ -685,7 +689,7 @@ and the caret is kept within what the field holds.
 `x_log_fields=1` at launch (exact2's `EXACT_LOG_FIELDS`) logs each edit told to exact2 with its composing region,
 and what the keyboard asks of the field's input connection (`setComposingText`, `commitText`, …).
 
-Not built yet:
+Not built of D8:
 
 - **`autofocus` on a page that opens does not take.** Shelf's add form names its title field and opens with no
   field focused and no keyboard; a tap on the field works. The cause is exact2's, not the reader's:
@@ -713,12 +717,12 @@ Not built yet:
   paint put it until the next.
 - **A font the app declares by its bytes** has no file to name: the field is set in the device's default family.
 - **A password's own width** is measured unmasked, and a `textarea`'s min-content width is its max-content.
-- **The Material container**, the floating label, a field's place in TalkBack's order (the `EditText`
+- **The Material container** (D9), the floating label, a field's place in TalkBack's order (D13: the `EditText`
   reports itself, with its text, its hint and its bounds, and nothing orders it among the painted content yet), a
   mouse's I-beam, and autofill's save UI.
 - **`inputmode="none"`** keeps the keyboard down on focus; nothing else of an app's own keys is built.
 
-## The top layer
+## The top layer (LLP 1115.001 D10)
 
 A confirmation and a menu are **windows of the platform's own**, not a layer painted in the page: an alert-shaped
 `alertdialog` is a `Dialog` and a menu popover a `PopupWindow` (`Surfaces.kt`), the framework's classes and no
@@ -801,8 +805,8 @@ has refused one.
 fades and settles into place over about 180 ms as its scrim fades in, complete in every frame, and leaves in about
 140 ms with its scrim gone in about 50.
 
-**The menu is given its motion**, since the platform gives none to a popup it did not place (the window keeps
-Exact's placement, and Android animates it). Checked on a Pixel 10 Pro XL first:
+**The menu is given its motion**, since the platform gives none to a popup it did not place (Charlie's ruling of
+2026-10-12: the window keeps Exact's placement, and Android animates it). Checked on a Pixel 10 Pro XL first:
 
 | The same menu | `dumpsys window`, its window's attributes | Filmed at 120 frames a second |
 |---|---|---|
@@ -824,10 +828,10 @@ committed about 35 ms after the touch lifts (alert 30 to 41, menu 29 to 37, five
 until the next collection and is then gone (one root again); resident memory after the first use stays about 8 MB
 above what it was before any, which has not been attributed.
 
-Not built yet:
+Not built of D10:
 
 - **Accessibility.** `uiautomator dump` shows an open alert as a window of its own holding one focused
-  `android.view.View` with no text, description or children: TalkBack lands on it and has nothing to read.
+  `android.view.View` with no text, description or children: TalkBack lands on it and has nothing to read (D13).
 - **A text field inside a dialog.** The shape rule admits text and buttons only, so a dialog with an `input` is no
   alert and is refused; nothing hosts a field in a surface's window.
 - A bottom sheet (a chooser, a `modal` route), a `select`'s menu, submenus as cascades (a row that opens another
@@ -835,8 +839,8 @@ Not built yet:
   menu row, right-to-left placement.
 - The ripple, Material's own type scaling above 100% (sizes are sp taken linearly), and the device's own face.
 - An outside tap that dismisses an alert whose author wrote `closedby="any"`: lowering implies `any` for every
-  `alertdialog` today, so the two cannot be told apart.
-- The arrow keys reach a surface; nothing else of the hardware keys is built for the page.
+  `alertdialog` today, so the two cannot be told apart (LLP 1115.000 D13.4).
+- The arrow keys reach a surface; nothing else of D7.6's hardware keys is built for the page.
 
 Not seen on a phone: Shelf itself (it has no `android/` crate; the fixture uses its shapes); an `alertdialog`
 written as a popover, and an `aria-checked` row (neither is in a test either); a font scale changed with a menu
@@ -844,7 +848,7 @@ open; rotation with a surface open; a second display; TalkBack. The dialog's wid
 its limits is the window less 24 dp a side, which was not compared with a Compose dialog on the same phone, and no
 screenshot here was compared with a reference app's.
 
-## The bars
+## The bars (LLP 1115.001 D11)
 
 A route's `header` is Material 3's **top app bar** and the navigation root's `tablist` is its **navigation bar**
 (`Bars.kt`). Each is a picture exact2 paints, replayed in a `Pane` of its own over the page, as a surface of the top
@@ -889,10 +893,10 @@ the bar took of the routes goes to nothing while it is covered (`Presenter::fit_
 | Held | a state layer (10%): a 40 dp circle on an icon, a pill on a text button | a state layer and a ripple |
 
 A level-1 heading is the same small bar: Material's medium and large bars, which collapse as the content scrolls,
-are not built, and neither is the change of colour as a transition (it switches in one frame here; Compose animates it).
-The Up arrow goes Back in Back's own order (`Presenter::system_back`), so it presses the route's authored Back
+are S3's, and so is the change of colour as a transition (it switches in one frame here; Compose animates it).
+The Up arrow goes Back in Back's own order (D6, `Presenter::system_back`), so it presses the route's authored Back
 control where there is one, which is then no item of the bar. A presented route (`navigationPresentation="modal"`,
-still a page here: no sheet is built) has no Up arrow, and its Back control is the bar's leading item: Shelf's add
+still a page here: the sheet is D10's) has no Up arrow, and its Back control is the bar's leading item: Shelf's add
 form is Cancel, New Book, Save. Material's full-screen dialog has a close icon there. A pushed route with no header
 of the bar's has no bar at all: Android's Back is the system's, not a bar's button. A route that says
 `navigationBar="none"` keeps its header in the page.
@@ -947,8 +951,8 @@ as it always did: a header's button or a tab is chosen in its bar (the answer sa
 and on a pushed route the authored Back control is the Up arrow. `tree` still shows the authored header and
 tablist, which the page no longer paints. To an accessibility service each bar is one `android.view.View` with its
 own bounds and no text, description or children (`uiautomator dump`: `[0,0][1080,317]` and `[0,2150][1080,2404]`
-on a Pixel 10 Pro XL), as a surface's window is: TalkBack has nothing to read in either until the
-accessibility provider serves them.
+on a Pixel 10 Pro XL), as a surface's window is: TalkBack has nothing to read in either until D13's provider
+serves them.
 
 **What it costs** (one Pixel 10 Pro XL, twenty cold starts each, `am start -W` after a force-stop, the two builds
 in alternating blocks of ten, each build installed fresh). Against the same main built without the bars
@@ -958,9 +962,9 @@ has no bars, 90.0 and 90.0. A session an hour earlier against the older base gav
 page is laid out once more as it boots; neither shows. Shelf's APK is 70,644 bytes larger (20,506,607 to
 20,577,251), Caltrain's 10,420.
 
-Not built yet:
+Not built of D11:
 
-- **The medium and large top app bars**, which collapse as the content scrolls; the colour change as a
+- **The medium and large top app bars**, which collapse as the content scrolls (S3); the colour change as a
   transition; a centred title; an overflow menu for buttons that do not fit (they are all placed, and the title
   is cut first).
 - **The segmented buttons** for a `tablist` in the content, and for one in a header (it stays in the page, as the
@@ -976,9 +980,9 @@ Not built yet:
   the direction yet).
 - **The content scroller rule** (`navigationScroll`, else the first node under the route that scrolls up and
   down) is written a second time here, in `presenter/bars.rs`: it is the iOS host's `contentScroller`, in Swift.
-- A bar's symbols are still the symbol table's paths, but for the Up arrow.
+- A bar's symbols are still the symbol table's paths (D14 is S2's), but for the Up arrow.
 
-## Accessibility
+## Accessibility (LLP 1115.001 D13)
 
 What the reader shows is painted: the page in one view, each bar and each surface of the top layer in a `Pane`. None
 of it said anything to an accessibility service, so TalkBack read an Exact app as one unlabelled view. The reader's
@@ -1068,7 +1072,7 @@ walks it (a hosted field's from the field's own view; the open surface's window 
 and not `uiautomator dump`, because the dump cannot say a heading, a role description, a range or a live region and
 cannot be joined to a view. It follows the provider's own child lists, so that a client outside the app is served
 the same nodes was checked apart, with `uiautomator`. `scripts/agent-ax.mjs` has Android's row of the per-platform
-table.
+table (LLP 1115.000 D14.4).
 
 `x_log_access=1` (a launch extra) logs each statement, each node a service focuses or acts on and each event sent.
 
@@ -1089,7 +1093,7 @@ table.
   TalkBack's own gestures could not be made from a shell. Its speech is not in the log without its developer
   setting. A person with the phone, or a virtual input device (`uinput`), is what it takes.
 
-**What it lacks.**
+**Short of D13.**
 
 - The two role descriptions, `Tab` and `link`, are English words: the reader has no strings by language, and
   Material ships its own "Tab" in each.
@@ -1147,9 +1151,9 @@ checks, R8's outlines of the newer calls, `Legacy`, `LegacyGlyphs`) and `resourc
 in the one APK every release installs; at run time a newer release pays the `SDK_INT` checks alone.
 
 Not tried: Android 11 (no device), and a TypeScript data module: the Android Hermes bundle is built at the NDK's API
-30, and whether its archives link and load at API 29 is unknown.
+30 (LLP 1107 §4.1), and whether its archives link and load at API 29 is unknown.
 
-## Android TV
+## Android TV (LLP 1115.001.003)
 
 The phone's APK also runs on an Android TV, and its manifest puts the app in the TV launcher with a plain banner
 (`app/src/main/res/drawable/banner.xml`). Build it as for a phone, then install it on a TV emulator:
@@ -1195,55 +1199,55 @@ The cut was the smallest one. Left in the reader:
 
 ## Not done
 
-- **Most of the Material look.** The controls have the desktop painter's shapes, and a sheet or a chooser is refused.
+- **Most of LLP 1115.001.** The controls have the desktop painter's shapes, and a sheet or a chooser is refused.
   What is built of it:
-  - *The reader answers accessibility services*: the section above, with what was and was not seen of
+  - *The reader answers accessibility services* (D13): the section above, with what was and was not seen of
     TalkBack and what is short of it.
-  - *A header is the top app bar and the root tablist the navigation bar*: the section above, with what is
+  - *A header is the top app bar and the root tablist the navigation bar* (D11): the section above, with what is
     not built of it.
-  - *An alert and a menu are windows*: the section above, with what is not built of it.
-  - *A text field is a real `EditText`*: the section above, with what is not built of it.
-  - *The device's colours* (colours only) and *the channel out*: the two sections above. The type ramp
+  - *An alert and a menu are windows* (D10): the section above, with what is not built of it.
+  - *A text field is a real `EditText`* (D8): the section above, with what is not built of it.
+  - *The device's colours* (D4, colours only) and *the channel out* (D5): the two sections above. The type ramp
     is not reported yet.
-  - *A finger scrolls*: the section above, with what is not built of it.
-  - *An authored swipe yields the system's edges*: a swipe row's own gesture does not start from the sides
+  - *A finger scrolls* (D7.1 to D7.3): the section above, with what is not built of it.
+  - *An authored swipe yields the system's edges* (D7.5): a swipe row's own gesture does not start from the sides
     the system's Back gesture starts from, by the system-gesture insets `Native.window` tells, in place of the fixed
     20 points the other hosts yield. With a button for Back there is no such edge, and nothing is yielded.
-  - *Edge to edge*. The reader tells exact2 the window's size, the display's density and the
+  - *Edge to edge* (D3.3, D3.4, D3.6). The reader tells exact2 the window's size, the display's density and the
     system's raw insets (bars, cutout, keyboard, gestures; `Native.window`) and pads nothing. exact2 says where the
     page is, what colour is behind it and whether its scheme is dark (`Native.chrome`); the reader puts the view
     there, makes that colour the window's background and sets the bars' icons by the scheme. The software keyboard
     ends the page at its top, and the field being edited stays in view (once the page has been painted in the
     viewport the keyboard left: the boxes a reveal goes by are the last paint's). The keyboard's own slide is not followed
-    frame by frame (`WindowInsetsAnimation`), and a `status-bar-style` is not read.
-  - *The device's settings* (`Device.kt`, `Native.configure`): night mode, the font scale (the root font size
+    frame by frame (`WindowInsetsAnimation`), and a `status-bar-style` (LLP 1105) is not read.
+  - *The device's settings* (D3.1, `Device.kt`, `Native.configure`): night mode, the font scale (the root font size
     is 16 times it; Material's type ramp is a later stage), the locale, "remove animations", high contrast, and that
     the screen is a finger's. The layout direction, the 12 or 24-hour clock and bold text cross too and change
     nothing yet: exact2 has no door for them.
-  - *Back, in order* (`Native.back`): from the navigation root's selected route, the Back control the root names,
+  - *Back, in order* (D6, `Native.back`): from the navigation root's selected route, the Back control the root names,
     else the root's `navigate`, else the runner's own `back`. The reader takes Back only while exact2 says it has
     somewhere to go (a request, above), so at the first screen Back is the system's own and leaves the app with
-    its animation. An open alert or menu closes first: its window takes Back by the system's own routing. A
+    its animation. An open alert or menu closes first (D10): its window takes Back by the system's own routing. A
     pop has no predictive preview (routes have no transition yet).
-  - *A finger is a finger*. Each touch says what touched (`Native.touch`'s tool type), so a finger is a
+  - *A finger is a finger* (D7.4, D7.6). Each touch says what touched (`Native.touch`'s tool type), so a finger is a
     `touch` pointer to the app, hovers nothing, and leaves no focus ring on the button it presses (a text field keeps
     its own focus ring). The system's touch slop, told with the settings, is how far a touch moves before it is a
     drag. One pointer still: a second finger cancels the touch, unless the touch is a scroll, which the second
     finger then takes.
-  - *The lifecycle's first two parts*: the manifest declares the configuration changes the host takes in
+  - *The lifecycle's first two parts* (D15): the manifest declares the configuration changes the host takes in
     place, an activity made again adopts the host that runs (`Native.start` on a thread that has one), and the host
     does no frame work while the activity is stopped. Android discards a stopped window's display lists, the reader's
     kept rows among them, so a start after a stop makes the reader again (`ExactActivity.read`) and the host paints
-    everything for it; hosted views are made again with it. Nothing is saved for a process the system kills.
-- **No check builds it**: building Weatherlight's APK by hand
+    everything for it; hosted views are made again with it. Nothing is saved for a process the system kills (D15.3).
+- **Only the async lane's second tier builds it** (LLP 1133.002 stage 4): Weatherlight's APK, hourly, which
   compiles `exact-linux` for the Android target and the reader's Kotlin with a module's. Gradle is in none of the
   six checks.
 - **The shell is a development build**: signed with the debug key, with no icon. Its one activity turns keys on for
-  every app, and gives none an app's own native module or a video player, which the benchmark's apps
+  every app, and gives none an app's own native module (LLP 1024) or a video player, which the benchmark's apps
   passed from an activity of their own. A package's implementation of a module is the exception (below, "Module
   implementations").
 - **A GPU canvas over children draws nothing**: Caltrain's sky (`glass`, which refracts the content inside it) is
-  blank with its module packaged, where a canvas without children (a game's world) draws.
+  blank with its module packaged, where a canvas without children (a game's world) draws (QUEUE.md).
 - **No update store** and no replaced Rust module: the Canvas host has neither, though an app's compatibility
   record is computed as its Linux crate's is, and Caltrain's names both (`store.L` is `A`, `rustMode` is `native`).
 - **No picture from a URL.** The Linux host's pictures are files under the asset root (`host/linux/src/image`), on
@@ -1254,7 +1258,7 @@ The cut was the smallest one. Left in the reader:
 ## The Material reference
 
 `reference/` is Compose Material 3 at the pinned version (`gradle/libs.versions.toml`), drawn on Robolectric's native
-graphics, and the oracle that compares it with Exact's drawing of the same specimens. It is in no
+graphics, and the oracle that compares it with Exact's drawing of the same specimens (LLP 1115.001.001). It is in no
 app. On a machine with the SDK, Java 21 (`JAVA_HOME`) and Cargo:
 
     bun host/android/reference/oracle.mjs            # draw both sides, compare, report
@@ -1265,7 +1269,7 @@ app. On a machine with the SDK, Java 21 (`JAVA_HOME`) and Cargo:
 The report is `reference/build/oracle/report.html`. `specimens.json` lists the specimens, their probes and the planted
 defects; each specimen's Exact half is `apps/material-specimens/specimens/<id>.contract`.
 
-The calibration on a phone, after the build box's run:
+On a phone (D4's calibration, LLP 1115.001.001 §3), after the build box's run:
 
     bun host/android/reference/oracle.mjs --phone <adb serial>
 

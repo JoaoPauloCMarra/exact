@@ -1,8 +1,8 @@
-// @exact/pedometer on Android: Google Play services' Recording API where it is current,
+// @exact/pedometer on Android (LLP 1133.026 D12, D15, D17): Google Play services' Recording API where it is current,
 // with the step counter between reads, else the step counter alone. Under the agent the runner's declared substitute
 // answers and nothing here runs.
 //
-// - The Recording API records steps for an app that is not running, "for up to 10 days". The first granted
+// - The Recording API records steps for an app that is not running, "for up to 10 days" (D12). The first granted
 //   request subscribes to `TYPE_STEP_COUNT_DELTA`; each answer is its total from the group's boundary to now (one
 //   bucket), plus the step counter's increase since that read while the app is in the foreground, so the line moves
 //   step by step. `since` is the latest of `start`, the subscription's start and ten days back: no read is issued from
@@ -11,8 +11,8 @@
 //   is in the foreground; each return from the background starts a new zero, so `since` moves and the answer never
 //   claims steps it could not have seen. `android.source` says which path answered.
 // - A counter that falls (a reboot) starts a new zero on either path.
-// - Both ask `ACTIVITY_RECOGNITION`, through the host's permission history.
-// - Tier 3: `PedometerModule.hatch` is given the manager once, when the module is made.
+// - Both ask `ACTIVITY_RECOGNITION`, through the host's permission history (LLP 1133.002 D8).
+// - Tier 3 (D17): `PedometerModule.hatch` is given the manager once, when the module is made.
 package exact.pedometer
 
 import android.Manifest
@@ -37,11 +37,11 @@ import java.util.concurrent.TimeUnit
 
 class PedometerModule(context: ExtensionContext) : ExactExtension(context) {
     companion object {
-        /** What the Recording API keeps: "up to 10 days". */
+        /** What the Recording API keeps (D12): "up to 10 days". */
         private const val KEPT_MS = 10 * 86_400_000.0
         private const val PERMISSION = Manifest.permission.ACTIVITY_RECOGNITION
 
-        /** The app's access hatch: given the manager once, when the module is made. */
+        /** The app's access hatch (D17): given the manager once, when the module is made. */
         @JvmStatic var hatch: ((SensorManager) -> Unit)? = null
     }
 
@@ -93,7 +93,7 @@ class PedometerModule(context: ExtensionContext) : ExactExtension(context) {
         }
     }
 
-    /** The Recording API's subscription, made once granted; renewed when Play services dropped it. */
+    /** The Recording API's subscription, made once granted; renewed when Play services dropped it (D12). */
     private fun subscribe() {
         val client = recording ?: return
         if (subscribed != null || context.permission(PERMISSION).state != "granted") return

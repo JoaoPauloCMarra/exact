@@ -1,5 +1,5 @@
 //! Host configuration and worker-side readiness for storage continuations.
-//! Effects leave the data seam as host work.
+//! @ref LLP 1027 D1a / D10 — effects leave the data seam as host work.
 use exact_runner::{FailureKind, Outcome, Response};
 use ibex2::{
     bindings::Context,
@@ -27,8 +27,8 @@ pub(crate) struct Directories {
     pub temporary: PathBuf,
 }
 
-/// What a waiter that took a compression's right to write away fails with;
-/// the prelude settles that operation on it.
+/// What a waiter that took a compression's right to write away fails with
+/// (LLP 1069.002 A1.5); the prelude settles that operation on it.
 pub(crate) const IMAGE_ABANDONED: &str =
     "compressImage: timeout: the storage wait ran out; nothing was written";
 
@@ -46,7 +46,7 @@ pub(crate) struct Session {
 impl Session {
     /// A storage session under `grants`: the app's directories where the
     /// host configured them, and always the documents the person chose
-    /// (`doc:`), which need none, as a Rust source's do.
+    /// (`doc:`, LLP 1069.010 D1), which need none, as a Rust source's do.
     pub fn open(
         grants: &str,
         wait: Duration,
@@ -68,7 +68,7 @@ impl Session {
             .set_documents(Arc::new(move |path, _access| documents(path, owner)))
             .map_err(|e| e.to_string())?;
         // Only where there is a codec: elsewhere ibex2 refuses the call as
-        // unsupported before reading the source.
+        // unsupported before reading the source (LLP 1069.002 A1.3).
         if exact_data::image::available() {
             context
                 .set_image_codec(Arc::new(ImageCodec { hold: hold.clone() }), image_limits())
@@ -107,7 +107,7 @@ impl Session {
     }
 
     /// Wait on this thread, until `deadline`, for a completion to deliver
-    /// (or nothing left in flight): teardown's bounded wait.
+    /// (or nothing left in flight): teardown's bounded wait (LLP 1097 D10).
     pub fn wait_until(&self, deadline: Instant) -> bool {
         loop {
             if self.context.is_idle() || self.context.wait(Duration::from_millis(25)) {
@@ -125,7 +125,7 @@ impl Session {
 
     /// A waiter for an answer's step, which gives up without taking any
     /// compression's right once `retired` is set (its call was let go, and
-    /// another waiter now watches the work).
+    /// another waiter now watches the work: LLP 1069.002 A1.5).
     pub fn continuation_for(
         &self,
         retired: Option<Arc<AtomicBool>>,
@@ -209,7 +209,7 @@ impl Session {
     }
 }
 
-/// Storage's availability as the prelude's refusal code: `bake`
+/// Storage's availability as the prelude's refusal code (kanban F28): `bake`
 /// where storage is not live; none where the module reaches it; else `agent`
 /// for a drive that names no scratch store, or `unsupported`.
 pub(crate) fn refusal(live: bool, reaches: bool, agent: bool) -> Result<Option<String>, String> {
@@ -229,9 +229,9 @@ type ReplacedFiles = exact_data::documents::kept::Replaced;
 
 /// `storage.fs.recentDocuments()` (`ask` empty) and `forgetDocument(path)`
 /// (`ask` is `forget <path>`), for the session `owner` names when the grants
-/// keep documents: the list as JSON, or nothing.
+/// keep documents (LLP 1069.010.000 D5): the list as JSON, or nothing.
 ///
-/// And the app's own `atomicWriteFile` of a kept file, around the
+/// And the app's own `atomicWriteFile` of a kept file (D4), around the
 /// write: `replacing <path>` reads what it replaces and answers a token, or
 /// nothing when it replaces no kept file; `replaced <token>` carries the
 /// entry to the file written; `dropped <token>` lets it go (the write failed).
@@ -299,8 +299,8 @@ fn documents(path: &str, owner: u64) -> Result<DocumentLease, DocumentError> {
 }
 
 /// The platform's image codec ([`exact_data::image`]), as ibex2's
-/// (`fs.compressImage`, `fs.transformImage`): the one a Rust source's
-/// storage requests run too.
+/// (`fs.compressImage`, LLP 1069.002 A1; `fs.transformImage`, LLP 1133.019
+/// D14): the one a Rust source's storage requests run too.
 pub(crate) struct ImageCodec {
     hold: Option<SessionHold>,
 }
@@ -474,7 +474,7 @@ impl Drop for Session {
 
 #[cfg(all(test, unix))]
 mod tests {
-    /// A save issued after an earlier one of the same
+    /// LLP 1069.010.000 D4: a save issued after an earlier one of the same
     /// kept file renamed its file but before it carried the entry still
     /// carries it, to the file the later one writes.
     #[test]

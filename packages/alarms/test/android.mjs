@@ -1,14 +1,14 @@
-// @exact/alarms on Android: the fixture app (`test/fixture`) built as the Canvas reader's
-// APK, which compiles the package's Kotlin and merges its manifest fragment under the allow-list. The build is
-// checked for what the grant derives, the fragment's three components (unexported, `directBootAware`, the service
+// @exact/alarms on Android (LLP 1133.030 §14 stage 2): the fixture app (`test/fixture`) built as the Canvas reader's
+// APK, which compiles the package's Kotlin and merges its manifest fragment under the allow-list (D9). The build is
+// checked for what the grant derives (D7), the fragment's three components (unexported, `directBootAware`, the service
 // `systemExempted`) and the roster binding the implementation.
 //
 // With `--emulator <serial>` it then drives the APK on that running emulator under the agent with the implementation
 // bound (`--bind alarms`), on the wall clock, since the system's alarms run on it: the status before asking, a request
 // answered through the system's notification dialog and the exact-alarm Settings page, a one-minute countdown that
 // `dumpsys alarm` lists as an alarm clock, pause and resume, the ring with its notification's Stop and Snooze, and a
-// revocation that ends the alarm. That half has never run: no emulator booted on the Mac that built it, so its first
-// run is its test. What needs a person or a phone is checklist.md's.
+// revocation that ends the alarm. That half has never run: no emulator booted on the Mac that built it (LLP 1133.030
+// §14), so its first run is its test. What needs a person or a phone is checklist.md's.
 //
 // usage: bun packages/alarms/test/android.mjs [--emulator <serial>]
 //   (an NDK of clang 18 or newer in ANDROID_NDK_HOME, and a JDK 17 or newer in JAVA_HOME)

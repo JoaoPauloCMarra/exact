@@ -1,4 +1,4 @@
-//! `contract tamber serve --stdio <app dir>`: the one
+//! `contract tamber serve --stdio <app dir>` (LLP 1121 D13, stage 3): the one
 //! writer of an app's design. One JSON request a line on stdin, one response
 //! a line on stdout, and an event line for every change it commits. The wire
 //! to clients (`scripts/tamber-server.mjs`) speaks to it; this owns the
@@ -33,12 +33,12 @@
 //! - **`propose`** plans without writing: the diff, the tokens it changes
 //!   (by file), `live` or `rebuild`, and the digests it planned against; a
 //!   digest it carries is checked as a transaction's is. `live` is the
-//!   edit's closure: no structure (a role override's value is not
-//!   structure), and the app's synthetic tokens (its rows' expressions over
+//!   edit's closure (LLP 1121 D13, stage 4): no structure (a role override's
+//!   value is not structure, stage 5), and the app's synthetic tokens (its rows' expressions over
 //!   tokens, read from the plan the compiler builds) re-folded, those that
 //!   change listed in `synthetic` with their new value per app tuple.
 //!   A propose with `texts: true` also answers the texts it would write,
-//!   by file, for a scrub's preview.
+//!   by file, for a scrub's preview (stage 4, commit 6).
 //! - **`requires`** (`tamber/1.1`), on a transaction or a propose: digests
 //!   of files it does not edit but was planned on, checked with the rest.
 //! - **Reads:** `hello`, `describe`, `resolve`, `explain`, `uses`, each of the
@@ -47,7 +47,7 @@
 //!   the `files` digests they read (`tamber/1.1`); `describe` each token's
 //!   declared `pairs` (a role's with its fallback) and the design's
 //!   contrast `warnings`.
-//! - **The wire's own** (*1.1*): `compare`, `revert-plan` (texts from git); `import-plan`
+//! - **The wire's own** (LLP 1122 T1, *1.1*): `compare`, `revert-plan` (texts from git); `import-plan`
 //!   marks a held re-import (sources are read alone). None writes. Base names, *1.14*: `tamber_base.rs`.
 //! - **A request** is one JSON object on a line of at most 1 MiB; a field
 //!   of the wrong type is an error, not absent.
@@ -73,7 +73,7 @@ mod scrub;
 mod walk;
 use answers::{diagnostic, located, modes_of, no_token, refused, temp_name};
 
-/// The protocol this server speaks (a minor version only adds).
+/// The protocol this server speaks (D13: minor versions only add).
 pub const PROTOCOL: &str = "tamber/1.18";
 
 /// The longest request line it reads; a longer one is refused whole.
@@ -201,9 +201,9 @@ struct Server {
     next: u64,
     /// The client a `hello` named.
     client: Option<String>,
-    /// The app's synthetic tokens, by the digest of the
+    /// The app's synthetic tokens (LLP 1121 D3), by the digest of the
     /// Contract sources they were read from, with the retention its plan
-    /// keeps tokens by, read by the same build.
+    /// keeps tokens by (D7), read by the same build.
     synthetic: Option<Synthetic>,
     /// The last retention build's types and expansion, by the Contract
     /// sources' key: a build the design alone moved reuses them where the
@@ -214,17 +214,18 @@ struct Server {
     /// check judges again (`contract_lower::rows`).
     rows: Option<(String, Vec<contract_lower::rows::Row>, Vec<PathBuf>)>,
     /// The background whole build, which says when a retention build's
-    /// build fails after the design.
+    /// build fails after the design (theme2's 12:15 ruling).
     checker: check::Checker,
     /// The retention key the last answer was made under (a scrub's frames
     /// ask the check under it).
     last_key: String,
-    /// The app's components' params, by the Contract
+    /// The app's components' params (LLP 1121 D15), by the Contract
     /// sources' key ([`Server::sources_key`]): every read and write asks
     /// them, and loading them parses the app (~200 ms on the clone).
     params: std::cell::RefCell<(String, std::rc::Rc<contract::tamber_params::AppParams>)>,
-    /// The exported library components' slot chains, built from the params
-    /// above when they are loaded again, never per write: what a write's candidate fold is checked against.
+    /// The exported library components' slot chains (LLP 1139 D4, stage 12
+    /// D2), built from the params above when they are loaded again, never
+    /// per write: what a write's candidate fold is checked against.
     #[allow(clippy::type_complexity)]
     slots: std::cell::RefCell<
         Option<(
@@ -440,7 +441,7 @@ impl Server {
         }
         // Built as far as the design's retention and no further, reusing
         // the last build's types and expansion where its Contract loads as
-        // it did. A build that fails after the
+        // it did (theme2's 11:32 ruling). A build that fails after the
         // design still says them; that it fails is the whole build's to say.
         let sources = self.sources_key();
         let kept = self
@@ -650,7 +651,7 @@ impl Server {
     /// The design's files: the app's design first, then any other design
     /// beside it, as the directory has them now (a transaction may edit
     /// several, committed as one set), then the app's own Contract sources
-    /// (a state part's row).
+    /// (stage 8 D: a state part's row).
     fn files(&self) -> Result<Vec<String>, String> {
         let mut others: Vec<String> = std::fs::read_dir(&self.dir)
             .map_err(|e| format!("{}: {e}", self.dir.display()))?
@@ -815,7 +816,7 @@ impl Server {
 
     /// The file a read names (`file`, the app's design when unsaid),
     /// checked, from one snapshot that also gives the digests.
-    /// The design folded with the app's params, each in its
+    /// The design folded with the app's params (D15), each in its
     /// `params` line's place, for a request's `token`, and the name to look
     /// up: a param's token where it names one in full or short, else the
     /// name as given (a design token, which may read a param). A short name
@@ -839,7 +840,7 @@ impl Server {
         }
     }
 
-    /// [`Self::design`], folded with the app's components' params,
+    /// [`Self::design`], folded with the app's components' params (D15),
     /// and the design as parsed, without them.
     fn design_with(
         &self,
@@ -862,7 +863,7 @@ impl Server {
         Ok((snap, folding, design))
     }
 
-    /// A reply with each param named by its full name, never by its
+    /// A reply with each param named by its full name (D15), never by its
     /// name below the IR.
     fn present(&self, v: Value) -> Value {
         let app = self.app_params();
@@ -887,7 +888,7 @@ impl Server {
         Ok((snap, folding))
     }
 
-    /// `export {kind: "dtcg"}` (*1.4*): the app's design as a
+    /// `export {kind: "dtcg"}` (*1.4*, LLP 1121 D14): the app's design as a
     /// DTCG export, its text, kept as the baseline a re-import compares with.
     fn export(&self, request: &Value) -> Result<Value, Value> {
         let kind = optional(request, "kind")?.unwrap_or_default();
@@ -897,8 +898,8 @@ impl Server {
         let (_, folding) = self.design(&json!({}))?;
         let text = exact_tamber::export::dtcg(&folding, &self.vocab)
             .map_err(|all| refused(&self.design, all))?;
-        // `keep: false` (below write): keeping one can prune another's.
-        let digest = exact_tamber::export::digest(&text); // what a client's `import` names as its baseline
+        // `keep: false` (below write, stage 10 A1): keeping one can prune another's.
+        let digest = exact_tamber::export::digest(&text); // what a client's `import` names as its baseline (stage 10b)
         if request.get("keep") == Some(&json!(false)) {
             return Ok(json!({"kind": "dtcg", "text": text, "baseline": null, "digest": digest}));
         }
@@ -914,7 +915,8 @@ impl Server {
     /// whose style rows name it, directly, through a token naming it or
     /// through a synthetic token, with its source span. `site` indexes the
     /// plan compiled here (`plan`, its digest, before any bake); a build
-    /// joins the spans through its own source map (its `outline`).
+    /// joins the spans through its own source map (LLP 1122 T2b's
+    /// `outline`).
     fn uses(&mut self, request: &Value) -> Result<Value, Value> {
         let (snap, folding, name) = self.lookup(request)?;
         let icon = folding.icons.iter().any(|i| i.name == name);
@@ -927,7 +929,7 @@ impl Server {
                 json!({"token": name, "plan": null, "sites": [], "aliases": [], "files": files_json(&snap)}),
             );
         }
-        // An icon's image sites, an icon param's too (*1.12*).
+        // An icon's image sites, an icon param's too (stage 9 C2, *1.12*).
         if icon {
             return crate::tamber_explain::icon_uses(
                 &self.dir,
@@ -968,7 +970,7 @@ impl Server {
             )
             .map_err(|e| json!({"message": format!("the app does not build: {e}")}))?;
             // Each instance at the element or style holding a literal is a
-            // site (*1.12*).
+            // site (stage 9 C2, *1.12*).
             let (plan, map) = contract::compile_path_mapped(&self.dir.join("app.contract"))
                 .map_err(
                     |e| json!({"message": format!("the app does not build: {}", e.message)}),
@@ -1014,12 +1016,12 @@ impl Server {
             false => None,
         };
         let snap = self.snapshot()?;
-        // A package's design is read-only; set-token is the app's override (*1.14*).
+        // A package's design is read-only; set-token is the app's override (*1.14*, D11).
         let design = snap
             .iter()
             .find(|(f, _, _)| *f == self.design)
             .map_or(String::new(), |(_, t, _)| t.clone());
-        // A write judges package files on a fresh load, never a cached one.
+        // A write judges package files on a fresh load, never a cached one (D11).
         let app = match write {
             true => std::rc::Rc::new(contract::tamber_params::params_of(
                 &self.dir.join("app.contract"),
@@ -1063,10 +1065,10 @@ impl Server {
                 json!({"conflict": true, "message": "a file changed since the client read it", "files": files_json(&snap), "stale": stale}),
             );
         }
-        // A param set or unset by a name the app has, on the line the
+        // A param set or unset by a name the app has (D15), on the line the
         // design already gives it, whichever name that line uses.
         crate::tamber_ops::param_names(&mut ops, &snap, &self.app_params())?;
-        // A scrub's preview (the wire's) compiles the texts
+        // A scrub's preview (the wire's, LLP 1121 D13) compiles the texts
         // a propose would write, which it asks for.
         let texts = !write && request["texts"] == json!(true);
         self.run(&snap, &ops, &contract_ops, client, false, texts)
@@ -1097,7 +1099,7 @@ impl Server {
                 json!({"conflict": true, "message": "a file changed since that write: its inverse no longer applies", "files": files_json(&snap), "stale": stale}),
             );
         }
-        // A file that has become a package's since (a link made to it) is read-only now too.
+        // A file that has become a package's since (a link made to it) is read-only now too (D11).
         crate::tamber_packages::read_only(
             &contract::tamber_params::params_of(&self.dir.join("app.contract")),
             &self.dir,
@@ -1138,7 +1140,7 @@ impl Server {
         let ops = ops.as_slice();
         let known = self.synthetic(snap);
         let exprs = known.clone().unwrap_or_default();
-        // The tokens the plan keeps: an edit to one it does not keep
+        // The tokens the plan keeps (D7): an edit to one it does not keep
         // (a plain app's token no view names) leaves the plan as it is.
         let retention = self.synthetic.as_ref().and_then(|(_, _, r)| r.clone());
         let app = self.app_params();
@@ -1168,15 +1170,15 @@ impl Server {
         )?;
         // What the build refuses beyond the crate's check, a write refuses
         // too, so nothing is written that the app cannot build: a role
-        // override that varies by an app axis (the compiler's
+        // override that varies by an app axis (LLP 1121 D5, the compiler's
         // `tamber-role-axis`). An undo restores what was, and is not judged.
         if !undo {
             self.write_checks(&texts, &planned, &self.last_key)?;
         }
         let mut out = json!({
             "files": files_json(snap),
-            // A param a token's edit reaches is named in full (the IR
-            // token a plan names it by reaches no client).
+            // A param a token's edit reaches is named in full (LLP 1122 T3:
+            // the IR token a plan names it by reaches no client).
             "changed": self.present(json!(planned.changed.iter().map(|(f, t)| json!({"file": f, "token": t})).collect::<Vec<_>>())),
             // The closure unknown (the app's build stops before its design):
             // no edit is answered live.

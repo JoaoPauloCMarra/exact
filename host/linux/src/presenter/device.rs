@@ -1,9 +1,9 @@
 //! What the device's shell tells the presenter about the device and about
-//! itself: the Canvas host's reader on Android, and
+//! itself (LLP 1115.001 D3, D15): the Canvas host's reader on Android, and
 //! an agent standing in for it.
 use super::*;
 
-/// The device's settings, whole: the shell tells them
+/// The device's settings, whole (LLP 1115.001 D3.1): the shell tells them
 /// once before the first frame and again, all of them, whenever one changes.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Device {
@@ -25,8 +25,8 @@ pub struct Device {
     pub high_contrast: bool,
     /// The screen is touched with a finger, which cannot hover.
     pub touch: bool,
-    /// The device is a television, driven by a remote's D-pad: no
-    /// pointer at all.
+    /// The device is a television, driven by a remote's D-pad (LLP
+    /// 1115.001.003 D2): no pointer at all.
     pub tv: bool,
     /// How far a finger moves before its contact is a drag and no longer a
     /// tap, in points (Android's scaled touch slop); 0 where the shell
@@ -56,8 +56,9 @@ impl<D: DataSource> Presenter<D> {
         root.or(field).or(applied)
     }
 
-    /// The device's settings, as its shell read them. What has a door here goes through it, each
-    /// one a commit only when its value changed:
+    /// The device's settings, as its shell read them (LLP 1115.001 D3.1,
+    /// D3.2). What has a door here goes through it, each one a commit only
+    /// when its value changed:
     ///
     /// - night mode is the system's scheme (`setScheme("system")` and
     ///   `prefers-color-scheme` follow it);
@@ -71,7 +72,7 @@ impl<D: DataSource> Presenter<D> {
     ///   far a contact moves before it is a drag;
     /// - how the device writes dates is how a date control shows its value;
     /// - bold text (Android's font weight adjustment) is Bold Text, which
-    ///   weights the system font.
+    ///   weights the system font (LLP 1115.000 D12.3).
     ///
     /// The layout direction and the 12 or 24-hour clock are kept
     /// ([`Presenter::device`]) and change nothing yet: the runner has no
@@ -113,14 +114,14 @@ impl<D: DataSource> Presenter<D> {
             self.text_scale = device.font_scale;
             let px = ROOT_FONT_SIZE * f64::from(device.font_scale);
             error = error.or(self.set_root_font_size(px));
-            // A field the shell hosts starts at the scaled size too.
+            // A field the shell hosts starts at the scaled size too (D8).
             error = error.or(self.scale_field_font(device.font_scale));
         }
         // A tag the runner refuses (an empty one) leaves the place as it was.
         if !device.locale.is_empty() && place != *self.host.runner().place() {
             error = error.or(self.set_place(&place));
         }
-        // A date control shows its value as the device writes it.
+        // A date control shows its value as the device writes it (D9).
         let dates = crate::paint::dates::Dates::from_lines(&device.dates);
         if self.brush.dates != dates {
             self.brush.dates = dates;
@@ -136,7 +137,7 @@ impl<D: DataSource> Presenter<D> {
         self.device.as_ref()
     }
 
-    /// The backend's reader was made again (Android made
+    /// The backend's reader was made again (LLP 1115.001 D15.1: Android made
     /// the activity again while this host ran): it holds none of the rows,
     /// faces or pictures the last one was sent. `backend` records for it
     /// from nothing, and the next frame paints everything again; the app,
@@ -146,8 +147,8 @@ impl<D: DataSource> Presenter<D> {
         self.brush.forget_rows();
         // Nor of what it was told of the scrollers: the new one asks again.
         self.reader = Default::default();
-        // Nor of Back and the keyboard, which it is told anew, nor of
-        // the text fields it hosts.
+        // Nor of Back and the keyboard, which it is told anew (D5), nor of
+        // the text fields it hosts (D8).
         self.requests_reset();
         self.hosted_reset();
         // Nor of the top layer's open surface, whose window it makes anew,

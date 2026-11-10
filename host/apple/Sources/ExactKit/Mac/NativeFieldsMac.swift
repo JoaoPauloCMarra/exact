@@ -1,4 +1,4 @@
-// AppKit chrome around the kernel's editor content rect.
+// @ref LLP 1104 D3–D6: AppKit chrome around the kernel's editor content rect.
 #if os(macOS)
 import AppKit
 import CoreText
@@ -46,7 +46,7 @@ extension NodeView {
     /// leading below the line box's top; the cell draws its line at the
     /// rect's top, the baseline the font's ascent, rounded to a point,
     /// below it (the field is flipped). The line box rounds in the window's
-    /// device pixels, as a textarea's and a paragraph's do, so
+    /// device pixels, as a textarea's and a paragraph's do (LLP 1008 §3), so
     /// at 2x the baseline, and the rect's top, can be on a half point.
     func cssLine(in box: NSRect, font: NSFont) -> NSRect {
         let (above, below) = CSSLineBox.extents(font as CTFont, height: usedLineHeight, scale: pixelScale ?? 1)
@@ -56,7 +56,7 @@ extension NodeView {
     }
     static let editorPadding = NSTextView.fieldEditor().textContainer?.lineFragmentPadding ?? 0
     func layoutField() {
-        // A field the window's toolbar hosts is AppKit's to place and to style.
+        // A field the window's toolbar hosts is AppKit's to place and to style (LLP 1115.002 D2).
         guard let field, pageField == nil else { return }
         // AppKit sets a borderless field's text in from its frame by the field
         // editor's line fragment padding (2 points, which the cell's drawing
@@ -65,11 +65,11 @@ extension NodeView {
         // author-drawn one at its content box's, where CSS puts it.
         let out = fieldInCell || !isNativeTextControl ? Self.editorPadding : 0
         field.frame = (isNativeTextControl ? bounds : contentBox()).insetBy(dx: -out, dy: 0)
-        layoutStepper() // a number input's stepper takes the field's trailing end
+        layoutStepper() // a number input's stepper takes the field's trailing end (LLP 1116.007 D4)
         field.needsDisplay = true
     }
     /// The AppKit class an input's field is: a password's secure field; a
-    /// native search input's `NSSearchField` (its magnifier, its
+    /// native search input's `NSSearchField` (LLP 1115 D8: its magnifier, its
     /// clear button, Escape clearing it); a plain field otherwise, including
     /// a search input the author draws (`appearance: none`).
     var wantedFieldClass: FieldClass {
@@ -98,7 +98,7 @@ extension NodeView {
         remakeFieldIfNeeded()
         guard let field, pageField == nil else { return }
         let native = isNativeTextControl
-        // A grouped form's field has no bezel, no
+        // @ref LLP 1115.002 D6 — a grouped form's field has no bezel, no
         // ground and no ring: the row is the field, as SwiftUI's `Form` has it.
         let themed = fieldGround != nil
         let bezel = native && !fieldInCell && !themed
@@ -129,7 +129,7 @@ extension NodeView {
         if field.baseWritingDirection != fieldBaseDirection { field.baseWritingDirection = fieldBaseDirection }
     }
     /// A field lent to the toolbar or an alert, which no page chrome styles:
-    /// its side and base, its editor's text too.
+    /// its side and base, its editor's text too (LLP 1001 §1).
     func styleLentFieldSide() {
         guard pageField != nil, let field else { return }
         syncFieldSide()
@@ -140,7 +140,7 @@ extension NodeView {
     }
     /// A plain field's paragraph base direction: CSS `direction`, said either
     /// way as Apple text's is (`TextEngine.setBaseDirection`), so no first
-    /// strong character picks it.
+    /// strong character picks it (LLP 1001 §1).
     var fieldBaseDirection: NSWritingDirection {
         style["direction"]?.string == "rtl" ? .rightToLeft : .leftToRight
     }
@@ -229,7 +229,7 @@ enum FieldClass {
 /// `FieldChromeCache`), its buttons where AppKit puts them.
 final class SearchFieldCell: NSSearchFieldCell {
     /// The input's node is its field's delegate, in the page and in the
-    /// window's toolbar alike: there too it edits in the
+    /// window's toolbar alike (LLP 1115.002 D2): there too it edits in the
     /// session's editor, which tells the node of a composition and of a
     /// copy, cut or paste. The rectangles below are the page's: a field
     /// the toolbar hosts has no node above it, and its geometry is AppKit's.
@@ -259,7 +259,7 @@ final class SearchFieldCell: NSSearchFieldCell {
     }
 }
 
-// A header's search input in the window's toolbar.
+// @ref LLP 1115.002 D2 — a header's search input in the window's toolbar.
 // The toolbar's search item holds a field (`NSSearchToolbarItem.searchField`,
 // which SwiftUI gives a subclass of its own too), and that field is this
 // node's: one of the node's own class with the node its delegate, so its
@@ -300,7 +300,7 @@ extension NodeView {
         lent.stringValue = page.stringValue
         lent.isEnabled = page.isEnabled
         lent.isEditable = page.isEditable
-        lent.contentType = page.contentType // `autocomplete`
+        lent.contentType = page.contentType // `autocomplete` (LLP 1102 §3.6)
         lent.cell?.isScrollable = true
         lent.cell?.wraps = false
         lent.cell?.usesSingleLineMode = true

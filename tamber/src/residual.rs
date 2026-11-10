@@ -1,4 +1,4 @@
-//! A length over base names the design leaves unset (stage
+//! A length over base names the design leaves unset (LLP 1121 D11, stage
 //! 12 B2): what the build cannot fold, since each host's column holds the
 //! base's length. Every token reference is inlined and every constant part
 //! folded, so its only free names are base names, and one expression has
@@ -210,8 +210,8 @@ impl Residual {
         for (atom, c) in &self.terms {
             let v = match atom {
                 Atom::Base(n) => base(n)?,
-                // A NaN argument makes the pick NaN (CSS Values 4 §10.9),
-                // where Rust's `min` and `max` would drop it.
+                // A NaN argument makes the pick NaN (§10.9), where Rust's
+                // `min` and `max` would drop it.
                 Atom::Min(args) => args
                     .iter()
                     .map(|a| a.sum_with(base))

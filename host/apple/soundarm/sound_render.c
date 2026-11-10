@@ -1,4 +1,4 @@
-// See sound_render.h.
+// @ref LLP 1096 D6, D8, LLP 1125 D10. See sound_render.h.
 #include "sound_render.h"
 #include <math.h>
 #include <stdatomic.h>
@@ -244,7 +244,7 @@ double exact_sound_seconds(uint64_t host) {
 bool exact_sound_render(ExactMixer *m, const AudioTimeStamp *ts, uint32_t frames, AudioBufferList *out) {
     bool interleaved = out->mNumberBuffers == 1 && m->channels > 1;
     for (uint32_t b = 0; b < out->mNumberBuffers; b++) memset(out->mBuffers[b].mData, 0, out->mBuffers[b].mDataByteSize);
-    // When this buffer's first frame reaches the speaker: its render
+    // When this buffer's first frame reaches the speaker (D6): its render
     // time plus the delay downstream of the node.
     double rendered = (ts && (ts->mFlags & kAudioTimeStampHostTimeValid)) ? exact_sound_seconds(ts->mHostTime) : 0;
     double speaker = rendered + atomic_load_explicit(&m->latency, memory_order_relaxed);

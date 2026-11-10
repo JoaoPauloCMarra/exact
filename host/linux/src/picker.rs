@@ -1,7 +1,8 @@
-//! The file picker on Linux: there is no desktop host yet, so `showPicker` is
-//! refused with `cancel` and only the agent's substitute answers. What both
-//! need is here: the app's directories behind `app:/`, the copy into
-//! `app:/tmp/picked/`, and a picked image's pixel size read from its header.
+//! The file picker on Linux (LLP 1069.002 D8): there is no desktop host
+//! yet, so `showPicker` is refused with `cancel` (ruled, Q4) and only the
+//! agent's substitute answers (D9). What both need is here: the app's
+//! directories behind `app:/` (D4, D7), the copy into `app:/tmp/picked/`,
+//! and a picked image's pixel size read from its header (D3).
 
 use exact_runner::DataError;
 use std::path::{Path, PathBuf};
@@ -37,7 +38,7 @@ fn leaf(name: &str) -> bool {
 }
 
 /// Whether a `showPicker` is held for the agent: `EXACT_AGENT=1`, which a
-/// production bake has already dropped.
+/// production bake has already dropped (LLP 1069.007 D2).
 pub fn agent() -> bool {
     std::env::var("EXACT_AGENT").as_deref() == Ok("1") || cfg!(test)
 }
@@ -46,14 +47,14 @@ pub fn agent() -> bool {
 static ROOTS: Mutex<Option<[PathBuf; 3]>> = Mutex::new(None);
 
 /// Record the app's directories, and empty `app:/tmp/picked/` and
-/// `app:/tmp/shared/`: what the last launch picked or was shared is gone.
+/// `app:/tmp/shared/`: what the last launch picked or was shared is gone (D4).
 pub fn set_roots(data: PathBuf, cache: PathBuf, temporary: PathBuf) {
     let _ = std::fs::remove_dir_all(temporary.join("picked"));
     let _ = std::fs::remove_dir_all(temporary.join("shared"));
     *ROOTS.lock().unwrap_or_else(|e| e.into_inner()) = Some([data, cache, temporary]);
 }
 
-/// The app's `app:/data`, `app:/cache` and `app:/tmp`: under
+/// The app's `app:/data`, `app:/cache` and `app:/tmp` (LLP 1027.001): under
 /// the XDG bases (Windows: the user's LocalAppData), or a scripted drive's scratch tree (`--storage`), apart
 /// from the app's real files, with that tree when an authored test starts it
 /// empty (`EXACT_AGENT_STORAGE_FRESH`). `None`: an app with no id, or a
@@ -120,12 +121,13 @@ pub(crate) fn store_root(app_id: &str) -> Result<Option<PathBuf>, DataError> {
 
 /// Where `secret.keep` names live (`<root>/secrets`). A named agent drive
 /// keeps them in its scratch tree beside its `app:/data`; outside the agent
-/// the app keeps them in its own data root, `$XDG_DATA_HOME/exact/<app id>`
-/// (`~/.local/share` when unset), as Ibex's file backends: a file per secret,
-/// `0600` in a `0700` directory, written whole and renamed into place, not
-/// encrypted. `None` keeps them in memory: a drive that names no scratch store,
-/// an app with no id, and Windows outside the agent (until its credential
-/// vault).
+/// the app keeps them in its own data root,
+/// `$XDG_DATA_HOME/exact/<app id>` (`~/.local/share` when unset), as Ibex's
+/// file backends: a file per secret, `0600` in a `0700` directory, written
+/// whole and renamed into place, not encrypted (LLP 1027.007 D13, ibex LLP
+/// 0069 §3). `None` keeps them in memory: a drive that names no scratch
+/// store, an app with no id, and Windows outside the agent (until its
+/// credential vault).
 pub(crate) fn secret_root(app_id: &str) -> Result<Option<PathBuf>, DataError> {
     if app_id.is_empty() || (cfg!(windows) && std::env::var_os("EXACT_AGENT").is_none()) {
         return Ok(None);
@@ -217,7 +219,7 @@ fn agent_scratch() -> Result<Option<String>, DataError> {
 
 /// The app's directories at boot, before storage is configured after first
 /// pixel: an `image "app:/data/…"` resolves from the first frame, whether or
-/// not anything was picked. Nothing is emptied until
+/// not anything was picked (D7; recipes F18). Nothing is emptied until
 /// storage is configured ([`set_roots`]).
 pub fn know_roots(app_id: &str) {
     if let Ok(Some((roots, _))) = app_dirs(app_id) {
@@ -241,7 +243,7 @@ fn roots() -> [PathBuf; 3] {
     r
 }
 
-/// The file an `app:/data|cache|tmp/…` path names: `None` for any
+/// The file an `app:/data|cache|tmp/…` path names (D7): `None` for any
 /// other scheme, root, or a `..`.
 pub fn resolve(path: &str) -> Option<PathBuf> {
     resolve_from(path, roots)
@@ -381,7 +383,7 @@ pub fn copy_in(source: &Path, app_path: &str, mime: &str) -> Result<exact_runner
     })
 }
 
-/// A cold share's claim, whose copies the presenter makes
+/// A cold share's claim (LLP 1133.024 D9), whose copies the presenter makes
 /// once storage is configured after first pixel, with the descriptors its
 /// files arrived as ([`Held`]).
 pub(crate) static COLD_SHARE: Mutex<Option<(exact_runner::share_in::Claimed, Held)>> =
@@ -421,7 +423,7 @@ pub(crate) fn hold(share: &exact_runner::share_in::Pending) -> Held {
         .collect()
 }
 
-/// A cold share: on Android the reader's, from the
+/// A cold share (LLP 1133.024 D5, D9): on Android the reader's, from the
 /// launching intent (`EXACT_SHARE`), else under the agent the driver's
 /// (`EXACT_AGENT_SHARE`); each `{"target", "share"}`, as the `share` op
 /// carries them. Claimed before the boot, which takes its location and
@@ -533,7 +535,7 @@ mod tests {
     }
 
     /// An `app:/data` image resolves before storage is configured, with
-    /// nothing picked: in a child, whose roots are its own.
+    /// nothing picked (D7; recipes F18): in a child, whose roots are its own.
     #[test]
     fn app_roots_are_known_at_boot_before_storage() {
         const CHILD: &str = "EXACT_LINUX_ROOTS_TEST";

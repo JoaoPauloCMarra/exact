@@ -1,4 +1,4 @@
-// Session ownership and presentation crossings.
+// @ref LLP 1123 D2 — session ownership and presentation crossings.
 #if os(iOS) || os(tvOS)
 import UIKit
 
@@ -92,7 +92,7 @@ extension Presenter {
     /// The view a press on `target`, reached from `start` (`listenerParent`),
     /// must land in: the target, or, when the walk left a presentation for a
     /// logical ancestor in another mount, whose own box is not under the
-    /// finger, the content UIKit hit-tested the touch to,
+    /// finger (LLP 1123 D2), the content UIKit hit-tested the touch to,
     /// `start`, as a node judges its own press.
     func pressBox(of target: UIView, from start: UIView) -> UIView {
         var at: UIView? = start, crossed = false
@@ -181,7 +181,7 @@ extension Presenter {
 #endif
 
 #if os(iOS) || os(tvOS)
-/// The view whose UIKit placement orders a top-layer box.
+/// The view whose UIKit placement orders a top-layer box (LLP 1123 D2).
 struct TopLayerBox {
     let view: UIView
     /// None: the top route presentation, which shows no box yet (its routes
@@ -190,9 +190,9 @@ struct TopLayerBox {
     let modal: UIViewController?
 }
 
-/// Each route's root laid out in its controller's view: the
-/// route is a content owner, and its view's bounds are its containing block,
-/// as a pane's are on the Mac (BlockHostMac.swift).
+/// Each route's root laid out in its controller's view (LLP 1123 D2): the
+/// route is a content owner, and its view's bounds are its containing block
+/// (LLP 1115.002 D8.2), as a pane's are on the Mac (BlockHostMac.swift).
 /// The runner is told where each route a window shows is: a presented
 /// route as a top-layer box, as a dialog is (`openTopLayerFrames`), and
 /// any other by a placement, its block in the routes' owner's local
@@ -266,7 +266,7 @@ final class OwnerBlocks {
 
     /// Each presented route a window shows; the top live modal stack's
     /// first box begins its boundary. Retiring routes remain visible but
-    /// claim no modal boundary.
+    /// claim no modal boundary (LLP 1123 D2).
     var presented: [TopLayerBox] {
         let top = presenter.modals.topNavigation
         var boxes = presenter.modals.navigations.flatMap { nav in
@@ -380,13 +380,13 @@ final class OwnerBlocks {
 }
 
 extension Presenter {
-    /// Open top-layer boxes in UIKit's paint order, back to front. A
-    /// popover's current host decides which sheet it is above:
+    /// Open top-layer boxes in UIKit's paint order, back to front (LLP
+    /// 1123 D2). A popover's current host decides which sheet it is above:
     /// one opened earlier or outside the dialog stays beneath its card.
     /// The last modal boundary leaves only it and what is above it live.
     package var openTopLayer: (frames: [TopLayerFrame], modal: Int?) {
         let boxes = owners.presented + menus.sheets.presented + menus.presented.map {
-            // Reported by its block, the viewport's, as a dialog's sheet is.
+            // Reported by its block, the viewport's (stage 14 B), as a dialog's sheet is.
             TopLayerBox(view: $0, frame: ($0.id, $0.topLayerFrame(in: viewport, containingBlock: owners.blockRects[$0.id]), nil), modal: nil)
         }
         func path(_ view: UIView) -> [Int] {

@@ -2,7 +2,7 @@
 // app declares in app.json's `open_url.schemes` (an editor's `vscode:` or
 // `zed:` link) goes to whatever Launch Services or UIKit has registered for
 // it. An undeclared scheme stays refused, so a link out of content the app
-// did not write still fails closed. Under the agent the open is
+// did not write still fails closed (LLP 0382). Under the agent the open is
 // journaled and not performed, as `app-settings:` is.
 import Foundation
 
@@ -33,8 +33,8 @@ extension ExactSession {
         return true
     }
 
-    /// `openURL(url, id)`: `change` at `id` hears `opened` or `failed`.
-    /// `args` are the command's; one with no `id` is not
+    /// `openURL(url, id)`: `change` at `id` hears `opened` or `failed`
+    /// (LLP 1133.000 §2). `args` are the command's; one with no `id` is not
     /// answered.
     public func answerOpenURL(_ args: [Any], opened: Bool) {
         guard state != .destroyed, args.count > 1, let id = args[1] as? String else { return }

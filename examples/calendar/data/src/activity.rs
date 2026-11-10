@@ -1,11 +1,11 @@
-//! The person's activity beside the calendar, read from
+//! The person's activity beside the calendar (LLP 1133.026 §12), read from
 //! `@exact/health` through the generated binding while "Show my activity"
 //! is on: the steps of each day the month shows, and the selected day's
-//! workouts. Only what the answers say becomes state; nothing is kept.
+//! workouts. Only what the answers say becomes state; nothing is kept (D9).
 //!
 //! A day Health shows nothing for is left out, never shown as 0: on Apple
 //! an answer is never `complete`, so an empty day may be one the person did
-//! not share.
+//! not share (D2, D5).
 
 use crate::dates::{self, DAY_MS};
 use crate::modules::health;

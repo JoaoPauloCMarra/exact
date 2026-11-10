@@ -1,7 +1,7 @@
-// `input type="radio"` on UIKit, which has no radio
+// `input type="radio"` on UIKit (x2apps survey #2), which has no radio
 // control: the SF Symbols pair, `circle` and, checked, `circle.inset.filled`
 // in `accent-color`, scaled with the body text, the way the checkbox is
-// (`ExactCheckbox`), with its 44-point target. It had
+// (`ExactCheckbox`), with its 44-point target (LLP 1115.000 D13.2). It had
 // been Safari's 16-point circle at every text size. In a grouped list's row
 // it is not drawn at all: the row shows the platform's checkmark
 // (`Accessory::Radio`, GroupedListIOS.swift). tvOS keeps the drawn circle.
@@ -60,7 +60,7 @@ final class ExactRadio: ExactCheckbox {
 
 extension Presenter {
     /// A grouped list's row checks its radio as a click on the radio does
-    /// (`ControlHost.checkRadio`).
+    /// (`ControlHost.checkRadio`, LLP 1115.000 D13.2).
     @discardableResult
     package func checkRadio(_ id: UInt32) -> Bool { controls.checkRadio(id) }
 }

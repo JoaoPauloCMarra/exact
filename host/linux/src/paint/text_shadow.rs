@@ -1,5 +1,5 @@
-//! A paragraph's glyph paint with CSS `text-shadow` and
-//! `-webkit-text-stroke`, per inline run. CSS paints each inline box's
+//! A paragraph's glyph paint with CSS `text-shadow` (LLP 1077 D3) and
+//! `-webkit-text-stroke` (D7), per inline run. CSS paints each inline box's
 //! shadow, then its text, then its stroke, box after box in tree order, so a
 //! later run's shadow can fall over an earlier run's glyphs and an earlier
 //! run's stroke never covers a later run's fill. Runs that all look alike

@@ -93,7 +93,7 @@ bunTest('LE feedback preserves u64 identity and rejects invalid geometry before 
   expect(() => collectionBytes({ ...feedback, revision: Number.MAX_SAFE_INTEGER + 1 })).toThrow();
   expect(() => collectionBytes({ ...feedback, measurements: [feedback.measurements[0], feedback.measurements[0]] })).toThrow();
 });
-test('a padding change alone, which keeps a border-box list\'s size, is reported after its commit', async () => { const r = await evaluate(`(() => { const f=fixture({own:true}); f.port.style.boxSizing='border-box'; f.controller.commit([f.snapshot()]); f.flush(); const before=f.reports.length; f.controller.restyled(); f.flush(); const idle=f.reports.length; f.port.style.paddingBottom='36px'; const size=f.port.getBoundingClientRect().height; f.controller.restyled(); f.flush(); return {reported:before>0,idle:idle===before,size,grew:f.reports.length-before}; })()`);
+test('LLP 1010 §6.9: a padding change alone, which keeps a border-box list\'s size, is reported after its commit', async () => { const r = await evaluate(`(() => { const f=fixture({own:true}); f.port.style.boxSizing='border-box'; f.controller.commit([f.snapshot()]); f.flush(); const before=f.reports.length; f.controller.restyled(); f.flush(); const idle=f.reports.length; f.port.style.paddingBottom='36px'; const size=f.port.getBoundingClientRect().height; f.controller.restyled(); f.flush(); return {reported:before>0,idle:idle===before,size,grew:f.reports.length-before}; })()`);
   expect(r).toEqual({ reported: true, idle: true, size: 180, grew: 1 }); });
 test('actual nested scrollport, content padding, mounted rows, and coalesced scroll without authored handler', async () => {
   const result = await evaluate(`(() => { const f=fixture(); f.controller.commit([f.snapshot()]); f.port.scrollTop=110; for(let i=0;i<100;i++) f.port.dispatchEvent(new Event('scroll')); const queued=f.frames.size; f.flush(); return {queued,last:f.reports.at(-1),inner:f.port.clientWidth,anchor:getComputedStyle(f.views.get(1)).overflowAnchor}; })()`);
@@ -274,7 +274,7 @@ test('collection read reuse: eligible nested correction alone reads geometry, la
   expect(result.repeated).toEqual({top:200,reads:[1,1,0,0]});
   expect(result.newer).toEqual({top:260,reads:[1,1,0,0]});
 });
-// An absolute correction planned before the port resized in the same commit still lands (Apple's
+// Review B5: an absolute correction planned before the port resized in the same commit still lands (Apple's
 // and Linux's rule): the composer shrinks back after a send while the list follows its end.
 test('an absolute correction lands in the commit that resizes its port', async () => {
   const result=await evaluate(`(() => {const f=fixture();
@@ -311,7 +311,7 @@ test('under scroll-behavior: smooth an anchor correction still lands before the 
     return f.port.scrollTop;})()`);
   expect(result).toBe(132);
 });
-test('a smooth correction animates and reports where it is headed until it lands', async () => {
+test('a smooth correction animates and reports where it is headed until it lands (LLP 1070.000 §6.2)', async () => {
   const result=await evaluate(`(async () => {const f=fixture();
     f.controller.commit([f.snapshot()]);f.flush();
     const seq=f.reports.at(-1).sequence,ended=new Promise(r=>{const t=setTimeout(r,10000);f.port.addEventListener('scrollend',()=>{clearTimeout(t);r();},{once:true});});
@@ -481,7 +481,7 @@ test('integer DOM end retains fractional measured extent in actual collection fe
   expect(result.fractionalRemaining).toBe(0.078125);
   console.log('DOM integer-end facts', JSON.stringify(result));
 });
-// A limited fill, travel, and authored jumps that wait.
+// LLP 1050.000 stage 1: a limited fill, travel, and authored jumps that wait.
 const fillWire = wire => { const d = new DataView(new Uint8Array(wire).buffer); return { velocity: d.getFloat64(80, true), limit: d.getUint32(88, true) }; };
 bunTest('fill wire carries velocity and a clamped limit; none means u32::MAX', () => {
   const facts = { view: 1, revision: '1', scroll_sequence: '0', offset: 0, port_cross: 1, port_main: 1, cross: 1, padding: [0, 0], focus_view: null, interaction_view: null, measurements: [] };
@@ -551,7 +551,7 @@ test('the browser clamping a port to a shorter extent is not a scroll: the paint
   expect(result.after).toEqual({ ...result.before, reported: result.max, shown: result.max - 100 });
 });
 test('an anchor correction after the extent shrank under the port moves from where the reader was, not the clamp', async () => {
-  // A bounded window shifting forward: the rows that leave
+  // A bounded window shifting forward (LLP 1027.004): the rows that leave
   // above shrink the extent below the offset before the correction lands.
   const result = await evaluate(`(() => { const f=(${jumpFixture})(); const tail=f.list.lastElementChild;
     f.list.scrollTop=4000; f.list.dispatchEvent(new Event('scroll')); f.frames.splice(0).forEach(fn=>fn());
@@ -562,7 +562,7 @@ test('an anchor correction after the extent shrank under the port moves from whe
   expect(result.top).toBe(1000);
 });
 test('a scrollIntoView correction applies across the browser\'s own moves until the reader\'s input', async () => {
-  const result = await evaluate(`(() => { const f=(${jumpFixture})(); // the reader's scroll to 300 ends before the request lands
+  const result = await evaluate(`(() => { const f=(${jumpFixture})(); // the reader's scroll to 300 ends before the request lands (LLP 1070.000 §2.6)
     f.list.scrollTop=300; f.list.dispatchEvent(new Event('scroll')); f.frames.splice(0).forEach(fn=>fn()); f.list.dispatchEvent(new Event('scrollend'));
     f.controller.commit([f.snapshot('2',{seeking:true,correction:{scrollSequence:'0',offset:900}})]); const authored=f.list.scrollTop;
     f.list.dispatchEvent(new WheelEvent('wheel')); f.list.scrollTop=700; f.list.dispatchEvent(new Event('scroll'));
@@ -766,7 +766,7 @@ test('swipe recognition catches current overshoot unchanged then reverses in dis
     f.advance(20);events.pointerup(event('pointerup',20));const release=f.calls.findLast(c=>c.op.startsWith('release'));
     return {caught,forward,reverse,release:[release.op,release.x,release.y],actions:f.calls.filter(c=>c.op==='action').length};})()`);
   expect(result.caught).toBe('100px'); expect(result.forward).toBe('104px'); expect(result.reverse).toBe('102px'); expect(result.actions).toBe(1);
-  // The release velocity is the engine's, over the held values: the wire's slots are zero.
+  // The release velocity is the engine's, over the held values (LLP 1057.001 §3): the wire's slots are zero.
   expect(result.release).toEqual(['release-measured',0,0]);
 });
 test('swipe survives descendant capture transfer but cancels its own capture loss',async()=>{
@@ -913,7 +913,7 @@ test('height header catches current constrained presentation and commits the fin
     return {caught,moved,held,during,end:getComputedStyle(n).height,release:release.x,old:a.playState,lateCalls:f.calls.length-calls,order:f.calls.filter(c=>['height-action','release-measured'].includes(c.op)).map(c=>c.op)};})()`);
   expect(result.caught).toBe('400px');expect(result.moved).toBe('380px');expect(result.held).toBe('380px');
   expect(result.during.height).toBe(370);expect(result.during.lastMove).toBe(370);expect(result.during.held).toBe(true);
-  // Velocity is the engine's over the heights shown: both wire slots are zero.
+  // Velocity is the engine's over the heights shown (LLP 1057.001 §3): both wire slots are zero.
   expect(result.during.velocity).toBe(0);expect(result.release).toBe(0);
   expect(result.end).toBe('360px');expect(result.old).toBe('idle');expect(result.lateCalls).toBe(0);expect(result.order).toEqual(['height-action','release-measured']);
 });
@@ -922,7 +922,7 @@ test('height header reports constrained velocity and keeps negative drag positio
     m.style(2,lower?'box-sizing:border-box;height:200px;min-height:180px;transition:none':'box-sizing:border-box;height:640px;max-height:400px;transition:none');
     e.pointerdown(f.event('pointerdown',100));e.pointermove(f.event('pointermove',90));f.advance(20);e.pointermove(f.event('pointermove',lower?1000:40));f.advance(20);e.pointerup(f.event('pointerup',lower?1200:0));
     const action=f.calls.find(c=>c.op==='height-action');return {height:action.x,velocity:action.y,tracks:f.calls.filter(c=>c.op==='track').map(c=>c.x),minInput:Math.min(...f.calls.filter(c=>c.op==='move').map(c=>c.x))};};return {upper:run(false),lower:run(true)};})()`);
-  // The engine estimates from what is shown: a clamped move tracks the displayed height.
+  // The engine estimates from what is shown: a clamped move tracks the displayed height (LLP 1057.001 §3).
   expect(result.upper.height).toBe(400);expect(result.upper.velocity).toBe(0);expect(result.upper.tracks.length).toBeGreaterThan(0);expect(result.upper.tracks.every(x=>x===400)).toBe(true);
   expect(result.lower.height).toBe(180);expect(result.lower.minInput).toBeGreaterThanOrEqual(0);
 });
@@ -1305,7 +1305,7 @@ test('Arrange pointer-up during unaccepted geometry cancels once without losing 
   await evaluate('f.arrange.reset()');
   expect(r).toEqual({cancel:1,drop:0,rebase:1,finish:1,pin:0});
 });
-// A touch is implicitly captured by the grip's child it lands on; taking capture to the grip bubbles that child's loss.
+// habits F10: a touch is implicitly captured by the grip's child it lands on; taking capture to the grip bubbles that child's loss.
 test('Arrange touch on a grip\'s child drops once: the child\'s lost capture is not the release',async()=>{
   const at=await evaluate(`(()=>{const f=(${arrangeFixture})(),g=document.createElement('div'),c=document.createElement('span');g.dataset.view='5';c.textContent='row';g.append(c);f.grip.replaceWith(g);f.views.set(5,f.grip=g);f.arrange.binding(f.binding);const r=c.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()`);
   await protocol('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
@@ -1398,7 +1398,7 @@ test('destroy cancels owned animations without querying styles on retiring rows'
   })()`);
   expect(result).toBe('idle');
 });
-// A row list (a flex row, overflow-x) on its own port, or its
+// LLP 1070 stage 3: a row list (a flex row, overflow-x) on its own port, or its
 // vertical twin, with a hand-held clock. Reports decode offset, the port's
 // main and cross, the rows' cross, and the scrollport's offset when reported.
 function axisFixture(axis) {
@@ -1459,7 +1459,7 @@ test('an authored scrollLeft on a row list builds, then moves; the other axis is
     f.controller.jump(1, 30, 'scrollLeft'); return {seen:f.seen.map(s=>[s.offset,s.shown]),top:f.list.scrollTop}; })()`);
   expect(y).toEqual({ seen: [[500, 0]], top: 500 });
 });
-// The oracle: the Chrome behaviour the web host relies on for row lists.
+// §2's oracle, the Chrome behaviour the web host relies on for row lists.
 function chromePage() {
   const root = document.getElementById('root');
   const cards = n => Array.from({ length: n }, () => `<div class="card" style="flex:none;width:80px;margin-right:8px;background:#ccc"></div>`).join('');

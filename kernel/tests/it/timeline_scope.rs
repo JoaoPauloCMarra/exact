@@ -1,7 +1,7 @@
-//! Timeline names resolve as CSS resolves them
-//! (Scroll-driven Animations 1 §4.2): from the consumer up, the first node
-//! that declares the name or scopes it decides. The cases are a Chrome
-//! probe's trees, a drag timeline where Chrome's had a scroller's
+//! Timeline names resolve as CSS resolves them (LLP 1057.003 D4;
+//! Scroll-driven Animations 1 §4.2): from the consumer up, the first node
+//! that declares the name or scopes it decides. The cases are the phase 3
+//! Chrome probe's trees, a drag timeline where Chrome's had a scroller's
 //! `scroll-timeline`, and each answer is the one Chrome 154 gave, but for
 //! `all`, which Chrome does not parse: those follow the specification.
 //! Then re-resolution: a node inserted, removed or moved, or a row set on

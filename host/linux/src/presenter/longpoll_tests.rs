@@ -1,8 +1,8 @@
-//! A long poll on work that is no HTTP request, through the presenter.
+//! A long poll on work that is no HTTP request, through the presenter (LLP 1016.000 D8).
 use super::*;
 use exact_runner::{Answer, DataError, Store, Value};
 
-/// Through the Linux presenter, a long poll attached to work
+/// LLP 1016.000 D8 through the Linux presenter: a long poll attached to work
 /// that is no HTTP request (a continuation) is refused before its work runs,
 /// and the source parses the refusal.
 #[derive(Default)]

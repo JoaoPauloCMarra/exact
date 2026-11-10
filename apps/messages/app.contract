@@ -13,7 +13,7 @@ use MessageRow from "./bubble.contract"
 use Balloon from "./bubble.contract"
 use Typing from "./bubble.contract"
 
-// The native stack owns the edge swipe and keyboard cancellation.
+// The native stack owns the edge swipe and keyboard cancellation (LLP 1038).
 routes nav
   inbox "/"
     thread "/t/:thread"
@@ -70,7 +70,7 @@ component Messages
   resource wallTime = exactTime() as shape Time
   resource data = snapshot(query, thread, revision) as shape Snapshot
   // The date is the view's: a snapshot asked with it would have no
-  // first-frame answer, since the bake's date is unknown.
+  // first-frame answer, since the bake's date is unknown (LLP 1027.000.000 D2).
   derive now = wallTime.epochAtZero + time
   derive receiptId = match data.messages.filter((m) => m.outgoing and (m.status != "" or now - m.at >= 1130)).at(-1) { case some(m) => m.id, case none => "" }
   resource models = catalog(modelQuery, choosing ? 1 : 0) as shape Model[]
@@ -256,7 +256,7 @@ component Messages
     main testId="messages" id="messages-root" navigationKey=`${top(nav).id}` navigationBack="back" navigate=navigate viewport-fit="cover" interactive-widget="resizes-content" width="100%" height="100%" display="flex" flex-direction="column" overflow="hidden" class=Canvas font-family="system-ui" color="light-dark(#000000, #ffffff)"
       for entry in stack(nav) key=entry.id
         // Every screen draws its own chrome (the thread's glass header and
-        // Back), so it says it has no system bar.
+        // Back), so it says it has no system bar (LLP 1115.000 D5.2).
         column navigationKey=`${entry.id}` navigationBar="none" class=Screen height=viewport.height
           if entry.name == "inbox"
             column testId="inbox" flex=1 min-height=0 width="100%" inert=(selected != "" or choosing or panel)
@@ -298,7 +298,7 @@ component Messages
                               text "›" font-size=19 class=Secondary
                             text t.preview font-size=15 line-height="20px" class=Secondary line-clamp=2 text-align="left"
                         row width=130 height=86.667 flex-shrink=0 scroll-snap-align="start" padding-left=10 padding-right=10 gap=10 box-sizing="border-box" align-items="center"
-                          // The platform's own buttons: on iOS the swipe's
+                          // The platform's own buttons (LLP 1069.011.000 D6): on iOS the swipe's
                           // actions, drawn from their symbols and accents; elsewhere filled circles.
                           button appearance="auto" buttonStyle="filled" accent-color="#5856d6" press=inboxOperation("mute", t.id) id=`mute-${t.id}` testId=`mute-${t.id}` aria-label=(t.muted ? "Show alerts" : "Hide alerts") width=50 height=50 flex-shrink=0
                             image "symbol:notifications"

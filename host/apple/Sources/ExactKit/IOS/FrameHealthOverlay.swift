@@ -4,7 +4,7 @@ import CExact
 import ObjectiveC
 
 /// Host UI outside the app's node tree, below sheets and alerts. The card takes the touches within
-/// its bounds, and touches outside it reach the app.
+/// its bounds, and touches outside it reach the app (LLP 1079.000 §7.2).
 final class FrameHealthOverlay: UIView {
     fileprivate weak var health: FrameHealth?
     let card = FrameHealthCardView()
@@ -274,7 +274,7 @@ final class FrameHealthOverlay: UIView {
     /// Make a change of the card's own between the app's frames. Measuring the screen, the card draws it and commits it
     /// in a Core Animation transaction of its own, which takes no UI update; after a change of the app's in this turn
     /// of the run loop, UIKit's implicit transaction holds it, and it goes out in that change's update, one of the
-    /// app's frames.
+    /// app's frames (LLP 1079.000 §7.4).
     private func alone(_ change: () -> Void) {
         guard observing else { change(); return }
         CATransaction.begin()
@@ -708,7 +708,7 @@ final class FrameHealthCardView: UIView {
 
     /// A view of the card's that renders its picture as an image, which Core Animation commits in the update that asks
     /// for it; drawn into a backing store by `draw(_:)`, it would take UIKit another update a refresh later to show
-    /// each drawing. Its drawing is the card's work (`drawing`).
+    /// each drawing (LLP 1079.000 §7.4). Its drawing is the card's work (`drawing`).
     class Pictured: UIView {
         weak var card: FrameHealthCardView?
         override class var layerClass: AnyClass { Picture.self }

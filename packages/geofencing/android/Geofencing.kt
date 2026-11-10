@@ -1,16 +1,16 @@
-// @exact/geofencing on Android: Play services' `GeofencingClient`, over the
+// @exact/geofencing on Android (LLP 1133.021 D10-D14, §15 question 3): Play services' `GeofencingClient`, over the
 // host's region store (`ExactRegions`, the truth: Play services lists no app's geofences and drops them at reboot and
 // when location goes off). The build makes one per host when the app binds the extension, outside the agent; under
 // the agent the runner's substitute answers, unless the drive binds it (`--bind geofencing`).
 //
-// - Ask: two decisions in order, fine and coarse first, then `ACCESS_BACKGROUND_LOCATION` alone (a request for
+// - Ask (D13): two decisions in order, fine and coarse first, then `ACCESS_BACKGROUND_LOCATION` alone (a request for
 //   both at once is ignored from Android 11, where the second opens the app's location settings page). A denied first
 //   step fails `PERMISSION_DENIED` without the second.
-// - Twenty a fence app, `android.limit` up to Play services' 100; a radius under 100 m is raised with a journal
+// - Twenty a fence app (D11), `android.limit` up to Play services' 100; a radius under 100 m is raised with a journal
 //   line. A fence added while inside raises `geofenceenter` (`INITIAL_TRIGGER_ENTER`); a re-arm adds none.
 // - A crossing reaches `GeofenceReceiver` (Receivers.kt), which writes it to the store and asks for a region wake. A
-//   live session's module delivers it at once; with none (no headless session yet) the store keeps it,
-//   and the module delivers it when a later launch makes it, with its original time.
+//   live session's module delivers it at once; with none (no headless session yet, §9 item 6) the store keeps it,
+//   and the module delivers it when a later launch makes it (D14 step 3), with its original time.
 package exact.geofencing
 
 import android.Manifest
@@ -82,7 +82,7 @@ class GeofencingModule(context: ExtensionContext) : ExactExtension(context) {
     init {
         if (!context.agent) {
             ExactRegions.listen(::deliver)
-            // Every launch re-arms the store's fences without an initial trigger (Re-arming), and delivers what
+            // Every launch re-arms the store's fences without an initial trigger (D14, Re-arming), and delivers what
             // the store kept undelivered.
             arm(app, store.list(), initial = false) { e -> if (e != null) context.log("geofencing: re-arm failed: $e") }
             android.os.Handler(android.os.Looper.getMainLooper()).post(::deliver)
@@ -111,7 +111,7 @@ class GeofencingModule(context: ExtensionContext) : ExactExtension(context) {
 
     private fun error(code: String) = JSONObject().put("error", code)
 
-    // Permission
+    // Permission (D13)
 
     private fun has(p: String) = app.checkSelfPermission(p) == PackageManager.PERMISSION_GRANTED
 
@@ -132,7 +132,7 @@ class GeofencingModule(context: ExtensionContext) : ExactExtension(context) {
         return out
     }
 
-    /** [then] once both decisions allow it: fine and coarse, then background location alone. */
+    /** [then] once both decisions allow it: fine and coarse, then background location alone (D13). */
     private fun allowed(reply: (JSONObject) -> Unit, then: () -> Unit) {
         if (!playServices()) return reply(error("NotSupportedError"))
         val state = status().getString("state")
@@ -167,7 +167,7 @@ class GeofencingModule(context: ExtensionContext) : ExactExtension(context) {
         context.askPermission(BACKGROUND, done)
     }
 
-    // Fences
+    // Fences (D10, D11)
 
     private fun add(args: JSONObject, reply: (JSONObject) -> Unit) {
         val name = args.optString("name")
@@ -175,7 +175,7 @@ class GeofencingModule(context: ExtensionContext) : ExactExtension(context) {
         val limit = android.optInt("limit", LIMIT).coerceIn(LIMIT, 100)
         var radius = args.optDouble("radius", 100.0)
         if (radius < 100) {
-            context.log("addGeofence $name: radius $radius raised to 100")
+            context.log("addGeofence $name: radius $radius raised to 100 (LLP 1133.021 D11)")
             radius = 100.0
         }
         if (store.list().count { it.getString("name") != name } >= limit) return reply(error("QuotaExceededError"))
@@ -204,7 +204,7 @@ class GeofencingModule(context: ExtensionContext) : ExactExtension(context) {
         reply(JSONObject())
     }
 
-    // Crossings
+    // Crossings (D14)
 
     /** The store's undelivered transitions, raised one at a time as wakes; each is forgotten only when its
      * invocation completes, so an expired one stays for the next launch. */

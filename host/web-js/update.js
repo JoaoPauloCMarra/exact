@@ -1,4 +1,4 @@
-// A keyed list whose entries change, on the JS target, as the runner's
+// A keyed list whose entries change, on the JS target (LLP 1133.033 D17 item 7, D21), as the runner's
 // `modules/declared/update.rs`: a call the app places is listed, then its state moves as the app reports it
 // (`"update"` on a send) and as the person acts on the system's screen (`tap @ref <choice>`). The forms are that
 // file's: a list's `with`, `absent`, `stamp`, `refuse`, `ends`, `tap.choices`; a value in `set` is a literal,

@@ -3,7 +3,7 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// `tree --ax` on UIKit: the walk reports what
+/// `tree --ax` on UIKit (LLP 1080.002 §3 stage 2): the walk reports what
 /// UIKit exposes after the host's own assignments, joins each element to
 /// its view, excludes only by documented properties, and flags a modal
 /// view's leak by UIKit's rule. UIKit, so a simulator runs it:
@@ -206,7 +206,7 @@ final class AccessibilityTreeIOSTests: XCTestCase {
     private func elements(_ ax: [String: Any]) -> [[String: Any]] { ax["elements"] as? [[String: Any]] ?? [] }
     private func element(_ ax: [String: Any], _ testId: String) -> [String: Any]? { elements(ax).first { $0["testId"] as? String == testId } }
 
-    /// A `link` is a link to VoiceOver. The tag lowers
+    /// LLP 1115.000 D11.6: a `link` is a link to VoiceOver. The tag lowers
     /// to a pressable whose role is `link`, and iOS called every pressable a
     /// button: only a plain box with `role="link"` got the link trait.
     func testALinkIsALinkToVoiceOver() throws {
@@ -368,7 +368,7 @@ final class AccessibilityTreeIOSTests: XCTestCase {
         XCTAssertEqual((kit["coverage"] as? [String: Any])?["complete"] as? Bool, false)
     }
 
-    /// `aria-modal` is the property UIKit's rule reads, only
+    /// `aria-modal` (LLP 1080.003) is the property UIKit's rule reads, only
     /// while the view is exposed: the walk then hides the box's siblings, and
     /// clearing it, `display: none` or an exit exposes them again.
     func testAriaModalIsUIKitsModalViewWhileExposed() throws {
@@ -414,7 +414,7 @@ final class AccessibilityTreeIOSTests: XCTestCase {
 
     /// A modal inside a branch another modal hides is not modal; an
     /// accessibility-hidden ancestor or a destroy ends modality; a sibling
-    /// painted over the modal (a sheet's stack) does too.
+    /// painted over the modal (a sheet's stack) does too (LLP 1080.003 D2).
     func testAriaModalFollowsTheHierarchyAndDestroy() throws {
         let p = try fixture()
         // A (the box, 4) and B (7) are sibling modals, B in front; C (8) is a newer modal inside A.
@@ -456,7 +456,7 @@ final class AccessibilityTreeIOSTests: XCTestCase {
 
     /// The post itself: once per change of the innermost modal, never for an
     /// unchanged batch, and once when the only modal is destroyed with no
-    /// reference left to it.
+    /// reference left to it (LLP 1080.003 D2).
     func testAriaModalPostsOncePerChangeAndOnDestroy() throws {
         var posts = 0
         let post = Presenter.postScreenChanged
@@ -592,7 +592,7 @@ final class AccessibilityTreeIOSTests: XCTestCase {
         XCTAssertNotNil(small["truncated"])
     }
 
-    /// The native boundary: a 300 KB testId is cut before the
+    /// The native boundary (round 3): a 300 KB testId is cut before the
     /// element is budgeted, and a whole reply over 256 KB is cut, counted.
     func testTheNativeReplyIsBoundedAtTheBoundary() throws {
         let p = try fixture()

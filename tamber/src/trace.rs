@@ -1,4 +1,4 @@
-//! `explain`'s per-tuple record: whether a check
+//! `explain`'s per-tuple record (LLP 1121 stage 13 D4): whether a check
 //! records what each token's value names in each tuple, and the record.
 
 thread_local! {
@@ -8,8 +8,8 @@ thread_local! {
 }
 
 /// `f` with every check it makes on this thread recording what each
-/// token's value names in each tuple ([`crate::Checked::by_tuple`]):
-/// `explain`'s. Other checks keep none, so a large design's fold costs
+/// token's value names in each tuple ([`crate::Checked::by_tuple`]): `explain`'s
+/// (stage 13 D4). Other checks keep none, so a large design's fold costs
 /// no more for it.
 pub fn traced<T>(f: impl FnOnce() -> T) -> T {
     struct Put(bool);
@@ -44,7 +44,7 @@ mod tests {
     use super::*;
 
     /// Recording lasts the call alone, nested or unwound, on its thread
-    /// alone.
+    /// alone (Astra's D4 round 3).
     #[test]
     fn tracing_is_the_calls_alone() {
         assert!(!on());

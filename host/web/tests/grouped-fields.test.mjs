@@ -1,4 +1,4 @@
-// In a real browser, a field in a grouped list's row is each platform's field there, and the web's is a
+// LLP 1116.005 D2 in a real browser: a field in a grouped list's row is each platform's field there, and the web's is a
 // visible field (its 1 px line, 8 px corners, at least 36 px tall, the browser's focus ring) that fits its row, in light
 // and dark, at a phone's width and a desktop's. `appearance="none"` stays the author's bare box: no line, no corners,
 // its text's height. The app is compiled from Contract and built for the JS target, as `exact` builds one.
@@ -102,7 +102,7 @@ check('a field in a grouped row is a visible field on the web; appearance="none"
         expect(f.inRow, `${at} fits its row`).toBe(true);
         expect(f.color, `${at}: its line shows on the card`).not.toBe(f.card);
       }
-      // (A section is at most 720 px wide on the web.)
+      // (A section is at most 720 px wide on the web, LLP 1115.000 D4.16.)
       expect(facts.unsaid.width, 'a field in a column fills the row').toBeGreaterThan(width === 390 ? 250 : 620);
       expect(facts.bare.line, `bare at ${width} in ${mode}`).toBe('0px none');
       expect(facts.bare.radius).toBe('0px');

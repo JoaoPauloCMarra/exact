@@ -72,8 +72,8 @@ fn emit_cold(w: &mut String, schema: &Schema) {
     emit_inherited_colors(w, schema);
 }
 
-/// The colours an `InheritedStyle` holds, for the wide table's sweep. Here,
-/// not in build.rs, which the schema digest hashes: it
+/// The colours an `InheritedStyle` holds, for the wide table's sweep (LLP
+/// 1121 stage 4). Here, not in build.rs, which the schema digest hashes: it
 /// changes no wire byte.
 fn emit_inherited_colors(w: &mut String, schema: &Schema) {
     writeln!(w, "impl crate::style::wide::Colors for InheritedStyle {{").unwrap();

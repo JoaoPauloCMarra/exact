@@ -1,5 +1,6 @@
-//! The vault over the reader's Keystore and where none is: a hook that writes
-//! the file as `Presence.kt` does stands for the reader.
+//! The vault over the reader's Keystore and where none is (LLP 1133.010 D6,
+//! D15): a hook that writes the file as `Presence.kt` does stands for the
+//! reader.
 
 use super::*;
 use exact_runner::presence::{Checked, Done, Env, Event, Faults, Occupancy, Op};

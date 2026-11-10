@@ -1,4 +1,4 @@
-//! `font-weight` and `font-stretch` transitions: the
+//! `font-weight` and `font-stretch` transitions (LLP 1019 §13 D10): the
 //! runner plays them, writing each frame's value as a commit, with CSS's
 //! before-change value and reversal.
 use exact_kernel::Kernel;

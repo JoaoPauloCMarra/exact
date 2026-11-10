@@ -1,4 +1,5 @@
-// `--app <path>`: a path names an app as EXACT_APP_DIR does, so its name
+// `--app <path>` (the lead's 08:39Z; x2-perf4's stage 10 C2 found a crate/ in
+// apps/theme-fixture): a path names an app as EXACT_APP_DIR does, so its name
 // is its directory's and nothing built from the name (the JS build's module
 // crate, the dev loop's GPU side root, the JS build's GPU cache) lands in the
 // app's own directory.

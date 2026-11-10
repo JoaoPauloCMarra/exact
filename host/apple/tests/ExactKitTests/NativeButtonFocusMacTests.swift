@@ -1,4 +1,4 @@
-// One native owner, independent of Keyboard navigation.
+// @ref LLP 1104 D6 — one native owner, independent of Keyboard navigation.
 #if os(macOS)
 import AppKit
 import ObjectiveC
@@ -40,7 +40,7 @@ final class NativeButtonFocusMacTests: XCTestCase {
         if !p.routeKey(event, focused: true, in: window) { window.sendEvent(event) }
     }
 
-    /// Tab honours the Mac's Keyboard Navigation setting,
+    /// LLP 1115.000 D7.2: Tab honours the Mac's Keyboard Navigation setting,
     /// read from AppKit where no drive or test says (this overrides only the
     /// process's AppKit query; it never changes the person's preferences).
     /// On, Tab and Shift-Tab reach each button, only its native owner in the
@@ -100,7 +100,7 @@ final class NativeButtonFocusMacTests: XCTestCase {
         }
     }
 
-    /// `outline: none` takes AppKit's ring
+    /// LLP 1104 D6 (amended 2026-11-05): `outline: none` takes AppKit's ring
     /// off a native button and a bare one, which still take the focus;
     /// unset, the ring is back.
     func testOutlineNoneTakesTheRingOffNativeAndBareButtons() throws {
@@ -150,7 +150,7 @@ final class NativeButtonFocusMacTests: XCTestCase {
         XCTAssertNil(p.focusedNode)
     }
 
-    /// Space presses the focused control, once. Return is
+    /// LLP 1115.000 D7.3: Space presses the focused control, once. Return is
     /// the default button's, and outside a dialog there is none: a merely
     /// focused button does nothing with it (DefaultButtonMacTests holds the
     /// default). A key the app prevented does nothing more.

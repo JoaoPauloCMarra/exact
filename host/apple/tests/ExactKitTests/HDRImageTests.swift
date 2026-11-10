@@ -5,7 +5,7 @@ import CoreImage
 import QuartzCore
 @testable import ExactKit
 
-/// An HDR picture decodes as HDR when its display can
+/// LLP 1100 D5, D8: an HDR picture decodes as HDR when its display can
 /// show it and `dynamic-range-limit` allows it; its layer asks for that
 /// range; anything else is SDR and never marked.
 final class HDRImageTests: XCTestCase {

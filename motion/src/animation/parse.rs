@@ -1,6 +1,6 @@
 //! The `animation` shorthand and `@keyframes` bodies, in CSS's grammar.
 //!
-//! CSS Animations 1 §3 (`@keyframes`), §4.10 (the shorthand)
+//! @ref LLP 1055 D5; CSS Animations 1 §3 (`@keyframes`), §4.10 (the shorthand)
 //!
 //! `animation: <name> || <duration> || <easing> || <delay> || <count> ||
 //! <direction> || <fill-mode> || <play-state>, …` — the first time is the
@@ -35,11 +35,11 @@ const GRAMMARS: Grammars = Grammars {
 #[cfg(target_arch = "wasm32")]
 static LINKED: std::sync::OnceLock<&'static Grammars> = std::sync::OnceLock::new();
 
-/// Link the `animation` shorthand's and `@keyframes`' grammars (linked by
-/// use): ~5 KiB of a web core that none of Caltrain, RealWorld
+/// Link the `animation` shorthand's and `@keyframes`' grammars (LLP 1047
+/// D2, linked by use): ~5 KiB of a web core that none of Caltrain, RealWorld
 /// or the video player animates with. A web artifact links them when its
 /// plan declares keyframes or binds `animation` or `-exact-exit-animation`, and a
-/// plan that does so unlinked is refused at boot, so an unlinked
+/// plan that does so unlinked is refused at boot (D6), so an unlinked
 /// artifact never parses one. Native artifacts and the compiler parse
 /// without it.
 pub fn link() {
@@ -53,7 +53,7 @@ fn parse_linked<T>(text: &str, pick: fn(&Grammars) -> Grammar<T>) -> Result<T, P
     return LINKED.get().map_or_else(
         || {
             Err(ParseError::BadShape(
-                "CSS animations are not linked into this artifact".into(),
+                "CSS animations are not linked into this artifact (LLP 1047 D6)".into(),
             ))
         },
         |grammars| pick(grammars)(text),
@@ -547,7 +547,7 @@ fn length(value: &str) -> Option<f64> {
 }
 
 /// One declaration's values: usually one property's, a `light-dark()`
-/// colour's dark value beside it, and `box-shadow`'s two
+/// colour's dark value beside it (LLP 1062 D9), and `box-shadow`'s two
 /// halves, its geometry and its colour.
 fn keyframe_values(
     property: Property,
@@ -615,7 +615,7 @@ fn keyframe_values(
 fn keyframe_value(property: Property, value: &str) -> Result<Value, ParseError> {
     let bad = || ParseError::BadValue(format!("{}: {value}", property.name()));
     Ok(match property {
-        // A length or a percentage of the box per axis:
+        // A length or a percentage of the box per axis (chess diary #4):
         // lengths in x and y, percentages in z and w.
         Property::Translate => {
             let axis = |part: &str| match part.strip_suffix('%') {

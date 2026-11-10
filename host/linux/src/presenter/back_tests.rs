@@ -1,6 +1,6 @@
-//! System Back, in order: the authored control, the root's
+//! System Back, in order (LLP 1115.001 D6): the authored control, the root's
 //! `navigate`, the runner's own `back`, and who takes nothing; and a
-//! desktop's Back keys, whose default action it is.
+//! desktop's Back keys, whose default action it is (LLP 1115.000 D5.4).
 use super::*;
 
 /// A two-route app. `ROOT` is the navigation root's own attributes, `BACK`
@@ -126,7 +126,7 @@ fn a_control_that_does_not_resolve_refuses_back_and_keeps_the_app() {
 
 #[test]
 fn a_node_that_only_has_the_id_back_is_no_back_control() {
-    // No navigation root names it, so the id alone makes no Back control.
+    // No navigation root names it: what the host pressed before LLP 1115.001 D6.
     let (mut p, error) = Presenter::boot_with(
         &contract::compile(
             "component App\n  state pressed = 0\n  action back\n    pressed = pressed + 1\n  view\n    column width=300 height=300\n      button id=\"back\" press=back testId=\"back\"\n        text \"Back\"\n",
@@ -201,7 +201,7 @@ fn a_desktops_back_keys_go_back_in_the_same_order() {
     assert_eq!(slot(&p, "followed"), 1.0, "one visit back, of two");
 }
 
-/// A mouse's back and forward buttons step history at
+/// LLP 1115.000 D5.5: a mouse's back and forward buttons step history at
 /// their release, as Chrome's do, unless a `pointerup` prevented it; Forward
 /// goes where Back left, by the root's `navigate` or the runner's own `go`,
 /// and Alt+Right and the Forward key go there too.
@@ -304,7 +304,7 @@ fn back_is_its_keys_default_action_after_the_authors() {
     assert!(!on_detail(&p), "the drive's Alt+Left popped the route");
 }
 
-/// A test's `back` is system Back, the wire's `tap` with
+/// LLP 1116.006 D4: a test's `back` is system Back, the wire's `tap` with
 /// `back`; with nowhere to go back to it is an error that says so, and a
 /// control that refuses it is the reply's `refused`.
 #[test]

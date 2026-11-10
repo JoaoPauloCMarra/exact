@@ -1,5 +1,5 @@
 //! Exit animation, layout transition and the presentation values the engine
-//! changed.
+//! changed (LLP 1063; LLP 1002 §3).
 //!
 //! A receipt's exits name the one view of each removed subtree that leaves
 //! (the kernel's rule). The host tells the presenter `exit` before the
@@ -38,7 +38,8 @@ struct Leaving {
     /// The view and everything under it the presenter knew.
     members: Vec<ViewId>,
     /// Whether the engine has its exit, and the clock time that ends, once
-    /// known: an exit waiting for the first presented frame has none yet.
+    /// known: an exit waiting for the first presented frame has none yet
+    /// (LLP 1003.001 D3).
     played: bool,
     end: Option<f64>,
 }
@@ -58,7 +59,7 @@ pub(crate) struct Presence {
     /// unless it is moving already, as on the web, where a layout transition
     /// plays only what a commit moved. `finish` clears it.
     pub(super) unauthored: bool,
-    /// The presented frame a motion tick is for: every
+    /// The presented frame a motion tick is for (LLP 1003.001 D5): every
     /// present while it is set starts what waits for it.
     pub(super) frame: Option<f64>,
     /// Each virtualized list's data generation, and whether it runs along
@@ -93,7 +94,7 @@ impl<D: DataSource> Host<D> {
                 }
             }
             // A flight inside it ends: the presenter puts the view back,
-            // and it leaves with the rest.
+            // and it leaves with the rest (LLP 1013.000).
             for id in &members {
                 self.end_flight_of(*id);
             }
@@ -143,8 +144,8 @@ impl<D: DataSource> Host<D> {
 
     /// Start every exit the engine has not heard, at the engine's clock.
     /// A leaving node's animations are the engine's to sample from here on:
-    /// the presenter has no mirror for it, so no Core Animation spec
-    /// follows it, and the ones it had come off.
+    /// the presenter has no mirror for it, so no Core Animation spec (LLP
+    /// 1055 D7) follows it, and the ones it had come off.
     pub(super) fn play_exits(&mut self, batch: &mut Batch) {
         for leaving in &mut self.presence.leaving {
             if !leaving.played {
@@ -179,7 +180,7 @@ impl<D: DataSource> Host<D> {
 
     /// An agent's jump to `to`, stopping after a timer that sends
     /// ([`exact_runner::Runner::advance_until_request`]). The engine hears
-    /// each commit of a jump at its timer's due time, but the
+    /// each commit of a jump at its timer's due time (LLP 1002 D3), but the
     /// kernel holds only the jump's last tree, laid out at its end: a box a
     /// timer moved inside the jump would start its layout transition there,
     /// and the first read after `clock +N` showed it where it was. While a
@@ -198,7 +199,7 @@ impl<D: DataSource> Host<D> {
             self.now_ms = a.now_ms.max(self.now_ms);
             self.runner.canvas_frame();
             // A commit that sent stops the jump: the next send would drop
-            // its reply.
+            // its reply (LLP 1016 D5).
             let stopped = a.error.is_some() || a.stopped_on_request || step >= to;
             let failed = error.or(a.error.map(|e| format!("{e:?}")));
             (batch, error) = self.commit_tree(&a.receipts, failed, batch);
@@ -410,7 +411,7 @@ impl<D: DataSource> Host<D> {
                 continue;
             };
             if Property::PAINT.contains(&p.property) {
-                // An `svg`'s scene shows its colours;
+                // @ref LLP 1055.000 D6 — an `svg`'s scene shows its colours;
                 // a box's are its style, re-sent with the presented values.
                 if !self.svg.touch(self.runner.kernel(), view) {
                     let inherits = p.property == Property::Color;
@@ -468,7 +469,7 @@ impl<D: DataSource> Host<D> {
             batch.present4(view, "layout", values);
         } else if property == Property::Translate && (values[2] != 0.0 || values[3] != 0.0) {
             // Its percentages ride as `w` and `h`; the presenter
-            // resolves them against the box.
+            // resolves them against the box (chess diary #4).
             batch.present4(view, "translate", values);
         } else {
             batch.present(view, property.name(), values[0], values[1]);

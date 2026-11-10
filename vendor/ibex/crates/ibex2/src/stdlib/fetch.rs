@@ -1,6 +1,6 @@
-//! `fetch` — delegating, **capability-bearing**.
+//! `fetch` — delegating, **capability-bearing** (LLP 0059.000 §3.5).
 //!
-//! The largest binding, and the first one that carries a capability.
+//! The largest v1 item, and the first one that carries a capability.
 //!
 //! **Rust owns:** header name case-folding and the forbidden-header list,
 //! redirect following and its count limit, the body state machine,
@@ -11,6 +11,9 @@
 //! transport is a trait here and not a hard-coded client: inverting it gives
 //! four platforms four different `fetch`es, which is the failure mode a
 //! cross-platform runtime exists to prevent.
+//!
+//! @ref LLP 0059.000#35-fetch--delegating-capability-bearing — the surface this implements
+//! @ref LLP 0057#3-the-boundary — Rust owns semantics, the platform owns transport
 
 use super::abort::AbortSignal;
 pub use super::fetch_body::{Body, BodySource, StreamingResponse};
@@ -28,8 +31,8 @@ pub const MAX_REDIRECTS: u32 = 20;
 pub const DEFAULT_MAX_BODY: usize = 64 * 1024 * 1024;
 
 /// The one spelling of "the response was too big", so a caller sees the same
-/// failure whichever transport is underneath. The error taxonomy is Rust's;
-/// a transport reports the overflow, it does not word it.
+/// failure whichever transport is underneath. The error taxonomy is Rust's
+/// (LLP 0057 §3); a transport reports the overflow, it does not word it.
 pub fn over_limit(limit: usize) -> HostError {
     HostError::Failed(format!(
         "TypeError: Failed to fetch — response exceeded the {limit}-byte limit"
@@ -249,7 +252,7 @@ pub struct Request {
     /// transport that cannot stop mid-response cannot honor this field.
     pub max_body: Option<usize>,
     /// The platform transport's own request timeout. A caller that needs the
-    /// whole exchange bounded also aborts its signal.
+    /// whole exchange bounded also aborts its signal (LLP 0068.000 §4).
     pub timeout: Option<std::time::Duration>,
     /// Told the body's bytes as they are sent (Exact patch 23).
     pub sent: Option<Sent>,
@@ -423,7 +426,7 @@ pub fn fetch_stream(
 }
 
 /// [`fetch_stream`], with the host's `gate` checked beside the grant at
-/// every hop (Exact patch).
+/// every hop (Exact patch, LLP 1133.036 D6).
 pub fn fetch_stream_gated(
     transport: &dyn Transport,
     grants: &GrantSet,
@@ -507,8 +510,8 @@ fn admit_hop_grant(grants: &GrantSet, url: &str, redirected: bool) -> Result<(),
 }
 
 /// What following one redirect does to the request, decided once for the
-/// blocking `fetch_stream` and the asynchronous `fetch_async::FetchTask`,
-/// so the two cannot disagree on a hop.
+/// blocking `fetch_stream` and the asynchronous `fetch_async::FetchTask`
+/// (LLP 0068.000 §2), so the two cannot disagree on a hop.
 pub(crate) struct RedirectStep {
     /// The next hop's URL, resolved against the one just used.
     pub(crate) url: String,
@@ -576,8 +579,7 @@ pub(crate) fn redirect_step(
         || (matches!(status, 301 | 302) && current.method != "GET" && current.method != "HEAD");
     // A redirect to another origin drops the credentials this request
     // carried, as the Fetch standard does for `Authorization`.
-    // A subdomain grant admits sibling hosts, which must not receive a token
-    // meant for the first.
+    // @ref LLP 0059.000#35-fetch--delegating-capability-bearing — a subdomain grant admits sibling hosts, which must not receive a token meant for the first
     let drops_credentials = origin_of(next.as_str())? != origin_of(&current.url)?;
     Ok(Some(RedirectStep {
         url: next.to_string(),

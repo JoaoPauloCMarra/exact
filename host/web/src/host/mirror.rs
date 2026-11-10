@@ -13,6 +13,6 @@ pub(in crate::host) struct Mirror {
     pub(in crate::host) in_button: bool,
     /// Created with handlers (a text that has some is never folded).
     pub(in crate::host) handled: bool,
-    /// Its state looks' page rules (`looks::rules`).
+    /// Its state looks' page rules (LLP 1121 D8, `looks::rules`).
     pub(in crate::host) looks: String,
 }

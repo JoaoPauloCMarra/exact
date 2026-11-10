@@ -1,4 +1,4 @@
-//! Images in a paragraph's text.
+//! Images in a paragraph's text (LLP 1011.002).
 use super::*;
 use crate::generated::Display;
 

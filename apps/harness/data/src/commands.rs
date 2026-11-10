@@ -18,7 +18,7 @@ pub fn submit(shared: &Arc<Shared>, text: &str) -> bool {
         return false;
     }
     let Some(command) = text.trim_start().strip_prefix('/') else {
-        // A prompt waits its turn: queued, shown, started when the
+        // A prompt waits its turn (P16): queued, shown, started when the
         // running turn ends however it ends.
         let queued = {
             let mut s = shared.lock();
@@ -75,7 +75,7 @@ fn run(shared: &Arc<Shared>, name: &str, rest: &str) -> bool {
         }
         "stress" => {
             // `/stress [n]` is one burst; `/stress n paced` releases the
-            // same entries a screenful at a time.
+            // same entries a screenful at a time (LLP 1101.002 P14).
             let mut words = rest.split_whitespace();
             let n = match words.next() {
                 None => Some(200),
@@ -305,7 +305,7 @@ const SETTLE: std::time::Duration = std::time::Duration::from_millis(1000);
 const PAUSE: std::time::Duration = std::time::Duration::from_millis(30);
 
 /// Release `entries` from a thread in batches of [`BATCH`], each once the
-/// host has printed and retired the one before. A
+/// host has printed and retired the one before (LLP 1101.002 §0 P14). A
 /// `/clear` meanwhile ends it: the old workload does not run on into the
 /// new transcript.
 fn pace(shared: &Arc<Shared>, entries: Vec<Entry>) {

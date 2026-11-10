@@ -108,7 +108,7 @@ export function compilerPaths(text, workspace) {
 }
 // One file under two spellings (macOS's /tmp and /private/tmp, a linked
 // checkout) is one file: a path that differs as written is compared as the
-// file system resolves it, and only then, since a receipt reads
+// file system resolves it (LLP 1143 D6), and only then, since a receipt reads
 // hundreds of rules.
 // rustc records relative inputs against Cargo's workspace root, even when
 // EXACT_APP_DIR makes the invoking directory a nested app in that workspace.

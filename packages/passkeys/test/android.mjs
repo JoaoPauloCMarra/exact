@@ -1,8 +1,8 @@
-// @exact/passkeys on Android: the auth fixture's Contract and data code in an app `exact
+// @exact/passkeys on Android (LLP 1133.011 §11 stage 3): the auth fixture's Contract and data code in an app `exact
 // new` made outside the repo, depending on this package by `file:`, built as the Canvas reader's APK, which compiles
-// Passkeys.kt against `androidx.credentials` 1.6.0 in the app's one locked, verified Gradle graph. It checks the
-// graph and the roster, prints the APK's size, and drives nothing: the emulator's real ceremonies need
-// the fixture's public origin and its assetlinks.json, and checklist.md is the phone's.
+// Passkeys.kt against `androidx.credentials` 1.6.0 in the app's one locked, verified Gradle graph (LLP 1133.008 D8
+// item 5). It checks the graph and the roster, prints the APK's size (D15's cost), and drives nothing: the emulator's
+// real ceremonies need the fixture's public origin and its assetlinks.json (D14), and checklist.md is the phone's.
 //
 // usage: bun packages/passkeys/test/android.mjs
 //   (an NDK of clang 18 or newer in ANDROID_NDK_HOME, and a JDK 17 or newer in JAVA_HOME)

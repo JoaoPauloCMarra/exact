@@ -1,4 +1,4 @@
-// A resource's two-way socket: the mapper keeps its
+// A resource's two-way socket (LLP 1016.000 D7): the mapper keeps its
 // handle by the resource's id and replies to frames on it, and a mutation
 // and a resource's answer send on it.
 
@@ -101,7 +101,7 @@ function say(id: string, what: string): unknown {
   }
 }
 
-// A resource's answer: it sends a request and
+// A resource's answer (the amendment of 2026-10-18): it sends a request and
 // awaits the reply; what its code sends after an await is the turn's that
 // settled it.
 const waiters = new Map<string, (data: string) => void>();

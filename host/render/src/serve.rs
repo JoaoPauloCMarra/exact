@@ -1,9 +1,9 @@
-//! The server: `<app>-render --serve <dist>`
+//! The server (LLP 1048.000 D10, D11): `<app>-render --serve <dist>`
 //! renders a page per request, on loopback, from the built web app.
 //!
 //! A route declared `render=build`, `cached` or `request`, and any location
 //! the router sends to its not-found route, is rendered with a new
-//! runner and module realm, then composed over the
+//! runner and module realm (D10), then composed over the
 //! built shell ([`crate::page`]). A `client` route gets the shell. Files
 //! under `dist/` are served as they are; `/.exact/health` answers `ok`.
 //! Renders run on a fixed set of workers behind a bounded queue: a request
@@ -28,7 +28,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Condvar, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
-/// The largest page the server sends (the bound on output bytes).
+/// The largest page the server sends (D10's bound on output bytes).
 pub(crate) const MAX_PAGE: usize = 16 << 20;
 const MAX_CACHED_PAGES: usize = 64;
 const MAX_CACHE_BYTES: usize = 32 << 20;
@@ -50,13 +50,13 @@ pub struct Serve {
     pub renders: usize,
     /// Requests that may wait for a render before the server answers 503.
     pub queue: usize,
-    /// The page viewport documents render at.
+    /// The page viewport documents render at (D4).
     pub viewport: exact_runner::Viewport,
     /// A rendered route's shared-cache lifetime (`s-maxage`), until routes
     /// declare their own.
     pub lifetime: Duration,
     /// Where the builds of `app.wasm` it has served are kept, so a browser
-    /// holding one gets the next as a delta against it.
+    /// holding one gets the next as a delta against it (LLP 1047.000 §9).
     pub generations: Option<PathBuf>,
 }
 
@@ -67,13 +67,13 @@ pub struct Server {
     stop: Arc<AtomicBool>,
 }
 
-/// Drains a running server: it stops accepting, answers what it has
+/// Drains a running server (D10): it stops accepting, answers what it has
 /// taken — the renders in flight included — and [`Server::run`] returns.
 #[derive(Clone)]
 pub struct Stopper(Arc<AtomicBool>, SocketAddr);
 
 /// Moves every armed render deadline to now, for the deadline thread to fire
-/// as it fires one that passes: the source call each
+/// as it fires one that passes (LLP 1048.000 D10): the source call each
 /// render is running, or its next, is stopped, and the render ends as one
 /// stopped at its deadline does. For a test that ends a render once it has
 /// seen what it waits for, not on the wall clock (docs/testing.md); it
@@ -102,10 +102,11 @@ struct Shared {
     plan: Plan,
     shell: String,
     csp: String,
-    /// The header lines a page adds beside its CSP: its `Permissions-Policy`,
-    /// and the client hints it asks for and varies by.
+    /// The header lines a page adds beside its CSP: its `Permissions-Policy`
+    /// (LLP 1069.008 D6), and the client hints it asks for and varies by
+    /// (LLP 1048.006).
     page_headers: String,
-    /// What of the viewport the plan reads.
+    /// What of the viewport the plan reads (LLP 1048.006).
     reads: crate::viewport::Reads,
     pages: Mutex<VecDeque<CachedPage>>,
     variants: Variants,
@@ -123,7 +124,7 @@ struct Shared {
 
 struct CachedPage {
     target: String,
-    /// The viewport class it was rendered for.
+    /// The viewport class it was rendered for (LLP 1048.006).
     class: String,
     created: Instant,
     response: Response,
@@ -197,7 +198,7 @@ impl Server {
         });
         let hints = crate::stream::preload_paths(&shell);
         let js = page::is_js(&shell);
-        // The build's analyzed sheet.
+        // The build's analyzed sheet (LLP 1048.007 D4).
         let rules = std::fs::read_to_string(serve.dist.join(".gen/page-style.json")).ok();
         let early = lang.filter(|_| js).and_then(|(lang, dir)| {
             let at = page::Js::of(&shell).ok()?;
@@ -397,7 +398,7 @@ struct Request {
     /// The client keeps the connection for its next request (HTTP/1.1's
     /// default, unless it said `Connection: close` or sent more than one).
     keep: bool,
-    /// What it says of its reader's viewport.
+    /// What it says of its reader's viewport (LLP 1048.006).
     hints: crate::viewport::Hints,
 }
 
@@ -476,7 +477,7 @@ impl Response {
         }
         // A page's policy. On a script's response a CSP would govern only a
         // worker made from it, and a module worker evaluates the module text
-        // it verified against the receipt.
+        // it verified against the receipt (LLP 1027.002 D2).
         let page = self
             .headers
             .iter()
@@ -550,7 +551,7 @@ fn handle<D: DataSource + 'static>(
     (stream, request.keep)
 }
 
-/// A response as the client accepts it: a page, the sitemap or any
+/// A response as the client accepts it (D11): a page, the sitemap or any
 /// other body made for this request, compressed now — brotli, else gzip —
 /// with the encoding in its ETag, and a 304 when the client holds that
 /// representation. A dist file carries its own `Vary` and made variant.
@@ -777,7 +778,7 @@ fn respond<D: DataSource + 'static>(
         return sitemap(shared, data);
     }
     if path == "/robots.txt" {
-        // Neutral until hosting decides a crawler policy.
+        // Neutral until hosting decides a crawler policy (LLP 1048 §9.9).
         let sitemap = shared
             .serve
             .origin
@@ -818,7 +819,7 @@ fn respond<D: DataSource + 'static>(
             Some(_) => format!("\"{tag}-dcb\""),
             None => served.etag.clone(),
         };
-        // Other files aren't content-addressed yet: revalidated, by
+        // Other files aren't content-addressed yet (D10): revalidated, by
         // their ETags.
         let auth = path.starts_with(AUTH_CALLBACK);
         let cache = match (named, auth) {
@@ -887,7 +888,7 @@ fn respond<D: DataSource + 'static>(
     if policy != Some(RenderPolicy::Cached) || shared.serve.lifetime.is_zero() || request.no_store {
         return document(request, policy, notfound, shared, data, early);
     }
-    // A dictionary the browser holds and names itself. A CDN's request
+    // A dictionary the browser holds and names itself (D11). A CDN's request
     // never gets one: the CDN would keep the body for browsers without it.
     let wanted = request
         .dictionary
@@ -1170,14 +1171,14 @@ fn document<D: DataSource + 'static>(
 ) -> Response {
     let serve = &shared.serve;
     let started = Instant::now();
-    // The reader's viewport, when the plan reads one.
+    // The reader's viewport, when the plan reads one (LLP 1048.006).
     let viewport = shared.reads.viewport(&request.hints, serve.viewport);
     let site = Site {
         name: &serve.name,
         origin: serve.origin.as_deref(),
     };
     let location = request.target.as_str();
-    // The early flush (crate::stream): a browser's
+    // @ref LLP 1071 D6 — the early flush (crate::stream): a browser's
     // navigation gets the page's head now; its rest follows the render.
     let js = shared.js && !notfound && request.method == "GET";
     let preload = crate::page::preloads_early(&shared.plan, location);
@@ -1212,7 +1213,7 @@ fn document<D: DataSource + 'static>(
         (flush, head, at)
     });
     // A flushed JavaScript page whose plan allows it is written from its
-    // runner's instance tree and sent as it is written.
+    // runner's instance tree and sent as it is written (LLP 1048.004).
     let mut streamed_body = false;
     let rendered = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         if let Some((out, head, at)) = flush.as_mut() {
@@ -1372,7 +1373,7 @@ fn document<D: DataSource + 'static>(
 const UNAVAILABLE_AFTER_HEAD: &str =
     "<title>Unavailable</title>\n<p>This page couldn't be rendered.</p>\n";
 
-/// The sitemap: every rendered route's location — a
+/// The sitemap (LLP 1048.000 D2): every rendered route's location — a
 /// parameterized one's as its `pages=` source lists them now, a route
 /// without one left out — absolute against the configured origin. Without
 /// an origin there is none.
@@ -1440,7 +1441,7 @@ fn sitemap<D: DataSource + 'static>(shared: &Shared, data: fn() -> D) -> Respons
     }
 }
 
-/// The surrogate keys: each answer's source, and its source with a
+/// The surrogate keys (D11): each answer's source, and its source with a
 /// digest of its arguments — `post` purges every post page, `post:<hex>`
 /// the pages that showed that one.
 fn keys(rendered: &Rendered) -> Vec<String> {

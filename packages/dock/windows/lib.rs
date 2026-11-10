@@ -1,4 +1,4 @@
-//! @exact/dock on Windows: `requestAttention` flashes the
+//! @exact/dock on Windows (LLP 1133.025 D5): `requestAttention` flashes the
 //! window's taskbar button through the host (`exact_linux::desktop`,
 //! `FlashWindowEx`): until the window comes forward for a critical request,
 //! three times otherwise. A hidden window has no taskbar button, so nothing

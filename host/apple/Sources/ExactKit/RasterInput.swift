@@ -26,8 +26,8 @@ final class RasterCancellation: @unchecked Sendable {
 /// spool to a bounded temporary file and are reused for metadata and decode.
 final class RasterInput: @unchecked Sendable {
     static var httpCacheUsage: [String: Int] { RasterDownload.cacheUsage }
-    /// A `data:` source's bound, in bytes of URL text, on every host
-    /// (`exact_raster::MAX_DATA_URL_BYTES`, the web hosts' `DATA_LIMIT`).
+    /// A `data:` source's bound, in bytes of URL text, on every host (LLP 1011
+    /// §2; `exact_raster::MAX_DATA_URL_BYTES`, the web hosts' `DATA_LIMIT`).
     static let dataLimit = 1024 * 1024
     let url: URL
     let encodedBytes: Int
@@ -69,7 +69,7 @@ final class RasterInput: @unchecked Sendable {
     private static let launchImage = (Bundle.main.object(forInfoDictionaryKey: "UILaunchScreen") as? [String: Any])?["UIImageName"] as? String
     deinit { if temporary { try? FileManager.default.removeItem(at: url) } }
     /// CommonCrypto's, not CryptoKit's: launching an app that touches no
-    /// other CryptoKit then dirties none of its pages (40 KB on iOS).
+    /// other CryptoKit then dirties none of its pages (40 KB in euxy on iOS).
     private static func sha256(_ data: Data) -> String {
         var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
         _ = data.withUnsafeBytes { CC_SHA256($0.baseAddress, CC_LONG(data.count), &hash) }
@@ -77,7 +77,7 @@ final class RasterInput: @unchecked Sendable {
     }
     static func open(_ name: String, resolver: AssetResolver, cancellation: RasterCancellation = RasterCancellation()) throws -> RasterInput {
         guard !cancellation.isCancelled else { throw URLError(.cancelled) }
-        // The app's own file: a picked photo's preview.
+        // The app's own file (LLP 1069.002 D7): a picked photo's preview.
         if name.hasPrefix("app:/") {
             guard let url = AppFiles.url(name) else { throw RasterFailure.unresolved }
             let values = try url.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
@@ -180,7 +180,7 @@ final class RasterInput: @unchecked Sendable {
 }
 
 /// A response that is not 2xx: its status is the image's `error` when it
-/// has no body that is an image.
+/// has no body that is an image (LLP 1011 §4).
 /// `retryAfter`: not asked again before this, a 429's or 503's `Retry-After`,
 /// on the monotonic clock (a wall clock's step never shortens it).
 struct RasterHTTPStatus: Error, CustomStringConvertible {
@@ -254,7 +254,7 @@ private final class RasterDownload: NSObject, @unchecked Sendable {
             return done(.success((destination, count, nil)))
         }
         // A server that said when to ask again is not asked sooner, by any
-        // source of the URL.
+        // source of the URL (LLP 1011 §4).
         if let cooling = RasterDownloads.shared.cooling(url) {
             try? file.close(); try? FileManager.default.removeItem(at: destination)
             return done(.failure(cooling))

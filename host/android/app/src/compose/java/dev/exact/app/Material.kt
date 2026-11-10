@@ -52,7 +52,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneOffset
 
-/** The plan has a date or time control: its picker is Compose Material 3's. */
+/** The plan has a date or time control: its picker is Compose Material 3's (LLP 1115.001.000 D1). */
 internal val materialPickers: Pickers? = MaterialPickers
 
 /**

@@ -1,4 +1,4 @@
-// Canvas 2D on the web: each 2D canvas's content box is
+// Canvas 2D on the web (LLP 1056 D4, D7): each 2D canvas's content box is
 // watched with a ResizeObserver and reported to the runner
 // (`exact_canvas_geometry`); the runner's stamped lists are replayed, in
 // order, into the canvas element's real CanvasRenderingContext2D, so the
@@ -7,8 +7,8 @@
 // added under the base transform (the device scale), and every paint runs
 // under base ∘ author, where the browser strokes and shades in user space as
 // it always does. Injected after first paint with the first 2D canvas; an
-// app without one never fetches it.
-const AGENT_ADMITTED = true; // false in a production bake: host/web/build.mjs rewrites this line
+// app without one never fetches it (LLP 1047).
+const AGENT_ADMITTED = true; // false in a production bake: host/web/build.mjs rewrites this line (LLP 1069.007 D2)
 const OPS = {
   1: "save", 2: "restore", 3: "reset", 4: "setTransform",
   10: "fillColor", 11: "fillGradient", 12: "strokeColor", 13: "strokeGradient",
@@ -55,13 +55,13 @@ function fontCss(k, count) {
   return `${style === 1 ? "italic " : style === 2 ? "oblique " : ""}${weight} ${size}px ${families(textOf(k, 9, count))}`;
 }
 
-// The page's decoded image handles: src -> { el, w, h, ok, subscribers }.
+// The page's decoded image handles (LLP 1056 D9): src -> { el, w, h, ok, subscribers }.
 const images = new Map();
 
 /** One canvas: the element, its context, and what the replayer keeps. */
 class Replayer {
   constructor(el, op) {
-    // Its getContext settings, which an element keeps from
+    // Its getContext settings (LLP 1100 D12a), which an element keeps from
     // its first context: other settings take a new element.
     const settings = { colorSpace: op.p3 ? "display-p3" : "srgb", colorType: op.float16 ? "float16" : "unorm8" }, key = `${settings.colorSpace} ${settings.colorType}`;
     if (el.exactSettings !== undefined && el.exactSettings !== key) { const fresh = el.cloneNode(false); el.replaceWith(fresh); el = fresh; }
@@ -225,7 +225,7 @@ globalThis.exact.canvas2dGlue = function canvas2dGlue(o) {
     const surface = surfaceOf(el), cs = getComputedStyle(el);
     if (surface) {
       // A replaced element takes its bitmap's size unless told the box's:
-      // an explicit bitmap is stretched to it.
+      // an explicit bitmap is stretched to it (LLP 1056 D6).
       surface.style.inset = `${cs.paddingTop} auto auto ${cs.paddingLeft}`;
       surface.style.width = `${width}px`; surface.style.height = `${height}px`;
       surface.style.borderRadius = "inherit";
@@ -260,7 +260,7 @@ globalThis.exact.canvas2dGlue = function canvas2dGlue(o) {
     }
     if (!waiting.size && settle) { settle.resolve(); settle = null; }
   }
-  // A display-scale change is a new generation: every canvas reports again.
+  // A display-scale change is a new generation (D4): every canvas reports again.
   const rescale = () => matchMedia(`(resolution: ${devicePixelRatio}dppx)`).addEventListener("change", () => {
     for (const id of reported.keys()) { const el = o.views.get(id); if (el) { observer.unobserve(el); observer.observe(el); } }
     rescale();
@@ -272,7 +272,7 @@ globalThis.exact.canvas2dGlue = function canvas2dGlue(o) {
     exact.send(exact.wasm.exact_advance(o.now(), 0));
     if (frames && !framing) { framing = true; requestAnimationFrame(frame); }
   }
-  // Image handles: loaded as an `image` node's src resolves,
+  // Image handles (LLP 1056 D9): loaded as an `image` node's src resolves,
   // then the runner is told, and the canvases that asked draw again.
   function load(src, subscriber) {
     let entry = images.get(src);
@@ -289,8 +289,8 @@ globalThis.exact.canvas2dGlue = function canvas2dGlue(o) {
     entry.el.src = exact.assetURL ? exact.assetURL(src) : src;
     return entry;
   }
-  // Text is measured on the page, whose document has the app's faces:
-  // the run at left/alphabetic, and the em box from "top" and
+  // Text is measured on the page, whose document has the app's faces (LLP
+  // 1056 D8): the run at left/alphabetic, and the em box from "top" and
   // "bottom" (Chrome has no emHeight* yet).
   const scratch = document.createElement("canvas").getContext("2d");
   function measure(json) {

@@ -1,4 +1,4 @@
-//! Edit operations: each takes a design's text and
+//! Edit operations (LLP 1121 D13, stage 3): each takes a design's text and
 //! gives the new text and its **inverse**. An edit splices the lines it
 //! touches, in `fmt`'s layout, and leaves every other line as it was, so on a
 //! formatted design it is a one-line diff (a token's `when` lines with it
@@ -9,8 +9,9 @@
 //!
 //! An edit that leaves the design refused by the checker is refused, with
 //! the checker's diagnostics; so is one naming a dial, token, `when` or axis
-//! value the design does not have. The operations touch only `.tamber`
-//! files: dials, tokens, component params and axes.
+//! value the design does not have. Stage 3 has the operations that touch only
+//! `.tamber` files: params (stage 7), state parts (stage 8) and rows (LLP
+//! 1122 T5) come later.
 
 use crate::lex::{self, Line};
 use crate::syntax::{same_conds, Design};
@@ -20,7 +21,7 @@ use crate::{Diagnostic, Vocab};
 /// its value, and its trailing comment.
 pub type WhenLine = (Vec<(String, String)>, String, Option<String>);
 
-/// One operation.
+/// One operation (D13's table).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Op {
     /// `set-dial name value`.
@@ -81,7 +82,7 @@ pub enum Op {
         /// The token.
         name: String,
     },
-    /// `set-param name [when …] value`: the app's value of a
+    /// `set-param name [when …] value` (D15): the app's value of a
     /// component's param, in the design's `params` block (made at the end
     /// when there is none), its line or one `when` line of it. A `when`
     /// line needs the param's own line first.
@@ -94,7 +95,7 @@ pub enum Op {
         value: String,
         /// The name the param's line has now, when the write spells it
         /// `name` instead (a library component's param, whose short
-        /// spelling the build refuses, written in full).
+        /// spelling the build refuses, written in full: LLP 1139 D8).
         respell: Option<String>,
     },
     /// `unset-param name [when …]`: the param's line and its `when` lines
@@ -188,7 +189,7 @@ pub fn undo(src: &str, inverse: &[Op], vocab: &Vocab) -> Result<Edited, Vec<Diag
 
 /// One edit, unchecked: the new text and the `restore` that undoes it.
 /// One operation on `src`; a rename is proved folded with the app's
-/// `params`, as the build folds the design.
+/// `params` (LLP 1121 D15), as the build folds the design.
 fn step(
     src: &str,
     op: &Op,
@@ -285,7 +286,7 @@ pub(crate) fn valid(op: &Op) -> Result<(), Vec<Diagnostic>> {
     // which the line keeps from before.
     let value = |v: &str| {
         // Past the checker's bound, refused before anything reads it, in
-        // words that give its size and never echo it;
+        // words that give its size and never echo it (rt1's co-sign);
         // measured trimmed, as a design's line is read.
         if let Some((id, why)) = crate::css::over_limit(v.trim()) {
             return Err(vec![Diagnostic::new(id, why, 1, 1)]);
@@ -468,8 +469,8 @@ pub fn apply_all(src: &str, ops: &[Op], vocab: &Vocab) -> Result<Edited, Vec<Dia
     run(src, ops, vocab, &crate::params::NONE)
 }
 
-/// [`apply_all`], the result checked laid out with the app's params,
-/// as the build checks it: a dial only a param reads is read.
+/// [`apply_all`], the result checked laid out with the app's params (LLP
+/// 1121 D15), as the build checks it: a dial only a param reads is read.
 pub fn apply_all_with(
     src: &str,
     ops: &[Op],
@@ -503,7 +504,7 @@ fn run(
             let mut k = 0;
             while k < ops.len() {
                 // A run of new tokens (an import's) with one parse, and one
-                // restore that takes them all out.
+                // restore that takes them all out (round 1 of the sweep).
                 // An import's values and new tokens, in its tokens' order:
                 // the new tokens first, then the values, each kind in one
                 // parse (`batch::mixed`), when no value is a new token's.
@@ -959,7 +960,7 @@ impl Doc {
                     ));
                 }
                 // A token is named in the theme's values, the exports, and
-                // the params block's values.
+                // the params block's values (D15).
                 let mut block = String::new();
                 for n in 0..self.lines.len() {
                     let raw = self.lines[n].clone();
@@ -989,7 +990,7 @@ impl Doc {
                     };
                     let (kept, body) = body.split_at(keep);
                     // A token line's metadata is no value, but `pair=` names
-                    // tokens, so those names are renamed.
+                    // tokens (LLP 1121 D3), so those names are renamed.
                     let words = lex::words(body.trim_end());
                     let meta_from = (1..words.len())
                         .rev()

@@ -1,4 +1,4 @@
-//! Control spacing on the Linux host (and so on Android's and Windows's,
+//! LLP 1115.000 D10 on the Linux host (and so on Android's and Windows's,
 //! which lay out and paint through this presenter): a control's spacing and
 //! size are the plan's, the same on every host.
 use super::*;
@@ -25,7 +25,7 @@ fn rect(p: &mut Presenter<()>, test_id: &str) -> (f32, f32, f32, f32) {
     p.rect_of(id).unwrap()
 }
 
-/// A checkbox, a radio and a range sit where their row puts them,
+/// D10.1: a checkbox, a radio and a range sit where their row puts them,
 /// with no margin of their own (Chrome's UA margins put the checkbox at 4,
 /// 3 and each next control 7, 8 and 5 points further on).
 #[test]
@@ -49,7 +49,7 @@ fn a_checkbox_a_radio_and_a_range_have_no_margin_of_their_own() {
     assert_eq!(after.0, check.2 + radio.2 + 90.0, "and what follows");
 }
 
-/// A range and a determinate `progress` are as wide as what holds
+/// D10.2: a range and a determinate `progress` are as wide as what holds
 /// them, by the plan's `width: 100%` and nothing of this host's: across a
 /// column and a box, what a row's other children leave, an authored width
 /// where one is written, and their own size (129; `10em` by `1em`) where
@@ -109,7 +109,7 @@ fn pixel(p: &mut Presenter<()>, x: u32, y: u32) -> [u8; 3] {
     [c.red(), c.green(), c.blue()]
 }
 
-/// An `hr` is one hairline with no margin: one device pixel of the
+/// D10.3: an `hr` is one hairline with no margin: one device pixel of the
 /// scale this host draws at, in layout and in paint. The presenter tells the
 /// kernel that scale when it boots and whenever it changes (a desktop's
 /// `EXACT_SCALE`, the density an Android reader was told, a Windows

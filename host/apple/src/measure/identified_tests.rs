@@ -114,7 +114,7 @@ fn giant_unchanged_typing_adds_zero_foreign_callbacks() {
         state.borrow().calls - 1
     );
     assert_eq!(state.borrow().calls, 1);
-    // The trailing space collapses away before the callback.
+    // The trailing space collapses away before the callback (LLP 1053 G5).
     assert_eq!(state.borrow().supplied_bytes, source.trim_end().len());
 }
 
@@ -497,7 +497,7 @@ fn owner_capacity_and_revision_replacement_do_not_keep_history() {
     assert_eq!(state.borrow().calls, n);
 }
 
-// Shape motion cannot hit geometry-blind metric memo.
+// @ref LLP 1043.000 §3 D5 — shape motion cannot hit geometry-blind metric memo.
 #[test]
 fn exclusions_cross_the_c_callback_and_bypass_identified_memo() {
     #[allow(unsafe_code)]

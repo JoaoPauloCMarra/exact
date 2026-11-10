@@ -1,5 +1,5 @@
 // The design tool's built files, as the Tamber wire serves them under
-// `/__tamber/tool/` (scripts/tamber-server.mjs; the remote doors,
+// `/__tamber/tool/` (scripts/tamber-server.mjs; stage 10 B's remote doors,
 // scripts/tamber-remote.mjs, serve them too).
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { relative, resolve, sep } from 'node:path';
@@ -26,11 +26,11 @@ export function serveTool(req, res, url, access, toolDir = TOOL_DIST) {
 }
 
 const TOOL_BASE = '/__tamber/tool/';
-/** What a caller of the async serveToolFiles does when it throws: the connection ended if an answer began, else
+/** What a caller of the async serveToolFiles does when it throws (rt1): the connection ended if an answer began, else
  * not found, never an unhandled rejection. */
 export const toolFilesFailed = (res) => () => (res.headersSent ? res.destroy() : notFound(res));
 /** The tool's built files under `/__tamber/tool/`, static GETs only: no
- * secret is in them (the remote listener serves them too). A
+ * secret is in them (the remote listener serves them too, stage 10 B). A
  * page's files come from the build it booted (host/web/generations.mjs): its
  * document's base names that build's generation, `/__tamber/tool/.exact/gen/
  * <id>/`, whose files are read from that build, the current one or the one

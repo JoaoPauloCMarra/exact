@@ -31,7 +31,7 @@ type Intelligence = Result<'intelligence'>;
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 // The wall clock is the runner's epoch shifted by the device's fixed UTC
-// offset, read through UTC getters: no ambient time here.
+// offset (LLP 1027.000.000), read through UTC getters: no ambient time here.
 function clock(minuteKey: number, utcOffset: number): Clock {
   const d = new Date(minuteKey * 60000 + utcOffset * 60000);
   const h = d.getUTCHours(), m = d.getUTCMinutes();
@@ -78,9 +78,9 @@ const threads = new Map<string, Message[]>([
     msg('nico', 'them', 'Nico', 'Can you push the build to Silver tonight? I want to see the lock screen on the 4a Pro.', '9:12 AM'),
   ]],
   ['crew', [
-    msg('crew', 'them', 'Theo', 'New Exposure Sans 10 is in the branch. The ẞ and ₹ are drawn now, not borrowed.', '8:20 AM'),
+    msg('crew', 'them', 'James', 'New Exposure Sans 10 is in the branch. The ẞ and ₹ are drawn now, not borrowed.', '8:20 AM'),
     msg('crew', 'them', 'Nico', 'The italic a is still the best glyph in the family, fight me', '8:31 AM'),
-    msg('crew', 'them', 'Theo', 'I still think the g needs a smaller ear', '8:47 AM'),
+    msg('crew', 'them', 'James', 'I still think the g needs a smaller ear', '8:47 AM'),
     msg('crew', 'me', 'Me', 'Ship the ear as is. We tune it after we see it on the lock screen.', '8:52 AM'),
   ]],
   ['builds', [
@@ -131,7 +131,7 @@ const MODELS: { id: string; name: string; maker: string }[] = [
 ];
 const DEFAULT_MODEL = MODELS[0].id;
 const SYSTEM = (model: string) => [
-  'You are Expose, the assistant built into the Expose phone — a new mobile operating system that runs on Nothing and Pixel hardware, built by a small team led by Casey Morrow.',
+  'You are Expose, the assistant built into the Expose phone — a new mobile operating system that runs on Nothing and Pixel hardware, built by a small team led by Charlie Cheever (the creator of Expo).',
   'You are talking inside the phone’s Messages app, so answer like a thoughtful friend texting back: warm, direct, a little playful, and short. One to four sentences unless the person clearly wants more. No headings, no bullet lists, no markdown; plain text only.',
   'Things you know about this phone: the system UI is grayscale-first, with colour reserved for content. Its three typefaces are Exciting (a heavy display face inspired by Chicago, used for the clock and app marks), Exciting Lilt (the titling face, Semibold and Bold), and Exposure Sans (the text face you are set in). The apps in this demo are Messages, Reader, Settings and the lock and home screens.',
   'If someone asks what you can do, tell them honestly: you can chat, answer questions, and talk about the articles in Reader when they are shared with you. You cannot set alarms, send messages to other people, or control the phone.',
@@ -193,7 +193,7 @@ function ask(thread: string, text: string, article: string, epochMs: number, sto
     last.content = `${shown}\n\n(I’m sharing this article from Reader.)\n\n${piece.section} — ${piece.title}\n${piece.deck}\nBy ${piece.author}\n\n${piece.body.join('\n\n')}`;
   }
   // A host with the native executor (Apple, Linux, the wasm web host) keeps
-  // only the newest undelivered stream message, which for a
+  // only the newest undelivered stream message (LLP 1016.000 D4), which for a
   // token stream means dropped words. There the answer is one JSON body. The
   // page runtime runs this module with the browser's own fetch, so the
   // response resolves and its events are read from the body as they arrive;
@@ -309,7 +309,7 @@ const articles: Article[] = [
     ],
   },
   {
-    id: 'grayscale', section: 'Principles', minutes: 5, author: 'Casey Morrow', posted: 'Yesterday',
+    id: 'grayscale', section: 'Principles', minutes: 5, author: 'Charlie Cheever', posted: 'Yesterday',
     title: 'A grayscale operating system',
     deck: 'Colour is for what you put on the phone, not for the phone.',
     pull: 'The system is the frame. Your life is the picture.',
@@ -331,7 +331,7 @@ const articles: Article[] = [
       'Lilt comes in two weights. Bold carries titles and actions from seventeen to thirty-six pixels, where it matches the colour of Exposure Sans Bold in the same line. Semibold carries the large numerals in widgets and anything set at forty-eight pixels and above, where Bold starts to clot.',
       'The interesting problems were all at the small end. At seventeen pixels a terminal flare is two pixels wide, and two pixels is exactly the size where a hint that helps a stem hurts a curve. Version four of the face is where the t stopped being mush. Version ten is where the Bold got heavy enough to hold its own next to a Sans paragraph without looking like it was apologising.',
       'The rule we ended up with is simple to say and hard to keep: Lilt never sets a paragraph. If you find yourself wanting to, the paragraph is too important to be a title and should be a paragraph.',
-      'The g still has a big ear. Theo is right about it. We are shipping it anyway, and we will tune it once we have seen it on a lock screen for a month.',
+      'The g still has a big ear. James is right about it. We are shipping it anyway, and we will tune it once we have seen it on a lock screen for a month.',
     ],
   },
   {
@@ -348,7 +348,7 @@ const articles: Article[] = [
     ],
   },
   {
-    id: 'assistant', section: 'Intelligence', minutes: 3, author: 'Casey Morrow', posted: 'Sunday',
+    id: 'assistant', section: 'Intelligence', minutes: 3, author: 'Charlie Cheever', posted: 'Sunday',
     title: 'An assistant that lives in Messages',
     deck: 'Not a separate app, not a floating orb. A thread, pinned to the top, that answers.',
     pull: 'It knows what you are reading because you told it.',

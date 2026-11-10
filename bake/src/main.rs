@@ -1,5 +1,5 @@
 //! `exact-bake compat <app-dir> --platform <p> [--target <triple>] [--json]`
-//! — the compatibility id the bake writes beside the plan,
+//! — the compatibility id (LLP 1030 D3a) the bake writes beside the plan,
 //! and with `--json` the inputs it digests, for reading why two differ.
 //! `exact-bake graph <app.plan> <compat.json> <target>` — the plan's
 //! requirement graph against those compatibility inputs (`scripts/push.mjs`).

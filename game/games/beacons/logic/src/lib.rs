@@ -177,7 +177,7 @@ impl Game for Beacons {
         }
         let count = w.count::<Beacon>(|b| b.lit);
         // The page answers a beacon lit in the hand, and the last one with
-        // the light bar: the presentation path, outside the hash.
+        // the light bar (LLP 1133.022 §10): the presentation path, outside the hash.
         if lit {
             w.emit(if count == 3 { "all lit" } else { "lit" });
         }

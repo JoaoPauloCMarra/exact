@@ -1,4 +1,4 @@
-//! The `delivery` resource: the one thing a Contract app can
+//! The `delivery` resource (LLP 1030 D7): the one thing a Contract app can
 //! read about its own delivery, and the one thing a host tells the runner.
 //!
 //! The runner answers the source [`crate::delivery::SOURCE`] itself, before
@@ -17,8 +17,8 @@ use exact_kernel::{CommitReceipt, Kernel};
 use exact_plan::{Plan, TypeKind, Value};
 
 impl<D: DataSource> Runner<D> {
-    /// Boot with the host's snapshot of the app's kept secrets:
-    /// what the platform's store holds under the names the data
+    /// Boot with the host's snapshot of the app's kept secrets (LLP 1018
+    /// D1): what the platform's store holds under the names the data
     /// crate's grants allow, read by the host before this call. A resource
     /// with no compiled value — one that read the store at bake — answers
     /// from it now, so the first frame is a returning user's.
@@ -95,7 +95,7 @@ impl<D: DataSource> Runner<D> {
         .map(Runner::linking_every_device)
     }
 
-    /// [`Runner::boot_with_delivery`], with what the host links.
+    /// [`Runner::boot_with_delivery`], with what the host links (LLP 1047 D3).
     #[allow(clippy::too_many_arguments)] // the host boot facts
     pub fn boot_with_delivery_linked(
         links: RunnerLinks,
@@ -139,7 +139,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// [`Runner::set_delivery`] with the binary's own three facts read out
-    /// of the archive's `compat.json` — the compatibility id,
+    /// of the archive's `compat.json` (LLP 1030 D3a) — the compatibility id,
     /// whether an update store is linked, and the executors — and everything
     /// else left as it was.
     pub fn set_delivery_from_compat(

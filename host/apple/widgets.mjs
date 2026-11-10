@@ -1,4 +1,4 @@
-// One runtime framework, one generated widget bundle.
+// @ref LLP 1126 D2/D8 — one runtime framework, one generated widget bundle.
 import { resolve } from 'node:path';
 import { mkdirSync, readdirSync, existsSync, writeFileSync, readFileSync, copyFileSync, cpSync, rmSync, renameSync, statSync } from 'node:fs';
 import { createHash, X509Certificate } from 'node:crypto';
@@ -20,12 +20,12 @@ export function platformWidgetEntries(app, platform = 'ios') {
 export const widgetEntries = app => app.manifest.widgets ?? [];
 export const activityEntries = app => app.manifest.live_activities ?? [];
 /** Whether the app has an entry of either kind: what the extension, the shared framework, the App Group and the
- * Keychain group are gated on. */
+ * Keychain group are gated on (LLP 1126.001 WP13). */
 export const hasEntries = app => platformWidgetEntries(app).length > 0 || activityEntries(app).length > 0;
 export const widgetGroup = app => `group.${app.widgetAppId ?? app.clipParent ?? app.id}`;
 export const widgetId = app => `${app.id}.widgets`;
 
-// The Mac container is authorized by the signing team,
+// LLP 1126.001 WP16: the Mac container is authorized by the signing team,
 // independently of iOS's registered group and of restricted Keychain access.
 export const macWidgetGroup = (app, team) => `${team}.${app.id}.widgets`;
 export function widgetSigningTeam(identity, { distribution = false, certificates = null } = {}) {
@@ -54,7 +54,7 @@ export function macHardwareID(read = (command, args) => spawnSync(command, args,
 }
 export function macWidgetProfiles({ app, team, distribution = false, installed = installedProfiles(), named = process.env.EXACT_PROFILE ? decodeProfile(process.env.EXACT_PROFILE) : null, udid, hardwareID = macHardwareID, log = console.log }) {
   if (named && !named.platforms?.includes('OSX')) {
-    log(`Mac widgets: ignoring EXACT_PROFILE (${named.name}) for ${named.platforms?.join(', ') || 'another platform'}; shared secrets need macOS profiles.`);
+    log(`Mac widgets: ignoring EXACT_PROFILE (${named.name}) for ${named.platforms?.join(', ') || 'another platform'}; shared secrets need macOS profiles (LLP 1126.001 §5 Q5).`);
     named = null;
   }
   if (udid === undefined) udid = !distribution && installed.some(p => p.platforms?.includes('OSX') && p.team === team) ? hardwareID() : null;
@@ -89,8 +89,8 @@ export function macWidgetEntitlements({ app, team, profiles = null, extension = 
   });
 }
 
-/** The two profiles a device build of an app with entries embeds, the app's and its extension's:
- * of one team, App ID prefix and method, each granting the App Group and the one Keychain group both sign
+/** The two profiles a device build of an app with entries embeds, the app's and its extension's (LLP 1126.001
+ * WP13): of one team, App ID prefix and method, each granting the App Group and the one Keychain group both sign
  * (`<prefix>.<app id>`, or the team wildcard), the app's also `aps-environment` (as its method signs it) when an
  * activity takes pushes and `required` (the grants' signing entitlements, which the extension never signs); or
  * one refusal naming, for each App ID, the profiles that were close and what each lacked or failed. A build for a
@@ -140,7 +140,7 @@ export function entryProfiles({ app, udid, required = [], installed = installedP
   const method = like ? METHODS[like.method] : udid ? 'development' : 'distribution';
   const register = [[app.id, forApp], [extension, forExtension]].filter(([, choice]) => !choice.found && choice.lacking?.length)
     .map(([id, choice]) => `the App ID ${id} with ${[...new Set(choice.lacking.map(w => w.portal))].join(' and ')}`);
-  throw new Error(`host/apple: a device build of an app with widgets or Live Activities embeds one ${method} profile in the app and one in its extension, of one team, App ID prefix and method, each granting the App Group and the Keychain group they share. On this Mac${udid ? `, for this phone (${udid})` : ', for an archive'}:
+  throw new Error(`host/apple: a device build of an app with widgets or Live Activities embeds one ${method} profile in the app and one in its extension, of one team, App ID prefix and method, each granting the App Group and the Keychain group they share (LLP 1126.001 WP13). On this Mac${udid ? `, for this phone (${udid})` : ', for an archive'}:
   ${app.id}: ${forApp.found ? 'provisioned' : forApp.why}
   ${extension}: ${forExtension.found ? 'provisioned' : forExtension.why}
 ${register.length ? `In the Apple Developer portal, register ${register.join(', and ')}; then make` : 'Make'} one ${method} profile for each App ID${udid ? ' that includes this phone' : like?.devices.length ? ' naming the same devices' : ''}; install both (open the files, or Xcode ▸ Settings ▸ Accounts ▸ Download Manual Profiles). EXACT_PROFILE names the app's.`);
@@ -177,7 +177,7 @@ export function sharedWidgetCore({ app, prepared, libDir, crate, env, runApple, 
   const dylib = resolve(bin, 'libExactCore.dylib');
   const archive = resolve(libDir, `lib${crate.replaceAll('-', '_')}.a`);
   const digest = createHash('sha256').update(readFileSync(archive)).update(linkedPlan?.digest ?? '').update(library?.sha256 ?? '').digest('hex');
-  // A package's framework, which the archive's shim calls, found beside this one in Frameworks.
+  // A package's framework (LLP 1154 D3), which the archive's shim calls, found beside this one in Frameworks.
   const linkLibrary = appleLinkArgs(library, platform !== 'macos', platform === 'macos' ? '@loader_path/../../..' : '@loader_path/..');
   const stamp = resolve(base, 'archive');
   // SwiftPM tracks neither an external archive nor the linked plan. Invalidate only its link;
@@ -247,7 +247,7 @@ export function packageWidgets({ app, bundle, shared, directory, sdk, triple, de
   // A phone installs the extension only with its own profile embedded (entryProfiles chose it).
   if (profile) copyFileSync(profile.path, resolve(extensionContents, mac ? 'embedded.provisionprofile' : 'embedded.mobileprovision'));
   // The widgets' plans and a TypeScript app's module pair, which the bake wrote or the build fails; an app with
-  // activities alone has no `plans` tree until its entries bake.
+  // activities alone has no `plans` tree until its entries bake (LLP 1126.001 WP8).
   for (const [tree, expected] of [['plans', entries.length > 0], ['typescript', platform !== 'watchos' && existsSync(resolve(app.dir, 'app.ts'))]]) {
     if (existsSync(resolve(resources, tree))) cpSync(resolve(resources, tree), resolve(extensionResources, tree), { recursive: true });
     else if (expected) throw new Error(`host/apple: the bake wrote no ${tree} tree for the widget extension (${resolve(resources, tree)})`);
@@ -275,14 +275,14 @@ export function packageWidgets({ app, bundle, shared, directory, sdk, triple, de
         .supportedFamilies([${entry.families.map(f => `.${f}`).join(', ')}]).contentMarginsDisabled()
     }
 }`).join('\n');
-  // The one ActivityConfiguration for every activity kind (`widget/Activity.swift`): the
+  // The one ActivityConfiguration for every activity kind (`widget/Activity.swift`, LLP 1126.001 WP10): the
   // envelope's attributes name the kind and the generation at render time, so the generated bundle holds no
   // activity string at all, and an app with activities and no widgets has it as its one member.
   // ActivityKit exists on iOS alone: the watch's and the Mac's bundles have no activities.
   const activities = platform === 'ios' && activityEntries(app).length > 0;
   if (activities) names.push('ExactActivities');
   const source = resolve(directory, 'WidgetBundle.swift');
-  // An alarm's countdown beside them, from iOS 26.
+  // An alarm's countdown beside them, from iOS 26 (LLP 1133.030 D8 item 2).
   const alarmMember = alarm && platform === 'ios' ? '; if #available(iOS 26.0, *) { ExactAlarmCountdown() }' : '';
   writeFileSync(source, `import SwiftUI\nimport WidgetKit\n${platform === 'ios' ? 'import UIKit\n' : mac ? 'import AppKit\n' : ''}${generated}\n@main struct ExactWidgets: WidgetBundle { var body: some Widget { ${names.map(n => `${n}()`).join('; ')}${alarmMember} } }\n`);
   const entitlementPath = resolve(directory, 'widget-entitlements.plist');
@@ -299,23 +299,23 @@ export function packageWidgets({ app, bundle, shared, directory, sdk, triple, de
   sign(extension, entitlementPath);
 }
 
-/** What compiles an alarm's countdown into a widget extension: the host's two files,
+/** What compiles an alarm's countdown into a widget extension (LLP 1133.030 D8 items 1 and 2): the host's two files,
  * AlarmKit weak-linked (the app's minimum is below iOS 26), and the module named as the package's, which compiles the
  * same `ExactAlarmMetadata` into the app: ActivityKit names an attributes type by its module and type name, as
  * `activities.mjs` keeps the envelope's in `ExactSnapshot` on both sides. */
 const alarmArgs = module => ['-module-name', module, '-Xlinker', '-weak_framework', '-Xlinker', 'AlarmKit',
   resolve(root, 'host/apple/widget/Alarm.swift'), resolve(root, 'host/apple/widget/AlarmAttributes.swift')];
 
-/** The package that asks the host for AlarmKit's countdown (`"apple": {"activity": "alarmkit"}`),
- * by its Swift module's name; one at most, since the extension's module takes that name. */
+/** The package that asks the host for AlarmKit's countdown (`"apple": {"activity": "alarmkit"}`, LLP 1133.030 D12
+ * item 3), by its Swift module's name; one at most, since the extension's module takes that name. */
 export function alarmActivity(packages) {
   const asking = packages.filter(p => p.activity === 'alarmkit');
-  if (asking.length > 1) throw new Error(`host/apple: ${asking.map(p => p.extension).join(' and ')} each ask for AlarmKit's countdown; only one package may`);
+  if (asking.length > 1) throw new Error(`host/apple: ${asking.map(p => p.extension).join(' and ')} each ask for AlarmKit's countdown; one package may (LLP 1133.030 D12 item 3)`);
   return asking[0]?.module ?? null;
 }
 
 /** An app with no widgets and no Live Activities whose package asks for AlarmKit's countdown gets an extension that
- * holds the countdown alone: no ExactCore, no snapshot archive, no app group and no cohort,
+ * holds the countdown alone (LLP 1133.030 D8 item 2): no ExactCore, no snapshot archive, no app group and no cohort,
  * so nothing of the app's state is reachable from it. */
 export function packageAlarmExtension({ app, bundle, directory, sdk, triple, device, entitlements, sign, runApple, profile = null, alarm }) {
   const extension = resolve(bundle, 'PlugIns/ExactWidgets.appex');

@@ -1124,7 +1124,7 @@ fn validate(d: Demand) -> Result<(), Refusal> {
         return Err(Refusal::SourcePixels);
     }
     // The variant names the output's storage, and with it the bytes a pixel
-    // costs; an unknown one is refused.
+    // costs (LLP 1100 D7); an unknown one is refused.
     let bytes = variant::bytes_per_pixel(d.key.variant).ok_or(Refusal::InvalidDimensions)?;
     let minimum = u64::from(d.key.pixels.width)
         .checked_mul(bytes)

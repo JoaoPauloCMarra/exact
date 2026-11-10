@@ -1,4 +1,4 @@
-//! The `use` lines a file lacks: named by `contract-use-missing`
+//! The `use` lines a file lacks (LLP 1091 D1): named by `contract-use-missing`
 //! and written by `contract fmt --uses`. Since a file sees only what it names,
 //! an app written before module scope (19 of the x2apps apps) must name every
 //! declaration it reaches in another file. Which line brings a name is
@@ -143,7 +143,7 @@ impl Loader<'_> {
         let (first, elsewhere) = &misses[0];
         let others = seen.len() - 1;
         let mut message = format!(
-            "`{}` is a {} declared in `{}`, which this file does not name",
+            "`{}` is a {} declared in `{}`, which this file does not name (LLP 1091 D1)",
             first.name,
             first.kind.what(),
             elsewhere.file

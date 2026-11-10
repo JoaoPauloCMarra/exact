@@ -1,5 +1,5 @@
-// A painted popover sized in its position-area option's region, as Chrome
-// sizes the box: the iOS lift's and the Mac's painted
+// A painted popover sized in its position-area option's region (LLP 1021
+// D2), as Chrome sizes the box: the iOS lift's and the Mac's painted
 // popovers, each placed by `PositionArea.place` with the kernel measuring
 // every option (`Runtime.measureBlock`) and told the region it chose.
 import CoreGraphics
@@ -21,7 +21,7 @@ extension Presenter {
         let rtl = documentDirection == "rtl", id = pop.id
         let placed = PositionArea.painted(pop, rtl: rtl), margins = PositionArea.margins(of: pop)
         // An authored `none` is no area: the viewport its top layer implies,
-        // and the default placement held inside it, as before regions.
+        // and D2's default placement held inside it, as before regions.
         if placed.area == "none" {
             tellRegion(id, nil, told: &told)
             let origin = PositionArea.origin("none", anchor: anchor, size: laid, margins: margins, fallbacks: placed.fallbacks,
@@ -40,8 +40,8 @@ extension Presenter {
         return at
     }
 
-    /// Where painted popover `pop` goes when its author wrote `left` or `top`:
-    /// at that point of the viewport, in `layer`, the other
+    /// Where painted popover `pop` goes when its author wrote `left` or `top`
+    /// (LLP 1021 D2): at that point of the viewport, in `layer`, the other
     /// way from it where it does not fit (`PositionArea.at`), sized in the
     /// viewport its top layer implies, as CSS sizes a box with no area. Nil
     /// when it wrote neither.

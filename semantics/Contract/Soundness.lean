@@ -1375,7 +1375,7 @@ theorem ValTyL.length_le {p : Program} : ∀ {vs : List Value} {ts us : List Ty}
   | [], [], _ :: _, _, hl | _ :: _, _ :: _, [], _, hl => by simp [Ty.leAll] at hl
 
 /-- `hacts`: every action's body is typed under its parameters, which a
-call runs. -/
+call (LLP 1089 D9) runs. -/
 theorem exec_sound_aux {p : Program} (hfn : ProgOK p) {E : Err → Prop}
     (hE : ∀ e, Legit e → e ≠ .pending → E e) {G : Scope}
     (hacts : ∀ a ∈ p.actions, StmtsTy p G a.params.reverse a.body) : ∀ n {env Γ ls ss fx},

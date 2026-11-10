@@ -119,7 +119,7 @@ function bakeTypescript(tool, app, env) {
  * the pair needs the prelude runtime the bake found it uses (its receipt's
  * `typescriptRuntime`, `bake/src/compat.rs` `typescript_runtime_of`), which
  * the classifier compares with the cohort's binary, so a module that uses
- * nothing newer still goes to an older binary; and it
+ * nothing newer still goes to an older binary (LLP 1016.000 D10); and it
  * needs exactly the cohort's grants (the host's data source refuses any
  * other, `Paired::decode`). */
 function typescriptBundle(bundle, build, baked, cohort) {

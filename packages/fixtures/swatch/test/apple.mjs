@@ -1,4 +1,4 @@
-// @fixture/swatch on Apple:
+// @fixture/swatch on Apple (LLP 1133.001 D1, LLP 1133.008 D8 items 1 and 2):
 // the fixture app made outside the repo, built for macOS, an iOS simulator
 // or the sample host (`--host`, two sessions in one process), and driven by
 // the agent. The package's view is made by its session's instance of the

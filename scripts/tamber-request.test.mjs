@@ -1,5 +1,5 @@
 // readBody (scripts/tamber-request.mjs) when the client leaves mid-body on a
-// TLS door's hand-off:
+// TLS door's hand-off (dtool2's repro, review2's ghost-builds follow-up):
 // under Bun, `req`'s close is lost on a socket a TLS server hands to the HTTP
 // server with `emit('connection')`, so the body's read settles on its
 // connection's close instead, and nothing it read is held.
@@ -64,7 +64,7 @@ test('the canvas port\'s own body reader settles when its connection closes, and
   expect(await read).toEqual({ gone: true });
 });
 
-// `tamber tool --via`'s wait: what is "no answer yet", and the cap.
+// `tamber tool --via`'s wait (the third pass's #9): what is "no answer yet", and the cap.
 test('probeTool: refused is listening, a held hello is starting, a token or hello answered is an answer', async () => {
   const { probeTool } = await import('./tamber-request.mjs');
   const free = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => new Response('') }), refusedAt = `http://127.0.0.1:${free.port}`;

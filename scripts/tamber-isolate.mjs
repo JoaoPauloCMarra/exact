@@ -1,6 +1,7 @@
-// One import planned in a process of its own: a client's file (a paired
-// one's, through a remote door, as much as the local tool's or `bun
-// exact.mjs tamber import`'s) is read by `contract tamber import-plan`, never by the shared
+// One import planned in a process of its own (LLP 1121 §5 stage 10b; the
+// lead's 12:31Z ruling on E2+E3): a client's file (a paired one's, through
+// a remote door, as much as the local tool's or `bun exact.mjs tamber
+// import`'s) is read by `contract tamber import-plan`, never by the shared
 // `tamber serve`, so a document that costs too much to read stops only its
 // own process. A watchdog here kills it past `rssKb` of resident memory,
 // `ms` of wall clock or `outBytes` of answer, or when it can't watch it

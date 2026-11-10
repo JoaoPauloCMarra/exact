@@ -1,9 +1,9 @@
-//! What a shell answers its platform's accessibility services with.
-//! Android's reader has one view, and what is in it is
+//! What a shell answers its platform's accessibility services with (LLP
+//! 1115.001 D13). Android's reader has one view, and what is in it is
 //! painted, so TalkBack sees nothing unless the reader's view answers for
 //! it: an `AccessibilityNodeProvider` whose virtual nodes are these
 //! (`host/android/canvas`, `Access.kt`). Desktop Linux has no shell that
-//! asks (there is no AT-SPI tree), and nothing here runs there.
+//! asks (LLP 1015 §7: no AT-SPI tree), and nothing here runs there.
 //!
 //! **Nothing is built until the shell asks.** The tree is made in
 //! [`Presenter::reader_access`], which the reader calls only while an
@@ -36,9 +36,9 @@
 //! node's is its view id, which the runner keeps while the view lives.
 //! Under a list's row it is derived from the list's own identity, the
 //! row's item key and the node's place in the row, since a row's views are
-//! given to another item when it scrolls away.
+//! given to another item when it scrolls away (LLP 1078).
 //!
-//! **A hosted text field** is the reader's own view and reports
+//! **A hosted text field** is the reader's own view (D8) and reports
 //! itself: its node here says only where it stands in the order and what
 //! its author named it.
 mod surface;
@@ -90,7 +90,7 @@ pub mod role {
     pub const TOGGLE: i32 = 17;
     /// The top app bar's Up arrow, which the platform names.
     pub const UP: i32 = 18;
-    /// A `table`: ARIA's `table`.
+    /// A `table` (LLP 1153 D7.3): ARIA's `table`.
     pub const TABLE: i32 = 19;
     /// A table's `tr`: ARIA's `row`. A row group is no node.
     pub const ROW: i32 = 20;
@@ -288,7 +288,7 @@ fn rowed(hash: u64) -> i32 {
 /// which the runner keeps for as long as the view lives, through every
 /// commit and scroll. Under a list's row (a node whose ancestor carries a
 /// `listItemKey`) the view is not the item's own: the row's views are
-/// given to another item when it scrolls away, and a row that
+/// given to another item when it scrolls away (LLP 1078), and a row that
 /// returns is built from others. So there it is a hash of the list's own
 /// identity, the row's item key, and the node's place in the row (its
 /// index among its siblings at each level down from the row).
@@ -823,7 +823,7 @@ impl<D: DataSource> Presenter<D> {
                 });
                 (!name.trim().is_empty()).then_some((name, String::new()))
             };
-            // A heading by its role, never by an
+            // @ref LLP 1115.000 D12.5 — a heading by its role, never by an
             // `aria-level` alone (the kernel's `Props::heading`).
             let heading = node.props.heading().is_some();
             let role = match (text, heading) {

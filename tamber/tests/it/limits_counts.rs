@@ -1,5 +1,6 @@
-//! The checker's work in token, param and dial counts: each walk linear in
-//! what it counts, timed at a large size.
+//! The checker's work in token, param and dial counts (QUEUE PRIORITY, the
+//! checker bound's follow-up): each walk linear in what it counts, timed at
+//! the request size.
 
 use exact_tamber::params::{laid, Param, Params};
 use exact_tamber::parse;
@@ -66,8 +67,8 @@ fn many_dials_probe_only_what_they_move() {
 
 /// A dial's dependents are refolded in the design's order, a token's names
 /// before it, as every token was: a 512-token chain the dial reads at both
-/// ends still moves with it (refolded from its far end, the chain would pass
-/// the depth bound and the dial read as inert).
+/// ends still moves with it (Astra's round 1: refolded from its far end the
+/// chain passed the depth bound and the dial read as inert).
 #[test]
 fn a_long_chain_a_dial_reads_at_both_ends_still_moves_with_it() {
     let mut src = String::from("tamber t\n\ndials\n  d: number = 0.1  in 0..1\n\ntheme\n  ink = #111111\n  t0: number = d\n");
@@ -83,7 +84,7 @@ fn a_long_chain_a_dial_reads_at_both_ends_still_moves_with_it() {
 
 /// An ordinary re-import of a shared dial's change (every token reading it
 /// changed alike) is not refused for the budget: only a batch's rounds past
-/// its first are charged (a trial per token would spend it).
+/// its first are charged (Astra's round 1: a trial per token spent it).
 #[test]
 fn a_shared_dials_change_reimports_within_the_budget() {
     let mut src =
@@ -157,8 +158,8 @@ fn shared_dial(n: usize, colour: impl Fn(usize) -> &'static str) -> (String, Str
     (src, export, doc.to_string())
 }
 
-/// The dial is decided first: 1,000 tokens a dial takes alike are one dial
-/// change, linear, no literal judged.
+/// The dial decided first (theme2's ruling on the counts' round 2): 1,000
+/// tokens a dial takes alike are one dial change, linear, no literal judged.
 #[test]
 fn a_dial_taking_its_tokens_change_judges_no_literal() {
     let (src, export, edited) = shared_dial(1000, |_| "#ffffff");
@@ -234,8 +235,8 @@ fn a_dial_falling_back_judges_each_literal_within_the_budget() {
 }
 
 /// A design asked about again, unchanged, is answered from the last few
-/// checked: a client asking can't make the server fold it, dial influence and
-/// all, each time.
+/// checked (theme2's condition (2) on the influence remainder): a client
+/// asking can't make the server fold it, dial influence and all, each time.
 #[test]
 fn a_design_checked_again_unchanged_is_answered_from_the_last() {
     let mut src = String::from("tamber t\n\ndials\n");
@@ -261,8 +262,9 @@ fn a_design_checked_again_unchanged_is_answered_from_the_last() {
     assert!(warm < cold, "20 asks {warm:?}, the first {cold:?}");
 }
 
-/// No client operation adds a dial: every operation a client may send leaves
-/// the design's dials as they were; only a hand edit (or the local token's import of a file it
+/// No client operation adds a dial (theme2's condition (1) on the influence
+/// remainder): every operation a client may send leaves the design's dials as
+/// they were; only a hand edit (or the local token's import of a file it
 /// writes) can add one, and a `restore` is no client's to send.
 #[test]
 fn no_client_operation_adds_a_dial() {
@@ -343,8 +345,8 @@ fn no_client_operation_adds_a_dial() {
 }
 
 /// A candidate whose export name differs from the design's spelling (a role
-/// override's) is found again when its dial falls back (a lookup by the export's name
-/// would miss it).
+/// override's) is found again when its dial falls back (Astra's check of the
+/// dial step: a lookup by the export's name panicked).
 #[test]
 fn a_role_overrides_literal_is_found_when_its_dial_falls_back() {
     let src = "tamber t\n\ndials\n  c: color = #000000\n\ntheme\n  ink = #111111\n  accentcolor = c\n  peer = c\n";

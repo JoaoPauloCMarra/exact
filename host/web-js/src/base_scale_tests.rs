@@ -1,4 +1,4 @@
-//! The base scale on the JS target: a static row
+//! @ref LLP 1121 stage 11 B2 — the base scale on the JS target: a static row
 //! is the build's column's length, the sheet declares each named base name
 //! once as `--exact-<name>` from the kernel's table, a bound row's value
 //! reads it, and a design's own definition stays its token.
@@ -24,7 +24,7 @@ fn a_static_row_is_the_columns_length_and_the_sheet_declares_the_scale_once() {
         "{css}"
     );
     assert!(css.contains("border-top-left-radius:9999px"), "{css}");
-    // Declared once, every base name (all nine or none).
+    // Declared once, every base name (theme2's all-nine-or-none, round 2).
     let root: String = scale::names()
         .map(|n| format!("{}:{};", crate::base_scale::property(n), kernel(n)))
         .collect();
@@ -83,8 +83,8 @@ fn no_base_named_no_declarations_and_a_designs_own_is_its_token() {
     );
 }
 
-/// An app's own base name wins on the JS target, with no base property for
-/// it, and follows a
+/// theme2's conditions on `--exact-<name>` (2026-10-19): an app's own base
+/// name wins on the JS target, with no base property for it, and follows a
 /// live edit: in a development build it is the design's property, which a
 /// design edit's batch sets again (`modes::design`), so the page moves.
 #[test]
@@ -153,8 +153,8 @@ fn an_apps_own_base_name_wins_and_follows_a_live_edit() {
     );
 }
 
-/// An alias to a base name the design leaves unset
-/// (`card.pad: length = space.md`): the token's CSS is the base's property,
+/// An alias to a base name the design leaves unset (B1 round 1,
+/// `card.pad: length = space.md`): the token's CSS is the base's property,
 /// which the sheet declares at the build's column although only the alias
 /// names it. When the design sets the base name the alias folds, so the page
 /// shows the app's value and no base property.
@@ -230,7 +230,7 @@ fn an_alias_to_an_unset_base_reads_its_property_and_one_the_app_sets_folds() {
     );
 }
 
-/// An SVG attribute reads no CSS property, so an alias
+/// B2 round 1 (Astra 1): an SVG attribute reads no CSS property, so an alias
 /// to an unset base name in one is the base's length in this build's column,
 /// in a release and a development build, bound or static.
 #[test]
@@ -270,7 +270,7 @@ fn an_alias_in_an_svg_attribute_is_the_bases_length() {
     }
 }
 
-/// All nine or none: the sheet declares every base
+/// theme2's all-nine-or-none (B2 round 2): the sheet declares every base
 /// name when the plan may read any as a length, and none when it can't. A
 /// literal row, an alias, a computed name, a string read: the nine, and the
 /// map holds each. A text or a label that says `space.md`, a condition over
@@ -313,7 +313,7 @@ fn the_scale_is_declared_whole_when_the_plan_may_read_a_base_name() {
         "      column padding=(\" \" + gap)\n        text \"a\"\n",
         "      column padding=(gap + \" \")\n        text \"a\"\n",
         "      column padding=gap\n        text \"a\"\n",
-        // Trimmed as JavaScript trims: U+FEFF, which
+        // Trimmed as JavaScript trims (round 2's re-review): U+FEFF, which
         // Rust's `trim` keeps, and an ideographic space.
         "      column padding=(\"\u{feff}\" + gap)\n        text \"a\"\n",
         "      column padding=(gap + \"\u{feff}\")\n        text \"a\"\n",
@@ -341,7 +341,7 @@ fn the_scale_is_declared_whole_when_the_plan_may_read_a_base_name() {
         "{}",
         out.js
     );
-    // A region's item or bound value typed as built: a
+    // Round 2, Astra 5: a region's item or bound value typed as built: a
     // number list's or option's is none, a string one's may be any.
     for (body, nine) in [
         ("      for n in [12, 16] key=n\n        column padding=n\n          text \"a\"\n", false),
@@ -358,7 +358,7 @@ fn the_scale_is_declared_whole_when_the_plan_may_read_a_base_name() {
     }
 }
 
-/// Where the plan declares the scale, a keyword row's map
+/// Round 2, Astra 1: where the plan declares the scale, a keyword row's map
 /// (which holds no base name, `base_scale::reads_length`) is not a length
 /// row's, whichever is bound first.
 #[test]
@@ -391,7 +391,7 @@ fn a_keyword_rows_map_is_not_a_length_rows() {
     );
 }
 
-/// A bound SVG attribute's map holds each token of one
+/// Round 2, Astra 3: a bound SVG attribute's map holds each token of one
 /// value it may name as its CSS (an attribute reads no property), an alias as
 /// its length, so each is written inline: a development build's edit of it
 /// builds, never a batch that leaves the attribute behind.
@@ -430,7 +430,7 @@ fn a_token_a_bound_svg_attribute_may_name_is_written_inline() {
         "{}",
         row("card.pad")
     );
-    // A plain constant the attribute may name too.
+    // Widened (the lead): a plain constant the attribute may name too.
     assert_eq!(
         row("tile")["inline"],
         serde_json::json!(true),
@@ -475,7 +475,7 @@ fn a_switch_between_base_names_keeps_the_structure() {
     );
 }
 
-/// Grid.js's track check admits a base name's property,
+/// Round 3 (Astra): grid.js's track check admits a base name's property,
 /// exactly the kernel's nine, written there by hand: held to the table.
 #[test]
 fn the_grid_track_check_names_the_scale() {
@@ -496,7 +496,7 @@ fn the_grid_track_check_names_the_scale() {
     assert!(grid.contains(&pattern), "grid.js should admit {pattern}");
 }
 
-/// A length token over base names the design leaves unset is a
+/// Stage 12 B2: a length token over base names the design leaves unset is a
 /// `calc()` over their properties, which the browser folds, so the sheet
 /// declares the scale although only the expression names it; a release's
 /// static row is the build's column's px, as the kernel folds it; an SVG
@@ -602,7 +602,7 @@ fn an_expression_over_base_names_is_a_calc_over_their_properties() {
     );
 }
 
-/// A shadow token whose lengths are over base names is the
+/// Stage 12 B3: a shadow token whose lengths are over base names is the
 /// row's CSS with each such length its property or a `calc()` over them,
 /// which the browser folds, so the sheet declares the scale although only
 /// the shadow names it; a release's static row is the build's column's
@@ -622,7 +622,7 @@ fn a_shadow_over_base_names_writes_their_properties() {
             .starts_with("0px var(--exact-space-xs) var(--exact-space-sm) "),
     );
     // A colour whose words name a base (a platform colour's asset) is a
-    // colour, kept whole, and no length is paired with it: the
+    // colour, kept whole, and no length is paired with it (round 3): the
     // row's CSS, as with no base at all.
     for (kind, text) in [
         (

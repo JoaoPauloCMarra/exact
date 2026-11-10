@@ -1,10 +1,10 @@
-//! SVG references by id.
+//! SVG references by id (LLP 1055.000 D3).
 
 use crate::id::ViewId;
 use crate::kernel::Kernel;
 
 impl Kernel {
-    /// The node an SVG reference `#id` from `from` names:
+    /// The node an SVG reference `#id` from `from` names (LLP 1055.000 D3):
     /// the one live node with that `id`; with several, the one sharing the
     /// deepest common ancestor with `from`, ties in tree order, so a
     /// component's instance finds its own definitions.
@@ -42,7 +42,7 @@ impl Kernel {
 /// common ancestor with `from`, ties in tree order (each step's place among
 /// its parent's children), then by key: [`Kernel::resolve_id`]'s rule, over
 /// any tree that answers `parent` and `position` — the kernel's, or a
-/// document a render writes without one.
+/// document a render writes without one (LLP 1048.004).
 pub fn nearest<K: Copy + Ord>(
     candidates: &[K],
     from: K,

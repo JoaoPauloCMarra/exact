@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// The app CLI's help: one text per verb of the `exact.mjs` that
+// The app CLI's help (LLP 1116 D4): one text per verb of the `exact.mjs` that
 // `exact new` writes (game/new.mjs `commandsFor`), with every flag the verb's
 // script takes, the ports it opens, whether it stays in the foreground, and an
 // example. The generated file forwards `--help`, `-h`, `help` and no verb here,
@@ -8,7 +8,7 @@
 // flag the script does not take is refused, naming the ones it does, before
 // anything builds or starts. Builders replay these texts in context: keep each
 // short, and never name a flag its script does not parse (help.test.mjs checks).
-// A verb with `more` shows what a first build needs; `--help all`
+// A verb with `more` (LLP 1116.003 D5) shows what a first build needs; `--help all`
 // adds its other flags and `bodyAll`'s lines (the ports, the rarer forms).
 //
 //   bun scripts/help.mjs [<verb>] [all]      a verb's help (all: every flag and the ports), or the index
@@ -36,7 +36,7 @@ const DRIVE = [
   ['--epoch <ISO|ms|now> · --login [hidden]', 'the date at the clock\'s zero (default 2026-01-01) · a launch the login item made, hidden: with no window'],
   ['--locale <tag> · --format-locale <tag> · --time-zone <zone> · --seed <n>', 'default en-US, the locale (the Region\'s format, exactTime().formatLocale), UTC, 1'],
   ['--fail-fetch <prefix> · --permission <name>=<state> · --notification <entry> · --wake <entry> · --call \'<tool> <json>\'', 'each fetch whose URL starts with it fails, from the first data load · a module\'s permission at the start (geolocation=granted) · a relaunch handed a listed entry, as state.notifications printed it · a cold wake for a registration, as state.backgroundSync printed it · a cold call of a tool, as a system\'s call that started the app'],
-  ['--process <target>=<file>|script:<file.json>|real · --login-env NAME=value · --home <dir>', 'macOS, Linux: what a child process is (none runs unnamed; `all=real` runs every one), the login shell\'s variables, home:/ for the data code'],
+  ['--process <target>=<file>|script:<file.json>|real · --login-env NAME=value · --home <dir>', 'macOS, Linux: what a child process is (none runs unnamed; `all=real` runs every one), the login shell\'s variables, home:/ for the data code (LLP 1133.007 §7)'],
   ['--url <url> · --browser chrome|firefox|webkit', 'web: drive a page already served (the dev loop\'s) instead of building · web (default chrome; bunx playwright@1.64.1 install firefox webkit)'],
   ['--sim <udid|name>', 'iOS: which simulator (default: a booted one)'],
   ['--device · --phone <udid|name> · --reader · --headless', 'a connected iPhone (built with ios --device), and which · Android: the APK (an `exact new` app\'s default) · the Linux host under adb shell'],
@@ -284,7 +284,7 @@ Ports    none. Runs to completion.`,
       PREBUILD,
       RELEASE,
       ['--bundle', 'assemble the .app bundle (the macOS default)'],
-      ['--painted-benchmark', 'build the app’s <macos-crate>-painted bin with ink; benchmark carrier only'],
+      ['--painted-benchmark', 'build the app’s <macos-crate>-painted bin with ink; benchmark carrier only (LLP 1149 S1.1)'],
       ['--url <url>', 'connect the app to that dev server (web\'s URL) for live reload'],
       OPTIMIZE,
     ],
@@ -351,7 +351,7 @@ artifacts under game/target only. Ports none. Runs to completion.`,
   verify <file.contract> [--types] [--prove <Module>] · rust <file.contract> [-o <shapes.rs>]
   lean <file.contract> [--components] [--name <ident>] [-o <file.lean>]
   tamber check <app> | eval <app> [--mode <axis>=<value>] | ir <app> [-o <tamber.json>] | fmt <app> [--check]   (a flag before or after <app>)
-                                          the app's design: checked, its tokens in one mode, its IR
+                                          the app's design (LLP 1121): checked, its tokens in one mode, its IR
 The first call compiles the compiler (minutes on a cold checkout).
 Ports    none. Runs to completion: exit 0 when it compiled.`,
     example: 'bun exact.mjs contract build app.contract --json',
@@ -402,18 +402,18 @@ Ports    none. Runs to completion.`,
       ['--no-open', 'tool: print the URL; open no browser'],
     ],
     body: `The design is the file app.json's "tamber" names, else app.tamber beside app.contract
-. check prints each refusal at its line; eval prints "name = value" a token.
+(LLP 1121). check prints each refusal at its line; eval prints "name = value" a token.
 serve is the design server (the dev loops mount it too, at /__tamber): reads, edits,
 undo and a change stream, with a token only this machine's loopback can have. gen writes
-bindings from the IR, generated and never committed: ts, tamber.ts (a
+bindings from the IR, generated and never committed (LLP 1121 D12): ts, tamber.ts (a
 ColorToken union, each token's CSS per mode) and tamber.css; rust, tamber.rs, a
 Token<Color> constant a token (SURFACE_CARD), which session.tamber().get resolves; swift,
 tamber.swift, ExactTamberToken.surfaceCard for a native view's ExactTamber(view). op takes
 that token and sends one request, or prints the change stream (subscribe). import css
 writes a stylesheet's :root custom properties into the design, between markers a later
-import of it rewrites, naming each it refuses. import <kind> holds another
+import of it rewrites, naming each it refuses (LLP 1153 D6). import <kind> holds another
 system's theme on the server as proposals: the tokens as one, each role override apart.
-tool is the design tool, built if stale, served by the design server at
+tool is the design tool (LLP 1122), built if stale, served by the design server at
 http://127.0.0.1:7740/__tamber/tool/ and opened. docs/recipes/tamber.md.
 Ports    serve: a loopback port (printed), until ctrl-c; tool: 127.0.0.1:7740, the one its
 grants name, until ctrl-c (EXACT_TOOL_PORT names another: the tool is built for it, and a dev
@@ -546,7 +546,7 @@ Ports    none; send makes one HTTPS request. Runs to completion.`,
     ],
     body: `The app is eight files and no Rust: app.contract, app.ts, app.test.contract, app.json, exact.mjs,
 AGENTS.md, package.json and .gitignore. A native verb (ios, mac, linux, android, windows) names its platform
-in app.json the first time it runs and builds in a workspace generated under .exact/. Give
+in app.json the first time it runs and builds in a workspace generated under .exact/ (LLP 1153 D1). Give
 --name and --bundle-id here, before the first build: a later change to the id makes the next build cold
 and leaves the old app installed. Then cd there: its exact.mjs runs everything, and bun exact.mjs help
 lists its verbs. Read docs/start-here-site.md first for a website, else docs/start-here.md.
@@ -571,7 +571,7 @@ export function helpText(verb, { all = false } = {}) {
 }
 
 /** The index: each verb of an app's exact.mjs, then the app's own (app.json `commands`), then the forms a build uses
- * (builders read `help` and then four or five verbs' `--help` for the same flags, each a step carried in
+ * (LLP 1116.009 D6: builders read `help` and then four or five verbs' `--help` for the same flags, each a step carried in
  * context to the end; every flag a form names is one its script parses, help.test.mjs). */
 export function indexText({ verbs = Object.keys(HELP).filter((v) => !['new', 'add'].includes(v)), own = {} } = {}) {
   const names = [...verbs, ...Object.keys(own)], width = Math.max(...names.map((v) => v.length));

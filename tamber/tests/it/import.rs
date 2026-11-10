@@ -1,4 +1,4 @@
-//! Importers (commits 6–9): each pinned source under
+//! Importers (LLP 1121 stage 3, commits 6–9): each pinned source under
 //! `tests/import/` imports with every value mapped or reported, counted;
 //! the transaction applies to a design that checks; and re-importing the
 //! unchanged source proposes nothing.
@@ -37,8 +37,8 @@ fn token_value<'a>(text: &'a str, name: &str) -> &'a str {
 fn shadcn_default_theme_imports_counted_and_again_proposes_nothing() {
     let css = fixture("shadcn-neutral.css");
     let first = shadcn::import(&css, "shadcn", &parse(EMPTY).unwrap(), &vocab()).unwrap();
-    // 24 in :root (23 colours, --radius, a length) and 23 in .dark: every
-    // one mapped.
+    // 24 in :root (23 colours, --radius) and 23 in .dark: every one mapped
+    // (stage 6 H made `--radius` a length).
     assert_eq!(
         (
             first.counted.source,
@@ -222,7 +222,7 @@ html.dark .theme-blue { --primary: #000088; }
         why("--font"),
         ["not a colour, nor a length, shadow or family by its name and value"]
     );
-    // A length, and a reference to it the token it names.
+    // A length, and a reference to it the token it names (stage 6 H).
     assert!(why("--gap").is_empty());
     assert!(why("--space").is_empty());
     assert_eq!(why("--loop-a").len() + why("--loop-b").len(), 2);
@@ -382,7 +382,7 @@ fn an_authored_when_on_another_axis_stays_and_a_role_offer_clears_its_own() {
     );
 }
 
-/// A role has one value, judged on the design as accepted:
+/// A role has one value (LLP 1121 D5), judged on the design as accepted:
 /// a `when` the design keeps on its own axis makes the token vary, and any
 /// role the design has that would then vary is named, with no operations
 /// (removing it could break what reads its colour).
@@ -774,7 +774,7 @@ fn a_figma_variables_export_imports_counted_with_light_and_dark() {
     );
     assert_eq!(first.counted.source, 31 + 31 + 4 + 19 + 19);
     // 11 + 11 primitive colours (two themes) and 9 + 9 token colours (light,
-    // dark), and 61 numbers: the strings and booleans reported.
+    // dark), and 61 numbers (stage 6 H): the strings and booleans reported.
     assert_eq!(first.counted.mapped, 101);
     let text = accepted(EMPTY, &first);
     // A number per theme: the default's, and a `when` line for the other.
@@ -1295,7 +1295,7 @@ fn astryx_neutral_imports_counted_and_reports_its_kinds_probe() {
     let json = fixture("astryx-neutral.json");
     let first = astryx::import(&json, "astryx", &parse(EMPTY).unwrap(), &vocab()).unwrap();
     // 258 Astryx tokens and the theme's 10 own: 160 colours and 101 of the
-    // other kinds mapped, 7 reported.
+    // other kinds mapped (stage 6 H), 7 reported.
     assert_eq!(
         (
             first.counted.source,
@@ -1372,7 +1372,7 @@ fn astryx_neutral_imports_counted_and_reports_its_kinds_probe() {
 }
 
 /// The design's own `when` line on the accent stays (Astryx owns no axis),
-/// so the role would vary: it is offered with no operations.
+/// so the role would vary: it is offered with no operations (LLP 1121 D5).
 #[test]
 fn astryx_offers_no_accent_role_over_a_token_the_design_varies() {
     use exact_tamber::import::astryx;
@@ -1390,8 +1390,8 @@ fn astryx_offers_no_accent_role_over_a_token_the_design_varies() {
 
 /// A role that reaches a changed value and holds a `when` line could
 /// split once accepted, though Astryx adds no `when`: it is named, with no
-/// operations (two cases: a `when` that folds to today's default, and a role
-/// chained to the rebound accent).
+/// operations (the reviewers' two cases: a `when` that folds to today's
+/// default, and a role chained to the rebound accent).
 #[test]
 fn astryx_names_a_design_role_a_changed_value_could_split() {
     use exact_tamber::import::astryx;

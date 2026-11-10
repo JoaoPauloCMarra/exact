@@ -1,4 +1,4 @@
-//! An answer that drew secure randomness is a device read
+//! LLP 1069.005 D2: an answer that drew secure randomness is a device read
 //! whose value bake leaves out of the plan — unlike a store read, whose
 //! empty-store answer is compiled as the fresh install's placeholder — so
 //! no random value is shared by every install, and the device asks it.
@@ -48,7 +48,7 @@ impl DataSource for Device {
                 store.observe_external_read();
                 Ok(Answer::Now(Value::str("signed out")))
             }
-            // A Rust source's own helpers, marked as TypeScript's are.
+            // D5: a Rust source's own helpers, marked as TypeScript's are.
             "uuid" => exact_data::crypto::random_uuid(store).map(|id| Answer::Now(Value::str(&id))),
             "digest" => {
                 let bytes = exact_data::crypto::digest(exact_data::crypto::Sha::Sha256, b"abc");
@@ -71,7 +71,7 @@ fn bake_compiles_no_value_that_drew_randomness() {
     };
     assert!(row("id").reader && row("id").initial.len == 0);
     assert!(row("session").reader && row("session").initial.len > 0);
-    // `exact_data::crypto` marks a Rust source's draw the same way; a
+    // D5: `exact_data::crypto` marks a Rust source's draw the same way; a
     // digest is pure and compiled.
     assert!(row("uuid").reader && row("uuid").initial.len == 0);
     assert!(!row("digest").reader && row("digest").initial.len > 0);

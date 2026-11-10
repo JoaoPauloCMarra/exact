@@ -1,4 +1,4 @@
-//! Look frames: the current tick drawn once,
+//! Look frames (LLP 1127.000 D1, D3, D4): the current tick drawn once,
 //! offscreen, with the renderer's probe armed, and read back. A canvas that
 //! draws (web, Apple, a rendering Linux host) draws its look frame with its own
 //! renderer. A device-less one, the GPU-less proof host, makes a device on its
@@ -442,7 +442,7 @@ impl<G: Game, P: Executor, const ASSETS: bool, H: crate::Hooks> WorldSurface<G, 
             headroom: 1.,
         });
         // A look frame is the world's picture: its rung's samples, clamps and
-        // scale, as the live frame has them.
+        // scale, as the live frame has them (LLP 1139.003 D3).
         let game = G::render_scale(sim.args());
         let factor = self
             .rung

@@ -1,4 +1,4 @@
-// NSButton as it is, including reported stand-ins.
+// @ref LLP 1069.011.001 D1–D17 and §6: NSButton as it is, including reported stand-ins.
 #if os(macOS)
 import AppKit
 
@@ -64,7 +64,7 @@ enum ButtonConfigurationMac {
         let platformFont = NSFont.systemFont(ofSize: NSFont.systemFontSize(for: button.controlSize))
         let titleFont = font(platformFont, rows: rows.title)
         button.font = titleFont
-        // The destructive role: AppKit's own flag, which is all it draws on a plain push button of
+        // The destructive role (LLP 1116.008): AppKit's own flag, which is all it draws on a plain push button of
         // the system's, and the platform's red where the author painted no accent: the accent look's bezel (AppKit's
         // white title on it), else the ink.
         button.hasDestructiveAction = destructive
@@ -74,13 +74,13 @@ enum ButtonConfigurationMac {
         let foreground = authored ?? (red && !look.hasSuffix("-accent") ? NSColor.systemRed : nil)
         // SwiftUI's `.plain` draws in the label colour, `.borderless` in the
         // accent; the table draws both borderless, so the name tells them
-        // apart. An authored colour wins over either.
+        // apart (LLP 1115 wave 1). An authored colour wins over either.
         // (The destructive red is `foreground` above, where the author painted no title.)
         let platformInk: NSColor? = look != "borderless" ? nil : face.style == "plain" ? .labelColor : (accent ?? .controlAccentColor)
         button.contentTintColor = foreground ?? platformInk
         button.title = face.title ?? ""
         // Keep the author's settings. AppKit still substitutes disabled ink
-        // at draw time; observation reports that platform limitation.
+        // at draw time; observation reports that platform limitation (§6).
         if let foreground {
             let paragraph = NSMutableParagraphStyle()
             paragraph.alignment = alignment(rows.title["text_align"]?.string, rtl: button.userInterfaceLayoutDirection == .rightToLeft)
@@ -89,7 +89,7 @@ enum ButtonConfigurationMac {
         let symbolFont = font(titleFont, rows: rows.symbol)
         let symbolWeight = rows.symbol["font_weight"]?.number.map(Int.init) ?? TextEngine.controlWeight(titleFont)
         button.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: symbolFont.pointSize, weight: weight(symbolWeight))
-        // An svg-only icon's path: a template image at the symbol's point size.
+        // An svg-only icon's path (stage 9 A2): a template image at the symbol's point size.
         var image = face.symbol.flatMap { FaceSymbol.image($0, points: symbolFont.pointSize) }
         if let tint = color(rows.symbol["tint_color"], appearance: appearance, accent: accent), let source = image {
             if face.symbol.map(FaceSymbol.isPath) == true {

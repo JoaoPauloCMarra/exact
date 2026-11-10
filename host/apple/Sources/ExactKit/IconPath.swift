@@ -1,4 +1,4 @@
-// An icon path on a node, drawn by ExactCore’s IconPath.
+// An icon path on a node (LLP 1121 D10), drawn by ExactCore’s IconPath.
 #if os(macOS)
 import AppKit
 #else

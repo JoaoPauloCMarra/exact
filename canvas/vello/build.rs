@@ -1,5 +1,5 @@
-//! Every shader this module runs, compiled here to Metal AIR: the GPU
-//! compiles no shaders at runtime.
+//! Every shader this module runs, compiled here to Metal AIR (`rules/
+//! DEFERRED.md`: the GPU "compiles no shaders at runtime").
 //!
 //! vello's WGSL (from `vello_shaders`, with the fine stage patched: a
 //! backdrop it starts from and premultiplied output) and this crate's own

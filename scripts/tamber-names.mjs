@@ -1,8 +1,8 @@
-// The token names a native module reads, written from the
+// The token names a native module reads (LLP 1121 D12), written from the
 // app's design before the module compiles: `contract tamber gen swift` or
 // `kotlin` into the app's `.exact/tamber/` (never committed), so a view names
 // `.swatchRing` or `TamberColor.SWATCH_RING`, a param of its own `component`
-// among them. An app with no design has none.
+// (D15) among them. An app with no design has none.
 import { spawnSync } from 'node:child_process';
 import { existsSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';

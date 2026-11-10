@@ -46,12 +46,12 @@ pub(crate) fn request_from_json(text: &str) -> Result<Request, String> {
         stream: j.get("stream").and_then(Json::as_bool).unwrap_or(false),
         socket: j.get("socket").and_then(Json::as_bool).unwrap_or(false),
         bytes: j.get("bytes").and_then(Json::as_bool).unwrap_or(false),
-        // `exactUploadProgress`.
+        // `exactUploadProgress` (LLP 1016.000 D10).
         upload_progress: j
             .get("upload_progress")
             .and_then(Json::as_bool)
             .unwrap_or(false),
-        // `exactLongPoll`: its cursor parameter and the reply field it is taken from.
+        // `exactLongPoll` (LLP 1016.000 D8): its cursor parameter and the reply field it is taken from.
         long_poll: match j.get("long_poll") {
             None | Some(Json::Null) => None,
             Some(lp) => {
@@ -104,7 +104,7 @@ pub(crate) fn request_from_json(text: &str) -> Result<Request, String> {
         redirect: Redirect::parse(j.get("redirect").and_then(Json::as_str))?,
         held: j.get("held").and_then(Json::as_bool).unwrap_or(false),
         reach: Default::default(),
-        // `exactListen`'s options; the defaults where unsaid.
+        // `exactListen`'s options (LLP 1133.005 D1); the defaults where unsaid.
         listen: match j.get("listen") {
             None | Some(Json::Null) => None,
             Some(l) => {
@@ -128,7 +128,7 @@ pub(crate) fn request_from_json(text: &str) -> Result<Request, String> {
         // Set when its answer awaits it (`Module::begin`), the name an abort uses.
         fetch: None,
     };
-    // A long poll's terms, checked as every host checks them, and an upload's.
+    // A long poll's terms, checked as every host checks them (LLP 1016.000 D8), and an upload's.
     match (request.long_poll_refusal().or(request.ceiling_refusal()))
         .or(request.upload_progress_refusal())
     {
@@ -220,7 +220,7 @@ fn base64(bytes: &[u8]) -> String {
 }
 
 /// `measureText`'s run from the TypeScript recorder, measured by the
-/// canvas's text engine on this thread: the eleven raw metrics
+/// canvas's text engine on this thread (LLP 1056 D8): the eleven raw metrics
 /// as a JSON array.
 pub(crate) fn canvas_measure(
     env: Option<&exact_runner::exact_canvas::Env>,

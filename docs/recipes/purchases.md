@@ -1,6 +1,7 @@
 # Recipe: selling a subscription or a tip
 
-`@exact/purchases` sells through the store on iOS, macOS and Android. Elsewhere `purchasesStatus().available` is false and the lists are
+`@exact/purchases` sells through the store on iOS, macOS and Android (LLP
+1133.015). Elsewhere `purchasesStatus().available` is false and the lists are
 empty. A screen gates on **`listPurchases()`**, what the person holds;
 delivery reads **`unfinishedPurchases()`**, the store's queue, and nothing
 else.

@@ -66,8 +66,8 @@ Create seam types once with `bun exact.mjs contract types app.contract -o app.co
 the change on stderr. `contract types --check app.contract` checks freshness without writing.
 `bun exact.mjs update` reports lock drift after this checkout moves; `bun exact.mjs lock`
 refreshes it. `contract migrate app.contract` rewrites retired Contract syntax;
-the upgrade note in [the snapback4 package's README](https://www.npmjs.com/package/snapback4)
-covers mutation refusals too.
+[the Snapback upgrade note](../snapback4/README.md#updating-an-inherited-app) covers
+mutation refusals too.
 Keep scratch files in `.exact/` and helper scripts you commit (a screenshot comparer) in
 `tools/`: neither makes the build stale. Other files you add may (a Python helper under
 `scripts/`, a JSON file `app.ts` imports). Nothing the app reads belongs in `tools/`: an edit

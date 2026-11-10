@@ -21,13 +21,13 @@ pub(crate) fn unknown_tag(tag: &str, span: Span) -> LowerError {
 }
 
 /// CSS's fragmentation properties exact2 knows and does not implement: the
-/// spanning element and paged media's breaks. Multi-column
-/// layout and its `break-*`, `widows` and `orphans` are rows; these
+/// spanning element and paged media's breaks (LLP 1093 §1, §5). Multi-column
+/// layout and its `break-*`, `widows` and `orphans` are rows (LLP 1093); these
 /// are refused by what they would need, not as misspellings.
 pub(crate) fn fragmentation(name: &str) -> Option<&'static str> {
     Some(match name {
-        "column-span" => "is CSS Multi-column Layout's spanning element, which exact2 does not implement (only `column-span: none` exists); end the column flow and put the spanning content after it",
-        "page-break-before" | "page-break-after" | "page-break-inside" => "controls where content breaks across printed pages, and exact2 does not print; in a multi-column flow `break-before`, `break-after` and `break-inside` take `column`, `avoid-column` and `avoid`",
+        "column-span" => "is CSS Multi-column Layout's spanning element, which exact2 does not implement (only `column-span: none` exists, LLP 1093 §1); end the column flow and put the spanning content after it",
+        "page-break-before" | "page-break-after" | "page-break-inside" => "controls where content breaks across printed pages, and exact2 does not print (LLP 1093 §5); in a multi-column flow `break-before`, `break-after` and `break-inside` take `column`, `avoid-column` and `avoid`",
         _ => return None,
     })
 }
@@ -90,7 +90,7 @@ const ARIA: &[&str] = &[
     "aria-valuetext",
 ];
 
-/// The physical longhands for a CSS logical box property (`padding-block`),
+/// The physical longhands for a CSS logical box property (r37 t1 wrote `padding-block`),
 /// in a left-to-right, top-to-bottom flow.
 fn logical(name: &str) -> Option<String> {
     let (base, rest) = ["padding", "margin", "inset"]
@@ -322,16 +322,16 @@ pub(crate) fn unknown_attr(tag: &str, a: &Attr) -> LowerError {
             crate::fields::placeholder_hint(&a.name).unwrap_or_default()
         }
         Some(new @ ("press" | "change" | "input")) => format!(
-            "; `{}` is `{new}` here: a handler is named for its event",
+            "; `{}` is `{new}` here: a handler is named for its event (LLP 1005 §3)",
             a.name
         ),
-        // CSS's own shorthand, not a nickname: Contract takes the longhand.
+        // CSS's own shorthand, not a nickname: Contract takes the longhand (app farm wave 1, about twelve builds).
         Some(new @ "background-color") if a.name == "background" => {
-            format!("; CSS's `background` shorthand is not taken here: a colour is `{new}`")
+            format!("; CSS's `background` shorthand is not taken here: a colour is `{new}` (LLP 1017 §8.1)")
         }
         Some(new) if new.starts_with(":active ") => active_migration_hint(&a.name, new),
         Some(new) => format!(
-            "; `{}` is spelled `{new}` here, the web's name",
+            "; `{}` is spelled `{new}` here, the web's name (LLP 1017 §8.1)",
             a.name
         ),
         None if fragmentation(&a.name).is_some() => {
@@ -369,7 +369,7 @@ pub(crate) fn unknown_attr(tag: &str, a: &Attr) -> LowerError {
             "; a cancelled pointer ends with `pointerup` (its `buttons` 0), so the `pointerup` handler that ends a hold covers it".into()
         }
         None if css_hint(&a.name).is_some() => css_hint(&a.name).unwrap_or_default(),
-        // The build chooses.
+        // LLP 1048.007 D5: the build chooses.
         None if tag == "image" && a.name == "loading" => {
             "; Exact chooses: an image a `for` repeats loads as its row comes into view, and a lone \
              image loads with the page"
@@ -423,7 +423,7 @@ struct Substituted<'a> {
     /// prop, inject or derive of the same name.
     hidden: Vec<&'a str>,
     /// The names a `use` brings from a package: one may be a module's event,
-    /// heard as an attribute on the root, which only the
+    /// heard as an attribute on the root (LLP 1133.004 D6), which only the
     /// package's declaration, read when sources resolve, can say.
     imported: Vec<&'a str>,
 }
@@ -532,7 +532,7 @@ fn known_arms(v: &Expr, names: &Substituted, budget: &mut usize) -> Option<Expr>
 /// rows. The driver runs this when an earlier pass refused, so a misspelled
 /// tag or a bad colour is reported in the same run as a type error.
 pub fn lint(file: &File) -> Vec<LowerError> {
-    // A theme's names are colours; the lint asks only whether a
+    // A theme's names are colours (LLP 1095 D4); the lint asks only whether a
     // row's value is one, so each stands for any.
     crate::theme::bind_axes(file);
     let _theme = crate::theme::lint_scope(file);
@@ -567,7 +567,7 @@ pub fn lint(file: &File) -> Vec<LowerError> {
                                 errors.extend(dataset::refused(a));
                                 continue;
                             }
-                            // A state part's row (`:hover opacity`): one
+                            // A state part's row (`:hover opacity`, LLP 1121 D8): one
                             // its state takes, checked as the row the fold lowers it to.
                             let row;
                             let a = match contract_syntax::state::state_of(&a.name) {
@@ -630,7 +630,7 @@ pub fn lint(file: &File) -> Vec<LowerError> {
                                 Some(_) => Ok(()),
                             };
                             // An expression over a token is folded by the
-                            // build (a synthetic token), not here,
+                            // build (a synthetic token, LLP 1121 D3), not here,
                             // in a choice's arm as in a whole value; the other
                             // arms are checked here.
                             let folded = |t: &str| {
@@ -702,15 +702,15 @@ pub fn lint(file: &File) -> Vec<LowerError> {
         };
         walk(&c.view, &names, &mut errors);
     }
-    // A component's anatomy, which no type is needed to check.
+    // A component's anatomy, which no type is needed to check (LLP 1139 D2).
     for c in file.components.iter().filter(|c| !c.anatomy.is_empty()) {
         errors.extend(crate::anatomy::check(c, file));
     }
-    // A library package's host reads, said beside the type
+    // A library package's host reads (LLP 1139 D6), said beside the type
     // error a child's resource is.
     errors.extend(crate::anatomy::platform(file));
     errors.truncate(MAX_REFUSALS);
-    // A param by its full name, never its token's.
+    // A param by its full name, never its token's (LLP 1121 D15).
     let params = crate::params::tokens(file);
     for e in &mut errors {
         e.message = crate::params::shown(&e.message, &params);

@@ -1,18 +1,18 @@
-// Native buttons on UIKit: a `button appearance="auto"` is a
+// Native buttons on UIKit (LLP 1069.011): a `button appearance="auto"` is a
 // `Control` of type `button`, and its control is UIKit's own `UIButton` with
 // the `UIButton.Configuration` its `buttonStyles` row names, or with no
-// `buttonStyle` written the platform's own (`ButtonFace.unsaid`,
-// Plain on iOS). Its title and
+// `buttonStyle` written the platform's own (`ButtonFace.unsaid`, LLP 1115.000
+// D15: plain on iOS). Its title and
 // symbol are the node's face, read from the kernel (`exact_button_face`);
 // its children are never views. The control takes the touch and runs the
-// node's activation; the node keeps keys and focus; the control is the
+// node's activation (D4); the node keeps keys and focus; the control is the
 // one accessibility element. A glass style's control is the glass body the
-// glass-group pass isolates.
+// glass-group pass isolates (D9).
 #if os(iOS) || os(tvOS)
 import UIKit
 
 /// UIKit's button, as a native button's control: never a UIKit focus item
-/// (the node is the focus owner).
+/// (the node is the focus owner, D4).
 final class NativeButtonIOS: UIButton {
     weak var owner: NodeView?
     override init(frame: CGRect) {
@@ -139,7 +139,7 @@ final class NativeButtonIOS: UIButton {
         super.touchesBegan(touches, with: event)
     }
     /// Where the touch lifted while UIKit sends the action it ends with (in
-    /// `super.touchesEnded`): its press's point. VoiceOver's
+    /// `super.touchesEnded`): its press's point (LLP 1021 D2). VoiceOver's
     /// activation sends the action with no touch, and has none.
     private(set) var lifted: CGPoint?
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -289,24 +289,24 @@ final class NativeButtonIOS: UIButton {
 }
 
 extension NodeView {
-    /// A `button appearance="auto"`.
+    /// A `button appearance="auto"` (LLP 1069.011 D3).
     var isNativeButton: Bool { kind == "control" && props["type"] == "button" }
 
     /// Where a native control sits: the glass slot's content when the
-    /// glass-group pass made one, else the node.
+    /// glass-group pass made one (D9), else the node.
     var controlMount: UIView { glassSlot?.contentView ?? self }
 
     /// Its face's title, as its control shows it.
     var nativeTitle: String? { (presenter?.controls.controls[id] as? NativeButtonIOS)?.written?.face.title }
 
     /// The native glass button this node shows, the glass body the
-    /// glass-group pass isolates; nil for anything else.
+    /// glass-group pass isolates (D9); nil for anything else.
     var nativeGlassBody: UIView? {
         guard isNativeButton, let b = presenter?.controls.controls[id] as? NativeButtonIOS, b.isGlass else { return nil }
         return b
     }
 
-    /// The control's primary action is what a custom button's touch-up
+    /// D4: the control's primary action is what a custom button's touch-up
     /// does, once: the target is this node or, without a handler, the
     /// nearest ancestor with one whose box holds the touch (refused at a
     /// disabled one), resolved first; then the press's focus
@@ -390,16 +390,16 @@ extension ControlHost {
         syncRaster(face, owner)
         // A destructive button draws in the platform's destructive red, as a hand-built screen's does (SwiftUI's
         // `Button(role: .destructive)`, UIKit's red tint): red ink, or a red fill under white ink on a filled
-        // style. The accent it only inherits
+        // style (LLP 1116.008, team-kanban: "Delete is not styled as destructive"). The accent it only inherits
         // leaves it red, as it leaves a swipe action's; an accent written on the button itself, and a colour
-        // written on its title, win (what the author writes wins).
+        // written on its title, win (LLP 1115: what the author writes wins).
         let destructive = owner.props["destructive"] == "true" && !owner.wrote("accent_color")
         let accent = destructive ? UIColor.systemRed : Self.platformAccent(owner, accent)
         let written = NativeButtonIOS.Written(
             face: face, active: NativeButtonState(owner), raster: owner.raster?.id ?? 0, accent: accent, destructive: destructive, enabled: !owner.disabled,
             label: owner.authoredLabel ?? face.title, testId: owner.props["testId"],
             // A checked radio is selected, as Safari's VoiceOver reads one (`setAccessibilityChecked`).
-            // `aria-current` (not `false`) too: UIKit has no current.
+            // `aria-current` (not `false`) too: UIKit has no current (theme2 2026-10-22 06:40).
             selected: owner.props["accessibilitySelected"] == "true" || owner.props["accessibilityCurrent"].map { !["", "false"].contains($0) } == true
                 || owner.checkedRole.map { $0.role == "radio" && $0.checked } == true,
             expanded: owner.props["accessibilityExpanded"],
@@ -441,7 +441,7 @@ extension ControlHost {
         ButtonConfigurationIOS.platformColor(owner.style["accent_color"], resolved)
     }
 
-    /// What the agent's `layout` says of a native button.
+    /// What the agent's `layout` says of a native button (D10).
     func nativeObservation(_ button: NativeButtonIOS) -> [String: Any] {
         let face = button.written?.face ?? ButtonFace()
         return ["view": "UIButton", "style": face.style as Any, "drawn": button.drawn, "title": face.title as Any,

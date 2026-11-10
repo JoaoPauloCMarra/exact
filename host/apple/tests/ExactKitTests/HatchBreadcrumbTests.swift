@@ -1,7 +1,7 @@
 import XCTest
 @testable import ExactKit
 
-/// The crash breadcrumb: what a process that
+/// The crash breadcrumb (LLP 1075.003.000.001 §4.4): what a process that
 /// died inside a hatch call left is read by the next launch; a call that
 /// returned leaves nothing; nesting past 8 is counted; each session's slot
 /// is its own; a record torn by the death is passed over for the last whole

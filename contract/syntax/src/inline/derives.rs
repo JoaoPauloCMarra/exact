@@ -174,7 +174,7 @@ fn summarize(e: &Expr, indices: &BTreeMap<&str, usize>, summaries: &[Summary]) -
             out.add(&part(subject));
             branches(&mut out, &part(some), &part(none));
         }
-        // A callback runs once per item, perhaps never.
+        // A callback runs once per item, perhaps never (LLP 1017.003).
         Expr::Arrow { body, .. } => out.add_sometimes(&part(body)),
         _ => each_child(e, &mut |child| out.add(&part(child))),
     }

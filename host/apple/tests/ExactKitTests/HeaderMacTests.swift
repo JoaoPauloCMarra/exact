@@ -1,4 +1,4 @@
-// A route's `header` as the window's title bar and
+// @ref LLP 1115.002 D2 — a route's `header` as the window's title bar and
 // toolbar on the Mac: which header (the shared rule's, the selected route's
 // or the one under a modal route), what the window's title is, that its
 // buttons are toolbar items pressing the authored buttons, that the bar's
@@ -430,8 +430,8 @@ final class HeaderMacTests: XCTestCase {
         q.toolbar.detach()
     }
 
-    /// `appearance: none` written on the header keeps it the page's (the
-    /// shared rule's `AUTHORED`); on one of its buttons
+    /// `appearance: none` written on the header keeps it the page's (LLP
+    /// 1075.003 §9.10, the shared rule's `AUTHORED`); on one of its buttons
     /// the whole header paints, since the window's bar shows a header whole
     /// or not at all. Implied (not written), it is no opt-out.
     func testAHeaderOrAButtonThatWritesAppearanceNoneStaysPainted() throws {
@@ -488,7 +488,7 @@ final class HeaderMacTests: XCTestCase {
         XCTAssertEqual(HeaderRule.walked - before, 6, "the header (20), Back and its symbol (21, 210), the heading (22), Share and its text (23, 231); not the page (25)")
     }
 
-    /// A modal route is a sheet (`RouteSheetMacTests`): the window
+    /// A modal route is a sheet (D7.4, `RouteSheetMacTests`): the window
     /// keeps the title and the items of the route it stands over, which
     /// cannot be pressed under it, and the modal route's own header is its
     /// sheet's: the heading its title row, the stack's Back control its

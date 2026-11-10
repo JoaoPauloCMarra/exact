@@ -150,7 +150,7 @@ fn empty_collection_padding_resolves_lengths_and_percentages() {
 }
 
 /// A padding whose `calc()` resolves below zero is zero, CSS's range for
-/// padding: the origin, the range and the reported
+/// padding (LLP 1010 §6.9): the origin, the range and the reported
 /// padding all take 0, on either axis, and the runner accepts the report.
 #[test]
 fn a_negative_resolved_padding_is_zero_on_either_axis() {

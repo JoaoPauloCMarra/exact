@@ -1,13 +1,14 @@
-// The canvas gateway: a paired client's view of the app's dev URL, served
-// by the Tamber server under its paired token on the canvas's own origin
-// (the remote listener's second TLS port), never the loop's loopback URL
-// handed out.
+// The canvas gateway (LLP 1121 stage 10 C, LLP 1122 D12): a paired client's
+// view of the app's dev URL, served by the Tamber server under its paired
+// token on the canvas's own origin (B's second TLS port), never the loop's
+// loopback URL handed out.
 //
 // - `mint(token)`, the `canvas` method's body (`read`): a single-use grant
 //   (256 bits, 30 s, bound to the client) and the entry URL,
-//   `<origin>/canvas/<client>/`. Rate-limited per client with the pairing `limiter`.
-// - The entry: the tool frames `/canvas/<client>/#g=<grant>` (the
-//   single-use 30 s grant, never the token, in a fragment no server sees). GET serves a static page whose one
+//   `<origin>/canvas/<client>/`. Rate-limited per client with A's `limiter`.
+// - The entry: the tool frames `/canvas/<client>/#g=<grant>` (theme2's
+//   approval of the fragment entry: the single-use 30 s grant, never the
+//   token, in a fragment no server sees). GET serves a static page whose one
 //   script (hashed in its CSP) takes the fragment out of its address and
 //   history first, then POSTs `{grant}` as JSON, same-origin: the grant
 //   compared timing-safe and burned, a session id (256 bits) bound here to
@@ -16,7 +17,7 @@
 //   A grant in a query or a path is never read. The cookie only names a session: a value this map didn't
 //   mint (page code can set a cookie of that name; cookies aren't
 //   port-scoped) is an unknown session, and a token is never read from it.
-// - Every other request: the session, then its client's token through the pairing's
+// - Every other request: the session, then its client's token through A's
 //   `lookup` (a revoked or expired token fails at once), then the route's
 //   scope through `allows`. An unknown, missing, revoked or expired session
 //   is not-found, the same answer for each; a scope refused is 403 naming
@@ -28,7 +29,7 @@
 //   not-found, and the path forwarded is exactly the path authorized.
 // - The allow list (`needs`): `read` for the page and its assets (GET/HEAD
 //   outside `/__…` and `/.exact`, in any case), the dev streams and reads, GET
-//   `/__dev/design` and the page's beacons; `write` for
+//   `/__dev/design` and the page's beacons; `write` (theme2's ruling) for
 //   POST `/__dev/design`, `/__dev/checkpoint` and `/__dev/open`. Never
 //   `/__tamber…`: through the proxy the loop would see a local request.
 // - Upstream: over loopback to the loop as itself, `redirect: 'manual'`, the
@@ -44,12 +45,12 @@
 //   rewritten, and JSON bodies (and SSE's JSON data lines) are parsed and
 //   each string rewritten: the loop's own to `origin`, any other to
 //   `loopback.invalid`, no other host ever touched. Escaped spellings in
-//   text are a known limit (functional, not a boundary). Range is
+//   text are a known limit (functional, not a boundary: theme2). Range is
 //   not passed on, so a rewritten body is never a slice. `frame-ancestors`
 //   names the tool's remote origin (`toolOrigin`, never a loopback one)
 //   instead of any loopback source; `cache-control: no-store`; bodies
 //   streamed with backpressure.
-// - Revoke and expiry (the pairing's `onEnd`): each of the client's proxied requests
+// - Revoke and expiry (A's `onEnd`): each of the client's proxied requests
 //   (streams, long polls, uploads, downloads a client stopped reading) is
 //   ended at once (its upstream fetch aborted, its request and response
 //   destroyed), and its sessions and grants deleted. A session evicted past
@@ -67,7 +68,7 @@ export const BODY_LIMIT = (1 << 20) - 64;
 // CHECKPOINT_BYTES, mirrored as that file is a script (importing it starts a
 // loop); a test reads it there so the two can't drift.
 export const CHECKPOINT_LIMIT = 16 * 1024 * 1024;
-// Grants per client: a burst of 6, refilled at 6 a minute (the pairing's token bucket).
+// Grants per client: a burst of 6, refilled at 6 a minute (A's token bucket).
 export const MINT_RATE = { per: 60_000, rate: 6 };
 // Per client: live sessions, unexpired grants, and requests proxied at once
 // (the page's two streams, a long poll and its assets fit many times over).
@@ -106,7 +107,7 @@ export function needs(method, path) {
   if (lower === '/__tamber' || lower.startsWith('/__tamber/')) return null;
   if (method === 'POST') return BEACONS.has(path) ? 'read' : WRITES.has(path) ? 'write' : null;
   if (method !== 'GET' && method !== 'HEAD') return null;
-  // `/__dev/open` is the loop's opening page: `write`.
+  // `/__dev/open` is the loop's opening page; theme2 ruled it `write`.
   if (path === '/__dev/open') return 'write';
   if (READS.has(path) || READ_PREFIXES.some(p => path.startsWith(p))) return 'read';
   // A page's files under the build generation it booted (host/web/generations.mjs): that exact form only, the id's
@@ -140,9 +141,9 @@ function loopbackPort(authority, scheme = 'http:') {
 
 // Candidates, each decided by WHATWG URL: a web URL or a scheme-relative
 // one (its authority up to the first `/`, `?`, `#`, `\`, whitespace, quote,
-// `<` or `>`, so userinfo punctuation such as `;@` stays in it), and a bare `host:port` standing alone
+// `<` or `>`, so userinfo punctuation such as `;@` stays in it: theme2), and a bare `host:port` standing alone
 // (not in a path, not inside a longer name). Escaped spellings (HTML or
-// JSON escapes in text, percent-encoded URLs) are a known limit.
+// JSON escapes in text, percent-encoded URLs) are a known limit (§10).
 const ADDRESSES = new RegExp(
   String.raw`(?<![\w+.\-:\/\\%])(?<scheme>(?:https?|wss?):)?\/\/(?<auth>[^\s"'<>\x60\/?#\\]+)`
   + String.raw`|(?<![\w.\-\/\\%@:\[])(?<bare>\[[0-9a-f:.]+\]|[a-z0-9](?:[a-z0-9.\-]*[a-z0-9])?\.?):(?<port>\d{1,5})(?![\w\-]|\.\w)`, 'gi');
@@ -290,7 +291,8 @@ const put = async (res, chunk, signal) => {
   if (signal.aborted) throw new Error('ended');
 };
 
-/** The entry page's one script: the grant from `#g=…`, the fragment taken out of the address and
+/** The entry page's one script (theme2's approval of dtool2's fragment
+ * entry): the grant from `#g=…`, the fragment taken out of the address and
  * its history entry first (`replaceState`, before any request), then POSTed
  * same-origin as JSON (its own referrer policy, so the POST carries its
  * Origin under the page's `no-referrer`), then tells the remote tool it
@@ -305,8 +307,8 @@ const attr = v => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').repla
 const entryHtml = tool => `<!doctype html><html lang="en"${tool ? ` data-tool="${attr(tool)}"` : ''}><meta charset="utf-8"><title>Canvas</title><p id="m" role="status"></p><script>${ENTRY_SCRIPT}</script></html>`;
 
 /** The gateway for the dev loop at `loop` (its loopback origin), served on
- * `origin` (the canvas's public origin), framed by `toolOrigin`. The
- * pairing interface (scripts/tamber-pairing.mjs): `pairing` is the run's, as
+ * `origin` (the canvas's public origin), framed by `toolOrigin`. Stage 10
+ * A's interface (scripts/tamber-pairing.mjs): `pairing` is the run's, as
  * `tamberServer(...).pairing` returns it. Each request acts as `lookup`'s
  * client for the session's token, and `onEnd` (at once for a client already
  * ended) ends its streams. `limiter` and `allows` are that module's.
@@ -320,7 +322,7 @@ const entryHtml = tool => `<!doctype html><html lang="en"${tool ? ` data-tool="$
 export function canvasGateway({ loop = null, pairing, origin = null, toolOrigin = null, now = Date.now, limiter = pairingLimiter, allows = pairingAllows, log = () => {}, mints: shared = null }) {
   if (typeof limiter !== 'function' || typeof allows !== 'function') throw new TypeError('canvasGateway takes A\'s `limiter` and `allows`');
   // One bucket per client, for grant minting: another gateway's (`mints`,
-  // the relay canvas's) when given, so a client's cap is one
+  // stage 10c R1b's relay canvas) when given, so a client's cap is one
   // across every door.
   const mints = shared ?? limiter({ ...MINT_RATE, clock: now });
   // Every canvas request is remote: never the local token's `local`.
@@ -331,10 +333,10 @@ export function canvasGateway({ loop = null, pairing, origin = null, toolOrigin 
     if (served) throw new Error('canvasGateway: served already');
     const u = new URL(at.loop);
     const tool = at.toolOrigin ? new URL(at.toolOrigin).origin : null;
-    // The remote tool's origin, the remote TLS door: never a plain one (the local
+    // The remote tool's origin, B's TLS door: never a plain one (the local
     // tool's http://127.0.0.1:7740, or any other service on this machine).
-    if (tool && new URL(tool).protocol !== 'https:') throw new TypeError('canvasGateway: `toolOrigin` is the remote tool\'s https origin (the remote door), never a plain or local one');
-    // A host name or address only (the remote door names one): nothing an HTML attribute or a header could misread.
+    if (tool && new URL(tool).protocol !== 'https:') throw new TypeError('canvasGateway: `toolOrigin` is the remote tool\'s https origin (B\'s door), never a plain or local one');
+    // A host name or address only (B's door names one): nothing an HTML attribute or a header could misread.
     if (tool && !/^https:\/\/(?:[a-z0-9.-]+|\[[0-9a-f:.]+\])(?::\d+)?$/i.test(tool)) throw new TypeError('canvasGateway: `toolOrigin` is a plain https origin (a host name or address and a port)');
     [loopOrigin, loopHost, loopPort] = [u.origin, u.host, u.port || (u.protocol === 'https:' ? '443' : '80')];
     origin = new URL(at.origin).origin;
@@ -381,7 +383,7 @@ export function canvasGateway({ loop = null, pairing, origin = null, toolOrigin 
   };
   const watch = client => {
     if (ends.has(client)) return;
-    // The pairing's `onEnd` calls `fn` at once for a client already ended: then
+    // A's `onEnd` calls `fn` at once for a client already ended: then
     // `end` has run (and deleted the key) before the unsubscribe is kept.
     ends.set(client, null);
     const unsubscribe = pairing.onEnd(client, reason => end(client, reason));
@@ -470,9 +472,9 @@ export function canvasGateway({ loop = null, pairing, origin = null, toolOrigin 
 
   /** The canvas port's every request. `req.url`, the raw target, is what
    * is checked and forwarded (`url`, a parse of it, is not trusted);
-   * `access` says which door it came through (the remote listener's `addPort` gives `remote`). */
+   * `access` says which door it came through (B's `addPort` gives `remote`). */
   async function handle(req, res, url, access) {
-    // Only through the canvas's TLS door (the remote listener's `addPort`: `remote`), or from this machine: never plain HTTP from a LAN peer.
+    // Only through the canvas's TLS door (B's `addPort`: `remote`), or from this machine: never plain HTTP from a LAN peer.
     const door = viaDoor(access);
     const target = closed || !served || !door ? null : canonical(req.url ?? (url && url.pathname + url.search));
     if (!target) { notFound(res); return true; }
@@ -487,10 +489,10 @@ export function canvasGateway({ loop = null, pairing, origin = null, toolOrigin 
     const need = needs(req.method, target.path);
     // A page of another origin including this one's resources (a stylesheet,
     // an image, a script), its cookie sent along because the two are
-    // same-site (another relay account's canvas):
+    // same-site (another relay account's canvas, stage 10c R1b's round 2):
     // refused, as Fetch metadata says it; only this origin's own requests
     // and navigations are answered. A request with no Fetch metadata (an
-    // older browser, a driver) is let through to the session check, the
+    // older browser, a driver) is handled as stage 10 handled it, the
     // answer's CORP covering the browsers.
     const site = req.headers['sec-fetch-site'];
     if (site !== undefined && site !== 'same-origin' && site !== 'none' && req.headers['sec-fetch-mode'] !== 'navigate') { notFound(res); return true; }
@@ -610,8 +612,8 @@ export function canvasGateway({ loop = null, pairing, origin = null, toolOrigin 
   return { mint, handle, serve, close, mints, get origin() { return served ? origin : null; }, get live() { return [...live.values()].reduce((n, s) => n + s.size, 0); } };
 }
 
-/** The canvas port on the remote doors (`openRemote`), for `tamber`'s
- * gateway: another TLS listener on `host`, the same certificate (the remote listener's
+/** The canvas port on B's remote doors (`openRemote`), for `tamber`'s
+ * gateway: another TLS listener on `host`, the same certificate (B's
  * Origin check: its own only), and the gateway served at `https://<the shown name>:<its
  * port>`, proxying `loop`. The port is bound first and its handler defers to
  * the gateway, which answers nothing until `serve` (no request can come
@@ -627,7 +629,7 @@ export async function openCanvas(doors, tamber, { loop, host, port = 0, say = co
   return origin;
 }
 
-/** The canvas through a hosted relay: a
+/** The canvas through a hosted relay (stage 10c R1b, theme2's 22:06): a
  * gateway of its own, this same code, for the relay session's own pair
  * (`https://<canvas name>` framed by `https://<tool name>`), made once the
  * relay names the run's one session; `canvas` through the relay's door mints

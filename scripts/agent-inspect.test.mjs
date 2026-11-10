@@ -1,4 +1,4 @@
-// `state <name>` (agent-inspect.mjs `stateOp`): a state, derive or resource (or a field of the record)
+// `state <name>` (agent-inspect.mjs `stateOp`, LLP 1116.007 D3.9): a state, derive or resource (or a field of the record)
 // reads by name, down a dotted path, as `expect state` does, even where a view carries the name; a plain view's is the record.
 import { test, expect } from 'bun:test';
 import { render, renderTrace, renderFrameHealthReport, renderFrameHealthMetrics, perfOp, readTrack, renderPerf, stateOp, tapRefusal, nextCommitTasks, settleBound, planLocators, perfDelta } from './agent-inspect.mjs';
@@ -190,12 +190,12 @@ test('a release build\'s first trace says its frames were not measured yet, and 
   expect(text).not.toContain('presented 0');
 });
 
-// A late frame's phases, and the build to look for when no map fits.
+// LLP 1142 D1, D2: a late frame's phases, and the build to look for when no map fits.
 test('a late frame names its phases, and a trace no map fits names the host build', () => {
   const late = { t: 41210, interval: 16.67, missed: 1, overrun: 17, seq: null, batches: 2, apply: 0.3,
     phases: [{ phase: 'text', ms: 4.1, segments: 12 }, { phase: 'rows', ms: 9.4, segments: 3 }], unattributed: 3.17 };
   const frames = { period: { ms: 8.33, source: 'target' }, lifetime: { presented: 9, late: 1, missed: 1, overruns: 1, segments: 1 }, window: {}, late: [late], records: [] };
-  const text = renderTrace({ identity: { host: 'macos', app: 'chat', hostBuild: { commit: 'abcdef1234567890', dirty: true, machine: 'M5' } }, frames, journal: { lines: [] },
+  const text = renderTrace({ identity: { host: 'macos', app: 'excord', hostBuild: { commit: 'abcdef1234567890', dirty: true, machine: 'M5' } }, frames, journal: { lines: [] },
     plan: 'ab'.repeat(32), perf: { plan: 'ab'.repeat(32), seq: 1, clock: 0, incarnation: 1, sites: [{ site: 4, source: { status: 'unavailable' } }] } });
   expect(text).toContain('no transaction range · 2 batches');
   expect(text).toContain('of its 16.67 ms: rows 9.4 (3) · text 4.1 (12) · unattributed 3.17');
@@ -236,7 +236,7 @@ test('state world events uses the world seam and an optional type filter', async
   expect(calls[1][4]).toEqual({world:true, events:true});
 });
 
-// A target covered by what may leave on a timer the frozen clock never reaches: the refusal names the
+// A target covered by what may leave on a timer the frozen clock never reaches (euxy FRICTION 9): the refusal names the
 // tasks still waiting and the step that runs them; with none waiting it is as it was.
 test('a covered target\'s refusal names the tasks waiting on the clock', async () => {
   const covered = (tasks, clock = 0) => tapRefusal({ state: async () => ({ clock, tasks }), tree: async () => ({ nodes: [] }) }, 'go', new Error('tap #333: node #6 covers its middle'));
@@ -245,7 +245,7 @@ test('a covered target\'s refusal names the tasks waiting on the clock', async (
   expect((await covered({})).message).toBe('tap #333: node #6 covers its middle');
 });
 
-// A task due a commit later (an `after(1, …)` an answer armed) is what `clock settle` runs and
+// A task due a commit later (an `after(1, …)` an answer armed, euxy FRICTION 7) is what `clock settle` runs and
 // `clock data` names; one due later, one spent and one past are not.
 test('the tasks due a commit later are those within 1 ms of the clock', async () => {
   const session = { state: async () => ({ tasks: { importLink: 1001, later: 1002, spent: null, past: 999, now: 1000, adopt: 1000.5 } }) };
@@ -289,7 +289,7 @@ test('resource declarations refuse incomplete or malformed source spans', async 
   }
 });
 
-// A scroll handler that changed the tree on every event of a fling is said once, with what to do; one that
+// LLP 1144 D3: a scroll handler that changed the tree on every event of a fling is said once, with what to do; one that
 // commits rarely, or a press, is only counted.
 test('perf names a scroll handler that commits on every event', () => {
   const r = { target: 'transcript', seq: 9, clock: 0, incarnation: 1, sites: [], handlers: [
@@ -300,7 +300,7 @@ test('perf names a scroll handler that commits on every event', () => {
   expect(text).not.toContain('each press event');
 });
 
-// Each resource's asks between two reads; a host that counts none has no `resources`.
+// LLP 1146 D3: each resource's asks between two reads; a host that counts none has no `resources`.
 test('perf … during subtracts each resource\'s asks', () => {
   const read = (asked) => ({ plan: 'p', incarnation: 1, seq: asked, clock: 0, sites: [], resources: [{ name: 'channels', asked }, { name: 'servers', asked: 4 }] });
   expect(perfDelta(read(2), read(8)).resources).toEqual([{ name: 'channels', asked: 6 }]);
@@ -419,7 +419,7 @@ test('a stop freezes the track and the driver reads a multi-page tail to the end
   expect(renderPerf(out)).toContain('12 rows');
 });
 
-test("tree shows Exact's picture-in-picture window on the floating image's row", () => {
+test("tree shows Exact's picture-in-picture window on the floating image's row (LLP 1042 §9.1)", () => {
   const window = { presentation: 'window', title: 't3code://app', open: true, frame: [1051, 683, 284, 178], controls: ['minimize', 'back', 'close'], controlsShown: true };
   const text = render('tree', { epoch: 1, incarnation: 1, clock: 0, nodes: [{ id: 7, depth: 0, type: 'Image', props: { testId: 'pip' }, pictureInPicture: window }] });
   expect(text.split('\n')[1]).toBe('Image#7 [pip] pictureInPicture{window "t3code://app" open at 1051,683,284,178 controls minimize,back,close shown}');

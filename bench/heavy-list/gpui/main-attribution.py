@@ -1,4 +1,4 @@
-"""Python reducer for the GPUI measurements. Run from the repository root; inputs and outputs are retained under target/s0."""
+"""Stage 0 Python reducer. Run from the repository root; inputs and outputs are retained under target/s0."""
 import json,collections,pathlib
 p=pathlib.Path('target/s0/cpu-profiler');ss=json.load(open(p/'samples.json'));end=json.load(open(p/'ink.json'));main=next(x['tid'] for x in ss if 'Main Thread' in x['thread']);summary={}
 for phase in ['fling','rest']:

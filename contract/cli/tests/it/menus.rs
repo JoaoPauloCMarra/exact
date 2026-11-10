@@ -1,6 +1,7 @@
-//! Menus: HTML's `hr`, a void separator row, one hairline, and the confirmation
-//! shape the compiler refuses where a literal shows an Apple host could not
-//! present it (`lower-alertdialog`), rather than at the tap.
+//! LLP 1021 (Menus): HTML's `hr`, a void separator row, one hairline (LLP
+//! 1115.000 D10.3), and the confirmation shape the compiler refuses where a
+//! literal shows an Apple host could not present it (`lower-alertdialog`),
+//! rather than at the tap.
 
 use exact_kernel::{BorderStyle, Color, ColorValue, Dimension, Kernel, Offer, Overflow, PropId};
 use exact_kernel::{StyleId, StyleMask};
@@ -97,10 +98,10 @@ fn dialog_close_handler_compiles_with_action_commands() {
     assert_eq!(node(&r, "count").props.str(PropId::Text), Some("1"));
 }
 
-/// An `hr` is one hairline with no margin of its own: a solid top edge
-/// `-exact-hairline` thick in the separator role, where Chrome draws
-/// `margin: 0.5em auto` around a 1px edge. The rows are the compiler's, not the
-/// author's, and the author's win.
+/// LLP 1115.000 D10.3: an `hr` is one hairline with no margin of its own:
+/// a solid top edge `-exact-hairline` thick in the separator role, where it
+/// was Chrome's `margin: 0.5em auto` around a 1px edge. The rows are the
+/// compiler's, not the author's (LLP 1115.000 D2), and the author's win.
 #[test]
 fn an_hr_is_one_hairline_with_no_margin_and_its_authors_rows_win() {
     let mut r = boot(&app(
@@ -122,7 +123,7 @@ fn an_hr_is_one_hairline_with_no_margin_and_its_authors_rows_win() {
     ] {
         assert!(!s.mask.has(margin), "{margin:?}");
     }
-    // The platform's separator: one solid top edge, no box, one
+    // The platform's separator (LLP 1115): one solid top edge, no box, one
     // device pixel thick: 1 px where no host has said its display's scale.
     assert_eq!(s.border_style_top, BorderStyle::Solid);
     assert_eq!(s.border_style_left, BorderStyle::None);
@@ -168,11 +169,11 @@ fn an_hr_is_one_hairline_with_no_margin_and_its_authors_rows_win() {
     assert_eq!(flat.border_colors(current), [blue; 4]);
 }
 
-/// `-exact-hairline` is a width an author may write, in place of `0.5`: on a
-/// border's width, in the `border` shorthand, as a height or a gap, literal or
-/// bound. It is one device pixel, so it follows the display's scale the host
-/// reports, and with it the layout; a size of text is no width, and the
-/// compiler says so.
+/// LLP 1115.000 D10.3: `-exact-hairline` is a width an author may write, in
+/// place of `0.5`: on a border's width, in the `border` shorthand, as a
+/// height or a gap, literal or bound. It is one device pixel, so it follows
+/// the display's scale the host reports, and with it the layout; a size of
+/// text is no width, and the compiler says so.
 #[test]
 fn a_hairline_is_one_device_pixel_of_the_scale_the_host_reports() {
     let src = "component App\n  state on = true\n  action flip\n    on = not on\n  view\n    column width=200 testId=\"root\"\n      box testId=\"all\" height=20 border=\"-exact-hairline solid -exact-separator\"\n      box testId=\"bottom\" height=20 border-bottom-width=\"-exact-hairline\" border-bottom-style=\"solid\"\n      box testId=\"bound\" height=20 border-top-width=(on ? \"-exact-hairline\" : 0) border-top-style=\"solid\"\n      box testId=\"line\" height=\"-exact-hairline\"\n      row gap=\"-exact-HAIRLINE\" testId=\"gapped\"\n        box width=20 height=20\n        box width=20 height=20 testId=\"second\"\n      hr testId=\"rule\"\n      box testId=\"half\" height=20 border-bottom-width=0.5 border-bottom-style=\"solid\"\n      button press=flip testId=\"flip\"\n        text \"flip\"\n";
@@ -270,7 +271,7 @@ fn a_confirmation_or_chooser_shape_compiles() {
         "column id=\"c\" popover=\"auto\" role=\"alertdialog\"\n  button press=go popovertarget=\"c\" popovertargetaction=(busy ? \"hide\" : \"show\")\n    text \"Go\"".into(),
         // A modal `dialog` confirmation closes by `command`.
         "dialog id=\"c\" role=\"alertdialog\" closedby=\"any\"\n  button press=go commandfor=\"c\" command=\"close\"\n    text \"Delete\"\n  button commandfor=\"c\" command=\"close\"\n    text \"Cancel\"".into(),
-        // Its `closedby` is implied, by its shape.
+        // Its `closedby` is implied, by its shape (LLP 1115.000 D13.4).
         "dialog id=\"c\" role=\"alertdialog\"\n  button press=go commandfor=\"c\" command=\"close\"\n    text \"Delete\"\n  button commandfor=\"c\" command=\"close\"\n    text \"Cancel\"".into(),
         // A modal laid out as written is a `dialog` role: any content.
         "dialog id=\"c\" role=\"dialog\" aria-modal=true closedby=\"any\"\n  column gap=12\n    text \"Delete account?\"\n    row\n      button commandfor=\"c\" command=\"close\"\n        text \"Cancel\"\n      button press=go commandfor=\"c\" command=\"close\"\n        text \"Delete\"".into(),
@@ -278,7 +279,7 @@ fn a_confirmation_or_chooser_shape_compiles() {
         format!("column id=\"c\" popover=\"auto\" role=\"menu\"\n  button press=go popovertarget=\"c\" popovertargetaction=\"hide\"\n    text \"Go\"\n  hr\n{CANCEL}"),
         // Text and one closing button: the platform's one-button alert,
         // which tells ("Couldn't save.") and has nothing to choose
-        // as a `dialog` and as a popover.
+        // (Charlie, 2026-10-18), as a `dialog` and as a popover.
         "dialog id=\"c\" role=\"alertdialog\" aria-label=\"Couldn't save\"\n  text \"The disk is full.\"\n  button commandfor=\"c\" command=\"close\"\n    text \"OK\"".into(),
         format!("column id=\"c\" popover=\"auto\" role=\"alertdialog\"\n  text \"Saved.\"\n{CANCEL}"),
     ] {
@@ -334,12 +335,13 @@ fn a_shape_the_native_sheet_cannot_present_is_refused_naming_the_row() {
     }
 }
 
-/// An alert has no outside. A `dialog` whose rows are an alert's (explanatory
-/// text, one cancel, at most three buttons: the rule every host presents by,
-/// `exact_kernel::confirmation::is_alert`) implies `closedby="closerequest"`:
-/// Escape and Back cancel it, a tap outside does nothing. Any other
-/// confirmation is the platform's chooser, which a tap outside dismisses:
-/// `any`. The row is the compiler's unless the author writes one.
+/// LLP 1115.000 D13.4: an alert has no outside. A `dialog` whose rows are an
+/// alert's (explanatory text, one cancel, at most three buttons: the rule
+/// every host presents by, `exact_kernel::confirmation::is_alert`) implies
+/// `closedby="closerequest"`: Escape and Back cancel it, a tap outside does
+/// nothing. Any other confirmation is the platform's chooser, which a tap
+/// outside dismisses: `any`, as every `alertdialog` implied until
+/// 2026-10-11. The row is the compiler's unless the author writes one.
 #[test]
 fn an_alert_shaped_dialog_implies_closerequest_and_a_chooser_any() {
     let text = "  text \"This cannot be undone.\"";
@@ -575,8 +577,8 @@ fn menu_bar_placement_is_a_button_hint_with_fixed_literal_destinations() {
     }
 }
 
-/// `status` stands alone; `dock` joins at most one menu-bar menu, in either
-/// order.
+/// LLP 1133.025 D4, D5: `status` stands alone; `dock` joins at most one
+/// menu-bar menu, in either order.
 #[test]
 fn a_status_item_stands_alone_and_a_dock_item_joins_one_menu() {
     for menu in ["status", "dock", "file dock", "dock file", "none dock"] {

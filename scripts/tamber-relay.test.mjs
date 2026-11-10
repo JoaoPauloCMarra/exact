@@ -1,4 +1,4 @@
-// The relay connector against a relay stand-in:
+// The relay connector (LLP 1121 §5 stage 10c R1) against a relay stand-in:
 // the design server dials out, the relay hands a client's stream down
 // unopened, and the client's TLS ends in the remote door's listener, routed
 // as that door's. The relay sees ciphertext only; one whose certificate
@@ -45,7 +45,7 @@ async function fakeRelay({ refuse = null, greet = `READY ${TOOL} ${CANVAS}\n`, l
       seen.hellos.push(head);
       if (refuse) { conn.end(`REFUSED ${refuse}\n`); return; }
       if (!head.startsWith('EXACT-RELAY/1 acct\r\n') || !head.includes(`authorization: Bearer ${token}\r\n`)) { conn.end('REFUSED no such account\n'); return; }
-      // A TXT record for ACME: only under the account's own names, kept in `seen.txt`.
+      // A TXT record for ACME (R2): only under the account's own names (R3's rule), kept in `seen.txt`.
       const txt = /\r\ntxt: (\S+) (\S+)\r\n/.exec(head), clear = /\r\ntxt-clear: (\S+) (\S+)\r\n/.exec(head);
       if (txt || clear) {
         const record = (txt ?? clear)[1];
@@ -187,7 +187,7 @@ test('the token is read from the environment or a file only its owner may read; 
     chmodSync(files, 0o600);
     expect(() => relayArgs([...base, '--relay-name', 'tool.example.com'], { env: { EXACT_RELAY_TOKEN: TOKEN }, home })).toThrow('two names');
     expect(relayArgs([...base, '--relay-name', 'tool.example.com', 'canvas.example.com'], { env: { EXACT_RELAY_TOKEN: TOKEN }, home }).names).toEqual({ tool: 'tool.example.com', canvas: 'canvas.example.com' });
-    // No certificate of its own, one got by ACME (Let's Encrypt unless --relay-acme), kept under the account's directory.
+    // R2: no certificate of its own, one got by ACME (Let's Encrypt unless --relay-acme), kept under the account's directory.
     const env = { env: { EXACT_RELAY_TOKEN: TOKEN }, home }, bare = ['--relay', 'relay.test', '--relay-account', 'acct'];
     expect(relayArgs(bare, env)).toMatchObject({ acme: 'https://acme-v02.api.letsencrypt.org/directory', hook: null, dir: join(home, '.exact', 'relay', 'acct') });
     expect(relayArgs([...bare, '--relay-acme', 'https://acme.test/dir'], env).acme).toBe('https://acme.test/dir');
@@ -214,7 +214,7 @@ test('a relay session pairs at most 10 times a minute, its own bucket: the direc
   expect(pairs.admit(`relay:${TOOL}`)).toBeNull();
 });
 
-test('the token never goes to an unverified relay, even with NODE_TLS_REJECT_UNAUTHORIZED=0; a refusal never shows it', async () => {
+test('round 1: the token never goes to an unverified relay, even with NODE_TLS_REJECT_UNAUTHORIZED=0; a refusal never shows it', async () => {
   const relay = await fakeRelay(), warned = [];
   const was = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -240,7 +240,7 @@ test('the token never goes to an unverified relay, even with NODE_TLS_REJECT_UNA
   expect(warned.some(l => l.includes(TOKEN) || l.includes('\x1b'))).toBe(false);
 });
 
-test('a relay handing down strangers costs it a doubling wait, never a dial each; a silent or overlong greeting is cut', async () => {
+test('round 1: a relay handing down strangers costs it a doubling wait, never a dial each; a silent or overlong greeting is cut', async () => {
   const strangers = await fakeRelay({ label: 'other.acct.relay.test' });
   const doors = await openRemote(wire(), { relay: relayOf(strangers.control) }, { connect: toRelay(strangers.control), say: () => {}, warn: () => {} });
   closing.push(() => doors.close());
@@ -268,7 +268,7 @@ test('a relay handing down strangers costs it a doubling wait, never a dial each
   over.close();
 });
 
-test('the relay\'s word for a name is checked against the client\'s; its address shown only when it is one; a refusal after the greeting cuts every stream', async () => {
+test('round 1: the relay\'s word for a name is checked against the client\'s; its address shown only when it is one; a refusal after the greeting cuts every stream', async () => {
   // A relay that labels a canvas-name connection as the tool's: closed unanswered.
   const liar = await fakeRelay({ label: TOOL, address: '1.2.3.4\rINJECTED' }), w = wire();
   const doors = await openRemote(w, { relay: relayOf(liar.control) }, { connect: toRelay(liar.control), say: () => {}, warn: () => {} });
@@ -290,7 +290,7 @@ test('the relay\'s word for a name is checked against the client\'s; its address
   expect(liar.seen.dials).toBe(dials);
 });
 
-test('names greeted with the first client in one write are known before it is routed', async () => {
+test('round 1: names greeted with the first client in one write are known before it is routed', async () => {
   const quick = await fakeRelay({ greet: null }), w = wire();
   const doors = await openRemote(w, { relay: relayOf(quick.control) }, { connect: toRelay(quick.control), say: () => {}, warn: () => {} });
   closing.push(() => doors.close());
@@ -312,7 +312,7 @@ function fakeServe() {
   return child;
 }
 
-test('the real wire through the relay: a code names the relay\'s session, a client pairs through it and its token works; the local token is no one there; pairing is limited per session', async () => {
+test('round 1: the real wire through the relay: a code names the relay\'s session, a client pairs through it and its token works; the local token is no one there; pairing is limited per session', async () => {
   const relay = await fakeRelay();
   let doors = null;
   const logged = [];
@@ -361,7 +361,7 @@ test('the real wire through the relay: a code names the relay\'s session, a clie
   await until(() => poll.text.startsWith('HTTP/1.1 401'), 3000);
 });
 
-test('a pending long poll through the relay is cut by the connector when the relay revokes the account (told on an idle connection)', async () => {
+test('round 3: a pending long poll through the relay is cut by the connector when the relay revokes the account (told on an idle connection)', async () => {
   const relay = await fakeRelay();
   let doors = null;
   const w = tamberServer({ appDir: '/nowhere', spawnServe: fakeServe, log: () => {}, remote: () => doors?.list() ?? [] });
@@ -377,7 +377,7 @@ test('a pending long poll through the relay is cut by the connector when the rel
   expect(poll.text).toBe(''); // (cut, never answered)
 });
 
-test('closing the server ends a relayed client\'s long poll', async () => {
+test('round 3: closing the server ends a relayed client\'s long poll', async () => {
   const relay = await fakeRelay();
   let doors = null;
   const w = tamberServer({ appDir: '/nowhere', spawnServe: fakeServe, log: () => {}, remote: () => doors?.list() ?? [] });
@@ -441,7 +441,7 @@ async function pairThrough(w, port) {
   return JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1)).ok.token;
 }
 
-test('a relay that hands the tool a client and drops it costs a doubling wait; a line started after the greeting has a deadline', async () => {
+test('round 2: a relay that hands the tool a client and drops it costs a doubling wait; a line started after the greeting has a deadline', async () => {
   // Accepted and dropped before its TLS settles, every time: a round of the pool a wait, not a loop.
   const dropper = await fakeRelay({ drop: true });
   const c = connectRelay(relayOf(dropper.control), { client: () => true, connect: toRelay(dropper.control), warn: () => {}, backoffMs: 10_000 });
@@ -457,7 +457,7 @@ test('a relay that hands the tool a client and drops it costs a doubling wait; a
   await until(() => p.live === 0, 2000);
 });
 
-test('at most 64 clients carried; as they close the pool is dialled again, so a burst never leaves the door down', async () => {
+test('round 2: at most 64 clients carried; as they close the pool is dialled again, so a burst never leaves the door down', async () => {
   const busy = await fakeRelay(), held = [];
   const c = connectRelay(relayOf(busy.control), { client: (sni, address, stream, settled) => { held.push(stream); stream.on('error', () => {}); settled(true); return true; }, connect: toRelay(busy.control), warn: () => {}, backoffMs: 50 });
   closing.push(() => c.close());
@@ -479,7 +479,7 @@ test('at most 64 clients carried; as they close the pool is dialled again, so a 
   await until(() => c.carried === 0 && busy.idle.length === POOL, 5000);
 });
 
-test('dials are budgeted whatever the relay does; a relay word carrying the token, or names the certificate does not cover, are never shown', async () => {
+test('round 3: dials are budgeted whatever the relay does; a relay word carrying the token, or names the certificate does not cover, are never shown', async () => {
   // A relay that hands the tool's name and drops it, its TLS "settled" each time: still no faster than the budget.
   const looper = await fakeRelay({ drop: true });
   const c = connectRelay(relayOf(looper.control), { client: (sni, address, stream, settled) => { settled(true); return true; }, connect: toRelay(looper.control), warn: () => {} });
@@ -506,7 +506,7 @@ test('dials are budgeted whatever the relay does; a relay word carrying the toke
   expect(doors.list()).toEqual([]);
 });
 
-test('a line trickled a byte at a time is cut at its deadline from its first byte; an address carrying the token is shown as unknown', async () => {
+test('round 3: a line trickled a byte at a time is cut at its deadline from its first byte; an address carrying the token is shown as unknown', async () => {
   const trickle = await fakeRelay();
   const c = connectRelay(relayOf(trickle.control), { client: () => true, connect: toRelay(trickle.control), warn: () => {}, pool: 1, greetMs: 300, backoffMs: 10_000 });
   closing.push(() => c.close());
@@ -526,7 +526,7 @@ test('a line trickled a byte at a time is cut at its deadline from its first byt
   expect(w.got.map(g => g.access.reported)).toEqual(['unknown']);
 });
 
-test('no direct door\'s peer can begin relay: (a socket\'s address, an address or none)', async () => {
+test('theme2\'s R1 condition: no direct door\'s peer can begin relay: (a socket\'s address, an address or none)', async () => {
   const w = wire();
   const handler = remoteHandler(w, { tunnel: false, scheme: 'https', admits: () => true });
   for (const remoteAddress of ['relay:s1-tool.acct.relay.test', '203.0.113.5']) {
@@ -558,7 +558,7 @@ function https1(port, sni, { method = 'GET', path = '/', host = sni, headers = {
   });
 }
 
-test('the canvas through the relay: its own gateway and origin pair, minted only through the relay\'s door, Host bound to the SNI, a revoke ending it on every gateway', async () => {
+test('R1b: the canvas through the relay: its own gateway and origin pair, minted only through the relay\'s door, Host bound to the SNI, a revoke ending it on every gateway', async () => {
   const relay = await fakeRelay();
   // (the loop's /__dev/commands holds, as a long poll does)
   const upstream = new Set();
@@ -571,7 +571,7 @@ test('the canvas through the relay: its own gateway and origin pair, minted only
   doors = await openRemoteCanvas(w, { remote: { host: '127.0.0.1', port: 0 }, tunnel: null, relay: relayOf(relay.control) }, loopBase, { connect: toRelay(relay.control), say: l => said.push(l), warn: () => {} });
   closing.push(async () => { await doors.close(); await w.close(); loop.close(); });
   await until(() => relay.idle.length === POOL && said.some(l => l.includes('canvas through the relay')));
-  // Paired through the relay, as above.
+  // Paired through the relay, as in R1.
   let token = null, text = '';
   await w.handle({ method: 'GET', headers: {} }, { writeHead() {}, setHeader() {}, end(t) { token = JSON.parse(t).token; } }, new URL('http://127.0.0.1/__tamber/token'), { allowed: true, local: true });
   const req = Object.assign(new PassThrough(), { method: 'POST', headers: { 'x-exact-tamber-token': token }, socket: { remoteAddress: '127.0.0.1' } });
@@ -645,7 +645,7 @@ test('the canvas through the relay: its own gateway and origin pair, minted only
   expect((await https1(Number(tls.port), null, { host: tls.host, headers: { cookie: tlsCookie }, ca: null })).status).toBe(404);
 });
 
-// Per door: a canvas through the relay stops being a build when it goes.
+// The ghost builds' follow-up (theme2's per-door test): a canvas through the relay stops being a build when it goes.
 // The connector hands its TLS socket to the canvas's HTTP server, whose req 'close' never fires under Bun; the gateway
 // lets go of the loop's request on res 'close'.
 test('a canvas stream through the relay ends upstream when its client leaves', async () => {
@@ -679,7 +679,7 @@ test('a canvas stream through the relay ends upstream when its client leaves', a
   await until(() => upstream.size === 0, 5000);
 }, 30_000);
 
-test('one mint limit a client across both doors\' gateways', async () => {
+test('R1b: one mint limit a client across both doors\' gateways', async () => {
   const relay = await fakeRelay();
   const loop = createHTTP((req, res) => res.end('{}'));
   await new Promise(ok => loop.listen(0, '127.0.0.1', ok));
@@ -700,7 +700,7 @@ test('one mint limit a client across both doors\' gateways', async () => {
   expect(got).toEqual([200, 200, 200, 200, 200, 200, 429, 429]);
 });
 
-test('one session a run: a connection greeted with another session\'s names is not taken', async () => {
+test('R1b: one session a run: a connection greeted with another session\'s names is not taken', async () => {
   // (the second greeting held until the first is read: the session-1 names are surely first)
   let first;
   const read = new Promise(ok => { first = ok; });
@@ -714,7 +714,7 @@ test('one session a run: a connection greeted with another session\'s names is n
   await until(() => c.live === 1, 2000);
 });
 
-test('a canvas client handed down in the same write as the greeting is routed to the relay canvas', async () => {
+test('R1b round 2: a canvas client handed down in the same write as the greeting is routed to the relay canvas', async () => {
   const relay = await fakeRelay({ greet: null });
   const loop = createHTTP((req, res) => res.end('{}'));
   await new Promise(ok => loop.listen(0, '127.0.0.1', ok));
@@ -728,7 +728,7 @@ test('a canvas client handed down in the same write as the greeting is routed to
   expect(entry.status).toBe(200);
 });
 
-test('every canvas answer is framed by its tool only, an SVG\'s too; the relay canvas is in place while the TLS canvas binds', async () => {
+test('R1b round 3: every canvas answer is framed by its tool only, an SVG\'s too; the relay canvas is in place while the TLS canvas binds', async () => {
   const relay = await fakeRelay();
   const loop = createHTTP((req, res) => { if (req.url === '/x.svg') { res.setHeader('content-type', 'image/svg+xml'); res.end('<svg xmlns="http://www.w3.org/2000/svg"/>'); } else if (req.url === '/y.svg') { res.setHeader('content-type', 'image/svg+xml'); res.setHeader('content-security-policy', "default-src 'none'"); res.end('<svg xmlns="http://www.w3.org/2000/svg"/>'); } else res.end('{}'); });
   await new Promise(ok => loop.listen(0, '127.0.0.1', ok));
@@ -750,7 +750,7 @@ test('every canvas answer is framed by its tool only, an SVG\'s too; the relay c
   expect(kept.headers['content-security-policy']).toBe(`default-src 'none'; frame-ancestors 'self' https://${TOOL}`);
 });
 
-test('with no certificate of its own, the session\'s wildcard is got by ACME, its record put up by the relay and taken down, and clients served on it', async () => {
+test('R2: with no certificate of its own, the session\'s wildcard is got by ACME, its record put up by the relay and taken down, and clients served on it', async () => {
   const relay = await fakeRelay();
   const acme = fakeAcme({ dns: relay.seen.txt });
   const home = mkdtempSync(join(tmpdir(), 'exact-relay-acme-'));
@@ -775,7 +775,7 @@ test('with no certificate of its own, the session\'s wildcard is got by ACME, it
   expect(warned).toEqual([]);
 });
 
-test('the relay refuses a TXT record outside the account\'s names; names of the developer\'s own go through their DNS command, never the relay', async () => {
+test('R2: the relay refuses a TXT record outside the account\'s names; names of the developer\'s own go through their DNS command, never the relay', async () => {
   const relay = await fakeRelay();
   await expect(relayTxt({ host: 'relay.test', port: relay.control, account: 'acct', token: TOKEN }, '_acme-challenge.other.relay.test', 'A'.repeat(43), { connect: toRelay(relay.control) })).rejects.toThrow("the relay refused the TXT record: not your account's name");
   // A record or value of no ACME shape (a newline a server slipped in) never leaves: refused before the token goes.
@@ -811,7 +811,7 @@ test('the relay refuses a TXT record outside the account\'s names; names of the 
   expect(readFileSync(zone, 'utf8')).toContain('_acme-challenge.example.com ');
 });
 
-test('the DNS hook gets the record and its value to clear as to publish, never the relay\'s token, and a timeout stops all it started', async () => {
+test('R2 round 1: the DNS hook gets the record and its value to clear as to publish, never the relay\'s token, and a timeout stops all it started', async () => {
   const { dnsHook } = await import('./tamber-relay.mjs');
   const home = mkdtempSync(join(tmpdir(), 'exact-relay-hook-'));
   closing.push(() => rmSync(home, { recursive: true, force: true }));
@@ -833,7 +833,7 @@ test('the DNS hook gets the record and its value to clear as to publish, never t
   expect(() => readFileSync(marker)).toThrow();
 });
 
-test('a CAA record pinning this account and DNS-01 makes it zero-trust (caa: true); --require-caa without one refuses before any order', async () => {
+test('R2 (theme2 09:57): a CAA record pinning this account and DNS-01 makes it zero-trust (caa: true); --require-caa without one refuses before any order', async () => {
   const home = mkdtempSync(join(tmpdir(), 'exact-relay-caa-'));
   closing.push(() => rmSync(home, { recursive: true, force: true }));
   const zone = join(home, 'zone');
@@ -857,7 +857,7 @@ test('a CAA record pinning this account and DNS-01 makes it zero-trust (caa: tru
   await until(() => ok.doors.relay() !== null, 10_000);
   expect(ok.doors.relay().caa).toBe(true);
   expect(ok.warned).toEqual([]);
-  // `issuewild` alone: a host's certificate is still open to the relay (RFC 8659 §4.3).
+  // `issuewild` alone (round 2): a host's certificate is still open to the relay (RFC 8659 §4.3).
   const wildOnly = await run(async d => (d === 'example.com' ? [{ critical: 0, issuewild: rule }] : []), false, 'c');
   await until(() => wildOnly.doors.relay() !== null, 10_000);
   expect(wildOnly.doors.relay().caa).toBe(false);
@@ -876,7 +876,7 @@ test('a CAA record pinning this account and DNS-01 makes it zero-trust (caa: tru
   const unknownCa = await run(async d => (d === 'example.com' ? [{ issue: rule.replace('acme.test', 'other-ca.test') }, { issuewild: rule.replace('acme.test', 'other-ca.test') }] : []), false, 'e');
   await until(() => unknownCa.doors.relay() !== null, 10_000);
   expect(unknownCa.doors.relay().caa).toBe(false);
-  // A resolver that never answers: not pinned within the deadline, and refused under --require-caa.
+  // A resolver that never answers (theme2's 14:20): not pinned within the deadline, and refused under --require-caa.
   const hung = await run(() => new Promise(() => {}), false, 'f');
   await until(() => hung.doors.relay() !== null, 10_000);
   expect(hung.doors.relay().caa).toBe(false);
@@ -884,7 +884,7 @@ test('a CAA record pinning this account and DNS-01 makes it zero-trust (caa: tru
   const hungRequired = await run(() => new Promise(() => {}), true, 'g');
   await until(() => hungRequired.warned.some(l => l.includes('--require-caa')), 10_000);
   expect(hungRequired.acme.orders.length).toBe(0);
-  // A kept certificate whose account URL is not kept: with --require-caa, refused, never served unchecked.
+  // A kept certificate whose account URL is not kept (round 3): with --require-caa, refused, never served unchecked.
   const { unlinkSync } = await import('node:fs');
   unlinkSync(join(home, 'a', 'account-uri'));
   const lost = await run(pinned, true, 'a');
@@ -894,7 +894,7 @@ test('a CAA record pinning this account and DNS-01 makes it zero-trust (caa: tru
   expect(lost.doors.relay()).toBeNull();
 });
 
-test('the CAA that governs a name is the nearest set up the tree; every rule must pin, `;` forbids', async () => {
+test('R2 (theme2 09:57): the CAA that governs a name is the nearest set up the tree; every rule must pin, `;` forbids', async () => {
   const { caaPinned } = await import('./tamber-acme.mjs');
   const uri = 'https://acme.test/acct/1', ok = `letsencrypt.org; validationmethods=dns-01; accounturi=${uri}`;
   const zoneOf = recs => async d => recs[d] ?? [];
@@ -910,7 +910,7 @@ test('the CAA that governs a name is the nearest set up the tree; every rule mus
   expect((await caaPinned('*.example.com', uri, { resolveCname: none, resolveCaa: zone({ 'example.com': [{ issuewild: ok.replace('dns-01', 'tls-alpn-01') }] }) })).pinned).toBe(false);
   // No issuewild: the issue rules govern a wildcard; `;` forbids, which pins nothing open.
   expect((await caaPinned('*.example.com', uri, { resolveCname: none, resolveCaa: zone({ 'example.com': [{ issue: ok }, { issue: ';' }] }) })).pinned).toBe(true);
-  // Read as Boulder reads them: a tag in another case, or said twice, pins nothing.
+  // Read as Boulder reads them (round 3): a tag in another case, or said twice, pins nothing.
   expect((await caaPinned('*.example.com', uri, { resolveCname: none, resolveCaa: zone({ 'example.com': [{ issuewild: `letsencrypt.org; AccountURI=${uri}; ValidationMethods=dns-01` }] }) })).pinned).toBe(false);
   expect((await caaPinned('*.example.com', uri, { resolveCname: none, resolveCaa: zone({ 'example.com': [{ issuewild: `${ok}; accounturi=https://acme.test/acct/2` }] }) })).pinned).toBe(false);
   // At a CA not known to honour the parameters: nothing pinned.
@@ -925,7 +925,7 @@ test('the CAA that governs a name is the nearest set up the tree; every rule mus
   expect(await caaPinned('*.example.com', uri, { resolveCname: none, resolveCaa: zone({}) })).toEqual({ pinned: false, at: null });
 });
 
-test('a TXT answer is one line, read once: what the relay sends after it is never read, and the connection is gone; a line past its length fails at once', async () => {
+test('R2 round 2: a TXT answer is one line, read once: what the relay sends after it is never read, and the connection is gone; a line past its length fails at once', async () => {
   const closed = [];
   const chatty = createTLS({ cert: relayCert.cert, key: relayCert.key }, conn => {
     conn.on('error', () => {});
@@ -949,7 +949,7 @@ test('a TXT answer is one line, read once: what the relay sends after it is neve
   expect(Date.now() - at).toBeLessThan(5000);
 });
 
-test('by ACME on the relay\'s names, a session under another domain (the account\'s label, a domain the relay chose) is refused before any order', async () => {
+test('R2 round 2: by ACME on the relay\'s names, a session under another domain (the account\'s label, a domain the relay chose) is refused before any order', async () => {
   const relay = await fakeRelay({ greet: 'READY s1-tool.acct.evil.test s1-canvas.acct.evil.test\n' });
   const acme = fakeAcme({ dns: relay.seen.txt });
   const home = mkdtempSync(join(tmpdir(), 'exact-relay-suffix-'));
@@ -964,7 +964,7 @@ test('by ACME on the relay\'s names, a session under another domain (the account
   expect(doors.relay()).toBeNull();
 });
 
-test('closed while its certificate is got, a run stops there: no record put up after, nothing kept, its lock let go; another run on the account adopts the kept certificate with no order', async () => {
+test('R2 round 2: closed while its certificate is got, a run stops there: no record put up after, nothing kept, its lock let go; another run on the account adopts the kept certificate with no order', async () => {
   const home = mkdtempSync(join(tmpdir(), 'exact-relay-cancel-'));
   closing.push(() => rmSync(home, { recursive: true, force: true }));
   const zone = join(home, 'zone'), log = join(home, 'hook-log');

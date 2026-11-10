@@ -6,8 +6,8 @@ import groovy.json.JsonSlurper
 
 plugins { id("com.android.application") }
 
-// -Pcompose=1: the app's plan has a date or time control, and its picker is Compose Material 3's
-// (`agent-android.mjs` reads the plan's uses). Without it the framework's dialogs show, and Compose is not linked.
+// -Pcompose=1: the app's plan has a date or time control, and its picker is Compose Material 3's (LLP 1115.001.000
+// D1-D2; `agent-android.mjs` reads the plan's uses). Without it the framework's dialogs show, and Compose is not linked.
 val compose = providers.gradleProperty("compose").orNull == "1"
 if (compose) apply(plugin = "org.jetbrains.kotlin.plugin.compose")
 
@@ -68,36 +68,36 @@ android {
     sourceSets["main"].jniLibs.directories.add(out.resolve("rust/jniLibs").path)
     sourceSets["main"].assets.directories.add(out.resolve("rust/assets").path)
     sourceSets["main"].kotlin.directories.add(if (compose) "src/compose/java" else "src/nocompose/java")
-    // The app's Kotlin hatches and module roster in its `modules/android`; -PmodulesDir lets a
+    // The app's Kotlin hatches and module roster (LLP 1115.001.000 D4) in its `modules/android`; -PmodulesDir lets a
     // component fixture compile the app's actual provider without copying its Kotlin.
     val modulesDir = providers.gradleProperty("modulesDir").orNull?.let { file(it) } ?: appDir.resolve("modules/android")
     modulesDir.takeIf { it.isDirectory }?.let { sourceSets["main"].kotlin.directories.add(it.path) }
-    // The modules' implementations the app binds: their Kotlin, and the roster naming them that
+    // The modules' implementations the app binds (LLP 1133.001 D5): their Kotlin, and the roster naming them that
     // `agent-android.mjs` writes (`-PextensionDirs`).
     providers.gradleProperty("extensionDirs").orNull?.split(',')?.filter { it.isNotEmpty() }?.forEach { sourceSets["main"].kotlin.directories.add(it) }
-    // The runtime permissions the app's grant lines derive (`-Ppermissions`), and the queries and
+    // The runtime permissions the app's grant lines derive (`-Ppermissions`, LLP 1133.002 D6), and the queries and
     // components its packages' manifest fragments declare (`-PmanifestFragment`, checked and written by
-    // scripts/android-manifest.mjs; with the share target's filters on the
-    // app's activity, scripts/share-target.mjs), merged into the shell's manifest from the release source set's: an app that grants no device asks
+    // scripts/android-manifest.mjs, LLP 1133.030 D9, LLP 1133.026 D19 item 3; with the share target's filters on the
+    // app's activity, scripts/share-target.mjs, LLP 1133.024 D5), merged into the shell's manifest from the release source set's: an app that grants no device asks
     // for none, and one that uses no such package runs nothing beyond the shell's activity.
     val fragment = providers.gradleProperty("manifestFragment").orNull?.let { file(it).readText() }?.takeIf { it.isNotBlank() }
-    // The hardware a grant line uses where present (`-PandroidFeatures`), never required.
+    // The hardware a grant line uses where present (`-PandroidFeatures`, LLP 1133.037 D17), never required.
     val lineFeatures = providers.gradleProperty("androidFeatures").orNull?.split(',')?.filter { it.isNotBlank() }.orEmpty()
     (providers.gradleProperty("permissions").orNull?.split(',')?.filter { it.isNotEmpty() } ?: emptyList())
         .takeIf { it.isNotEmpty() || fragment != null || lineFeatures.isNotEmpty() }?.let { names ->
         val permissions = layout.buildDirectory.file("permissions/AndroidManifest.xml").get().asFile
         permissions.parentFile.mkdirs()
         // CAMERA implies the back camera and autofocus as required features, which would filter the app from a
-        // device without them; each is declared not required.
+        // device without them; each is declared not required (LLP 1133.008 D6).
         val features = (if ("android.permission.CAMERA" in names) listOf("camera.any", "camera", "camera.autofocus", "camera.flash") else emptyList()) + lineFeatures
-        // A permission a later API retired names its last level (`<name> maxSdkVersion=32`).
+        // A permission a later API retired names its last level (`<name> maxSdkVersion=32`, LLP 1133.019 D4).
         val permission = { line: String ->
             val (name, last) = line.split(' ').let { it[0] to it.getOrNull(1)?.removePrefix("maxSdkVersion=") }
             "    <uses-permission android:name=\"$name\"${last?.let { " android:maxSdkVersion=\"$it\"" } ?: ""} />\n"
         }
-        // The reader's foreground services the lines declare (`-PforegroundServices`, `{kind: {purpose, types}}`), each
-        // with every type its lines give it: a type the manifest lacks throws at `startForeground`.
-        // The purpose is the notification's title and its channel's name.
+        // The reader's foreground services the lines declare (`-PforegroundServices`, `{kind: {purpose, types}}`, LLP
+        // 1133.033 D2), each with every type its lines give it: a type the manifest lacks throws at `startForeground`.
+        // The purpose is the notification's title and its channel's name (D4).
         val escape = { t: String -> t.replace("&", "&amp;").replace("<", "&lt;").replace("\"", "&quot;") }
         @Suppress("UNCHECKED_CAST")
         val services = (providers.gradleProperty("foregroundServices").orNull?.let { JsonSlurper().parseText(it) } as Map<String, Map<String, Any?>>?).orEmpty()
@@ -120,7 +120,7 @@ android {
             manifestChildren(fragment, services.entries.joinToString("") { service(it.key, it.value) }) + "</manifest>\n")
         sourceSets["release"].manifest.srcFile(permissions)
     }
-    // The manifest's `shortcuts` as the launcher activity's static shortcuts, in order: each
+    // The manifest's `shortcuts` as the launcher activity's static shortcuts (LLP 1133.023 D3, D17), in order: each
     // starts the activity with its location as the intent's data, which the reader takes as a link's. Labels and the
     // disabled message are string resources, as `shortcuts.xml` requires; an app with none has an empty list.
     run {
@@ -151,7 +151,7 @@ android {
         res.resolve("values/exact_shortcuts.xml").writeText("<resources>\n$strings</resources>\n")
         sourceSets["main"].res.directories.add(res.path)
     }
-    // The token names `bun exact.mjs tamber gen kotlin` wrote (never committed).
+    // The token names `bun exact.mjs tamber gen kotlin` wrote (LLP 1121 D12; never committed).
     appDir.resolve(".exact/tamber/TamberTokens.kt").takeIf { it.isFile }?.let { sourceSets["main"].kotlin.directories.add(it.parent) }
     if (compose) buildFeatures { this.compose = true }
     // An app's GPU module (-PgpuModule=<file>) is opened by path from the extracted library directory and checked
@@ -165,7 +165,7 @@ android {
     }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
 }
-// The Maven libraries the bound modules' implementations name (`-Pmaven`), resolved with the
+// The Maven libraries the bound modules' implementations name (`-Pmaven`, LLP 1133.008 D8 item 5), resolved with the
 // reader's own AndroidX in this one graph. The graph is locked to the app's lock file (`-PmavenLock`, beside its other
 // locks) and verified against its checksums (`agent-android.mjs` puts the app's verification file in place and passes
 // `--dependency-verification=strict`); `--write-locks` there writes both. An app with none resolves as before.

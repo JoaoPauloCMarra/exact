@@ -1,4 +1,4 @@
-// The conformance fixture, as every platform's suite makes
+// The conformance fixture (LLP 1133.001 D7), as every platform's suite makes
 // it: an app `exact new` made outside the repo, its files replaced by
 // `fixture/`'s, depending on this package and @exact/media-capture by `file:`
 // and installed; and the known spoken file the suites recognise.

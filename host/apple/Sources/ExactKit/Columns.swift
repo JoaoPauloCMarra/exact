@@ -1,4 +1,4 @@
-// Multi-column layout on Apple. The kernel cuts each
+// @ref LLP 1093 D6–D8: multi-column layout on Apple. The kernel cuts each
 // flow into columns and publishes every box at its column's place; a box
 // that straddles columns arrives with its union frame and, in a `fragments`
 // op, the pieces it was cut into. A paragraph is laid out once, at its own
@@ -106,7 +106,7 @@ extension NodeView {
     }
 
     /// Whether a point in this view's space hits a fragmented box: only
-    /// inside a fragment, never in its union's gap.
+    /// inside a fragment, never in its union's gap (LLP 1093 D8).
     func fragmentHit(_ point: CGPoint) -> Bool {
         columnRecord?.fragments.isEmpty != false || paragraphPoint(point) != nil
     }
@@ -141,7 +141,7 @@ extension NodeView {
 
     /// Where the agent's `tap` aims, as `box` (the view's box as seen): a
     /// fragmented box's first fragment, never its union's middle, which may
-    /// be a gap.
+    /// be a gap (LLP 1093 D12).
     func tapBox(_ box: CGRect) -> CGRect {
         guard let f = columnRecord?.fragments.first, bounds.width > 0 else { return box }
         let scale = box.width / bounds.width
@@ -151,7 +151,7 @@ extension NodeView {
 
     /// A multi-column container's `column-rule`: a layer under its children
     /// holding one rectangle per gap between two columns that both hold a
-    /// box, as tall as the columns. A rule wider than its gap moves no
+    /// box, as tall as the columns (D7). A rule wider than its gap moves no
     /// column.
     func layoutColumnRules() {
         #if os(macOS)

@@ -1,5 +1,5 @@
-//! @exact/device on the Linux and Windows hosts,
-//! composed by the desktop package builder.
+//! @exact/device on the Linux and Windows hosts (LLP 1133.031 D1–D5, D14),
+//! composed by the desktop package builder (LLP 1133.022 D10 item 5).
 //!
 //! - Linux: the battery from UPower's display device, else the system
 //!   battery in sysfs; `type` from the link of the route rtnetlink names for
@@ -13,7 +13,7 @@
 //!   the specification's no-battery values and `type` `unknown`.
 //!
 //! One watcher per source per process, shared by every session's instance
-//!: the first read starts it, and it stops when no session reads
+//! (D5 item 1): the first read starts it, and it stops when no session reads
 //! the source. A source announces to its readers only when an answered
 //! field changes; the foreground reads every watched source again.
 
@@ -210,7 +210,7 @@ fn linux_watch(name: &'static str, stops: &mut Vec<Box<dyn FnOnce() + Send>>) {
                     return;
                 }
             }
-            // Without UPower the supply files are read once a minute while a reader exists.
+            // Without UPower the supply files are read once a minute while a reader exists (D5).
             let (tx, rx) = std::sync::mpsc::channel::<()>();
             std::thread::spawn(move || {
                 while let Err(std::sync::mpsc::RecvTimeoutError::Timeout) =

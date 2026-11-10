@@ -52,7 +52,7 @@ test("every engine draws Exact's colour roles in Apple's palette", async () => {
             want[name] = await page.evaluate(([value, scheme]) => read(value, scheme), own ? [alias, scheme] : [scheme === 'light' ? light : dark]);
           }
           expect([engine, scheme, got]).toEqual([engine, scheme, want]);
-          // Apple's own stays apart from an app's theme, which sets the role over it: the page reports it.
+          // Apple's own stays apart from an app's theme (LLP 1095 D4), which sets the role over it: the page reports it.
           const themed = await page.evaluate((scheme) => {
             const theme = Object.assign(document.createElement('style'), { textContent: ':root { --exact-system-green: rgb(255, 0, 0); }' });
             document.head.append(theme);

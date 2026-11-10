@@ -1,4 +1,4 @@
-//! This host draws sRGB only. A colour outside it, set at run
+//! LLP 1100 D10: this host draws sRGB only. A colour outside it, set at run
 //! time, is refused as an invalid colour is (the bake refuses a literal one).
 use exact_kernel::{ColorValue, MonospaceMeasurer};
 use exact_linux::Host;

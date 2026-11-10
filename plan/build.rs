@@ -19,7 +19,7 @@ struct Schema {
     #[serde(rename = "formatVersion")]
     format_version: u32,
     /// Extra header fields after the four fixed integers, in declaration
-    /// order (`app_id`, `router`).
+    /// order (LLP 1023 D5: `app_id`; LLP 1038 D2: `router`).
     #[serde(default)]
     header: Vec<Field>,
     tables: Vec<Table>,
@@ -51,10 +51,10 @@ struct StdlibEntry {
     name: String,
     params: Vec<String>,
     /// The trailing parameters a call may omit, as the constant each
-    /// defaults to, in JavaScript's spelling: for a `number`
+    /// defaults to (LLP 1088 D2), in JavaScript's spelling: for a `number`
     /// only `Number.MAX_VALUE`, an index past any end, since a plan's
     /// number constants are finite; for a literal choice only `""`, which
-    /// no call can write (`formatNumber`'s currency code).
+    /// no call can write (LLP 1116 D8: `formatNumber`'s currency code).
     #[serde(default)]
     optional: Vec<String>,
     returns: String,
@@ -138,12 +138,13 @@ fn rust_type(c: &Codec) -> String {
     }
 }
 
-/// The one field whose Rust type is not its codec's: the `icons` row's `path`,
-/// a `str` on the wire like any other (format.json, its bytes and FORMAT_DIGEST
-/// unchanged), typed `IconPathId` in Rust so that nothing reads it as a string.
-/// An even-odd icon's path carries its rule's `evenodd:` marker, which only
-/// `exact_kernel::Icon` strips; `IconPathId`'s one method is the way out, which
-/// `exact_runner::icon_of` alone calls (a guard test holds that).
+/// The one field whose Rust type is not its codec's (LLP 1121 stage 14 C2,
+/// round 2): the `icons` row's `path`, a `str` on the wire like any other
+/// (format.json, its bytes and FORMAT_DIGEST unchanged), typed
+/// `IconPathId` in Rust so that nothing reads it as a string. An even-odd
+/// icon's path carries its rule's `evenodd:` marker, which only
+/// `exact_kernel::Icon` strips; `IconPathId`'s one method is the way out,
+/// which `exact_runner::icon_of` alone calls (a guard test holds that).
 fn icon_path(table: &str, field: &str) -> bool {
     table == "icons" && field == "path"
 }
@@ -370,7 +371,7 @@ fn validate(schema: &Schema) {
         );
     }
     for f in &schema.header {
-        // Optional table references in the header.
+        // @ref LLP 1038 D2 — optional table references in the header.
         if f.codec != "string" {
             match parse_codec(&f.codec) {
                 Codec::Opt(t) => assert!(tables.contains(t.as_str()), "format: header table `{t}`"),
@@ -438,14 +439,14 @@ fn validate(schema: &Schema) {
         }
     }
     assert!(schema.opcodes.len() <= 255, "format: opcodes exceed u8");
-    // Reserved shapes and typed lists in the roster.
+    // @ref LLP 1038 D3 — reserved shapes and typed lists in the roster.
     let mut fns = BTreeSet::new();
     for f in &schema.stdlib {
         assert!(fns.insert(&f.name), "format: duplicate stdlib `{}`", f.name);
         let returns = std::iter::once((&f.returns, false));
         for (t, param) in f.params.iter().map(|p| (p, true)).chain(returns) {
-            // A parameter spelled as string literals, `"a" | "b"`: a string the
-            // compiler requires written as one.
+            // A parameter spelled as string literals, `"a" | "b"` (LLP
+            // 1054.000.003 D9): a string the compiler requires written as one.
             let literals = param
                 && t.split(" | ").all(|l| {
                     l.len() > 2
@@ -453,8 +454,8 @@ fn validate(schema: &Schema) {
                         && l.ends_with('"')
                         && !l[1..l.len() - 1].contains('"')
                 });
-            // A whole-number literal in a range, `0..=100` (`toFixed`'s digits),
-            // likewise written at the call.
+            // A whole-number literal in a range, `0..=100` (LLP 1102 §3.2:
+            // `toFixed`'s digits), likewise written at the call.
             let range = param
                 && t.split_once("..=").is_some_and(|(a, b)| {
                     a.parse::<u32>()
@@ -615,7 +616,7 @@ fn main() {
             let _ = writeln!(w, "    }} }}");
             let _ = writeln!(
                 w,
-                "    /// The fewest arguments a call may write: the trailing optional\n    /// ones are filled with [`Stdlib::defaults`]."
+                "    /// The fewest arguments a call may write: the trailing optional\n    /// ones are filled with [`Stdlib::defaults`] (LLP 1088 D2)."
             );
             let _ = writeln!(
                 w,
@@ -675,7 +676,7 @@ fn main() {
         if name == "Stdlib" {
             let _ = writeln!(
                 w,
-                "/// The constant a trailing optional parameter takes when a call omits it\n///: a number, or the empty string no call can write for a\n/// literal choice.\n#[derive(Debug, Clone, Copy, PartialEq)]\npub enum StdlibDefault {{\n    /// A number constant.\n    Number(f64),\n    /// A string constant.\n    Str(&'static str),\n}}\n"
+                "/// The constant a trailing optional parameter takes when a call omits it\n/// (LLP 1088 D2): a number, or the empty string no call can write for a\n/// literal choice (LLP 1116 D8).\n#[derive(Debug, Clone, Copy, PartialEq)]\npub enum StdlibDefault {{\n    /// A number constant.\n    Number(f64),\n    /// A string constant.\n    Str(&'static str),\n}}\n"
             );
         }
     }
@@ -889,7 +890,7 @@ fn main() {
     let _ = writeln!(w, "    /// The bytes of one data range.");
     let _ = writeln!(w, "    pub fn bytes(&self, b: Bytes) -> &[u8] {{ &self.data[b.offset as usize..(b.offset + b.len) as usize] }}");
     // Every code range a row names: what a scan of the plan's calls walks,
-    // one validated body at a time. Plain loops and a
+    // one validated body at a time (LLP 1054.000.003 D8). Plain loops and a
     // `dyn` callback: this is in every web core, and an iterator chain or a
     // generic callback is compiled once per table.
     let _ = writeln!(w, "    /// Call `f` with every code range a table row names, table by table: each one a validated body, so a walk of each is a walk of every instruction a run can reach.");
@@ -991,7 +992,7 @@ fn main() {
     let _ = writeln!(w, "    }}");
 
     // structure: the canonical bytes without the design's values
-    let _ = writeln!(w, "    /// The plan's structure (commit 3): its canonical bytes with the design's values left out (`theme` rows' `value`, `theme_slices`' `value`, but a profile colour's, which a host takes at boot; a role override's is a value too), so two plans that differ only in token values have equal structures (the builder interns the values after every other string, so none moves another's id). A dev loop compares them to send a value-only edit as a batch instead of a new plan.");
+    let _ = writeln!(w, "    /// The plan's structure (LLP 1121 stage 4, commit 3): its canonical bytes with the design's values left out (`theme` rows' `value`, `theme_slices`' `value`, but a profile colour's, which a host takes at boot; a role override's is a value too, LLP 1121 stage 5), so two plans that differ only in token values have equal structures (the builder interns the values after every other string, so none moves another's id). A dev loop compares them to send a value-only edit as a batch instead of a new plan.");
     let _ = writeln!(w, "    pub fn structure(&self) -> Vec<u8> {{");
     // Strings only the design's values name are left out of the pool; code
     // names strings by id, so the rest stay, in place.
@@ -1063,8 +1064,8 @@ fn main() {
         let _ = writeln!(w, "        w.u32(self.{}.len() as u32);", t.name);
         let _ = writeln!(w, "        for r in self.{}.iter() {{", t.name);
         for f in &t.fields {
-            // A token's value is the design's, a role override's too, unless it
-            // names a profile's colour.
+            // A token's value is the design's, a role override's too (LLP
+            // 1121 stage 5), unless it names a profile's colour.
             if f.name == "value" && t.name == "theme" {
                 let _ = writeln!(w, "            if self.str(r.value).contains(\"(--\") {{ w.string(self.str(r.value)); }}");
                 continue;
@@ -1100,10 +1101,7 @@ fn main() {
     let _ = writeln!(w, "    }}");
 
     // decode
-    let _ = writeln!(
-        w,
-        "    /// Decode only the named snapshot entry; running app plans are refused."
-    );
+    let _ = writeln!(w, "    /// Decode only the named snapshot entry (LLP 1126 D2); running app plans are refused.");
     let _ = writeln!(w, "    pub fn decode_snapshot(bytes: &[u8], kind: &str) -> Result<Plan, PlanError> {{ if kind.is_empty() {{ return Err(PlanError::WrongEntry); }} Self::decode_from(bytes, None, Some(kind)) }}");
     let _ = writeln!(w, "    /// Decode and validate whole. Every index, range, code, and data reference is checked before the plan is returned; a failure names the row.");
     let _ = writeln!(
@@ -1341,10 +1339,10 @@ fn main() {
         w,
         "        if last != Some(Opcode::Return) {{ return Err(CodeError::NoReturn); }}"
     );
-    let _ = writeln!(w, "        // Control flow is forward-only and instruction-aligned, so a body always terminates; a callback body repeats once per item of a list.");
+    let _ = writeln!(w, "        // Control flow is forward-only and instruction-aligned, so a body always terminates; a callback body repeats once per item of a list (LLP 1017.003 D5).");
     let _ = writeln!(w, "        boundaries.push(bytes.len());");
     let _ = writeln!(w, "        for &(pc, target) in &jumps {{ let t = target as usize; if t <= pc || boundaries.binary_search(&t).is_err() {{ return Err(CodeError::BadJump {{ pc, target }}); }} }}");
-    // A `Map`/`Filter` callback body runs from its
+    // @ref LLP 1017.003 D5: a `Map`/`Filter` callback body runs from its
     // opcode to its end once per item. No jump leaves a body, none lands
     // inside one from outside (its end is fine: a branch around it), and
     // bodies nest, so each run ends at its end.

@@ -592,7 +592,7 @@ fn forgotten_hands_a_child_its_own_tokens_and_lets_go_of_the_rest() {
     assert_eq!(heard.borrow().as_slice(), [Some(7), None]);
 }
 
-/// A `doc:` path reads and writes the chosen file under
+/// LLP 1069.010 D1: a `doc:` path reads and writes the chosen file under
 /// the existing grants over the namespace, with no app directories, and a
 /// path never minted, or outside the grant, is refused.
 #[test]
@@ -660,7 +660,7 @@ fn a_document_path_reads_and_writes_the_chosen_file_under_its_grant() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
-/// `copyFile` takes a chosen file into an app
+/// LLP 1069.010 D1 (2026-10-26): `copyFile` takes a chosen file into an app
 /// file under `fs.read` on the one and `fs.write` on the other, needing the
 /// app's directories, while a copy between documents is still refused.
 #[test]
@@ -703,7 +703,7 @@ fn a_chosen_file_is_copied_into_an_app_file_under_both_grants() {
     exact_data::documents::forget(9007);
 }
 
-/// A write that expects the stat it read is refused
+/// LLP 1069.010.000 D2a: a write that expects the stat it read is refused
 /// `ECHANGED`, writing nothing, once another writer changed the file, and
 /// lands while the file is as read.
 #[test]
@@ -745,9 +745,9 @@ fn a_write_that_expects_what_it_read_is_refused_once_the_file_changed() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
-/// Under `doc.keep` the app lists what it keeps and
+/// LLP 1069.010.000 D5: under `doc.keep` the app lists what it keeps and
 /// forgets one; without it both are refused. The app's own atomic save keeps
-/// its document.
+/// its document (D4).
 #[test]
 #[cfg(unix)]
 fn the_kept_list_reads_and_forgets_under_doc_keep() {
@@ -789,7 +789,7 @@ fn the_kept_list_reads_and_forgets_under_doc_keep() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
-/// A kept file renamed while the app was closed is
+/// LLP 1069.010.000 D4: a kept file renamed while the app was closed is
 /// read at its new name through the path it was kept by.
 #[test]
 #[cfg(unix)]
@@ -1116,7 +1116,7 @@ fn document_work_stays_on_the_selected_directory_during_path_swaps() {
     exact_data::documents::forget(9003);
 }
 
-/// A drive that names no scratch store: the request is answered,
+/// A drive that names no scratch store (trivia F7): the request is answered,
 /// with the web's refusal word for word, which the module can handle — where
 /// an unconfigured host refuses the answer itself.
 #[test]
@@ -1168,7 +1168,7 @@ fn storage_forwards_source_console_lines_once() {
     assert!(source.take_logs().is_empty());
 }
 
-/// A Rust source's `fs.compressImage`: the operation a
+/// A Rust source's `fs.compressImage` (LLP 1069.002 A1.1): the operation a
 /// TypeScript source's `storage.fs.compressImage` runs, through ibex2's
 /// executor and the platform codec. On Apple the fixture comes back upright
 /// as a JPEG; elsewhere the call is refused as `unsupported`.
@@ -1255,10 +1255,9 @@ fn compress_image_answers_a_rust_source_as_typescripts() {
     assert!(!paths.0.join("data/x.jpg").exists());
 }
 
-/// A Rust source's `fs.transformImage`: the record is
-/// the TypeScript options beside the two paths, and the answer is the
-/// TypeScript result's record; and
-/// `fs.compressImage` takes the edit as TypeScript's call does.
+/// A Rust source's `fs.transformImage` (LLP 1133.019 D17): the record is
+/// D14's options beside the two paths, and the answer is D14's record; and
+/// `fs.compressImage` takes the edit as TypeScript's call does (D15).
 #[test]
 fn transform_image_answers_a_rust_source_as_typescripts() {
     let paths = Paths::new();
@@ -1344,7 +1343,7 @@ fn transform_image_answers_a_rust_source_as_typescripts() {
     assert!(!paths.0.join("data/x.jpg").exists());
 }
 
-/// A Rust source's upload from a file: the storage composer
+/// A Rust source's upload from a file (LLP 1108 D6 R2): the storage composer
 /// passes `Request::body_from` and `body_to` through untouched, the paths
 /// alone, for the host's executor to read and write when it runs the request.
 #[test]

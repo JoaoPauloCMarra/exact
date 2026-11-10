@@ -1,4 +1,4 @@
-//! The reader's extensions' calls into the host: what
+//! The reader's extensions' calls into the host (LLP 1133.001 D5): what
 //! `canvas_jni!` defines beside its own, over the same `HOST`, and the
 //! session's clock and agent flag they read. An
 //! extension's call itself comes the other way, as a request (kind 11,
@@ -20,7 +20,7 @@ pub(crate) fn take_bound() -> Option<String> {
 
 /// The session's clock as of the host's last turn, and the wall instant it
 /// was read at: what an extension's `ExtensionContext.now()` reads from the
-/// main thread without waiting for exact2's.
+/// main thread without waiting for exact2's (LLP 1133.009 D10 item 2).
 static CLOCK: std::sync::Mutex<Option<(f64, std::time::Instant)>> = std::sync::Mutex::new(None);
 
 /// The host's turn ended at session time `now_ms`.
@@ -50,8 +50,9 @@ pub fn under_agent(name: &str) -> bool {
     agent() && !bound.split(',').any(|b| b == name)
 }
 
-/// The answers of the app's handlers a package called (`Native.invoke`), by
-/// the call's number, until `Native.invoked` reads each.
+/// The answers of the app's handlers a package called (`Native.invoke`,
+/// LLP 1133.016 D15 item 1), by the call's number, until `Native.invoked`
+/// reads each.
 static INVOKED: std::sync::Mutex<std::collections::BTreeMap<i32, String>> =
     std::sync::Mutex::new(std::collections::BTreeMap::new());
 static INVOKES: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
@@ -76,7 +77,8 @@ pub fn invoked(id: i32) -> Option<String> {
         .remove(&id)
 }
 
-/// A package's sample for a canvas input (`Native.sensorInput`): whether none waited before it.
+/// A package's sample for a canvas input (`Native.sensorInput`, LLP 1133.013
+/// D6): whether none waited before it.
 pub fn sensor_input(
     surface: &str,
     sensor: &str,
@@ -119,7 +121,8 @@ macro_rules! canvas_jni_extensions {
             $crate::canvas::jni::jni_extensions::now()
         }
 
-        /// The file an `app:/` path names (`ExtensionContext.file`), or null.
+        /// The file an `app:/` path names (`ExtensionContext.file`, LLP
+        /// 1133.009 D10 item 4), or null.
         #[no_mangle]
         pub unsafe extern "system" fn Java_dev_exact_canvas_Native_appFile(
             env: *mut JNIEnv,
@@ -145,8 +148,8 @@ macro_rules! canvas_jni_extensions {
             )))
         }
 
-        /// How a presence check the reader made ended (`Presence.kt`): on the
-        /// store's completion path, never journaled.
+        /// How a presence check the reader made ended (`Presence.kt`, LLP
+        /// 1133.010 D13): on the store's completion path, never journaled.
         #[no_mangle]
         pub unsafe extern "system" fn Java_dev_exact_canvas_Native_presence(
             env: *mut JNIEnv,
@@ -158,7 +161,7 @@ macro_rules! canvas_jni_extensions {
         }
 
         /// What the activity asked for the orientation lock (`Orientation.kt`,
-        /// JSON, a conflict, and a line to journal or null.
+        /// LLP 1133.029 D6): JSON, a conflict, and a line to journal or null.
         #[no_mangle]
         pub unsafe extern "system" fn Java_dev_exact_canvas_Native_orientationApplied(
             env: *mut JNIEnv,
@@ -173,7 +176,7 @@ macro_rules! canvas_jni_extensions {
         }
 
         /// The activity started (`false`) or stopped (`true`): the page's
-        /// `visibilityState`.
+        /// `visibilityState` (LLP 1133.010 §9).
         #[no_mangle]
         pub unsafe extern "system" fn Java_dev_exact_canvas_Native_hidden(
             _env: *mut JNIEnv,
@@ -235,8 +238,8 @@ macro_rules! canvas_jni_extensions {
             ))
         }
 
-        /// A package's picture for request `id` (`Exact.picture`): `bitmap`,
-        /// or `error` when it is null.
+        /// A package's picture for request `id` (`Exact.picture`, LLP
+        /// 1133.019 D11 item 1): `bitmap`, or `error` when it is null.
         #[no_mangle]
         pub unsafe extern "system" fn Java_dev_exact_canvas_Native_picture(
             env: *mut JNIEnv,

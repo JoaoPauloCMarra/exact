@@ -8,8 +8,8 @@ import UIKit
 import AppKit
 #endif
 
-/// A session's display-link callbacks, the frames it judges presented: a
-/// display link of its own, run only inside active segments,
+/// A session's display-link callbacks, the frames it judges presented (LLP
+/// 1079 D3–D4): a display link of its own, run only inside active segments,
 /// or throughout a recording an app
 /// started (`startTrace_EXPERIMENTAL`). It watches; it never keeps the
 /// session's frame source (`Frames`) running, so the measured app schedules
@@ -34,7 +34,7 @@ final class FrameSampler: NSObject {
 
     /// A new session's sampler, where it samples from boot. Where it starts
     /// at the first ask instead, so does the count of its runner's plan
-    /// sites' work, which is told before the first runner
+    /// sites' work (LLP 1079 D1), which is told before the first runner
     /// boots.
     static func fromBoot(_ session: ExactSession, atBoot: Bool = atBoot) -> FrameSampler? {
         guard measured else { return nil }
@@ -61,15 +61,15 @@ final class FrameSampler: NSObject {
         /// needed it included: on iOS and tvOS 18 and later, from the update
         /// link's `beforeCATransactionCommit` to its `afterCATransactionCommit`.
         var commit: Double?
-        /// A late frame's hatch calls: those that
+        /// A late frame's hatch calls (LLP 1075.003.000.001 §3.1): those that
         /// overlapped its interval, each charged its overlap, with `coverage`.
         var hatches: [String: Any]?
         /// A late frame's main-thread host phases inside its interval, and
-        /// what none of them took (`HostPhases.window`).
+        /// what none of them took (LLP 1142 D1, `HostPhases.window`).
         var phases: [String: Any]?
         /// The tracked scroller's offset as the last turn committed it, and
         /// its phase: `t` dragged, `d` decelerating, `b` past its range,
-        /// `-` at rest (`scrollSample`).
+        /// `-` at rest (LLP 1144 D1, `scrollSample`).
         var scroll: (Double, String)?
         /// In a recording: how long the main thread's turns that ended in
         /// this frame's interval ran, milliseconds.
@@ -119,7 +119,7 @@ final class FrameSampler: NSObject {
     private var active = -Double.infinity
     private var observing = false
     var observationStopped: ((String) -> Void)?
-    /// `perf frames hold`: the segment stays open with no batch,
+    /// `perf frames hold` (LLP 1144 D1): the segment stays open with no batch,
     /// so a list built up front is sampled as it glides; released by `perf
     /// frames release`, or by anything that stops sampling.
     var held = false {
@@ -299,7 +299,7 @@ final class FrameSampler: NSObject {
     /// A display-link recording's link asks for the display's full rate, so
     /// that it ticks at every refresh a scroll draws; otherwise, a passive
     /// recording's included, it keeps the default range, which never raises
-    /// the rate.
+    /// the rate (LLP 1061 D4).
     private func followDisplay() {
         #if os(iOS)
         let range = recording == nil || recorder != nil ? CAFrameRateRange.default : FrameClock.full(on: session?.presenter.viewport.window?.screen)
@@ -433,7 +433,7 @@ final class FrameSampler: NSObject {
 
     @objc func tick(_ link: CADisplayLink) {
         observe(now: link.timestamp, target: link.targetTimestamp, at: CACurrentMediaTime())
-        // Which images show without their pixels this frame.
+        // Which images show without their pixels this frame (LLP 1145 D2).
         session?.rasters.sampleBlank()
         // The session's own frame source running is activity too.
         if session?.frames.link != nil || held { active = CACurrentMediaTime() }
@@ -601,9 +601,9 @@ final class FrameSampler: NSObject {
     }
     var observedCount: Int { presented }
 
-    /// `{"op":"perf","frames":true[,"late":N]}`: lifetime counters, the
+    /// `{"op":"perf","frames":true[,"late":N]}` (D4): lifetime counters, the
     /// ring's percentiles with the range they cover, the most recent late
-    /// records; `all` adds every retained record (a trace).
+    /// records; `all` adds every retained record (a trace, D5).
     func reply(late n: Int = 20, all: Bool = false) -> [String: Any] {
         let xs = records.map(\.interval).sorted()
         let q = { (f: Double) -> Any in xs.isEmpty ? NSNull() : xs[min(xs.count - 1, Int(f * Double(xs.count)))] }
@@ -623,12 +623,12 @@ final class FrameSampler: NSObject {
 }
 
 extension ExactSession {
-    /// Save Trace: this session's journal, its presented frames,
+    /// Save Trace (LLP 1079 D5): this session's journal, its presented frames,
     /// `perf` over every root and its hatches, with who made them and each timing's
     /// proxy, as `trace-<wallclock>.json` in the app's temporary directory;
     /// `agent.mjs trace <file>` reads it back. The path, or why not.
     /// `signalled`, it is also `trace-pid-<pid>.json`, the name `trace --pid`
-    /// waits for.
+    /// waits for (LLP 1142 D5).
     public func saveTrace(signalled: Bool = false) -> Result<URL, Error> {
         guard FrameSampler.measured else { return .failure(TraceError.production) }
         // A release build's first trace starts its measuring: it has the
@@ -654,7 +654,7 @@ extension ExactSession {
                 var row = row; row["pid"] = canvas * 2 + (row["pid"] as? Int ?? 0); return row
             }
         }
-        // The host binary's build, as `build.mjs` stamped it. It
+        // The host binary's build, as `build.mjs` stamped it (LLP 1142 D2). It
         // is not the running plan's: a development host may run another plan.
         let info = ExactEnv.appMetadata
         var hostBuild: [String: Any] = ["bundlePath": Bundle.main.bundlePath]
@@ -678,7 +678,7 @@ extension ExactSession {
             "journal": raw(agent("{\"op\":\"logs\",\"since\":0}")),
             "frames": frames,
             "perf": perf,
-            // The hatches, read in this same turn, so the sections agree.
+            // The hatches (LLP 1075.003.000.001 §3.3), read in this same turn, so the sections agree.
             "hatches": ["state": presenter.elements.observation(hatchDiagnostics), "perf": hatchPerf()],
         ]
         do {
@@ -705,7 +705,7 @@ extension ExactSession {
     enum TraceError: Error { case production }
 
     /// Start measuring what `perf` reads, where this binary can and has not
-    /// yet (a release build): the presented frames, the hatch
+    /// yet (a release build, LLP 1079): the presented frames, the hatch
     /// calls' timing and the plan sites' work. The agent's requests, and
     /// Save Trace, ask.
     func measurePerf(frameSampler: Bool = true) {
@@ -718,7 +718,7 @@ extension ExactSession {
     static let latestTrace = "trace-latest.json"
 }
 
-/// `SIGUSR1` saves the session's trace, with no alert, as Linux's
+/// `SIGUSR1` saves the session's trace, with no alert (LLP 1142 D5), as Linux's
 /// display loop does: `agent.mjs trace --pid <pid>` asks a running app for
 /// one with no person at its menu. Not in a production bake. The handler only
 /// marks the signal; the save runs on the main queue.
@@ -751,7 +751,7 @@ public enum TraceSignal {
 extension ExactSession {
     static let journal = Logger(subsystem: "com.exact.app", category: "journal")
 
-    /// A batch's failure lines (a resource refused, a request
+    /// A batch's failure lines (LLP 1142 D4: a resource refused, a request
     /// or a send failed), written where a person or an agent looks: the
     /// unified log (`log show --predicate 'subsystem == "com.exact.app"'`)
     /// and stderr, which `build.mjs --run` shows. The runner queues them only
@@ -763,7 +763,7 @@ extension ExactSession {
         }
     }
 
-    /// The journal's other lines, at a lower
+    /// The journal's other lines (LLP 1143 open question 1), at a lower
     /// level than a failure and not on stderr: a run a person drives reads
     /// what `logs` would have said with `log stream --level info`. A host
     /// line (`host: …`) is HostLog's, already written as it happened.
@@ -793,7 +793,7 @@ final class FrameObservation {
     }
 }
 
-// Independent real-time observation, never a clock loan.
+// @ref LLP 1142 §13 D8 — independent real-time observation, never a clock loan.
 extension Agent {
     func liveFrames(_ request: [String: Any], completed: @escaping ([String: Any]) -> Void) {
         guard let ms = Agent.integer(request["live"]), (1...120_000).contains(ms) else {

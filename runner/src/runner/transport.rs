@@ -1,17 +1,17 @@
-//! A `sequence` in the runner's commits and clock: the
+//! A `sequence` in the runner's commits and clock (LLP 1125 D2–D5): the
 //! gate step reads each sequence's gate, key and `play` arguments over the
 //! commit's settled state, inside its rollback; the transport takes them
 //! once the commit stands, so a refused commit changes nothing that sounds.
 //! Its own wakes (a fill, the count-in's end) run no action and make no
 //! commit; its end runs `ended=` as a timer runs; and what `exactTransport`
 //! answers is published by a commit of its own, as an answer's `then` is.
-//! A clock in's deliveries come through `midi_input`.
+//! A clock in's deliveries (LLP 1125 D9) come through `midi_input`.
 
 use super::*;
 use crate::transport::{Answer, Out, Seen, SOURCE};
 
 impl<D: DataSource> Runner<D> {
-    /// The gate step's part: each sequence's gate, its key's
+    /// The gate step's part (LLP 1092 D8): each sequence's gate, its key's
     /// text while the gate holds, and its six arguments, read now and kept
     /// for [`Runner::transport_stood`]. A trap, or a key that is no key,
     /// refuses the commit.
@@ -104,7 +104,7 @@ impl<D: DataSource> Runner<D> {
         self.transport_said(lines, before);
     }
 
-    /// One delivery's clock messages from the followed input,
+    /// One delivery's clock messages from the followed input (LLP 1125 D9),
     /// `(stamp, bytes)` each in arrival order: no action, no commit.
     pub(super) fn transport_clock(&mut self, msgs: &[(f64, Vec<u8>)]) {
         let before = self.transport.answer();
@@ -163,20 +163,20 @@ impl<D: DataSource> Runner<D> {
         Ok(Value::record(fields))
     }
 
-    /// The voice table, for `state.sounds` and a test.
+    /// The voice table (LLP 1096 D5), for `state.sounds` and a test.
     pub fn sounds(&self) -> &crate::sound::Sounds {
         &self.sounds
     }
 
     /// What the output plays since the last take: a `Play` per new voice,
-    /// an `End` per voice that now ends earlier, and a
-    /// sequence's timed haptics.
+    /// an `End` per voice that now ends earlier (LLP 1096 D5), and a
+    /// sequence's timed haptics (LLP 1125 D3).
     pub fn take_sounds(&mut self) -> Vec<crate::sound::SoundOp> {
         self.sounds.take()
     }
 
-    /// End every live voice before this runner is replaced (a dev reload);
-    /// the host drains `take_sounds` before the restart.
+    /// End every live voice before this runner is replaced (a dev reload,
+    /// LLP 1096 D5); the host drains `take_sounds` before the restart.
     pub fn end_sounds(&mut self) {
         // The host's time now, not the last commit's: what its output has
         // handed since is handed here too, so no note-off it needs is taken
@@ -186,7 +186,7 @@ impl<D: DataSource> Runner<D> {
         if !self.plan.sounds.is_empty() {
             self.sounds.reload(self.now_ms, &mut lines);
         }
-        // The MIDI queue as at a stop: every note ends.
+        // The MIDI queue as at a stop: every note ends (LLP 1125 D4).
         self.midi.reload(self.now_ms, &mut lines);
         lines.into_iter().for_each(|l| self.log(l));
     }

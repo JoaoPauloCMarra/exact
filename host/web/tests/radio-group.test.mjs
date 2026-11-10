@@ -1,4 +1,4 @@
-// In a real browser, a value chosen from a few is a `radiogroup` of native
+// LLP 1116.004 D5.2 in a real browser: a value chosen from a few is a `radiogroup` of native
 // `radio` buttons, which a default build's stylesheet (look.mjs) draws as a segmented control (a track, the
 // checked radio raised in it) and the input piece (input-glue.js, which both web targets load)
 // gives one Tab stop and the arrow keys, as WAI-ARIA's radio group has them. The nodes are as

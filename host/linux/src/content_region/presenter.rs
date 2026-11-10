@@ -32,7 +32,7 @@ impl<D: DataSource> Presenter<D> {
             "/",
             Some(region),
         )?;
-        presenter.measure();
+        presenter.measure(); // LLP 1079 D1
         Ok((presenter, error))
     }
     /// Region completion readiness. No timer or input event is needed to resume.
@@ -66,12 +66,12 @@ impl<D: DataSource> Presenter<D> {
     pub(crate) fn frame_for(&mut self, target: FrameTarget) -> Option<Arc<Pixmap>> {
         #[cfg(windows)]
         let window_damage = self.surfaces.direct_window.is_some() && self.dirty();
-        // Its session's roles, whatever else lives on the thread.
+        // Its session's roles, whatever else lives on the thread (LLP 1121 stage 5).
         let _roles = self.host.runner().bind_roles();
         let frame = crate::text::cache::deferring_eviction(|| {
             let frame = self.paint_frame(target);
-            // A field's caret, or a fragment's target as pictures arrive,
-            // moved by this frame's layout: paint again.
+            // A field's caret, or a fragment's target as pictures arrive
+            // (LLP 1153 D5), moved by this frame's layout: paint again.
             if self.last_frame_succeeded && (self.reveal_field_cursor() | self.hold_fragment()) {
                 self.paint_frame(target)
             } else {
@@ -107,7 +107,7 @@ impl<D: DataSource> Presenter<D> {
             previous,
             self.brush.window_canvas,
         ));
-        // The hatches' overlays as published:
+        // The hatches' overlays as published (LLP 1075.003.000.001 §2.2.1):
         // read here, at the start of the paint; the walk calls no hatch.
         self.brush.overlays = (self.hatches.overlays.iter())
             .map(|(id, shown)| (*id, shown.pixels.clone()))
@@ -121,7 +121,7 @@ impl<D: DataSource> Presenter<D> {
         if let Some(error) = self.refine_collections() {
             self.host.log(error);
         }
-        self.refresh_looks(None); // the focus's ring
+        self.refresh_looks(None); // the focus's ring (LLP 1121 D8)
         self.restore_scroll_anchors();
         self.arm_scroll_anchors();
         let dirty = self.host.take_row_dirty();

@@ -1,4 +1,4 @@
-// Held proposals replaced since a client last saw them (tamber/1.17): an `accept`,
+// Held proposals replaced since a client last saw them (tamber/1.17, the third hands-on pass's #2): an `accept`,
 // `drop` or `edit-held` of one is refused 409 `{stale: true, replacedBy, by}`, so a client never acts on a proposal
 // someone else changed without being told who. A proposal is replaced by an `edit-held` (its editor) or by a recompute
 // at an `accept` (its accepter); each says so as `proposal-dropped` with `replacedBy`, and that event is what this

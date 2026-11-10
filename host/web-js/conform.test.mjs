@@ -154,10 +154,10 @@ test("the drive's clock step holds Linux to the pages' Poisoned refusal, and ask
 
 test('the wasm reference marker covers exactly photo-editor, recorder and markdown, with exactly its reason', async () => {
   const { WASM_UNBOUND, WASM_UNBOUND_REASON } = await import('./conform-marked.mjs');
-  // Interim, until the wasm host binds packages. A fourth app or another reason fails here.
-  expect(WASM_UNBOUND_REASON).toBe('reference does not bind packages');
+  // Interim (theme2 + the lead, 2026-10-30): the landing fix removes it. A fourth app or another reason fails here.
+  expect(WASM_UNBOUND_REASON).toBe('reference does not bind packages (LLP 1071 retirement)');
   expect(Object.keys(WASM_UNBOUND).sort()).toEqual(['markdown', 'photo-editor', 'recorder']);
-  for (const reason of Object.values(WASM_UNBOUND)) expect(reason).toBe('reference does not bind packages');
+  for (const reason of Object.values(WASM_UNBOUND)) expect(reason).toBe('reference does not bind packages (LLP 1071 retirement)');
   expect(Object.isFrozen(WASM_UNBOUND)).toBe(true);
   expect(Object.getPrototypeOf(WASM_UNBOUND)).toBe(Object.prototype);
 });

@@ -1,6 +1,7 @@
 //! The module seam's general pieces, through an interface no module ships:
 //! `@fixture/sensor`, written beside the app as an installed package, whose
-//! implementation the test plays as the host's native slot.
+//! implementation the test plays as the host's native slot (LLP 1133.002
+//! D14; LLP 1133.008 D8; LLP 1133.009 D10).
 
 use exact_runner::{CallOrigin, Dispatch, Outcome, Reply, Response, Runner, Work};
 use serde_json::{json, Value as Json};
@@ -55,7 +56,7 @@ component App
       text meter.id
 "#;
 
-/// `@fixture/listener`, a recognizer's shape: two
+/// `@fixture/listener`, a recognizer's shape (LLP 1133.012 D12): two
 /// permissions, the second the microphone's, asked only by the calls that
 /// name a line they cover; a `"*"` line every call needs; an app origin only
 /// for a call on a track; and a word the agent prefers for the
@@ -288,10 +289,11 @@ fn data_call(r: &mut Runner<Granted>, body: Json) -> Json {
     serde_json::from_slice(&body).unwrap()
 }
 
-/// A bound implementation answers only what admission lets through, from
-/// Contract and from data code alike: an argument whose grant line the app
-/// lacks, a capture start while the app is in the background, and one a tool
-/// invocation makes are each refused before the implementation hears of it.
+/// LLP 1133.002 D14, LLP 1133.009 D10 items 3, 8, 9: a bound implementation
+/// answers only what admission lets through, from Contract and from data
+/// code alike: an argument whose grant line the app lacks, a capture start
+/// while the app is in the background, and one a tool invocation makes are
+/// each refused before the implementation hears of it.
 #[test]
 fn a_bound_call_is_admitted_before_its_implementation_answers() {
     let (_app, mut r, calls) = boot("admitted");
@@ -363,7 +365,7 @@ fn a_bound_call_is_admitted_before_its_implementation_answers() {
     assert_eq!(sent(&calls, "open"), 2);
 }
 
-/// A path option is admitted against the app's
+/// LLP 1133.009 D10 item 4: a path option is admitted against the app's
 /// `fs.write` lines before the implementation hears of the call; a path
 /// outside them, or one that is not a plain `app:/` file, is refused.
 #[test]
@@ -392,12 +394,13 @@ fn a_path_to_write_is_admitted_against_the_app_s_fs_write_lines() {
     assert_eq!(sent(&calls, "save"), 1, "no refused path reaches it");
 }
 
-/// Under the agent an interface that is its own substitute is answered by its
-/// implementation, told so, behind the runner's permission: a request while
-/// `prompt` waits on a ticket the agent answers before the call reaches the
-/// implementation; a tool's call raises no ticket; the agent's preferred value
-/// reaches the implementation and is laid over its answer, checked field by
-/// field.
+/// LLP 1133.008 D8 item 9, LLP 1133.009 D10 item 11: under the agent an
+/// interface that is its own substitute is answered by its implementation,
+/// told so, behind the runner's permission: a request while `prompt` waits
+/// on a ticket the agent answers before the call reaches the
+/// implementation; a tool's call raises no ticket; the agent's preferred
+/// value reaches the implementation and is laid over its answer, checked
+/// field by field.
 #[test]
 fn an_implementation_that_is_its_own_substitute_answers_behind_the_agent_s_ticket() {
     let (_app, mut r, calls) = boot("agent");
@@ -465,7 +468,7 @@ fn an_implementation_that_is_its_own_substitute_answers_behind_the_agent_s_ticke
     );
 }
 
-/// A reader asked again with new arguments hands
+/// LLP 1133.009 D10 item 12: a reader asked again with new arguments hands
 /// its implementation the new group before the old one is released, and
 /// only the old group is released; the whole name is released when its last
 /// reader goes.
@@ -503,7 +506,7 @@ fn an_argument_group_with_no_reader_is_released_after_its_successor_is_asked() {
     );
 }
 
-/// A reply carrying handles is provisional
+/// LLP 1133.009 D6, D10 item 10: a reply carrying handles is provisional
 /// until delivered; the reply to a send superseded before it landed is
 /// dropped, and its implementation told to dispose of its handles, while
 /// the delivered one's stay the session's.
@@ -534,7 +537,7 @@ fn a_dropped_reply_s_handles_are_disposed_of() {
     );
 }
 
-/// A polled source is asked again once after an
+/// LLP 1133.009 D10 item 7: a polled source is asked again once after an
 /// advance that crossed its period, however many periods it crossed; never
 /// before its period, never while its last ask is in flight, and its poll
 /// is no timer that would stop the agent's jump. The agent's `polls` says
@@ -604,7 +607,7 @@ fn prefer(r: &mut Runner<Granted>, request: &str) -> Result<String, String> {
     r.extension_agent(request).expect("a prefer").1
 }
 
-/// Under the agent, a tool may start a
+/// LLP 1133.012 D12 item 5, §10 drive 4: under the agent, a tool may start a
 /// recognition of a file while its permission is granted, never one on the
 /// microphone; while `prompt` a tool raises no ticket, and the app's call on
 /// a track waits on the speech permission's.
@@ -643,7 +646,7 @@ fn a_tool_may_recognise_a_file_but_never_the_microphone() {
     assert_eq!(sent(&calls, "listen"), 1, "held under the ticket");
 }
 
-/// A `"*"` grant line holds every call of the name,
+/// LLP 1133.012 D12 item 3: a `"*"` grant line holds every call of the name,
 /// whatever its arguments.
 #[test]
 fn a_star_grant_line_holds_every_call() {
@@ -661,7 +664,7 @@ fn a_star_grant_line_holds_every_call() {
     );
 }
 
-/// A word the interface declares for its implementation's
+/// LLP 1133.012 §9: a word the interface declares for its implementation's
 /// agent path is preferred by its type and told to the implementation; a
 /// name neither a source nor a word is refused. The permission is asked only
 /// by the names whose lines it covers: while it is denied, a source with no

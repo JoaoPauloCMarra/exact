@@ -1,4 +1,4 @@
-//! A scripted child: `--process <target>=script:<file>`
+//! A scripted child (LLP 1133.007 §7): `--process <target>=script:<file>`
 //! answers a spawn with no process at all. The script says what each
 //! incarnation writes to stdout and stderr, how much of its stdin it reads
 //! and when, how it exits (a code or a signal), whether its pipes stay open

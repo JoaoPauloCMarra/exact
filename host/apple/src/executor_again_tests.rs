@@ -1,9 +1,10 @@
-//! A re-ask (`Dispatch::Again`) and the sixteen effects: a re-ask is never
-//! worker work and never counts against the sixteen; it takes its place in the
-//! ordered sequence complete, charged one place in the markers' own window of
-//! 128; with that full it waits pending, oldest first, never refused. Finished
-//! reads leave the sixteen; finished effects stay in it until drained.
-//! Completion is driven by the fixture's hold and release, never by sleeping.
+//! A re-ask (`Dispatch::Again`) and the sixteen effects (LLP 1041 §8.4,
+//! amended 2026-10-09): a re-ask is never worker work and never counts
+//! against the sixteen; it takes its place in the ordered sequence complete,
+//! charged one place in the markers' own window of 128; with that full it
+//! waits pending, oldest first, never refused. Finished reads leave the sixteen;
+//! finished effects stay in it until drained. Completion is driven by the
+//! fixture's hold and release, never by sleeping.
 use super::*;
 
 fn again(core: &Core, ticket: u64) {
@@ -313,8 +314,8 @@ fn re_asks_behind_a_refusal_wait_and_enter_after_it() {
 
 /// A wave of re-asks while a refusal is retained, more than the fence's
 /// 128, then a real read: the read is held behind the refusal, not refused,
-/// and runs when it lifts, never refused for good while read capacity is
-/// free.
+/// and runs when it lifts (Grok, code review round 1: re-asks had filled
+/// the fence and the read was refused for good with read capacity free).
 #[test]
 fn re_asks_behind_a_refusal_leave_the_fence_to_real_requests() {
     let (core, fixture, woke) = fenced_core();
@@ -347,9 +348,10 @@ fn re_asks_behind_a_refusal_leave_the_fence_to_real_requests() {
     until_settled(&core);
 }
 
-/// More re-asks than 128 markers and 1024 waiting records, then an effect: none
-/// is refused, the effect is admitted and runs, and everything settles in entry
-/// order.
+/// More re-asks than any cap the first build had (128 markers and 1024
+/// waiting records), then an effect: none is refused, the effect is admitted
+/// and runs, and everything settles in entry order (Astra and Grok, code
+/// review round 1: the 1,153rd had been refused for good, outside the fence).
 #[test]
 fn thousands_of_re_asks_and_a_following_effect_all_settle() {
     let (core, fixture, woke) = setup();
@@ -371,7 +373,8 @@ fn thousands_of_re_asks_and_a_following_effect_all_settle() {
 /// before re-asks A and C (Apple and Linux lift it when the runner lets the
 /// refusal go, drained or not): the refusal is returned, the held write
 /// after it is held again, and A and C keep their order and their single
-/// records (A never goes after C, and the waiting records never overfill).
+/// records (Astra, code review round 1: A had gone after C, and the
+/// waiting records could overfill).
 #[test]
 fn lifting_the_fence_with_the_window_full_keeps_re_asks_in_order() {
     let (core, _fixture, woke) = setup();

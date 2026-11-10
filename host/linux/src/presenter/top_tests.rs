@@ -1,4 +1,4 @@
-//! The top layer: the shape rule, the surface a shell's
+//! The top layer (LLP 1115.001 D10): the shape rule, the surface a shell's
 //! windows show, what closes it, the page inert beneath it, the focus
 //! moving in and back, Back's order, and a host with no shell unchanged.
 use super::look::{self, Inputs, Layout};
@@ -352,7 +352,7 @@ fn the_shape_rule_is_the_one_the_apple_hosts_follow() {
         .map(|r| (r.title.as_str(), r.cancel, r.destructive))
         .collect();
     assert_eq!(titles, [("Cancel", true, false), ("Delete", false, true)]);
-    // Lowering implies `closerequest` for the shape, so
+    // LLP 1115.000 D13.4: lowering implies `closerequest` for the shape, so
     // Back and Escape cancel it and it has no outside.
     assert!(cancellable && !outside);
     assert!(
@@ -711,7 +711,7 @@ fn the_page_is_inert_under_an_alert_and_the_focus_moves_in_and_back() {
     assert_eq!(text(&p, "said"), "removed", "a cancel runs nothing");
 }
 
-/// An alert has no outside, and its `closedby` is read
+/// LLP 1115.000 D13.4: an alert has no outside, and its `closedby` is read
 /// as it stands, written or implied. The shape's implied `closerequest`
 /// tells the shell that Back dismisses it and a tap outside does not (flags
 /// 1). An author's `closedby="any"` is Material's dialog left to itself,
@@ -1122,7 +1122,7 @@ fn a_driver_reveals_a_row_of_the_surface_and_opens_a_context_menu_by_its_node() 
     assert!(p.surface().is_none());
 }
 
-/// The menu's motion grows from the corner by its anchor:
+/// The menu's motion grows from the corner by its anchor (D10, as ruled):
 /// the statement says which, and the shell's window animates from it.
 #[test]
 fn a_menu_grows_from_the_corner_by_its_anchor() {

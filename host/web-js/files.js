@@ -1,12 +1,12 @@
-// Files on the JS target: a file input and `showPicker`,
-// `saveFile` and the three document pickers and
-// `share` — the runner's decisions (runner/src/runner/
+// Files on the JS target: a file input and `showPicker` (LLP 1069.002),
+// `saveFile` and the three document pickers (LLP 1069.010 D2, D3) and
+// `share` (LLP 1069.003) — the runner's rulings (runner/src/runner/
 // picker.rs, save_file.rs, file_pickers.rs, share.rs: the checks, the
 // refusals into the journal, the agent's holds) over the web host's own
 // `picker-glue.js` and `documents-glue.js`, fetched on first use. The commands run in
 // the press's commit, so the element's own picker opens inside the
 // activation. Under the agent each request is held (`pick`, `export`,
-// `open-file`, `open-directory`, `save-file`, `share`) and
+// `open-file`, `open-directory`, `save-file`, `share`, LLP 1069.007 D3) and
 // `tap @t …` / `type @t …` answers it
 // (agent.js). Bundled only for a plan with a file input or one of the
 // commands.
@@ -65,7 +65,7 @@ OnHooks.file = (e, kind, f) => {
   return true;
 };
 
-// ---------------------------------------------------------------- holds
+// ---------------------------------------------------------------- holds (LLP 1069.007 D3)
 const Holds = [];
 function hold(capability, el, args, answer) {
   const ticket = nextTicket();
@@ -78,7 +78,7 @@ export const holds = () => {
   for (let i = Holds.length - 1; i >= 0; i--) if (Holds[i].el && !Holds[i].el.isConnected) { const [h] = Holds.splice(i, 1); inflight.n--; say(`device ${h.capability} ${h.ticket} retired`); }
   return Holds.map(h => ({ name: h.name, ticket: h.ticket, device: { capability: h.capability, args: h.args } }));
 };
-/** The agent's answer: checked before the hold is spent. */
+/** The agent's answer (D4): checked before the hold is spent. */
 export async function answer(req) {
   holds();
   const at = Holds.findIndex(h => h.ticket === req.ticket);
@@ -118,7 +118,7 @@ Hosts.showPicker = id => {
   const accept = tokens(el), multiple = el.hasAttribute('multiple');
   hold('pick', el, { id: String(id), accept, multiple }, (value, req) => counted(glue().then(m => m.answer(viewId(el), value == null ? null : req.files ?? []))));
   const h = Holds.at(-1);
-  // What the real picker would have let the person choose (`check_pick`), with iOS Safari's HEIC rule.
+  // What the real picker would have let the person choose (`check_pick`), with iOS Safari's HEIC rule (D6).
   h.check = v => {
     if (!el.isConnected) return 'the file input is gone';
     const list = paths(v);
@@ -135,7 +135,7 @@ Hosts.showPicker = id => {
 
 // ---------------------------------------------------------------- saveFile (save_file.rs)
 // `(id, from, suggestedName)`, or `(id, none, suggestedName, text)` for
-// `text=`: the text itself, with no file to write first.
+// `text=`: the text itself, with no file to write first (x2apps notes #4).
 Hosts.saveFile = (...args) => {
   const refuse = (why, el) => { say(`saveFile: refused: ${why}`); if (el) el.dispatchEvent(new Event('cancel')); };
   const text = args.length === 4 && args[1] == null ? args[3] : undefined;
@@ -165,7 +165,7 @@ Hosts.share = (title, text, url, files) => {
   if (!Array.isArray(files) || files.some(f => typeof f !== 'string')) return refuse('files= is a list of strings');
   if (text == null && url == null && !files.length) return refuse('needs text=, url= or files=');
   if (url != null && !/^https?:\/\/[^/?#\s]\S*$/i.test(url)) return refuse('url is not an absolute http: or https: URL');
-  // `files=`: app:/ files behind `fs.read`; a picture of an element is refused on the web.
+  // `files=` (LLP 1125 D12): app:/ files behind `fs.read`; a picture of an element is refused on the web.
   for (const f of files) {
     if (f.startsWith('#')) return refuse('a picture of an element is not available on the web');
     const rest = f.startsWith('app:/') ? f.slice(5).split('/') : [];
@@ -185,7 +185,7 @@ Hosts.share = (title, text, url, files) => {
 // What the person chooses becomes a `doc:/<n>/<name>` path the app reaches
 // through `storage.fs` (the glue's handles; storage-request.js routes it).
 let Docs = null;
-// An app granted `doc.keep` keeps what the person chooses.
+// An app granted `doc.keep` keeps what the person chooses (LLP 1069.010.000 D3).
 const docs = () => Docs ??= import(new URL('./documents-glue.js', import.meta.url).href).then(() => (x().documents.keeping(data.appId, appGrantSet()), x().documents.install({
   log: say, openFile: () => false,
   dispatch(view, kind, payload) {
@@ -195,7 +195,7 @@ const docs = () => Docs ??= import(new URL('./documents-glue.js', import.meta.ur
     else el.dispatchEvent(new CustomEvent('change', { detail: payload }));
   },
 })));
-// Files and folders dropped from outside (DOM's `drop`),
+// Files and folders dropped from outside (DOM's `drop`, studio diary R19),
 // of any type: Chromium's handles, asked for while the event lasts
 // (`getAsFileSystemHandle`), else a folder's entry or each File read-only,
 // minted as a picker's choice is and heard with the `DragEvent` record. The
@@ -261,7 +261,7 @@ for (const [name, [capability, usage]] of Object.entries(PICKERS)) Hosts[name] =
   // needs the activation, which a page that has loaded it already keeps.
   counted(docs().then(m => m.show(r, name)));
 };
-// `requestPermission(id, path, mode)`: the browser's
+// `requestPermission(id, path, mode)` (LLP 1069.010.000 D7): the browser's
 // own prompt for a kept document after a reload, asked inside the press's
 // activation, as the pickers are; `change` at `id` hears `granted` or `denied`.
 Hosts.requestPermission = (id, path, mode) => {

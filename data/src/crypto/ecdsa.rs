@@ -1,9 +1,9 @@
-//! ECDSA P-256 for DPoP: generate, sign (ES256, raw
+//! ECDSA P-256 for DPoP (LLP 1069.005 D1b): generate, sign (ES256, raw
 //! `r‖s`), and JWK import and export, the four WebCrypto members a source
 //! needs, plus "keep this key" under `secret.keep`. One implementation for
 //! both languages: the Hermes executor's `crypto.subtle` calls these too.
 //!
-//! Generating and signing draw a nonce, so each is a
+//! @ref LLP 1069.005 D1b — generating and signing draw a nonce, so each is a
 //! counted read; importing and exporting are pure. The nonce is always the
 //! OS's, never the agent's stream (the web's browser draws its own).
 
@@ -164,7 +164,7 @@ impl EcKey {
     }
 
     /// Whether `signature` (raw `r‖s`) is this key's over `data`. For tests
-    /// that cross-check executors; no source verifies a DPoP proof.
+    /// that cross-check executors; no source verifies a DPoP proof (D1b).
     pub fn verify(&self, data: &[u8], signature: &[u8]) -> bool {
         use p256::ecdsa::signature::Verifier;
         Signature::from_slice(signature).is_ok_and(|s| self.public.verify(data, &s).is_ok())
@@ -220,7 +220,7 @@ fn sample_key(
 }
 
 /// `generateKey({name:"ECDSA", namedCurve:"P-256"}, extractable, …)`: a
-/// fresh pair from the OS's entropy, and a counted read.
+/// fresh pair from the OS's entropy, and a counted read (D2).
 pub fn generate_p256(store: &Store, extractable: bool) -> Result<EcKeyPair, DataError> {
     let secret = sample_key(platform::fill)?;
     store.observe_entropy();
@@ -241,7 +241,7 @@ pub fn generate_p256(store: &Store, extractable: bool) -> Result<EcKeyPair, Data
 
 /// `sign({name:"ECDSA", hash:"SHA-256"}, key, data)`: ES256 as raw `r‖s`,
 /// with a random nonce (hedged, so the same key and data give a different
-/// signature each time, as on the web), and a counted read.
+/// signature each time, as on the web), and a counted read (D2).
 pub fn sign_es256(store: &Store, key: &EcKey, data: &[u8]) -> Result<[u8; 64], DataError> {
     let Some(secret) = &key.secret else {
         return Err(bad(
@@ -257,7 +257,7 @@ pub fn sign_es256(store: &Store, key: &EcKey, data: &[u8]) -> Result<[u8; 64], D
     Ok(signature.to_bytes().into())
 }
 
-/// Keep `pair` under the `secret.keep <name>` grant: its
+/// Keep `pair` under the `secret.keep <name>` grant (LLP 1069.005 D1b): its
 /// JWK, `d` included whatever its extractability, written by Rust so the
 /// private scalar never enters a source's heap. On the web a Rust source
 /// can't keep a key the browser protects (a wasm scalar is readable by the
@@ -265,7 +265,7 @@ pub fn sign_es256(store: &Store, key: &EcKey, data: &[u8]) -> Result<[u8; 64], D
 pub fn keep_key(store: &mut Store, name: &str, pair: &EcKeyPair) -> Result<(), DataError> {
     if cfg!(target_arch = "wasm32") {
         return Err(DataError::Unavailable(
-            "keep_key: a Rust source on the web cannot keep a key the browser protects yet".into(),
+            "keep_key: a Rust source on the web cannot keep a key the browser protects yet (LLP 1069.005 D1b)".into(),
         ));
     }
     if !pair.private.is_private() {
@@ -281,7 +281,7 @@ pub fn keep_key(store: &mut Store, name: &str, pair: &EcKeyPair) -> Result<(), D
 pub fn kept_key(store: &Store, name: &str) -> Result<Option<EcKeyPair>, DataError> {
     if cfg!(target_arch = "wasm32") {
         return Err(DataError::Unavailable(
-            "kept_key: a Rust source on the web cannot keep a key the browser protects yet".into(),
+            "kept_key: a Rust source on the web cannot keep a key the browser protects yet (LLP 1069.005 D1b)".into(),
         ));
     }
     let Some(text) = store.get(name) else {

@@ -1,12 +1,12 @@
 // The app's lifecycle holds for work an answer started that it must finish
 // (`Runner::must_finish`): the module's storage, which lands after the
-// answer that started it, and a request with effects, whose
+// answer that started it (LLP 1097 D10), and a request with effects, whose
 // server may have acted on it, spending a rotating refresh token say, so its
-// reply must land and what its turn writes be kept. iOS and
+// reply must land and what its turn writes be kept (LLP 1146 D2). iOS and
 // tvOS hold a background task from the batch that says there is such work
 // to the one that says it is done, or until the system's time runs out
 // (`FinishHold`). macOS waits to terminate while there is, and while a
-// native module's quit work runs, five seconds at most for
+// native module's quit work runs (LLP 1069.010 Q4), five seconds at most for
 // all together, and the agent's exit 1.5 (`QuitHold`). What the store
 // already has completes on disk regardless.
 import Foundation

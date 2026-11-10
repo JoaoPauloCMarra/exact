@@ -1,6 +1,7 @@
-//! Where a `use` specifier leads: `./` and `../` paths inside the using file's
-//! root (its app, or its package), `exact:` modules compiled into the compiler,
-//! and packages found through `node_modules` as Node finds them.
+//! Where a `use` specifier leads (LLP 1091 D8/D9): `./` and `../` paths
+//! inside the using file's root (its app, or its package), `exact:` modules
+//! compiled into the compiler, and packages found through `node_modules` as
+//! Node finds them.
 
 use std::path::{Path, PathBuf};
 
@@ -192,7 +193,7 @@ fn lexical(path: &Path) -> PathBuf {
 }
 
 /// A `.contract` file, or a package's module declaration, its `exact.json`
-/// An app's own files are Contract only.
+/// (LLP 1133.001 D1): an app's own files are Contract only.
 fn contract_file(spec: &str, key: &Path, in_package: bool) -> Result<(), Refusal> {
     let declaration = in_package && key.file_name().is_some_and(|f| f == "exact.json");
     if declaration || key.extension().and_then(|extension| extension.to_str()) == Some("contract") {
@@ -284,7 +285,7 @@ fn package(spec: &str, dir: &Path, consulted: &mut Vec<PathBuf>) -> Result<Resol
                     root.join("package.json").display(),
                     root.display()
                 ),
-                // One of the SDK's standard modules: by a
+                // One of the SDK's standard modules (LLP 1133.001 D8): by a
                 // path into the checkout this compiler was built from.
                 None => match standard_module(&name) {
                     Some(at) => format!(
@@ -387,7 +388,7 @@ fn package(spec: &str, dir: &Path, consulted: &mut Vec<PathBuf>) -> Result<Resol
     })
 }
 
-/// Where a package's design is: the file its
+/// Where a package's design is (LLP 1121 D11): the file its
 /// `package.json`'s `"tamber"` names (`named`), else `<name>.tamber` beside
 /// its entry (what `exports` maps `.` to, or `index.contract`), where
 /// `<name>` is its namespace; and the package's own name (its
@@ -423,7 +424,7 @@ pub(crate) fn package_design(root: &Path, manifest: &Path) -> Option<PackageDesi
 }
 
 /// A package's entry file, relative to its root: what its `package.json`
-/// `exports` maps `.` to, else `index.contract`.
+/// `exports` maps `.` to, else `index.contract` (LLP 1121 D11, LLP 1139 D0).
 pub(crate) fn package_entry(manifest: &serde_json::Value) -> String {
     let entry = entry(&manifest["exports"], "").unwrap_or_else(|| "./index.contract".to_owned());
     entry.strip_prefix("./").unwrap_or(&entry).to_owned()
@@ -436,8 +437,8 @@ pub(crate) fn package_subpath(manifest: &serde_json::Value, sub: &str) -> Option
     entry(&manifest["exports"], sub)
 }
 
-/// The namespace a package's design tokens are named under: the last part of
-/// its name (`@exact/reading` → `reading`).
+/// The namespace a package's design tokens are named under (LLP 1121
+/// D11): the last part of its name (`@exact/reading` → `reading`).
 pub(crate) fn namespace(name: &str) -> &str {
     name.rsplit('/').next().unwrap_or(name)
 }

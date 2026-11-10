@@ -1,4 +1,4 @@
-# @exact/clipboard: what a person checks
+# @exact/clipboard: what a person checks (LLP 1133.006 §8, D3, D5)
 
 The fixture is `packages/clipboard/test/fixture`, made into an app by
 `fixture.mjs` (`EXACT_CLIPBOARD_FIXTURE=<dir>` keeps it). Build it from the
@@ -18,14 +18,14 @@ agent).
    TextEdit as plain text (Edit > Paste and Match Style): the URL arrives.
 4. Press **text**. Paste into TextEdit: "Copied from the fixture".
 5. Run `osascript -e 'clipboard info'` after step 1 and record the types
-   listed (what `writeObjects([NSImage])` writes, and `public.png`).
+   listed (D5: what `writeObjects([NSImage])` writes, and `public.png`).
 
 ## iOS, on a phone
 
 6. Press **png**, then paste into Notes: an 8 × 8 red image. No banner
-   appears for the write.
+   appears for the write (D5).
 
-## The web: when a write may happen
+## The web: when a write may happen (D3)
 
 7. In Safari and in Firefox, open the fixture's web build from a served
    origin and press **png**. Record whether it writes or rejects

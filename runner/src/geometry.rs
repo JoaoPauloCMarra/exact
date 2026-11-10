@@ -1,9 +1,9 @@
 //! Geometry and structural reads from actions, answered by the engine that
 //! commits.
 //!
-//! Reads run in actions only, with `measure` answered before the action
-//! runs: by the kernel natively, by the page on the web through the
-//! artifact's link; a box not yet laid out is provisional or unavailable.
+//! @ref LLP 1051.000 D1 (what each read means), D2 (actions only; `measure`
+//! answered before the action runs), D3 (the kernel natively), D4 (the page
+//! on the web, through the artifact's link), D5 (provisional, unavailable)
 //!
 //! Both answer the box where the viewer sees it, as `getBoundingClientRect`
 //! does: through every transform above it, with every scroll offset above
@@ -12,11 +12,11 @@
 //! runner where each scroller it presents stands ([`Scrolled`]) for the read
 //! to subtract; the page's answer already has them.
 //!
-//! `elementFromPoint(x, y)` and `elementsFromPoint(x, y)`
+//! `elementFromPoint(x, y)` and `elementsFromPoint(x, y)` (LLP 1094 D10)
 //! test the same boxes front to back: the former names the first hit by its
 //! nearest `id`, the latter lists each hit's own `id`. Natively both use the
 //! kernel's boxes, transform rows and [`Scrolled`]; the web uses its hit test.
-//! `querySelectorAll` lists nodes by a declared data word.
+//! `querySelectorAll` (LLP 1075.003 §9.1) lists nodes by a declared data word.
 //!
 //! An action runs against a read-only runner, so `frame` reads through a
 //! borrowed kernel while the body runs, and every `measure` in the body is
@@ -39,7 +39,7 @@ use exact_kernel::{
 };
 use exact_plan::{Opcode, Plan, Stdlib, StrId, Value};
 
-/// One answer: a border box and its two flags.
+/// One answer: a border box and its two flags (LLP 1051.000 D5).
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct GeometryAnswer {
     /// The box's left edge in its root's space.
@@ -104,7 +104,7 @@ pub trait InlineGeometry: std::fmt::Debug {
     fn frame(&self, view: ViewId) -> GeometryAnswer;
 
     /// `rangeFrame`: a text field's UTF-16 range `start..end` as its field
-    /// last drew it, in viewport coordinates: a collapsed
+    /// last drew it, in viewport coordinates (LLP 1114.007): a collapsed
     /// range is the caret's rectangle, a wider one the union of its line
     /// fragments, untrimmed by scrolling or the field's clip. Unavailable
     /// past the field's text, while text is composed, when the field is
@@ -115,8 +115,8 @@ pub trait InlineGeometry: std::fmt::Debug {
 }
 
 /// An open top-layer box: its view, viewport frame and optional viewport
-/// clip, each rectangle as `[x, y, width, height]`.
-/// The clip bounds reads without changing the frame's mapping.
+/// clip, each rectangle as `[x, y, width, height]` (LLP 1051.000 D1,
+/// LLP 1123 D2). The clip bounds reads without changing the frame's mapping.
 pub type TopLayerFrame = (ViewId, [f64; 4], Option<[f64; 4]>);
 
 #[derive(Debug, Clone)]
@@ -136,10 +136,10 @@ struct PlacedBlock {
 
 /// Where the host last showed each scroll container, and the page, in CSS
 /// px (`scrollLeft`, `scrollTop`): what a native read subtracts from the
-/// kernel's scroll-free box, so an app need not track every column's
-/// offset to drop a card where the pointer is. A host notes an
+/// kernel's scroll-free box (kanban diary F4: an app hand-tracked every
+/// column's offset to drop a card where the pointer was). A host notes an
 /// offset whenever one changes, handler or not; a read sees the offsets as
-/// last shown, as it sees the layout.
+/// last shown, as it sees the layout (LLP 1051.000 D1).
 #[derive(Debug, Default, Clone)]
 pub struct Scrolled {
     page: (f64, f64),
@@ -205,7 +205,7 @@ impl Scrolled {
     /// `frames` of the frontmost modal presentation's first box
     /// (`modal_live`), none while no presentation is open. An optional clip
     /// bounds hits and visibility in viewport points, independently of the
-    /// frame's mapping. Invalid rectangles
+    /// frame's mapping (LLP 1051.000 D1, LLP 1123 D2). Invalid rectangles
     /// discard their entry, without counting it toward `modal`.
     pub fn top_layer_frames(
         &mut self,
@@ -235,8 +235,8 @@ impl Scrolled {
     }
 
     /// Where the host shows the block of a subtree it lays out in a block of
-    /// its own without lifting it to the top layer: a
-    /// stack's route, a tab panel, a split's pane. The
+    /// its own (LLP 1115.002 D8.2) without lifting it to the top layer: a
+    /// stack's route, a tab panel, a split's pane (LLP 1123 D2). The
     /// rectangle is the block's, in the local coordinates of `within`, an
     /// ancestor of the root that holds the block in the host's hierarchy as
     /// in the document: its border box's, before its own transform, and
@@ -319,7 +319,7 @@ impl Scrolled {
     }
 
     /// `view`'s frame as `frame()` reports it when a host placed the block it
-    /// is in, else `frame`, the kernel's in the root's space.
+    /// is in (LLP 1115.002 D8.2), else `frame`, the kernel's in the root's space.
     pub(crate) fn agent_frame(
         &self,
         kernel: &Kernel,
@@ -369,7 +369,7 @@ impl Scrolled {
 /// A host hands its reads to [`GeometryLinks::new`], and what every host
 /// shares (naming a view by its id, finding an action's `measure`s, building
 /// the record) rides along in the same value, so an artifact that links no
-/// geometry carries none of it.
+/// geometry carries none of it (LLP 1047 D3).
 #[derive(Clone, Copy)]
 pub struct GeometryLinks {
     range_frame: fn(&Kernel, &Scrolled, ViewId, u32, u32) -> GeometryAnswer,
@@ -511,8 +511,8 @@ fn kernel_measure(kernel: &mut Kernel, scrolled: &Scrolled, view: ViewId) -> Geo
 /// every ancestor's (CSS's individual `translate`, its percentages of the
 /// box included, `rotate` and `scale` about `transform-origin`), less every
 /// scroll offset above it, the page's included; the bounding box of its
-/// four corners, so a drop aims
-/// at a translated card's place on screen. The rows as committed: a
+/// four corners (LLP 1051.000 D1, changed 2026-10-04: kanban2's drop aimed
+/// at a translated card's laid-out place). The rows as committed: a
 /// transition in flight counts at its end, which a presenter, not the
 /// kernel, knows; a 3D rotation or a z translation counts by its 2D parts.
 fn client_rect(
@@ -606,7 +606,7 @@ type Affine = [f64; 6];
 
 const IDENTITY: Affine = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 
-/// One step up a box's rendering ancestry: where `slot`,
+/// One step up a box's rendering ancestry (LLP 1123 D2): where `slot`,
 /// laid out at `frame`, is shown, from its border box (its own transform
 /// already applied) to the local coordinates of the box that shows it,
 /// or to the viewport's when nothing above it moves it. An open top-layer
@@ -629,7 +629,7 @@ pub(crate) fn shown_in(kernel: &Kernel, scrolled: &Scrolled, slot: u32, frame: F
     let at = shift(f64::from(frame.x), f64::from(frame.y));
     if scrolled.is_open(arena.key(slot)) {
         // With no rectangle from its host, one in the viewport's block is
-        // where its insets put it there, as a fixed box.
+        // where its insets put it there, as a fixed box (stage 14 B).
         let env = arena.env();
         let viewport = (env.viewport_width, env.viewport_height);
         let placed = || kernel.top_layer_origin(arena.local_id(slot), viewport);
@@ -921,7 +921,8 @@ fn field_range_frame(
     start: f64,
     end: f64,
 ) -> GeometryAnswer {
-    // A text field, or a Markdown reader, whose atoms' pills answer.
+    // A text field, or a Markdown reader, whose atoms' pills answer
+    // (LLP 1045.000 D7).
     let field = kernel.node(view).is_some_and(|node| {
         node.node_type == exact_kernel::NodeType::TextInput
             || (node.node_type == exact_kernel::NodeType::Text
@@ -1103,10 +1104,10 @@ fn kernel_shown(kernel: &Kernel, scrolled: &Scrolled, view: ViewId, _: bool) -> 
     }
 }
 
-/// The front-most laid-out box at viewport `(x, y)`: every
-/// root from the last, each node's children front to back by stacking
+/// The front-most laid-out box at viewport `(x, y)` (LLP 1094 D10): every
+/// root from the last, each node's children front to back by LLP 1083.000's
 /// rank and then tree order, a child before its parent. Boxes are `frame`'s,
-/// through every transform, each
+/// through every transform (LLP 1051.000 D1, changed 2026-10-04), each
 /// tested in its own space, so a turned box answers its own shape, not its
 /// bounding box, as DOM's hit test does; a scroller or a box that clips cuts
 /// its descendants to its padding box; `pointer-events: none` and

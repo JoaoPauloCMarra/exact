@@ -1,4 +1,4 @@
-// Animated GIF and WebP on Apple: what a decode learns
+// @ref LLP 1011.000 — animated GIF and WebP on Apple: what a decode learns
 // about the animation (`RasterAnimation`), Chrome's schedule for it
 // (`AnimationSchedule`, `AnimationClock`), and the frames themselves, decoded
 // at the display size one after another (`AnimatedFrames`). The players that

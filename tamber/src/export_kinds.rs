@@ -1,4 +1,4 @@
-//! The DTCG export's kinds besides colour: each
+//! The DTCG export's kinds besides colour (LLP 1121 D14, stage 6 G): each
 //! token's value per context as DTCG 2025.10 writes its type, what the
 //! export loses kept in `$extensions.exact`, and the way back from an
 //! incoming value to the text a design writes.
@@ -57,7 +57,7 @@ fn length(l: &Length, vocab: &Vocab) -> (Json, Option<String>) {
             dimension(named_px(name, vocab).unwrap_or(1.0), "px"),
             Some(name.clone()),
         ),
-        // Over base names: folded with each base's px, as a
+        // Over base names (stage 12 B2): folded with each base's px, as a
         // bare one is.
         Length::Base(r) => (
             dimension(r.fold(&|n| named_px(n, vocab)).unwrap_or(1.0), "px"),
@@ -75,8 +75,8 @@ fn shadows(s: &crate::Shadows, dark: bool, vocab: &Vocab) -> Option<Json> {
             // `currentcolor`: black, marked by the token's `currentcolor`.
             None => json!({ "colorSpace": "srgb", "components": [0, 0, 0], "hex": "#000000" }),
         };
-        // A length over base names folded with each base's px, as a length
-        // token's is.
+        // A length over base names (stage 12 B3) folded with each base's
+        // px, as a length token's is.
         let at = |i: usize| {
             one.lengths
                 .get(i)
@@ -226,7 +226,7 @@ pub(crate) fn written(v: &Value, dark: bool, vocab: &Vocab) -> Option<Written> {
             if s.list.is_empty() {
                 exact.insert("lossy".into(), json!("none"));
             }
-            // Over base names: its source, as a length's.
+            // Over base names: its source, as a length's (stage 12 B3).
             if !s.bases().is_empty() {
                 exact.insert("lossy".into(), json!(s.css()));
             }

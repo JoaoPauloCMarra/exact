@@ -13,7 +13,7 @@ import { macResourceMappings, macResourceInventory, appleAssetCatalogInventory, 
 // script that builds, serves, or drives an app resolves it here, so nothing
 // else knows the difference.
 //   bun host/web/build.mjs weird-castle-web          (EXACT_APP_DIR set)
-// The app manifest: `app.json` beside
+// The app manifest (LLP 1030 D2; 1030.000 D7): `app.json` beside
 // `app.contract` — the W3C Web App Manifest's own keys, which the web host
 // copies out as `manifest.json`, plus `app` (identity: the id every platform
 // derives its bundle id from, the name, the origin), `host.<platform>` (what
@@ -41,7 +41,7 @@ import { installProblems } from './install-page.mjs';
 import { gameDefaults, lintGame, prepareGame } from '../game/app/shells.mjs';
 import { shareTargetProblems, webShareTarget } from './share-target.mjs';
 import { bakedSettings, noteBunLoaded, settingChanges } from '../js/bake/src/__exact_env.mjs';
-noteBunLoaded(); // before this script starts a process: the settings Bun loaded from `.env` files
+noteBunLoaded(); // before this script starts a process: the settings Bun loaded from `.env` files (LLP 1153 D4)
 /** rustup puts cargo in `~/.cargo/bin` and a login profile puts that on PATH;
  * a non-interactive shell (an agent's, a launchd job's) often skips the
  * profile, and every cargo spawn below then fails as ENOENT. Every script that
@@ -58,7 +58,7 @@ export function cargoOnPath(env = process.env, home = homedir()) {
 cargoOnPath(); process.env.HERMES_LEAN_SYS_OFFLINE = '1';
 /** Every Cargo process Exact starts refuses implicit Hermes acquisition. */
 export function cargoEnvironment(env = process.env) { return withHostDeployment({ ...env, HERMES_LEAN_SYS_OFFLINE: '1' }); }
-// Shaders live with the game.
+// @ref llp/1046.006.000-render-hooks.rfc.md#d5-shaders-that-live-with-the-game
 /** Explicit source roots, relative to app.json. Only packaged names reach a host. */
 export function shaderRoots(app) {
   return [...(app.manifest.game ? [] : ['gpu/shaders']), ...(shaderConfig(app).shaderRoots ?? [])]
@@ -129,7 +129,7 @@ export function copyShaders(app, target, {replace=false} = {}) {
   if (files.size) mkdirSync(target, {recursive:true});
   for (const [name, bytes] of files) writeFileSync(resolve(target,name), bytes);
 }
-// One artifact per module, loaded by the surfaces it owns.
+// @ref LLP 1009 D6 — one artifact per module, loaded by the surfaces it owns.
 /** The GPU artifacts beside the primary `<app>-gpu`: module `m` is the crate
  * `<app>-gpu-m` and owns exactly the surface names listed for it. */
 export function gpuModules(manifest) {
@@ -151,8 +151,9 @@ function gpuModuleProblems(manifest) {
 /** Existing locks are binding; the root workspace and generated game shells require theirs. */
 export const cargoReproducibilityFlags = (app, workspace = app.workspace) =>
   (resolve(workspace) === ROOT || (app.manifest.game && resolve(workspace) === resolve(app.workspace)) || (existsSync(resolve(workspace, 'Cargo.toml')) && existsSync(resolve(workspace, 'Cargo.lock')))) ? ['--locked', '--offline'] : [];
-/** The root workspace's `[profile.*]` tables, for a build of an app outside it,
- * passed as `--config` so nothing is copied and nothing can drift. Cargo ranks config above a manifest, so an app's own copy is
+/** The root workspace's `[profile.*]` tables, for a build of an app outside it
+ * (LLP 1036.001 D1): passed as `--config` so nothing is copied and nothing can
+ * drift. Cargo ranks config above a manifest, so an app's own copy is
  * overridden. A game's generated workspace carries its own. Empty for the root. */
 export function injectedProfiles(app, workspace = app.workspace) {
   if (resolve(workspace) === ROOT || app.manifest?.game) return [];
@@ -173,7 +174,7 @@ export function injectedProfiles(app, workspace = app.workspace) {
 /** The root's crates.io patches as they must appear in an outside workspace
  * at `from`: each vendored crate, by a path relative to it. Two copies of taffy
  * or cosmic-text in one build fail far from the cause, so `exact new` writes
- * these and every run checks them. */
+ * these and every run checks them (LLP 1036.001 D2). */
 export function patchLines(from) {
   const root = Bun.TOML.parse(readFileSync(resolve(ROOT, 'Cargo.toml'), 'utf8'));
   return Object.entries(root.patch?.['crates-io'] ?? {}).map(([name, spec]) =>
@@ -245,7 +246,7 @@ function checkOutsideLock(workspace) {
   return JSON.parse(result.stdout).packages.filter(pkg => pkg.source == null).map(pkg => pkg.manifest_path).sort();
 }
 
-export const hatchWords = (manifest, platform, h = manifest?.hatches ?? []) => (Array.isArray(h) ? [...h] : Object.keys(h).filter(w => h[w].includes(platform))).sort(); // the hatch words `platform`'s module handles (the bake's `hatches_on`): a plain list is every platform's
+export const hatchWords = (manifest, platform, h = manifest?.hatches ?? []) => (Array.isArray(h) ? [...h] : Object.keys(h).filter(w => h[w].includes(platform))).sort(); // the hatch words `platform`'s module handles (LLP 1075.003.000.001 §5; the bake's `hatches_on`): a plain list is every platform's
 export const runnerOwnedSource = name => ['exactDelivery', 'exactViewport', 'exactSurface', 'exactActivities', 'startActivity', 'updateActivity', 'endActivity'].includes(name);
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -275,7 +276,7 @@ export function wasmRemapFlags(app, toolchain = null) {
   return ['--config', `target.wasm32-unknown-unknown.rustflags=[${flags.join(',')}]`];
 }
 
-/** The web artifacts' toolchain: a pinned nightly builds
+/** The web artifacts' toolchain (LLP 1047 §6, §10): a pinned nightly builds
  * std for size, and a panic aborts without its message or location. The web
  * shows neither: wasm32-unknown-unknown has no panic output and the glue
  * reads no trap. Everything else builds with rust-toolchain.toml's stable. */
@@ -290,7 +291,7 @@ export const WEB_SIZE = [...WEB_STD, ...WEB_RUSTFLAGS].join(' ');
 export function webToolchainEnv(env) {
   const sysroot = spawnSync('rustc', ['--print', 'sysroot'], { env: { ...env, RUSTUP_TOOLCHAIN: WEB_TOOLCHAIN }, encoding: 'utf8' });
   if (sysroot.status !== 0 || !existsSync(resolve(sysroot.stdout.trim(), 'lib/rustlib/src/rust/library/Cargo.lock'))) throw new Error(
-    `the web artifact builds with ${WEB_TOOLCHAIN} and its std sources:\n` +
+    `the web artifact builds with ${WEB_TOOLCHAIN} and its std sources (LLP 1047):\n` +
     `  rustup toolchain install ${WEB_TOOLCHAIN} --profile minimal --component rust-src --component llvm-tools\n` +
     `  cargo +${WEB_TOOLCHAIN} fetch --manifest-path "$(rustc +${WEB_TOOLCHAIN} --print sysroot)/lib/rustlib/src/rust/library/Cargo.toml"`);
   // `-Zbuild-std` builds std offline, so std's own locked sources must be in
@@ -323,7 +324,7 @@ if (process.versions.bun && PINNED_BUN && !HELP) ensureBun(PINNED_BUN);
 const binaryenBin = resolve(homedir(), '.cache/exact/binaryen', BINARYEN.replace(' ', '_'), 'bin');
 if (existsSync(resolve(binaryenBin, process.platform === 'win32' ? 'wasm-opt.exe' : 'wasm-opt'))) process.env.PATH = `${binaryenBin}${delimiter}${process.env.PATH ?? ''}`;
 
-// One inventory for host builds, serving and fixtures.
+// @ref LLP 1043.000 §3 D7/D8 — one inventory for host builds, serving and fixtures.
 // Groups preserve capability-based shipping; none of these imports enters boot.
 // A group's files import statically only from it or base (web-host-groups.test.mjs): base's documents-glue.js
 // reads storage-environment.js, so it ships in base, not only with storage.
@@ -339,7 +340,7 @@ const WEB_HOST_GROUPS = {
   gpu: ['gpu-glue.js', 'pace.js', 'gpu-assets.js', 'gpu-pads.js', 'gpu-tier.js', 'gpu-refusal.js'],
   gpuModules: ['gpu-modules.js'],
   native: ['native-glue.js'],
-  // A development page's frame sampler; a production build ships none.
+  // A development page's frame sampler (LLP 1079 D3); a production build ships none.
   development: ['frames.js'],
 };
 
@@ -348,7 +349,7 @@ export function worldSurfaces(dir) {
   try { return Object.keys(JSON.parse(readFileSync(resolve(dir, '.shells/surfaces.json'), 'utf8'))); } catch { return []; }
 }
 
-/** The shell page with its world surfaces on its root (`<html data-exact-worlds="world …">`),
+/** The shell page with its world surfaces on its root (`<html data-exact-worlds="world …">`, LLP 1139.003 D1),
  * inserted into the `<html>` tag whatever its other attributes (the manifest's `lang`). */
 export function markWorlds(html, names) {
   const value = names.join(' ').replace(/[&"<>]/g, c => ({ '&': '&amp;', '"': '&quot;', '<': '&lt;', '>': '&gt;' })[c]);
@@ -356,7 +357,7 @@ export function markWorlds(html, names) {
 }
 
 /** The AT Protocol client-metadata documents an app with auth sessions
- * serves beside its callback page (after review, item 3):
+ * serves beside its callback page (LLP 1069.006 D6; after review, item 3):
  * one per `application_type`, since a document names one type and a `web`
  * client's redirect URIs are https only. `client-metadata.native` lists the
  * private-use schemes and claimed https callbacks, `client-metadata.web` the
@@ -377,7 +378,7 @@ export function authClientMetadata(app, callbacks) {
     .filter(([, uris]) => uris.length).map(([name, uris, type]) => [name, { ...base(type), redirect_uris: uris }]));
 }
 
-/** A build's module artifact against the app's roster:
+/** A build's module artifact against the app's roster (LLP 1024 D1, D8.4):
  * a roster tag the artifact has no factory for fails a release build, named,
  * and is a warning in development, where the node reports its status. */
 export function checkModuleRoster(app, provided, where, release) {
@@ -396,11 +397,11 @@ export function webHostFiles(...groups) {
           : 'host/web/' + name]));
 }
 
-/** The app's GPU modules for the web into `stage`: each
+/** The app's GPU modules for the web (LLP 1009 D2, D6) into `stage`: each
  * GPU crate's wasm with wasm-bindgen's glue (its exports are the module's ABI
  * on the web), then wasm-opt; `<stem>.js` + `<stem>_bg.wasm`, the primary as
  * `gpu`, a declared module as `gpu/<name>`. `cargo` builds the crates first,
- * on stable (a GPU crate keeps its toolchain's std), as the wasm target's bake does
+ * on stable (@ref LLP 1047: a GPU crate keeps its toolchain's std), as the wasm target's bake does
  * (the JS target has no bake); the wasm target passes false, having built them. Missing packaging tools refuse the build. */
 export function webGpuArtifacts(app, stage, { cargo = false, env = process.env, profile = 'web' } = {}) {
   const artifacts = [...(app.hasGpu ? [{ crate: app.crate('gpu'), stem: 'gpu' }] : []),
@@ -442,7 +443,7 @@ function checkoutOf(dir) {
  * outside this repository, its own `target/web-dist` — a checkout's
  * `host/web/dist` is one slot every in-repo build writes (the checks rebuild
  * Caltrain into it), and an outside app served from it silently became
- * Caltrain); otherwise `host/web/dist`. */
+ * Caltrain (LLP 1054 O5); otherwise `host/web/dist`. */
 export function webDist() {
   if (process.env.EXACT_WEB_DIST) return resolve(process.env.EXACT_WEB_DIST);
   if (process.env.EXACT_APP_DIR) return resolve(resolveApp().target, 'web-dist');
@@ -527,7 +528,7 @@ export function resolveApp(nameOrCrate) {
     if (known) workspace = known;
     else {
       if (declared.length) workspace = declared[0];
-      // From the files, never `cargo locate-project`: a web verb runs no Cargo in the app. An app that
+      // From the files, never `cargo locate-project`: a web verb runs no Cargo in the app (LLP 1153 D2.1). An app that
       // authored no workspace builds in the generated one (scripts/app-shells.mjs), written when a build asks (`rust`).
       else if (outside) workspace = authoredWorkspace(dir) ?? shellsDir(dir);
       // EXACT_APP_DIR may name an app of this repo; only another workspace is checked, its lock when a build asks.
@@ -546,9 +547,9 @@ export function resolveApp(nameOrCrate) {
   const target = process.env.CARGO_TARGET_DIR ? resolve(process.env.CARGO_TARGET_DIR) : resolve(own, 'target');
   assertOwnTarget(target, own);
   // What a build asks for before it runs Cargo in the workspace, once: a generated workspace written current with the
-  // manifest and its copied lock resolved (the first build fetches what the cache lacks), or an
+  // manifest (LLP 1153 D1.3) and its copied lock resolved (the first build fetches what the cache lacks), or an
   // authored workspace's lock checked. Every build helper reads `workspace`, so every build passes here; a web
-  // verb reads `dir` and `target` and runs no Cargo.
+  // verb reads `dir` and `target` and runs no Cargo (D2.1).
   let rusted = false;
   const rust = () => {
     if (!rusted) { rusted = true; if (generated) { ensureShells(dir, manifest); checkOutsideLock(workspace); } else checkLock?.(); }
@@ -586,12 +587,12 @@ export function resolveApp(nameOrCrate) {
       const pkg = cargoPackage('gpu');
       return !!pkg && realpathSync(dirname(pkg.manifest_path)) === realpathSync(gpu);
     },
-    /** The native-module roster and its sources: the Swift under
+    /** The native-module roster (LLP 1024 D1) and its sources: the Swift under
      * `modules/apple` that becomes `libexact_modules.dylib`, and the web
      * executor `modules/web/index.js`. Empty tags: the app has no module
-     * views; its web executor may still answer `native.later` on the page,
-     * and its Swift still makes the artifact, for `later` and
-     * the hatches. */
+     * views; its web executor may still answer `native.later` on the page
+     * (LLP 1067 D5), and its Swift still makes the artifact, for `later` and
+     * the hatches (LLP 1075.003 §3.2). */
     modulesFor(platform) {
       const folder = moduleDirectory(dir, platform);
       const under = suffix => existsSync(folder) ? readdirSync(folder).filter(f => f.endsWith(suffix)).sort().map(f => resolve(folder, f)) : [];
@@ -606,14 +607,14 @@ export function resolveApp(nameOrCrate) {
     id: manifest.app.id,
     /** The name people see. */
     displayName: manifest.app.name,
-    /** The production origin (the app's URL), or null in an app that has not declared one. */
+    /** The production origin (1023 D1's URL), or null in an app that has not declared one. */
     origin: manifest.app.origin ?? null,
     /** Whether the app declares its own manifest (false: the defaults above stand in). */
     declared: existsSync(resolve(dir, 'app.json')),
   };
 }
 
-/** An app's authored tests, the files that exist: `app.test.contract`, then every other `*.test.contract`
+/** An app's authored tests (LLP 1017 P7), the files that exist: `app.test.contract`, then every other `*.test.contract`
  * beside it in name order (an app's tests split by area under the line cap). `test`, `verify` and the smoke run these. */
 export function authoredTests(dir) {
   const others = readdirSync(dir).filter((n) => n.endsWith('.test.contract') && n !== 'app.test.contract').sort();
@@ -628,12 +629,12 @@ export function readManifest(dir, name) {
   if (!existsSync(path) && !game) return fallback;
   let parsed;
   try { parsed = game ?? JSON.parse(readFileSync(path, 'utf8')); } catch (e) { throw new Error(`${path}: ${e.message}`); }
-  // A device's usage text is derived from its grant, never hand-written.
+  // LLP 1069.008 D4: a device's usage text is derived from its grant, never hand-written.
   const problems = validate(parsed, schema(), '', schema()).map((p) => /^host\.(ios|macos)\.permissions: /.test(p)
-    ? `${p.split(':')[0]}: deleted; declare the device in the source's grants as \`device.<name> <strings key>\` (e.g. \`device.microphone purpose.microphone\`) and put the text in strings/<locale>.json`
-    // The GPU hooks crate was renamed (2026-10-04).
+    ? `${p.split(':')[0]}: deleted (LLP 1069.008); declare the device in the source's grants as \`device.<name> <strings key>\` (e.g. \`device.microphone purpose.microphone\`) and put the text in strings/<locale>.json`
+    // LLP 1046.008 amendment (2026-10-04): the GPU hooks crate was renamed.
     : /^game\.presentation: /.test(p)
-      ? 'game.presentation is now game.render: rename the key, move presentation/ to render/, name the crate <name>-render and rename its "type" to "hooks" (amendment of 2026-10-04)'
+      ? 'game.presentation is now game.render: rename the key, move presentation/ to render/, name the crate <name>-render and rename its "type" to "hooks" (LLP 1046.008, amendment of 2026-10-04)'
       : p);
   if (!problems.length) problems.push(...installProblems(parsed), ...gpuModuleProblems(parsed), ...documentTypeProblems(parsed), ...shareTargetProblems(parsed), ...protocolHandlerProblems(parsed), ...appleIconProblems(parsed, dir));
   if (problems.length) throw new Error(`${path} does not conform to scripts/app.schema.json:\n  ${problems.join('\n  ')}`);
@@ -658,7 +659,7 @@ function appleIconProblems(manifest, dir) {
   ];
 }
 
-/** An app's own document format: a MIME type in IANA's
+/** An app's own document format (studio diary R13): a MIME type in IANA's
  * vendor or unregistered trees (`application/vnd.studio.board+json`,
  * `application/x-studio-board`), which no system type names. The Apple
  * bake exports it as the app's: `<app id>.<subtype>`, conforming to what
@@ -682,7 +683,7 @@ function documentTypeProblems(manifest) {
       : []));
 }
 /** Whether a `protocol_handlers` scheme is the web's own: `http` and
- * `https` make a native app a web browser, and
+ * `https` make a native app a web browser (LLP 1030 D2, 2026-10-20), and
  * no browser registers them (WHATWG HTML's protocol handler safelist). */
 export const isWebScheme = (protocol) => ['http', 'https'].includes(protocol.toLowerCase());
 function protocolHandlerProblems({ protocol_handlers = [], host }) {
@@ -693,16 +694,16 @@ function protocolHandlerProblems({ protocol_handlers = [], host }) {
     ...(host?.ios?.webBrowser && web.length === 0 ? ['host.ios.webBrowser: declare http and https together in protocol_handlers'] : []),
     ...(pair ? ['protocol_handlers: http and https come together, with one url and one distribution_only: a web browser claims both'] : [])];
 }
-/** The W3C keys of `app.json`, as the web builds write `manifest.json`. A
- * browser opens files only, so `inode/directory` (the Apple bake's word for
- * a folder) goes, and it
+/** The W3C keys of `app.json`, as the web builds write `manifest.json`
+ * (LLP 1030 D2/D10; 1030.000 D7). A browser opens files only, so
+ * `inode/directory` (the Apple bake's word for a folder) goes, and it
  * registers neither `http` nor `https`, so those handlers go too. */
 export function webAppManifest(manifest, name, notes = []) {
   const keys = ['name', 'short_name', 'description', 'id', 'start_url', 'display', 'display_override', 'theme_color', 'background_color', 'icons', 'lang', 'orientation', 'file_handlers', 'protocol_handlers', 'launch_handler', 'shortcuts'];
   const web = Object.fromEntries(keys.filter((k) => manifest[k] !== undefined).map((k) => [k, manifest[k]]));
   if (web.file_handlers) web.file_handlers = web.file_handlers.filter((h) => !Object.keys(h.accept ?? {}).includes('inode/directory'));
   if (web.protocol_handlers) web.protocol_handlers = web.protocol_handlers.filter((h) => !isWebScheme(h.protocol));
-  // A shortcut's `apple` and `android` words are the native bakes'.
+  // A shortcut's `apple` and `android` words are the native bakes' (LLP 1133.023 D11).
   if (web.shortcuts) web.shortcuts = web.shortcuts.map(({ apple, android, ...item }) => item);
   if (manifest.share_target) web.share_target = webShareTarget(manifest.share_target, notes);
   for (const key of ['file_handlers', 'protocol_handlers', 'shortcuts']) if (!web[key]?.length) delete web[key];
@@ -783,7 +784,7 @@ export function developmentBuildEnv() {
   return env;
 }
 /** Rust replacement capability baked into this platform/environment, independent
- * of release cadence and rebuild triggers. */
+ * of release cadence and rebuild triggers. @ref LLP 1029.000 §2. */
 export function rustPolicy(manifest, platform, environment = 'dev') {
   if (!['web', 'ios', 'macos', 'linux', 'android', 'windows'].includes(platform)) throw new Error(`unknown Rust replacement platform: ${platform}`);
   if (!['dev', 'prod'].includes(environment)) throw new Error(`unknown Rust replacement environment: ${environment}`);
@@ -855,7 +856,7 @@ export function verifyBakeFiles(receipt, plan, assets) {
 
 // The compiler owns both the loaded files and the bundle requirements. This
 // outer receipt is completed after Cargo succeeds; it is not embedded in the
-// product whose inputs it describes.
+// product whose inputs it describes. @ref LLP 1030 D3/D3a.
 const canonicalBuild = (v) => v === null || typeof v !== 'object' ? JSON.stringify(v) : Array.isArray(v) ? `[${v.map(canonicalBuild).join(',')}]` : `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canonicalBuild(v[k])}`).join(',')}}`;
 const buildHash = (v) => createHash('sha256').update(v).digest('hex');
 /** A development receipt names four thousand inputs by SHA-256, on every build,
@@ -895,7 +896,7 @@ function buildCommand(command, args, app, env, stderr = 'pipe') {
   let result = spawnSync(...appleCargo(command, args, { cwd: app.workspace, env, stdio: ['ignore','pipe',stderr], encoding: 'utf8', maxBuffer: 128 * 1024 * 1024 }));
   // An offline Cargo that lacks a source it needs (a new workspace, a new
   // lock entry) fetches the lock's sources once and tries again, instead of
-  // failing on the first missing crate.
+  // failing on the first missing crate (LLP 1054 O2).
   if (command === 'cargo' && result.status !== 0 && /--offline was specified|attempting to make an HTTP request|in the offline mode|offline mode \(via `--offline`\)/.test(result.stderr ?? '')) {
     console.error(`${app.name}: Cargo's sources are not all fetched; fetching the locked ones (cargo fetch --locked) and trying again`);
     const fetched = spawnSync('cargo', ['fetch', '--locked'], { cwd: app.workspace, env, stdio: ['ignore', 'inherit', 'inherit'] });
@@ -911,7 +912,7 @@ function buildCommand(command, args, app, env, stderr = 'pipe') {
 }
 /** A build script's call into the bake: a Contract that does not compile
  * ends the process with its diagnostics as the last thing printed, with no
- * stack after them; any other failure is thrown on. */
+ * stack after them (LLP 1054 L9); any other failure is thrown on. */
 export function contractLast(build) {
   try { return build(); } catch (error) { if (!error?.contract) throw error; console.error(error.message); process.exit(1); }
 }
@@ -956,7 +957,7 @@ export const linuxBinary = (app, bin = app.crate('linux')) => resolve(app.target
 /** The command that builds it. An app outside this repo gets the root's
  * profiles on the command line, as its Apple build does (injectedProfiles). */
 export const linuxBuild = (app, bin = null) => ['cargo', 'build', ...injectedProfiles(app), '--profile', HOST_DEV, '-p', app.crate('linux'), ...(bin ? ['--bin', bin] : [])];
-/** The executable (and Apple bundle) as Xcode and Visual Studio name a project's: the app's name, less what a file name cannot carry; `windowsFile` is a Windows build's name for a Cargo product. */
+/** The executable (and Apple bundle) as Xcode and Visual Studio name a project's: the app's name, less what a file name cannot carry (LLP 1030 D2); `windowsFile` is a Windows build's name for a Cargo product. */
 export const executableName = (app) => app.displayName.replace(/[<>:"/\\|?*\x00-\x1f]/g, '-').replace(/^[. ]+|[. ]+$/g, '') || app.id.split('.').pop();
 export const windowsFile = (app, path) => basename(path) === `${app.crate('windows')}.exe` ? `${executableName(app)}.exe` : basename(path);
 export function bakeTarget(platform) {
@@ -1027,7 +1028,7 @@ function completeBuild(app, platform, target, graph, messages, roots, env, prepa
   // A build script must never watch its own receipt: writing it dirties every next build.
   const stem = `${platform}-${target}`;
   for (const [file, suffix] of [['compat.json', '.json'], ['app.plan', '.plan'], ['artifacts.json', '.artifacts.json']]) writeFileSync(resolve(env.EXACT_BAKE_OUTPUT, stem + suffix), readFileSync(resolve(baked, file)));
-  // A development bake's source map, for the agent driver only; none is carried stale.
+  // A development bake's source map, for the agent driver only (LLP 1012.001.000 D6); none is carried stale.
   const map = resolve(baked, 'app.plan.map.json'), mapCopy = resolve(env.EXACT_BAKE_OUTPUT, stem + '.plan.map.json');
   if (existsSync(map)) writeFileSync(mapCopy, readFileSync(map)); else rmSync(mapCopy, { force: true });
   const replaced = new Set(['app.plan','compat.json','artifacts.json'].map((n) => resolve(rootOutput,n)));
@@ -1107,7 +1108,7 @@ function completeBuild(app, platform, target, graph, messages, roots, env, prepa
   }
   for (const pkg of packages) if(usedPackages.has(pkg.id))add(pkg.manifest_path);
   add(resolve(graph.metadata.workspace_root,'Cargo.toml'));add(resolve(graph.metadata.workspace_root,'Cargo.lock'));add(resolve(app.dir,'.exact/backend-origin'),true); // the bake's backend selection, by bytes or absence
-  for (const file of app.manifest?.env?.length ? ['.env.local', '.env'] : []) add(resolve(app.dir, file), true); // its settings' files, likewise
+  for (const file of app.manifest?.env?.length ? ['.env.local', '.env'] : []) add(resolve(app.dir, file), true); // its settings' files (LLP 1153 D4), likewise
   // Watch absent art without a missing Cargo input that dirties every build.
   if (app.manifest.game) add(resolve(app.dir, 'art'), true);
   if (app.manifest.game?.render && graph.surface) {
@@ -1236,7 +1237,7 @@ export function bakeSelection(graph, part) {
 
 /** What ships to an Apple device or an Android phone is optimized as one module: fat LTO
  * makes the stripped binary smaller than thin — 4.8% on Apple, no slower to boot, for 16 s
- * of a production build; 6.4% for Caltrain's Android library (16.6 →
+ * of a production build (LLP 1036.000 §8); 6.4% for Caltrain's Android library (16.6 →
  * 15.6 MB), whose release build takes about a minute longer. Said on the command line and
  * not in `[profile.release]`, which every developer tool builds with. Cargo's fingerprints
  * keep thin and fat apart: a target directory used both ways (a macOS and a Linux bake on a
@@ -1262,7 +1263,7 @@ export function buildBake(app, platform, target, options = {}) {
   if(platform==='web'||watch)env=webToolchainEnv(env);
   if(options.analysis && env.EXACT_UPDATE_TRUST==='production')env.EXACT_BAKE_ANALYSIS='1';else delete env.EXACT_BAKE_ANALYSIS;
   mkdirSync(env.EXACT_BAKE_OUTPUT,{recursive:true});
-  if(platform!=='web')prepareLibrary(app.dir,target); // a package's library, fetched and checked before Cargo links it
+  if(platform!=='web')prepareLibrary(app.dir,target); // a package's library, fetched and checked before Cargo links it (LLP 1154 D3)
   const rustBundle=prepareRustBundle(app,platform,target,env);
   if(rustBundle)env.EXACT_RUST_BUNDLE=rustBundle;
   const native=platform==='web'?null:nativeSource(app,env); // what the binary compiles its Rust from (Swappable::with_native)
@@ -1321,7 +1322,7 @@ export function buildBake(app, platform, target, options = {}) {
       // Cargo's messages keep Cargo's file: its rustc dep-info is found beside it.
       const prepared = options.prepareGpu?.(product) ?? product;
       if (prepared !== product) preparedProducts.set(product, prepared);
-      // Each module's signed digest is bound beside the primary's.
+      // Each module's signed digest is bound beside the primary's (LLP 1009 D6).
       const module = gpuModules(app.manifest).find(({name}) => app.crate(`gpu-${name}`) === pkg.name);
       if (module) { moduleProducts[module.name] = prepared; env.EXACT_GPU_MODULES = JSON.stringify(moduleProducts); }
       else if (!options.part || bindGpuProduct(options.profile, env.EXACT_UPDATE_TRUST)) env.EXACT_GPU_PRODUCT = prepared;
@@ -1353,7 +1354,7 @@ export function cohortReceipt(build) {
   return {version:1,compat:{id:build.compat.id,inputs:build.compat.inputs,target:build.compat.target},sources:build.graph.sources,surfaceCalls:build.graph.surfaceCalls??{},binary:build.binary.sha256};
 }
 
-/** The shared dev/deploy comparison. A new binary and a safe
+/** The shared dev/deploy comparison (LLP 1030 D3). A new binary and a safe
  * bundle are independent results. Compatibility-id equality decides neither. */
 export function classifyArtifacts(candidate, cohort, signingKey = null) {
   const missing=[];
@@ -1370,8 +1371,8 @@ export function classifyArtifacts(candidate, cohort, signingKey = null) {
       for(const [name,arities] of Object.entries(need)) for(const arity of arities) if(!cohort.surfaceCalls?.[name]?.includes(arity)) fail(`.${name}/${arity} (not demanded by the installed plan)`);
     } else if(key==='gpuSurfaces') {
       for(const surface of need) if(!have.gpuSurfaces?.some(s=>canonicalBuild(s)===canonicalBuild(surface))) fail(`.${surface.name} (interface ${surface.interface})`);
-    } else if(key==='executors'||key==='hatches') { for(const item of need) if(!have[key]?.includes(item)) fail(key==='hatches'?`.${item} (handled by this platform's module, not by the installed one)`:`.${item}`); // hatches: a cohort from before the capability handles none
-    } else if(key==='typescriptRuntime') { if(!((have[key]??0)>=need)) fail(` (requires a prelude of runtime ${need} or later; this cohort's is ${have[key]??0})`); /* an older prelude ignores exactBodyFrom */ } else if(key==='grantCeiling') {
+    } else if(key==='executors'||key==='hatches') { for(const item of need) if(!have[key]?.includes(item)) fail(key==='hatches'?`.${item} (handled by this platform's module, not by the installed one)`:`.${item}`); // hatches: LLP 1075.003.000.001 §4.3, a cohort from before the capability handles none
+    } else if(key==='typescriptRuntime') { if(!((have[key]??0)>=need)) fail(` (requires a prelude of runtime ${need} or later; this cohort's is ${have[key]??0})`); /* LLP 1108 D6 R2: an older prelude ignores exactBodyFrom */ } else if(key==='grantCeiling') {
       const grants=new Set((have.grantCeiling??'').split('\n').filter(Boolean));
       if(need===null||have.grantCeiling===null) fail(' (unknown baked grants)');
       else for(const grant of need.split('\n').filter(Boolean)) if(!grants.has(grant)) fail(` (${grant})`);
@@ -1407,7 +1408,7 @@ export function pendingBuildInputs(build) {
     catch {changed.push(file.name);}
   }
   for(const path of build.binary.missing)if(existsSync(path))changed.push(path);
-  for(const {name} of build.settings?settingChanges(build.settings.env,process.env,build.settings.dir):[])changed.push(`import.meta.env.${name}`); // a setting the module inlined, as its sources give it now
+  for(const {name} of build.settings?settingChanges(build.settings.env,process.env,build.settings.dir):[])changed.push(`import.meta.env.${name}`); // a setting the module inlined, as its sources give it now (LLP 1153 D4)
   for(const {path,names} of build.binary.directories) {
     try {if(!statSync(path).isDirectory()||canonicalBuild(readdirSync(path).sort())!==canonicalBuild(names))changed.push(path);}
     catch {changed.push(path);}

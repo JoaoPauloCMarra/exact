@@ -3,11 +3,11 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// On AppKit, a `Control` of type `button` is AppKit's own
-/// `NSButton` with its row's look and the node's face; its action is
-/// a custom button's click, once; it owns the key view; it is the
+/// LLP 1069.011 on AppKit: a `Control` of type `button` is AppKit's own
+/// `NSButton` with its row's look and the node's face (D2, D5); its action is
+/// a custom button's click, once (D4); it owns the key view (LLP 1104 D6); it is the
 /// one accessibility element; a glass look's button is isolated in a glass
-/// group.
+/// group (D9).
 final class NativeButtonsMacTests: XCTestCase {
     private var window: NSWindow!
 
@@ -75,7 +75,7 @@ final class NativeButtonsMacTests: XCTestCase {
     }
 
     override func tearDown() { window?.close(); window = nil }
-    /// Tab reaches the buttons here: Keyboard Navigation on.
+    /// Tab reaches the buttons here: Keyboard Navigation on (LLP 1115.000 D7.2).
     override func setUp() { super.setUp(); keyboardNavigation(true) }
 
     private func presenter(_ ops: [[String: Any]], faces: [UInt32: ButtonFace]) -> Presenter {
@@ -118,10 +118,11 @@ final class NativeButtonsMacTests: XCTestCase {
          ["op": "frame", "id": id, "x": 0.0, "y": 0.0, "w": 300.0, "h": 40.0]]
     }
 
-    /// An ordinary `button destructive=true` is AppKit's destructive role
-    /// (`hasDestructiveAction`) in the platform's red, whatever accent it only inherits: red ink
-    /// on a push or borderless button, a red bezel under AppKit's white on the accent look. What
-    /// the author wrote wins: an accent written on the button, a colour on its title.
+    /// LLP 1116.008 (team-kanban: "Delete is not styled as destructive"): an ordinary
+    /// `button destructive=true` is AppKit's destructive role (`hasDestructiveAction`) in the
+    /// platform's red, whatever accent it only inherits: red ink on a push or borderless button,
+    /// a red bezel under AppKit's white on the accent look. What the author wrote wins: an accent
+    /// written on the button, a colour on its title.
     func testADestructiveButtonIsAppKitsDestructiveRoleInTheSystemsRedUnlessTheAuthorPaintedIt() throws {
         let indigo: [Int] = [97, 85, 245, 255]
         let orange: [Int] = [255, 141, 40, 255]
@@ -169,7 +170,7 @@ final class NativeButtonsMacTests: XCTestCase {
     /// The role has AppKit's manners with it: an `NSButton` takes the click that brings its
     /// window forward, and one with `hasDestructiveAction` does not (measured on macOS 27.0.1),
     /// so a person's first click on a window behind never presses Delete. The agent's window is
-    /// never key, so its every click counts, a destructive button's too:
+    /// never key, so its every click counts (LLP 1115.000 D7.9), a destructive button's too:
     /// AppKit's answer alone left the driver no way to press one, and Shelf's "Remove…" row,
     /// painted under the agent, took its tap and did nothing.
     func testADestructiveButtonTakesTheAgentsClickAndNoOtherThatActivatesItsWindow() throws {
@@ -334,7 +335,7 @@ final class NativeButtonsMacTests: XCTestCase {
         }
     }
 
-    /// A click moves no focus, press or no press.
+    /// LLP 1115.000 D7.1: a click moves no focus, press or no press.
     func testAClickMovesNoFocusAndPressesOnlyAnAncestorItIsIn() throws {
         let p = presenter(box(1) + native(2, handlers: ["focus"]) + box(4, handlers: ["press"]) + native(3, handlers: [], x: 320) + native(5, handlers: [])
                           + [["op": "children", "id": 1, "ids": [2]], ["op": "children", "id": 4, "ids": [3, 5]], ["op": "roots", "ids": [1, 4]]],
@@ -420,7 +421,7 @@ final class NativeButtonsMacTests: XCTestCase {
         while !drained, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
     }
 
-    /// A custom button's ring is AppKit's exterior one around its own
+    /// #179: a custom button's ring is AppKit's exterior one around its own
     /// box, which AppKit draws only for non-empty mask bounds.
     func testCustomButtonExposesItsFocusMaskToAppKit() throws {
         let p = presenter(box(1, handlers: ["press"]) + box(2)
@@ -435,7 +436,7 @@ final class NativeButtonsMacTests: XCTestCase {
         XCTAssertTrue(plain.focusRingMaskBounds.isEmpty, "noninteractive boxes have no focus mask")
     }
 
-    /// A click focuses no custom button and rings none.
+    /// A click focuses no custom button and rings none (LLP 1115.000 D7.1).
     /// A focus the pointer's press led to (its action's `focus()`) is not
     /// visible; a key used there, or a Tab to the next, shows the ring.
     func testAClickFocusesNoButtonAndTheKeyboardsFocusShowsItsRing() throws {

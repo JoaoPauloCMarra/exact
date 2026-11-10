@@ -1,4 +1,4 @@
-//! A background stop is the standing commit's, and when
+//! Review round 2, G1: a background stop is the standing commit's, and when
 //! `set_page`'s commit is refused with reads owed, the commit that fails
 //! those reads and stands makes it. Whether the plan keeps MIDI, which
 //! `state` shows, is walked for once.

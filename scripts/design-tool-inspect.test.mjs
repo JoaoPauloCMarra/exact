@@ -1,5 +1,5 @@
-// The design tool's inspect on the canvas frame, on the wasm dev loop (split from design-tool-canvas.test.mjs, so it runs in parallel with
-// the others).
+// The design tool's inspect on the canvas frame, on the wasm dev loop (T2b; split from design-tool-canvas.test.mjs, so a
+// lane runs it beside the others).
 import { expect, onTestFinished, test } from 'bun:test';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -10,10 +10,10 @@ import { suiteBrowser } from './agent-launch.mjs';
 
 toolTurns();
 
-test('inspect from the tool selects a view in the canvas frame, shows its source and rows, and opens its token on the branch that won', async () => {
+test('T2b: inspect from the tool selects a view in the canvas frame, shows its source and rows, and opens its token on the branch that won', async () => {
   // This checkout's apps/theme-fixture (the wasm loop builds the app's crate, so no copy will do), in turn with another
   // run here: its design server takes the app's .exact/tamber.lock, which refuses a second writer.
-  const giveFixture = await takePort(1000 + checkoutPort(resolve(ROOT, 'apps/theme-fixture')), { label: `design-tool inspect on ${ROOT}/apps/theme-fixture` });
+  const giveFixture = await takePort(1000 + checkoutPort(resolve(ROOT, 'apps/theme-fixture')), { label: `T2b on ${ROOT}/apps/theme-fixture` });
   onTestFinished(giveFixture);
   const listener = (await import('node:http')).createServer();
   await new Promise(ok => listener.listen(0, '127.0.0.1', ok));

@@ -1,10 +1,10 @@
-//! The executor's half of background work: storage an
+//! The executor's half of background work (LLP 1097 D5, D6): storage an
 //! answer started and did not await finishes after the answer, under one
 //! continuation of the module's own ([`BACKGROUND`]) that the runner holds
 //! as a request in flight. The prelude keeps the owner and the one queue;
 //! this hands out a round only when the operation in flight is the
 //! background's, so the round is the only waiter on the store's shared
-//! completions, and delivers it with the background current.
+//! completions (D3), and delivers it with the background current.
 use super::Module;
 use exact_runner::{BackgroundState, DataError, Dispatch, Outcome, Request, Work, BACKGROUND};
 use serde_json::Value as Json;
@@ -90,7 +90,7 @@ impl Module {
         if let Outcome::Failed { message, kind } = outcome {
             // The wait gave up on the background's compression and took its
             // right to write away: fail it as an answer's is failed, so its
-            // rejection runs and the queue moves on. Any
+            // rejection runs and the queue moves on (LLP 1069.002 A1.5). Any
             // other operation may still write: stall, as before.
             let text = crate::wire::outcome_to_json(&Outcome::Failed {
                 kind,
@@ -150,7 +150,7 @@ impl Module {
         }
     }
 
-    /// Teardown: the module's storage still queued or in
+    /// Teardown (LLP 1097 D10): the module's storage still queued or in
     /// flight is finished here, on this thread, as a let-go answer's steps
     /// are, within `bound`; what is left then is dropped and said. An
     /// operation the store already has completes on disk regardless.
@@ -193,7 +193,7 @@ impl Module {
         self.host.between_answers = false;
     }
 
-    /// The module's journal: the runtime's own lines as they
+    /// The module's journal (LLP 1097 D8): the runtime's own lines as they
     /// are, its `console` marked as the app's.
     pub(crate) fn journal_lines(&mut self) -> Vec<String> {
         let mut lines = std::mem::take(&mut self.host.journal);

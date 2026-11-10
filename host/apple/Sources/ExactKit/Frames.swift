@@ -1,4 +1,4 @@
-// A session's frames: the display link that runs only while
+// A session's frames (LLP 1009 D4): the display link that runs only while
 // motion or a canvas wants it. Split from Session.swift.
 #if canImport(UIKit)
 import UIKit
@@ -9,7 +9,7 @@ import Foundation
 import QuartzCore
 
 /// Frames come from the display link, only while motion runs or a canvas
-/// has something to render, per session. iOS takes them from
+/// has something to render (LLP 1009 D4), per session. iOS takes them from
 /// the app's clock (`FrameClock`); macOS's link comes from the viewport, so
 /// from its window's screen.
 package final class Frames: NSObject {
@@ -21,12 +21,12 @@ package final class Frames: NSObject {
     var link: CADisplayLink?
     #endif
     package var motion = false, spatial = false
-    /// A 2D canvas asked for a frame: ticks run while it does.
+    /// A 2D canvas asked for a frame (LLP 1056 D5): ticks run while it does.
     var canvas2d = false
     var timerSoon = false
-    /// A frame task: each tick is the runtime's frame at the tick's target time.
+    /// A frame task (LLP 1073 D5): each tick is the runtime's frame at the tick's target time.
     var tasks = false
-    /// A hatch's frame ticket is live: each tick calls it, after the frame's tasks.
+    /// A hatch's frame ticket is live (LLP 1075.003.000.001 §2.4): each tick calls it, after the frame's tasks.
     var hatches = false
     /// Keep every existing app frame request when scheduling or resuming the session.
     var hasWork: Bool { motion || canvas2d || timerSoon || session?.canvases.wantsFrames == true }
@@ -65,16 +65,16 @@ package final class Frames: NSObject {
         defer { s.canvases.frameNow = previous }
         // Explicit frame work advances here; ordinary task timers have independent native callbacks
         // A slice building on the owner holds this frame's timers and tick:
-        // they run on the first frame after it lands.
+        // they run on the first frame after it lands (LLP 1072 §7.1).
         // Frame health: a callback that starts no frame work is not a frame, and a frame that sends
-        // owner work finishes when that work lands
+        // owner work finishes when that work lands (LLP 1079.000 §4.6)
         var held = false, ran = false, sent: UInt8 = 0
         if !s.fillInFlight {
             if timerSoon, !ExactEnv.agentFreezes, s.clock == nil {
                 let now = s.now()
                 s.followOffset()
                 // Frame work that changes nothing shown skips the presenter's pass.
-                // Posted where fills are, one at a time: a
+                // Posted where fills are (LLP 1072.000), one at a time: a
                 // frame with one in flight skips its own, never caught up.
                 let due = tasks || s.timerDue.map({ now >= $0 }) ?? true
                 if ExactSession.asyncFills {
@@ -90,7 +90,7 @@ package final class Frames: NSObject {
                 else if due { s.applyUnlessEmpty(s.runtime.advance(now: now)) }
             }
             // Motion samples at the frame's target, and starts there what
-            // waits for it; the agent's clock has no frames.
+            // waits for it (LLP 1003.001 D5); the agent's clock has no frames.
             if motion || canvas2d {
                 if arrival != 0, ExactSession.asyncFills, !s.tickInFlight {
                     s.frameHealth.sending(FrameHealth.tick, start: link.timestamp, deadline: link.targetTimestamp)
@@ -172,7 +172,7 @@ package final class Frames: NSObject {
         // reads the same at 60, so paint-only motion — a breathing loop
         // that runs for minutes — asks no more. The app's clock runs
         // only while something wants frames, so an idle app gets no
-        // callbacks at all.
+        // callbacks at all (LLP 1061 D4).
         let fullRate = (motion && spatial) || canvas2d || session?.canvases.wantsFrames == true
         let range = Self.requestedRange(maximum: session?.presenter.viewport.window?.screen.maximumFramesPerSecond ?? 60,
             full: fullRate, paint: motion)

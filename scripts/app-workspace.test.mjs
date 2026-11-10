@@ -1,5 +1,5 @@
 // An app's and a game's workspaces (scripts/app.mjs `resolveApp`, game/app/shells.mjs): shells, locks, Cargo graphs, GPU and
-// render ownership, and what a deploy captures.
+// render ownership, and what a deploy captures (R12–R15).
 import { test } from 'bun:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -244,7 +244,7 @@ test('deploy excludes generated shells and regenerates them from captured game s
   } finally { disposeSnapshot(snapshot); }
 }), 60000); // Three lockfiles, a commit, a capture and Cargo metadata; Windows filesystem cost is higher.
 
-test('resolution is lazy and does not create a workspace', () => fixture(({app, dir}) => {
+test('R12 resolution is lazy and does not create a workspace', () => fixture(({app, dir}) => {
   const started = performance.now();
   const path=process.env.PATH;
   let resolved;
@@ -256,7 +256,7 @@ test('resolution is lazy and does not create a workspace', () => fixture(({app, 
   assert.ok(performance.now() - started < 200);
 }), 60_000);
 
-test('the captured source lock replaces a corrupted generated lock', () => fixture(({app, dir}) => {
+test('R12 the captured source lock replaces a corrupted generated lock', () => fixture(({app, dir}) => {
   app().cargoPackage('gpu');
   const lock = resolve(dir, 'Cargo.lock');
   assert.ok(existsSync(lock), 'source lock must be outside ignored shells');
@@ -266,7 +266,7 @@ test('the captured source lock replaces a corrupted generated lock', () => fixtu
   assert.equal(readFileSync(resolve(dir, '.shells/Cargo.lock'), 'utf8'), captured);
 }), 60_000);
 
-test('authored logic belongs only to its app workspace and locked edits refuse', () => fixture(({app, dir, run, write}) => {
+test('R12 authored logic belongs only to its app workspace and locked edits refuse', () => fixture(({app, dir, run, write}) => {
   const resolved=app();resolved.cargoPackage('gpu');
   const metadata=JSON.parse(run('cargo',['metadata','--locked','--offline','--format-version','1','--manifest-path',resolve(dir,'.shells/Cargo.toml')]));
   const logic=metadata.packages.find(p=>p.name==='foo-logic');
@@ -417,12 +417,12 @@ test('game bakes resolve one fresh Cargo graph for the actual target and environ
   } finally { process.env.PATH = previous; }
 }), 180000);
 
-test('named in-tree game resolves without EXACT_APP_DIR', () => fixture(({app, dir}) => {
+test('R12 named in-tree game resolves without EXACT_APP_DIR', () => fixture(({app, dir}) => {
   delete process.env.EXACT_APP_DIR;
   assert.equal(app().dir,dir);
 }), 60_000);
 
-test('deploy captures initialized dependency submodules without building discovery in the snapshot', () => fixture(({app,root,write,run})=>{
+test('R12 deploy captures initialized dependency submodules without building discovery in the snapshot', () => fixture(({app,root,write,run})=>{
   const resolved=app();resolved.cargoPackage('gpu');
   write('contract/src/main.rs', `fn main() { let target=std::env::var("CARGO_TARGET_DIR").unwrap_or_else(|_| "target".into()); std::fs::write(std::path::Path::new(&target).join("source-discovery-target"), b"compiled").unwrap(); println!("{}", r#"{"packages":[],"sources":[],"consulted":[]}"#); }`);
   run('cargo',['generate-lockfile','--offline']);run('cargo',['generate-lockfile','--offline','--manifest-path','game/Cargo.toml']);
@@ -450,7 +450,7 @@ test('deploy captures initialized dependency submodules without building discove
   } finally {process.env.PATH=previousPath;disposeSnapshot(snapshot);}
 }), 30000); // two lockfiles, a submodule, three commits and two captures: 2.6 s at load 35, past five seconds on a loaded Mac
 
-test('capture refuses tracked files under inferred game output roots',()=>fixture(({app,root,write,run})=>{
+test('R13 capture refuses tracked files under inferred game output roots',()=>fixture(({app,root,write,run})=>{
   const resolved=app();resolved.cargoPackage('gpu');
   run('cargo',['generate-lockfile','--offline']);run('cargo',['generate-lockfile','--offline','--manifest-path','game/Cargo.toml']);
   run('git',['init','-q']);run('git',['add','.']);run('git',['-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm','fixture']);
@@ -486,14 +486,14 @@ test('ordinary resolution refuses missing and stale locks without writing them',
   assert.equal(readFileSync(resolve(root,'game/Cargo.lock'),'utf8'),before);
 }), 60_000);
 
-test('explicit update-lock accepts a deliberate dependency change',()=>fixture(({app,dir,write,update})=>{
+test('R13 explicit update-lock accepts a deliberate dependency change',()=>fixture(({app,dir,write,update})=>{
   app().cargoPackage('gpu');const before=readFileSync(resolve(dir,'Cargo.lock'),'utf8');
   write('game/deps/exact-game-render/Cargo.toml',readFileSync(resolve(dir,'../../deps/exact-game-render/Cargo.toml'),'utf8').replace('version="0.1.0"','version="0.2.0"'));
   assert.throws(()=>app().cargoPackage('gpu'),/locked|lock file/);
   update();assert.ok(app().cargoPackage('gpu'));assert.notEqual(readFileSync(resolve(dir,'Cargo.lock'),'utf8'),before);
 }), 60_000);
 
-test('external game capture refuses tracked output roots',()=>fixture(({app,root,write,run})=>{
+test('R14 external game capture refuses tracked output roots',()=>fixture(({app,root,write,run})=>{
   const external = resolve(root, 'outside/foreign');
   mkdirSync(external,{recursive:true});
   for (const path of ['app.json','app.contract','Cargo.lock','logic/Cargo.toml','logic/src/lib.rs']) {
@@ -514,7 +514,7 @@ test('external game capture refuses tracked output roots',()=>fixture(({app,root
   }
 }), 60000);
 
-test('reproducibility flags follow workspace locks and always lock game shells', async () => {
+test('R15 reproducibility flags follow workspace locks and always lock game shells', async () => {
   const {cargoReproducibilityFlags} = await import('./app.mjs');
   const dir = mkdtempSync(resolve(tmpdir(), 'r15-locks-'));
   try {
@@ -530,7 +530,7 @@ test('reproducibility flags follow workspace locks and always lock game shells',
   } finally { rmSync(dir,{recursive:true,force:true}); }
 });
 
-test('the root Caltrain workspace refuses a missing lock and accepts its restored lock',()=>fixture(({app,root,pkg,write,run,flags})=>{
+test('R15 the root Caltrain workspace refuses a missing lock and accepts its restored lock',()=>fixture(({app,root,pkg,write,run,flags})=>{
   pkg('apps/caltrain/web','caltrain-web');
   write('Cargo.toml','[workspace]\nmembers=["apps/caltrain/web"]\nresolver="2"\n');
   write('apps/caltrain/app.contract','component App\n  view\n');
@@ -698,7 +698,7 @@ test('app update reports lock drift without changing it, and the app lock verb r
   } finally { rmSync(scratch, {recursive:true,force:true}); }
 }, 60_000);
 
-// What is installed is what bun.lock says. A registry package installed at another
+// LLP 1133.001 D9: what is installed is what bun.lock says. A registry package installed at another
 // version, or missing, is named; a workspace's, a platform's own, and a nested install are not compared.
 test('a node_modules that differs from bun.lock is named by package', async () => {
   const { lockMismatches } = await import('./filesystem.mjs');

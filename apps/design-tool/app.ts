@@ -1,4 +1,4 @@
-// The design tool's protocol client: `tamber/1` over HTTP to the
+// The design tool's protocol client (LLP 1122 D2): `tamber/1` over HTTP to the
 // app's Tamber server, which serves this page from the same local origin
 // (`bun exact.mjs tamber tool`). The token comes once from `GET
 // /__tamber/token`, which answers only this machine's loopback, and rides
@@ -29,7 +29,7 @@ export const appId = 'com.exact.design-tool';
 // The tool's own local URL: `tamber tool` serves it here, and a grant names
 // one origin and port.
 export const API = 'http://127.0.0.1:7740';
-// Another machine's design server, paired with: an https door, or a
+// Another machine's design server, paired with (T6): an https door, or a
 // tunnel to this machine's loopback (wire.ts `doorOf` refuses any other
 // before a request). And the files the person picks to import, which the
 // host copies under app:/tmp/picked/, and nothing else of app:/tmp.
@@ -99,7 +99,7 @@ const snapshots = new Map<number, Snapshot>();
 let issued = 0, axesReads = 0;
 const keptReads = new Map<string, Kept>(); // each file's last whole read, which a read after writes starts from
 // Whether running apps take a value edit with no reload: a server says so
-// in its hello once it has the live table. Until then
+// in its hello once it has the live table (LLP 1121 stage 4). Until then
 // every edit reaches them through the dev loop's reload.
 let liveTable = false;
 
@@ -149,7 +149,7 @@ async function readDesign(file: string, wanted: () => boolean): Promise<{ error:
  * when ""). */
 /** An edit's operations: its one, and before a param's `when` line where
  * the app has no line for the param, that line (its default as written),
- * which a `when` line needs first. */
+ * which a `when` line needs first (LLP 1121 D15). */
 function opsOf(file: string, kind: string, target: string, when: string, value: string): Record<string, unknown>[] {
   if (kind === 'promote-param' || kind === 'promote-token' || kind === 'detach-param') return moveOps(file, kind, JSON.parse(target), value.trim(), appParams, appKinds);
   const op = opOf(file, kind, target, when, value);
@@ -165,13 +165,13 @@ function opOf(file: string, kind: string, target: string, when: string, value: s
   const on = file ? { file } : {};
   switch (kind) {
     case 'set-dial': return { op: kind, name: target, value, ...on };
-    // A param's line is the app design's, whichever file is
+    // A param's line is the app design's (LLP 1121 D15), whichever file is
     // open, written by its short name where that names one param.
     case 'set-param': return { op: kind, name: lineName(target), when: whenOf(when), value };
     case 'unset-param': return { op: kind, name: lineName(target), when: whenOf(when) };
-    // A style's state part row: its value a number where it is one, else a Contract string.
+    // A style's state part row (T4): its value a number where it is one, else a Contract string.
     case 'set-state': { const [style, state, row, f] = target.split('|'); return { op: kind, style, state, row, value: NUMBER.test(value) ? Number(value) : value, ...(f ? { file: f } : {}) }; }
-    // A row as its author wrote it: `set-row` at its place or on its style, the address the join gave.
+    // A row as its author wrote it (T5): `set-row` at its place or on its style, the address the join gave.
     case 'set-row': return { op: kind, ...JSON.parse(target), value: NUMBER.test(value) ? Number(value) : value };
     case 'set-token': return { op: kind, name: target, when: whenOf(when), value, ...on };
     case 'add-token': return { op: kind, name: target, value, ...on };
@@ -181,7 +181,7 @@ function opOf(file: string, kind: string, target: string, when: string, value: s
 }
 const label = (kind: string, target: string, when: string, value: string) =>
   moveLabel(kind, target, value) ?? (kind === 'set-state' ? `${target.split('|').slice(0, 3).join(' ')} = ${value}` : kind === 'rename-token' ? `${target} → ${value}` : kind === 'remove-token' ? `removed ${target}` : kind === 'unset-param' ? `reset ${target}${when ? ` when ${when}` : ''}` : `${target}${when ? ` when ${when}` : ''} = ${value}`);
-// The scrub, one session at a time, from Scrub live to Keep,
+// The scrub (LLP 1122 D6), one session at a time, from Scrub live to Keep,
 // Cancel or an end: the edit it is of (file, kind, target, branch), the
 // digests and server run it opened on, its id once the server answers, the
 // op the server last previewed (`shown`, what Keep writes) and the latest
@@ -298,7 +298,7 @@ const byWhom = (reply: Reply) => {
 const conflict = (reply: Reply) => (reply.error as { conflict?: boolean } | undefined)?.conflict === true;
 
 
-// The session changeset: every write since the tool opened,
+// The session changeset (LLP 1122 D9): every write since the tool opened,
 // its own and others', newest first. Each says its files, who, and the
 // token values before and after; under the tool's own (an undo and a redo
 // among them), the diff its reply gave. The tool's own write and its event
@@ -323,7 +323,7 @@ function wroteMine(ok: { write?: number; diff?: string; before?: Record<string, 
   const n = changeset.find(c => c.write === ok.write);
   if (n) { n.mine = true; n.diff = ok.diff ?? ''; n.redoneBy = redoneBy; } else mine.push({ write: ok.write, diff: ok.diff ?? '', redoneBy });
 }
-// The dev loop's running builds, by id, only as the server
+// The dev loop's running builds (LLP 1122 D4), by id, only as the server
 // shows them: hello's list when the poll starts again (the first answer, a
 // gap, a new run), then the build events. Each with the revision of the
 // last pin frame it was sent (`pinRevision`, whoever sent it), and the last
@@ -331,7 +331,7 @@ function wroteMine(ok: { write?: number; diff?: string; before?: Record<string, 
 type BuildState = { inspectRefused?: string | null; refusalSeq?: number; id: string; host: string; page: string; status: any; plan: string | null; planDigest: string | null; design: string | null; pin: any; pinRevision: number; unsupported: { what: string; detail: string | null } | null; holding: Holding; navRefusals?: number };
 let buildsNow = new Map<string, BuildState>();
 const goneNow = new Gone();
-// The latest selection (the server's join) with what it was
+// The latest selection (the server's join, LLP 1122 D5) with what it was
 // made under; a stale one stays stale until a fresh selection (a reload back
 // to the same facts is another document). And the builds this tool turned
 // inspect mode on, as the server and the pages tell it.
@@ -345,8 +345,8 @@ const sameHold = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.
  * was of the last one, so it is asked for again under this one. */
 const forgetHeld = (id: string) => { if (selectionNow?.e.held && String(selectionNow.e.build) === id) selectionNow.e = { ...selectionNow.e, held: undefined }; };
 let designAxes: Axis[] = [], axesRead = false;
-// Each library component's parts, by its declaring identity, as the app design's newest describe lists them: the
-// inspector's part outline. Empty until the server says them.
+// Each library component's parts, by its declaring identity, as the app design's newest describe lists them (stage
+// 12 D3, LLP 1139 D5): the inspector's part outline. Empty until the server says them.
 let libraryParts = new Map<string, { name: string; slot: boolean }[]>();
 const partsFrom = (ir: { components?: { identity: string; parts?: { name: unknown; slot?: unknown }[] }[] } | undefined) =>
   new Map((ir?.components ?? []).filter(c => Array.isArray(c.parts)).map(c => [c.identity, c.parts!.map(p => ({ name: String(p.name), slot: p.slot === true }))]));
@@ -360,12 +360,12 @@ const latch = () => { if (!selectionNow) return; const b = buildsNow.get(String(
 // be read again from hello (the poll started again, and no read has
 // succeeded since).
 let polls = 0, resync = true, polled = '', seeded = '';
-// The changes' poll: `reread`, a reply the long poll could not fold alone (a coalesced one, from
+// The changes' poll (stage 14 D): `reread`, a reply the long poll could not fold alone (a coalesced one, from
 // another cursor, or starting again), so the next ask reads once by POST; its answers' common part.
 let reread = false, byCursor = false, byChoice = false, taken: unknown = null; // (`byCursor`: the server speaks 1.17's GET long poll; `byChoice`, 1.18's choose; an older one keeps the held POST; `taken`, the last answer's cursor folded, opaque)
 const changesState = () => ({ answer: answers, seq: place.seq, epoch: place.epoch, files: `${fileChanges} ${digestKey(lastFiles)}`, paced: scrubsOpen.size ? `scrub ${scrubMoves} ${fileChanges} ${commitsTold}` : `answer ${answers}`, committable: `${session} ${fileChanges} ${commitsTold} ${written}`, clients: `${clientMoves}`, recent, undo: undoStack.length, redo: redoStack.length, session, held, heldDesign, builds: buildRows(), reloading: goneNow.rows(), reloadGen: goneNow.newest, ...refusalRows(buildsNow.values()) });
 /** One reply of the long poll (wire.ts `longPoll`), folded as it comes, or the poll's end (`ok: false`, asked again
- * after 3 s). A reply that names another cursor than the last folded, or carries others folded into it (the host's
+ * after 3 s). A reply that names another cursor than the last folded, or carries others folded into it (D4's
  * coalescing keeps the newest), or starts again (missed, another run), is read again once by POST instead, which
  * folds a gap, a missed stretch or another run whole: no events are lost. */
 function streamed(e: StreamEvent, used: string, gen: number, epoch: string, client: string) {
@@ -484,7 +484,7 @@ function fold(r: { events?: unknown[]; seq?: number; epoch?: string; missed?: bo
       if (e.client === client) { endedIds.set(String(e.scrub), String(e.reason)); if (endedIds.size > 32) endedIds.delete(endedIds.keys().next().value!); }
       if (scrubbing?.id && e.scrub === scrubbing.id) endScrub(scrubbing, scrubEndText(String(e.reason)));
     }
-    // A hold's end, in words, for the inspector: a build's own
+    // A hold's end, in words, for the inspector (LLP 1122 D8): a build's own
     // let-go, the server's clearing (no single site after a new plan).
     else if (e.event === 'held' || e.event === 'hold-cleared') {
       const b = buildsNow.get(String(e.build)); if (b) b.holding = heldEvent(b.holding, e);
@@ -493,7 +493,7 @@ function fold(r: { events?: unknown[]; seq?: number; epoch?: string; missed?: bo
     }
     else if (e.event === 'unsupported') {
       const b = buildsNow.get(String(e.build)), step = e.what === 'inspect' && stepRefused(String(e.build), e.detail, b); if (b && !step) b.unsupported = { what: String(e.what ?? ''), detail: e.detail ?? null };
-      // (A navigation its page refused, counted: the grid reloads that copy at the place instead.)
+      // (A navigation its page refused, counted: the grid reloads that copy at the place instead, LLP 1122 T7.)
       if (b && e.what === 'navigate') b.navRefusals = (b.navRefusals ?? 0) + 1;
       if (e.what === 'hold') holdNotes.set(String(e.build), `This build cannot hold that state${e.detail ? `: ${e.detail}` : ''}.`); else if (b && e.what === 'inspect' && !step && inspectOn.has(String(e.build))) refuse(b, String(e.detail ?? '')); // (refusals.ts)
       if (e.what === 'inspect' && !step && selectionNow && String(selectionNow.e.build) === String(e.build)) { const why = `its page could not inspect it${e.detail ? ` (${e.detail})` : ''}`; selectionNow.stale ||= why; selectionNow.pageStale ||= why; }
@@ -552,7 +552,7 @@ let lastFiles: Record<string, string> = {};
 let fileChanges = 0;
 // Commits told (with fileChanges, what moves while a scrub is open).
 let commitsTold = 0;
-// Whether this run of the server has written since its last commit, as its events tell it: the dry
+// Whether this run of the server has written since its last commit, as its events tell it (stage 15 D1.6): the dry
 // commit is asked only then, a write from before the tool opened (the first answer's backlog) included; a first answer
 // that missed some of the run can't say, so it asks.
 let written = false;
@@ -561,7 +561,7 @@ let written = false;
 const scrubsOpen = new Set<string>();
 // Each scrub opened or ended (two in one answer still move it); each client paired or gone (the list read again).
 let scrubMoves = 0, clientMoves = 0;
-// The scale columns the app ships, as the last design read named them.
+// The scale columns the app ships, as the last design read named them (stage 11).
 let shippedNow: string[] = [];
 const digestKey = (files: Record<string, string> = {}) => JSON.stringify(Object.keys(files).sort().map(f => [f, files[f]]));
 // Each read's stored values, axes and columns, by `<file>|<its digest>`; a few.
@@ -570,8 +570,8 @@ const named = (file: string) => file || designFile;
 /** An entry's tokens in one file. */
 const tokensIn = (n: Noted, file: string) => [...new Set(n.changed.filter(c => c.file === file).map(c => c.token))];
 
-/** A client's colour, the same each time (each client's edits show in
- * its own colour). */
+/** A client's colour, the same each time (LLP 1122 D10: each client's
+ * edits in its own colour). */
 const TINTS = ['-exact-system-blue', '-exact-system-green', '-exact-system-orange', '-exact-system-purple', '-exact-system-pink', '-exact-system-teal', '-exact-system-indigo', '-exact-system-brown'];
 // Given in the order clients first appear, so the first eight differ.
 const tinted = new Map<string, string>();
@@ -580,7 +580,7 @@ export const tintOf = (who: string) => {
   return tinted.get(who)!;
 };
 
-// Held proposals, as the last poll answer listed them.
+// Held proposals, as the last poll answer listed them (LLP 1122 D10).
 type Held = Result<'waitChanges'>['held'][number];
 let held: Held[] = [];
 // Each held proposal's operations (for redoing one accepted, and editing an
@@ -594,7 +594,7 @@ let heldToken = '';
 let heldAt = { epoch: '', revision: -1 };
 // The list as last sent, and the design read its swatches were drawn from.
 let heldRaw: any[] = [], heldDesign = -1;
-/** An import's review as the view lists it: the mapped
+/** An import's review (LLP 1122 D11) as the view lists it: the mapped
  * tokens with their values per mode, the role overrides it offers, the
  * values it could not map and why, and the count check. */
 function reviewOf(p: any) {
@@ -740,7 +740,7 @@ const fileWords = (n: Noted, f: string) => `${f}: ${n.values.get(f)?.join('; ') 
  * named, until measured), who. */
 const plain = (n: Noted) => n.gap ? 'Some changes were missed here (the server keeps the last 256), so this list may be incomplete.' : `${n.files.map(f => `${f}: ${n.values.get(f)?.join('; ') || tokensIn(n, f).join(', ') || 'edited'}`).join('; ') || 'the design: edited'} · ${n.who}${n.acceptedBy ? `, accepted by ${n.acceptedBy}` : ''}${n.redoneBy ? `, redone by ${n.redoneBy}` : ''}`;
 
-/** The re-scope an edit of the app's design would offer once written,
+/** The re-scope an edit of the app's design would offer once written (D6),
  * read from the design as it is before the write. */
 async function rescopeFor(file: string, op: Record<string, unknown>, token: string, files: Record<string, string>): Promise<Rescope | null> {
   // The design read and every explain of the revision the edit was reviewed on.
@@ -750,14 +750,14 @@ async function rescopeFor(file: string, op: Record<string, unknown>, token: stri
   if (!app(file) || !snap || (op.op !== 'set-param' && op.op !== 'set-token')) return null;
   return rescopeOf(op as { op: string; name: string; when: When[]; value: string }, snap.params, snap.tokenOf, async name => {
     const { error, reply } = await call('/__tamber', { method: 'explain', token: name }, 15000, token);
-    // (A base name's explain has no branches to re-scope: none offered.)
+    // (A base name's explain, stage 11, has no branches to re-scope: none offered.)
     return error || !Array.isArray(reply.ok?.whens) ? null : (reply.ok as { value: string; whens: { when: When[]; value: string }[]; files?: Record<string, string> });
   }, key);
 }
 
 const sources: Sources = {
   ...pairingSources(call, pairWith, remote), sendSelectUp: async ([client, build, up]) => { stepping.add(String(build)); const r = await call('/__tamber', { method: 'inspect', client, build, select: { up } }); if (r.error) stepping.delete(String(build)); return { ok: !r.error, error: r.error }; },
-  ...gridSources(call, () => buildsNow, () => selectionNow, () => designAxes), loadCanvasCheck: () => canvasRefusal(API), ...chosenDiffSources(call, () => held.filter(h => h.importer && (h.replaces || h.from)), (p, picked) => chosen(p, picked), p => heldOps.get(p) ?? [], () => heldToken || undefined, () => lastFiles, (p, picked, gen) => heldChoice.inStep(p, picked, gen)), // (the diff a card shows follows its choice)
+  ...gridSources(call, () => buildsNow, () => selectionNow, () => designAxes), loadCanvasCheck: () => canvasRefusal(API), ...chosenDiffSources(call, () => held.filter(h => h.importer && (h.replaces || h.from)), (p, picked) => chosen(p, picked), p => heldOps.get(p) ?? [], () => heldToken || undefined, () => lastFiles, (p, picked, gen) => heldChoice.inStep(p, picked, gen)), // (D1.1: the diff a card shows follows its choice)
   loadHello: async () => {
     const { error, reply } = await call('/__tamber', { method: 'hello' });
     if (error) return { ok: false, error, protocol: '', format: 0, app: '', files: [], page: '', frame: '', live: false, scope: '', local: false, client: '', epoch: '' };
@@ -784,7 +784,7 @@ const sources: Sources = {
       // changed, in their client's colour; a read again at the same place
       // does not.
       // Each token's stored value per tuple and scheme, a residual as its
-      // fallback (no running app reports it here).
+      // fallback (no running app reports it until T2).
       const stored = new Map<string, Stored[][]>();
       const baseRows = new Map<string, any>((read.base ?? []).map((r: any) => [String(r.name), r])), targets = shippedOf(read.targets);
       shippedNow = targets;
@@ -792,7 +792,7 @@ const sources: Sources = {
         const tuples = (resolved[i].tuples ?? []) as any[];
         const sides = tuples.map(r => [false, true].map(dark => {
           const side = dark ? 'dark' : 'light';
-          // A token of another kind than colour: its value
+          // A token of another kind than colour (LLP 1121 stage 6): its value
           // as `resolve` gives it (`cellText`); it has no sides and draws no
           // swatch.
           if (t.kind !== 'color') return { css: cellText(t.kind, r), srgb: '', residual: false, note: '', value: r.value };
@@ -809,9 +809,9 @@ const sources: Sources = {
         // (Set for this app starts from the value as written, never the grid's words for it.)
         return { name: t.name, kind: t.kind, follows: (t.dials ?? []).join(', '), cells, start: String(tuples[0]?.value ?? ''), ...sourceOf(t, baseRows.get(t.name), targets, designFile) };
       });
-      // Exact's base names the app does not override: per platform, no fold, so no cells.
+      // Exact's base names the app does not override (stage 11): per platform, no fold, so no cells.
       for (const row of baseRows.values()) if (!row.override && !tokens.some((t: { name: string }) => t.name === row.name)) { const src = sourceOf(null, row, targets, designFile); tokens.push({ name: row.name, kind: 'length', follows: '', cells: [], start: writable(src.columns[0]?.value ?? ''), ...src }); }
-      // Each declared pair's contrast per cell (`pair=`): the
+      // Each declared pair's contrast per cell (LLP 1121 D3, `pair=`): the
       // token over what it is drawn on, a token's stored value or a role's
       // fallback; below 4.5:1, WCAG's for text, it is marked low.
       // A Map, so a token named `constructor` is no inherited property.
@@ -882,7 +882,7 @@ const sources: Sources = {
     const { error, reply } = await call('/__tamber', { method: 'explain', token, ...(file ? { file } : {}) }, READ_WAIT);
     if (error) return { ...none, ok: false, error };
     const raw = reply.ok as { value?: string; whens?: { when: When[]; value: string }[]; dials?: string[]; names?: string[]; bases?: string[]; files?: Record<string, string>; kind?: string; package?: string; file?: string; base?: { override?: { text?: string } | null; columns?: Record<string, { value?: string }> } };
-    // A base name (`kind: 'base'`): its override is the app's line, edited as one; with none, the
+    // A base name (stage 11, `kind: 'base'`): its override is the app's line, edited as one; with none, the
     // base's value, read only (no per-tuple fold: each platform's, the first the app ships said).
     // An override with its branches (`whens`, as an app token's explain gives them) is edited as one; a base
     // reply that names the override's text alone shows it read only, since its branches can't be read back.
@@ -897,14 +897,14 @@ const sources: Sources = {
     const value = b.index >= 0 ? x.whens[b.index].value : x.value;
     // An expression's inputs: the tokens and dials it names; a dial's
     // control is where it is edited.
-    // (A base name a value names is an input too: explain lists those apart, as `bases`.)
+    // (A base name a value names, stage 11, is an input too: explain lists those apart, as `bases`.)
     const inputs = inputsOf(value, [...x.names, ...(Array.isArray(raw.bases) ? raw.bases : [])], x.dials);
     // A dial with no control (`control=none`) is said, not offered.
     const dials = inputs.dials.map(name => ({ name, group: snap.dials.get(name)?.group ?? '', more: snap.dials.get(name)?.more ?? false, hidden: !snap.dials.has(name) }));
     return {
       ok: true, error: '', token, kind, column, place: placeOf(snap.axes, col), label: `${token} · ${b.when || 'default'} (${col.label})`, when: b.when, value,
       expression: inputs.tokens.length + inputs.dials.length + inputs.roles.length > 0, inputs: inputs.tokens, dials, roles: inputs.roles, exact: b.own === '' || b.when === b.own, own: b.own, param: snap.params.has(token), answer,
-      // (The base's or a package's value is theirs; the app sets its own, from the grid.)
+      // (Stage 11: the base's or a package's value is theirs; the app sets its own, from the grid.)
       readOnly: based && !overridden ? 'Exact\'s base, read only: Set for this app (in the grid) to change it here.' : based && !branched ? 'Set for this app: the server names its line without its branches, so edit it in the app\'s design here once it does.' : raw.package && raw.file !== designFile ? `The ${raw.package} package's, read only: Set for this app (in the grid) to change it here.` : '',
     };
   },
@@ -926,12 +926,12 @@ const sources: Sources = {
     // (A proposal waits as long as a read: the server plans it behind the reads it serializes.)
     let { error, reply, used } = await call('/__tamber', { method: 'propose', ops }, READ_WAIT);
     for (let n = 0, t: any = null, u: { more: string[]; keep: boolean }; kind === 'detach-param' && error && n < 4 && ((u = unread(error, target, ops)).more.length || (u.keep && !t?.keep)); n++)
-      ({ error, reply, used } = await call('/__tamber', { method: 'propose', ops: ops = moveOps(file, kind, (t = { ...(t ?? JSON.parse(target)), keep: t?.keep || u.keep, extra: [...(t?.extra ?? []), ...u.more] }), '', appParams, appKinds) })); // (a detach's closure, as the server names it)
+      ({ error, reply, used } = await call('/__tamber', { method: 'propose', ops: ops = moveOps(file, kind, (t = { ...(t ?? JSON.parse(target)), keep: t?.keep || u.keep, extra: [...(t?.extra ?? []), ...u.more] }), '', appParams, appKinds) })); // (a detach's closure, as the server names it, D6)
     if (error) return { ...idle, ok: false, error };
     const ok = reply.ok as { diff: string; class: string; files: Record<string, string>; changed: { token: string }[] };
     // A param's first `when` line was planned from the params of another revision than this proposal's: asked again once the design is read.
     if (!paramsOf(kind, when, ok.files, paramsAt)) return { ...idle, ok: false, error: kind === 'detach-param' && file && file !== designFile ? 'The app\'s params are from an older read: open the app\'s design, which reads them again, then detach.' : 'The design changed: reading it again before this is proposed.' };
-    if (/^(set-state|set-row|promote-|detach-)/.test(kind) && selectionNow?.files !== digestKey(ok.files)) return { ...idle, ok: false, error: 'The files moved since this copy was selected: select it again.' }; // (the selected copy's source edited as reported)
+    if (/^(set-state|set-row|promote-|detach-)/.test(kind) && selectionNow?.files !== digestKey(ok.files)) return { ...idle, ok: false, error: 'The files moved since this copy was selected: select it again.' }; // (the selected copy's source edited as reported, T4/T5)
     // What Apply writes: this edit, against the digests this proposal read,
     // to the server run that read them (its token), carried on the proposal
     // itself, so what is shown is what is written, and where.
@@ -947,7 +947,7 @@ const sources: Sources = {
     const ops = read.ops;
     const op = ops.at(-1)!;
     const move = ops.length === 1 ? await rescopeFor(file, op, read.token, read.now ?? read.files) : null;
-    // A client paired at `propose` holds it for someone with write to accept instead.
+    // A client paired at `propose` (T6) holds it for someone with write to accept instead.
     if (scopeNow() === 'propose') { const held = await call('/__tamber', { method: 'propose', hold: true, client, ops }, WRITE_WAIT, read.token); return { ...stacks(!held.error, held.error, ''), note: held.error ? '' : `Held for review as ${held.reply.ok?.proposal}: someone with write accepts it.` }; }
     // Every file's digest as the proposal read it: the server checks the
     // ones the edit writes, whichever file the app's design is.
@@ -1131,19 +1131,19 @@ const sources: Sources = {
     // Up to 25 s with nothing new, and the server answers once there is.
     // The first asks, at once, from the start of what the server keeps. It
     // names the tool's client: a client is present while its poll is, and
-    // its pins live only while it is.
+    // its pins live only while it is (LLP 1122 D4).
     // A poll another has replaced (a new name starts one) changes nothing
     // when it answers: the newer one reads the same events.
     // None for no one (`design-tool:`, before the name: the tool asks it first and shows nothing else), and no answer
-    // counted, so nothing asks again until the name comes.
+    // counted, so nothing asks again until the name comes (stage 15 D1.6).
     if (client === 'design-tool:') return { ok: true, error: '', missed: false, stream: false, ...changesState() };
     const gen = ++polls;
     // Another name is another client: what this tool inspects is read again.
     if (client !== polled) { polled = client; inspectOn.clear(); resync = true; }
-    // Once this run has been read, with nothing to read again first: the long poll by cursor (tamber/1.17's GET),
-    // its re-asks and backoff the host's, held by no clock after its first reply,
+    // Once this run has been read, with nothing to read again first: the long poll by cursor (tamber/1.17's GET,
+    // stage 14 D), its re-asks and backoff the host's (LLP 1016.000 D8), held by no clock after its first reply (D9),
     // each reply folded as it comes. Else, or with no token in hand, one read at once (`wait: false`); with a server
-    // before 1.17, the POST long poll as before, held (`exactHeld`).
+    // before 1.17, the POST long poll as before, held (`exactHeld`, D9).
     const ready = byCursor && !!epoch && epoch === place.epoch && heldAt.epoch === epoch && heldAt.revision >= 0 && typeof taken === 'string' && !resync && !reread;
     // (Its first ask opens from the last read's cursor, `open`, answered at once, as no clock should wait on a first
     // ask for long, with what came since; the host's re-asks carry each reply's as `after`.)
@@ -1271,7 +1271,7 @@ const sources: Sources = {
     if (error) return { ...none, ok: false, error };
     const ok = reply.ok as { commits: any[]; more: boolean };
     const when = (w: When[]) => (w?.length ? ` when ${whenText(w)}` : '');
-    // A state part's row (a `.contract` file's) is its style's: `Post :active opacity`.
+    // A state part's row (a `.contract` file's, LLP 1121 stage 8 D) is its style's: `Post :active opacity`.
     const edit = (e: { what: string; name: string; state?: string; row?: string; when: When[]; before: string | null; after: string | null }) => {
       const name = e.what === 'state' ? `${e.name} :${e.state} ${e.row}` : e.name, what = e.what === 'state' ? 'row' : e.what;
       return e.before === null ? `added ${what} ${name}${when(e.when)} = ${e.after}`
@@ -1398,7 +1398,7 @@ const sources: Sources = {
     return { axes: axes.map(a => ({ name: a.name, values: a.values })), answer: ++appReads };
   },
   loadSelection: async () => {
-    // Below write (paired), once a server run, its builds and the design read: the selection each build
+    // Below write (paired, T6), once a server run, its builds and the design read: the selection each build
     // last reported, as the server keeps it (a read-only refresh); its events before the poll began are not
     // sent, and Inspect is not this client's.
     // It is shown as reported, not as current (the server keeps no cursor of when): it offers no edit.
@@ -1424,7 +1424,7 @@ const sources: Sources = {
     return view();
   },
   sendHold: async ([client, state]) => {
-    // A state held on the selected copy (`hold`), or
+    // A state held on the selected copy (LLP 1122 D8; `hold`, stage 8 E), or
     // let go (""): one a build, which replaces the last.
     const e = selectionNow?.e;
     if (!e || selectionNow?.stale) return { ok: false, error: 'Select a view again to hold a state on it.', note: '' };
@@ -1434,7 +1434,7 @@ const sources: Sources = {
     return error ? { ok: false, error, note: '' } : { ok: true, error: '', note: '' };
   },
   sendInspect: async ([client, on]) => {
-    // Inspect mode on every build that can, or off; asked again, the refusals said before go (back on a failure).
+    // Inspect mode on every build that can (LLP 1122 D4), or off; asked again, the refusals said before go (back on a failure).
     const refused = takeRefusals(buildsNow), { error, reply } = await call('/__tamber', { method: 'inspect', client, on });
     if (error) { restoreRefusals(buildsNow, refused); return { ok: false, error, note: '' }; }
     const ok = reply.ok as { builds: string[]; unsupported: string[] };

@@ -1,10 +1,10 @@
-//! Paint motion on the Linux host: the engine samples colours and
+//! Paint motion on the Linux host (LLP 1062): the engine samples colours and
 //! the shadow like any property; the painter paints a presented value over
 //! its row while the two differ. An animating `color` also reaches the views
 //! and inline runs that inherit it, as a browser's inheriting element shows
 //! it, and each `currentcolor` border side among them. An SVG element's
 //! inherited `fill` and `stroke` reach its descendants through the scene's
-//! resolver.
+//! resolver (LLP 1055.000 D15).
 
 use super::Host;
 use exact_kernel::motion::{layout_presented, motion_node, node_key};
@@ -13,7 +13,7 @@ use exact_motion::{Presentation, Property, Value};
 use exact_runner::DataSource;
 
 impl<D: DataSource> Host<D> {
-    /// A path's `d` while a transition moves it; `None`
+    /// A path's `d` while a transition moves it (LLP 1055.000 D15); `None`
     /// paints the attribute.
     pub fn presented_path(&self, id: ViewId) -> Option<exact_motion::PathValue> {
         let key = self.runner.kernel().node(id)?.key;
@@ -22,7 +22,7 @@ impl<D: DataSource> Host<D> {
 
     /// Adopt a commit's paint, after its `motion_sync` set the rows.
     pub(super) fn sync_paint(&mut self, receipt: &CommitReceipt) {
-        let _roles = self.runner.bind_roles(); // Its own.
+        let _roles = self.runner.bind_roles(); // Its own (LLP 1121 stage 5).
         let retired = self
             .paint
             .sync(self.runner.kernel(), receipt, &mut self.engine);
@@ -31,7 +31,7 @@ impl<D: DataSource> Host<D> {
 
     /// Adopt the whole tree's paint at boot.
     pub(super) fn boot_paint(&mut self) {
-        let _roles = self.runner.bind_roles(); // Its own.
+        let _roles = self.runner.bind_roles(); // Its own (LLP 1121 stage 5).
         self.paint.adopt(
             self.runner.kernel(),
             self.keys.keys().copied(),
@@ -53,9 +53,9 @@ impl<D: DataSource> Host<D> {
     }
 
     /// Report the session's appearance: first quietly, then transitioning
-    /// `light-dark()` targets under their rows.
+    /// `light-dark()` targets under their rows (LLP 1062 D4).
     pub fn set_scheme(&mut self, dark: bool) {
-        let _roles = self.runner.bind_roles(); // Its own.
+        let _roles = self.runner.bind_roles(); // Its own (LLP 1121 stage 5).
         if let Some(retired) = self.paint.set_scheme(
             self.runner.kernel(),
             &mut self.engine,
@@ -69,11 +69,11 @@ impl<D: DataSource> Host<D> {
     }
 
     /// The platform's colours resolve differently (the device's shell
-    /// reported its palette): every paint owner re-targets
-    /// under its appearance, as the Apple host's does.
+    /// reported its palette, LLP 1115.001 D4): every paint owner re-targets
+    /// under its appearance, as the Apple host's does (LLP 1095 D6).
     /// `first`: the first report, a correction in place without motion.
     pub(crate) fn colors_changed(&mut self, first: bool) {
-        let _roles = self.runner.bind_roles(); // Its own.
+        let _roles = self.runner.bind_roles(); // Its own (LLP 1121 stage 5).
         if let Some(retired) = self.paint.colors_changed(
             self.runner.kernel(),
             &mut self.engine,
@@ -89,7 +89,7 @@ impl<D: DataSource> Host<D> {
     /// Report a view's own appearance, following the same first-report
     /// correction and later transitions as the session's.
     pub fn set_view_scheme(&mut self, view: ViewId, dark: bool) {
-        let _roles = self.runner.bind_roles(); // Its own.
+        let _roles = self.runner.bind_roles(); // Its own (LLP 1121 stage 5).
         let Some(key) = self.runner.kernel().node(view).map(|n| n.key) else {
             return;
         };
@@ -254,7 +254,7 @@ impl<D: DataSource> Host<D> {
                 Property::Opacity => entry.opacity = p.value.x as f32,
                 Property::R => entry.svg[0] = Some(p.value.x as f32),
                 Property::StrokeDashoffset => entry.svg[1] = Some(p.value.x as f32),
-                // Geometry, in `Presented::svg`'s order.
+                // @ref LLP 1055.000 D15 — geometry, in `Presented::svg`'s order.
                 Property::Cx => entry.svg[2] = Some(p.value.x as f32),
                 Property::Cy => entry.svg[3] = Some(p.value.x as f32),
                 Property::X => entry.svg[4] = Some(p.value.x as f32),

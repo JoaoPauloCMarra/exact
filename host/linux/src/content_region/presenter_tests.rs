@@ -1190,7 +1190,7 @@ fn placeholder_focus_follows_successful_acknowledged_region_presentation() {
 }
 
 #[test]
-#[ignore = "times retained membership lookup over 4000 views; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: retained membership lookup scaling"]
 fn retained_membership_lookup_cost_is_independent_of_paint_order() {
     let _service = crate::content_region::test_service();
     let mut nodes = String::from("              view testId=\"first\" width=1 height=1\n");

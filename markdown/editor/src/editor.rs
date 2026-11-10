@@ -94,7 +94,7 @@ pub enum SelectionMode {
     End,
 }
 
-/// The toolbar facts a `select` event carries.
+/// The toolbar facts a `select` event carries (LLP 1045 D6).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Facts {
     /// Space-separated command names, pending formats applied.
@@ -106,7 +106,7 @@ pub struct Facts {
     /// Space-separated commands that do nothing here.
     pub unavailable: String,
     /// The atom's source when the selection is exactly one atom, else empty
-    /// (`MarkdownSelection.atom`).
+    /// (`MarkdownSelection.atom`, LLP 1045.000 D3).
     pub atom: String,
 }
 
@@ -197,7 +197,7 @@ pub struct Editor {
     utf8: String,
     pub(crate) styled: Styled,
     pub(crate) proj: Projection,
-    /// The field's atom kinds and the app's faces.
+    /// The field's atom kinds and the app's faces (LLP 1045.000 D2).
     atoms: md::Atoms,
     sel: (u32, u32),
     /// A caret deliberately after an inline closer.
@@ -310,8 +310,8 @@ impl Editor {
         self.atoms.face(source)
     }
 
-    /// The host's words for the current state's lines (`paragraphDirs`),
-    /// opaque here. Each undo step keeps the words of the state it
+    /// The host's words for the current state's lines (`paragraphDirs`, LLP
+    /// 1045 D11), opaque here. Each undo step keeps the words of the state it
     /// returns to, and undo and redo give them back ([`Editor::words_back`]).
     pub fn set_words(&mut self, words: &[u16]) {
         self.words = Rc::from(words);
@@ -339,13 +339,13 @@ impl Editor {
     }
 
     /// Each source line's direction under `paragraphDirs`' `auto`
-    /// ([`crate::auto_directions`]).
+    /// ([`crate::auto_directions`], LLP 1045 D11).
     pub fn auto_directions(&self) -> Vec<u8> {
         crate::direction::auto_of(&self.utf8, &self.styled)
     }
 
     /// A field's declared kinds and the app's faces changed (`atoms`,
-    /// `atomFaces`): restyle. The source and its history
+    /// `atomFaces`, LLP 1045.000 D2): restyle. The source and its history
     /// stay; a selection now inside an atom moves by the caret and range rules.
     pub fn set_atoms(&mut self, atoms: md::Atoms) -> Change {
         if atoms == self.atoms {
@@ -372,7 +372,7 @@ impl Editor {
         md::plain_range(&self.utf8, Range::new(from, to), &self.atoms)
     }
 
-    /// An input method begins composing: over a range that
+    /// An input method begins composing (LLP 1045.000 D5): over a range that
     /// holds an atom, the range is deleted first, as an undo step of its
     /// own. The platform's text is left as it is, composing over the range.
     pub fn compose(&mut self, now: f64) -> Change {
@@ -429,7 +429,7 @@ impl Editor {
     }
 
     /// The app wrote a value. The changed middle is replaced and the selection
-    /// carried through it; the history resets, as it does on Apple.
+    /// carried through it; the history resets, as it does on Apple (LLP 1045 D1).
     pub fn set_value(&mut self, text: &[u16]) -> Change {
         let text = clean(text);
         if text == self.source {
@@ -484,9 +484,9 @@ impl Editor {
     }
 
     /// The app's `setSelectionRange`, in source code units. A caret in hidden
-    /// syntax moves to the visible edge the platform can draw it at;
-    /// a range is kept as given, but for an end inside an
-    /// atom, which goes to the atom's outer edge.
+    /// syntax moves to the visible edge the platform can draw it at
+    /// (LLP 1045 D6); a range is kept as given, but for an end inside an
+    /// atom, which goes to the atom's outer edge (LLP 1045.000 D5).
     pub fn set_selection(&mut self, from: u32, to: u32) -> Change {
         let (from, to) = self.clamp((from, to));
         self.pending = [None; 4];
@@ -671,7 +671,7 @@ impl Editor {
         }
     }
 
-    /// ⌥⌫ or ⌥⌦ at `p`: an atom and the spaces between it
+    /// ⌥⌫ or ⌥⌦ at `p` (LLP 1045.000 D5): an atom and the spaces between it
     /// and the caret, stopping at a line break; `None` when no atom is there.
     fn word_atom(&self, p: u32, backward: bool) -> Option<(u32, u32)> {
         let space = |i: u32| matches!(self.source.get(i as usize), Some(32 | 9));
@@ -737,7 +737,7 @@ impl Editor {
         }
     }
 
-    /// A toolbar or shortcut command, by the shared vocabulary,
+    /// A toolbar or shortcut command, by the shared vocabulary (LLP 1045 D6),
     /// plus `undo` and `redo`. Bold, italic, code and strike at a caret
     /// toggle a pending format for the next insertion.
     pub fn command(&mut self, name: &str, argument: &str, now: f64) -> Change {
@@ -828,7 +828,7 @@ impl Editor {
             atom: String::new(),
         };
         // Exactly one atom: its source, its destination as a link's, and no
-        // `link` command over it.
+        // `link` command over it (LLP 1045.000 D3, D5).
         if let Some(atom) = self
             .proj
             .one_atom(self.sel.0, self.sel.1)
@@ -1148,7 +1148,7 @@ impl Editor {
             let c = proj.cluster(from);
             let src = &self.source;
             // Backspace at an atom's end or Delete at its start removes its
-            // whole source in one edit.
+            // whole source in one edit (LLP 1045.000 D5).
             let atom = if backward {
                 proj.atom_ending(c.0)
             } else {

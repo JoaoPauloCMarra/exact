@@ -1,4 +1,4 @@
-//! Per-side border colours, held to Chrome's pixels. The page
+//! LLP 1053 G2: per-side border colours, held to Chrome's pixels. The page
 //! is `scripts/fixtures/borders.contract`; Chrome's pictures of it (the web
 //! host at 1×, `bun scripts/agent.mjs web --plan … screenshot`) are
 //! `borders.web.png` as booted and `borders.web-dark.png` after `flip` and

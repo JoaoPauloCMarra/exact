@@ -1,4 +1,5 @@
-// The Canvas 2D parity smoke: `apps/canvas-gallery` on every host against Chrome, through both
+// The Canvas 2D parity smoke (LLP 1056 §4; Charlie approved the apparatus,
+// §0.1): `apps/canvas-gallery` on every host against Chrome, through both
 // oracles.
 //
 // 1. The API oracle: the recorder's rules (canvas/tests/cases.txt) run in
@@ -10,14 +11,14 @@
 //    (the backdrop shows the bitmap's alpha), on page 3 at every step of the
 //    sequences; Linux under both painters; and at native resolution against
 //    direct.html drawn at the host's scale.
-// 3. Caltrain's line map (the take): with the sky off, the
+// 3. Caltrain's line map (LLP 1056 §8, the take): with the sky off, the
 //    map's own pixels — the part of its canvas no child covers: background
 //    and the train — on each native host against Chrome's.
 // 4. Probes: every canvas drew and none is pending; the throwing fixture
 //    reports its error at odd steps and kept what it drew; the resizing one's
 //    generation is its step; the explicit bitmap is 40 × 25, stretched.
 //
-// Bands (provisional): mean |Δ| ≤ 4/255 and ≤ 6% of pixels off by more
+// Bands (provisional, §4): mean |Δ| ≤ 4/255 and ≤ 6% of pixels off by more
 // than 32. Failing crops are written out in pairs.
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -31,9 +32,9 @@ import { chromium } from './agent-launch.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const MEAN = 4, OFF = 0.06, BAND = 32, SLOP = 1, STEPS = 4;
 const BACKDROPS = { light: [255, 255, 255], dark: [0, 0, 0] };
-// Text is held to a text band where the host's rasterizer is not Chrome's:
-// on Linux SVG's Linux text band (unhinted outlines);
-// on Apple a declared band, because Core Graphics
+// Text is held to a text band where the host's rasterizer is not Chrome's
+// (LLP 1056 §4, §8.2): on Linux SVG's Linux text band (unhinted outlines);
+// on Apple a declared band (Charlie, 2026-09-27), because Core Graphics
 // strokes glyph outlines with more ink than Skia's glyph masks carry.
 const TEXT = /^fx-text/;
 const limits = (host, id) => (!TEXT.test(id) ? undefined
@@ -77,7 +78,7 @@ async function capture(open, host, dir, check, env) {
   }
 }
 
-/** `state` and `tree` against what the fixtures must have done (the probes, 4. above). */
+/** `state` and `tree` against what the fixtures must have done (§4's probes). */
 async function probe(s, host, step, check) {
   const [state, tree] = [await s.state(), await s.tree()];
   const ids = new Map(tree.nodes.filter((n) => n.props?.testId?.startsWith('fx-')).map((n) => [n.id, n.props.testId]));
@@ -138,7 +139,7 @@ function webBuild(app) {
   const dist = resolve(ROOT, 'target/web-dist-js', app);
   if (process.env.EXACT_CANVAS_REBUILD === '1' || !existsSync(resolve(dist, '.exact-build.json'))) {
     mkdirSync(dirname(dist), { recursive: true });
-    // The web the app ships (the JS target), whose replay is the web host's own glue.
+    // The web the app ships (LLP 1071: the JS target), whose replay is the web host's own glue.
     const b = spawnSync('bun', [resolve(ROOT, 'host/web/build.mjs'), `${app}-web`, '--js'], { cwd: ROOT, env: { ...process.env, EXACT_WEB_DIST: dist }, stdio: 'inherit' });
     if (b.status !== 0) throw new Error(`the ${app} web build failed`);
   }

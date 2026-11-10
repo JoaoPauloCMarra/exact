@@ -37,7 +37,7 @@ impl<D: DataSource> Presenter<D> {
             if node.props.str(PropId::ReorderFor).is_some() {
                 let binding = self.host.runner().reorder_binding(key)?;
                 self.arrange_mapping(binding)?;
-                // A grouped list's row lifts as a ghost.
+                // A grouped list's row lifts as a ghost (LLP 1094 D6).
                 if self.group_of(&binding).is_some() {
                     return Some(Candidate::Group(binding));
                 }
@@ -393,7 +393,7 @@ impl<D: DataSource> Presenter<D> {
     }
     /// Existing display pump demand: held-only Arrange is quiescent except when
     /// the pointer's edge zone can advance this actual clamped scrollport; a
-    /// frame task wants every frame.
+    /// frame task wants every frame (LLP 1073 D5).
     /// Advance the host clock on a due `wake_due_ms()` before asking: a
     /// sleeping step is demand only once that clock has reached its edge.
     pub fn needs_animation_frame(&self) -> bool {

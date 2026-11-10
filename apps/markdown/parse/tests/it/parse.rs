@@ -1,5 +1,5 @@
 //! What the parser must get right, checked against the corpus it exists to
-//! read: this repository's own Markdown.
+//! read: this repository's own Markdown. @ref LLP 1033
 
 use markdown_parse::{parse, plain, Kind};
 

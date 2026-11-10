@@ -4,16 +4,17 @@ import XCTest
 @testable import ExactKit
 import ExactGroupedLists
 
-/// A large title collapses with its route's content scroll view (the
-/// fixture's Second tab, which names no scroller). CSS `scrollTop` counts
-/// from the scrollport's top, which under the bar is the bar's bottom
-/// whatever its height — UIKit keeps the offset plus that inset fixed as
-/// the title collapses — so an authored offset lands where the browser's
-/// does (0, 80, the middle, the end of what shows). At rest, CSS 0, the title
-/// is expanded; an authored 0 after a collapse lands at 0 under the bar as it
-/// is, and the title expands when the user pulls. Gestures (a finger's
-/// collapse, pull to top, a held sheet) need real touches, which a unit test
-/// has none of.
+/// LLP 1075.003 Stage 3: a large title collapses with its route's content
+/// scroll view (the fixture's Second tab, which names no scroller: LLP
+/// 1115.000 D11.1). CSS `scrollTop` counts from the
+/// scrollport's top, which under the bar is the bar's bottom whatever its
+/// height — UIKit keeps the offset plus that inset fixed as the title
+/// collapses — so an authored offset lands where the browser's does (0, 80,
+/// the middle, the end of what shows). At rest, CSS 0, the title is
+/// expanded; an authored 0 after a collapse lands at 0 under the bar as it
+/// is, and the title expands when the user pulls.
+/// Gestures (a finger's collapse, pull to top, a held sheet) need real
+/// touches, which a unit test has none of.
 final class NavigationCollapseIOSTests: XCTestCase {
     private var window: UIWindow?
     private var sessions: [ExactSession] = []
@@ -225,7 +226,7 @@ final class NavigationCollapseIOSTests: XCTestCase {
         XCTAssertEqual(home.scrollOrigin, 0, "CSS scrollTop 0 is the top edge")
     }
 
-    /// Over `scripts/fixtures/large-title.contract`: one
+    /// LLP 1115.000 D11.1 over `scripts/fixtures/large-title.contract`: one
     /// stack with no tabs, the shape `exact new` makes, whose first screen
     /// names no scroller. Its large title opens expanded, its content below
     /// it, and collapses as the content scrolls. UIKit shows the title
@@ -252,7 +253,7 @@ final class NavigationCollapseIOSTests: XCTestCase {
     /// The agent's `tap <scroller> drag 0 -900` to the end under an expanded
     /// large title rests at the end, as a finger's drag does once its bounce
     /// settles: UIKit adds the collapsing title's height to the offset, which
-    /// left the content that far past its end (52 points on a settings screen).
+    /// left the content that far past its end (euxy's Settings, 52 points).
     func testAnAgentDragToTheEndUnderALargeTitleRestsAtTheEnd() throws {
         let session = try booted("EXACT_LARGE_TITLE_PLAN", label: "large-title-drag", beforeItsWindow: true)
         let home = try node(session, "home-scroll"), sv = try XCTUnwrap(home.scroll)
@@ -319,7 +320,7 @@ final class NavigationCollapseIOSTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(pull["scrolledBy"] as? [Double])[1], -300, accuracy: 0.5, "the content moved back by the 300 it went")
     }
 
-    /// The agent's drag pulls to refresh as a finger does. A
+    /// LLP 1054 A4: the agent's drag pulls to refresh as a finger does. A
     /// real touch's 200 points past the top refreshed, 180 did not (iOS 27).
     func testTheAgentsDragPullsToRefreshAsAFingerDoes() throws {
         let session = try booted("EXACT_PULL_REFRESH_PLAN", label: "pull-refresh")
@@ -368,7 +369,7 @@ final class NavigationCollapseIOSTests: XCTestCase {
         XCTAssertEqual(by[1], 300, accuracy: 0.5, "the drag's 300, not the title's height besides")
     }
 
-    /// A route that names no scroller has one all the
+    /// LLP 1115.000 D11.1: a route that names no scroller has one all the
     /// same, its first that scrolls vertically, as a hand-built screen's
     /// scroll view is its bar's with nothing written. Right after the header
     /// the bar replaces, it goes under the bar, which insets it, and the
@@ -397,8 +398,8 @@ final class NavigationCollapseIOSTests: XCTestCase {
 
     /// Under a `viewport-fit="cover"` root a route's scroller spans the
     /// window, side insets included. UIKit insets it at its top and bottom
-    /// only, so its content, as wide as it, has no sideways range;
-    /// `.always` added the side inset too, and it scrolled sideways by it.
+    /// only, so its content, as wide as it, has no sideways range (LLP 1123
+    /// D3); `.always` added the side inset too, and it scrolled sideways by it.
     func testUnderACoverRootTheBarsScrollerHasNoSidewaysRange() throws {
         let session = try booted("EXACT_COVER_SCROLL_PLAN", label: "cover-scroll")
         let sv = try XCTUnwrap(try node(session, "home-scroll").scroll)
@@ -444,7 +445,7 @@ final class NavigationCollapseIOSTests: XCTestCase {
         }
     }
 
-    /// Several scrollers: the bar's is the one the status bar's tap
+    /// D11.1, several scrollers: the bar's is the one the status bar's tap
     /// already picked, the first that scrolls vertically, by one rule for
     /// both; `navigationScroll` is how a route names a different one.
     func testWithSeveralScrollersTheBarsIsTheStatusBarsAndARouteMayNameAnother() throws {
@@ -464,13 +465,13 @@ final class NavigationCollapseIOSTests: XCTestCase {
         XCTAssertNil(route.collapseScroll, "it is not at the route's top, so the title keeps still, as before")
     }
 
-    /// No header: a pushed route whose bar holds the system Back
+    /// D11.1, no header: a pushed route whose bar holds the system Back
     /// alone runs its scroller under that bar too.
     func testAHeaderlessRoutesScrollerRunsUnderTheBackOnlyBar() throws {
         let (session, nav, route) = try pushed("bare")
         let bare = try node(session, "bare-scroll")
         let sv = try XCTUnwrap(bare.scroll)
-        XCTAssertFalse(nav.isNavigationBarHidden, "the bar with Back alone")
+        XCTAssertFalse(nav.isNavigationBarHidden, "the bar with Back alone (D5.2)")
         XCTAssertTrue(route.collapseScroll === bare)
         XCTAssertEqual(bare.convert(bare.bounds, to: nil).minY, 0, accuracy: 0.5, "under the bar")
         let top = try node(session, "bare-top"), bar = nav.navigationBar
@@ -483,7 +484,7 @@ final class NavigationCollapseIOSTests: XCTestCase {
         let node = try self.node(session, "list-second")
         let sv = try XCTUnwrap(node.scroll)
         spin(0.3)
-        // Second names no scroller, and its large title
+        // LLP 1115.000 D11.1: Second names no scroller, and its large title
         // collapses with the one right after its header all the same.
         let route = try XCTUnwrap(nav.topViewController as? RouteController)
         XCTAssertEqual(route.node.props["navigationScroll"] ?? "", "", "the route names nothing")
@@ -517,8 +518,8 @@ final class NavigationCollapseIOSTests: XCTestCase {
     }
 
     /// A scroller replaced in place by a taller one, then a shorter one, as
-    /// a quiz's results replace its question (otherwise the results
-    /// open scrolled by the bar, their score and Play Again under it).
+    /// a quiz's results replace its question (bake-off round 3: the results
+    /// opened scrolled by the bar, their score and Play Again under it).
     /// UIKit insets a new scroller from the offset it had, 0, which leaves
     /// its content's top under the bar; each opens at its top instead, just
     /// below the bar. The bar stays as the page before left it, its title

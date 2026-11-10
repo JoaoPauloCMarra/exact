@@ -1,4 +1,4 @@
-//! The backend's guarantees: moves are the host's,
+//! The backend's guarantees (LLP 1133.010 D4, D6): moves are the host's,
 //! each recorded before it begins, a half-done one resolves toward locked at
 //! the next boot, and one queue per name orders every operation.
 

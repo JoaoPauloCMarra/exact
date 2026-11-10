@@ -1,4 +1,5 @@
-//! An import checked against the design it lands in: the tokens it adds or sets are laid into the design as
+//! An import checked against the design it lands in (LLP 1121 D14, after
+//! stage 6 H): the tokens it adds or sets are laid into the design as
 //! `reconcile` writes them (a set default, a set or added `when`, a `when` on
 //! the importer's own axes it no longer gives taken out), and the design
 //! folded. A token the design has of another kind is refused before that,

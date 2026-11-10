@@ -1,4 +1,4 @@
-// `tamber tool --via` while the dev loop starts: no
+// `tamber tool --via` while the dev loop starts (the design tool's third hands-on pass, #9; theme2's 21:06 ruling): no
 // answer yet (refused: the loop on its first build; or its hello held: its design server starting) is waited for,
 // saying why once per reason, up to the cap (EXACT_TAMBER_VIA_WAIT_MS under the test switch); an answer that is
 // another app's fails at once. The loop here is a stub answering the token and hello as a design server does. The

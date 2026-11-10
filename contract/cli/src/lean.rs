@@ -244,7 +244,7 @@ impl Emitter<'_> {
         let _ = writeln!(o, "  fns := {},", self.fns_list()?);
         let owners = &self.checked.expanded.owners;
         let mut states = Vec::new();
-        // The resolved locale's slot, when the app has strings
+        // The resolved locale's slot (LLP 1060 D4), when the app has strings
         // tables: initialized before every other, to the base locale; after
         // the router's, which the expander puts first and boot fills from
         // the launch, not an initializer.
@@ -260,7 +260,7 @@ impl Emitter<'_> {
                 Some(contract_syntax::Owner::Instance) => (".none".into(), true),
                 Some(contract_syntax::Owner::Root) | None => (".none".into(), false),
             };
-            // A persisted root state says so; the rest keep
+            // A persisted root state (LLP 1116 D5) says so; the rest keep
             // the default, so an embedding without one reads as before.
             let persist = matches!(owners.get(i), Some(contract_syntax::Owner::Root) | None)
                 && root.persists(&s.name);
@@ -367,7 +367,7 @@ impl Emitter<'_> {
         let mut todo: Vec<String> = quoted_after(body, ".record \"");
         for name in quoted_after(body, ".call \"") {
             if name == "failure" {
-                // `failure(x)` answers the compiler's `Failure`.
+                // `failure(x)` answers the compiler's `Failure` (LLP 1109 D3).
                 todo.push("Failure".into());
             }
             if let Some(f) = exact_plan::Stdlib::from_name(&name) {
@@ -448,7 +448,7 @@ impl Emitter<'_> {
     ) -> Result<String, CompileError> {
         let mut resources = Vec::new();
         for (i, r) in root.resources.iter().enumerate() {
-            // Over a list: its element's name, list and key.
+            // Over a list (LLP 1017.000 P4c): its element's name, list and key.
             let each = match &r.each {
                 Some(e) => format!(
                     ", each := .some {{ item := {}, list := {}, key := {} }}",
@@ -470,7 +470,7 @@ impl Emitter<'_> {
             ));
         }
         // A declared placeholder is a resource row of its own, after every
-        // authored row, its arguments read in no scope;
+        // authored row, its arguments read in no scope (LLP 1048.003 D6);
         // `empty(…)` rides its resource's row and adds none.
         for (i, r) in root.resources.iter().enumerate() {
             let Some(p) = &r.placeholder else { continue };
@@ -499,7 +499,7 @@ impl Emitter<'_> {
                     Some((a, _)) => format!(".some {}", string(a)),
                     None => ".none".into(),
                 };
-                // `queue` only where declared: the embedding
+                // `queue` (LLP 1092 D1) only where declared: the embedding
                 // of every other program is as it was.
                 let queue = if m.queue { ", queue := true" } else { "" };
                 format!(
@@ -550,7 +550,7 @@ impl Emitter<'_> {
                 TaskKind::After => ".after",
                 TaskKind::Frame => ".frame",
             };
-            // A gated task's gate and key, as lowering gives them.
+            // A gated task's gate and key (LLP 1092 D12), as D9 lowers them.
             let mut gate = String::new();
             if let Some(g) = &t.gate {
                 gate += &format!(", gate := .some ({})", self.expr(g)?);
@@ -584,7 +584,7 @@ impl Emitter<'_> {
         Ok(format!("[{}]", tasks.join(",\n    ")))
     }
 
-    /// The checked route table.
+    /// The checked route table (LLP 1038 D2).
     fn routes_list(&self) -> String {
         let routes: Vec<String> = self
             .checked
@@ -694,7 +694,7 @@ impl Emitter<'_> {
                     .map(|a| self.expr(a))
                     .collect::<Result<Vec<_>, _>>()?;
                 // A roster call may leave its trailing optional parameters
-                // out; the semantics takes the full arity, so
+                // out (LLP 1088 D2); the semantics takes the full arity, so
                 // their defaults are written here as lowering writes them.
                 // No `fn` takes a roster name, and the semantics evaluates
                 // no action in an expression.
@@ -826,9 +826,10 @@ impl Emitter<'_> {
                 list(args, |a| self.expr(a))?
             ),
             Stmt::Refresh { target, .. } => format!("(.refresh {})", string(target)),
-            // A call by its callee's name and whole argument list, never the
-            // body the Rust compiler expanded: the semantics gives the call
-            // its own meaning, so difftest checks the expansion against it.
+            // A call by its callee's name and whole argument list (LLP 1089
+            // D9), never the body the Rust compiler expanded: the semantics
+            // gives the call its own meaning, so difftest checks the
+            // expansion against it.
             Stmt::Call { action, args, .. } => format!(
                 "(.call {} {})",
                 string(action),

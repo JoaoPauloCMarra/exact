@@ -1,7 +1,7 @@
-// On the Mac a template-path icon (an image node with a `symbolPath`, no
-// SF Symbol) is filled as its paths at the node's own fractional frame,
-// not drawn by an NSImageView resampling a template image off the pixel
-// grid.
+// LLP 1121 stage 14 C1 (theme2's 07:01 and 07:02 rulings): on the Mac a
+// template-path icon (an image node with a `symbolPath`, no SF Symbol) is
+// filled as its paths at the node's own fractional frame, not drawn by an
+// NSImageView resampling a template image off the pixel grid.
 //   bun host/apple/build.mjs --test
 //   cd host/apple && EXACT_CONTRACT=$PWD/../../target/debug/contract xcrun xctest -XCTest ExactKitTests.IconShapeMacTests <bundle>
 #if os(macOS)
@@ -40,7 +40,7 @@ final class IconShapeMacTests: XCTestCase {
     /// path is filled on its own and the flag says which way up it is.
     private static let ring: Icon = [circle(12, 12, 9) + circle(12, 12, 5.5, reversed: true),
                                      rect(10.3, 1.2, 3.4, 21.6) + [.m(16, 2), .l(22, 2), .l(22, 8), .z]]
-    /// The same glyph, even-odd: the ring's hole wound the same way, so
+    /// Stage 14 C2's glyph, even-odd: the ring's hole wound the same way, so
     /// only the even-odd rule leaves it clear, beside the same bar and flag.
     private static let evenRing: Icon = [circle(12, 12, 9) + circle(12, 12, 5.5),
                                          rect(10.3, 1.2, 3.4, 21.6) + [.m(16, 2), .l(22, 2), .l(22, 8), .z]]
@@ -148,7 +148,7 @@ final class IconShapeMacTests: XCTestCase {
         return render(page, scale: scale)
     }
 
-    // MARK: Checks (edge rule, centroid, spread, coverage)
+    // MARK: theme2's checks (05:12 edge rule, 05:15 centroid, spread, coverage)
 
     private struct Measure: CustomStringConvertible {
         var differing = 0, fringe = 0, outside = 0
@@ -255,7 +255,7 @@ final class IconShapeMacTests: XCTestCase {
         }
     }
 
-    /// An even-odd icon (`symbolFillRule`) fills each path
+    /// Stage 14 C2: an even-odd icon (`symbolFillRule`) fills each path
     /// even-odd at its frame, at the six origins at 1x and 2x, against the
     /// independent reference filled even-odd: identical at a whole-pixel
     /// origin, the checks at a fractional one. Filled nonzero, its hole is
@@ -432,7 +432,7 @@ final class IconShapeMacTests: XCTestCase {
         XCTAssertTrue(node.symbolFound)
     }
 
-    // MARK: Tint, gutters and corners
+    // MARK: Round 1
 
     /// Coverage of a whole-pixel 1x render at (x, y) points.
     private func alpha(_ a: [UInt8], _ x: Int, _ y: Int) -> Int { Int(a[y * Int(canvas.width) + x]) }
@@ -460,7 +460,7 @@ final class IconShapeMacTests: XCTestCase {
             XCTAssertEqual(leaf.shapes.first?.fillColor?.alpha, 1, "\(name): each path is filled opaque")
             let host = render(try XCTUnwrap(p.views[1]), scale: 1)
             let overlap = alpha(host, 12 + 11, 12 + 11), single = alpha(host, 12 + 4, 12 + 4), other = alpha(host, 12 + 17, 12 + 17)
-            print("icon \(name): opacity \(opacity), overlap \(overlap), first only \(single), second only \(other)")
+            print("C1 r1 \(name): opacity \(opacity), overlap \(overlap), first only \(single), second only \(other)")
             XCTAssertEqual(overlap, Int((expected * 255).rounded()), accuracy: 1, "\(name): inked at the tint's alpha")
             XCTAssertGreaterThan(single, 0, "\(name): ink is drawn"); XCTAssertGreaterThan(other, 0)
             XCTAssertEqual(overlap, single, "\(name): the overlap is no darker")
@@ -475,7 +475,7 @@ final class IconShapeMacTests: XCTestCase {
             let data = try XCTUnwrap(ctx.data).assumingMemoryBound(to: UInt8.self)
             var worst = 0
             for i in 0..<(w * h) { worst = max(worst, abs(Int(host[i]) - Int(data[i * 4 + 3]))) }
-            print("icon \(name): worst alpha difference from the union filled once: \(worst)")
+            print("C1 r1 \(name): worst alpha difference from the union filled once: \(worst)")
             XCTAssertLessThanOrEqual(worst, 1, "\(name): the union filled once at that alpha")
             p.reset()
         }
@@ -492,7 +492,7 @@ final class IconShapeMacTests: XCTestCase {
         for y in 12..<36 { for x in 0..<48 {
             if x < 12 || x >= 36 { gutter = max(gutter, alpha(host, x, y)) } else { square = max(square, alpha(host, x, y)) }
         } }
-        print("icon gutters: most ink in the gutters \(gutter), in the square \(square)")
+        print("C1 r1 gutters: most ink in the gutters \(gutter), in the square \(square)")
         XCTAssertEqual(gutter, 0, "the gutters stay empty")
         XCTAssertEqual(square, 255, "the bar inks the square")
         XCTAssertEqual(alpha(host, 12, 24), 255, "from its left edge")
@@ -516,7 +516,7 @@ final class IconShapeMacTests: XCTestCase {
                 let want = (12..<18).contains(x) && (12..<18).contains(y) ? 255 : 0
                 if alpha(host, x, y) != want { wrong.append("(\(x),\(y))=\(alpha(host, x, y))") }
             } }
-            print("icon corner in \(box): \(wrong.count) pixels off")
+            print("C1 r2 corner in \(box): \(wrong.count) pixels off")
             XCTAssertEqual(wrong, [], "\(box): ink exactly at (12,12)-(18,18)")
             p.reset()
         }

@@ -1,4 +1,4 @@
-//! A task's schedule and, for a gated task, its gate and
+//! A task's schedule and, for a gated task (LLP 1092 D7, D9), its gate and
 //! key: `when` takes a bool, and a key is a string, number or bool, as a
 //! `for` key is.
 
@@ -41,7 +41,7 @@ pub(crate) fn check_tasks(c: &Component, scope: &Scope, shapes: &Shapes, sink: &
 }
 
 /// A gate takes a bool, and a key is a string, number or bool, as a `for`
-/// key is: a task's, and a sequence's.
+/// key is: a task's, and a sequence's (LLP 1125 D2).
 pub(crate) fn check_gate(
     gate: Option<&Expr>,
     key: Option<&Expr>,

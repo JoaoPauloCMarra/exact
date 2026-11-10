@@ -1,5 +1,5 @@
-//! The base scale on the Linux desktop and Android's reader,
-//! through each one's own column switch: the desktop paints the
+//! The base scale on the Linux desktop and Android's reader (LLP 1121 stage
+//! 11 B2), through each one's own column switch: the desktop paints the
 //! neutral look (`show_neutral_look`, the role table's switch), the reader
 //! Material (`show_material_look`, the metrics' column). A base name reads
 //! that column's cell of the kernel's table. One test: the switches are the

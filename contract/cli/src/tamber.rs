@@ -1,8 +1,8 @@
-//! `contract tamber check | eval | ir` — an app's design on its own: the file
-//! the compiler reads (`app.json`'s `"tamber"`, else `app.tamber` beside
-//! `app.contract`), checked against the schema's roles by the build's one
-//! evaluator (`exact-tamber`), its tokens in one app tuple, or its IR
-//! (`tamber.json`, generated and never committed).
+//! `contract tamber check | eval | ir` — an app's design on its own (LLP
+//! 1121 D2): the file the compiler reads (`app.json`'s `"tamber"`, else
+//! `app.tamber` beside `app.contract`), checked against the schema's roles
+//! by the build's one evaluator (`exact-tamber`), its tokens in one app tuple,
+//! or its IR (`tamber.json`, generated and never committed).
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -90,7 +90,7 @@ pub fn run(args: &[String]) -> ExitCode {
         eprintln!("{USAGE}");
         return ExitCode::from(2);
     }
-    // The app's components' params fold with its design; an
+    // The app's components' params (LLP 1121 D15) fold with its design; an
     // app with params and no design has them alone. A design named apart
     // (a `.tamber` the app does not build) is checked alone.
     let canonical = |p: &Path| p.canonicalize().unwrap_or_else(|_| p.to_path_buf());
@@ -111,7 +111,7 @@ pub fn run(args: &[String]) -> ExitCode {
                 return ExitCode::from(2);
             }
         },
-        // Params or packages' designs and no design of its own: theirs alone.
+        // Params or packages' designs (LLP 1121 D11) and no design of its own: theirs alone.
         None if app.inline && !app.packages.is_empty() && verb != "fmt" => {
             eprintln!("contract tamber: {input}'s tokens are an inline `theme`, which `contract tamber` doesn't fold with its packages' designs; `contract build` checks them");
             return ExitCode::from(2);
@@ -131,7 +131,7 @@ pub fn run(args: &[String]) -> ExitCode {
     if verb == "fmt" {
         return fmt(&path, &src, !rest.is_empty());
     }
-    // Its params and its packages' tokens laid in, as the build lays them.
+    // Its params and its packages' tokens (LLP 1121 D11) laid in, as the build lays them.
     let folded = match (params.is_empty(), app.packages.is_empty()) {
         (true, true) => exact_tamber::check(&src, &contract_lower::tamber_vocab()),
         // With packages: what the build refuses of them too (`fold_with`).
@@ -153,7 +153,7 @@ pub fn run(args: &[String]) -> ExitCode {
                 eprintln!("{}", contract::tamber_params::located(d, &app, &path));
             }
             // A profile's colour is the compiler's to resolve, with the
-            // declarations in the app's Contract.
+            // declarations in the app's Contract (LLP 1100 D3).
             let lines: Vec<&str> = src.lines().collect();
             let profiled = |d: &exact_tamber::Diagnostic| {
                 lines
@@ -172,7 +172,7 @@ pub fn run(args: &[String]) -> ExitCode {
     // An app with params is built itself, as it builds its design; so is
     // one whose Contract did not load (its params are unknown), so the
     // build says why.
-    // An app with params or package designs is admitted by its own build.
+    // An app with params or package designs (LLP 1121 D11) is admitted by its own build.
     // The app's `assets/`, where its build reads its icons' SVGs: beside its
     // app.contract, or beside a design checked apart from any app.
     // A design checked by its own path whose app is a directory above it
@@ -213,12 +213,12 @@ pub fn run(args: &[String]) -> ExitCode {
     }
     match (verb, rest) {
         ("check", []) => {
-            // The author's information, never a refusal.
+            // The author's information, never a refusal (LLP 1121 D3).
             for w in &folding.warnings {
                 eprintln!("{}", contract::tamber_params::located(w, &app, &path));
             }
             let design = &folding.design;
-            // A param is its component's, counted apart.
+            // A param is its component's, counted apart (D15).
             let tokens =
                 folding.tokens.len() - params.iter().filter(|p| p.param.kind != "icon").count();
             let counted = match params.len() {
@@ -260,8 +260,8 @@ pub fn run(args: &[String]) -> ExitCode {
 }
 
 /// Each SVG the build reads for `folding`'s icons, where it reads it: under
-/// the assets of the root whose file writes it (a package's under its root),
-/// by its path there. `home` is the app's directory.
+/// the assets of the root whose file writes it (a package's under its root,
+/// stage 13), by its path there. `home` is the app's directory.
 pub(crate) fn svgs<'f>(
     folding: &'f exact_tamber::Folding,
     home: Option<&Path>,
@@ -273,7 +273,7 @@ pub(crate) fn svgs<'f>(
         .filter_map(|i| {
             let svg = i.svg.as_deref()?;
             let at = contract_lower::icons::Home::of(i, home, &app.packages, &app.tokens);
-            // A package's read as the build reads it: one that leaves it is
+            // A package's read as the build reads it (round 3, R3-4): one that leaves it is
             // not copied, and is refused as the build refuses it.
             let root = at.package.and(at.root).map(Path::to_path_buf);
             Some((at.svg(svg)?, svg, root))
@@ -408,7 +408,7 @@ fn eval(folding: &exact_tamber::Folding, modes: &str) -> ExitCode {
         eprintln!("contract tamber eval: `{modes}` names an axis or value the design lacks");
         return ExitCode::from(2);
     };
-    // A param is read by its full name, in `ir`'s `components`.
+    // A param is read by its full name, in `ir`'s `components` (D15).
     let tokens = folding
         .tokens
         .iter()
@@ -421,7 +421,7 @@ fn eval(folding: &exact_tamber::Folding, modes: &str) -> ExitCode {
     ExitCode::SUCCESS
 }
 
-/// `tamber fmt`: the design in its canonical layout, written
+/// `tamber fmt` (LLP 1121 §3): the design in its canonical layout, written
 /// in place; with `check`, nothing written and exit 1 where it would change.
 fn fmt(path: &Path, src: &str, check: bool) -> ExitCode {
     let formatted = match exact_tamber::format(src) {
@@ -452,10 +452,10 @@ fn fmt(path: &Path, src: &str, check: bool) -> ExitCode {
     }
 }
 
-/// The design's IR, with its app's components' params when it declares any,
-/// or uses an exported library component (its parts and variants): under
-/// `components` by full name, never among the tokens by their names below
-/// the IR.
+/// The design's IR, with its app's components' params (LLP 1121 D15) when
+/// it declares any, or uses an exported library component (its parts and
+/// variants, stage 12 D3): under `components` by full name, never among the
+/// tokens by their names below the IR.
 fn ir(
     src: &str,
     app: &contract::tamber_params::AppParams,
@@ -467,7 +467,7 @@ fn ir(
     let Ok(mut ir) = serde_json::from_str::<serde_json::Value>(&folding.ir()) else {
         return folding.ir();
     };
-    // (as `describe` lists them: a library component with no params too)
+    // (as `describe` lists them: a library component with no params too, stage 12 D3)
     if !app.tokens.is_empty() || app.library.iter().any(|(_, _, d)| d.library) {
         contract::tamber_params::hide(&mut ir);
         let design = exact_tamber::parse(src).ok();
@@ -477,7 +477,7 @@ fn ir(
             &contract_lower::tamber_vocab(),
         );
     }
-    // Parts and variants, in the IR file only.
+    // Parts and variants, in the IR file only (LLP 1139 D5; theme2's Q2).
     if !app.library.is_empty() {
         ir["library"] =
             contract::tamber_params::library(app, exact_tamber::parse(src).ok().as_ref());

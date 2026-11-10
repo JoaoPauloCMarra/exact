@@ -1,12 +1,12 @@
-//! A read of a slot its own action assigned before
+//! @ref LLP 1116.003 D6 — a read of a slot its own action assigned before
 //! it is warned of.
 //!
 //! Every statement of an action reads the state the action started with,
-//! and its assignments land together when it ends: after
+//! and its assignments land together when it ends (LLP 1089 D2): after
 //! `now = performanceNow()`, `if now >= endsAt` tests the last tick's time.
 //! It is on the page, unlike a read behind a call (`calls.rs`, the same
-//! rule's other frame), yet it is easy to write expecting the new value.
-//! It is a
+//! rule's other frame since LLP 1035.005.002 C2), yet five builds in the
+//! bake-off's rounds 4 and 5 wrote it expecting the new value. It is a
 //! warning, not a refusal: a swap, `a = b` then `b = a`, means it.
 //!
 //! The walk is the action's own frame, path-sensitive as `calls.rs`'s: an

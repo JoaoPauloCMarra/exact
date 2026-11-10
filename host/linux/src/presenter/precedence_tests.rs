@@ -1,4 +1,4 @@
-//! Gesture precedence on Linux: candidates innermost first, then by rank; the
+//! LLP 1057.001 §1 on Linux: candidates innermost first, then by rank; the
 //! first whose axis rule accepts at the slop begins, and nothing after it.
 use super::super::*;
 
@@ -59,7 +59,7 @@ fn a_refusing_inner_swipe_falls_to_the_ancestor_pan() {
     assert_eq!(out(&p), "0 20", "a vertical drag is the column's pan");
 }
 
-/// A card that pans with a button inside it: a drag that starts on
+/// A card that pans with a button inside it (kanban F6): a drag that starts on
 /// the button is the card's once it passes the slop, and takes the press; a
 /// tap on the button still presses it.
 #[test]

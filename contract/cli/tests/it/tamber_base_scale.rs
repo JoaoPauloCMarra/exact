@@ -1,7 +1,8 @@
-//! The base scale's nine names: a view reads one with no design defining it
-//! (the compiler knows the names, the kernel reads its column's length), the
-//! plan keeps nothing for it, an app's own definition wins and must be a
-//! length, and a base name is never an app axis's inherited-row refusal.
+//! @ref LLP 1121 stage 11 B — the base scale's nine names: a view reads one
+//! with no design defining it (the compiler knows the names, the kernel
+//! reads its column's length), the plan keeps nothing for it, an app's own
+//! definition wins and must be a length, and a base name is never an app
+//! axis's inherited-row refusal.
 
 use exact_kernel::style::{metrics::Column, scale};
 use exact_kernel::{Kernel, StyleId};
@@ -122,7 +123,7 @@ fn an_app_definition_of_a_base_name_is_a_length() {
     for (name, design) in [
         ("colour", "tamber t\n\ntheme\n  space.md = #ff0000\n"),
         ("number", "tamber t\n\ntheme\n  radius.md: number = 4\n"),
-        // An icon under a base name. (A dial's name is an
+        // Round 1 (Astra 2): an icon under a base name. (A dial's name is an
         // identifier, so none can be one.)
         (
             "icon",
@@ -170,10 +171,11 @@ fn a_base_name_in_an_inherited_row_is_no_axis_refusal_and_a_wrong_row_is_refused
     .is_err());
 }
 
-/// A bare base name the design leaves unset is an alias
-/// (`contract/cli/tests/base_alias.rs`), an expression over one is kept for
-/// each host (`tests/it/tamber_base_expression.rs`), and over one the design
-/// sets it is its token's expression, as any.
+/// Round 1 (theme2's (a)), widened by stage 12 B2: a bare base name the
+/// design leaves unset is an alias (`contract/cli/tests/base_alias.rs`), an
+/// expression over one is kept for each host
+/// (`tests/it/tamber_base_expression.rs`), and over one the design sets it
+/// is its token's expression, as any.
 #[test]
 fn an_expression_over_a_base_name_the_design_sets_folds() {
     let view = "component App\n  view\n    column padding=\"card.pad\"\n      text \"a\"\n";
@@ -196,9 +198,9 @@ fn an_expression_over_a_base_name_the_design_sets_folds() {
     assert_eq!(plan.str(token.value), "24px");
 }
 
-/// Outside Exact (the DTCG export) an alias to a base name the design leaves
-/// unset writes the neutral column's px, from the kernel's table, never an
-/// invented 1px; the base name is the source it keeps.
+/// Round 2 (Astra 2): outside Exact (the DTCG export) an alias to a base name
+/// the design leaves unset writes the neutral column's px, from the kernel's
+/// table, never an invented 1px; the base name is the source it keeps.
 #[test]
 fn an_alias_to_a_base_name_exports_the_neutral_columns_length() {
     use exact_kernel::style::{metrics::Column, scale};
@@ -222,9 +224,9 @@ fn an_alias_to_a_base_name_exports_the_neutral_columns_length() {
     assert_eq!(light["pill"]["$value"], px(scale::RADIUS_FULL), "{text}");
 }
 
-/// A base name misdeclared beside another refusal is said at once: beside an
-/// icon's refusal, and where the checker refused another token (its kind
-/// written or inferred).
+/// Round 3 (Grok): a base name misdeclared beside another refusal is said
+/// at once: beside an icon's refusal, and where the checker refused another
+/// token (its kind written or inferred, round 3's re-check).
 #[test]
 fn every_misdeclared_base_name_is_said_beside_other_refusals() {
     let vocab = contract_lower::tamber_vocab();

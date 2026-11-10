@@ -1,4 +1,4 @@
-// Pictures of a package's `img` scheme: a
+// Pictures of a package's `img` scheme (LLP 1133.019 D2, D11 item 1): a
 // source such as `photos:<id>`, whose scheme an interface declares
 // (`images`), is never opened as a file. The raster loader asks the runner
 // to admit it when a view loads it (a read: never a ticket), and a refusal
@@ -114,7 +114,7 @@ private let packageImageDone: @convention(c) (UnsafeMutableRawPointer?, UnsafeMu
 
 extension NodeView {
     /// A revoked picture leaves the view: its raster goes, and the box is
-    /// drawn empty, as no failed load of an ordinary image does.
+    /// drawn empty (D2), as no failed load of an ordinary image does.
     func withdrawPicture() {
         raster = nil
         applyImageLayer()

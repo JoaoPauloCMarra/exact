@@ -42,7 +42,7 @@ test('storage locks queue and time out without retaining acquired ancestors', as
   } finally { await browser.close(); server.stop(true); }
 }, 60_000);
 
-// The worker's timers (passed to lockPaths from module-worker.js's closure): the only callback they
+// rt1's review of the worker's timers (passed to lockPaths from module-worker.js's closure): the only callback they
 // run is the lock's own abort, one per wait however many paths it takes, cleared when the wait ends, and its bound
 // is the lock's own, never longer than asked.
 test('a lock asks the timers it is given for its own bound alone, one per wait, cleared when it ends', async () => {

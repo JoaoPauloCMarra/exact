@@ -1,4 +1,4 @@
-//! The native ABI: what the presenter `dlopen`s.
+//! The native ABI: what the presenter `dlopen`s (LLP 1009 D2).
 //!
 //! One thread-local module; calls on the main thread. Strings are UTF-8
 //! bytes with lengths. The `unsafe` this module owns: the platform target
@@ -6,7 +6,7 @@
 //! it calls `destroy`) and the byte ranges a host hands over — each checked
 //! for a null pointer before it becomes a slice, every count checked for
 //! overflow in the module, so a confused host gets a refusal by name, never
-//! undefined behaviour (the ABI is the one `unsafe` boundary).
+//! undefined behaviour (LLP 1009 D2: the ABI is the one `unsafe` boundary).
 
 use crate::{json, Frame, Module, Registry};
 use std::cell::RefCell;
@@ -143,7 +143,7 @@ static PREPARED: (std::sync::Mutex<Prepared>, std::sync::Condvar) = (
 
 /// Create the device on a thread of its own, now, for the next [`load`]
 /// (which waits for it): a host starting up makes it while it boots, and
-/// the canvas's first frame does not. The device and queue are
+/// the canvas's first frame does not (LLP 1076). The device and queue are
 /// `Send`; the module itself stays on the thread that loads it.
 pub fn prepare() {
     {
@@ -262,7 +262,7 @@ pub unsafe fn create(name: &str, layer: *mut c_void, width: u32, height: u32) ->
     created.unwrap_or(0)
 }
 
-/// Off Apple there is no layer to present to yet: the module
+/// Off Apple there is no layer to present to yet (LLP 1015 §7): the module
 /// still loads, and a surface runs through [`crate::fixture`]; a canvas on a
 /// platform target is refused by name.
 ///
@@ -354,7 +354,7 @@ pub fn detach(id: u32) {
     with(|m| m.detach(id));
 }
 
-/// Register the text of shader `name`: validated, its
+/// Register the text of shader `name` (LLP 1030 D8): validated, its
 /// interface checked against the one this module's Rust binds. Returns 0 on
 /// success, 1 on a refusal (see [`error`]). The module must be loaded.
 pub fn shader(name: &str, text: &str) -> u32 {
@@ -399,7 +399,7 @@ pub fn bind_at(id: u32, values: &str, at_ms: Option<f64>) -> u32 {
     }
 }
 
-/// Record one frame into the tick's open frame; nothing is
+/// Record one frame into the tick's open frame (LLP 1009 D7); nothing is
 /// shown until [`flush`]. Returns 1 when the surface wants another frame, 0
 /// otherwise, 2 on failure, 3 when presentation has no device.
 pub fn render(id: u32, width: f32, height: f32, scale: f32, now_ms: f64) -> u32 {
@@ -422,8 +422,8 @@ pub fn render(id: u32, width: f32, height: f32, scale: f32, now_ms: f64) -> u32 
     }
 }
 
-/// Submit the tick's recorded frame once and present every canvas in it.
-/// 0 on success, 1 when a surface failed (see [`error`]).
+/// Submit the tick's recorded frame once and present every canvas in it
+/// (LLP 1009 D7). 0 on success, 1 when a surface failed (see [`error`]).
 pub fn flush() -> u32 {
     match with(|m| m.flush()) {
         Some(false) => 1,
@@ -431,13 +431,14 @@ pub fn flush() -> u32 {
     }
 }
 
-/// Whether a canvas's surface wants each child as its own texture.
+/// Whether a canvas's surface wants each child as its own texture (LLP
+/// 1014 D5).
 pub fn children_mode(id: u32) -> u32 {
     with(|m| m.children_mode(id).code()).unwrap_or(0)
 }
 
-/// The `index`th direct child of a canvas as pixels with its frame.
-/// 0 on success.
+/// The `index`th direct child of a canvas as pixels with its frame (LLP
+/// 1014 D5). 0 on success.
 pub fn child(
     id: u32,
     index: u32,
@@ -452,7 +453,7 @@ pub fn child(
     }
 }
 
-/// How many direct children a canvas has now. 0 on success.
+/// How many direct children a canvas has now (LLP 1014 D5). 0 on success.
 pub fn children_count(id: u32, count: u32) -> u32 {
     match with(|m| m.children_count(id, count as usize)) {
         Some(true) => 0,
@@ -461,12 +462,12 @@ pub fn children_count(id: u32, count: u32) -> u32 {
 }
 
 /// Where the surface put a child: the homography (nine floats, row major)
-/// then the depth; `None` when it is the kernel's frame.
+/// then the depth; `None` when it is the kernel's frame (LLP 1014 D5).
 pub fn placement(id: u32, index: u32) -> Option<crate::Placement> {
     with(|m| m.placement(id, index as usize)).flatten()
 }
 
-/// The canvas's children as pixels (`width`×`height` premultiplied
+/// The canvas's children as pixels (LLP 1014 D3) (`width`×`height` premultiplied
 /// RGBA). 0 on success.
 pub fn texture(id: u32, width: u32, height: u32, bytes: &[u8]) -> u32 {
     match with(|m| m.texture(id, width, height, bytes)) {
@@ -475,7 +476,7 @@ pub fn texture(id: u32, width: u32, height: u32, bytes: &[u8]) -> u32 {
     }
 }
 
-/// The module's GPU work complete. 0 on success.
+/// The module's GPU work complete (LLP 1008 §9). 0 on success.
 pub fn sync() -> u32 {
     match with(|m| m.sync()) {
         Some(true) => 0,
@@ -484,7 +485,7 @@ pub fn sync() -> u32 {
 }
 
 /// The canvas's children as a Metal texture the host rendered, imported as
-/// it is. 0 on success.
+/// it is (LLP 1008 §9). 0 on success.
 ///
 /// # Safety
 /// `raw` is a live `MTLTexture` of `width`×`height`, `rgba8Unorm`, kept
@@ -499,8 +500,8 @@ pub unsafe fn texture_from_metal(id: u32, width: u32, height: u32, raw: *mut c_v
 }
 
 /// A canvas's picture as pixels into `out` — `width`×`height` points at
-/// `scale`, RGBA rows top-down, `out` at least the pixel count × 4 (nested
-/// canvases). 0 on success, 2 on success when the surface wants
+/// `scale`, RGBA rows top-down, `out` at least the pixel count × 4 (LLP
+/// 1014, nested canvases). 0 on success, 2 on success when the surface wants
 /// another frame, 1 on failure, 3 when the device is unavailable.
 pub fn readback(id: u32, width: f32, height: f32, scale: f32, now_ms: f64, out: &mut [u8]) -> u32 {
     let frame = Frame {
@@ -582,12 +583,12 @@ pub fn window_detach() {
     with(|m| m.detach_window());
 }
 
-/// Whether a canvas draws above SDR white.
+/// Whether a canvas draws above SDR white (LLP 1100 D12b).
 pub fn high_dynamic_range(id: u32) -> bool {
     with(|m| m.high_dynamic_range(id)).unwrap_or(false)
 }
 
-/// The headroom an HDR canvas draws its next frames to.
+/// The headroom an HDR canvas draws its next frames to (LLP 1100 D12b).
 pub fn headroom(id: u32, headroom: f32) {
     with(|m| m.set_headroom(id, headroom));
 }
@@ -697,7 +698,7 @@ pub fn error() -> String {
     with(|m| m.take_error()).unwrap_or_default()
 }
 
-/// The exports for one app's registry, C ABI.
+/// The exports for one app's registry, C ABI (see LLP 1009 D2).
 #[macro_export]
 macro_rules! module {
     ($registry:expr) => {
@@ -862,7 +863,7 @@ macro_rules! module {
         }
 
         /// The `index`th direct child of a canvas: its frame in points and
-        /// `len` bytes of premultiplied RGBA, `width`×`height`.
+        /// `len` bytes of premultiplied RGBA, `width`×`height` (LLP 1014 D5).
         /// 0 on success.
         ///
         /// # Safety
@@ -875,13 +876,13 @@ macro_rules! module {
             $crate::native::child(id, index, name, [x, y, w, h], [width, height], bytes)
         }
 
-        /// How many direct children a canvas has now. 0 on success.
+        /// How many direct children a canvas has now (LLP 1014 D5). 0 on success.
         #[no_mangle]
         pub extern "C" fn gpu_children_count(id: u32, count: u32) -> u32 {
             $crate::native::children_count(id, count)
         }
 
-        /// Where the surface put a child: ten floats into
+        /// Where the surface put a child (LLP 1014 D5): ten floats into
         /// `out`, which is `len` floats long (at least ten) — the homography,
         /// row major, then the depth; 1 when placed, 0 when it is the
         /// kernel's frame or `out` cannot hold it; 2 means hidden, with `out` untouched.
@@ -911,7 +912,7 @@ macro_rules! module {
             }
         }
 
-        /// The canvas's children, painted: `len` bytes of premultiplied
+        /// The canvas's children, painted (LLP 1014 D3): `len` bytes of premultiplied
         /// RGBA, `width`×`height`, rows top-down. 0 on success.
         ///
         /// # Safety
@@ -923,14 +924,14 @@ macro_rules! module {
         }
 
         /// The module's GPU work complete, so a texture it was reading may be
-        /// drawn into. 0 on success.
+        /// drawn into (LLP 1008 §9). 0 on success.
         #[no_mangle]
         pub extern "C" fn gpu_sync() -> u32 {
             $crate::native::sync()
         }
 
-        /// The canvas's children as a Metal texture the host rendered:
-        /// imported as it is. 0 on success.
+        /// The canvas's children as a Metal texture the host rendered (LLP
+        /// 1008 §9): imported as it is. 0 on success.
         ///
         /// # Safety
         /// `raw` is a live `MTLTexture` of that size, `rgba8Unorm`, alive
@@ -941,8 +942,8 @@ macro_rules! module {
             unsafe { $crate::native::texture_from_metal(id, width, height, raw) }
         }
 
-        /// A canvas's picture as pixels into `out`, `len` bytes (nested
-        /// canvases). 0 on success, 2 when the surface also wants
+        /// A canvas's picture as pixels into `out`, `len` bytes (LLP 1014,
+        /// nested canvases). 0 on success, 2 when the surface also wants
         /// another frame, 1 on failure, 3 when the device is unavailable.
         ///
         /// # Safety
@@ -982,7 +983,7 @@ macro_rules! module {
         #[no_mangle]
         pub extern "C" fn gpu_presentation_flags(id: u32) -> u32 { $crate::native::presentation_flags(id) }
 
-        /// Whether a canvas draws above SDR white: 1 or 0.
+        /// Whether a canvas draws above SDR white (LLP 1100 D12b): 1 or 0.
         #[no_mangle]
         pub extern "C" fn gpu_high_dynamic_range(id: u32) -> u32 { u32::from($crate::native::high_dynamic_range(id)) }
 

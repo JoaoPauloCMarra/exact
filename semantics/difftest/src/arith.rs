@@ -13,9 +13,9 @@
 //! with tiny inputs, reduction boundaries and large inputs through 1e300.
 //! Each case also carries a numeral and two dates:
 //! `parseNumber` of the numeral and `calendarDiff` of the dates in years and
-//! in months, as `exact_runner::stdlib` reads them;
+//! in months (LLP 1102 §3.1, §3.4), as `exact_runner::stdlib` reads them;
 //! and two digit counts: `toFixed(a, d)`, `formatDecimal(a, g)` and
-//! `formatDecimal(trunc(a), g)`, as the `format` capability prints.
+//! `formatDecimal(trunc(a), g)` (§3.2), as the `format` capability prints.
 
 use crate::leanrun;
 use crate::rng::Rng;

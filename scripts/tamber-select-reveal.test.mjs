@@ -1,7 +1,7 @@
-// An outline brings the selection's own copy into view (host/web/dev.js and
+// An outline brings the selection's own copy into view (Apple pass #2, theme2's 13:44 approval; host/web/dev.js and
 // host/web-js/inspect-dev.js, as the Apple hosts' Inspect.revealing), on both web pages over apps/select-walk-fixture,
 // whose Card has two copies (in Post, above, and in Outer, at the foot). The selection is made on the copy the page
-// does NOT list first (the old rule's pick), so each case is red on the old code: (a) a move up
+// does NOT list first (the old rule's pick), so each case is red on the old code (theme2's 16:25 (3)): (a) a move up
 // to that card leaves the page where it is; (c) at the other copy, an outline brings the selection's in; (e) that copy
 // hidden, then gone, the outline scrolls nothing; (d) with no selection (the tool's Outline), the first copy in the
 // page's order, as before. Each case is checked on its own and every red one said at the end.
@@ -64,7 +64,7 @@ test('an outline on both web pages brings the selection\'s own copy into view, n
       await page.locator('#exact-inspect').waitFor();
       const scrollY = () => page.evaluate(() => scrollY);
       const settle = () => page.waitForTimeout(400);
-      // An outline applied: its dashed marks drawn again (the page scrolls before it draws them).
+      // An outline applied: its dashed marks drawn again (the page scrolls before it draws them; Astra's round 1).
       const unmarked = () => page.evaluate(() => { for (const m of document.querySelectorAll('[data-exact-outline]')) m.remove(); });
       const marked = async () => { await until(() => page.evaluate(() => document.querySelectorAll('[data-exact-outline]').length > 0), 30_000, 'the outline drawn'); await page.waitForTimeout(100); };
       const shows = (nth) => page.evaluate((n) => { const r = document.querySelectorAll('[data-testid="card"]')[n].getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }, nth); // (wholly on screen)
@@ -79,7 +79,7 @@ test('an outline on both web pages brings the selection\'s own copy into view, n
       await settle();
       const at = { P: Math.floor(c0.top - 2), O: Math.ceil(c1.bottom + 2 - h), top: 0 };
       const to = async (where) => { await page.evaluate(y => scrollTo(0, y), at[where]); await settle(); expect([page_, where, await scrollY()]).toEqual([page_, where, at[where]]); };
-      // A click's selection and its outline drawn (so a later outline's marks are never this one's).
+      // A click's selection and its outline drawn (so a later outline's marks are never this one's; Astra's check).
       const click = async (id) => {
         const box = await page.locator(`[data-testid="${id}"]`).boundingBox(), seen = events.length;
         await unmarked();

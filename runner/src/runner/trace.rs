@@ -1,4 +1,4 @@
-//! Commit attribution for the differential observation.
+//! Commit attribution for the differential observation (LLP 1148 D3).
 
 use super::*;
 

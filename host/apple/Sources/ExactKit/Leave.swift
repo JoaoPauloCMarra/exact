@@ -1,4 +1,4 @@
-// The embedder's decision on leaving the app:
+// @ref LLP 1133.024 D22 item 7 — the embedder's decision on leaving the app:
 // a package asks (`ExactPackageContext.leave`) before it shows a page over
 // the app or hands a URL to another app, and the session's delegate answers.
 #if canImport(UIKit)

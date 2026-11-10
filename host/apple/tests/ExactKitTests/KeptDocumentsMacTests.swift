@@ -3,7 +3,7 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// On a Mac, a kept document's security-scoped bookmark
+/// LLP 1069.010.000 D4 on a Mac: a kept document's security-scoped bookmark
 /// leads to the object chosen, not to whatever is at its path. A move is
 /// followed; a file another program renamed to a backup before writing its
 /// own at the name is followed to the original; one deleted and replaced is

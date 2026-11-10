@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// `bun exact.mjs verify [web|ios|windows|android]`: one command a builder can stop on, where test,
+// `bun exact.mjs verify [web|ios|windows|android]` (LLP 1116.004 D7, 1116.005 D7): one command a builder can stop on, where test,
 // drives, check and screenshots were three to five turns. It builds when the build is stale (web: the dist's
 // record against its sources, as the driver checks it; iOS: agent-build.mjs `buildFirst`, the plan fast path
 // included), runs the app's tests (app.test.contract and each other `*.test.contract` beside it, app.mjs
@@ -8,15 +8,15 @@
 // dark there. Each test's end screen is checked the same way inside the test's own session (the web at both
 // widths, resized to each), so its secondary screens and populated states are in the report. Then the app
 // relaunches once on the store a passing test left, on real time (at most REAL_MS) and under the zone, locale and seed
-// the test launched with and the date it had reached (its launch date plus its `clock` steps, as a `reload` relaunches),
-// and its first screen is compared with a fresh launch's under the same (the
+// the test launched with and the date it had reached (its launch date plus its `clock` steps, as a `reload` relaunches,
+// LLP 1116.007 D3.4, LLP 1116.009 D1), and its first screen is compared with a fresh launch's under the same (the
 // driver's, for an app whose server holds the tests' writes): what the test stored should come back. On the web each test's end screen is also
 // reloaded where it stands (the test's `reload` step: the page loads again on its URL and storage, at the date it had reached) and
-// its texts compared before and after (`judgeReload` says what it forgives): a screen that reloads into another state
-// ('Card 2 of 3' → '0 / 0') is a note, not a problem, since a game or a draft in progress lives in memory by design;
+// its texts compared before and after (LLP 1116.010 D6; `judgeReload` says what it forgives): a screen that reloads into another state
+// ('Card 2 of 3' → '0 / 0') is a note, not a problem, since a game or a draft in progress lives in memory by design (LLP 1116.011 D5);
 // it is a finding only when a saved value came back different (`savedChanges`: a `persist` state, a field showing what the app kept).
-// A native host's cold launch is `/`, so iOS has no such reload to compare. A refusal
-// the host journaled during the run (`logs`: 'swipeContent … is refused: …') is shown first in the report. One capture of each screen is kept in
+// A native host's cold launch is `/` (LLP 1038 §7), so iOS has no such reload to compare. A refusal
+// the host journaled during the run (`logs`: 'swipeContent … is refused: …') is shown first in the report (LLP 1116.010 D5). One capture of each screen is kept in
 // .exact/verify/ for milestones (four of the first screen: each width and scheme). It prints one short report
 // ending "verify: clean" or "verify: N problems" (`--json`: one object). Exit 1 when the build, a test, a launch
 // or the relaunch fails; check's findings, the relaunch's, those at the largest text size and the compiler's warnings
@@ -25,12 +25,12 @@
 // counted. The web's tests and its two launches run at once; a simulator takes one drive at a time, and runs the
 // tests with UIKit's bars (`--chrome platform`) so their end screens
 // are what a person sees. An app with a server of its own (the `rest` pattern's) has it run by verify, where the
-// app calls it, on an empty scratch database kept through the run and removed after (`appServer`); a server
-// entry that does not read DB is refused unless app.json declares server.database: false.
+// app calls it, on an empty scratch database kept through the run and removed after (LLP 1116.006 D3, `appServer`); a server
+// entry that does not read DB is refused unless app.json declares server.database: false (LLP 1116.008 D1).
 // Each of those screens is read again at the largest text size (iOS: the simulator's; the web: iOS's body as the root font
 // size, at the phone's width), and what spills there (past the screen's edge, squeezed to no width, overlapping) is reported
-// with a remedy that keeps the text's size, counted in the last line and never failing the run
-// (`largestText`); the web also runs the tests again at that size and reads screens they only pass through
+// with a remedy that keeps the text's size, counted in the last line and never failing the run (LLP 1116.019 D2, LLP
+// 1116.020 D4, `largestText`); the web also runs the tests again at that size and reads screens they only pass through
 // (`largeTour`). On Windows the drives are the headless host's, at app.json's window size; then the app is opened once on
 // the console session's desktop and its window captured (`desktopShot`), since that, not the headless picture, is what a
 // person sees there.
@@ -63,7 +63,7 @@ export const WEB_SIZES = [[390, 844], [1280, 900]];
 const SHOWN = 6, WARNINGS = 4; // the findings and build warnings shown; the count says the rest
 const REAL_MS = 4000, REAL_STEP = 250; // the relaunch's bound on real time for its first loads, in steps
 const FIRST = 'first screen', RELAUNCH = 'relaunch';
-// How long a run takes, said when it starts so a builder waits once rather than polling: the app's
+// How long a run takes, said when it starts so a builder waits once rather than polling (LLP 1116.021 D3): the app's
 // last run on that host, else these (a run that must build first takes that build's time too).
 const ESTIMATE = { web: 30_000, ios: 60_000, windows: 60_000, android: 120_000 };
 const lastRuns = (app) => { try { return JSON.parse(readFileSync(resolve(app.dir, '.exact', 'verify', 'last.json'), 'utf8')); } catch { return {}; } };
@@ -72,7 +72,7 @@ const secs = (ms) => `${(ms / 1000).toFixed(1)} s`;
 const firstLine = (text) => String(text ?? '').split('\n').find((l) => l.trim())?.trim() ?? '';
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-// The app's own server. A local origin the data module calls, with any path under it.
+// The app's own server (LLP 1116.006 D3). A local origin the data module calls, with any path under it.
 const LOCAL = /\bhttps?:\/\/(?:127\.0\.0\.1|localhost|\[::1\]):\d{2,5}(?:\/[\w\-./]*)?/;
 const readIn = (dir, path) => { try { return readFileSync(resolve(dir, path), 'utf8'); } catch { return null; } };
 
@@ -95,7 +95,7 @@ export function onThisMachine(origin) {
     || privateNetwork(origin) && Object.values(networkInterfaces()).flat().some(n => n?.address === new URL(origin).hostname.replace(/^\[|\]$/g, ''));
 }
 
-/** app.ts as the build has it, each setting read replaced by what `inlineSettings` gives under `env` (a
+/** app.ts as the build has it (LLP 1153 D4), each setting read replaced by what `inlineSettings` gives under `env` (a
  * default included), and those values; as written, with none, where the bake refuses it. */
 function builtSettings(dir, env, code = readIn(dir, 'app.ts')) {
   try { const { code: built, record } = inlineSettings(code, dir, createRequire(import.meta.url)('rolldown/utils').parseSync, env); return { code: built, values: Object.fromEntries(Object.entries(record).map(([name, s]) => [name, s.value])) }; } catch { return { code, values: {} }; }
@@ -123,7 +123,7 @@ function readsDB(dir, entry) {
  * `["bun", "server/index.ts"]`, else server.ts, server/index.ts or server/server.ts) at the URL the data module calls,
  * its database's path read from `DB` unless `server.database` is false. Arguments after the named entry are kept in
  * `args`. null without a server; else `why` says what keeps it
- * from being run when the app calls no local URL (null when nothing does), `refusal` the one line for an
+ * from being run when the app calls no local URL (null when nothing does), `refusal` (LLP 1116.008 D1) the one line for an
  * entry that needs a database but does not read `DB`, which `test` and `verify` stop on. */
 export function appServer(dir, env = process.env) {
   let named = null, serverArgs = [], manifest = {};
@@ -263,7 +263,7 @@ const commandLine = (pid) => (process.platform === 'win32'
   ? spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', `(Get-CimInstance Win32_Process -Filter 'ProcessId=${Number(pid)}').CommandLine`], { encoding: 'utf8' })
   : spawnSync('ps', ['-o', 'command=', '-p', String(pid)], { encoding: 'utf8' })).stdout?.trim() ?? '';
 
-/** The app's server for one `agent` drive: null when the app has none, or the URL it calls already answers
+/** The app's server for one `agent` drive (LLP 1116.008 D1): null when the app has none, or the URL it calls already answers
  * (the builder's own, or another drive's: used, said nothing of); else started where app.ts calls it, on a database of the
  * drive's own, `.exact/agent/<storage>/db.sqlite` kept for the `--storage` name so a second drive on it sees the first's data
  * (without one, an empty database removed after; `fresh`, a drive that starts its store empty, empties it first, and is
@@ -370,9 +370,9 @@ function ancestors() {
 }
 
 /** `fn` with the app's server running on an empty database, as verify runs it: its exit code, or 1 when the server cannot
- * run, said in one line. `bun exact.mjs test` runs its tests so (`optional`: an app with no server, or one
+ * run, said in one line. `bun exact.mjs test` runs its tests so (LLP 1116.007 D2: `optional`: an app with no server, or one
  * whose URL app.ts does not say, runs them as they are, the second said once, and the tests use whatever answers there);
- * a server entry that needs a database but does not read `DB` is refused whatever the verb;
+ * a server entry that needs a database but does not read `DB` is refused whatever the verb (LLP 1116.008 D1);
  * a server an ancestor process runs (an older app's api-test test.mjs, which runs `test` under `withAppServer`, and
  * the `agent.mjs --test` that `test` runs a level further down) is used, not started again.
  * `api-test` is the same call without `optional`: it wants a server, and says why it has none. */
@@ -542,7 +542,7 @@ function typedFields(before, after, touched, states) {
 /** The fields to leave out of a reload's comparison: the drafts (`typedFields`). */
 export const draftFields = (before, after, touched, states) => typedFields(before, after, touched, states).drafts;
 
-/** The root states the app says `persist` on, by name, read from app.contract: only the root's may, and the root is
+/** The root states the app says `persist` on (LLP 1116 D5), by name, read from app.contract: only the root's may, and the root is
  * its first component. A trailing comment is not read. */
 export function persistedStates(dir) {
   const names = [];
@@ -555,7 +555,7 @@ export function persistedStates(dir) {
 
 /** What a reload did to a saved value, from the screen's fields (`typedFields`) and the persisted states (`persistedStates`):
  * the `persist` states whose value came back different, and the fields that showed a kept value and now show another. These
- * are the only evidence that something saved was lost; a game's or a draft's state is in memory and is not.
+ * are the only evidence that something saved was lost; a game's or a draft's state is in memory and is not (LLP 1116.011 D5).
  * `[{ kind: 'state', name, was, now } | { kind: 'field', id, was, now }]`. */
 export function savedChanges({ persisted = [], states, nodes, touched }) {
   const was = states?.before?.slots ?? {}, now = states?.after?.slots ?? {};
@@ -568,7 +568,7 @@ export function savedChanges({ persisted = [], states, nodes, touched }) {
  * banner, a validation error, an open dialog's words), not state. */
 const GONE = 3;
 /** A clock face: `24:49`, `1:02:03`, `00:12.5`. A running timer shows another one after a reload, and a pinned clock
- * does not make it the same: the elapsed time lived in memory. */
+ * does not make it the same: the elapsed time lived in memory (LLP 1116.010 D6). */
 const CLOCK_FACE = /\d{1,3}:\d{2}(?::\d{2})?(?:[.,]\d+)?/g;
 const faceless = (text) => text.replace(CLOCK_FACE, '§');
 
@@ -586,13 +586,13 @@ export function judgeReload(before, after) {
 
 const texts3 = (texts) => `${texts.slice(0, 3).map((t) => quoted(t, 28)).join(', ')}${texts.length > 3 ? `, … (${texts.length - 3} more)` : ''}`;
 const saying = (v) => quoted(typeof v === 'string' ? v : JSON.stringify(v) ?? 'none', 24);
-/** The finding's line: the route and the saved values that came back different, and the repair. */
+/** The finding's line (LLP 1116.011 D5): the route and the saved values that came back different, and the repair. */
 export function reloadLine(f, test) {
   const what = f.saved.map((c) => (c.kind === 'state' ? `the saved state \`${c.name}\` was ${saying(c.was)} and is ${saying(c.now)}` : `the field ${quoted(c.id)} showed ${saying(c.was)}, which the app holds, and shows ${saying(c.now)}`));
   return `  reload   ${f.route}${f.now ? `, landing on ${f.now},` : ''} a saved value came back different: ${what.join('; ')}; a reload must bring back what was saved (${quoted(test, 36)})`;
 }
 
-/** The note's line: the route, and the texts that changed. Not counted. */
+/** The note's line (LLP 1116.010 D6, 1116.011 D5): the route, and the texts that changed. Not counted. */
 export function reloadNote(n, test) {
   const what = n.lost.length && n.gained.length ? `${texts3(n.lost)} → ${texts3(n.gained)}` : n.lost.length ? `loses ${texts3(n.lost)}` : `gains ${texts3(n.gained)}`;
   return `  note     ${n.route} reloads into another state${n.now ? `, landing on ${n.now}` : ''}: ${what} (${quoted(test, 36)})`;
@@ -601,7 +601,7 @@ export function reloadNote(n, test) {
 /** What the notes say once: the reload check cannot tell a game in progress from a lost value, so it asks. */
 const NOTE_ADVICE = '  a saved value must survive a reload; a game or a draft in progress may not';
 
-/** A line of the journal or the host's output that says the host refused what the app asked, with the
+/** A line of the journal or the host's output that says the host refused what the app asked (LLP 1116.010 D5), with the
  * journal's `t=N` and the host's `app: exact: ` taken off. A refusal the app's own rule makes when a person tries (a
  * dismissal its `closedby` refuses, a Back its control disables) and a connection a `fail fetch` refused are the app's design. */
 export function refusalsOf({ lines = [], host = [] } = {}, expected = []) {
@@ -629,7 +629,7 @@ const refusalsIn = async (s, expected = []) => refusalsOf(await s.logs().catch((
 
 /** The end screen reloaded where it stands (the test's `reload` step, run on the session; the web only), and what it
  * showed before and after compared (`judgeReload`): `finding` when a saved value came back different (`savedChanges`),
- * else `note` for any other change, which is the app's state in memory and no problem. `{ ran: false }` when
+ * else `note` for any other change, which is the app's state in memory and no problem (LLP 1116.011 D5). `{ ran: false }` when
  * there is nothing to compare: a native host, a failed test, or one that ended on a draft it typed and did not submit (a page
  * keeps none). `persisted` names the app's `persist` states. */
 async function reloadEnd(s, t, persisted = []) {
@@ -682,9 +682,9 @@ async function checkHere(s, { screen, sizes = [null], shot, state }) {
 /** What verify android does not do yet (agent-android.mjs `androidCaptures`), said in its report. */
 const ANDROID = 'not on Android yet: check\'s findings (each screen is captured unjudged, light and dark: look at them), the largest text size, the scrolling probe (iOS\'s), a test end\'s reload (the web\'s)';
 
-// Each screen verify visits is read again at the largest text size, and what spills is reported, counted
-// and never failing the run (uncounted, builders who saw them stopped at "verify: clean"): the
-// layout is the builder's, and a failure would invite `overflow: hidden`. iOS sets the
+// LLP 1116.019 D2: each screen verify visits is read again at the largest text size, and what spills is reported, counted
+// and never failing the run (LLP 1116.020 D4: uncounted, half of the builders who saw them stopped at "verify: clean"): the
+// layout is the builder's (LLP 1115.000 D12.1), and a failure would invite `overflow: hidden`. iOS sets the
 // simulator's own size, which UIKit's controls and Exact's text both follow; the web, where a builder iterates, sets the root
 // font size to iOS's body at that size on the phone's width. Only the kinds of finding a larger text makes are kept, each with
 // a remedy that keeps the text's size: a smaller font is the platform tell this pass exists to prevent.
@@ -693,9 +693,10 @@ const LARGE_KINDS = new Set(['overflow', 'clipped', 'overlap', 'squeezed']), PAG
 const WRAP = 'wrap the row: flex-wrap="wrap" with a flex-basis in rem on its items (docs/recipes/responsive-columns.md)';
 /** The remedy for a finding at the largest size: never a smaller or fixed font. A text in a list's row (`inRow`) is cut by
  * the row, which wrapping the row does not change: at the accessibility sizes UIKit's cells wrap a label and grow taller,
- * never truncating it, so a `line-clamp` there reads as a tell. A grouped list's standard cell already hyphenates as its label does. Elsewhere a UILabel wraps at words and breaks
+ * never truncating it, so a `line-clamp` there reads as a tell (round 22's book-club and contacts took one from this
+ * remedy). A grouped list's standard cell already hyphenates as its label does. Elsewhere a UILabel wraps at words and breaks
  * between syllables only a word longer than its line (iOS 27), so `hyphens="auto"` is the remedy for a text of one word;
- * on a heading or sentence it hyphenates words a UILabel keeps whole, which reads as a tell. */
+ * on a heading or sentence it hyphenates words a UILabel keeps whole, which round 26's graders named a tell. */
 export function largeRemedy(f, { inRow = false } = {}) {
   const wide = (f.detail?.need ?? f.detail?.cut ?? [0])[0] > 0;
   if (f.kind === 'clipped' && inRow && !f.detail?.edge) {
@@ -711,8 +712,8 @@ export function largeRemedy(f, { inRow = false } = {}) {
   if (f.kind === 'overlap') return `${WRAP}; for a row of equal cells that must stay one line (a week's days), cap the size its text grows to, as UIKit's calendar does: font-size="min(-exact-subheadline, 31px)"`;
   return WRAP;
 }
-/** Each font size the app's own Contract fixes (no-tells.mjs `fixedSizesIn`), which no spill shows (a fixed
- * size never grows to spill), and two like it: a symbol sized in points beside text that grows
+/** LLP 1116.020 D4: each font size the app's own Contract fixes (no-tells.mjs `fixedSizesIn`), which no spill shows (a fixed
+ * size never grows to spill), and LLP 1116.021 D6's two like it: a symbol sized in points beside text that grows
  * (`fixedSymbolsIn`), and text that breaks inside words (`brokenWordsIn`), the remedy builders reached for when a large
  * text spilled. `{ lines, accepted, fonts }`, a line each, those app.json's `verify.accept` takes (`fixed-type`,
  * `fixed-symbol` or `broken-words`, the node's testId) apart, and how many lines are font sizes. Exact's parts that are
@@ -836,7 +837,7 @@ async function tests(host, app, shots) {
     try {
       const r = await runTests({ host, file, app: app.name, atEnd: (s, t) => atEnd(s, { ...t, index: first + t.index }), ...(i ? { storage: `test${i}` } : {}), ...hostOpen(host, app) });
       out.passed += r.passed; out.failed += r.failed;
-      // A failure the test did not arrange is a finding: `runTests` says it in a note.
+      // A failure the test did not arrange is a finding (LLP 1146 D4): `runTests` says it in a note.
       out.results.push(...r.results.map(({ name, failures, notes = [], end, store, shots }) => ({ name, file: basename(file), failures, unarranged: notes.filter((n) => n.startsWith('unarranged: ')).map((n) => n.slice(12)), ...(shots ? { shots } : {}), ...(end ? { end } : {}), ...(store ? { store } : {}) })));
     } catch (e) { errors.push(files.length > 1 ? `${basename(file)}: ${e.message}` : e.message); }
   }
@@ -847,9 +848,9 @@ async function tests(host, app, shots) {
  * width, and after an input that shows a testId no screen of the tour has shown yet (its digits aside: a row's id that
  * holds a date or a count is the same row), the screen is read as `largestText` reads one. A screen only passed through
  * (a flashcard's Again and Got it, shown once the card turns) is no test's end, and its overflow went unreported
- * (a flashcards app). What the tests assert is not judged here. At most LARGE_TOUR_SCREENS screens, so a run
+ * (flashcards, round 22). What the tests assert is not judged here. At most LARGE_TOUR_SCREENS screens, so a run
  * reports the same ones each time, and no more than LARGE_TOUR_MS. The `largestText` results, each screen named by the
- * line of the test it followed. On a flashcards, a notes and a book-club app (12 to 26 s without it) it added 1 to 11 s,
+ * line of the test it followed. On round 22's flashcards, notes and book-club (12 to 26 s without it) it added 1 to 11 s,
  * 6 on average; most on an app with its own server, whose tour runs after the rest. */
 const LARGE_TOUR_SCREENS = 12, LARGE_TOUR_MS = 40_000;
 const kindOf = (id) => String(id).replace(/\d+/g, '#');
@@ -1020,7 +1021,7 @@ export function relaunchStore(results, fresh) {
  * `reload` step) and ended holding resources a fresh launch does not, and the relaunch holds a fresh launch's. */
 export function judgeRelaunch(test, fresh, after, { busy = [], failed = {}, heldBy = [] } = {}) {
   const problems = [];
-  // Requests the server holds (`exactHeld`): named, never waited on, no finding.
+  // Requests the server holds (`exactHeld`, LLP 1016.000 D9): named, never waited on, no finding.
   const notes = heldBy.length ? { notes: [`  held     ${heldBy.join(', ')}: the server holds ${heldBy.length === 1 ? 'it' : 'them'} (exactHeld); no clock waited on ${heldBy.length === 1 ? 'it' : 'them'}`] } : {};
   if (busy.length) problems.push(`  loading  still in flight after ${secs(REAL_MS)} of real time: ${busy.join(', ')}; a store or the network that slow leaves the first screen empty`);
   for (const [name, why] of Object.entries(failed ?? {})) problems.push(`  failed   resource ${name}: ${why}; the screen shows its placeholder or last value`);
@@ -1041,7 +1042,7 @@ const LAUNCH_FACTS = ['epoch', 'timeZone', 'locale', 'seed'];
 const launchOf = (launch) => Object.fromEntries(LAUNCH_FACTS.filter((k) => launch?.[k] != null).map((k) => [k, launch[k]]));
 
 /** The facts a relaunch on the store `test` left is made under: its launch facts, the date being the one it had reached
- * (its launch date plus its `clock` steps), as a `reload` relaunches: a phone restarted at 9:05 wakes at 9:05. */
+ * (its launch date plus its `clock` steps), as a `reload` relaunches (LLP 1116.009 D1): a phone restarted at 9:05 wakes at 9:05. */
 export const relaunchFacts = (test) => ({ ...test.end?.launch, ...(test.end?.reached != null ? { epoch: test.end.reached } : {}) });
 
 /** Whether the test ended at a date other than the one it launched at: its relaunch's first screen may say another day,
@@ -1050,7 +1051,7 @@ export const movedClock = (test) => test.end?.reached != null && test.end.launch
 
 /** Whether `test` launched under facts other than the driver's own, which the first screens launch under: a date, zone,
  * locale or seed its leading lines pinned, or a media preference it applied. What it stored is read back under those facts, and a fresh launch to compare
- * with must be made under them too. */
+ * with must be made under them too (LLP 1116.007 D3.4). */
 export function pinnedLaunch(test, defaults) {
   const launch = test.end?.launch;
   return !!launch && (LAUNCH_FACTS.some((k) => launch[k] != null && launch[k] !== defaults[k]) || Object.entries(launch.media ?? {}).some(([k, v]) => v !== (defaults.media?.[k] ?? LAUNCH_MEDIA[k])));
@@ -1129,10 +1130,10 @@ export function report({ host, built, compiler = [], server, tested, checks, rel
   const out = [], full = [];
   const all = listed ? `${listed} lists them all` : 'verify --json lists them all';
   let failedTests = 0, findings = 0, broken = 0;
-  // Each counted finding's kind, for the closing line.
+  // Each counted finding's kind, for the closing line (LLP 1143 D5).
   const kinds = new Map(), counted = (kind, n = 1) => { if (n > 0) kinds.set(kind, (kinds.get(kind) ?? 0) + n); };
   const acceptable = new Set(); // the kinds `verify.accept` can take: check's, and fixed type
-  // What the host refused while the app ran: first, since each is a call or a wiring the app got wrong.
+  // What the host refused while the app ran (LLP 1116.010 D5): first, since each is a call or a wiring the app got wrong.
   if (refused.length) {
     const shownAt = (where) => where.length > 2 ? `${where.slice(0, 2).join(', ')} and ${where.length - 2} more` : where.join(', ');
     const head = `refused at run time: ${refused.length} (the host's journal, 'logs'; each is a call or a wiring the app got wrong)`;
@@ -1141,7 +1142,7 @@ export function report({ host, built, compiler = [], server, tested, checks, rel
     full.push(head, ...refused.map((r) => `  ${r.line} (${r.where.join(', ')})`));
     findings += refused.length; counted('refused at run time', refused.length);
   }
-  // The app's own server: run on an empty database, or why not; one that died mid-run is a failure.
+  // The app's own server (LLP 1116.006 D3): run on an empty database, or why not; one that died mid-run is a failure.
   if (server?.died) { broken++; out.push(`server: ${server.died}`); }
   else if (server) out.push(`server: ${server.said}`);
   if (built) {
@@ -1151,7 +1152,7 @@ export function report({ host, built, compiler = [], server, tested, checks, rel
     if (built.warnings.length > WARNINGS) out.push(`  … and ${built.warnings.length - WARNINGS} more (bun exact.mjs web-build prints them all)`);
     findings += built.warnings.length; counted('build warning', built.warnings.length);
   }
-  // The compiler's warnings, each as `contract build` says it: findings, never a failure. Those that
+  // The compiler's warnings, each as `contract build` says it (LLP 1116.004 D7): findings, never a failure. Those that
   // are information (`information`: the platform's look stands) are said apart and not counted.
   const warned = compiler.filter((w) => !information(w)), noted = compiler.filter(information);
   if (warned.length) {
@@ -1161,7 +1162,7 @@ export function report({ host, built, compiler = [], server, tested, checks, rel
     findings += warned.length; for (const w of warned) counted(ruleOf(w));
   }
   if (noted.length) {
-    const head = `compiler: ${plural(noted.length, 'note')}, not counted (the platform's own look stands there)`, lines = noted.map((w) => `  ${w}`);
+    const head = `compiler: ${plural(noted.length, 'note')}, not counted (the platform's own look stands there; LLP 1121 D9)`, lines = noted.map((w) => `  ${w}`);
     out.push(head, ...byRule(lines));
     full.push(head, ...lines);
   }
@@ -1197,7 +1198,7 @@ export function report({ host, built, compiler = [], server, tested, checks, rel
     out.push(...new Set(runs.flatMap((r) => r.advice ?? [])));
     findings += count; for (const l of shown) { counted(ruleOf(l)); acceptable.add(ruleOf(l)); } counted('check (not listed)', count - shown.length);
   }
-  // Font and symbol sizes the app's Contract fixes and words it breaks: findings, as
+  // Font and symbol sizes the app's Contract fixes and words it breaks (LLP 1116.020 D4, LLP 1116.021 D6): findings, as
   // check's are.
   if (fixed.lines.length) {
     const said = (fixed.fonts ?? fixed.lines.length) === fixed.lines.length ? `${plural(fixed.lines.length, 'font size')} the reader's text size does not move`
@@ -1216,9 +1217,9 @@ export function report({ host, built, compiler = [], server, tested, checks, rel
     if (accepted.length) full.push(`accepted (app.json verify.accept, not counted): ${plural(accepted.length, 'finding')}`, ...accepted);
     for (const e of idle) out.push(`  accepts nothing: ${e.finding} ${e.node} (no such finding in this run)`);
   }
-  // Each test's end screen reloaded where it stands: a saved value that came back different is a finding, one a
+  // Each test's end screen reloaded where it stands (LLP 1116.010 D6): a saved value that came back different is a finding, one a
   // route and change, the first test that ended there named; any other change is a note under its own heading, which counts
-  // for nothing (a game or a draft in progress lives in memory).
+  // for nothing (LLP 1116.011 D5: a game or a draft in progress lives in memory).
   const ran = reloads.filter((r) => r.ran);
   if (ran.length) {
     const lines = [], notes = [], keys = new Set();
@@ -1239,8 +1240,8 @@ export function report({ host, built, compiler = [], server, tested, checks, rel
       out.push(NOTE_ADVICE);
     }
   }
-  // The same screens at the largest text size: each finding once, said where unless everywhere; counted
-  // apart from check's, so the last line says where they came from.
+  // The same screens at the largest text size (LLP 1116.019 D2): each finding once, said where unless everywhere; counted
+  // apart from check's, so the last line says where they came from (LLP 1116.020 D4).
   let largeCount = 0;
   if (large.length) {
     const read = large.filter((l) => !l.error), shown = distinctFindings(read.map((l) => ({ ...l, scheme: 'light' })));
@@ -1273,7 +1274,7 @@ export function report({ host, built, compiler = [], server, tested, checks, rel
       findings += found.length; counted('scrolling', found.length);
     }
   }
-  // The relaunch on a test's store: what came back, or each problem, counted as findings.
+  // The relaunch on a test's store (LLP 1116.005 D7): what came back, or each problem, counted as findings.
   if (relaunched?.error) { broken++; out.push(`relaunch: could not drive: ${firstLine(relaunched.error)}`); }
   else if (relaunched) {
     out.push(`relaunch on ${quoted(relaunched.test)}'s store (${secs(relaunched.ms)} of real time): ${relaunched.problems.length ? plural(relaunched.problems.length, 'problem') : relaunched.said}`, ...relaunched.problems, ...(relaunched.notes ?? []));
@@ -1289,7 +1290,7 @@ export function report({ host, built, compiler = [], server, tested, checks, rel
   // Windows: the drives above are headless (DejaVu Sans, no frame); the desktop's picture is one more, never counted.
   if (desktop) out.push(desktop.error ? `window: not captured (${firstLine(desktop.error)})` : `window: ${relative(cwd, desktop.shot)}, the app opened on the desktop at ${desktop.size?.join('x')} with the system's font, title bar and theme${desktop.foreground ? '' : ' (not the foreground window: its title bar is drawn inactive)'}`,
     '  not on Windows yet: check\'s findings (the host has no check observation; each screen is captured unjudged), the largest text size, the scrolling probe (iOS\'s), a test end\'s reload (the web\'s)');
-  // How a person opens what ran: the dev loop serves the web app, the simulator build launches on iOS.
+  // How a person opens what ran (LLP 1116.008 D2): the dev loop serves the web app, the simulator build launches on iOS.
   if (host === 'android') out.push(ANDROID);
   if (!failedTests && !broken) out.push(host === 'ios' ? 'open it: bun exact.mjs ios --run (launches what verify checked)' : host === 'windows' ? 'open it: bun exact.mjs windows --run (opens what verify checked)' : host === 'android' ? 'open it: bun exact.mjs android --run (installs and launches what verify checked)' : 'open it: bun exact.mjs web (serves what verify checked)');
   // Every finding, one a line, where the groups above left any out.
@@ -1297,7 +1298,7 @@ export function report({ host, built, compiler = [], server, tested, checks, rel
   if (grouped && listed) out.push(`every finding, one a line: ${listed}`);
   const problems = failedTests + findings + largeCount + broken;
   // Many findings are said by kind, the commonest first, so the line an agent copies says what they are; a kind that is
-  // most of them is named with the way to accept those the app's design means.
+  // most of them is named with the way to accept those the app's design means (LLP 1143 D5).
   const byKind = [...kinds].sort((a, b) => b[1] - a[1]), many = findings + largeCount >= KINDS_FROM;
   const shownKinds = byKind.slice(0, 3), others = byKind.slice(3).reduce((n, [, c]) => n + c, 0);
   const kindsSaid = [...shownKinds.map(([k, c]) => `${c} ${k}`), others && `${others} other`].filter(Boolean).join(', ');
@@ -1328,7 +1329,7 @@ async function deviceMain(argv, emitJSON, declined, ended) {
   const say = (lines) => console.log(lines.join('\n'));
   // An app with a server of its own: verify runs it where the app calls it, on an empty database. One already
   // answering there (the builder's dev server) is refused before the build: never stopped, never written to; so is
-  // an entry that does not read DB, which could only be run on its own database.
+  // an entry that does not read DB (LLP 1116.008 D1), which could only be run on its own database.
   const server = appServer(app.dir), owned = server && !server.why;
   const refuse = (line) => { if (json) emitJSON({ host, server: { error: line }, problems: 1, exit: 1 }); else console.error(`verify: ${line}`); return declined(1); };
   if (server?.refusal) return refuse(server.refusal);
@@ -1410,7 +1411,7 @@ async function deviceMain(argv, emitJSON, declined, ended) {
   const checks = [...firsts.flat(), ...ends, ...(relaunched?.runs ?? [])];
   const compiler = await compiling;
   const kept = [...new Set([...checks.map((c) => c.shot), relaunched?.shot, desktop?.shot])].filter((p) => p && existsSync(p));
-  // `--shots <dir>`: every capture of this run copied out, under its own name.
+  // `--shots <dir>`: every capture of this run copied out, under its own name (LLP 1116.008 D2).
   // The screenshots a test took itself (its `screenshot` steps) come too, named by the test as the ends are.
   const own = [];
   if (copyTo) {
@@ -1438,13 +1439,13 @@ async function deviceMain(argv, emitJSON, declined, ended) {
     const relaunchOut = relaunched && (({ runs, large, ...rest }) => rest)(relaunched);
     emitJSON({ host, built: built && { ms: built.ms, said: built.said ?? [], warnings: built.warnings }, compiler, ...(serverSaid ? { server: serverSaid } : {}), refused: refusedList, tests: testsOut, checks, reloads, large, fixed, relaunch: relaunchOut, ...(scrolled ? { scrolling: scrollingOut(scrolled) } : {}), ...(desktop ? { window: desktop } : {}), screenshots: kept, problems: r.problems, exit: r.exit, ms: Date.now() - started });
   } else { say(r.lines.slice(0, -1)); ended(r.lines.at(-1)); }
-  // The run, against the build it used (`bun scripts/evidence.mjs`).
+  // The run, against the build it used (LLP 1146 D2: `bun scripts/evidence.mjs`).
   (await import('./evidence.mjs')).recordRun(app.name, { host, what: 'verify', result: r.problems ? `${r.problems} problem${r.problems === 1 ? '' : 's'}${tested?.failed ? `, ${tested.failed} failed test${tested.failed === 1 ? '' : 's'}` : ''}` : 'clean', timing: 'agent', sim });
   return r.exit;
 }
 
 // Both runs contribute to the exit status, including when the device build or drive fails. A refusal (a bad flag,
-// a server verify will not start or write to) stops both: it is one line and nothing runs.
+// a server verify will not start or write to) stops both: it is one line and nothing runs (LLP 1116.008 D1).
 async function main(argv) {
   const args = guardFlags('verify', argv), json = args.includes('--json');
   const { resolveApp } = await import('./app.mjs');

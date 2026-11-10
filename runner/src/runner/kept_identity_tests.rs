@@ -1,5 +1,5 @@
-//! A kept answer's identity read from another resource: `feeds(gen,
-//! account)`, where `account` reads the store.
+//! A kept answer's identity read from another resource (LLP 1027.005 D3,
+//! 2026-10-10): `feeds(gen, account)`, where `account` reads the store.
 use super::*;
 use crate::{Answer, Outcome, Request, Store};
 use exact_kernel::{Kernel, NodeType};

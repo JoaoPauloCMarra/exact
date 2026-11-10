@@ -1,4 +1,4 @@
-# @exact/photos's fixture on Android's Canvas host:
+# @exact/photos's fixture on Android's Canvas host (LLP 1133.019 stage 3):
 # a library with no GPU module, so the photos implementation can be
 # driven on an emulator. Off Android the library is empty.
 [package]

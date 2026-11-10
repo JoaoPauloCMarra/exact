@@ -1,4 +1,4 @@
-// AppKit fitting answers precede publication.
+// @ref LLP 1069.011.001 D11: AppKit fitting answers precede publication.
 #if os(macOS)
 import AppKit
 import CExact

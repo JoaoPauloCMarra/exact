@@ -1,4 +1,4 @@
-//! A box's `background-image` gradient: captured for one
+//! A box's `background-image` gradient (LLP 1066): captured for one
 //! appearance with the box, placed in its padding box (CSS's gradient box
 //! under the initial `background-origin`), and filled over the border box
 //! with its radii, over the background colour and under the border.
@@ -13,7 +13,7 @@ pub(super) struct Captured {
     dark: bool,
     /// Its wide stops' colours by value, which its stops are read through:
     /// the retained paint holds no slot, and the ramp mixes the exact
-    /// colours.
+    /// colours (LLP 1121 stage 4).
     values: exact_kernel::style::wide::Values,
 }
 
@@ -31,7 +31,7 @@ pub struct GradientPaint {
 }
 
 impl Captured {
-    /// The layers, the first on top.
+    /// The layers, the first on top (LLP 1077 D5).
     pub(super) fn capture(style: &StyleProps, dark: bool) -> Vec<Captured> {
         style
             .background_image
@@ -41,7 +41,7 @@ impl Captured {
             .collect()
     }
 
-    /// CSS `mask-image`'s gradient, placed in the border box.
+    /// CSS `mask-image`'s gradient (LLP 1077 D2), placed in the border box.
     pub(super) fn mask(style: &StyleProps, dark: bool) -> Option<Captured> {
         let gradient = style.rare.mask_image.gradient()?.clone();
         Some(Captured::new(gradient, dark))

@@ -1,5 +1,6 @@
-//! Host chrome and focus, never compiled default rows. Off
-//! the neutral look the field is Material's filled text field.
+//! LLP 1104 D6–D7: host chrome and focus, never compiled default rows. Off
+//! the neutral look the field is Material's filled text field (LLP
+//! 1115.001.000 D6).
 use exact_kernel::style::roles;
 use exact_kernel::{Appearance, ColorValue, Frame, StyleMask, ViewId};
 use exact_linux::{presenter::PainterChoice, Presenter};

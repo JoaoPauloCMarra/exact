@@ -1,12 +1,12 @@
 #if os(iOS) || os(tvOS)
 import UIKit
 
-/// The iOS carrier's one held contact.
-/// UIKit synthesizes no touch, so the contact is `recognized`.
+/// @ref LLP 1057 §10.6 — the iOS carrier's one held contact (LLP 1035.003 D1).
+/// UIKit synthesizes no touch (LLP 1008 §9), so the contact is `recognized`.
 /// On a `pan` node its deltas take the presenter's pan path, as
 /// `ContactLayoutPan`'s do, and `up` releases at the engine's tracker over the
 /// synthesized samples, spaced `ms / steps` apart on the contact's own clock,
-/// never the wall time between requests. Anywhere else it is
+/// never the wall time between requests (LLP 1057.001 §3). Anywhere else it is
 /// a finger held where it went down: its `pointerdown`, `pointermove`s and
 /// `pointerup` as a real touch's, and on `up` the press a finger lifted there
 /// makes, still on its target; the driver seeks the clock through a hold.
@@ -277,7 +277,7 @@ extension Agent {
               let node = reach.reached?.live(in: presenter), !node.disabled else { return ["pressed": NSNull()] }
         if let run = reach.run, !node.inert, node.activateInline(run) { return ["pressed": Int(run)] }
         if let href = reach.href {
-            if node.pressReaderAtom(href) { return ["pressed": Int(node.id)] } // an inline atom
+            if node.pressReaderAtom(href) { return ["pressed": Int(node.id)] } // an inline atom (LLP 1045.000 D7)
             presenter.session?.follow(href)
             return ["followed": href]
         }
@@ -287,7 +287,7 @@ extension Agent {
         defer { handoff?.dispatched() }
         while let cur = f {
             if let node = cur as? NodeView, let field = (node.textArea as UIView?) ?? node.field {
-                // A pill's press, as its tap recognizer takes a finger's (FieldAtoms.swift).
+                // A pill's press, as its tap recognizer takes a finger's (FieldAtoms.swift, LLP 1045.000 D7).
                 if let area = field as? TextArea, let hit = area.atom(at: area.convert(p, from: nil)) { area.pressAtom(hit.range); return ["pressed": Int(node.id), "atom": hit.atom.kind] }
                 handoff = presenter.beginPress(control: field)
                 if !field.isFirstResponder { _ = field.becomeFirstResponder() }
@@ -323,7 +323,7 @@ extension Agent {
         return ["pressed": pressed]
     }
 
-    /// `tap <scroller> drag <dx> <dy>` without real touches (r5
+    /// `tap <scroller> drag <dx> <dy>` without real touches (LLP 1116.003; r5
     /// weather, mood journal): what a finger's drag on a scroller ends with,
     /// its content moved with the finger — up 300 points for a drag of
     /// -300 — as far as its range allows, lifted with no fling, and its bars
@@ -340,7 +340,7 @@ extension Agent {
         if v.scrollDormant { v.needScroll() }
         let list = presenter.groupedLists?.scroller(for: v.id).flatMap { $0.superview === v ? $0 : nil }
         guard let sv = list ?? v.scroll, sv.isScrollEnabled else {
-            return ["error": "drag #\(v.id) starts on nothing the agent scrolls, so it is a gesture only a real touch makes (a row's swipe actions, a slider, a pan): drive with --touch platform. Without it a drag scrolls only a scroll or list it starts on (`tap <scroll or list> drag 0 -300`), and `tap <action>` performs a row's swipe action"]
+            return ["error": "drag #\(v.id) starts on nothing the agent scrolls, so it is a gesture only a real touch makes (a row's swipe actions, a slider, a pan): drive with --touch platform (LLP 1080.000 §11). Without it a drag scrolls only a scroll or list it starts on (`tap <scroll or list> drag 0 -300`), and `tap <action>` performs a row's swipe action"]
         }
         // Where the finger goes down: the request's point in the viewport, else the middle.
         let b = box(v), vp = presenter.viewport
@@ -351,7 +351,7 @@ extension Agent {
         MainActor.assumeIsolated { HeldState.input(at: win.hitTest(p, with: nil)) } // the finger's accepted down: real input, which lets a held state go
         let scrollsX = (sv as? ScrollView)?.scrollsX ?? false, scrollsY = (sv as? ScrollView)?.scrollsY ?? true
         let o = sv.contentOffset
-        // A drag ends a smooth correction, as a wheel does.
+        // A drag ends a smooth correction, as a wheel does (LLP 1070.000 §11).
         if let owner = sv.superview as? NodeView, presenter.collections.animating.contains(owner.id) { presenter.collections.animationEnded(owner.id, dragging: true) }
         // The content follows the finger, within the range; past it UIKit's bounce brings it back inside, here at once
         Agent.rest(sv, at: CGPoint(x: o.x - CGFloat(delta[0]), y: o.y - CGFloat(delta[1])), x: scrollsX, y: scrollsY)
@@ -469,7 +469,7 @@ extension Agent {
                 if req["pan"] != nil { return nil }
                 if case .contested = reach {
                     return ["phase": phase, "delivery": "unsupported",
-                            "reason": "a swipe or drag binding UIKit would offer this touch; only UIKit's arbitration could give it the contact, and no recognizer sees a recognized one"]
+                            "reason": "a swipe or drag binding UIKit would offer this touch; only UIKit's arbitration could give it the contact, and no recognizer sees a recognized one (LLP 1035.003 D1)"]
                 }
                 // A finger held still: it lands only where the target is seen, as a tap's does.
                 if let why = offscreen(v, box: CGRect(origin: at, size: .zero), hit: seen) ?? seen.flatMap({ obscured(v, at: p, hit: $0) }) {

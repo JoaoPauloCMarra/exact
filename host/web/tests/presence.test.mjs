@@ -63,7 +63,7 @@ const page = `<style>
     presence.live.after(batch, views);
   }
   const readOut = x => x, now = () => 0, preferences = () => 0;
-  const positionContexts = () => {}, onPreferences = () => {}, foldBits = () => 0, onFold = () => {}; // no fold posture
+  const positionContexts = () => {}, onPreferences = () => {}, foldBits = () => 0, onFold = () => {}; // no fold posture (LLP 1078 D6)
   const wasm = { exact_resize: () => JSON.stringify(window.resizeBatch) };
   ${resize}
   window.fixture = html => {
@@ -161,7 +161,7 @@ check('resize snaps an active move and takes new boxes without a move', async ()
 });
 
 check('an interrupted spring uses the seeked time, including its delay and velocity', async () => {
-  const spring = card.replace('1000 0 linear', '0 100 spring(300, 30, 1)'); // the private row (css.rs layout_transition_css)
+  const spring = card.replace('1000 0 linear', '0 100 spring(300, 30, 1)'); // the private row (css.rs layout_transition_css; LLP 1081 D5)
   await fixture(`<div id="card" style="${spring}"></div>`);
   await style(spring + ';margin-left:100px');
   await evaluate('seek(250)');

@@ -1,4 +1,4 @@
-//! CSS `backdrop-filter` on the GPU painter.
+//! CSS `backdrop-filter` on the GPU painter (LLP 1053.000 D2).
 //!
 //! Vello draws a frame in one pass and cannot read what it has drawn, so a
 //! backdrop flushes: the scene so far is rendered and read back, the patch
@@ -6,8 +6,8 @@
 //! blur and saturation (`exact_svg_raster`), and the scene starts again
 //! from that frame as an image, with the open clip and opacity layers
 //! pushed again and the patch drawn inside the box. One extra render and
-//! readback per backdrop node per frame is a declared cost, as is that an
-//! opacity group's content before the backdrop is composited early.
+//! readback per backdrop node per frame — declared in LLP 1053.000 §3, as is
+//! that an opacity group's content before the backdrop is composited early.
 
 use super::{shape, Gpu};
 use crate::paint::Shape;
@@ -22,7 +22,7 @@ use vello::peniko::{Fill, ImageAlphaType, ImageBrush, ImageData, ImageFormat, Mi
 pub(super) enum Layer {
     Clip(Fill, Affine, BezPath),
     Opacity(f32),
-    /// An isolated group clipped to a path: a mask's.
+    /// An isolated group clipped to a path: a mask's (LLP 1077 D2).
     Group(Affine, BezPath),
 }
 

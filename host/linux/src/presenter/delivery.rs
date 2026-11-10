@@ -3,7 +3,7 @@ use crate::host::LET_GO_AFTER;
 use std::time::Instant;
 
 impl<D: DataSource> Presenter<D> {
-    /// Attach the update store: what it has to say reaches
+    /// Attach the update store (LLP 1026 D9): what it has to say reaches
     /// the runner now (`state.delivery`, the `delivery` resource) and after
     /// every check; a boot note it left goes to the journal.
     pub fn set_updates(&mut self, updates: Option<Box<dyn crate::delivery::Store>>) {
@@ -36,7 +36,7 @@ impl<D: DataSource> Presenter<D> {
         if let Some(dev) = self.dev.as_mut() {
             *dev.waker.lock().unwrap_or_else(|e| e.into_inner()) = Some(waker);
         }
-        // What the build channel's registration names.
+        // What the build channel's registration names (LLP 1122 D4).
         if let Some(link) = self.dev.as_mut().and_then(|dev| dev.link.as_mut()) {
             link.design = Some(self.host.runner().design());
             link.plan_digest = Some(self.host.runner().inspection_digest().to_string());
@@ -70,7 +70,7 @@ impl<D: DataSource> Presenter<D> {
             return;
         }
         self.tick_development();
-        // The build channel: the frames its tick took, the
+        // The build channel (LLP 1122 D4): the frames its tick took, the
         // commands dispatched before any generation is handled.
         self.serve_build_channel();
         self.apply_development(data);
@@ -217,7 +217,7 @@ impl<D: DataSource> Presenter<D> {
         self.updates.as_ref().map(|u| u.fd())
     }
 
-    /// First pixel: the selection that booted is good.
+    /// First pixel (LLP 1026 D11): the selection that booted is good.
     pub fn first_pixel(&mut self) {
         if self.display.blocked()
             || self.dirty
@@ -227,7 +227,7 @@ impl<D: DataSource> Presenter<D> {
             return;
         }
         self.activate_first_pixel();
-        // No hatch runs before first pixel.
+        // No hatch runs before first pixel (LLP 1075.003.000.001 §2.1).
         self.connect_hatches();
     }
 
@@ -278,8 +278,8 @@ impl<D: DataSource> Presenter<D> {
         true
     }
 
-    /// Apply the staged bundle now with carry (`deliveryActivate`): its
-    /// assets stand in for the root's by name, its plan restarts
+    /// Apply the staged bundle now with carry (`deliveryActivate`, LLP 1030
+    /// D7): its assets stand in for the root's by name, its plan restarts
     /// the app. `Ok(false)` when nothing is staged.
     pub fn activate_update(&mut self, data: D) -> Result<bool, HostError> {
         if self.content_registration.is_some() {
@@ -370,7 +370,7 @@ impl<D: DataSource> Presenter<D> {
         images.fit(self.viewport, self.brush.scale);
         self.images = images;
         // The old executor lets go of everything, then says which uploads had
-        // begun to go out; the rest never left.
+        // begun to go out; the rest never left (LLP 1016.000 D10).
         self.executor.forget(|_| false);
         let started = self.executor.let_go_started(|_| false);
         self.executor = self.host.executor();
@@ -394,7 +394,7 @@ impl<D: DataSource> Presenter<D> {
         Ok(true)
     }
 
-    /// Commit changed store facts to the delivery resource.
+    /// Commit changed store facts to the delivery resource (LLP 1030 D7).
     pub(super) fn sync_delivery(&mut self) {
         let Some(u) = &self.updates else {
             return;

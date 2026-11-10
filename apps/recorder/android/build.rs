@@ -12,7 +12,7 @@ fn main() {
         return;
     }
     exact_js_bake::build(std::path::Path::new(".."), "linux").expect("bake the recorder");
-    // The app's hatches and what its plan links, from the plan the bake wrote.
+    // The app's hatches and what its plan links (LLP 1115.001.000 D2, D4), from the plan the bake wrote.
     println!("cargo:rerun-if-changed=../app.json");
     let out_dir = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
     let app_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..");

@@ -1,4 +1,4 @@
-//! EXACT PATCH 12: a box's size styles through its preferred
+//! EXACT PATCH 12 (LLP 1053 G1): a box's size styles through its preferred
 //! aspect ratio, as CSS Box Sizing 4 §5 and Chrome size them.
 //!
 //! - The ratio relates the sizes of the box `box-sizing` names, except that a

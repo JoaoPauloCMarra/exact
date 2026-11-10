@@ -1,4 +1,4 @@
-// The root tab bar as the window's sidebar on the
+// @ref LLP 1115.002 D3 — the root tab bar as the window's sidebar on the
 // Mac: which tablist (the kernel's rule and the web's placement rule), what
 // its rows show, that a row presses its authored tab and follows the app's
 // selection, that the tablist's box leaves layout while the sidebar stands
@@ -411,7 +411,7 @@ final class SidebarMacTests: XCTestCase {
             XCTAssertTrue(condition(), "the split view did not reach its requested geometry")
         }
 
-        // On a narrow window the page keeps its minimum and the window stops at the two panes'.
+        // On a narrow window the page keeps its minimum and the window stops at the two panes' (LLP 1115.002 §1).
         window.setContentSize(NSSize(width: 300, height: 500))
         layoutUntil { abs(view.frame.width - 320) < 1 && abs((window.contentView?.frame.width ?? 0) - (320 + split.sidebarWidth)) < 2 }
         XCTAssertEqual(view.frame.width, 320, accuracy: 1)

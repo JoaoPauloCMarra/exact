@@ -1,6 +1,6 @@
-// Generated Markdown through the real Markdown parser: the reader's blocks and styled runs.
+// LLP 1041: real Markdown parser, blocks and styled runs from LLP 1033.
 // Blocks/Runs below match apps/markdown/app.contract; no private renderer.
-// The readers' palette, one `light-dark()` pair an entry; a
+// The readers' palette (LLP 1095 D4), one `light-dark()` pair an entry; a
 // row names an entry (`color="ink"`). The dark half is warm rather than
 // blue-black, so the same documents read as the same documents, and its text
 // sits below white-on-black contrast, which is what makes a long document
@@ -28,7 +28,7 @@ theme
   warnEdge="light-dark(#f5c6c0, #5d302a)" // its border
   warnInk="light-dark(#8a1c12, #f0a89c)" // its text
 
-// Inline atoms: a citation link is always one, a mention and
+// Inline atoms (LLP 1045.000): a citation link is always one, a mention and
 // a skill only when a face names them.
 atom citation link="cite:"
 atom mention prefix="@"
@@ -186,7 +186,7 @@ component MarkdownStress
       column flex-shrink=0 padding=12 gap=6 width="100%" box-sizing="border-box" background-color="chrome"
         row gap=10 align-items="center" flex-wrap="wrap"
           text "Markdown stress" font-size=22 font-weight=700 color="strongInk"
-          text "Synthetic documents" font-size=12 color="softInk"
+          text "LLP 1041 · synthetic documents" font-size=12 color="softInk"
           button press=reset testId="reset" padding=6 background-color="control" border-width=0 border-radius=6
             text "Reset" font-size=12 color="ink"
         row gap=6 align-items="center" flex-wrap="wrap"
@@ -222,7 +222,7 @@ component MarkdownStress
               text "20 reparses at 1 Hz" font-size=12 color="ink"
         text `${doc.sourceBytes} source bytes · ${doc.totalBlocks} parsed blocks · ${doc.materialized} supplied blocks · ${doc.tableRows} table rows · revision ${doc.revision}` testId="stats" font-size=12 color="ink"
         text `${doc.largestBlock} text bytes in largest block · ${wide ? "1200" : "640"} px column · ${running ? "reparsing" : "paused"}` testId="load-stats" font-size=12 color="softInk"
-        text (single ? "ONE NODE: the whole source as one text markup=\"markdown\" node; the host styles it." : windowed ? "WINDOWED: complete parsed document; only nearby blocks mounted. One giant block remains giant." : eager ? "EAGER: all blocks mounted. Large documents may stall input." : "MANUAL PAGE: 40 blocks; the entire document is still parsed. One giant block remains giant.") testId="mode" font-size=11 color="warnInk"
+        text (single ? "ONE NODE: the whole source as one text markup=\"markdown\" node; the host styles it (LLP 1045 D4)." : windowed ? "WINDOWED: complete parsed document; only nearby blocks mounted. One giant block remains giant." : eager ? "EAGER: all blocks mounted. Large documents may stall input." : "MANUAL PAGE: 40 blocks; the entire document is still parsed. One giant block remains giant.") testId="mode" font-size=11 color="warnInk"
       if not eager and not windowed
         row flex-shrink=0 padding=6 gap=8 flex-wrap="wrap" align-items="center" background-color="chrome"
           button press=previousPage testId="previous-page" padding=6 background-color="control" border-width=0
@@ -367,14 +367,14 @@ component DocumentBody
   state unavailable = ""
   state linkOpen = false
   state linkUrl = ""
-  // The atom fixture.
+  // The atom fixture (LLP 1045.000 §5 stage 1).
   state atomText = "Ask [Assistant quote](cite://v1/quote?text=a%20long%20quoted%20passage) about @src/main.rs and $tidy here.\n\n@a-very-long-file-name-that-does-not-fit-in-a-narrow-field.rs [B](cite:2)[C](cite:3) end"
   state atomPress = ""
   state atomSelected = ""
-  // Each face paints its atom over its kind's: `tidy` is green, not the skill's violet.
-  // `tidy` is read as "Skill, tidy", its `ariaLabel`, where it draws "tidy".
+  // Each face paints its atom over its kind's (LLP 1045.000 D2): `tidy` is green, not the skill's violet.
+  // `tidy` is read as "Skill, tidy", its `ariaLabel`, where it draws "tidy" (D8).
   derive atomFaces = [AtomFace(source="@src/main.rs", label="main.rs", icon="", title="src/main.rs", color="light-dark(#0f5fa8, #8cc4ff)", backgroundColor="light-dark(#1a85d424, #69b1ff33)", direction="", ariaLabel=""), AtomFace(source="$tidy", label="tidy", icon="", title="Skill: tidy", color="light-dark(#137a35, #7ad893)", backgroundColor="light-dark(#199f4324, #5ecc7133)", direction="", ariaLabel="Skill, tidy"), AtomFace(source="@a-very-long-file-name-that-does-not-fit-in-a-narrow-field.rs", label="", icon="", title="", color="light-dark(#b5242d, #ff8f8a)", backgroundColor="light-dark(#d52c3624, #ff676233)", direction="", ariaLabel="")]
-  // A right-to-left line's pills: each in its line's
+  // A right-to-left line's pills (LLP 1045.000 D4): each in its line's
   // direction, but those whose faces pin left to right. Apple draws a
   // `symbol:sf/` icon and the web an image's, so each host shows two.
   state atomRtl = "שאל את @notes ואת @pinned כאן\n\nבדוק את @web ואת @webpin כאן"
@@ -414,7 +414,7 @@ component DocumentBody
       scroll testId="document" flex=1 min-height=60 width="100%" overflow-x="hidden" overscroll-behavior="contain"
         column width="100%" align-items="center" padding-top=16 padding-bottom=64
           column width="100%" max-width=(wide ? 1200 : 640) padding-left=20 padding-right=20 box-sizing="border-box" testId="reading-column" gap=16
-            // The WYSIWYG editor prototype: the same source
+            // The WYSIWYG editor prototype (LLP 1045 D5): the same source
             // string the one-node reader below it draws.
             row role="toolbar" aria-label="Markdown formatting" gap=6 flex-wrap="wrap"
               MarkdownTool(name="bold", label="Bold", formats=formats, unavailable=unavailable, apply=applyFormat)
@@ -436,7 +436,7 @@ component DocumentBody
             text `${mixed ? "Mixed · " : ""}${formats}` testId="markup-selection" min-height=16 font-size=12 color="softInk"
             textarea id="markup-editor" markup="markdown" value=editorText input=editMarkdown select=selected testId="markup-editor" aria-label="Markdown editor" width="100%" height=260 box-sizing="border-box" padding=12 border-width=1 border-color="fieldEdge" border-radius=8 background-color="fieldBg" color="ink" font-size=16 line-height="26px"
             text editorText markup="markdown" testId="markup-preview" width="100%" font-size=16 line-height="26px" color="ink"
-            // Above the atom reader, which Firefox draws a line taller.
+            // Above the atom reader, which Firefox draws a line taller (issues/20261030-firefox-atom-reader-single-line.md).
             textarea id="atom-rtl-editor" markup="markdown" value=atomRtl input=editRtl atoms="mention" atomFaces=atomRtlFaces testId="atom-rtl-editor" aria-label="Right-to-left atoms" width="100%" height=120 box-sizing="border-box" padding=12 border-width=1 border-color="fieldEdge" border-radius=8 background-color="fieldBg" color="ink" font-size=16 line-height="26px" direction="rtl"
             text atomRtl markup="markdown" atoms="mention" atomFaces=atomRtlFaces testId="atom-rtl-reader" width="100%" font-size=16 line-height="26px" color="ink" direction="rtl"
             textarea id="atom-editor" markup="markdown" value=atomText input=editAtoms select=selectedAtom atoms="citation mention skill" atomFaces=atomFaces atompress=pressedAtom testId="atom-editor" aria-label="Atoms" width="100%" height=160 box-sizing="border-box" padding=12 border-width=1 border-color="fieldEdge" border-radius=8 background-color="fieldBg" color="ink" font-size=16 line-height="26px"

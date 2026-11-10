@@ -1,4 +1,4 @@
-//! shadcn/ui (importer 1): the `:root` and `.dark` blocks of a
+//! shadcn/ui (LLP 1121 D14, importer 1): the `:root` and `.dark` blocks of a
 //! `globals.css`, in v4's `oklch()` or v3's bare HSL channels
 //! (`222.2 84% 4.9%`, read as `hsl()`).
 //!
@@ -12,7 +12,7 @@
 //!   block `.dark .theme-blue`) is a proposed axis, `theme = default | blue`,
 //!   with `when theme=blue` lines; `.theme-default` is the default theme.
 //! - A length (`--radius: 0.625rem`), and a shadow or a family by its name
-//!   (`--shadow-sm`, `--font-sans`), is its kind's token, a
+//!   (`--shadow-sm`, `--font-sans`), is its kind's token (stage 6 H), a
 //!   theme's value its `when` line; one with two values on the scheme's
 //!   sides, or that does not fold, is reported. `--radius`'s sizes as
 //!   shadcn derives them (`radius.sm/md/lg/xl`) are proposed with it, each
@@ -260,7 +260,7 @@ fn import_unbounded(
     let names = &named.names;
     let (mut tokens, fates) = engine::assemble(&decls, &named, &themes, &literal);
     // The declarations of the kinds besides colour, each made a token or
-    // reported there.
+    // reported there (stage 6 H).
     let mut others: Vec<(usize, &'static str)> = Vec::new();
     // Each token's source declarations, for a token refused where it lands.
     let mut sources: Vec<(String, Vec<Unmapped>)> = Vec::new();
@@ -714,7 +714,7 @@ fn looks_like_length(v: &str) -> bool {
 
 /// The role overrides the mapped tokens mean, each offered alone; none
 /// where the design has it so already, under any spelling of the role. A
-/// role has one value: one whose token varies by an app axis
+/// role has one value (LLP 1121 D5): one whose token varies by an app axis
 /// once the import is accepted is not offered, and any role the design has
 /// that would vary then is named, each with a note and no operations
 /// (removing a role can break what reads its colour; the person decides).
@@ -752,7 +752,7 @@ fn offers(
         if varies(&token) {
             out.push(Offer {
                 role: role.into(),
-                note: Some(format!("not offered: `{token}` varies by an app axis, and a role has one value, which the hosts' own surfaces read (the build refuses it, `tamber-role-axis`)")),
+                note: Some(format!("not offered: `{token}` varies by an app axis, and a role has one value, which the hosts' own surfaces read (LLP 1121 D5; the build refuses it, `tamber-role-axis`)")),
                 token,
                 ops: Vec::new(),
             });
@@ -829,7 +829,7 @@ fn offers(
             role: t.name.value.clone(),
             token: named.unwrap_or(&t.value.value).to_string(),
             ops: Vec::new(),
-            note: Some(format!("the design's `{}` {what}: a role has one value, so the build refuses it (`tamber-role-axis`) until it names one colour", t.name.value)),
+            note: Some(format!("the design's `{}` {what}: a role has one value (LLP 1121 D5), so the build refuses it (`tamber-role-axis`) until it names one colour", t.name.value)),
         });
     }
     let split = super::split_roles(design, &roles, tokens, &out);

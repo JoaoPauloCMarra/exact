@@ -1,6 +1,6 @@
 //! List rows laid out by replaying rows like them (Taffy patch 29) against
 //! rows laid out fresh: over seeded random rows of a few shapes, rebound to
-//! other texts and arms as a list rebinds them, every frame and
+//! other texts and arms as a list rebinds them (LLP 1078), every frame and
 //! scroll extent equals a rehydrated kernel's bit for bit, and most rows of a
 //! shape and text sizes seen before are replays.
 use crate::{Kernel, MonospaceMeasurer, NodeType, Offer, Op, PropId, StyleId, StyleProps};

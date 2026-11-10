@@ -1,10 +1,10 @@
-//! An SVG file as an image: the document parsed into the
+//! An SVG file as an image (LLP 1011.001): the document parsed into the
 //! kernel's own SVG nodes in a scratch kernel, resolved by the kernel's
 //! scene resolver (`exact_kernel::svg::scene`), for a native host to
 //! rasterize as it rasterizes an island and hand to its raster loader as a
 //! decoded picture. A browser's `<img>` of an SVG is the model: a picture
 //! drawn at the size it is shown, no scripts, no external references, no
-//! interaction. Animation is ignored, where a browser would run it.
+//! interaction; animation is ignored (§3's declared deviation).
 
 mod css;
 mod lower;
@@ -44,7 +44,7 @@ impl std::error::Error for Error {}
 /// `viewBox` (CSS Images 3 §4.1's default object size, 300×150).
 pub const DEFAULT_SIZE: (f32, f32) = (300.0, 150.0);
 
-/// What the root element says of the picture's size.
+/// What the root element says of the picture's size (LLP 1011.001 D1).
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Natural {
     /// An absolute `width`, in CSS pixels; a percentage counts as absent.
@@ -81,7 +81,7 @@ impl Natural {
         }
     }
 
-    /// The natural size the kernel's seam carries: the absolute size;
+    /// The natural size the kernel's seam carries (D1): the absolute size;
     /// one absolute dimension with the other from the `viewBox`'s ratio;
     /// the `viewBox`'s own size when the file gives no size (the declared
     /// deviation: a browser gives such an image its container's width);
@@ -143,7 +143,7 @@ pub struct Document {
     /// and the host's log.
     pub warnings: Vec<String>,
     /// Whether the picture has text, which a host draws where its fonts
-    /// are.
+    /// are (D3).
     pub text: bool,
 }
 
@@ -189,7 +189,7 @@ fn sniff_text(text: &str) -> bool {
     }
 }
 
-/// The natural size a header read gives from a prefix of the file:
+/// The natural size a header read gives from a prefix of the file (D4):
 /// the root tag's attributes alone. `None` when the prefix holds no root
 /// tag or the document is not SVG.
 pub fn natural(prefix: &[u8]) -> Option<Natural> {
@@ -215,7 +215,7 @@ pub struct Loaded {
     pub document: Document,
 }
 
-/// Nothing presented: an image has no running animation.
+/// Nothing presented: an image has no running animation (§3).
 fn still(_: exact_kernel::NodeKey, _: exact_motion::Property) -> Option<exact_motion::Value> {
     None
 }
@@ -231,8 +231,8 @@ pub fn load(text: &str) -> Result<Loaded, Error> {
 }
 
 impl Loaded {
-    /// The scene at a concrete object size of `width` × `height` CSS pixels:
-    /// user units to that box, `preserveAspectRatio` honoured.
+    /// The scene at a concrete object size of `width` × `height` CSS pixels
+    /// (D3): user units to that box, `preserveAspectRatio` honoured.
     pub fn scene(&self, width: f32, height: f32) -> Scene {
         let node = self
             .kernel
@@ -251,7 +251,7 @@ impl Loaded {
         self.document.svg
     }
 
-    /// Whether the picture can show an SVG island,
+    /// Whether the picture can show an SVG island (LLP 1055.000 D10, D14),
     /// by `exact_runner::svg_islands`'s rule for a plan: a `mask` or
     /// `filter` element, or `filter` set on an SVG element.
     pub fn islands(&self) -> bool {
@@ -425,7 +425,7 @@ mod tests {
     }
 
     /// Files a few kilobytes long that name billions of items, dashes or
-    /// surface pixels: each is refused by the limit it
+    /// surface pixels (LLP 1011.001 D2): each is refused by the limit it
     /// passes, quickly, before a host allocates for it.
     #[test]
     fn a_file_that_expands_past_a_limit_draws_nothing_and_names_it() {

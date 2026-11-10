@@ -1,5 +1,5 @@
-// A confirmation in the alert shape on AppKit: an `alertdialog` — a
-// `dialog` shown by `showModal` or its
+// A confirmation in the alert shape on AppKit (LLP 1115.000 D7.6; LLP 1115
+// D6's Mac half): an `alertdialog` — a `dialog` shown by `showModal` or its
 // `command="show-modal"`, or a popover opened by its invoker — whose rows are
 // text, one hide-only cancel and at most three buttons with it
 // (`ConfirmationShape`, the rule iOS's alert follows) is `NSAlert`, a sheet
@@ -15,8 +15,8 @@
 // after the sheet has ended, and only while the alert still showed what is
 // there (as the chooser's menu does, ChooserMac.swift). Any other shape is
 // no alert: a chooser is the `NSMenu`, and the rest is a sheet or a popover
-// holding its own subtree (SheetsMac.swift,
-// PopoversMac.swift). An alert has no outside: a click
+// holding its own subtree (LLP 1115.002 D7; SheetsMac.swift,
+// PopoversMac.swift). An alert has no outside (LLP 1115.000 D13.4): a click
 // on the window behind the sheet does nothing and Escape presses the cancel,
 // which is the `closedby` lowering implies for the shape, `closerequest`. So
 // a `dialog` whose author wrote `closedby="any"` is not presented as one: it
@@ -121,7 +121,7 @@ final class AlertHost {
         let cancels = children.filter { $0.isButton && !$0.handlers.contains("press") && closes($0, pop, popover: popover) }
         let texts = children.filter { $0.kind == "text" }
         let fields = children.filter(\.isPromptField)
-        // A prompt asks one thing, as lowering holds it to.
+        // A prompt asks one thing, as lowering holds it to (rules/DEFERRED.md).
         guard fields.count <= 1, children.count == actions.count + cancels.count + texts.count + fields.count, let cancel = cancels.first,
               actions.allSatisfy({ closes($0, pop, popover: popover) }),
               // A prompt's actions may all be disabled (Save, until a name is
@@ -149,7 +149,7 @@ final class AlertHost {
                     defaultRow: actions.isEmpty ? 0 : emphasized.flatMap { rows[$0].cancel ? nil : $0 })
     }
 
-    /// The row Return presses: the one `filled`,
+    /// The row Return presses (LLP 1115.000 D7.3): the one `filled`,
     /// non-destructive button, when there is exactly one. Emphasis alone
     /// never picks among several, and a destructive button is never it.
     static func defaultRow(filled: [Bool], destructive: [Bool]) -> Int? {

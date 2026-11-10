@@ -1,8 +1,8 @@
-//! The window's app modes: `setMode(axis, value)` from an
+//! The window's app modes (LLP 1121 D5): `setMode(axis, value)` from an
 //! action, or the agent's `prefer mode`. A node's tuple is the window's,
 //! overridden by the nearest `-exact-mode` pin; a new window tuple sets every
 //! themed row again in the commit that changed it, which paints (a colour
-//! token moves no geometry). Neither persists across a launch; a
+//! token moves no geometry). Neither persists across a launch (§9 Q5); a
 //! reload carries the window's.
 
 use super::{DataSource, Runner, RunnerError};
@@ -145,7 +145,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Set the app modes `pins` names, each axis to its value, and commit
-    /// what they move in one commit (the agent's `prefer mode`): every
+    /// what they move in one commit (the agent's `prefer mode`, D13): every
     /// pin is checked before any is set. `None` when they are the window's
     /// already.
     pub fn set_modes(
@@ -201,7 +201,7 @@ impl<D: DataSource> Runner<D> {
         self.set_modes(&[(axis, value)])
     }
 
-    /// `view`'s look row `style` in `state` as the theme index
+    /// `view`'s look row `style` in `state` (LLP 1121 D8) as the theme index
     /// holds it, for `layout <node>`: the tokens its written text read, the
     /// text, and the tuple; `None` when it read no token.
     pub fn look_token(
@@ -256,7 +256,7 @@ impl<D: DataSource> Runner<D> {
         names
     }
 
-    /// `view`'s `style` row as the token index holds it, for `layout <node>`:
+    /// `view`'s `style` row as D7's index holds it, for `layout <node>`:
     /// the tokens it read (the theme's names its text names), its text, the
     /// tuple it was set in as `axis=value` by commas, and whether a boundary
     /// set it (an implied row) rather than a binding. `None` when it read no
@@ -293,7 +293,7 @@ impl<D: DataSource> Runner<D> {
         Some((names, text, modes, row.implied))
     }
 
-    /// The app modes `view`'s node is in, `[(axis, value)]`:
+    /// The app modes `view`'s node is in, `[(axis, value)]` (LLP 1121 D5):
     /// the window's, overridden by the pins above it.
     pub fn modes_of_view(&self, view: exact_kernel::ViewId) -> Option<Vec<(String, String)>> {
         self.tree
@@ -304,7 +304,7 @@ impl<D: DataSource> Runner<D> {
 
     /// Every remembered instance view with its plan site and the plan's
     /// digest, as JSON `{"planDigest": …, "sites": [[view, site], …]}`: a
-    /// development page's map from views to sites (its outline),
+    /// development page's map from views to sites (LLP 1122 D5's outline),
     /// in one read.
     pub fn view_sites_json(&self) -> String {
         let mut out = String::from("{\"planDigest\":");

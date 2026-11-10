@@ -1,4 +1,4 @@
-//! Canvas 2D on Linux: the recorded lists replayed into a
+//! Canvas 2D on Linux (LLP 1056 D7): the recorded lists replayed into a
 //! tiny-skia pixmap, the canvas's kept bitmap, under both painters. The
 //! painters composite each canvas's latest snapshot in its content box; the
 //! GPU painter uploads it as an image, keyed by the snapshot's identity, so a
@@ -98,7 +98,7 @@ enum Object {
     Image(String),
 }
 
-/// The decoded image handles, shared by every replayer.
+/// The decoded image handles, shared by every replayer (LLP 1056 D9).
 pub(crate) type ImageCache = HashMap<String, Arc<Pixmap>>;
 
 /// One canvas's replayer: its bitmap and the state the lists build on.
@@ -483,7 +483,7 @@ impl Replayer {
 }
 
 /// A whole recording replayed into a fresh bitmap of `size` points at
-/// `scale` (a hatch's overlay): nothing is
+/// `scale` (a hatch's overlay, LLP 1075.003.000.001 §2.2.1): nothing is
 /// carried from an earlier one. `None` for a box with no area.
 pub(crate) fn replay(
     lists: &[Vec<u8>],
@@ -516,7 +516,7 @@ pub(crate) struct Canvases {
 }
 
 impl Canvases {
-    /// Apply the runner's stamped lists in order. A fresh one
+    /// Apply the runner's stamped lists in order (LLP 1056 D4). A fresh one
     /// allocates the generation's bitmap, cleared; a zero size is none.
     pub(crate) fn apply(&mut self, lists: Vec<CanvasList>) -> Vec<String> {
         let mut errors = Vec::new();

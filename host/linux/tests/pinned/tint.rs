@@ -29,7 +29,7 @@ fn raster_tint_matches_chrome_in_both_painters() {
     assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
-/// A symbol is drawn in its computed `color`, inherited
+/// LLP 1081 stage 2: a symbol is drawn in its computed `color`, inherited
 /// (the column's black) or its own (red), on every host; a tint is for rasters.
 #[test]
 fn a_symbol_paints_its_color() {

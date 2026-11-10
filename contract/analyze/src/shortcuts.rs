@@ -1,9 +1,9 @@
-//! A button's `aria-keyshortcuts` against the keys a game's `Actions` bind.
-//! A shown button's shortcut takes its chord, its key with
+//! A button's `aria-keyshortcuts` against the keys a game's `Actions` bind
+//! (LLP 1132 D11). A shown button's shortcut takes its chord, its key with
 //! exactly its modifiers, before the focused world hears it, on every host,
 //! so that press of a key both declare reaches the world only while no such
 //! button shows; the key with other modifiers reaches it either way. And
-//! the chords that never reach an app on Windows.
+//! the chords that never reach an app on Windows (LLP 1115.004 D9.6).
 
 use crate::{AnalyzeError, Related};
 use contract_syntax::{Attr, Expr, File, Node, Span};
@@ -347,7 +347,7 @@ pub fn check_shortcut_keys(
                         };
                         out.push(AnalyzeError {
                             id: "analyze-shortcut-world-key",
-                            message: format!("`aria-keyshortcuts` \"{chord}\" takes {code} pressed with {held} held: while this button shows, surface `{surface}` does not hear that press as {names}, though {code} with other modifiers still reaches it; the shortcut presses the button first on every host; {fix}"),
+                            message: format!("`aria-keyshortcuts` \"{chord}\" takes {code} pressed with {held} held: while this button shows, surface `{surface}` does not hear that press as {names}, though {code} with other modifiers still reaches it; the shortcut presses the button first on every host (LLP 1132 D11); {fix}"),
                             span: button.shortcut.span,
                             related: button.related(text, written),
                         });
@@ -406,7 +406,7 @@ fn same_chord(a: &str, b: &str) -> bool {
 }
 
 /// Every button `aria-keyshortcuts` chord that never presses its button on
-/// Windows, for an app with a Windows host. Each host
+/// Windows (LLP 1115.004 D9.6), for an app with a Windows host. Each host
 /// matches a chord as written, and on Windows `Meta` is the Windows key,
 /// whose chords the shell takes first; so a `Meta` chord whose list holds
 /// no `Control` sibling is `analyze-shortcut-meta-only`, naming the sibling
@@ -449,12 +449,12 @@ pub fn check_windows_shortcuts(file: &File) -> Vec<AnalyzeError> {
                     };
                     (
                         "analyze-shortcut-meta-only",
-                        format!("`aria-keyshortcuts` \"{chord}\" has no Control chord beside it: on Windows `Meta` is the Windows key, whose chords the shell takes before the app hears them, and a host matches a chord as written, so this shortcut never fires there; {advice}"),
+                        format!("`aria-keyshortcuts` \"{chord}\" has no Control chord beside it: on Windows `Meta` is the Windows key, whose chords the shell takes before the app hears them, and a host matches a chord as written, so this shortcut never fires there; {advice} (LLP 1115.004 D9.6)"),
                     )
                 } else if let Some(kept) = windows_keeps(&modifiers, key) {
                     (
                         "analyze-shortcut-windows-reserved",
-                        format!("`aria-keyshortcuts` \"{chord}\" is a chord Windows keeps for {kept}, so on Windows it never presses this button; choose another"),
+                        format!("`aria-keyshortcuts` \"{chord}\" is a chord Windows keeps for {kept}, so on Windows it never presses this button; choose another (LLP 1115.004 D9.6)"),
                     )
                 } else {
                     continue;

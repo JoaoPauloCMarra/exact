@@ -1,4 +1,4 @@
-// A scroller with pull to refresh, which the agent's own drag
+// LLP 1054 A4: a scroller with pull to refresh, which the agent's own drag
 // pulls as a finger does (NavigationCollapseIOSTests).
 component PullRefresh
   state pulls = 0

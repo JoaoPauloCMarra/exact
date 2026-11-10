@@ -1,13 +1,12 @@
-//! A reusable, lazily created `NSURLSession` behind [`AsyncTransport`]: tasks
-//! with their own delegates, callbacks on the session's serial queue, the
-//! upload held once and read in bounded chunks. The Objective-C++ half is
+//! A reusable, lazily created `NSURLSession` behind [`AsyncTransport`] (LLP 0068.000 §5): tasks with their own delegates, callbacks on the session's serial
+//! queue, the upload held once and read in bounded chunks. The Objective-C++ half is
 //! `darwin_task.mm`.
 
 use std::ffi::{c_char, c_int, c_uchar, c_void, CStr, CString};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::{Arc, OnceLock};
 
-// Contain all Rust callbacks across native FFI.
+// @ref LLP 0068.000#3-ownership-callbacks-and-cancellation — contain all Rust callbacks across native FFI
 const NATIVE_HEADER_BYTES: usize = 1 << 20;
 struct CallbackState {
     sink: Box<dyn Sink>,

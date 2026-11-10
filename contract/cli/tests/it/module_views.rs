@@ -1,7 +1,8 @@
-//! A package carries a view, and its implementation hears whether the view is
-//! displayed and who made it so, through `@fixture/swatch`, a package written
-//! beside the app as an installed one, whose implementation the test plays as
-//! the host's native slot.
+//! A package carries a view, and its implementation hears whether the view
+//! is displayed and who made it so (LLP 1133.001 D1, LLP 1133.008 D8 items
+//! 1 and 2), through `@fixture/swatch`, a package written beside the app as
+//! an installed one, whose implementation the test plays as the host's
+//! native slot.
 
 use exact_runner::{CallOrigin, Reply, Runner};
 use serde_json::{json, Value as Json};

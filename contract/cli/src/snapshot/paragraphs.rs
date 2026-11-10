@@ -1,4 +1,4 @@
-//! Paragraph ownership after component expansion.
+//! Paragraph ownership after component expansion (LLP 1126 D6/D7).
 use super::{refusal, CompileError};
 use contract_syntax::{Expr, File, Node};
 

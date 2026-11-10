@@ -1,6 +1,6 @@
 import CoreGraphics
 
-/// A flat leaf's paint, read once from its style: nil when
+/// A flat leaf's paint (LLP 1068 §6.1), read once from its style: nil when
 /// the style paints something a bare layer cannot.
 package struct FlatPaint: Equatable {
     /// The fill's RGBA bytes in the light and the dark appearance (the same
@@ -47,9 +47,9 @@ package struct FlatPaint: Equatable {
         "border_style_top", "border_style_right", "border_style_bottom", "border_style_left", "text_transform",
         "text_color", "text_shadow", "text_stroke_width", "text_stroke_color", "text_align", "text_overflow", "text_decoration_line", "interpolate_size", "touch_action",
         "border_radius_top_left", "border_radius_top_right", "border_radius_bottom_right", "border_radius_bottom_left",
-        // A fixed fill paints alike in either scheme.
+        // A fixed fill paints alike in either scheme (LLP 1034 §8).
         "color_scheme",
-        // Which rows the author wrote: nothing a leaf paints.
+        // Which rows the author wrote (LLP 1115.000 D2): nothing a leaf paints.
         "written",
     ]
 

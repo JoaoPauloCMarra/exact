@@ -1,4 +1,4 @@
-// The design server's wire: the token only
+// The design server's wire (LLP 1121 D13, stage 3 commit 4): the token only
 // to a local request, every read and write behind it, two clients' writes to
 // one token where one conflicts, a hand edit, a new file and a `git checkout`
 // reaching a subscriber and a long poll, a write announced once, a server
@@ -127,7 +127,7 @@ test('the token goes only to a local request, and every request needs it', async
   tamber.close();
 });
 
-// A dev loop's wire says its builds take a value-only edit
+// LLP 1121 stage 4: a dev loop's wire says its builds take a value-only edit
 // live; a write is held until the server answers, however long (a read
 // still times out), so a write never lands after its client was told it
 // failed.
@@ -160,7 +160,7 @@ test('hello says live, and a slow write is answered, not timed out', async () =>
   tamber.close();
 });
 
-// A map per plan digest. Each build is joined and outlined
+// LLP 1122 T2c: a map per plan digest. Each build is joined and outlined
 // from its own plan's map; a build on a plan with no map here is sent none.
 test('each build is joined and outlined from its own plan\'s map', async () => {
   const port = 8806, P1 = '1'.repeat(64), P2 = '2'.repeat(64), P3 = '3'.repeat(64);
@@ -214,7 +214,7 @@ test('each build is joined and outlined from its own plan\'s map', async () => {
   await tamber.close();
 });
 
-// The dev loop's builds in `hello`, and a pin a client may
+// LLP 1122 D4: the dev loop's builds in `hello`, and a pin a client may
 // set only while it subscribes by name, cleared on every build when it goes.
 test('a pin is its client\'s while it is present, and builds are in hello', async () => {
   const port = 8804;
@@ -490,7 +490,7 @@ test('frameOnlyByTool: every HTML head carries frame-ancestors, however it is wr
 });
 
 // The wasm loop's HTML (caltrain: the theme fixture has no wasm build).
-// Inspect is a development page's only: no file a web build
+// LLP 1122 T2b: inspect is a development page's only: no file a web build
 // ships (every host file, `webHostFiles`) carries it; dev.js, which does, is
 // served by the dev loop alone.
 test('no web build ships inspect: it lives in dev.js, which no build copies', async () => {
@@ -509,7 +509,7 @@ test('no web build ships inspect: it lives in dev.js, which no build copies', as
   expect(readFileSync(resolve(ROOT, 'host/web-js/inspect-dev.js'), 'utf8')).toContain('exact-inspect');
 });
 
-// Inspect mode in the wasm host, on the theme fixture's page.
+// LLP 1122 T2b: inspect mode in the wasm host, on the theme fixture's page.
 test('inspect on the wasm page: no tap reaches the app, a click selects the node the hit test finds and reports its site, instance and rows, a refresh reports it again, and Escape leaves', async () => {
   const { base, stop, said } = await devLoop(['--wasm'], 'theme-fixture');
   const browser = await suiteBrowser();
@@ -637,8 +637,8 @@ test('inspect on the wasm page: no tap reaches the app, a click selects the node
   }
 }, 900_000);
 
-// The JS target: the same node on the theme fixture answers
-// the same on the JS loop as on the wasm loop, its rows
+// LLP 1122 T2b, the JS target: the same node on the theme fixture answers
+// the same on the JS loop as on the wasm loop (the gate's line), its rows
 // built in the page from the build's inspect table, and the join and
 // outline drawn from the page's own plan's map.
 test('inspect on the JS page: no tap reaches the app, and each node answers as on the wasm page, row for row, joined to the same source, with the same editability', async () => {
@@ -780,7 +780,7 @@ for (const [loop, flags] of [['the JS loop', []]]) {
   }, 900_000);
 }
 
-// On the wire: who changed a file,
+// LLP 1122 D9 and D10 on the wire (stage 3 commit 5): who changed a file,
 // `commit`'s guard, held proposals.
 const gitIn = (...args) => spawnSync('git', ['-c', 'user.email=t@example.test', '-c', 'user.name=t', ...args], { cwd: dir, encoding: 'utf8' });
 const head = () => gitIn('rev-parse', 'HEAD').stdout.trim();
@@ -998,7 +998,7 @@ test("an import is held as proposals: the tokens as one, each role override apar
   expect(said[0]).toBe('shadcn: 47 source values, 47 mapped, 0 reported');
   await stream.until(e => e.some(x => x.event === 'proposal' && x.client === 'import:shadcn'));
   const held = stream.events.find(x => x.event === 'proposal' && x.client === 'import:shadcn');
-  // 23 colours, `--radius` a length and its derived `lg`.
+  // 23 colours, `--radius` a length and its derived `lg` (stage 6 H).
   expect(held.ops.length).toBe(30);
   expect(held.review.tokens).toBe(25);
   expect(held.review.offers.map(o => [o.role, o.items])).toEqual([['-exact-background', [25]], ['-exact-label', [26]], ['-exact-secondary-background', [27]], ['-exact-separator', [28]], ['AccentColor', [29]]]);
@@ -1023,7 +1023,7 @@ test("an import is held as proposals: the tokens as one, each role override apar
   stream.close();
 }, 120_000);
 
-// The server's `tamber/1.1` additions: `history`, `revert`,
+// LLP 1122 T1's server additions (`tamber/1.1`): `history`, `revert`,
 // `import`, and the design tool's files.
 test('the design tool is served to a local request only, its base at its path', async () => {
   const port = 8802;
@@ -1106,7 +1106,7 @@ test('history reads three design commits as token edits; a revert applies, is re
     expect(second.files[0]).toMatchObject({ file: 'app.tamber', status: 'M', edits: [{ what: 'token', name: 'edge', when: [], before: '#101010', after: '#202020' }] });
     expect(second.files[0].diff).toContain('+  edge = #202020');
     expect(third.files[0].edits.map(e => [e.name, e.before, e.after])).toEqual([['ink', '#000000', '#111111'], ['card', null, '#303030']]);
-    // Its app.contract has no state part: not the design's.
+    // Its app.contract has no state part: not the design's (stage 8 D).
     expect(first.files.map(f => f.file)).toEqual(['app.tamber']);
     expect(first.files[0].status).toBe('A');
     expect(first.files[0].edits.map(e => [e.what, e.name])).toEqual([['other', 'name'], ['token', 'ink'], ['token', 'edge']]);
@@ -1167,7 +1167,7 @@ test('history reads three design commits as token edits; a revert applies, is re
     const imported = await call({ method: 'import', client: 'design-tool:ada', kind: 'shadcn', source: css, name: 'globals.css' });
     expect(imported.status, JSON.stringify(imported)).toBe(200);
     expect(imported.ok.client).toBe('design-tool:ada');
-    // 23 colours, `--radius` a length and its derived `lg`.
+    // 23 colours, `--radius` a length and its derived `lg` (LLP 1121 stage 6 H).
     expect(imported.ok.ops).toHaveLength(30);
     expect(imported.ok.review).toMatchObject({ importer: 'shadcn', counted: { source: 47, mapped: 47, reported: 0 }, tokens: 25 });
     expect(imported.ok.review.offers.map(o => o.role)).toEqual(['-exact-background', '-exact-label', '-exact-secondary-background', '-exact-separator', 'AccentColor']);
@@ -1272,7 +1272,7 @@ test("a held revert keeps its untouched files' digests and a person's selection 
   }
 }, 600_000);
 
-// The app's own `.contract` files are the server's too:
+// LLP 1121 stage 8 D: the app's own `.contract` files are the server's too:
 // a hand edit of a state part is announced, a `set-state` is a session's
 // write that `commit` takes, and a file dirty at its baseline is refused.
 test("the app's .contract: a hand edit is announced, set-state is committed, and one dirty at its baseline refused", async () => {
@@ -1340,7 +1340,7 @@ test("the app's .contract: a hand edit is announced, set-state is committed, and
     rmSync(repo, { recursive: true, force: true });
   }
 }, 600_000);
-// A held set-state with no `file` is guarded by
+// Stage 8 D, review round 2: a held set-state with no `file` is guarded by
 // the Contract sources it does not write; a source two directories down is
 // still watched after its directory is replaced empty and filled again.
 test("a held set-state is guarded by the other Contract sources, and a replaced directory's source stays watched", async () => {
@@ -1401,8 +1401,8 @@ test("a held set-state is guarded by the other Contract sources, and a replaced 
     rmSync(repo, { recursive: true, force: true });
   }
 }, 600_000);
-// The app's own .contract files are in history and revert too:
-// a commit's state rows are edits, its other lines `code`,
+// The app's own .contract files are in history and revert too (stage 8 D's
+// follow-up): a commit's state rows are edits, its other lines `code`,
 // which a revert leaves alone.
 test("history reads a .contract commit's state rows, and a revert undoes them, leaving its code", async () => {
   const V1 = 'style Post\n  background-color="#0a7aff"\n\ncomponent App\n  view\n    column class=Post\n      text "Post"\n';
@@ -1458,7 +1458,7 @@ test("history reads a .contract commit's state rows, and a revert undoes them, l
   }
 }, 600_000);
 
-// `hold` (*1.11*), a present client's
+// LLP 1122 D4, D8; LLP 1121 stage 8 E (*1.11*): `hold`, a present client's
 // with write scope, sent to its build; replayed after a rebuild at the one
 // site at the same source location in the new plan's map; the build's `held`
 // is every client's event.

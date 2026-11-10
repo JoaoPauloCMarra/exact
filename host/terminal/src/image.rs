@@ -1,4 +1,4 @@
-//! Images in cells: a PNG decoded once, drawn as the
+//! Images in cells (LLP 1101 §4): a PNG decoded once, drawn as the
 //! terminal allows — the kitty graphics protocol, iTerm2's inline images, or
 //! half-blocks (`▀`, foreground the top pixel and background the bottom),
 //! which every truecolour terminal shows, tmux included.

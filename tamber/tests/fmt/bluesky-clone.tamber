@@ -1,7 +1,7 @@
 // A copy of the Bluesky clone's design (bluesky-exact2-v2 at 7166baf, b40), kept as
-// tamber fmt's fixture: it formats to a fixed point.
+// tamber fmt's fixture (LLP 1121 stage 3): it formats to a fixed point.
 // Bluesky's palette (ALF, @bsky.app/alf 0.1.15: src/alf/themes.ts) as Tamber
-// tokens. The palette's own steps keep ALF's names (contrast_0 ..
+// tokens (LLP 1121). The palette's own steps keep ALF's names (contrast_0 ..
 // contrast_975, primary_*, positive_*, negative_*) and are light-dark() of the
 // light theme's step and the dark theme's. Bluesky has two dark themes, Dim and
 // Dark (true black), chosen in Settings > Appearance (its darkTheme setting):

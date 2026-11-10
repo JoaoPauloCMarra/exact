@@ -1,4 +1,4 @@
-// The design server's clocks (tamber/1.17): the long poll's
+// The design server's clocks (LLP 1122 D4, tamber/1.17): the long poll's
 // wait before a heartbeat (25 s), how long a client stays present after its
 // last answer (35 s; 90 s after a GET long poll's, which re-asks after a
 // backoff), and the sweep that drops the absent (every 5 s); and how long `tamber tool --via` waits for a dev loop

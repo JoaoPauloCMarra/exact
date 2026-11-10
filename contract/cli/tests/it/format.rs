@@ -1,4 +1,4 @@
-//! `formatTime`, `formatDate` and `formatNumber`: a
+//! `formatTime`, `formatDate` and `formatNumber` (LLP 1054.000.003): a
 //! post's date line and its like count, formatted in the view from numbers
 //! the view holds, so an optimistic `+1` is a view change.
 
@@ -61,7 +61,7 @@ fn a_post_s_date_and_count_are_formatted_in_the_view() {
     assert_eq!(text(&r, "stamp"), " at ");
 }
 
-/// A style is a string literal the roster lists, written at the call.
+/// D9: a style is a string literal the roster lists, written at the call.
 #[test]
 fn a_style_is_a_listed_literal() {
     let refused = |from: &str, to: &str| {
@@ -80,7 +80,7 @@ fn a_style_is_a_listed_literal() {
     );
     refused(r#""compact")"#, r#"(likes > 1 ? "compact" : "compact"))"#);
     refused(r#"offset, "short")"#, r#"offset, `short`)"#);
-    // `formatDay`'s mode likewise.
+    // LLP 1116.020 D8: `formatDay`'s mode likewise.
     let e = contract::compile(
         "component A\n  state m = \"day\"\n  view\n    text formatDay(0, 0, 0, m)\n",
     )
@@ -148,10 +148,10 @@ fn the_roster_names_are_the_roster_s() {
     );
 }
 
-/// A birthday field's text read as a number, a total rounded as JavaScript
-/// rounds it, a day as `YYYY-MM-DD`, and an age in whole years, through the
-/// compiler and the runner. Only `iso` links the `format` capability; the reads
-/// are the core's.
+/// LLP 1102 §3.1–§3.4: a birthday field's text read as a number, a total
+/// rounded as JavaScript rounds it, a day as `YYYY-MM-DD`, and an age in
+/// whole years, through the compiler and the runner. Only `iso` links the
+/// `format` capability; the reads are the core's.
 #[test]
 fn a_field_s_number_an_age_and_an_iso_day() {
     let src = r#"component App
@@ -205,9 +205,9 @@ fn a_field_s_number_an_age_and_an_iso_day() {
     assert_eq!(e.id, "type-argument", "{e}");
 }
 
-/// `toFixed` and `formatDecimal` are linked `format` entries; `digits` is a
-/// whole-number literal in each one's range, written at the call, as a style
-/// is.
+/// LLP 1102 §3.2 (decided (c)): `toFixed` and `formatDecimal` are linked
+/// `format` entries; `digits` is a whole-number literal in each one's range,
+/// written at the call, as a style is.
 #[test]
 fn money_is_format_decimal_and_a_measure_is_to_fixed() {
     let src = r#"component App
@@ -256,9 +256,9 @@ fn money_is_format_decimal_and_a_measure_is_to_fixed() {
     assert_eq!(e.id, "type-argument", "{e}");
 }
 
-/// A bill's grouped total, its currency and a share as a percent, through the
-/// compiler and the runner: Intl's `en-US` forms, the code written with
-/// `"currency"` only, and listed.
+/// LLP 1116 D8: a bill's grouped total, its currency and a share as a
+/// percent, through the compiler and the runner: Intl's `en-US` forms, the
+/// code written with `"currency"` only, and listed.
 #[test]
 fn a_total_its_currency_and_a_share() {
     let src = r#"component App

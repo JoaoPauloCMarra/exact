@@ -1,4 +1,4 @@
-//! The JS target's motion capability: springs, holds and a
+//! The JS target's motion capability (LLP 1071 §7): springs, holds and a
 //! pan's release velocity from the one `exact_motion` Engine every host runs.
 //!
 //! The page (`host/web-js/motion.js`) is the kernel seam here: it tells the
@@ -43,7 +43,7 @@ impl Default for Motion {
 
 impl Motion {
     /// Empty, at clock zero; the browser runs CSS transitions and
-    /// animations itself, so the engine lowers only springs.
+    /// animations itself (LLP 1055 D7), so the engine lowers only springs.
     pub fn new() -> Motion {
         let mut engine = Engine::new();
         engine.set_lowered(true);
@@ -153,8 +153,8 @@ impl Motion {
         Ok(Some((start.token.serial(), start.value)))
     }
 
-    /// Capture a node's translate and scale as one pair (the photo pair):
-    /// the two serials and the values taken.
+    /// Capture a node's translate and scale as one pair (the photo pair,
+    /// LLP 1057.001 §4): the two serials and the values taken.
     pub fn begin_pair(
         &mut self,
         node: u64,
@@ -207,14 +207,14 @@ impl Motion {
         }
     }
 
-    /// Record what a constrained display shows for a hold.
+    /// Record what a constrained display shows for a hold (LLP 1057.001 §3).
     pub fn track(&mut self, serial: u64, now: f64, shown: Value) -> bool {
         self.token(serial)
             .is_some_and(|token| self.engine.track_hold(token, now, shown))
     }
 
     /// The engine's velocity over a hold's values, where the platform
-    /// measures none.
+    /// measures none (LLP 1057.001 §3).
     pub fn measured(&self, serial: u64, now: f64) -> Value {
         self.token(serial)
             .and_then(|token| self.engine.hold_velocity(token, now))
@@ -306,8 +306,8 @@ impl Motion {
         Ok(())
     }
 
-    /// A pan's pointer sample at `ms`, the event's own time
-    /// (`host/web/src/pan_velocity.rs`); `first` begins the contact on `view`.
+    /// A pan's pointer sample at `ms`, the event's own time (LLP 1057 §10.6,
+    /// `host/web/src/pan_velocity.rs`); `first` begins the contact on `view`.
     pub fn pan_sample(&mut self, view: u32, first: bool, x: f64, y: f64, ms: f64) {
         if first || self.pan.as_ref().is_none_or(|(v, _)| *v != view) {
             self.pan = Some((view, VelocityTracker::new()));

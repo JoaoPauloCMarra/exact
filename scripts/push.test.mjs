@@ -71,7 +71,7 @@ test('push seals every Rust, TypeScript and graph bake against an inherited proo
       expect(await pusher({_:[root],origin:root,keys:root})).toBe(0);
       expect(calls).toEqual(['tools','resident',typescript?'typescript':'rust','graph','publish','close']);
       expect(bindings.process.env).toEqual({EXACT_GAME_PROOF_PROFILE:'gpu-dev',EXACT_UPDATE_TRUST:'development'});
-      // A module needs the runtime its receipt names, not the cohort's.
+      // A module needs the runtime its receipt names, not the cohort's (LLP 1016.000 D10).
       if(typescript)for(const artifact of published[0].graph.artifacts)expect(artifact.requires.typescriptRuntime).toBe(4);
     }
   } finally {fs.rmSync(root,{recursive:true,force:true})}

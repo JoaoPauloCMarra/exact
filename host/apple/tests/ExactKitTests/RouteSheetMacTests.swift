@@ -1,4 +1,4 @@
-// A modal route as a sheet, in a whole session: the
+// @ref LLP 1115.002 D7.4 — a modal route as a sheet, in a whole session: the
 // route's own subtree is in a sheet attached to the window, laid out in a
 // containing block that is a maximum (or the size, where the route has an
 // authored one); its header's heading is the sheet's title row and its two

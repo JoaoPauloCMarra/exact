@@ -91,7 +91,7 @@ final class TextPaintTests: XCTestCase {
         XCTAssertEqual(pixel(1, top + 1)[3], 0, "no background under the plain run")
     }
 
-    /// An inline box's `border-radius`, sliced as CSS's
+    /// An inline box's `border-radius` (issue #725), sliced as CSS's
     /// `box-decoration-break: slice` slices it: its start corners on its
     /// first fragment, its end corners on its last, each box its own.
     func testAnInlineBoxsRadiusRoundsOnlyItsOwnEnds() throws {
@@ -224,7 +224,7 @@ final class TextPaintTests: XCTestCase {
         XCTAssertTrue(row.hasSchemeColor)
     }
 
-    /// Per inline run: a run's own computed `text-shadow`
+    /// LLP 1077 D3/D7 per inline run: a run's own computed `text-shadow`
     /// and `-webkit-text-stroke` cross on its row (`none` and a zero width
     /// as no row and 0), `currentcolor` is the run's own colour, and a
     /// shadow only some runs have is theirs, drawn around their glyphs.
@@ -347,7 +347,7 @@ final class TextPaintTests: XCTestCase {
 
     /// A run's own shadow past the raster's 256-point ink allowance stays in
     /// its pixels, as the layer shadow a uniform paragraph casts would, up
-    /// to `maxShadowReach`; a huge one is cut there.
+    /// to `maxShadowReach`; a huge one is cut there (LLP 1077 D3).
     func testARunShadowFarPastTheBoxStaysInTheRasterUpToItsCap() throws {
         func frame(_ dx: Double) throws -> CGRect {
             var far = run("Cd", weight: 800)
@@ -372,7 +372,7 @@ final class TextPaintTests: XCTestCase {
 
     /// A tall paragraph rasters in bands clipped 32 points past its box; a
     /// run's own shadow cast far sideways widens the band, under the cap,
-    /// and the band's height pays for the width.
+    /// and the band's height pays for the width (LLP 1077 D3).
     func testABandAdmitsARunShadowCastSidewaysPastItsClip() throws {
         var far = run("Cd", weight: 800)
         far.shadow = [400, 0, 0, 255, 0, 0, 255]
@@ -445,8 +445,8 @@ final class TextPaintTests: XCTestCase {
         XCTAssertTrue(keeps(up), "the new band, at rest")
     }
 
-    /// A `line-clamp` paragraph rasters from its published geometry:
-    /// a worker shapes the lines, the last one again from the
+    /// A `line-clamp` paragraph rasters from its published geometry (LLP
+    /// 1072 §8.1): a worker shapes the lines, the last one again from the
     /// range it broke at, ending in "…". The same pixels as layout's lines.
     func testAClampedParagraphRastersFromItsGeometryAsLayoutPaintsIt() throws {
         let text = "Maybe family sounds draft later scroll deadline picnic thanks soon a meeting at the station"
@@ -550,7 +550,7 @@ final class TextPaintTests: XCTestCase {
     }
 
     #if os(macOS)
-    /// `-webkit-font-smoothing: antialiased`: AppKit's raster,
+    /// `-webkit-font-smoothing: antialiased` (LLP 1019 D12): AppKit's raster,
     /// both its paths, draws with font smoothing off, as Chrome does on the
     /// Mac: thinner stems, so less ink. The raster's key tells the two apart.
     func testAntialiasedTextRastersWithoutFontSmoothing() throws {
@@ -610,7 +610,7 @@ final class TextPaintTests: XCTestCase {
     }
     #endif
 
-    /// A paragraph whose colour is wide rasterizes into Display
+    /// LLP 1100 D2: a paragraph whose colour is wide rasterizes into Display
     /// P3, so its ink is not clipped to sRGB; any other stays sRGB.
     func testAWideColouredParagraphRastersInDisplayP3() throws {
         func raster(_ color: [Double]) throws -> TextRasterImage {

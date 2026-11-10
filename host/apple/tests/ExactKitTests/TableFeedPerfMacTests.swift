@@ -1,11 +1,12 @@
-// A `list` as a table, timed: ten thousand rows scrolled, in the table and as
-// the list is laid out today, the same page and the same travel. What can be
-// counted is held on every run: a row moves into a cell once and out once,
-// and neither arrangement mounts more than a window of rows. What is timed is
-// a measurement, written where `EXACT_TABLE_PERF` says and asserted nowhere:
-// this Mac may be shared, and a frame's time under another process's build is not
-// this code's. So each frame's work is given as processor time too, which
-// waiting for a core does not lengthen.
+// @ref LLP 1115.002 D5 — stage 3a, the gate's third question: ten thousand
+// rows scrolled, in the table and as the list is laid out today, the same
+// page and the same travel. What can be counted is held on every run: a row
+// moves into a cell once and out once, and neither arrangement mounts more
+// than a window of rows. What is timed is a measurement, written where
+// `EXACT_TABLE_PERF` says and asserted nowhere: this Mac is shared, and a
+// frame's time under another lane's build is not this code's. So each
+// frame's work is given as processor time too, which waiting for a core
+// does not lengthen.
 #if os(macOS)
 import AppKit
 import XCTest
@@ -38,10 +39,10 @@ final class TableFeedPerfMacTests: XCTestCase {
         }
         XCTAssertGreaterThan(deepest, 150, "the fling passed some hundreds of rows")
         XCTAssertLessThan(mounted, 120, "a window of rows was mounted at any time")
-        // A row goes into its cell in the batch that
+        // What stage 3b cut. A row goes into its cell in the batch that
         // made it and leaves it when the runner destroys it: one move a row
         // the runner made (it makes some twice, ahead of a fling and again),
-        // not a move in and out each time it crosses the port.
+        // where stage 3a's feed moved each in and out as it crossed the port.
         let made = f.feed.arrivals - arrived
         XCTAssertGreaterThan(made, deepest - 60, "the runner made the rows the fling passed")
         XCTAssertEqual(f.feed.moves - moved, made, "each row the runner made went into a cell, once, and none came out to the document")
@@ -149,7 +150,7 @@ final class TableFeedPerfMacTests: XCTestCase {
         let qos = "the main thread's quality of service \(qos_class_self().rawValue) (33 an app's own, user-interactive; 21 the default; it began at \(began))"
         // How ExactKit was compiled, said by whoever built it optimized (`swift build -c release`): a debug build overstates every time here.
         let build = ProcessInfo.processInfo.environment["EXACT_TABLE_PERF_BUILD"] ?? "a debug build of ExactKit"
-        say("ten thousand rows, the fixture (mixed heights; a button, a checkbox and a field in every tenth row), two 480 by 600 windows on screen: the table, and the list as the presenter lays it out today")
+        say("ten thousand rows, the gate's fixture (mixed heights; a button, a checkbox and a field in every tenth row), two 480 by 600 windows on screen: the table, and the list as the presenter lays it out today")
         say(String(format: "display %.0f Hz at %.0fx: a frame is %.2f ms; %@; %@; windows visible %@ %@; %@", hz, screen.backingScaleFactor, 1000 / hz, build, qos,
                    "\(table.window.occlusionState.contains(.visible))", "\(today.window.occlusionState.contains(.visible))", Self.load()))
         // `EXACT_TABLE_PERF_ONLY=table` (or `today`): that arrangement alone, for a profile of it. `EXACT_TABLE_PERF_REPEAT=<n>`: each travel

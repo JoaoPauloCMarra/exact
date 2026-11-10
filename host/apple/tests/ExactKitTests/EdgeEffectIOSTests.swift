@@ -3,7 +3,7 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// Over `scripts/fixtures/edge-effect.contract`: content
+/// LLP 1141.001 D4 over `scripts/fixtures/edge-effect.contract`: content
 /// scrolled under the bar takes iOS 26's scroll edge effect, as a hand-built
 /// screen's does, when the scroller's rows paint above their in-flow
 /// siblings. UIKit hangs the effect in a view after the content; a row ranked

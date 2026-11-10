@@ -1,4 +1,4 @@
-// The acceptance drives 1 to 7 under the agent, with the auth
+// LLP 1133.014 §10's acceptance drives 1 to 7 under the agent, with the auth
 // fixture against its server's sign-in routes (apps/auth-fixture/sign-in.mjs).
 // Each request holds a `credential` ticket; "answer" runs `idp.mjs` on the
 // ticket's args and types its credential, so the server verifies a real
@@ -143,7 +143,7 @@ try {
     check(6, 'the server signed no one in', (await log()).signIn.verified === before, JSON.stringify((await log()).signIn));
   }
   if (run(7)) {
-    // No answer, journal line or state field holds a token, a code or a return route's handle.
+    // No answer, journal line or state field holds a token, a code or a return route's handle (§10's test).
     const st = JSON.stringify(await s.state()), lines = (await s.logs({ all: true })).lines.join('\n');
     const secret = /eyJ[A-Za-z0-9_-]{8,}\.|fixture-code-|fixture-apple-code|"relay":/;
     check(7, 'no state field or journal line holds a token, a code or a handle', !secret.test(st) && !secret.test(lines), (st.match(secret) ?? lines.match(secret))?.[0]);

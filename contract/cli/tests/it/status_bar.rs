@@ -1,5 +1,5 @@
-//! `status-bar-style` and `status-bar-animation` lower to props, a literal
-//! outside their sets is refused, and a bound one follows state.
+//! LLP 1105 D1: `status-bar-style` and `status-bar-animation` lower to props,
+//! a literal outside their sets is refused, and a bound one follows state.
 
 use exact_kernel::{Kernel, PropId};
 use exact_plan::Value;

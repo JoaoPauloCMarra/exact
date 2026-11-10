@@ -15,10 +15,10 @@ pub fn ensure_mta() -> Result<(), windows::core::HRESULT> {
     })
 }
 
-/// Make this thread a single-threaded apartment, once, for the packages' WinRT
-/// calls on the loop's thread: a WinRT picker and a GATT client run there. A
-/// thread winit already initialized for OLE stays as it is
-/// (`RPC_E_CHANGED_MODE` or `S_FALSE`, both kept).
+/// Make this thread a single-threaded apartment, once, for the packages'
+/// WinRT calls on the loop's thread (LLP 1133.022 D10 item 5): a WinRT
+/// picker and a GATT client run there. A thread winit already initialized
+/// for OLE stays as it is (`RPC_E_CHANGED_MODE` or `S_FALSE`, both kept).
 pub fn ensure_sta() {
     thread_local!(static DONE: std::cell::Cell<bool> = const { std::cell::Cell::new(false) });
     if DONE.with(|done| done.replace(true)) {

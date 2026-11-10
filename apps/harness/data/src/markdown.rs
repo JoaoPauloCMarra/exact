@@ -1,5 +1,5 @@
 //! Assistant Markdown to the transcript's blocks. The parsing is the
-//! Markdown reader's (`markdown-parse`); this maps its blocks to
+//! Markdown reader's (`markdown-parse`, LLP 1033); this maps its blocks to
 //! `shape Block` and its runs to coloured `shape Run`s. An unterminated
 //! fence (a reply mid-stream) is a code block to the end of the text.
 

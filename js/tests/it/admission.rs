@@ -2,7 +2,7 @@
 //! load that fetches through the host before its own fetch: the Bluesky
 //! clone's Home at launch (its sources `await loadModeration()`), through the
 //! Apple host's actual Bridge, executor and pump, with the app's TypeScript
-//! module and a scripted transport.
+//! module and a scripted transport (LLP 1041 §8.4, amended 2026-10-09).
 //!
 //! Before the amendment (2eca0ad80): every answer begun before another is
 //! asked again at once, and each re-ask was an opaque ordered job, counted
@@ -264,7 +264,7 @@ fn assert_all_loaded(drove: Drove, n: usize, own: bool) {
         expected(if own { n } else { 0 }),
         "each fetch once, each row its own"
     );
-    // The baseline for the herd: pumps to load every row.
+    // The baseline for LLP 1041 §8.4 Q6 (the herd): pumps to load every row.
     eprintln!("{n} rows loaded in {} pumps", drove.pumps);
 }
 

@@ -1,4 +1,4 @@
-//! The document's elements as the kernel's SVG nodes:
+//! The document's elements as the kernel's SVG nodes (LLP 1011.001 D2):
 //! each tag the compiler lowers an inline `svg` tag to, each attribute the
 //! row or prop the compiler gives the same attribute (`contract/lower`'s
 //! tag and attribute tables, mirrored here for the file's names), the
@@ -11,7 +11,7 @@ use crate::xml::Event;
 use crate::{Document, Error, Natural};
 use exact_kernel::{NodeType, Op, PropId, PropKind, PropValue, StyleId, StyleProps, StyleValue};
 
-/// Elements past this count are a file no picture needs.
+/// Elements past this count are a file no picture needs (D2's bound).
 pub const MAX_ELEMENTS: usize = 50_000;
 /// Nesting past this depth is a file no picture needs.
 pub const MAX_DEPTH: usize = 256;
@@ -130,7 +130,7 @@ fn node_type(tag: &str, nested_svg: bool) -> Result<NodeType, Option<&'static st
         "script" => return Err(Some("does not run in an image")),
         "animate" | "animateTransform" | "animateMotion" | "set" | "mpath" | "discard" => {
             return Err(Some(
-                "animation inside an image is ignored: the still values draw",
+                "animation inside an image is ignored (LLP 1011.001 §3): the still values draw",
             ))
         }
         "image" => {
@@ -138,7 +138,11 @@ fn node_type(tag: &str, nested_svg: bool) -> Result<NodeType, Option<&'static st
                 "is dropped from an SVG image (an external reference): the file still draws",
             ))
         }
-        "foreignObject" => return Err(Some("`foreignObject` renders on the web only")),
+        "foreignObject" => {
+            return Err(Some(
+                "`foreignObject` renders on the web only (LLP 1055.000 D13)",
+            ))
+        }
         "textPath" => {
             return Err(Some(
                 "`textPath` in an SVG image is not read yet: its text is dropped",
@@ -298,8 +302,9 @@ impl Lowerer {
             }
         }
         if in_text {
-            // Character data as the compiler's positional text; a run of white space collapses, as
-            // the default `xml:space` collapses it.
+            // Character data as the compiler's positional text (LLP
+            // 1055.000 D11); a run of white space collapses, as the
+            // default `xml:space` collapses it.
             let collapsed: String = text.split_whitespace().collect::<Vec<_>>().join(" ");
             if !collapsed.is_empty() {
                 self.ops.push(Op::SetProp {

@@ -1,7 +1,7 @@
-//! A popover's default surface: the compiler marks a `popover` whose author wrote no
-//! background, border, shadow or material, on it or its class, in any state
-//! (`defaultSurface`), for a host that paints the popover to draw the platform's
-//! surface under it.
+//! A popover's default surface (LLP 1021; theme2 2026-10-21 18:45, 19:55):
+//! the compiler marks a `popover` whose author wrote no background, border,
+//! shadow or material, on it or its class, in any state (`defaultSurface`), for a host
+//! that paints the popover to draw the platform's surface under it.
 
 use exact_kernel::{Kernel, PropId};
 use exact_runner::{DataError, DataSource, Runner, Value};

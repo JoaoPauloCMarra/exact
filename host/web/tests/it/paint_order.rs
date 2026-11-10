@@ -1,4 +1,4 @@
-//! Live batches must write exactly the kernel's isolation.
+//! Live batches must write exactly the kernel's isolation (LLP 1083.000 W1).
 use exact_kernel::{NodeType, StyleId, ViewId};
 use exact_plan::{builder::PlanBuilder, BindingKind, BindingsRow, Plan, Value};
 use exact_runner::Event;

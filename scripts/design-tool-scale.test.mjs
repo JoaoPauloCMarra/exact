@@ -1,5 +1,5 @@
-// The design tool's base scale against a real `tamber serve` (the
-// server's half is tamber/1.14 and its package designs): Exact's
+// The design tool's half of LLP 1121 stage 11 D against a real `tamber
+// serve` (the server's half, tamber/1.14, and A2's package designs): Exact's
 // base scale listed read-only, each platform the app ships first with its
 // value and source as `describe` gives them; the app's override of a base
 // name as its own line; a package's tokens under their package; Set for
@@ -19,7 +19,7 @@ toolTurns();
 const from = s => s.kind === 'metric' ? s.ref : s.kind === 'measured' ? `measured: ${s.id}` : s.kind === 'guideline' ? s.cite : s.kind === 'stretch' ? `${s.ref}${s.why ? `, ${s.why}` : ''}` : s.kind === 'full' ? 'the pill' : s.kind === 'terminal' ? 'cells' : '';
 const LABELS = { ios: 'iOS', mac: 'Mac', neutral: 'neutral', material: 'Android', terminal: 'terminal' };
 
-test('on a real server: the base scale read-only with each shipped platform and its source, an override, a package\'s tokens; Set for this app and Back to the base each one line, and Back\'s undo gives the bytes back', async () => {
+test('stage 11 on a real server: the base scale read-only with each shipped platform and its source, an override, a package\'s tokens; Set for this app and Back to the base each one line, and Back\'s undo gives the bytes back', async () => {
   const app = mkdtempSync(join(tmpdir(), 'exact-design-tool-scale-'));
   // The theme fixture's targets (iOS, the Mac, the web), a design overriding radius.md and naming a package's token.
   cpSync(resolve(ROOT, 'apps/theme-fixture/app.json'), join(app, 'app.json'));
@@ -93,7 +93,7 @@ test('on a real server: the base scale read-only with each shipped platform and 
     for (const column of [...shipped, ...rest]) expect(text(expanded, `token-base-space.md-${column}`)).toBe(cell('space.md', column));
     // Every source kind the server emits, as the tool words it: metric, measured, guideline, a stretch, the pill, cells.
     for (const column of [...shipped, ...rest]) expect(text(expanded, `token-base-radius.md-${column}`)).toBe(cell('radius.md', column));
-    // The Mac's space.xl, the one stretch: marked, with its metric and why.
+    // The Mac's space.xl, the one stretch (stage 13 D5): marked, with its metric and why.
     expect(row('space.xl').columns.mac.source.kind).toBe('stretch');
     expect(text(expanded, 'token-base-space.xl-mac')).toBe(cell('space.xl', 'mac'));
     expect(text(expanded, 'token-base-space.xl-mac')).toContain('(a stretch) · grouped-label-inset, ');
@@ -130,7 +130,7 @@ test('on a real server: the base scale read-only with each shipped platform and 
     expect(node(pkgSet, 'set-for-app-reading.measure')).toBeUndefined();
     expect(states[3].slots.editKind).toBe('remove-token');
     expect(tool.writes[4].after).toBe(set);
-    // Back to the package removed the app's line alone: the package's own files, byte for byte as they were.
+    // Back to the package removed the app's line alone: the package's own files, byte for byte as they were (LLP 1139 D5).
     expect(readFileSync(join(pkg, 'reading.tamber'), 'utf8')).toBe(pkgDesign);
     expect(text(pkgBack, 'token-over-reading.measure')).toBeUndefined();
     expect(node(pkgBack, 'set-for-app-reading.measure')).toBeTruthy();
@@ -155,7 +155,7 @@ test('on a real server: the base scale read-only with each shipped platform and 
   }
 }, 900_000);
 
-test('a package token set for this app: its value edited before Apply is still the app\'s line (set-token), and edited again after', async () => {
+test('a package token set for this app: its value edited before Apply is still the app\'s line (set-token), and edited again after (D4 batch 2 #1)', async () => {
   const app = mkdtempSync(join(tmpdir(), 'exact-design-tool-override-'));
   const design = 'tamber t\n\ntheme\n  brand = reading.card\n';
   writeFileSync(join(app, 'app.tamber'), design);
@@ -182,22 +182,22 @@ test('a package token set for this app: its value edited before Apply is still t
       'tap cell-reading.measure-0-light', 'clock data', 'clock +1', 'clock data',
       'type branch-value 720px', 'type branch-value key Enter', 'clock data', 'clock +1', 'clock data', 'state',
       'tap apply', 'clock data', 'clock +1', 'clock data',
-      // The form again after a cell edit: its own draft, not the cell's, so Apply goes.
+      // The form again after a cell edit (round 1, Astra): its own draft, not the cell's, so Apply goes.
       'type new-name reading.measure', 'type new-value 740px', 'type new-value key Enter', 'clock data', 'clock +1', 'clock data', 'state',
       'tap apply', 'clock data', 'clock +1', 'clock data',
-      // An app token's name typed in the form stays add-token (decided by the rows, not the last Set).
+      // An app token's name typed in the form stays add-token (round 1, Grok and Astra: decided by the rows, not the last Set).
       'type new-name brand.two', 'type new-value #445566', 'type new-value key Enter', 'clock data', 'state',
       'tap cancel-edit', 'clock data',
-      // Their read-only cell open, then the form names the same token: the cell is no guard on it.
+      // Their read-only cell open, then the form names the same token (round 2, Astra and Grok): the cell is no guard on it.
       'tap back-reading.measure', 'clock data', 'clock +1', 'clock data', 'tap apply', 'clock data', 'clock +1', 'clock data',
       'tap cell-reading.measure-0-light', 'clock data',
       'type new-name reading.measure', 'type new-value 760px', 'type new-value key Enter', 'clock data', 'clock +1', 'clock data', 'state',
       'tap apply', 'clock data', 'clock +1', 'clock data',
-      // Another file open: their rows show beside its own, but a name added there is that file's line.
+      // Another file open: their rows show beside its own, but a name added there is that file's line (round 2).
       'type file brand.tamber', 'clock data', 'clock +1', 'clock data',
       'type new-name reading.measure', 'type new-value 780px', 'type new-value key Enter', 'clock data', 'state',
       'tap cancel-edit', 'clock data',
-      // The app's design opened by its own path: still the app's line over theirs.
+      // The app's design opened by its own path: still the app's line over theirs (re-check, Astra and Grok).
       'type file app.tamber', 'clock data', 'clock +1', 'clock data',
       'type new-name reading.measure', 'type new-value 790px', 'type new-value key Enter', 'clock data', 'state',
     ]);

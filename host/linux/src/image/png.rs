@@ -21,7 +21,7 @@ pub(super) struct Header {
 /// `color` for a JPEG, GIF or WebP (not a PNG colour type); its pixels come
 /// from `jpeg_decode`, the platform's decoder.
 const JPEG: u8 = 0xFF;
-/// `color` for an SVG document: its pixels are painted from
+/// `color` for an SVG document (LLP 1011.001): its pixels are painted from
 /// the resolved scene (`super::svg_picture`).
 const SVG: u8 = 0xFE;
 
@@ -54,7 +54,7 @@ impl Header {
         }
     }
 
-    /// An SVG's header: its natural size the document's,
+    /// An SVG's header: its natural size the document's (LLP 1011.001 D1),
     /// its pixels painted at any size up to the island's.
     pub(super) fn svg(metadata: Metadata) -> Header {
         Header {
@@ -341,7 +341,7 @@ impl DecodePlan {
             crop: Crop::default(),
         })
     }
-    /// An SVG's plan: drawn at `pixels`, which may exceed
+    /// An SVG's plan (LLP 1011.001 D1): drawn at `pixels`, which may exceed
     /// the natural size, up to the island's side. The output is the
     /// painter's own pixmap; the scratch bounds the parse (the document's
     /// text, its ops and the scratch kernel's nodes: a few times the file).

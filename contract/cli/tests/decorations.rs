@@ -1,5 +1,5 @@
 //! A textarea's paint-only decorations: declarations, the record, and what
-//! the narrowing removed.
+//! the narrowing removed (LLP 1114.007).
 use exact_kernel::{Kernel, PropId, StyleId};
 use exact_runner::{DataError, DataSource, Event, Runner, Value};
 use serde_json::Value as Json;

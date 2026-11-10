@@ -1,9 +1,8 @@
-// The canvas gateway: entered by a single-use grant,
+// The canvas gateway (LLP 1121 stage 10 C): entered by a single-use grant,
 // held by a server-side session, an allow list by scope, nothing of the
 // loop's loopback origin or a client's credentials crossing it, and revoke
-// or expiry ending every proxied stream at once. A fake pairing (the
-// pairing interface) and a fake dev loop on loopback; plain HTTP (the remote
-// listener owns TLS).
+// or expiry ending every proxied stream at once. A fake pairing (A's
+// interface) and a fake dev loop on loopback; plain HTTP (B owns TLS).
 import { afterAll, beforeAll, expect, test } from 'bun:test';
 import { createHash, randomBytes } from 'node:crypto';
 import { createServer, request as httpRequest } from 'node:http';
@@ -20,8 +19,8 @@ const ORIGIN = 'https://canvas.test:9443';
 const TOOL = 'https://canvas.test:9442';
 const ORDER = ['read', 'propose', 'write'];
 
-/** A run's pairing, by hand, in its shapes (scripts/tamber-pairing.mjs):
- * `lookup`, and `onEnd` whose `fn(reason)` is called once, or at
+/** A's run pairing, by hand, in its shapes (scripts/tamber-pairing.mjs on
+ * x2/s10a): `lookup`, and `onEnd` whose `fn(reason)` is called once, or at
  * once for a client already ended. */
 function fakePairing() {
   const tokens = new Map(), ends = new Map(), ended = new Set();
@@ -46,7 +45,7 @@ function fakePairing() {
     },
   };
 }
-/** The pairing module's exports, in their shapes: a token bucket per key (a burst of
+/** A's module exports, in their shapes: a token bucket per key (a burst of
  * `rate`, refilled at `rate` per `per` ms), and `allows(scope, needs, local)`. */
 const limiter = ({ rate, per, clock = Date.now }) => {
   const buckets = new Map();
@@ -95,7 +94,7 @@ const ADDRESS_CASES = p => [
   ['https://example.test/localhost:9000.png', 'https://example.test/localhost:9000.png'],
   ['notlocalhost:9000 and see localhost:9000.', `notlocalhost:9000 and see ${PLACEHOLDER}.`],
   ['https://example.test/x and http://192.168.1.20:8765/ and http://127.0.0.1.example.test/', 'https://example.test/x and http://192.168.1.20:8765/ and http://127.0.0.1.example.test/'],
-  // Known limits: escaped spellings in text pass as they came.
+  // Known limits (§10): escaped spellings in text pass as they came.
   [`u=http%3A%2F%2Flocalhost%3A${p}%2Fj`, `u=http%3A%2F%2Flocalhost%3A${p}%2Fj`],
   [`http:\\/\\/127.0.0.1:${p}\\/h`, `http:\\/\\/127.0.0.1:${p}\\/h`],
   [`http://localhos&#116;:${p}/q`, `http://localhos&#116;:${p}/q`],
@@ -174,7 +173,7 @@ const listening = server => new Promise((ok, fail) => {
 async function gateway(opts = {}) {
   const pairing = opts.pairing ?? fakePairing();
   const gw = canvasGateway({ loop: loopBase, pairing, origin: ORIGIN, toolOrigin: TOOL, limiter, allows, ...opts });
-  // The door a request came through: the remote listener's TLS canvas door (`remote`) unless a test says otherwise.
+  // The door a request came through: B's TLS canvas door (`remote`) unless a test says otherwise.
   let door = { allowed: true, local: false, remote: true, port: 'canvas' };
   const server = createServer((req, res) => { gw.handle(req, res, new URL(req.url, 'http://x'), door); });
   await listening(server);
@@ -515,7 +514,7 @@ test('mint: rate-limited per client, refused to an unknown token, url never loop
     // Every scope check was a remote one.
     expect(allowed.length).toBeGreaterThan(0);
     expect(allowed.every(local => local === false)).toBe(true);
-    // The pairing module's own limiter and allows by default; anything but functions is refused.
+    // A's own limiter and allows by default; anything but functions is refused.
     canvasGateway({ loop: loopBase, pairing, origin: ORIGIN }).close();
     expect(() => canvasGateway({ loop: loopBase, pairing, origin: ORIGIN, limiter: 'no' })).toThrow(TypeError);
   } finally { await g.stop(); }
@@ -533,7 +532,7 @@ const fakeServe = () => {
   return child;
 };
 
-/** A real design server's wire (its pairing and dispatcher) with
+/** A real design server's wire (stage 10 A's pairing and dispatcher) with
  * the gateway it makes, each on its own loopback port: `post` a request as
  * a local or a remote (`peer`) client, `pair` a client at a scope. */
 async function wired(canvas = pairing => canvasGateway({ loop: loopBase, pairing, origin: ORIGIN, toolOrigin: TOOL })) {
@@ -549,7 +548,7 @@ async function wired(canvas = pairing => canvasGateway({ loop: loopBase, pairing
   const local = (await (await fetch(`${wireBase}/__tamber/token`)).json()).token;
   await tamber.ready;
   const post = async (request, token = local, path = '/__tamber', peer = null, door = true) => {
-    // `peer` through the remote door, or (`door` false) plain HTTP from off this machine.
+    // `peer` through B's door, or (`door` false) plain HTTP from off this machine.
     remote = peer ? (door ? { local: false, remote: true, peer } : { allowed: true, local: false, peer }) : null;
     try {
       const res = await fetch(`${wireBase}${path}`, { method: 'POST', headers: { 'content-type': 'application/json', ...(token ? { 'x-exact-tamber-token': token } : {}) }, body: JSON.stringify(request) });
@@ -568,7 +567,7 @@ async function wired(canvas = pairing => canvasGateway({ loop: loopBase, pairing
   return { tamber, post, pair, at, local, stop };
 }
 
-test('with the real pairing: `canvas` through the real dispatcher (read), enter, proxy, and a revoke ending the stream and the next request', async () => {
+test('with stage 10 A: `canvas` through the real dispatcher (read), enter, proxy, and A\'s revoke ending the stream and the next request', async () => {
   const w = await wired();
   try {
     const p = await w.pair('read', 'phone');
@@ -585,7 +584,7 @@ test('with the real pairing: `canvas` through the real dispatcher (read), enter,
     const reader = sse.body.getReader();
     expect(new TextDecoder().decode((await reader.read()).value)).toContain(`"page":"${ORIGIN}/"`);
     expect(w.tamber.canvas.live).toBe(1);
-    // A revoke, by the local tool.
+    // A's revoke, by the local tool.
     closed.length = 0;
     const t0 = performance.now();
     expect((await w.post({ method: 'revoke', client: p.client })).ok).toEqual({ revoked: p.client });
@@ -612,7 +611,7 @@ test('a plain LAN peer\'s `canvas` call is not found, the grant minted only thro
   } finally { await w.stop(); }
 });
 
-test('with the real pairing: a propose client mints (canvas is read) but is refused the write routes; the local token, no token and no gateway as the table says', async () => {
+test('with stage 10 A: a propose client mints (canvas is read) but is refused the write routes; the local token, no token and no gateway as the table says', async () => {
   const w = await wired();
   try {
     const p = await w.pair('propose', 'tablet');
@@ -637,7 +636,7 @@ test('with the real pairing: a propose client mints (canvas is read) but is refu
     // No token, or an unknown one: the wire's not-found, before any method.
     expect((await w.post({ method: 'canvas' }, null)).status).toBe(404);
     expect((await w.post({ method: 'canvas' }, randomBytes(32).toString('hex'), '/__tamber', '198.51.100.12')).status).toBe(404);
-    // The local token through the remote listener is no one.
+    // The local token through B's listener is no one.
     expect((await w.post({ method: 'canvas' }, w.local, '/__tamber', '198.51.100.13')).status).toBe(404);
   } finally { await w.stop(); }
   // A server with no gateway answers so.
@@ -682,7 +681,7 @@ test('onEnd: the reason goes to the log only, both reasons end the same, and a c
     expect(said).toEqual(['canvas: remote:a#1 revoked: its proxied streams end', 'canvas: remote:b#1 expired: its proxied streams end']);
     for (const line of said) for (const secret of [a.token, b.token, a.cookie.split('=')[1], b.cookie.split('=')[1], a.ok.grant, b.ok.grant]) expect(line).not.toContain(secret);
     for (const who of [a, b]) expect((await g.at('/', { headers: { cookie: who.cookie } })).status).toBe(404);
-    // The pairing's onEnd for an ended client calls back at once: nothing stays watched.
+    // A's onEnd for an ended client calls back at once: nothing stays watched.
     const c = canvasGateway({ loop: loopBase, pairing: { ...pairing, lookup: () => ({ client: 'remote:a#1', scope: 'read', expires: Infinity }) }, origin: ORIGIN, limiter, allows, log: line => said.push(line) });
     expect(c.mint('t').ok).toBeTruthy();
     expect(said.at(-1)).toBe('canvas: remote:a#1 revoked: its proxied streams end');
@@ -747,7 +746,7 @@ test('rewriter: the loop\'s own origin in every form as the canvas\'s, any other
   expect(rewrite.json(`not json http://localhost:${port}/`)).toBe(`not json ${ORIGIN}/`);
   // SSE: a JSON data line as JSON, any other line as text.
   expect(rewrite.sse(`data: {"u":"http://localhos\\u0074:${port}/"}\nid: http://localhost:7000/\n\n`)).toBe(`data: {"u":"${ORIGIN}/"}\nid: http://${PLACEHOLDER}/\n\n`);
-  // A plain toolOrigin (the local tool's, any other) is refused: the remote tool is on the remote https door.
+  // A plain toolOrigin (the local tool's, any other) is refused: the remote tool is B's https door.
   for (const toolOrigin of ['http://127.0.0.1:7740', 'http://localhost:7740', 'http://[::1]:7740', 'http://canvas.test:9442']) expect(() => canvasGateway({ loop: loopBase, pairing: fakePairing(), origin: ORIGIN, toolOrigin, limiter, allows })).toThrow(TypeError);
 });
 
@@ -873,13 +872,13 @@ test('the JS loop\'s page reloads afresh when its checkpoint is refused (a canva
   expect(code.slice(refused, failed)).toContain('location.reload();return}');
 });
 
-test("an https loop on its default port is the loop's own origin, not another loopback", () => {
+test("an https loop on its default port is the loop's own origin, not another loopback (round 3, Grok)", () => {
   const r = rewriter('https://127.0.0.1', 'https://canvas.test:9443');
   expect(r.text('see https://127.0.0.1/x and https://127.0.0.1:443/y')).toBe('see https://canvas.test:9443/x and https://canvas.test:9443/y');
   expect(r.text('http://127.0.0.1/z')).toBe('http://loopback.invalid/z');
 });
 
-test('a compact CSP directive after a loopback source keeps its boundary', () => {
+test('a compact CSP directive after a loopback source keeps its boundary (round 3 re-check, Astra)', () => {
   const r = rewriter('http://127.0.0.1:9000', 'https://canvas.test:9443');
   expect(r.text("default-src http://127.0.0.1:9000;img-src 'self'")).toBe("default-src https://canvas.test:9443;img-src 'self'");
   expect(r.text("default-src http://127.0.0.1:7005;img-src 'self'")).toBe("default-src http://loopback.invalid;img-src 'self'");
@@ -887,7 +886,7 @@ test('a compact CSP directive after a loopback source keeps its boundary', () =>
   expect(r.text('http://127.0.0.1;@evil.test/a')).toBe('http://127.0.0.1;@evil.test/a');
 });
 
-test('the cut of an unparsed authority never lands in its userinfo', () => {
+test('the cut of an unparsed authority never lands in its userinfo (round 3 re-check 2, Astra)', () => {
   const r = rewriter('http://127.0.0.1:9000', 'https://canvas.test:9443');
   expect(r.text('(http://127.0.0.1;@evil.test:9000)')).toBe('(http://127.0.0.1;@evil.test:9000)');
   expect(r.text('(http://u,v@evil.test:9000),')).toBe('(http://u,v@evil.test:9000),');
@@ -899,7 +898,7 @@ test('the cut of an unparsed authority never lands in its userinfo', () => {
   expect(r.text('a http://localhost:9000,http://127.0.0.1:7005 b')).toBe('a https://canvas.test:9443,http://loopback.invalid b');
 });
 
-/** A request over TLS to the remote listener's per-run certificate, pinned by its SHA-256
+/** A request over TLS to B's per-run certificate, pinned by its SHA-256
  * fingerprint (no CA vouches for it): the answer, or a throw when the
  * certificate is another. */
 const pinned = (url, fingerprint, { method = 'GET', headers = {}, body } = {}) => new Promise((ok, fail) => {
@@ -914,7 +913,7 @@ const pinned = (url, fingerprint, { method = 'GET', headers = {}, body } = {}) =
   r.end(body);
 });
 
-test('the canvas port: on the remote doors with the same certificate, the entry posted from the canvas\'s own origin, the gateway served at the shown name; none without --remote', async () => {
+test('the canvas port (C2): on B\'s doors with the same certificate, the entry posted from the canvas\'s own origin, the gateway served at the shown name; none without --remote', async () => {
   const w = await wired('default');
   const said = [];
   let doors = null;
@@ -929,7 +928,7 @@ test('the canvas port: on the remote doors with the same certificate, the entry 
     expect(canvas).toMatch(/^https:\/\/127\.0\.0\.1:\d+$/);
     expect(canvas).not.toBe(tool);
     expect(said.at(-1)).toContain(canvas);
-    // Minted over the remote TLS wire door, the token in its header.
+    // Minted over B's TLS wire door, the token in its header.
     const minted = JSON.parse((await pinned(`${tool}/__tamber`, fingerprint, { method: 'POST', headers: { 'content-type': 'application/json', 'x-exact-tamber-token': p.token }, body: '{"method":"canvas"}' })).text).ok;
     expect(minted.url).toBe(`${canvas}/canvas/remote%3Afar%231/`);
     // The tool's page posts the grant: its Origin admitted by the port, the cookie set.
@@ -950,7 +949,7 @@ test('the canvas port: on the remote doors with the same certificate, the entry 
     expect((await pinned(`${canvas}/__dev/report`, fingerprint, { method: 'POST', headers: { cookie, origin: 'https://evil.test' }, body: '{}' })).status).toBe(403);
     expect((await pinned(`${canvas}/__dev/report`, fingerprint, { method: 'POST', headers: { cookie, origin: tool }, body: '{}' })).status).toBe(403);
     expect((await pinned(`${canvas}/__dev/report`, fingerprint, { method: 'POST', headers: { cookie, origin: canvas }, body: '{}' })).status).toBe(200);
-    // A revoke: the canvas port refuses the next request, as the wire door does the token.
+    // A's revoke: the canvas port refuses the next request, as the wire door does the token.
     await w.post({ method: 'revoke', client: p.client });
     expect((await pinned(`${canvas}/`, fingerprint, { headers: { cookie } })).status).toBe(404);
     expect((await pinned(`${tool}/__tamber`, fingerprint, { method: 'POST', headers: { 'x-exact-tamber-token': p.token }, body: '{"method":"hello"}' })).status).toBe(401);
@@ -966,7 +965,7 @@ test('the canvas port: on the remote doors with the same certificate, the entry 
   } finally { await v.stop(); }
 });
 
-// Per door: a canvas framed through the TLS door's canvas port stops being
+// The ghost builds' follow-up (theme2's per-door test): a canvas framed through the TLS door's canvas port stops being
 // a build when it goes. Its requests are handed to the port's HTTP server, whose req 'close' never fires under Bun;
 // the gateway ends the loop's page stream upstream on res 'close'.
 test('a page stream through the canvas port on the TLS door ends upstream when its client leaves', async () => {
@@ -1020,12 +1019,12 @@ test('plain HTTP from a LAN peer (a --lan bind): no session, grant or entry page
     const plain = await w.post({ method: 'canvas' }, p.token, '/__tamber', '192.168.1.30', false);
     expect(plain.status).toBe(404);
     expect(plain.ok).toBeUndefined();
-    // Through the remote door it is.
+    // Through B's door it is.
     expect((await w.post({ method: 'canvas' }, p.token, '/__tamber', '192.168.1.30')).status).toBe(200);
   } finally { await w.stop(); }
 });
 
-test('the tool origin on the entry page is a plain https origin, written as an attribute value ', async () => {
+test('the tool origin on the entry page is a plain https origin, written as an attribute value (C2 re-check, Astra)', async () => {
   const pairing = fakePairing();
   expect(() => canvasGateway({ loop: loopBase, pairing, origin: ORIGIN, toolOrigin: 'https://tool".test', limiter, allows })).toThrow(/plain https origin/);
   expect(() => canvasGateway({ loop: loopBase, pairing, origin: ORIGIN, toolOrigin: 'https://a&b.test', limiter, allows })).toThrow(/plain https origin/);

@@ -1,13 +1,13 @@
-//! @exact/hid on the Windows host: Win32's `hid.dll`. Windows enumerates each
+//! @exact/hid on the Windows host (LLP 1133.037 D10–D12, D14, D21): Win32's `hid.dll`. Windows enumerates each
 //! top-level collection as a device interface of its own (Configuration Manager's
 //! `CM_Get_Device_Interface_ListW` over the HID class's interface GUID), so a collection on WebHID's blocklist,
 //! which the system's keyboard and mouse mappers hold anyway, is never opened, and a pad's is never offered
-//!. A collection is opened once per process and leased to each connection; a thread per open reads its
-//! input reports (`ReadFile`) into a log each reader takes a batch from. Output reports are
+//! (D11). A collection is opened once per process and leased to each connection (D5); a thread per open reads its
+//! input reports (`ReadFile`) into a log each reader takes a batch from (D12). Output reports are
 //! `HidD_SetOutputReport`, feature reports `HidD_SetFeature` and `HidD_GetFeature`, each the length the
 //! collection's capabilities name.
 //!
-//! WinRT's `HidDevice` needs a package capability the unpackaged host cannot declare, so this is Win32's,
+//! WinRT's `HidDevice` needs a package capability the unpackaged host cannot declare (D14), so this is Win32's,
 //! declared here: the package names only `exact_linux` and `std`. Not built yet: the plug notifications
 //! (`CM_Register_Notification`); the lists are read again at each ask. `requestDevice` (the `DevicePicker`) fails
 //! `NotSupportedError`: the app lists `attachedDevices` itself.
@@ -125,7 +125,7 @@ fn describe(path: &str) -> Option<Device> {
     Some(Device { id: path.to_lowercase(), path: path.to_owned(), vendor: a.vendor, product: a.product, name: String::from_utf16_lossy(&name[..end]), caps })
 }
 
-/// WebHID's blocklist by collection, and the pads `@exact/gamepad` owns.
+/// WebHID's blocklist by collection, and the pads `@exact/gamepad` owns (D6, D11).
 fn offered(c: &Caps) -> bool {
     let blocked = c.page == 0xF1D0 || (c.page == 1 && matches!(c.usage, 0x01 | 0x02 | 0x06 | 0x07 | 0x80..=0x8F));
     let pad = c.page == 1 && matches!(c.usage, 0x04 | 0x05 | 0x08);

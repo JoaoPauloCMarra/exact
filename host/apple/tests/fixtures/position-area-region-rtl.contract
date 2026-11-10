@@ -1,4 +1,4 @@
-// The rows of host/web/tests/position-area-region.test.mjs's table, mirrored right to left,
+// LLP 1021 D2: the rows of host/web/tests/position-area-region.test.mjs's table, mirrored right to left,
 // each an invoker where Chrome's anchor is and its popover of 50x18 boxes in a
 // wrapping row (PositionAreaRegionIOSTests, PositionAreaRegionMacTests). Generated with the table.
 component Proof

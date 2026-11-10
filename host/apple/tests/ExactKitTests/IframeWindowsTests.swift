@@ -10,8 +10,8 @@ import UIKit
 
 #if os(macOS) || os(iOS)
 /// An iframe's new windows, dialogs, file inputs, downloads, permissions and
-/// other apps' schemes through the web arm's C ABI,
-/// against pages a loopback server in the test serves. A
+/// other apps' schemes through the web arm's C ABI (LLP 1020.002 stage 2,
+/// D5 and §10), against pages a loopback server in the test serves. A
 /// script the test runs with `evaluateJavaScript` carries a person's
 /// gesture, as WebKit runs it.
 final class IframeWindowsTests: XCTestCase {
@@ -137,7 +137,7 @@ final class IframeWindowsTests: XCTestCase {
 
     private func events(_ seen: Seen) -> [String] { seen.records.map(\.event) }
 
-    // MARK: New windows (the popup table)
+    // MARK: New windows (D5's popup table)
 
     func testWindowRequestsFollowThePopupTable() throws {
         let arm = try arm(), seen = Seen()
@@ -257,7 +257,7 @@ final class IframeWindowsTests: XCTestCase {
 
     #if os(macOS)
     /// A `mailto:` link with `target=_blank`: the platform's confirmation,
-    /// never a popup or a `newwindow`.
+    /// never a popup or a `newwindow` (LLP 1020.002 §11, stage 2's case).
     func testAnotherAppsSchemeAsksFirst() throws {
         guard NSWorkspace.shared.urlForApplication(toOpen: URL(string: "mailto:a@b.test")!) != nil else {
             throw XCTSkip("no app opens mailto: on this Mac")
@@ -345,7 +345,7 @@ final class IframeWindowsTests: XCTestCase {
     }
     #endif
 
-    // MARK: Under the agent: requests a drive answers
+    // MARK: Under the agent: requests a drive answers (§10)
 
     func testUnderTheAgentDialogsFilesAndDownloadsAreRequests() throws {
         let arm = try arm(), seen = Seen()
@@ -442,7 +442,7 @@ final class IframeWindowsTests: XCTestCase {
         XCTAssertEqual(answered as? Bool, false)
     }
 
-    // MARK: Permissions
+    // MARK: Permissions (§12 Q8)
 
     /// Each permission the arm's delegate is asked for is denied. WebKit asks
     /// it only in a process that may use the device (a usage string, a
@@ -488,8 +488,9 @@ final class IframeWindowsTests: XCTestCase {
     }
 
     /// A guest the wrapper's inner frame holds (a sandboxed remote page, and
-    /// on iOS any remote one) is allowed fullscreen, as a top-level guest is;
-    /// without `allow="fullscreen *"` its `fullscreenEnabled` is false.
+    /// on iOS any remote one) is allowed fullscreen, as a top-level guest is
+    /// (LLP 1020.002 D5); without `allow="fullscreen *"` its
+    /// `fullscreenEnabled` is false.
     func testAGuestInTheWrapperIsAllowedFullscreen() throws {
         let arm = try arm()
         for sandbox in ["allow-scripts", "allow-scripts allow-forms allow-popups allow-downloads", nil] {
@@ -506,7 +507,7 @@ final class IframeWindowsTests: XCTestCase {
         }
     }
 
-    // MARK: Abuse and failure cases
+    // MARK: Review round 1
 
     /// A download's destination that is a folder is refused, never replaced:
     /// an agent's typed `/Users/me/Downloads` or `/` must not delete it.

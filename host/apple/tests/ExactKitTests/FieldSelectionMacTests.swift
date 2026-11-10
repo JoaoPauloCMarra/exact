@@ -263,7 +263,8 @@ final class FieldSelectionMacTests: XCTestCase {
     }
 
     /// ⌘Z takes back a script's range edit, and only it: the person's
-    /// typing before it is the next step.
+    /// typing before it is the next step (the user's ruling of 2026-11-04,
+    /// LLP 1069.001).
     func testRangeTextWhileEditingIsOneUndoStep() throws {
         let p = presenter()
         var replacements = 0, inputs: [String] = []

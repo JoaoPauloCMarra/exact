@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-// A data module's `scheduler` on the JS target, ts-fetch.js as it is: with no
+// A data module's `scheduler` on the JS target (LLP 1141.001 D10), ts-fetch.js as it is: with no
 // browser `scheduler.yield` (Bun has none, nor has Safari), a yield resolves in a task of its own, after
 // the microtasks queued before it; `postTask` refuses, naming the yield; and an overlay may not yield.
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');

@@ -1,4 +1,4 @@
-// The date a session tells its runner: at boot, before
+// The date a session tells its runner (LLP 1027.000.000): at boot, before
 // the first settle, and whenever the zone's offset or the drive's clock moves.
 import Foundation
 import ExactCore
@@ -44,7 +44,7 @@ extension ExactSession {
     }
     /// Under the agent, sends the drive's date at clock zero and its zone's
     /// offset at the current virtual time. Runs at boot and after every `clock`,
-    /// so crossing a DST change updates it.
+    /// so crossing a DST change updates it (LLP 1069.007 D2).
     func tellAgentOffset() {
         guard launchPlace.epoch != nil else { return }
         let date = dateNow()

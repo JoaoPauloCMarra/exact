@@ -104,7 +104,7 @@ pub(super) fn inline_use(
         };
         child_subst.insert(p.name.clone(), e);
     }
-    // The child's own `state`, `derive`, and `action`:
+    // The child's own `state`, `derive`, and `action` (LLP 1017 P4c):
     // renamed apart with this use's number and lifted into the
     // root — a derive as an expression substituted at each read.
     *ctx.counter += 1;
@@ -179,8 +179,8 @@ pub(super) fn inline_use(
             )
         })
         .collect();
-    // An action prop or injected action an action calls:
-    // the action it names and the arguments it was
+    // An action prop or injected action an action calls (LLP
+    // 1089 D7): the action it names and the arguments it was
     // curried with, captured as the props above are (they are
     // the parent's), and where it was bound.
     let mut captures = captures;
@@ -360,7 +360,7 @@ pub(super) fn inline_use(
     let outer_fill = std::mem::replace(&mut ctx.fill, fill);
     let outer_instance = std::mem::replace(&mut ctx.instance, instance);
     // The child's `provide` section covers its whole view, after
-    // the fill took the use site's.
+    // the fill took the use site's (LLP 1035.005.000 D9).
     let outer_provides = ctx.provides.len();
     for b in &c.provides {
         ctx.provides

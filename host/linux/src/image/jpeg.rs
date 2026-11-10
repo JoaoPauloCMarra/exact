@@ -9,6 +9,8 @@
 //! in the platform's own animated drawable, which a reader may draw in the
 //! still's place ([`crate::image::Bitmap::animation_file`]). Windows uses WIC
 //! for these formats, including installed WebP codecs.
+//!
+//! @ref LLP 1076 §3.4 (the Rust painter on Android)
 use super::png_decode::{DecodePlan, Header};
 use exact_raster::{Metadata, PixelSize, Refusal, MAX_HEADER_BYTES, MAX_SOURCE_PIXELS};
 use std::io::{Read, Seek, SeekFrom};

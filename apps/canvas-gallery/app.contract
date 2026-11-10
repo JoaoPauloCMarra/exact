@@ -1,4 +1,4 @@
-// Canvas gallery — the Canvas 2D fixture: every Canvas 2D member the recorder carries,
+// Canvas gallery — the LLP 1056 fixture: every Canvas 2D member of stages 1 and 2,
 // drawn by fixtures.js through the recorder on each host. Chrome (the web
 // host) is the reference; `bun scripts/smoke.mjs canvas` crops each `fx-*`
 // canvas on every host and compares it, and holds the web's recorded path to
@@ -6,12 +6,12 @@
 //
 // Page 3's fixtures are sequences: `step` redraws them on the same context.
 // `backdrop` puts every canvas on black instead of white, without a redraw:
-// what shows through is the bitmap's alpha.
+// what shows through is the bitmap's alpha (LLP 1056 §4).
 
 routes nav
   tab home "/"
 
-// Text is drawn in a declared face: the tight case for parity.
+// Text is drawn in a declared face: the tight case for parity (LLP 1056 D8).
 font "Exposure Sans"
   400 = "assets/ExposureSansOriginal03-Regular.ttf"
   400 italic = "assets/ExposureSansOriginal03-Italic.ttf"
@@ -97,7 +97,7 @@ component Paint
     canvas surface=clear() class=Tile background-color=bg testId="fx-clear"
     canvas surface=bitmap() class=Tile background-color=bg bitmap-width=40 bitmap-height=25 testId="fx-bitmap"
 
-// Sequences: each step draws again on the same context.
+// Sequences: each step draws again on the same context (D3, D4).
 component Sequences
   props
     step: number
@@ -109,7 +109,7 @@ component Sequences
     canvas surface=throws(step) class=Tile background-color=bg testId="fx-throws"
     canvas surface=resize(step) class=Tile background-color=bg width=(90 + step * 20) testId="fx-resize"
 
-// Text: alignment, baselines, styles, measurement, direction and
+// Text (stage 2): alignment, baselines, styles, measurement, direction and
 // currentColor (the canvas node's `color`).
 component Text
   props
@@ -121,7 +121,7 @@ component Text
     canvas surface=textmeasure() class=Tile background-color=bg testId="fx-textmeasure"
     canvas surface=textrtl() class=Tile background-color=bg color="#be185d" testId="fx-textrtl"
 
-// Pictures: images by handle, patterns, conic gradients, Path2D,
+// Pictures (stage 2): images by handle, patterns, conic gradients, Path2D,
 // shadows, the clip-extent operators, raw pixels and wide colours.
 component Pictures
   props

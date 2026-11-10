@@ -1,4 +1,4 @@
-// The tool door: what a system's call of a
+// The tool door (LLP 1133.023 D7, D15 item 4): what a system's call of a
 // tool reaches. The generated intents module (host/apple/intents.mjs) posts
 // `exact.tools.call` `{tool, args, door, digest, reply}`, an
 // `NSMutableDictionary` this marks `taken`, and an app's own native intent
@@ -8,7 +8,7 @@
 // ends.
 //
 // A call that launched the app with no scene boots the session with none,
-// as a wake does: `boot`, which the app's host sets.
+// as a wake does (LLP 1133.017 D7): `boot`, which the app's host sets.
 import Foundation
 import os
 #if os(iOS)
@@ -42,10 +42,10 @@ public enum ExactTools {
         ExactContentIndex.install()
     }
 
-    /// Call `tool` with `args` as `door` hands it, and answer with the
+    /// Call `tool` with `args` as `door` hands it, and answer LLP 1111 D4's
     /// envelope: `outcome` (`ok`, `failed`, `superseded`, `timeout`,
     /// `refused`), `certainty`, `reason`, `value` and `message`. `digest` is
-    /// the face's the caller was compiled with, checked against the
+    /// the face's the caller was compiled with (D8), checked against the
     /// plan's. Main thread.
     public static func call(tool: String, args: [String: Any], door: String = "apple", digest: String? = nil,
                             reply: @escaping ([String: Any]) -> Void) {
@@ -90,7 +90,7 @@ public enum ExactTools {
         hand()
     }
 
-    /// No view of the session is visible: its timers stop while the call runs.
+    /// No view of the session is visible: its timers stop while the call runs (D7).
     private static func hidden(_ session: ExactSession) -> Bool {
         #if os(iOS)
         return UIApplication.shared.applicationState == .background

@@ -1,5 +1,5 @@
-//! A child process in a TypeScript module, through the runner:
-//! the process request, the incarnation's handle,
+//! A child process in a TypeScript module, through the runner (LLP
+//! 1133.007 D2, D3, D13): the process request, the incarnation's handle,
 //! staged writes, ends and kills addressed to it, their admission by the
 //! commit's origin, and a one-shot `execFile`.
 
@@ -217,7 +217,7 @@ fn a_tool_or_a_wake_directs_no_child() {
     for origin in [CallOrigin::Tool, CallOrigin::Wake] {
         r.act_from(origin, "poke", vec![Value::str("kill")])
             .unwrap();
-        assert!(r.take_socket_sends().is_empty(), "refused");
+        assert!(r.take_socket_sends().is_empty(), "refused (D13)");
     }
     let journal: Vec<&str> = r.journal().collect();
     assert!(
@@ -341,7 +341,7 @@ fn an_exec_file_its_signal_aborts_resumes_rejected_and_is_cancelled() {
     let exec = out.iter().find(|o| o.target == "held").unwrap();
     assert!(exec.request.is_process() && !exec.request.stream);
     // Another answer's turn aborts it: answered aborted at the host's next
-    // pump, and handed to the host to cancel, which ends the child.
+    // pump, and handed to the host to cancel, which ends the child (D3).
     r.act("halt", vec![]).unwrap();
     let (ticket, outcome) = r.take_request_refusal(false).expect("the aborted answer");
     assert_eq!(ticket, exec.ticket);

@@ -1,17 +1,18 @@
-//! The host services the desktop modules use: the process's one hot-key
-//! handler, the taskbar button and the launch. Each platform object is one per
-//! process, so the host keeps it and a package reaches it through its
-//! [`Context`](crate::package::Context), keyed by the calling session.
+//! The host services LLP 1133.025's desktop modules use (D11 item 2): the
+//! process's one hot-key handler, the taskbar button and the launch. Each
+//! platform object is one per process, so the host keeps it and a package
+//! reaches it through its [`Context`](crate::package::Context), keyed by the
+//! calling session.
 //!
 //! A host that has these installs its [`Services`] before the loop starts
 //! (the Windows host, `host/windows/src/desktop.rs`); this Linux host binds
-//! none, so [`services`] is `None` and the packages
+//! none (LLP 1133.025 D14), so [`services`] is `None` and the packages
 //! answer `NotSupportedError`.
 //!
-//! A hot key's press is an activation the host raises: the host's callback
-//! calls [`activate`], and the presenter's next turn raises the registration's
-//! event with a person's origin on the runner, which a package's own `emit`
-//! never gets.
+//! A hot key's press is an activation the host raises (D11 item 3): the
+//! host's callback calls [`activate`], and the presenter's next turn raises
+//! the registration's event with a person's origin on the runner, which a
+//! package's own `emit` never gets.
 
 use std::cell::RefCell;
 use std::rc::Rc;

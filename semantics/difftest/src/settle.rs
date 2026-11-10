@@ -1,4 +1,4 @@
-//! Replay the device runner's settle and mutation clocks.
+//! Replay the device runner's settle and mutation clocks (LLP 1151 D4.1).
 
 use crate::{
     observe::Driver,

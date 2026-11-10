@@ -1,4 +1,4 @@
-// Reader paragraphs use the region text service.
+// @ref LLP 1044.000 §6 S3(d) — reader paragraphs use the region text service.
 #if os(macOS)
 import AppKit
 import CExact
@@ -31,7 +31,7 @@ struct RegionReaderBand {
          velocity: CGFloat, scale: Int) {
         let q = CGFloat(scale)
         // Budget both the viewport and time to prepare its successor. At rest
-        // keep the small admission; travel spends the existing 32 MiB cap.
+        // keep S3(d)'s small admission; travel spends the existing 32 MiB cap.
         height = floor(min(capacity, 16384 / q, velocity == 0 ? steadyHeight
             : max(steadyHeight, visible + abs(velocity) * 0.18 + 128)) * q) / q
         let extra = max(0, height - visible)
@@ -455,7 +455,7 @@ final class RegionReaderParagraph {
 }
 
 extension TextEngine {
-    /// The reader is UI-owned: its paragraphs hold layers and
+    /// The reader is UI-owned (LLP 1072 §8.1): its paragraphs hold layers and
     /// its timing measures main's frames. The kernel measures on the owner
     /// thread, so a request the reader may answer, or one naming a paragraph
     /// it holds, goes through the owner's one door to main; every other

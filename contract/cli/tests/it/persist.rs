@@ -1,4 +1,4 @@
-//! `state … persist`: a root state the store keeps across
+//! `state … persist` (LLP 1116 D5): a root state the store keeps across
 //! launches — restored before the first frame where it still fits its type,
 //! written after every commit that stands.
 

@@ -1,5 +1,5 @@
 //! The agent's verbs, run as the agent runs them: the binary, headless, on
-//! an entry compiled with the terminal profile.
+//! an entry compiled with the terminal profile (LLP 1101.002 §0 P1, P7).
 
 use std::path::PathBuf;
 use std::process::Command;
@@ -815,7 +815,7 @@ fn inline_paint_carries_colours_decorations_and_links_without_crossing_siblings(
         let grid = &painted.grid;
         assert!(grid.text().starts_with("ABCDE"), "{}", grid.text());
         // B is a run with an `href` in its paragraph and no colour of its
-        // own: the link role's, not its parent's. C says
+        // own: the link role's, not its parent's (LLP 1115 §3). C says
         // `inherit`, and the paragraph's own link keeps inheriting.
         let link = exact_kernel::ColorValue::parse_light_dark("LinkText")
             .unwrap()
@@ -936,7 +936,7 @@ fn a_verb_that_cannot_do_its_work_fails() {
 }
 
 /// A native field in a terminal entry is one row with a host-painted fill,
-/// no border, and a disabled one is faint.
+/// no border (LLP 1104 D7), and a disabled one is faint.
 #[test]
 fn a_terminal_field_is_a_filled_row() {
     let (ok, out, err) = run("field", &["print"]);
@@ -1040,7 +1040,7 @@ fn native_cell_look_keeps_bare_fields_and_authored_ink() {
     }
 }
 
-/// A determinate `progress` is a row of blocks, `█` to its
+/// LLP 1116 D8: a determinate `progress` is a row of blocks, `█` to its
 /// value and `░` after, across its box (HTML's 10em).
 #[test]
 fn a_progress_bar_is_a_row_of_blocks() {
@@ -1094,8 +1094,8 @@ fn headless_time_uses_agent_facts_and_survives_an_invalid_place() {
     std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
 }
 
-/// The terminal carrier's own `layout` and `plan` verbs (for
-/// scripts/scale-check.mjs): each node's kernel frame, its cells, its
+/// The terminal carrier's own `layout` and `plan` verbs (LLP 1121 stage 11 C,
+/// for scripts/scale-check.mjs): each node's kernel frame, its cells, its
 /// testId and its corners' resolved radii; the running plan's SHA-256.
 #[test]
 fn layout_and_plan_answer_as_json() {
@@ -1134,7 +1134,7 @@ fn layout_and_plan_answer_as_json() {
         "{layout}"
     );
     // A ch of padding is a column across and, half a row, none down (the
-    // terminal's space rule): the box is its child's
+    // terminal's space rule, LLP 1121 stage 11 (c)): the box is its child's
     // two rows; its corners resolved.
     assert!(
         layout.contains("\"x\":0,\"y\":0,\"w\":176,\"h\":32,\"cells\":{\"x\":0,\"y\":0,\"w\":22,\"h\":2},\"radius\":[8,8,8,8],\"testId\":\"box\""),

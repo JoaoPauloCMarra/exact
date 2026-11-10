@@ -1,4 +1,4 @@
-// An app whose one resource asks a server that holds the request, as a long poll does,
+// An app whose one resource asks a server that holds the request, as a long poll does (LLP 1016.000 D9),
 // and its server, for the hosts' held-request tests (host/web-js/held.test.mjs, host/apple/held.test.mjs):
 // `poll("held")` fetches `/changes` with `exactHeld: true`; `poll("plain")` the same unmarked. Once the
 // held reply lands, the answer fetches `/detail` (unmarked): its work after the held reply, which a clock

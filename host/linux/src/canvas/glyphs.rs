@@ -1,6 +1,6 @@
 //! A paragraph's glyph runs (`GLYPHS`, op 9), each from one face at one
 //! size, and the blur a numeric roll draws them through (`BLUR`, op 44:
-//! `[44, sigma]` in local units, before the GLYPHS it blurs).
+//! `[44, sigma]` in local units, before the GLYPHS it blurs; LLP 1077 D15).
 use super::{clip, Recorder, FONT, FONT_AXES, GLYPHS};
 use crate::text::{Paragraph, RunPaint, TextEngine};
 use std::sync::Arc;

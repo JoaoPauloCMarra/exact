@@ -2,7 +2,7 @@
 //! order-modified document order — ascending `order`, ties in document order
 //! (CSS Flexbox §5.4.1, CSS Grid §8.1). The kernel hands the layout engine a
 //! container's children in that order; the arena keeps document order, which
-//! painting and focus follow (for painting, a deliberate deviation from CSS).
+//! painting and focus follow (LLP 1001 §2 declares the paint half).
 
 use crate::arena::NodeArena;
 use taffy::prelude::{NodeId, TaffyTree};
@@ -20,7 +20,7 @@ pub(super) fn laid_out<T>(
     handle: impl Fn(u32) -> Option<NodeId>,
 ) -> Vec<NodeId> {
     // A child a host gave a containing block is out of this layout, the
-    // root of its own.
+    // root of its own (LLP 1115.002 D8.2).
     let mut items: Vec<(i32, NodeId)> = before
         .into_iter()
         .map(|node| (0, node))

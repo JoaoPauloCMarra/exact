@@ -1,4 +1,4 @@
-//! A route that paints its boot document first: the page
+//! A route that paints its boot document first (LLP 1048.005): the page
 //! with its answers still to come goes before the render waits, its head's
 //! fields in the head; the settled page follows, hiding it and removing it
 //! before the runtime adopts.

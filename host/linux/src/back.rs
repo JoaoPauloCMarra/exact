@@ -1,5 +1,6 @@
-//! The platform's own Back and Forward on the host: the router's `back` or
-//! `go`, written by the runner as one commit.
+//! The platform's own Back and Forward on the host (LLP 1115 D5; LLP
+//! 1115.001 D6; LLP 1115.000 D5.5): the router's `back` or `go`, written by
+//! the runner as one commit.
 use super::*;
 
 impl<D: DataSource> Host<D> {

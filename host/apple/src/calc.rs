@@ -42,8 +42,8 @@ impl Context {
     /// Copy a serialized environment. See `exact_calc_create` in exact.h.
     pub fn new(handle: u32, values: &[f64]) -> Option<Box<Self>> {
         let calculation = tree(handle)?;
-        // The layout regions' count, exactly 0 or 20, then the regions;
-        // the title-bar area's, 0 or 4, then the area
+        // The layout regions' count, exactly 0 or 20, then the regions (LLP
+        // 1123 D10); the title-bar area's, 0 or 4, then the area
         let regions = match values.get(8) {
             Some(&0.0) => 0,
             Some(&20.0) => 20,
@@ -239,7 +239,7 @@ mod tests {
         assert!(super::Context::new(n, &[0., 0., 0., 0., 300., 600., 2., 1., 0., 0.]).is_none());
     }
 
-    /// A deferred calculation reads the layout regions the
+    /// LLP 1123 D10: a deferred calculation reads the layout regions the
     /// snapshot carries, and the safe area without them.
     #[test]
     fn a_snapshot_carries_the_layout_regions() {

@@ -8,8 +8,8 @@ import UIKit
 #endif
 
 #if os(macOS) || os(iOS)
-/// A partitioned frame driven through the web arm's `exact_web_automation`,
-/// as `@exact/browser-automation`'s package calls
+/// A partitioned frame driven through the web arm's `exact_web_automation`
+/// (LLP 1020.002 stage 4, D9), as `@exact/browser-automation`'s package calls
 /// it once the runner admitted the call: scripts in their worlds, preload
 /// scripts, input and whether the page trusts it, prompts, downloads, a
 /// person taking the frame back, and calls ending with their document or
@@ -213,7 +213,7 @@ final class IframeAutomationTests: XCTestCase {
     }
 
     /// Input reaches the page: a click, typed text, a key with a modifier
-    /// held, and a wheel. Whether the page trusts it is measured.
+    /// held, and a wheel. Whether the page trusts it is measured (D9).
     func testInputReachesThePage() throws {
         #if os(iOS)
         guard hostedWindowScene() != nil else { throw missing("scene", "WebKit lays out a page only in an app's window scene") }

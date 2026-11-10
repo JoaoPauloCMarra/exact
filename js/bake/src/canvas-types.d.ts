@@ -1,6 +1,6 @@
-/** An image, by the URL or asset an `image` node's `src` takes. */
+/** An image, by the URL or asset an `image` node's `src` takes (LLP 1056 D9). */
 export type ImageHandle = string;
-/** The 2D context a surface draws with (stages 1 and 2). */
+/** The 2D context a surface draws with (LLP 1056 §3, stages 1 and 2). */
 export type Ctx2D = Pick<OffscreenCanvasRenderingContext2D,
   | 'save' | 'restore' | 'reset'
   | 'translate' | 'rotate' | 'scale' | 'transform' | 'setTransform' | 'resetTransform' | 'getTransform'
@@ -20,7 +20,7 @@ export type Ctx2D = Pick<OffscreenCanvasRenderingContext2D,
   drawImage(image: ImageHandle, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
   createPattern(image: ImageHandle, repetition: string | null): CanvasPattern | null;
 };
-/** What one draw is told. */
+/** What one draw is told (LLP 1056 D4–D6). */
 export interface Frame {
   readonly time: number;
   readonly mounted: number;

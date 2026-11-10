@@ -1,4 +1,4 @@
-//! f64 path geometry: the author matrix, and `arc`,
+//! f64 path geometry (LLP 1056 §1, §7): the author matrix, and `arc`,
 //! `ellipse`, `arcTo` and `roundRect` as line and cubic segments. The
 //! recorder resolves these at the call, so every replayer draws the same
 //! segments. Angles and their canonicalisation are Chrome's

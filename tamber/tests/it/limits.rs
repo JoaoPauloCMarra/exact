@@ -1,4 +1,5 @@
-//! The design checker's own bounds: a value's bytes and nesting
+//! The design checker's own bounds (the lead's 13:30Z PRIORITY, rt1's
+//! finding; theme2's approval): a value's bytes and nesting
 //! (`css::over_limit`), and a length over base names' atoms
 //! (`residual::MAX_RESIDUAL_ATOMS`). Each value past one is refused with its
 //! own id, quickly, whatever its shape; every value the corpus writes reads.
@@ -31,8 +32,8 @@ fn theme(lines: &[String]) -> String {
 }
 
 /// A chain of tokens each naming the next three times in a `clamp()`, over
-/// a base name: its residual tripled a level, 3^n atoms. Refused at the
-/// level that passes the bound, in milliseconds.
+/// a base name: its residual tripled a level, 3^n atoms on main (rt1's
+/// finding). Refused at the level that passes the bound, in milliseconds.
 #[test]
 fn a_clamp_chain_is_refused_where_it_passes_the_bound() {
     let n = 30;
@@ -55,8 +56,8 @@ fn a_clamp_chain_is_refused_where_it_passes_the_bound() {
 /// function is made.
 #[test]
 fn a_nest_in_one_value_is_bounded_where_each_function_is_made() {
-    // Five levels in one value (364 atoms, about 3 KB): refused (twelve
-    // would be past the bytes, so never reach the atoms' bound).
+    // Five levels in one value (364 atoms, about 3 KB): refused (Astra's
+    // round 1: the twelve this had were past the bytes, so never ran).
     let mut v = "base.gap".to_string();
     for _ in 0..5 {
         v = format!("clamp({v},{v},{v})");
@@ -154,9 +155,9 @@ fn a_px_chain_within_the_depth_still_folds() {
     const { assert!(MAX_RESIDUAL_ATOMS >= 64) };
 }
 
-/// Every op that carries a value checks it first (`edit::valid`): a value
-/// past the bound is refused with the bound's id, in words that give its size
-/// and never echo it, as is a name past it.
+/// Every op that carries a value checks it first (`edit::valid`, rt1's
+/// co-sign): a value past the bound is refused with the bound's id, in words
+/// that give its size and never echo it, as is a name past it.
 #[test]
 fn an_edit_past_the_bound_is_refused_before_it_is_read() {
     use exact_tamber::{apply, Op};
@@ -190,8 +191,8 @@ fn an_edit_past_the_bound_is_refused_before_it_is_read() {
 }
 
 /// Each importer refuses a source value past the bound with that bound's id,
-/// whether it would have mapped it or reported it
-/// (`import::bounded`), naming the source's name and never echoing the value.
+/// whether it would have mapped it or reported it (theme2's condition;
+/// `import::bounded`), naming the source's name and never echoing the value.
 #[test]
 fn each_importer_refuses_a_value_past_the_bound_with_its_id() {
     use exact_tamber::import::{astryx, dtcg, shadcn, tailwind};
@@ -241,7 +242,7 @@ fn each_importer_refuses_a_value_past_the_bound_with_its_id() {
         "pen",
     );
     // A value nested past the bound, within its bytes: each kind refuses it
-    // with the depth's id, at import.
+    // with the depth's id (theme2's condition (2), at import).
     let deep = format!(
         "{}1px{}",
         "calc(".repeat(MAX_VALUE_DEPTH + 1),
@@ -293,8 +294,8 @@ fn each_importer_refuses_a_value_past_the_bound_with_its_id() {
     );
 }
 
-/// A sum of many lengths, each within the bound, stops as it passes it,
-/// not checked on the result alone.
+/// A sum of many lengths, each within the bound, stops as it passes it
+/// (both reviewers' round 1: the bound was checked only on the result).
 #[test]
 fn a_wide_sum_stops_as_it_passes_the_bound() {
     let mut lines = Vec::new();
@@ -311,7 +312,8 @@ fn a_wide_sum_stops_as_it_passes_the_bound() {
     assert!(took < Duration::from_secs(2), "{took:?}");
 }
 
-/// A cycle read twice a level is no 2^n: refused as a cycle in moments.
+/// A cycle read twice a level is no 2^n (Astra's round 1): refused as a
+/// cycle in moments.
 #[test]
 fn a_cycle_read_twice_a_level_is_refused_in_moments() {
     let mut lines: Vec<String> = (0..30)
@@ -324,7 +326,7 @@ fn a_cycle_read_twice_a_level_is_refused_in_moments() {
 }
 
 /// A chain of names past 256 is refused where it passes, not followed until
-/// the stack runs out.
+/// the stack runs out (both reviewers' round 1).
 #[test]
 fn a_long_chain_of_names_is_refused_before_the_stack_runs_out() {
     let n = 5000;
@@ -349,7 +351,7 @@ fn a_long_chain_of_names_is_refused_before_the_stack_runs_out() {
 
 /// A platform colour's fallback is read again, and the reader counts its
 /// levels through it: an escaped quote that hides parentheses from the scan
-/// recurses no deeper.
+/// recurses no deeper (Astra's round 1).
 #[test]
 fn a_platform_colours_fallbacks_count_their_levels() {
     let mut v = "red".to_string();
@@ -363,7 +365,8 @@ fn a_platform_colours_fallbacks_count_their_levels() {
 }
 
 /// A number dial, a range end, an icon and a metadata word past the bound
-/// are refused with its id before anything reads them, never echoed.
+/// are refused with its id before anything reads them, never echoed (Astra's
+/// and Grok's round 1).
 #[test]
 fn every_kind_of_value_meets_the_bound_first() {
     let big = "0".repeat(MAX_VALUE_BYTES + 1);
@@ -392,7 +395,7 @@ fn every_kind_of_value_meets_the_bound_first() {
     }
 }
 
-/// A shadow's pieces read alone keep the depth id.
+/// A shadow's pieces read alone keep the depth id (Grok's round 1).
 #[test]
 fn a_shadow_piece_nested_too_deep_keeps_the_depth_id() {
     let deep = format!(
@@ -410,7 +413,7 @@ fn a_shadow_piece_nested_too_deep_keeps_the_depth_id() {
 /// The importers: two sides each within the bound are no refusal though
 /// their joined report is past it; a long name doesn't hide a long value;
 /// a Pencil theme's label isn't a value; a reimport refuses as an import
-/// does.
+/// does (both reviewers' round 1).
 #[test]
 fn importers_check_source_values_not_reports() {
     use exact_tamber::import::{astryx, dtcg, shadcn};
@@ -464,8 +467,8 @@ fn importers_check_source_values_not_reports() {
 }
 
 /// Tokens followed and the functions their values nest are counted
-/// together (512 tokens of 32 functions each fit both bounds and would
-/// otherwise overflow a 2 MB stack): a chain of deeply nested values
+/// together (both reviewers' round 2: 512 tokens of 32 functions each fit
+/// both bounds and overflowed a 2 MB stack): a chain of deeply nested values
 /// is refused where the count passes 512; a shorter one folds, on a test
 /// thread's 2 MB stack.
 #[test]
@@ -496,7 +499,8 @@ fn tokens_and_the_functions_they_nest_count_together() {
 
 /// Text a parser or a check names before the bounds see it (an unknown
 /// kind, a malformed range) is never echoed whole: a kind past the bound is
-/// refused with its id, and every diagnostic's words stay short.
+/// refused with its id, and every diagnostic's words stay short (both
+/// reviewers' round 2).
 #[test]
 fn nothing_said_echoes_text_past_the_bound() {
     let long = "k".repeat(5000);
@@ -522,7 +526,8 @@ fn nothing_said_echoes_text_past_the_bound() {
 }
 
 /// A metadata word is measured alike on the wire and on disk (its name,
-/// `=`, its value unquoted), refused with one id and the same words.
+/// `=`, its value unquoted), refused with one id and the same words (both
+/// reviewers' round 2).
 #[test]
 fn a_metadata_word_is_measured_alike_on_the_wire_and_on_disk() {
     use exact_tamber::{apply, Op};
@@ -555,7 +560,8 @@ fn a_metadata_word_is_measured_alike_on_the_wire_and_on_disk() {
 
 /// A reimport refuses a key past the bound (a context's) with the bound's
 /// id, never echoing it; a CSS name past its 256 bytes doesn't hide a value
-/// nested too deep; parentheses inside single quotes are no nesting.
+/// nested too deep; parentheses inside single quotes are no nesting (both
+/// reviewers' round 2).
 #[test]
 fn reimport_keys_long_names_and_single_quotes() {
     use exact_tamber::import::shadcn;
@@ -581,8 +587,8 @@ fn reimport_keys_long_names_and_single_quotes() {
     assert!(!ids.contains(&"tamber-value-depth"), "{ids:?}");
 }
 
-/// Icon aliases are followed once each (a pass per alias, each scanning
-/// every icon, would be cubic in a chain written backwards).
+/// Icon aliases are followed once each (Astra's round 2: a pass per alias,
+/// each scanning every icon, was cubic in a chain written backwards).
 #[test]
 fn an_icon_alias_chain_resolves_in_moments() {
     let n = 20_000;

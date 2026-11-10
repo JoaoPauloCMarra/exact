@@ -1,4 +1,4 @@
-//! Optional app-supplied delivery composition.
+//! Optional app-supplied delivery composition (LLP 1030 D4).
 //! The host owns sessions and assets; the higher adapter owns store policy.
 use crate::image::AssetResolver;
 use exact_runner::Delivery;

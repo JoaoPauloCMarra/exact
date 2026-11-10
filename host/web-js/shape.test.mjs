@@ -1,4 +1,4 @@
-// A lone UTF-16 surrogate is no string on the web, as on native hosts.
+// A lone UTF-16 surrogate is no string on the web, as on native hosts (LLP 1146 D6).
 import { expect, test } from 'bun:test';
 import { conforms, loneSurrogate } from './shape.js';
 

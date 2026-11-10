@@ -1,6 +1,6 @@
-// @exact/camera and media-capture's video half on Android: the fixture app made outside the
-// repo, given a date control so Compose's AndroidX and CameraX's resolve in one APK, and built as the Canvas
-// reader's APK, which compiles both packages' Kotlin. It checks the one locked, verified Gradle graph:
+// @exact/camera and media-capture's video half on Android (LLP 1133.008 stage 4): the fixture app made outside the
+// repo, given a date control so Compose's AndroidX and CameraX's resolve in one APK (§10), and built as the Canvas
+// reader's APK, which compiles both packages' Kotlin. It checks the one locked, verified Gradle graph (D8 item 5):
 // the build refuses a graph with no lock, `--write-locks` writes the lock and checksums beside the app's other locks,
 // a build checks against both, and an artifact the lock does not name is refused by name. It drives nothing;
 // checklist.md is the phone's.

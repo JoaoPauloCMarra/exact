@@ -1,8 +1,8 @@
-//! Astryx: a theme package's
+//! Astryx (LLP 1121 D14, importer 4; exact1 LLP 0267): a theme package's
 //! tokens resolved to light and dark values (`scripts/astryx-tokens.mjs`
 //! runs `resolveThemeTokens()` on the pinned package), mapped by name. It is
 //! also a probe of Tamber's token kinds: its unmapped report is the
-//! evidence for new kinds, each gap an open question or a later kind.
+//! evidence for new kinds, each gap a §9 question or a later kind.
 //!
 //! - `--color-background-*` → `surface.*` (`-exact-background` offered for
 //!   `body`, `AccentColor` for `--color-accent`), `--color-text-*` →
@@ -14,7 +14,7 @@
 //! - Spacing, radii, sizes, borders and focus widths are lengths; shadows
 //!   (rings as `inset`) box shadows; the three durations durations; easings
 //!   easings; families families, font sizes lengths, weights numbers, and a
-//!   text style's size, weight and leading one type token. One
+//!   text style's size, weight and leading one type token (stage 6 H). One
 //!   whose sides differ or that does not fold is reported.
 //! - A duration's `-min` and `-max` tiers are reported: Tamber has one value
 //!   per duration token.
@@ -495,7 +495,7 @@ fn other_kinds(
 /// The body surface as the platform's background and the accent as the
 /// theme's tint (`AccentColor`), each offered alone. Astryx gives a token no
 /// `when` line, but the design may keep its own on one (reconcile owns no
-/// axis here): a role has one value, so such a token is
+/// axis here): a role has one value (LLP 1121 D5), so such a token is
 /// offered with no operations, and a note.
 fn offers(prefix: &str, design: &Design, vocab: &Vocab, tokens: &[Mapped]) -> Vec<Offer> {
     let roles: Vec<(String, bool)> = vocab
@@ -519,7 +519,7 @@ fn offers(prefix: &str, design: &Design, vocab: &Vocab, tokens: &[Mapped]) -> Ve
         {
             out.push(Offer {
                 role: role.into(),
-                note: Some(format!("not offered: `{token}` keeps the design's `when` lines, and a role has one value, which the hosts' own surfaces read")),
+                note: Some(format!("not offered: `{token}` keeps the design's `when` lines, and a role has one value, which the hosts' own surfaces read (LLP 1121 D5)")),
                 token,
                 ops: Vec::new(),
             });

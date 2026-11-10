@@ -18,12 +18,12 @@ import org.json.JSONObject
 import java.io.File
 
 /**
- * A native module's view: the app registers one per module name. [reset] readies a released view for
- * reuse by another element; a module that returns false from it is destroyed instead.
+ * A native module's view (LLP 1024): the app registers one per module name. [reset] readies a released view for
+ * another element (LLP 1068 §4.8 reuse); a module that returns false from it is destroyed instead.
  */
 interface NativeModule {
     fun create(context: Context, props: JSONObject): View
-    /** [create] for element [id], the node's id: a package's view is made with it. */
+    /** [create] for element [id], the node's id: a package's view is made with it (LLP 1133.008 D8 item 1). */
     fun create(context: Context, props: JSONObject, id: Int): View = create(context, props)
     fun update(view: View, props: JSONObject)
     /** Bound before the first update. Keep this callback only until the next binding; a retired one is ignored. */
@@ -316,7 +316,7 @@ class Natives(
     /** The node op 28 draws for [id] (main thread). */
     fun node(id: Int): RenderNode? = elements[id]?.node
 
-    /** A view the app's Kotlin hatches host at a node (kind 5), made for this layer's
+    /** A view the app's Kotlin hatches host at a node (kind 5, LLP 1115.001.000 D4), made for this layer's
      * activity: each element its own. */
     var hatched: ((Int, Context) -> View?)? = null
 

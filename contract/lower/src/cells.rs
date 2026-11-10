@@ -1,4 +1,4 @@
-//! Rows of a vertical `list` are cells: each host
+//! @ref LLP 1115.000 D16 — rows of a vertical `list` are cells: each host
 //! draws a row as its platform's own list does (UIKit's cell, the Mac's
 //! table, the neutral look's row, Material's list item), with the
 //! platform's separator and press, and what the author writes on a row

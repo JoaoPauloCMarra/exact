@@ -1,4 +1,4 @@
-//! The coding-agent harness's data module: one `session()`
+//! The coding-agent harness's data module (LLP 1101): one `session()`
 //! snapshot the screen draws, the sends that change it, and pure
 //! `animation(...)` frames. Its values are exactly `../shapes.contract`.
 //!
@@ -15,6 +15,8 @@
 //! - `animation(name, tick, cols, rows)` → `Frame`
 //! - `submit(text)`, `approve(id, choice)`, `interrupt()`, `setModel(id)`,
 //!   `setKey(provider, key)`, `retire(id)` → `Ack`
+//!
+//! @ref LLP 1101 (terminal apps)
 
 #![forbid(unsafe_code)]
 

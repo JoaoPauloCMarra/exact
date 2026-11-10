@@ -1,4 +1,4 @@
-// Observations for timer admission, sampled after every applied batch.
+// Observations for timer admission, sampled after every applied batch (LLP 1147).
 #if canImport(UIKit)
 import UIKit
 #else

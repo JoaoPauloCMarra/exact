@@ -1,4 +1,4 @@
-//! Named `backgroundMaterial`s as the web approximates
+//! LLP 1053.000 D4: named `backgroundMaterial`s as the web approximates
 //! them (the schema's blur and tint), held to Chrome's pixels. The page is
 //! `scripts/fixtures/materials.contract`, a grey backdrop so the web's
 //! `saturate()` (which Linux does not draw) changes nothing; Chrome's

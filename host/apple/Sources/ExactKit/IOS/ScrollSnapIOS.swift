@@ -1,4 +1,4 @@
-// CSS scroll snap on UIKit ("Horizontal scroll snap"): UIKit
+// CSS scroll snap on UIKit (LLP 1008, "Horizontal scroll snap"): UIKit
 // projects where a drag comes to rest; the nearest captured snap position
 // replaces it.
 #if os(iOS) || os(tvOS)

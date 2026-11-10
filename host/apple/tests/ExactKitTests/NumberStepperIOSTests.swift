@@ -1,4 +1,4 @@
-// `input type="number"` is a field with a UIStepper at its
+// @ref LLP 1116.007 D4: `input type="number"` is a field with a UIStepper at its
 // trailing edge, stepping the field's text by HTML's rules and saying so as
 // `input` then `change`; `appearance="textfield"`, any other `type` and a
 // field too narrow for both leave the bare field.
@@ -86,7 +86,7 @@ final class NumberStepperIOSTests: XCTestCase {
         XCTAssertEqual(text.maxX, stepper.frame.minX - NodeView.stepperGap, accuracy: 0.001, "the text ends a gap short of the stepper")
         XCTAssertEqual(field.editingRect(forBounds: field.bounds), text)
         XCTAssertEqual(field.placeholderRect(forBounds: field.bounds), text)
-        XCTAssertEqual(field.keyboardType, .numberPad, "step 1 from min 1: whole numbers, the number pad")
+        XCTAssertEqual(field.keyboardType, .numberPad, "step 1 from min 1: whole numbers, the number pad (LLP 1116.019 D5)")
         XCTAssertEqual(field.text, "3")
         XCTAssertEqual(stepper.accessibilityLabel, "Quantity", "the stepper is named as the field is")
         XCTAssertEqual(field.accessibilityLabel, "Quantity")
@@ -232,11 +232,11 @@ final class NumberStepperIOSTests: XCTestCase {
         node.fieldChanged()
     }
 
-    /// A typed 250 against a `max` of 99 saved 250 while the stepper's plus was
-    /// dimmed. The edit commits as the bound it passed, written into the field
-    /// and told as a step is: `input` (the app that listens to it holds the same
-    /// number the field shows), then the `change`. What was typed while typing
-    /// is unchanged.
+    /// LLP 1116.008 D5 (grocery-list, round 10): a typed 250 against a `max` of
+    /// 99 saved 250 while the stepper's plus was dimmed. The edit commits as the
+    /// bound it passed, written into the field and told as a step is: `input`
+    /// (the app that listens to it holds the same number the field shows), then
+    /// the `change`. What was typed while typing is unchanged.
     func testATypedValuePastABoundCommitsAsTheBoundAndTheFieldShowsIt() throws {
         let (node, heard, session) = fixture()
         defer { session.destroy() }

@@ -3,7 +3,7 @@ tamber components
 theme
   accent.fill = #1083fe
 
-// A native view's params: the compiler names and checks them.
+// A native view's params (D15): the compiler names and checks them.
 component MapCard
   params
     pin: color = accent.fill  control=color  priority=1

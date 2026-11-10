@@ -196,6 +196,7 @@ pub struct TextureData {
 }
 /// How every mip of a `.tex` record is encoded. Block formats use 4×4 blocks;
 /// a record's base dimensions are whole blocks (WebGPU's rule).
+/// @ref llp/1046.003-game-engine-as-built.explainer.md#compressed-textures-2026-09-23
 #[derive(Data, Default, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TextureFormat {
     /// Four bytes per texel; every device samples it.

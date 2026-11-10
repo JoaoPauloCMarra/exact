@@ -1,4 +1,4 @@
-//! The font rows that move glyphs: `font-weight`,
+//! The font rows that move glyphs (LLP 1019 §13 D10): `font-weight`,
 //! `font-stretch` and `font-variation-settings` change advances, so no
 //! compositor can play them. A `transition` or `@keyframes` that moves one
 //! plays in a motion engine of the runner's own; each frame writes the
@@ -373,7 +373,7 @@ impl<D: DataSource> Runner<D> {
                     return read(node.style, row);
                 }
             }
-            // A platform control's start stops inheritance.
+            // A platform control's start stops inheritance (LLP 1104 D4).
             if node.starts(row.id()) {
                 break;
             }

@@ -1,6 +1,6 @@
 //! Markdown for reading and editing, over the source string itself.
 //!
-//! The source is the only value. [`style`] says how to
+//! @ref LLP 1045 D1, D2 — the source is the only value. [`style`] says how to
 //! draw it (spans, paragraph styles, the marker ranges to hide), [`edit`] turns
 //! a formatting command into ordinary text replacements, and [`segments`] cuts
 //! a document into the text a single node paints and the blocks text cannot be.
@@ -10,7 +10,7 @@
 //! Ranges in and out are UTF-16 code units: what TextKit, CoreText and the DOM
 //! count in. Pure: no I/O, no host, no dependency.
 //!
-//! The dialect, exactly: ATX headings without closing hashes;
+//! The dialect, exactly (LLP 1045 D2): ATX headings without closing hashes;
 //! `*` `_` emphasis with CommonMark's flanking rules; code spans without
 //! edge-space normalization; `~~` strikethrough (one tilde stays literal);
 //! inline links, autolinks, bare `http(s)` URLs; backslash escapes; fenced

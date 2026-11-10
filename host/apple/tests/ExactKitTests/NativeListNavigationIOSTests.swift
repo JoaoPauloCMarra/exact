@@ -4,7 +4,7 @@ import XCTest
 @testable import ExactKit
 @testable import ExactGroupedLists
 
-/// A large title collapses with its route's content
+/// LLP 1075.003 Stage 3: a large title collapses with its route's content
 /// scroll view (the fixture's Second tab). CSS `scrollTop` counts from the
 /// scrollport's top, which under the bar is the bar's bottom whatever its
 /// height — UIKit keeps the offset plus that inset fixed as the title

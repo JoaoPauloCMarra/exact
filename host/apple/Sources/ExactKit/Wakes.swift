@@ -1,8 +1,8 @@
 // The wake entry points the host keeps, and its store of packages' wake
-// requests. `BGTaskScheduler` takes a launch handler only
+// requests (LLP 1133.017 D8). `BGTaskScheduler` takes a launch handler only
 // before the app finishes launching, and a package's Swift loads with the
 // app's module after its session boots, so the host registers the
-// identifiers Info.plist permits (a grant line derived each) and
+// identifiers Info.plist permits (a grant line derived each, D14) and
 // multiplexes every package's requests through them:
 //
 // - iOS: `<bundle id>.refresh`, one `BGAppRefreshTaskRequest` at the soonest
@@ -29,7 +29,7 @@
 //   (Transfers.swift).
 //
 // A wake that arrives with no module ready is held, and `boot` (the app's
-// host, ExactIOS/main.swift) boots a session for it with no view.
+// host, ExactIOS/main.swift) boots a session for it with no view (D7).
 import Foundation
 import os
 #if os(iOS)
@@ -165,7 +165,7 @@ public enum WakeStore {
         finish(a, false)
     }
 
-    /// Transfers' endings, by package and registration id: a wake of kind `transfer`.
+    /// Transfers' endings, by package and registration id: a wake of kind `transfer` (D10).
     static func transfer(_ due: [(String, String)], complete: @escaping (Bool) -> Void) {
         let a = Arrival(kind: "transfer", due: due.map { Request(package: $0.0, key: $0.1, kind: "transfer", at: now(), network: false, power: false) },
                         complete: complete)
@@ -173,7 +173,7 @@ public enum WakeStore {
         offer(a)
     }
 
-    /// Regions' crossings, by package and region name: a wake of kind `region`.
+    /// Regions' crossings, by package and region name: a wake of kind `region` (LLP 1133.021 D14).
     static func region(_ due: [(String, String)], complete: @escaping (Bool) -> Void) {
         let a = Arrival(kind: "region", due: due.map { Request(package: $0.0, key: $0.1, kind: "region", at: now(), network: false, power: false) },
                         complete: complete)
@@ -272,15 +272,15 @@ public enum WakeStore {
     #endif
 
     #if !os(iOS) && !os(macOS)
-    /// tvOS's refresh is later: its requests are kept, never submitted.
+    /// tvOS's refresh is later (D17): its requests are kept, never submitted.
     public static func schedule() {}
     #endif
 }
 
 extension ExactApp {
-    /// Install at launch, before the app finishes launching. `boot` boots a
-    /// session with no view for a wake that launched the
-    /// app with none.
+    /// Install at launch, before the app finishes launching (LLP 1133.017
+    /// D8). `boot` boots a session with no view for a wake that launched the
+    /// app with none (D7).
     public func installWakes(boot: (() -> Void)? = nil) {
         WakeStore.boot = boot
         WakeStore.install()

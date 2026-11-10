@@ -5,6 +5,7 @@
 //! implementation-defined; exceptional values follow §10.9. Compact expressions
 //! stay in `Dimension`; other trees are interned so it remains `Copy` and equal
 //! styles share a handle. Percentages resolve during layout against their basis.
+//! @ref LLP 1001 §2
 
 mod parse;
 mod simplify;
@@ -67,7 +68,7 @@ pub enum EnvTerm {
     Inset(Edge),
     /// `env(viewport-segment-<var> <x> <y>)`.
     Segment(SegmentVar, u8, u8),
-    /// `env(-exact-<region>-inset-<edge>)`.
+    /// `env(-exact-<region>-inset-<edge>)` (LLP 1123 D10).
     Region(Region, Edge),
     /// `env(titlebar-area-<var>)` (Window Controls Overlay). No compact
     /// [`Dimension`] holds it: a length that reads it is always a tree.
@@ -418,7 +419,7 @@ impl Comparison {
     }
 
     /// Whether it reads the safe-area inset at `edge` under `env`, or the
-    /// corner-adapted safe area's there, which is never less:
+    /// corner-adapted safe area's there, which is never less (LLP 1123 D10):
     /// a text once substituted.
     pub fn reads(self, edge: Edge, env: &Env) -> bool {
         self.tree(|t| {

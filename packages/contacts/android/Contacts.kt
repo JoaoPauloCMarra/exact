@@ -1,16 +1,16 @@
-// @exact/contacts on Android: the person's contacts, picked through the system's picker or read from
+// @exact/contacts on Android (LLP 1133.018): the person's contacts, picked through the system's picker or read from
 // the Contacts Provider under `READ_CONTACTS`. Under the agent it asks the provider for nothing and answers from the
-// agent's address book (AgentContacts.kt); the runner holds the permission and sheet tickets and answers the
+// agent's address book (AgentContacts.kt, §10); the runner holds the permission and sheet tickets and answers the
 // status. Otherwise the provider answers (ContactStore.kt).
 //
-// - A pick is a copy: no `id`, icons written to `app:/tmp/picked/contacts/` for the app to keep.
-// - A store read answers a bounded page whose cursor is a key in the provider's order, `SORT_KEY_PRIMARY` then
+// - A pick is a copy (D4): no `id`, icons written to `app:/tmp/picked/contacts/` for the app to keep.
+// - A store read answers a bounded page (D6) whose cursor is a key in the provider's order, `SORT_KEY_PRIMARY` then
 //   `_ID`. Its icons are written to `app:/tmp/contacts/` and deleted with their answer: when the reader is released,
 //   when its page is answered again, at the first call of a launch, and when access narrows to none.
-// - A change is announced, coalesced: while the re-asks one announcement caused are in flight, further changes
+// - A change is announced, coalesced (D7): while the re-asks one announcement caused are in flight, further changes
 //   set a mark, and one more announcement follows them landing.
 // - Android has no limited access to contacts and no access picker: `showContactAccessPicker` is iOS's.
-// - Tier 3: `pickIntentHatch` sees the picker's `Intent` after the module's extras, before it starts, on the
+// - Tier 3 (D10): `pickIntentHatch` sees the picker's `Intent` after the module's extras, before it starts, on the
 //   main thread, never under the agent.
 package exact.contacts
 
@@ -24,7 +24,7 @@ import org.json.JSONObject
 
 class ContactsModule(context: ExtensionContext) : ExactExtension(context) {
     companion object {
-        /** The app's picker hatch: the picker's `Intent`, which it may add extras to. */
+        /** The app's picker hatch (D10): the picker's `Intent`, which it may add extras to. */
         @JvmStatic var pickIntentHatch: ((Intent) -> Unit)? = null
         /** Emptied once a launch. */
         private var emptied = false
@@ -55,7 +55,7 @@ class ContactsModule(context: ExtensionContext) : ExactExtension(context) {
     private val readers = HashSet<String>()
     /** Each store reader's icon directory, by its arguments. */
     private val directories = HashMap<String, String>()
-    /** Coalescing: an announcement's re-asks in flight; a change since. */
+    /** Coalescing (D7): an announcement's re-asks in flight; a change since. */
     private var awaiting = false
     private var dirty = false
     private var rounds = 0
@@ -139,12 +139,12 @@ class ContactsModule(context: ExtensionContext) : ExactExtension(context) {
 
     override fun foreground(shown: Boolean) {
         if (!shown) return
-        // Access may have changed in Settings meanwhile.
+        // Access may have changed in Settings meanwhile (D5).
         if (!context.agent) real.refresh()
         changedStore()
     }
 
-    // Announcing
+    // Announcing (D7)
 
     /** The store changed: announced, or marked while an announcement's re-asks are in flight. */
     private fun changedStore() {
@@ -173,7 +173,7 @@ class ContactsModule(context: ExtensionContext) : ExactExtension(context) {
         }
     }
 
-    // The agent's answers
+    // The agent's answers (§10)
 
     private fun status() = JSONObject().put("available", true).put("state", "prompt").put("access", book.access)
         .put("apple", JSONObject.NULL).put("android", JSONObject.NULL)

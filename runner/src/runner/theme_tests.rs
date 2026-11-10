@@ -1,5 +1,5 @@
-//! A Markdown node's faces in the theme index:
-//! read again when a pin above them, the mode or a token moves; kept
+//! A Markdown node's faces in the theme index (LLP 1045.000 D2, LLP 1121
+//! D7): read again when a pin above them, the mode or a token moves; kept
 //! as they were when a read again finds a colour the first read took is
 //! none, and never for one the first read refused; and gone from the index
 //! when they read no token, are cleared, or their node is unmounted.
@@ -75,7 +75,7 @@ const FACE: &str =
     "AtomFace(source=\"@a\", label=\"\", icon=\"\", title=\"\", direction=\"\", ariaLabel=\"\"";
 
 /// A pin above the node that moves reads its faces again in the slice the
-/// pin makes, though nothing they read changed (as a row's text does).
+/// pin makes, though nothing they read changed (D7, as a row's text).
 #[test]
 fn a_pin_above_reads_a_faces_colour_again() {
     let mut r = boot(plan(
@@ -143,7 +143,7 @@ fn a_token_that_is_no_colour_leaves_the_faces_as_they_were() {
 /// A colour the faces' first read refused, said once there, keeps no edit
 /// from them: beside a token, a mode switch and a token's edit set the
 /// token's colour and leave the refused one empty, with no other line.
-/// So for a colour in a profile the app declares: the first
+/// So for a colour in a profile the app declares (LLP 1100 D3): the first
 /// read refuses it, and every read again does, as the first.
 #[test]
 fn a_refused_colour_beside_a_token_blocks_no_edit() {

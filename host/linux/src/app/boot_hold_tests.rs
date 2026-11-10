@@ -1,5 +1,5 @@
-//! A request the boot makes is held under the agent as a later one is:
-//! a sign-in an app starts at launch, which the Linux host, with no
+//! A request the boot makes is held under the agent as a later one is (LLP
+//! 1146 D4): a sign-in an app starts at launch, which the Linux host, with no
 //! system browser, answers 501 outside the agent.
 use super::*;
 use crate::agent::handle;

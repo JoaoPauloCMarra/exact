@@ -1,7 +1,7 @@
-//! `describe` (*1.15*) lists each exported library component's parts and
-//! variant props (from the IR), with params or without; each of its params'
-//! winning level per tuple is `resolve`'s (the one levels walker), for each of
-//! the five levels.
+//! LLP 1139 D5, LLP 1121 stage 12 D3 (*1.15*): `describe` lists each
+//! exported library component's parts and variant props (from C's IR), with
+//! params or without; each of its params' winning level per tuple is
+//! `resolve`'s (B2-levels' one walker), for each of the five levels.
 #![cfg(unix)]
 
 use super::tamber_serve::{app, Serve};
@@ -76,9 +76,9 @@ fn describe_lists_a_library_components_parts_and_variants_and_resolve_each_param
         card["variants"],
         json!([{"prop": "tone", "options": ["plain", "quiet"]}])
     );
-    // Each param's winner per tuple is `resolve`'s (describe keeps only `reaches`): the app's own value, the
-    // app's override of the token, the package's default, a base name, a role, through the library
-    // component's params.
+    // Each param's winner per tuple is `resolve`'s (B2-levels; theme2's 07:20Z ruling: describe keeps only
+    // `reaches`): the app's own value, the app's override of the token, the package's default, a base
+    // name, a role, through the library component's params.
     let row = |param: &str| {
         card["params"]
             .as_array()
@@ -144,7 +144,7 @@ fn describe_lists_a_library_components_parts_and_variants_and_resolve_each_param
 #[test]
 fn a_local_component_or_a_public_packages_with_parts_is_no_library_one() {
     // A local file's `Card` (with a param, so `components` is listed) and a public package's `Tile`, each
-    // naming parts: neither is an exported library component (that is a private package with a design).
+    // naming parts: neither is an exported library component (LLP 1139 D0: a private package with a design).
     let dir = app(
         "describe-no-library",
         "tamber app\n\ntheme\n  other = 2px\n",
@@ -214,7 +214,7 @@ fn an_app_whose_only_library_component_has_no_params_lists_it_by_its_own_name() 
             json!({"identity": "@acme/lib/index.contract#Badge", "name": "Badge", "params": [], "library": true, "parts": [{"name": "face", "groups": ["paint"], "slot": false}], "variants": []})
         ],
     );
-    // `contract tamber ir` lists it the same way.
+    // `contract tamber ir` lists it the same way (round 2).
     let out = std::process::Command::new(env!("CARGO_BIN_EXE_contract"))
         .args(["tamber", "ir", dir.join("app.tamber").to_str().unwrap()])
         .output()

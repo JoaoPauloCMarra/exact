@@ -51,7 +51,7 @@ enum RequestEffect {
 
 impl<D: DataSource> Runner<D> {
     /// What a resource shows while its source hasn't answered and nothing
-    /// is kept: its declared placeholder row's value this
+    /// is kept (LLP 1048.003 D6): its declared placeholder row's value this
     /// pass, or a list's or an option's empty value.
     fn placeholder(
         &self,
@@ -63,7 +63,7 @@ impl<D: DataSource> Runner<D> {
             Some(p) => resources[p.0 as usize]
                 .as_ref()
                 .map(|h| h.get(&self.plan).clone()),
-            // A declared `else empty(…)`, or
+            // @ref LLP 1054.000.002 D1/D3 — a declared `else empty(…)`, or
             // the type's zero.
             None if row.placeholder_value.len > 0 => {
                 Value::from_bytes(self.plan.bytes(row.placeholder_value)).ok()
@@ -76,9 +76,10 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// The journal's word when an answer lands on a build-time one shown
-    /// until its source was ready, or on a kept answer
-    /// that it contradicts: the first frame showed the last
-    /// session's value, which a reader of only the final frame never sees.
+    /// until its source was ready (LLP 1048.003 D6), or on a kept answer
+    /// (LLP 1027 D4) that it contradicts: the first frame showed the last
+    /// session's value, which a reader of only the final frame never sees
+    /// (LLP 1102 §3.17).
     pub(super) fn revalidated(&mut self, i: usize, shown: Option<&ResourceState>, answer: &Value) {
         let Some(shown) = shown.filter(|_| self.stale[i]) else {
             return;
@@ -104,7 +105,7 @@ impl<D: DataSource> Runner<D> {
     /// A store reader whose build-time answer, the bake's empty store's,
     /// is passed over for its declared placeholder: before its source is
     /// ready, at a launch whose store held granted secrets the bake never
-    /// saw. Without an `else` it stands.
+    /// saw (LLP 1027 D4, approved 2026-10-10). Without an `else` it stands.
     fn secrets_unseen(&self, i: usize, row: &ResourcesRow, resources: &[Option<Held>]) -> bool {
         !self.data.ready()
             && self.store_readers[i]
@@ -114,7 +115,7 @@ impl<D: DataSource> Runner<D> {
             && self.store.opened_with_secrets()
     }
 
-    /// Whether resource `i` is another's `else` row.
+    /// Whether resource `i` is another's `else` row (LLP 1048.003 D6).
     pub(super) fn is_placeholder_row(&self, i: usize) -> bool {
         self.plan
             .resources
@@ -123,7 +124,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// A resource whose source answers later with nothing to show: no
-    /// answer kept for its arguments and no placeholder.
+    /// answer kept for its arguments and no placeholder (LLP 1048.003 D6).
     fn unanswerable(&self, i: usize) -> RunnerError {
         let name = self.plan.str(self.plan.resources[i].name);
         let owner = self
@@ -162,7 +163,7 @@ impl<D: DataSource> Runner<D> {
     /// order, to a fixpoint: an expression that reads something not yet
     /// settled this pass is retried after it settles. Deterministic, and a
     /// cycle is a typed refusal. On boot a resource takes its compiled value
-    /// if its evaluated arguments equal the baked arguments;
+    /// if its evaluated arguments equal the baked arguments (LLP 1038 D5);
     /// afterwards it is re-requested only when its arguments changed, so
     /// every derive that reads it sees the new value in the same
     /// pass.
@@ -172,7 +173,7 @@ impl<D: DataSource> Runner<D> {
         if result.is_err() {
             // A refused pass hands nothing out: the `Later` answers it
             // collected are dropped, and their sources forget the calls
-            // (the cleanup of rolled-back calls).
+            // (LLP 1027.002 D3, the cleanup of rolled-back calls).
             for effect in effects {
                 if let RequestEffect::Later { request, .. } = effect {
                     self.discard_request(&request);
@@ -224,7 +225,7 @@ impl<D: DataSource> Runner<D> {
     ) -> Result<(), RunnerError> {
         // Store provenance as the derives below will see it.
         let store_readers = self.store_readers.clone();
-        // What an action asked to re-request, the requests this
+        // LLP 1016: what an action asked to re-request, the requests this
         // pass hands the host, and the pending flags as they will be —
         // published with the rest only when the pass succeeds.
         let mut force = std::mem::take(&mut self.refresh_next);
@@ -240,7 +241,7 @@ impl<D: DataSource> Runner<D> {
         effects.clear();
         effects.resize_with(states.len(), || RequestEffect::None);
         // Which resources took their compiled value in this settlement: each
-        // source is told once it is published.
+        // source is told once it is published (LLP 1027 D11).
         let mut adopted = vec![false; states.len()];
         let mut resource_args = vec![Vec::new(); states.len()];
         // Over a list (`each.rs`): each family's members in its list's
@@ -528,7 +529,7 @@ impl<D: DataSource> Runner<D> {
                         all = false;
                         continue;
                     }
-                    // A placeholder row settles first,
+                    // @ref LLP 1048.003 D6 — a placeholder row settles first,
                     // so a source that answers later has something to show.
                     if row.placeholder.is_some_and(|p| !settled_res[p.0 as usize]) {
                         all = false;
@@ -550,7 +551,7 @@ impl<D: DataSource> Runner<D> {
                     let identity = &args[..row.args.len as usize - usize::from(row.context)];
                     let failed_for =
                         |f: &Vec<Value>| *f == args || (self.stale[i] && f == identity);
-                    // An upload is asked once for its
+                    // @ref LLP 1016.000 D10 — an upload is asked once for its
                     // arguments: in flight, ended or failed, nothing asks it
                     // again at them, not a store write it read nor a refresh.
                     let mark = self.upload_at(i, &args).cloned();
@@ -564,7 +565,7 @@ impl<D: DataSource> Runner<D> {
                     }
                     let failed = self.failed_args[i].as_ref().is_some_and(failed_for);
                     // On its way under a ticket kept for other arguments (the same
-                    // request): these arguments' again.
+                    // request, LLP 1054.000.000 D3): these arguments' again.
                     if let Some(super::UploadEnd::Sent(t)) = &mark {
                         if let Some(p) = self.pending.iter_mut().find(|p| p.ticket == *t) {
                             p.args.clone_from(&args);
@@ -584,14 +585,14 @@ impl<D: DataSource> Runner<D> {
                             .find(|p| p.target == Target::Resource(i))
                             .map(|p| &p.args),
                     };
-                    // Only a persisted boot seed
+                    // @ref LLP 1027.005 D3/D4 — only a persisted boot seed
                     // ignores context, and only until its source is ready.
                     // Consume the mark on mismatch or activation even when
                     // the old value stands during an asynchronous request.
                     // `states` is tentative, so a refused pass restores both.
                     // A seed whose identity reads a resource still on its
                     // fallback is not this launch's answer yet: it is
-                    // neither admitted nor reused.
+                    // neither admitted nor reused (LLP 1027.005 D3, 2026-10-10).
                     let unknown = states[i].as_ref().is_some_and(|s| s.kept_seed)
                         && !self.data.ready()
                         && self.identity_unknown(i, &states);
@@ -618,7 +619,7 @@ impl<D: DataSource> Runner<D> {
                     // store revision it observed. `answer` and `parse` both
                     // write through Store, so this is the one dirtying point.
                     // Host facts always come from this candidate, never a baked
-                    // or carried delivery answer.
+                    // or carried delivery answer (LLP 1030 D7).
                     let upload = mark.is_some() || self.uploading(i);
                     let reuse = states[i]
                         .as_ref()
@@ -633,12 +634,12 @@ impl<D: DataSource> Runner<D> {
                                         && (!self.store_readers[i]
                                             || s.store_revision == self.store.revision()
                                             || self.asks_again_after_reply(i)))
-                                // A placeholder stands
+                                // @ref LLP 1054.000.002 D4 — a placeholder stands
                                 // in only while its answer is on the way.
                                 && (!s.placeholder || pending_res[i] || awaiting[i]))
                         })
                         // A compiled answer a launch holding secrets passes
-                        // over is never reused, failed or not,
+                        // over (LLP 1027 D4) is never reused, failed or not,
                         // even one that came to read the store at equal
                         // arguments.
                         .filter(|s| {
@@ -646,7 +647,8 @@ impl<D: DataSource> Runner<D> {
                         })
                         .map(|s| s.value.clone());
                     // A child its ask would let go, or arguments refused for
-                    // one, keeps what shows, and a refresh is spent.
+                    // one, keeps what shows, and a refresh is spent (LLP
+                    // 1133.007 D13).
                     let reuse = match reuse {
                         Some(v) => Some(v),
                         None => (states[i].as_ref())
@@ -672,7 +674,7 @@ impl<D: DataSource> Runner<D> {
                     } else {
                         None
                     };
-                    // Whether what shows is a stand-in, not an answer.
+                    // Whether what shows is a stand-in, not an answer (D4).
                     let mut placeholder =
                         reuse.is_some() && states[i].as_ref().is_some_and(|s| s.placeholder);
                     // Every ResourceState was checked for this index in this
@@ -700,10 +702,11 @@ impl<D: DataSource> Runner<D> {
                         {
                             // Keep deferred placeholders until activation, even
                             // when timers or a deep launch change arguments after
-                            // boot. The bake's answer
+                            // boot (LLP 1038 D5, LLP 1027 D4). The bake's answer
                             // is the first frame, not the answer: data_ready asks
                             // the current arguments once the executor can answer,
-                            // as the web asks its module at launch. An `else` row is the
+                            // as the web asks its module at launch (LLP 1048.003
+                            // D6, 2026-10-04; feed F24). An `else` row is the
                             // bake's for every launch and is never asked again
                             // (each was a worker turn, c318ed04), unless forced.
                             if !self.data.ready()
@@ -723,7 +726,7 @@ impl<D: DataSource> Runner<D> {
                             // Shown for the bake's arguments, not these (state
                             // a launch restored changed them), it is a stand-in
                             // like a placeholder: pending until `data_ready`
-                            // asks the source.
+                            // asks the source (LLP 1048.003 D6, 2026-10-27).
                             awaiting[i] = answered_for.is_some() && self.stale[i];
                             Held::compiled(
                                 Value::from_bytes(self.plan.bytes(row.initial))
@@ -731,10 +734,10 @@ impl<D: DataSource> Runner<D> {
                                 row.initial,
                             )
                         }
-                        // The source can't answer yet
+                        // @ref LLP 1048.003 D6 — the source can't answer yet
                         // (its module isn't loaded) and nothing is compiled,
-                        // or what is was passed over (`secrets_unseen`): the
-                        // placeholder shows, pending;
+                        // or what is was passed over (`secrets_unseen`, LLP
+                        // 1027 D4): the placeholder shows, pending;
                         // `data_ready` asks.
                         None if !self.data.ready()
                             && !exact_plan::runner_owned_source(self.plan.str(row.source))
@@ -752,7 +755,8 @@ impl<D: DataSource> Runner<D> {
                         None => {
                             awaiting[i] = false;
                             // A resource that consults the store is the device's,
-                            // not the build's: bake gives it no compiled value.
+                            // not the build's: bake gives it no compiled value
+                            // (LLP 1018 D4).
                             let reads_before = self.store.reads();
                             let draws_before = self.store.entropy_draws();
                             // Asked again in a later pass: an earlier
@@ -767,7 +771,7 @@ impl<D: DataSource> Runner<D> {
                             let reconciling = self.reconciling.contains(&i);
                             self.reconciling.retain(|r| *r != i);
                             self.inspect_request(i);
-                            // An upload's arguments answer as it ended.
+                            // An upload's arguments answer as it ended (D10).
                             let ledger = self.ledger_answer(i, mark.as_ref());
                             let asked = match ledger.unwrap_or_else(|| self.query(i, &args)) {
                                 // A reconciling answer outside its shape fails
@@ -813,7 +817,7 @@ impl<D: DataSource> Runner<D> {
                                     self.failed_why[i] = Some(failure);
                                     force.retain(|forced| *forced != i);
                                     // Its newest ask is answered, by a failure: no
-                                    // answer is on the way
+                                    // answer is on the way (LLP 1054.000.002 D4)
                                     effects[i] = RequestEffect::Answered;
                                     awaiting[i] = false;
                                     pending_res[i] = false;
@@ -838,7 +842,8 @@ impl<D: DataSource> Runner<D> {
                                         }
                                     }
                                     // A failed ask that read the store makes a store
-                                    // reader too, so a reply's write asks it again.
+                                    // reader too, so a reply's write asks it again
+                                    // (LLP 1146 §2.3).
                                     if self.store.reads() > reads_before {
                                         self.store_readers[i] = true;
                                     }
@@ -878,7 +883,7 @@ impl<D: DataSource> Runner<D> {
                                     generation = 0;
                                     Held::new(value)
                                 }
-                                // A TypeScript answer's
+                                // @ref LLP 1027.000 D3 — a TypeScript answer's
                                 // failure belongs to its resource, not its input.
                                 Err(RunnerError::Data {
                                     resource,
@@ -915,7 +920,7 @@ impl<D: DataSource> Runner<D> {
                                 // resource keeps what it shows and is held to be
                                 // asked again, an ask in flight; its streak
                                 // spent, it fails as any refusal does. The
-                                // asking commit stands.
+                                // asking commit stands (LLP 1027.000 D3).
                                 Err(e)
                                     if super::overrun::is_overrun(&e)
                                         && !self.streaming(i)
@@ -976,7 +981,7 @@ impl<D: DataSource> Runner<D> {
                                 Ok(Answer::Later(request)) => {
                                     // The host will run it. Meanwhile the resource
                                     // keeps the value it had — its last answer, or
-                                    // its compiled boot value.
+                                    // its compiled boot value (LLP 1016 D3).
                                     placeholder = states[i].as_ref().is_some_and(|s| s.placeholder);
                                     if let Some(state) = &states[i] {
                                         value_args = state.args.clone();
@@ -997,7 +1002,7 @@ impl<D: DataSource> Runner<D> {
                                             })
                                             .flatten()
                                         });
-                                    // Nothing kept for these
+                                    // @ref LLP 1048.003 D6 — nothing kept for these
                                     // arguments: the placeholder shows, pending.
                                     let kept = kept.or_else(|| {
                                         placeholder = true;
@@ -1134,14 +1139,14 @@ impl<D: DataSource> Runner<D> {
             self.sync_pending_flags();
             // A forced resource not asked in this settlement (an argument
             // still pending, a source not ready) is forced at the next one
-            // that can ask it.
+            // that can ask it (LLP 1054.000.000 D2).
             self.refresh_next = force;
             return Ok(());
         }
     }
 
     /// Hand each source the compiled value its resource just took, with the
-    /// arguments the bake answered it for: the one decoded
+    /// arguments the bake answered it for (LLP 1027 D11): the one decoded
     /// copy, shared.
     fn adopt(&mut self, adopted: &[bool]) {
         for (i, _) in adopted.iter().enumerate().filter(|(_, a)| **a) {
@@ -1191,7 +1196,7 @@ impl<D: DataSource> Runner<D> {
     }
 }
 
-/// `ty`'s zero: `0`, `""`, `false`, `()`, `none`, `[]`,
+/// `ty`'s zero (LLP 1054.000.002 D1): `0`, `""`, `false`, `()`, `none`, `[]`,
 /// and a record's fields' zeros in order — the compiler's
 /// `contract_types::placeholder::zero`, over the plan's tables.
 pub(super) fn zero(plan: &exact_plan::Plan, ty: exact_plan::TypesId) -> Option<Value> {

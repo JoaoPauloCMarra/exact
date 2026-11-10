@@ -73,7 +73,7 @@ impl NodeFlags {
     /// The node was created in the batch that produced the current epoch.
     pub const CREATED: NodeFlags = NodeFlags(1 << 6);
     /// The node's own `display` was `none` when it was last laid out. A
-    /// geometry read answers the layout last shown, not a
+    /// geometry read answers the layout last shown (LLP 1051.000 D1), not a
     /// visibility a batch has changed since.
     pub const HIDDEN: NodeFlags = NodeFlags(1 << 7);
     /// The node took a new parent since the last layout publication: its
@@ -173,7 +173,7 @@ impl Offer {
 
 /// A box's padding and border as its layout resolved them, each left, top,
 /// right, bottom: CSS's padding, and apart from it what a host cover added
-/// to the engine's for layout.
+/// to the engine's for layout (LLP 1075.003 §3.5).
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub(crate) struct BoxInset {
     pub(crate) padding: [f32; 4],

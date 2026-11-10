@@ -1,4 +1,4 @@
-//! The dist's files as the server names them: which
+//! The dist's files as the server names them (LLP 1048.000 D10): which
 //! paths are files, their types, and the build a URL names.
 
 use std::path::{Path, PathBuf};
@@ -26,7 +26,7 @@ pub(crate) fn named_build(target: &str, tag: &str) -> bool {
     })
 }
 
-/// The web's auth callback page, served with no referrer
+/// The web's auth callback page (LLP 1069.006 D4), served with no referrer
 /// and never stored, as its script is.
 pub(crate) const AUTH_CALLBACK: &str = "/.exact/auth/callback";
 
@@ -51,7 +51,7 @@ pub(crate) fn static_file(dist: &Path, path: &str) -> Option<(PathBuf, &'static 
     if extension == "html" && !exact {
         return None;
     }
-    // The auth callback page: one page at exactly this path.
+    // The auth callback page (LLP 1069.006 D4): one page at exactly this path.
     if decoded == AUTH_CALLBACK {
         return Some((file.clone(), content_type("html")));
     }

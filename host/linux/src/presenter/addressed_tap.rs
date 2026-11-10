@@ -1,4 +1,4 @@
-//! The agent's `tap`: a press through the path a pointer
+//! The agent's `tap` (LLP 1012 §1): a press through the path a pointer
 //! takes, and a tap that names a node presses that node, never a control
 //! inside it (`AgentAddressedTap.swift` on Apple, `scripts/agent-aim.mjs` on
 //! the web).
@@ -13,7 +13,7 @@ impl<D: DataSource> Presenter<D> {
 
     /// The agent's `tap`, at `at` (a point in the node's box, from its top
     /// left: whatever a press there reaches) or plain. A plain tap presses
-    /// what it names (`AgentAddressedTap.swift` on Apple): a
+    /// what it names (LLP 1012 §1; `AgentAddressedTap.swift` on Apple): a
     /// node with a press of its own is pressed where a press reaches it — its
     /// center, else the point of its box nearest the center that does — or
     /// refused; one without never presses a control inside it.
@@ -203,12 +203,12 @@ impl<D: DataSource> Presenter<D> {
 
     /// What a press at (`x`, `y`), released where the painted boxes put
     /// `hit`, activates under the Material look: Android's minimum touch
-    /// size.
+    /// size (LLP 1115.001 D9; LLP 1115.001.001 §5 Q5, Charlie, 2026-10-19).
     /// A press that lands in something that takes a press (a link run
     /// among them) stays there; else it reaches the enabled control whose
     /// touch box ([`crate::paint::material::touch_box`]) it is in, the
     /// nearest middle where two are, as iOS's checkbox answers 44 points
-    /// round it. A control is a candidate only where a
+    /// round it (LLP 1115.000 D13.2). A control is a candidate only where a
     /// press at its own middle would hit it (shown, taking the pointer,
     /// uncovered, in this route and above any dialog), the press is not on
     /// a cover over its own box, no ancestor of it is disabled, and it is
@@ -414,7 +414,7 @@ fn aim_points(rect: (f32, f32, f32, f32), mid: (f32, f32)) -> Vec<(f32, f32)> {
     points
 }
 
-/// A plain tap's refusal: what it names would not be pressed,
+/// A plain tap's refusal (LLP 1012 §1): what it names would not be pressed,
 /// `inner` would. The words the Apple hosts and the web use.
 fn addressed_refusal(id: ViewId, inner: Option<Reach>, own: bool) -> String {
     let d = inner.map_or("nothing".to_string(), Reach::describe);

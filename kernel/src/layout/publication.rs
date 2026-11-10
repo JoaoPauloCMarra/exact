@@ -27,7 +27,7 @@ pub(super) fn publish(
         let mut at = slot;
         let mut path = Vec::new();
         // A subtree a host gave a containing block is another layout's: the
-        // pass that starts at it publishes it.
+        // pass that starts at it publishes it (LLP 1115.002 D8.2).
         while at != root && !arena.blocks.holds(at) {
             let Some(parent) = arena.parent(at) else {
                 break;
@@ -64,7 +64,7 @@ pub(super) fn publish(
     let mut updated = Vec::new();
     let mut exclusions = Vec::new();
     let mut images = Vec::new();
-    // A box in a multi-column flow is published at its
+    // @ref LLP 1093 D7 — a box in a multi-column flow is published at its
     // place in the flow thread plus its placement: its column's translation,
     // relative to the container's own (`base`), or a straddling box's union.
     // `t` is the translation its subtree inherits; (ox, oy) stay flow-thread
@@ -148,7 +148,7 @@ pub(super) fn publish(
             } else {
                 arena.field_content.remove(&slot);
             }
-            // A multi-column container's overflow is its columns', which
+            // A multi-column container's overflow is its columns' (D7), which
             // a multi-column `text`, a leaf to the engine, never reports.
             let o = arena
                 .frag
@@ -193,8 +193,8 @@ pub(super) fn publish(
         // A changed child list visits every child; a child that arrived
         // (created, or moved from another parent: a Text subtree switching
         // into/out of inline runs) is published whole, a kept one sparsely.
-        // A multi-column cut that changed publishes this subtree whole:
-        // placements moved without each child's layout bit.
+        // A multi-column cut that changed publishes this subtree whole
+        // (LLP 1093): placements moved without each child's layout bit.
         let full = full || hidden || republish;
         // A table that is another box places its parts from its anonymous
         // table, which can move inside it alone. A row or group places what
@@ -637,7 +637,7 @@ mod tests {
         assert!(calls.get() > 0);
     }
 
-    /// An image in a paragraph's text is placed with its
+    /// LLP 1011.002: an image in a paragraph's text is placed with its
     /// paragraph, left clean (a layout with nothing changed visits nothing),
     /// and placed alike by a rehydrated kernel.
     #[test]

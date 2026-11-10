@@ -1,11 +1,11 @@
-//! Shadow tokens: `box-shadow` and `text-shadow`,
+//! Shadow tokens (LLP 1121 D3, stage 6 D): `box-shadow` and `text-shadow`,
 //! each its row's own syntax, folded per tuple. A length is px (unitless
 //! zero), a length token or dial, or over base names the design leaves
 //! unset (a bare one, a token over some, or a length's function over one),
-//! kept as a [`Residual`] each host folds in its column; a colour is a
-//! literal, a colour token, a role or a colour expression over tokens,
-//! folded as a colour token is. A `rem` or `em` inside one is refused: the
-//! kernel takes only px there.
+//! kept as a [`Residual`] each host folds in its column (stage 12 B3); a
+//! colour is a literal, a colour token, a role or a colour expression over
+//! tokens, folded as a colour token is. A `rem` or `em` inside one waits on
+//! QUEUE's item.
 
 use crate::css::Item;
 use crate::fold::{self, fail, FoldError, Folded, Named, Names};
@@ -13,7 +13,7 @@ use crate::measure::{num, Length};
 use crate::residual::Residual;
 
 /// Why a relative length inside a shadow is refused.
-const RELATIVE: &str = "the kernel takes only px in a shadow";
+const RELATIVE: &str = "the kernel takes only px in a shadow until QUEUE's item \"`rem`/`em` where the kernel still takes only `px`\"";
 
 /// One folded shadow.
 #[derive(Debug, Clone, PartialEq)]
@@ -27,8 +27,8 @@ pub struct Shadow {
 }
 
 /// One of a shadow's lengths: px, or over base names the design leaves
-/// unset, each host's in its column, as a length token's [`Length::Base`]
-/// is.
+/// unset, each host's in its column (stage 12 B3), as a length token's
+/// [`Length::Base`] is.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShadowLength {
     /// Pixels.
@@ -89,7 +89,7 @@ impl Shadows {
         self.list.iter().map(one).collect::<Vec<_>>().join(", ")
     }
 
-    /// The base names its lengths read, each once, in order.
+    /// The base names its lengths read, each once, in order (stage 12 B3).
     pub fn bases(&self) -> Vec<&str> {
         let mut out = Vec::new();
         for s in &self.list {
@@ -152,7 +152,7 @@ pub(crate) fn looks(
     named: &dyn Fn(&str) -> bool,
 ) -> bool {
     // A function over a dimension or a length's name, at any depth: one
-    // over plain numbers is a number's.
+    // over plain numbers is a number's (stage 12 B3, round 3, Grok).
     fn measures(
         args: &[Vec<Item>],
         length: &mut dyn FnMut(&str) -> bool,
@@ -174,7 +174,7 @@ pub(crate) fn looks(
                     Item::Dim(..) => true,
                     Item::Number(n) => *n == 0.0,
                     Item::Ident(name) => length(name),
-                    // A length's function.
+                    // A length's function (stage 12 B3, round 2, Grok 1).
                     Item::Func(f, args, _) => {
                         matches!(f.as_str(), "calc" | "min" | "max" | "clamp")
                             && measures(args, length, named)
@@ -288,7 +288,8 @@ fn one(items: &[Item], text: bool, names: &mut dyn Names) -> Result<Shadow, Fold
             )
         }
     }
-    // A blur over base names is checked in each column, by the build.
+    // A blur over base names is checked in each column, by the build
+    // (stage 12 B3).
     if matches!(lengths.get(2), Some(ShadowLength::Px(b)) if *b < 0.0) {
         return fail("tamber-kind", "a blur radius is never negative");
     }
@@ -311,7 +312,7 @@ fn one(items: &[Item], text: bool, names: &mut dyn Names) -> Result<Shadow, Fold
 
 /// An item as a shadow's length, `None` when it is no length (a colour, by
 /// elimination). One over base names the design leaves unset is kept, as a
-/// length token's is: a bare one, or a token aliasing one or
+/// length token's is (stage 12 B3): a bare one, or a token aliasing one or
 /// over some (its references inlined). A length's `calc()`, `min()`,
 /// `max()` or `clamp()` folds by the length's own code, whose refusals
 /// stand: px, or over base names.
@@ -375,7 +376,7 @@ fn length(item: &Item, names: &mut dyn Names) -> Result<Option<ShadowLength>, Fo
             // A colour by elimination: the colour fold reads it.
             _ => None,
         },
-        // A length's function: the length's own fold, as a
+        // A length's function (stage 12 B3): the length's own fold, as a
         // length token's value folds, so px and length tokens give px, a
         // base the design sets its px, and one it leaves unset a residual
         // (`calc(space.md)` is `space.md`); setting the base never turns
@@ -399,7 +400,7 @@ fn length(item: &Item, names: &mut dyn Names) -> Result<Option<ShadowLength>, Fo
 mod tests {
     use super::*;
 
-    // A length over base names is written as its residual,
+    // Stage 12 B3: a length over base names is written as its residual,
     // reads its bases, and folds with each base's px outside Exact.
     #[test]
     fn a_length_over_base_names_is_written_read_and_folded() {

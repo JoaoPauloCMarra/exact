@@ -1,4 +1,4 @@
-//! Regression crops for backend paint fixes.
+//! Regression crops for LLP 1149 S0's code reviews.
 use super::*;
 use exact_linux::paint::{Backend, Ink as Paint, Shape, SvgPaint};
 use tiny_skia::Transform;

@@ -1,7 +1,7 @@
 //! Explicit fresh-generation import. No mutation of an accepted old catalog.
 //!
-//! A worker's catalog shares the UI catalog's faces outright:
-//! every face is a blob over its file, mapped
+//! A worker's catalog shares the UI catalog's faces outright (LLP 1085.000
+//! §4, the storage spike's Q2): every face is a blob over its file, mapped
 //! once and read by both threads, and a shaped run carries the face it was
 //! shaped with. Nothing is read, copied or renumbered to cross the thread.
 use super::transfer::TransferError;

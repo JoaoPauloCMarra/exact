@@ -1,9 +1,10 @@
-//! What a library component writes: its spacing, corners and colours are
-//! knobs, never literals (`lower-library-literal`); a control's role is the
-//! native control's, with what its platform needs (`lower-library-control`);
-//! nothing in a library package reads the host (`lower-library-platform`); a
-//! style one component alone applies reads its params; and a library's names
-//! are its API (`tamber-package-unknown`, `tamber-param-short-library`).
+//! @ref LLP 1139 D1, D3, D6, D8 (stage 12 C3) — what a library component
+//! writes: its spacing, corners and colours are knobs, never literals
+//! (`lower-library-literal`); a control's role is the native control's,
+//! with what its platform needs (`lower-library-control`); nothing in a
+//! library package reads the host (`lower-library-platform`); a style one
+//! component alone applies reads its params (D3); and a library's names are
+//! its API (`tamber-package-unknown`, `tamber-param-short-library`).
 
 use contract::CompileError;
 use std::path::{Path, PathBuf};
@@ -619,7 +620,7 @@ fn a_librarys_names_are_its_api() {
             .any(|e| e.message.contains("lib.gap")),
         "{all:?}"
     );
-    // Its icons are names it defines too: the app's
+    // Its icons are names it defines too (LLP 1121 stage 13): the app's
     // icon overriding one builds, one under its namespace it lacks is
     // refused.
     let icons = format!("{DESIGN}\nicons\n  lib.star = icon(sf \"star\")\n");
@@ -670,10 +671,11 @@ fn a_package_is_its_own_name_and_base_names_are_no_packages() {
     assert!(ids(&all, "tamber-package-unknown").is_empty(), "{all:?}");
 }
 
-/// A library view's buttons stand in for platform controls: each is named,
-/// and one whose look reads a state (`selected`, `pressed`, …) says it
-/// aloud, through an `aria-*` state or a label that reads it; a
-/// presentational bool (a size, an ink) needs nothing.
+/// A library view's buttons stand in for platform controls (LLP 1139 D9's
+/// condition (b), theme2 2026-10-22 04:40): each is named, and one whose
+/// look reads a state (`selected`, `pressed`, …) says it aloud, through an
+/// `aria-*` state or a label that reads it; a presentational bool (a size,
+/// an ink) needs nothing.
 #[test]
 fn a_library_button_is_named_and_says_the_state_its_look_shows() {
     let id = "lower-library-control";
@@ -780,7 +782,7 @@ fn a_library_button_is_named_and_says_the_state_its_look_shows() {
     assert!(all.is_empty(), "{all:?}");
     // Named by its caller's content (the slot) or a used component's text,
     // a state said by its own text, and an id that reads a state (no look):
-    // the build passes.
+    // the build passes (reload1's review).
     let all = build(
         "btn-ok-more",
         "component Label\n  props\n    text: string\n  view\n    text text\n\ncomponent Card\n  props\n    selected: bool\n    go: action\n  slot\n  view\n    column\n      button press=go\n        children\n      button press=go\n        Label(text=\"Go\")\n      button press=go opacity=(selected ? 1 : 0.5)\n        text (selected ? \"Unfollow\" : \"Follow\")\n      button press=go aria-label=\"Home\" id=(selected ? \"on\" : \"off\")\n        box width=4 height=4\n",

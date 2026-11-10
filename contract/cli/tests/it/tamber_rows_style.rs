@@ -1,5 +1,5 @@
 //! The write check judges a style's rows where an element applies it, as the
-//! build lowers them there (`class::rows`): at each
+//! build lowers them there (`class::rows`; theme2's 02:08 ruling): at each
 //! element, with its fonts and typing, keyed by the element, refused once
 //! for the style row in the build's words and place. A style no element
 //! applies, a choice of styles, and a row the element overrides are the
@@ -64,7 +64,7 @@ fn a_used_styles_row_is_refused_where_the_build_refuses_it() {
 }
 
 /// A style row two elements apply and the write breaks at both is one
-/// refusal, the build's.
+/// refusal, the build's (theme2's condition 2).
 #[test]
 fn a_style_row_broken_at_two_elements_is_refused_once() {
     let dir = reading("rows-style-two");
@@ -126,7 +126,7 @@ fn an_unused_an_overridden_and_a_chosen_style_row_are_not_judged() {
 }
 
 /// A style applied under a `for` or a `match` whose subject is typed is
-/// judged where the element applies it, in the arm's scope: its
+/// judged where the element applies it, in the arm's scope (stage 14 E): its
 /// row refused once, at the style row, as the build refuses it.
 #[test]
 fn a_style_row_under_a_for_or_match_is_judged() {
@@ -137,7 +137,8 @@ fn a_style_row_under_a_for_or_match_is_judged() {
         ("rows-style-each-first", "use Card from \"@acme/reading\"\nstyle Pad\n  padding=\"gap\"\ncomponent App\n  state items = [1]\n  view\n    column\n      for i in items key=i\n        row class=Pad\n          text \"a\"\n      row class=Pad\n        Card()\n"),
         ("rows-style-only-match", "use Card from \"@acme/reading\"\nstyle Pad\n  padding=\"gap\"\ncomponent App\n  state picked = some(1)\n  view\n    column\n      match picked\n        case some(p)\n          row class=Pad\n            Card()\n        case none\n          text \"none\"\n"),
     ] {
-        // Refused once, at the style row, however many elements apply it.
+        // Refused once, at the style row, however many elements apply it
+        // (Astra's round 1).
         let dir = reading(&format!("{name}-once"));
         let refused = refusals(&dir, DESIGN, contract, op.clone()).expect(name);
         assert_eq!(refused.len(), 1, "{name}: {refused:?}");
@@ -149,7 +150,7 @@ fn a_style_row_under_a_for_or_match_is_judged() {
 /// A style applied under a `for` whose subject isn't typed by its form (a
 /// call's list) is the build's there, and so everywhere: where the build
 /// lowers that element first, its refusal of the row is the build's first,
-/// in that element's words. Accepted here, the column's
+/// in that element's words (Grok's round 2). Accepted here, the column's
 /// application beside it too.
 #[test]
 fn a_style_row_under_an_untyped_region_is_left_to_the_build() {
@@ -158,7 +159,7 @@ fn a_style_row_under_an_untyped_region_is_left_to_the_build() {
     let dir = reading("rows-style-each-call");
     assert_eq!(refusals(&dir, DESIGN, contract, op), None);
     // The app builds, and the written design is refused by the build at the
-    // style row.
+    // style row (Astra's and Grok's round 1).
     std::fs::write(dir.join("app.tamber"), DESIGN).unwrap();
     contract::compile_path(&dir.join("app.contract")).unwrap();
     std::fs::write(
@@ -174,8 +175,8 @@ fn a_style_row_under_an_untyped_region_is_left_to_the_build() {
 /// A `button`'s class rows are the build's (`button_appearance` reads them
 /// first, and a native button refuses rows of its own), and so are a grouped
 /// list's (`grouped::style` rewrites its rows first) and a `delete=` row's
-/// (its swipe's rows go before the class's, `width` among them): none
-/// refused here.
+/// (its swipe's rows go before the class's, `width` among them; Astra's
+/// round 2): none refused here.
 #[test]
 fn a_buttons_a_grouped_lists_and_a_swipes_style_rows_are_left_to_the_build() {
     let op = json!({"op": "set-token", "name": "gap", "value": "#444444"});
@@ -190,7 +191,7 @@ fn a_buttons_a_grouped_lists_and_a_swipes_style_rows_are_left_to_the_build() {
     }
 }
 
-/// Refusals are said as the build reaches them: an element's
+/// Refusals are said as the build reaches them (Grok's round 3): an element's
 /// style row before its own, and an earlier element's style row before a
 /// later one's, whatever their order in the file. The first is the build's.
 #[test]

@@ -1,9 +1,9 @@
-// Canvas 2D text on Apple: one Core Text line builder
+// @ref LLP 1056 D8 — Canvas 2D text on Apple: one Core Text line builder
 // for measuring (the runner's draw, through `exact_set_canvas_text`, on the
 // thread the draw runs on) and for drawing (the replayer), so what was
 // measured is what is drawn. A family list resolves as box text resolves
 // families: the generic names to the text engine's platform stacks, a
-// declared family to its registered faces, then any installed
+// declared family (LLP 1019) to its registered faces, then any installed
 // family by name; none is Chrome's default, serif.
 import CExact
 import CoreGraphics

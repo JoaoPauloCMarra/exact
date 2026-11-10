@@ -79,7 +79,7 @@ fn storage_configuration_is_post_pixel_app_scoped_and_absent_in_agent_mode() {
             "boot cannot configure storage"
         );
         // The roots an `app:/` image resolves against are known at boot,
-        // before storage is and with nothing picked.
+        // before storage is and with nothing picked (LLP 1069.002 D7; recipes F18).
         let at_boot = host.answer_hold("{\"op\":\"appRoots\"}").unwrap();
         host.activate_data();
         host.activate_data();

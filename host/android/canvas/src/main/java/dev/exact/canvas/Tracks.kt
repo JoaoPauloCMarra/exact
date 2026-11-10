@@ -3,7 +3,7 @@ package dev.exact.canvas
 import org.json.JSONObject
 
 /**
- * The session's track table: tracks and streams by id, each track with the
+ * The session's track table (LLP 1133.009 D3, D10 item 6): tracks and streams by id, each track with the
  * implementation that opened it ([TrackOwner]), through which a consuming implementation subscribes, so a recorder
  * records a track another package opened. Main thread.
  */
@@ -13,7 +13,7 @@ class Tracks internal constructor() {
     private val holds = HashSet<Hold>()
 
     /**
-     * An exclusive hold on the [kind] device, for a recognizer that opens it itself:
+     * An exclusive hold on the [kind] device, for a recognizer that opens it itself (LLP 1133.012 D8, D12 item 4):
      * granted only while no track of [kind] has a running capture ([TrackOwner.leased]), and while it lasts an owner
      * opens no capture of that kind ([held]). The returned function releases it; a running capture throws
      * `NotReadableError`.
@@ -42,14 +42,14 @@ class TrackEntry(val id: String, val kind: String, val tracks: List<String> = em
     /** A track's state as `mediaStreamTrack` answers it, for a package that consumes it. */
     var state: (() -> JSONObject)? = null
 
-    /** A video track's running capture while its lease is held; null otherwise. */
+    /** A video track's running capture while its lease is held (LLP 1133.008 D3, D8 item 3); null otherwise. */
     var video: (() -> VideoSource?)? = null
 }
 
 /** Why a track call failed: a `DOMException` name, as answered. */
 class TrackError(val code: String) : Exception(code)
 
-/** The implementation that opened a track: it decides whether a consumer joining takes the track's lease. */
+/** The implementation that opened a track: it decides whether a consumer joining takes the track's lease (D6). */
 interface TrackOwner {
     /** [start] is an explicit start, which reopens an idle track; [origin] is `app`, `tool` or `wake`. */
     fun subscribe(id: String, consumer: TrackConsumer, start: Boolean, origin: String): () -> Unit
@@ -79,9 +79,9 @@ interface AudioSource {
 }
 
 /**
- * A running camera capture: CameraX's one lifecycle's set of use cases, which a consumer
+ * A running camera capture (LLP 1133.008 D3, D8 item 3): CameraX's one lifecycle's set of use cases, which a consumer
  * adds to rather than reading frames. Its objects are CameraX's (`UseCase`, `Camera`), typed `Any` here so the reader
- * links no CameraX; a package that uses them names CameraX's coordinates. Main thread.
+ * links no CameraX; a package that uses them names CameraX's coordinates (D8 item 5). Main thread.
  */
 interface VideoSource {
     /** The bound `androidx.camera.core.Camera`, once the set is bound. */

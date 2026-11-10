@@ -1,4 +1,4 @@
-// The commands an app gives its own window: a quit the
+// The commands an app gives its own window (@ref LLP 1069.010): a quit the
 // app holds leaves full screen and fades the window first, as Electron's
 // `setFullScreen(false)` and `setOpacity(0)` do for T3 Code's ⌘Q hold. The
 // window's owner (the Mac app's delegate) calls them, as it does `close()`.

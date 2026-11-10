@@ -1,6 +1,6 @@
 //! Cases: a program and the events a host delivers to it.
 //!
-//! A corpus case is a `.contract` file with `test` blocks:
+//! A corpus case is a `.contract` file with `test` blocks (LLP 1017 P7):
 //! each block's inputs and clocks become primitive events, and its
 //! `expect` lines are checked against the runner's observations. A random
 //! case comes from [`crate::gen`].
@@ -69,12 +69,12 @@ pub struct Case {
     /// The file it was read from, when it resolves `use`s.
     pub path: Option<std::path::PathBuf>,
     /// Whether the device's store holds persisted states at launch
-    /// ([`crate::oracle::Oracle::with_store`]); an authored
+    /// (LLP 1116 D5, [`crate::oracle::Oracle::with_store`]); an authored
     /// test's starts empty.
     pub stored: bool,
     /// Whether the host builds every tab panel from boot on, as a page
-    /// rendered ahead of its runtime does
-    /// (`Runner::build_every_tab`); an authored test's panels wait.
+    /// rendered ahead of its runtime does (LLP 1075.003 §9.14,
+    /// `Runner::build_every_tab`); an authored test's panels wait.
     pub prerendered: bool,
     /// Fixed host facts supplied before boot.
     pub launch: exact_runner::time::Launch,
@@ -314,15 +314,15 @@ fn deliver(step: &Step) -> Result<Option<Item>, String> {
         Step::ExpectTree {
             target, present, ..
         } => Item::Expect(Expect::Tree(target.clone(), *present), step.span()),
-        // The voice table is not in Lean: its commands
+        // The voice table is not in Lean (LLP 1096 D11): its commands
         // are, and those are compared; a step that reads the table is
         // the runner's tests' and conformance's.
         Step::ExpectSound { .. } => Item::Observe(step.span()),
-        // Displayed wake-lock holders have no Lean oracle.
+        // Displayed wake-lock holders have no Lean oracle (LLP 1125 D11).
         Step::ExpectWakelock { .. } => Item::Observe(step.span()),
-        // A control's `disabled` is read from the host's tree, which Lean has no model of.
+        // A control's `disabled` is read from the host's tree (LLP 1116.010 D3), which Lean has no model of.
         Step::ExpectDisabled { .. } => Item::Observe(step.span()),
-        // The media session is the host's: an assertion on
+        // The media session is the host's (LLP 1098 D12): an assertion on
         // it has no oracle, and a test that only asserts it still runs.
         // Its `tap` form is not a press, so it reaches `other` and the
         // block stops at that step.

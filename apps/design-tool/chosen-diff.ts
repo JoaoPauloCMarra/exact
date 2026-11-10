@@ -1,4 +1,4 @@
-// A held import's diff follows its card's choice at once. A card that
+// A held import's diff follows its card's choice at once (stage 15 D1.1, the third pass's #10 item 1). A card that
 // shows a diff (a recomputed or edited import) shows the server's plan of every operation it holds; once the card has
 // chosen fewer, it shows the plan of the ones chosen instead, asked as a plain `propose` (planned, never held or
 // written: no wire change), once for each choice on the files as they are (kept by proposal, items and the files'

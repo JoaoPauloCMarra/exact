@@ -1,12 +1,13 @@
-//! Miswirings the compiler can see: a name that points at
+//! Miswirings the compiler can see (LLP 1116.010 D5): a name that points at
 //! nothing, or a key that never meets its partner, which the hosts refuse or
-//! ignore at run time without failing the build, though the repair is one
-//! line away: a delete button indented as a sibling of the swipe row's
-//! `scroll` instead of inside it (iOS: `swipeContent on #243 is refused:
-//! "delete-1" names no one descendant of it`); a navigation root keyed by a
-//! literal while its routes are keyed by id, so no push is ever shown;
-//! `EmptyState(symbol="sparkles")`, which draws nothing; `navigationSplit`
-//! on the root, which no host reads.
+//! ignore at run time without failing the build. Round 12's builders spent
+//! 7, 8 and 1 minutes on them with the repair one line away: grocery-list's
+//! delete button, indented as a sibling of the swipe row's `scroll` instead of
+//! inside it (iOS: `swipeContent on #243 is refused: "delete-1" names no one
+//! descendant of it`); chat-rooms' navigation root keyed by a literal while its
+//! routes are keyed by id, so no push was ever shown; habit-tracker's
+//! `EmptyState(symbol="sparkles")`, which draws nothing; recipe-finder's
+//! `navigationSplit` on the root, which no host reads.
 //!
 //! Only what is certain is named. A name is compared as written: a literal, or
 //! a template whose fixed text a descendant's `id` could not complete
@@ -205,7 +206,7 @@ fn written(name: &Name) -> String {
 
 const SWIPE_FIX: &str = "(docs/recipes/list-rows.md)";
 
-/// `lower-swipe-wiring`: a row's `scroll swipeContent=… swipeLeading=…
+/// `lower-swipe-wiring` (LLP 1116.010 D5): a row's `scroll swipeContent=… swipeLeading=…
 /// swipeTrailing=…` whose names do not meet the elements inside it. iOS builds UIKit's
 /// swipe action from a content element and action buttons that are all descendants of the
 /// scroll, the actions beside the content and not inside it, and refuses the row at run
@@ -320,7 +321,7 @@ fn route_keys<'a>(nodes: &'a [Node], out: &mut Vec<&'a Attr>) {
     }
 }
 
-/// `lower-navigation-key`: the navigation root's `navigationKey` names
+/// `lower-navigation-key` (LLP 1116.010 D5): the navigation root's `navigationKey` names
 /// the route to show, so it has to be a key some route carries while that route is on top.
 /// A literal root key over routes keyed by their entry's id never names a pushed route:
 /// chat-rooms' `main navigationKey="rooms"` over `navigationKey=`${e.id}`` showed nothing
@@ -375,10 +376,10 @@ pub(super) fn navigation_keys(
     }
 }
 
-/// `lower-navigation-split`: `navigationSplit` (a width, or `"none"`) is
+/// `lower-navigation-split` (LLP 1116.010 D5): `navigationSplit` (a width, or `"none"`) is
 /// read from the stack's root route, the first route under the navigation root; on the
-/// root itself or on a box no host reads it: on `main` it leaves the
-/// default 320-point list over a blank detail pane. The `"placeholder"` box
+/// root itself or on a box no host reads it. recipe-finder wrote it on `main` and got the
+/// default 320-point list over a blank detail pane (round 12). The `"placeholder"` box
 /// inside the root route is the word's other form and is left alone.
 pub(super) fn navigation_split(
     tag: &str,
@@ -416,7 +417,7 @@ fn bare_word(source: &str) -> bool {
             .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-' || c == '_')
 }
 
-/// `lower-image-source`: an `image` whose literal source is one bare
+/// `lower-image-source` (LLP 1116.010 D5): an `image` whose literal source is one bare
 /// word is neither a symbol (`symbol:<role>`) nor a file (it has no extension and no path),
 /// so nothing is drawn: habit-tracker's `EmptyState(symbol="sparkles")` rendered a blank
 /// where the icon goes, and only a screenshot showed it.

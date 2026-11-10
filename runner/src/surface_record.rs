@@ -20,7 +20,7 @@ pub fn oversize(bytes: usize) -> String {
 const MAX_DEPTH: usize = 32;
 
 /// Resource `i`'s value from its surface's published record: what the runner
-/// answers for [`SOURCE`] when its host links surfaces.
+/// answers for [`SOURCE`] when its host links surfaces (LLP 1047 D3).
 pub fn answer(
     plan: &Plan,
     records: &exact_kernel::SortedMap<String, String>,

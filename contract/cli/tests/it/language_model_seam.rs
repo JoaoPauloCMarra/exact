@@ -1,7 +1,8 @@
-//! The runner's half of `@exact/language-model`'s seam, with the implementation
-//! played as the host's native slot and the data module's `tools` by a Rust
-//! stand-in: a handler runs only for a handle whose call listed it, under the
-//! `tool` origin, which each module call it makes carries; a send let go is
+//! The runner's half of `@exact/language-model`'s seam (LLP 1133.016 D15
+//! items 1-3; §10's drives 7 and 8), with the implementation played as the
+//! host's native slot and the data module's `tools` by a Rust stand-in:
+//! a handler runs only for a handle whose call listed it, under the `tool`
+//! origin, which each module call it makes carries; a send let go is
 //! cancelled at the implementation; a poll ends with its answer.
 
 use exact_runner::{
@@ -97,7 +98,7 @@ impl exact_runner::DataSource for Tools {
                     body.to_string().into_bytes(),
                 )))
             }
-            // A sleep on a timer of its own, due at 500 ms.
+            // A sleep on a timer of its own (LLP 1027.000 D1), due at 500 ms.
             ("tool:findNotes", Some("sleep")) => {
                 Ok(Answer::Later(Request::continuation(9).due(500)))
             }
@@ -235,7 +236,7 @@ fn sent<'a>(calls: &'a [Json], name: &str) -> Vec<&'a Json> {
     calls.iter().filter(|c| c["send"] == name).collect()
 }
 
-/// A handler runs only for a handle whose call listed it, as
+/// D15 item 1: a handler runs only for a handle whose call listed it, as
 /// `tool`, its value the implementation's as JSON text.
 #[test]
 fn a_handler_runs_only_for_a_handle_whose_call_listed_it() {
@@ -311,7 +312,7 @@ fn a_tool_invocations_create_is_told_its_origin() {
     );
 }
 
-/// A send whose mutation is sent again before its reply is
+/// D15 item 2: a send whose mutation is sent again before its reply is
 /// cancelled at the implementation by its number.
 #[test]
 fn a_send_let_go_is_cancelled_at_its_implementation() {
@@ -350,7 +351,7 @@ fn a_send_let_go_is_cancelled_at_its_implementation() {
     assert_eq!(after, 1, "{}", logs(&r));
 }
 
-/// A model's handler runs as `tool` but under no
+/// LLP 1133.023 D7: a model's handler runs as `tool` but under no
 /// invocation, so a system's call of a tool while it is in flight neither
 /// waits for its request nor ends it.
 #[test]
@@ -391,7 +392,7 @@ fn calls_with_cancel(r: &Runner<Tools>) -> usize {
     logs(r).matches("its call was let go").count()
 }
 
-/// A polled source whose answer leaves `while` (a response no
+/// D15 item 3: a polled source whose answer leaves `while` (a response no
 /// longer generating) is not asked again by the clock.
 #[test]
 fn a_poll_ends_with_its_answer() {

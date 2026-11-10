@@ -1,4 +1,4 @@
-// CSS `text-wrap-style: balance` against Chrome: the issue's
+// CSS `text-wrap-style: balance` (LLP 1001 §6) against Chrome: the issue's
 // sentence in 16px DejaVu Sans (the fixture face, loaded in Chrome as a web
 // font) in a 240px box breaks greedily as [208.61, 230.39, 74.8] and
 // balanced as [174.33, 170.72, 168.75]; centred, the balanced lines centre

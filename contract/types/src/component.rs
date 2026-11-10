@@ -96,8 +96,8 @@ pub(crate) fn check_component(
         .chain(c.actions.iter().map(|a| (&a.name, a.span)))
     {
         if let Some(first) = seen.insert(name.clone(), span) {
-            // `mutation exported` and `action exported`: say that the kinds
-            // share one set of names.
+            // The survey diary's `mutation exported` and `action exported`:
+            // say that the kinds share one set of names.
             sink.push(TypeError {
                 id: "type-duplicate-name",
                 message: format!(
@@ -144,10 +144,10 @@ pub(crate) fn check_component(
     }
     for m in &c.mutations {
         let t = sink.keep(shapes.resolve(&m.shape));
-        // A mutation holds `option<T>` of its answer.
+        // A mutation holds `option<T>` of its answer (LLP 1090 D2).
         sink.keep_unit(shapes.bounded(&Ty::Option(Box::new(t.clone())), m.shape.span()));
         ct.mutations.push(t);
-        // What a send to this mutation refreshes.
+        // @ref LLP 1054.000.000 D1 — what a send to this mutation refreshes.
         for (i, (name, span)) in m.refreshes.iter().enumerate() {
             if !c.resources.iter().any(|r| &r.name == name) {
                 sink.push(TypeError {
@@ -219,10 +219,10 @@ pub(crate) fn check_component(
     // reads it (a derive, a view head, a handler's or a resource's
     // argument) must see that type, whatever the declaration order.
     ct.derives = vec![Ty::Unknown; c.derives.len()];
-    // One ordered pass first, not a fixed point: a row's state is typed from
-    // its initializer before the derives that read it (`derive chosen =
-    // at(…, pick)` over a row's `state pick = 0`). Its refusals are made
-    // where the same pass runs again below, once
+    // One ordered pass first, not a fixed point (LLP 1088 D6 is deferred): a
+    // row's state is typed from its initializer before the derives that read
+    // it (shop F3's `derive chosen = at(…, pick)` over a row's `state pick =
+    // 0`). Its refusals are made where the same pass runs again below, once
     // the derives and resources a child's state may read have types.
     let _ = infer_owned_state_initializers(c, &mut ct, types, owners);
     let order = derive_order(c);
@@ -306,7 +306,7 @@ pub(crate) fn check_component(
         shapes,
         &mut miscounted,
     ));
-    // Then the calls in action bodies, before any body is checked.
+    // Then the calls in action bodies (LLP 1089 D8), before any body is checked.
     crate::calls::refine(c, &mut ct, types);
     share_captures(c, &mut ct);
     // A handler whose payload does not fit its action, which it left with
@@ -343,7 +343,7 @@ pub(crate) fn check_component(
                     .collect(),
             );
             scope.enter_action();
-            // A lifted child action is `name#N`.
+            // A lifted child action is `name#N` (LLP 1017 P4c).
             let lifted = a.name.contains('#');
             let written = crate::actions::check_body(
                 &a.body, &scope, lifted, &names, &mut ct, shapes, report,
@@ -352,7 +352,7 @@ pub(crate) fn check_component(
             scope.retype_written(c, &ct, &written);
         }
     }
-    // The seam's signatures: every resource's arguments against
+    // The seam's signatures (LLP 1027 D2): every resource's arguments against
     // the final scope, unified with the sends' (recorded as their bodies were
     // checked). One source, one signature.
     {
@@ -389,12 +389,12 @@ pub(crate) fn check_component(
             let result = crate::each::answer(r, &ct.resources[i]);
             sink.keep_unit(record_source(&mut ct, &r.source, params, result, r.span));
         }
-        // A placeholder is a source call over values:
+        // @ref LLP 1048.003 D6 — a placeholder is a source call over values:
         // the build answers it once for every launch, so its arguments read
         // no state, and its answer is the resource's shape.
         for (i, r) in c.resources.iter().enumerate() {
             let Some(p) = &r.placeholder else { continue };
-            // `empty(field=value, …)` is the
+            // @ref LLP 1054.000.002 D2 — `empty(field=value, …)` is the
             // compiler's constant, not a source.
             if p.source == crate::placeholder::EMPTY {
                 if let Err(errors) = crate::placeholder::materialize(
@@ -410,7 +410,7 @@ pub(crate) fn check_component(
                 }
                 continue;
             }
-            // `else Row(title="…")`: a shape's call
+            // `else Row(title="…")` (app farm round 1): a shape's call
             // builds a record, and a placeholder is a source's.
             if shapes.declared.contains(&p.source) {
                 sink.push(TypeError {
@@ -470,8 +470,8 @@ pub(crate) fn check_component(
                 continue;
             }
             if p.name.starts_with(CAPTURE) {
-                // Hidden: what an action prop was curried with, said once,
-                // at that prop's binding.
+                // Hidden: what an action prop was curried with (LLP 1089
+                // D7), said once, at that prop's binding.
                 said.push(p.name.clone());
                 sink.push(untyped_capture(c, &p.name, p.span));
                 continue;
@@ -481,7 +481,7 @@ pub(crate) fn check_component(
     }
     // A child's `provide` section and the view type. The expanded root's
     // section is checked with its uses (`check_root`), after the expansion,
-    // so a provided value is refused where a child reads it.
+    // so a provided value is refused where a child reads it (LLP 1006 §3).
     let scope = types.component_scope(c, &ct);
     if owners.is_none() {
         for b in &c.provides {
@@ -800,18 +800,18 @@ fn refine_params_from_view(
                 ..
             } => {
                 // A checkbox's `change` and `input` carry whether it is
-                // checked; a text field's, its text.
+                // checked (LLP 1069.001 D4); a text field's, its text.
                 let control = contract_syntax::input_control(tag, attrs);
                 let checkbox = control == Some("checkbox");
                 // A text field's `select` is HTML's, its selection the
-                // `InputEvent`; the Markdown editor's
+                // `InputEvent` (x2apps codeedit #2); the Markdown editor's
                 // carries its formats.
                 let payload_control = contract_syntax::payload_control(tag, attrs);
                 let field = payload_control == Some("field");
-                // A file input's `change` carries the picked files;
-                // its `cancel`, nothing.
+                // A file input's `change` carries the picked files (LLP
+                // 1069.002 D3); its `cancel`, nothing.
                 let file = control == Some("file");
-                // A range's carry its number.
+                // A range's carry its number (LLP 1069.001 D4).
                 let range = control == Some("range");
                 // A bound `type` that could name a control is lowering's
                 // refusal (`lower-input-type`), not a payload guessed here;
@@ -907,7 +907,8 @@ fn refine_params_from_view(
                                 "select" if field => vec![Ty::Record("InputEvent".into())],
                                 "select" => vec![Ty::Record("MarkdownSelection".into())],
                                 // A drag's numbers and a drop's keys, as
-                                // analysis's `handler_arity` counts them.
+                                // analysis's `handler_arity` counts them
+                                // (LLP 1057 §1.1).
                                 "scroll" | "pan" | "panrelease" | "heightrelease" | "resize" => {
                                     vec![Ty::Number, Ty::Number]
                                 }
@@ -978,9 +979,9 @@ fn refine_params_from_view(
                                         if !counted {
                                             continue;
                                         }
-                                        // A repair that only retyped the
-                                        // parameter would drop the guard on
-                                        // a radio's deselection.
+                                        // LLP 1116.018: a repair that only
+                                        // retyped the parameter dropped the
+                                        // guard on a radio's deselection.
                                         let param = &c.actions[ai].params[last].name;
                                         let keep = match (&ty, &declared) {
                                             (Ty::String, Ty::Number) => format!(
@@ -1060,7 +1061,7 @@ fn refine_params_from_view(
 }
 
 /// Every lifted action of one use takes the same hidden captures, of the
-/// same values: one that a handler or a call types gives its
+/// same values (LLP 1089 D7): one that a handler or a call types gives its
 /// type to the others, a sibling nothing binds included.
 fn share_captures(c: &Component, ct: &mut ComponentTypes) {
     let mut typed: BTreeMap<&str, Ty> = BTreeMap::new();
@@ -1246,12 +1247,12 @@ fn empty_list_in(e: &Expr) -> Option<Span> {
 }
 
 /// The first name in `e` the component declares: state a placeholder's
-/// arguments may not read.
+/// arguments may not read (LLP 1048.003 D6).
 fn reads_state(e: &Expr, scope: &Scope) -> Option<(String, Span)> {
     first_free(e, &|_| false, &|name| scope.lookup(name).is_some())
 }
 
-/// A state's initializer runs before any resource
+/// @ref LLP 1088 D4 — a state's initializer runs before any resource
 /// answers and before any derive, so it reads only props, injects and the
 /// states declared above it. A name it reads that the component declares
 /// otherwise is refused as what it is; an unknown name keeps its

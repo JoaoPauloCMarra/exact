@@ -1,4 +1,4 @@
-//! A prepend moves every kept row: a row re-evaluates for its
+//! A prepend moves every kept row (LLP 1062 D8): a row re-evaluates for its
 //! move only when its body reads its own position (`each item, i in list`);
 //! one that reads none keeps its bindings, and still updates for every other
 //! input it reads (an outside slot), moved or not.
@@ -18,7 +18,7 @@ fn plan_with(n: usize, index: bool, mark: bool, virtualized: bool, nested: bool)
     plan_full(n, index, mark, false, virtualized, nested)
 }
 
-/// [`plan_with`]'s rows, where `lit` makes the outside text a chat app's
+/// [`plan_with`]'s rows, where `lit` makes the outside text Excord's
 /// `lit=(m.id == highlight)`: whether the row's item is the slot `mark`.
 fn plan_full(
     n: usize,
@@ -231,7 +231,7 @@ fn a_prepend_reevaluates_and_renumbers_every_kept_row_that_reads_its_position() 
 
 #[test]
 fn a_row_reading_outside_state_updates_when_it_changes_and_its_item_does_not_moved_or_not() {
-    // "Unchanged" is every input a row reads, not its item alone.
+    // theme2's condition: "unchanged" is every input a row reads, not its item alone.
     let mut h = harness(100, false, true);
     h.send(h.feedback(640.0));
     // Unmoved: the outside slot alone changes.
@@ -574,7 +574,7 @@ fn after_a_prepend_the_rows_equal_a_fresh_build_of_the_new_list() {
 
 #[test]
 fn a_kept_moved_row_lit_in_the_same_commit_as_the_prepend_shows_it_and_so_does_the_new_first_row() {
-    // A chat app's `lit=(m.id == highlight)` changing in the commit that prepends, on a kept row
+    // reload1's condition: Excord's `lit=(m.id == highlight)` changing in the commit that prepends, on a kept row
     // that moved (the old first row, no longer first) and on the newly first row.
     for virtualized in [false, true] {
         let mut h = Harness::from_parts(
@@ -637,7 +637,7 @@ fn a_kept_moved_row_lit_in_the_same_commit_as_the_prepend_shows_it_and_so_does_t
 
 #[test]
 fn a_moved_row_whose_body_is_opaque_reevaluates_as_before() {
-    // A body whose scan stopped at code it couldn't decode can't say whether it reads its
+    // theme2's condition: a body whose scan stopped at code it couldn't decode can't say whether it reads its
     // position, so a move keeps it all-dirty. The body's reads are made opaque in place; its bindings are not.
     for virtualized in [false, true] {
         let mut h = Harness::from_parts(

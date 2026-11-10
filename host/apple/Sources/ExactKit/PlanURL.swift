@@ -1,4 +1,4 @@
-// The network form of the dev plan: given the app
+// The network form of the dev plan (LLP 1023 D1–D3, Stage 1): given the app
 // URL — the same one a browser opens — resolve the envelope (negotiated
 // directly, or through index.html's rel=alternate link), fetch and verify
 // the complete plan and asset manifest, hand the verified generation to
@@ -10,7 +10,7 @@
 // new plan against this binary's data crate would be a poisoned boot — but
 // the host stays connected and registered, reconnects across restarts, and
 // takes the next generation for its own program; rebuilding the host, or the
-// menu's Reload, starts over. One connection per app, never
+// menu's Reload, starts over. One connection per app (LLP 1031 D11), never
 // per session.
 import CryptoKit
 import Foundation
@@ -37,7 +37,7 @@ enum DevelopmentModules {
 }
 
 /// A local development bake is a plan plus its optional, inseparable module
-/// pair. Watch all three files: a writer can replace them in
+/// pair (LLP 1027 D7). Watch all three files: a writer can replace them in
 /// either order, and a refused partial bake must be retried when it finishes.
 public struct ExactDevelopmentPlan {
     private let baseFiles: [URL]
@@ -117,7 +117,7 @@ public struct ExactDevelopmentPlan {
     }
 
     /// The plan and its module pair as the launch generation (`EXACT_PLAN`
-    /// naming a local bake): the first boot runs it as a build
+    /// naming a local bake, LLP 1116.003): the first boot runs it as a build
     /// that baked it would, fresh, with nothing carried from the embedded
     /// plan. Call before the first session; nil once installed, else why not.
     public func installInitial(on app: ExactApp) -> String? {
@@ -132,7 +132,7 @@ public struct ExactDevelopmentPlan {
     }
 }
 
-/// Explicit development-only opening action. The locator
+/// Explicit development-only opening action (LLP 1030.000 §7). The locator
 /// stays an HTTP(S) URL; the outer app-specific scheme only selects the client.
 /// The scheme is derived from the public app id and the loader's identity and
 /// compatibility checks are computable by anyone, so neither is trust: a link
@@ -171,7 +171,7 @@ public enum ExactDevelopmentLink {
     }
 
     /// A link in this build's development scheme is consumed here, admitted
-    /// or refused; it never becomes an app location.
+    /// or refused; it never becomes an app location (LLP 1038 D11).
     public static func claims(_ link: URL) -> Bool {
         guard let baked else { return false }
         return link.scheme?.lowercased() == baked.scheme
@@ -319,7 +319,7 @@ private final class BoundedFetch: NSObject, URLSessionDataDelegate, URLSessionTa
 final class PlanURL: NSObject, URLSessionDataDelegate {
     static let envelopeType = "application/vnd.exact.envelope+json"
     /// A dev loop's answer while its producers start, or after their start
-    /// failed (host/web/dev-phase.mjs): a status, not a failure.
+    /// failed (llp/1023.001; host/web/dev-phase.mjs): a status, not a failure.
     static let devStatusType = "application/vnd.exact.dev-status+json"
     static let pageLimit = 64 * 1024
     static let envelopeLimit = 64 * 1024
@@ -388,10 +388,10 @@ final class PlanURL: NSObject, URLSessionDataDelegate {
     private let runningPlan: () -> String?
     /// The candidate, its label, and `letGo` (requests in flight do not hold it back).
     private let applyGeneration: (Generation, String, Bool) -> Bool
-    /// A live design batch or snapshot applied to the
+    /// A live design batch or snapshot (LLP 1121 stage 4) applied to the
     /// app; answers applied, stale, structure or refused.
     private let applyDesign: (String) -> String
-    /// A build-channel frame: a hello with a new nonce, or a
+    /// A build-channel frame (LLP 1122 D4): a hello with a new nonce, or a
     /// command (`BuildChannel.commands`).
     private let channel: ([String: Any]) -> Void
     private let preparationPending: () -> Bool
@@ -470,7 +470,7 @@ final class PlanURL: NSObject, URLSessionDataDelegate {
         resolveAndBoot()
     }
 
-    // MARK: discovery and immutable generation fetches
+    // MARK: discovery and immutable generation fetches (LLP 1023 D1–D3)
 
     private func resolveAndBoot() {
         guard !closed else { return }
@@ -744,7 +744,7 @@ final class PlanURL: NSObject, URLSessionDataDelegate {
                         payloads.removeAll()
                         let fetched = ProcessInfo.processInfo.systemUptime
                         // Asked again while the host is preparing, or while requests are in flight;
-                        // a second after they first held it, they are let go, as the web's dev loop does.
+                        // a second after they first held it, they are let go, as the web's dev loop does (LLP 1007 §6).
                         var heldSince: TimeInterval?
                         func commitCandidate() {
                             guard !self.closed, self.terminal == nil, generation == self.resolution else { return }
@@ -811,7 +811,7 @@ final class PlanURL: NSObject, URLSessionDataDelegate {
         return result + "\""
     }
 
-    // MARK: reconnect and ordering
+    // MARK: reconnect and ordering (LLP 1023 D3)
 
     private func subscribe(_ url: URL) {
         stream?.cancel()
@@ -951,7 +951,7 @@ final class PlanURL: NSObject, URLSessionDataDelegate {
             design(frame)
             return
         }
-        // The build channel, development builds only: a command
+        // The build channel (LLP 1122 D4), development builds only: a command
         // before any generation; a new stream's hello registers again, under
         // the same id.
         if let kind = frame["kind"] as? String, BuildChannel.commands.contains(kind) { if BuildChannel.enabled { channel(frame) }; return }
@@ -971,7 +971,7 @@ final class PlanURL: NSObject, URLSessionDataDelegate {
         fetchEnvelope(url, subscribe: false, generation: generation, expected: revision)
     }
 
-    // MARK: the live table
+    // MARK: the live table (LLP 1121 D13, stage 4)
 
     /// A batch (a notice is one with no tokens) applied on its base; a build
     /// on another design fetches the snapshot. One at a time, in the stream's
@@ -1028,7 +1028,7 @@ final class PlanURL: NSObject, URLSessionDataDelegate {
         }
     }
 
-    // MARK: the build channel
+    // MARK: the build channel (LLP 1122 D4)
 
     /// The nonce the stream's hello gave, which every report carries; nil
     /// once that stream ends.

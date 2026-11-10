@@ -1,7 +1,7 @@
 # GPU module ABI
 
 The host and module ship together. Before 1.0, missing required symbols refuse
-loading; there is no compatibility shim.
+loading; there is no compatibility shim. See LLP 1009 and LLP 1014.000.
 
 | Version / revision | Child delivery export | Contract |
 |---|---|---|

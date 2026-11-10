@@ -4,33 +4,33 @@ import { FetchError, fetchWith, inOverlay, overlaying, ownWithout, redirectOf, s
 import { tsGrantSet } from './admission-data.js';
 // A stream or an upload takes the redirect mode as `fetch` is called, as Hermes
 // does: a bad one rejects before a file is read or a stream registered.
-// A mutation does one kind of effect: socket operations
+// A mutation does one kind of effect (LLP 1016.000 D7): socket operations
 // or a fetch. Whichever comes second refuses, and so does the mutation
 // (ts-data.js). In a module that holds a socket, a mutation's fetch is
 // captured when called and starts after its source returns, so a refused
 // one never starts; a module with none fetches at once, as before.
 export const SOCKET_AND_FETCH = 'a mutation cannot both send on a socket and fetch';
-// `exactHeld`, with Hermes's words (js/src/prelude.js): the server may hold the reply. Each
+// `exactHeld` (LLP 1016.000 D9), with Hermes's words (js/src/prelude.js): the server may hold the reply. Each
 // fetch is counted on its answer, held (`call.held`) or not (`call.plain`), or as tied to no answer
 // (`answering.loose`); an answer with only held fetches out counts for no clock (held.js `counted`, whose
 // hooks the page's entry sets on `answering`, build.mjs).
 export function fetch(input, options) {
-  // Checked before any path, a mutation's captured fetch included.
+  // Checked before any path, a mutation's captured fetch included (LLP 1016.000 D8).
   if (options?.exactLongPoll !== undefined && options.exactStream === undefined)
     return Promise.reject(new TypeError('exactLongPoll asks again for an answer that keeps coming: give exactStream too'));
-  const upload = options?.exactUploadProgress;
+  const upload = options?.exactUploadProgress; // LLP 1016.000 D10
   if (upload !== undefined && upload !== false && options.exactStream === undefined)
     return Promise.reject(new TypeError(upload === true ? "exactUploadProgress reports an upload's progress to its stream: give exactStream too" : 'exactUploadProgress is true or false'));
   const held = options?.exactHeld;
   if (held !== undefined && held !== true && held !== false) return Promise.reject(new TypeError('exactHeld is true or false'));
   if (held && options.exactStream !== undefined) return Promise.reject(new TypeError('exactHeld: a stream is never held; it stops counting at its first message'));
-  // A stream counts by its own rule, never here.
+  // A stream counts by its own rule (D5), never here.
   if (options?.exactStream !== undefined) return fetchNow(input, options);
   // An upload or a download to a file is never held (Request::is_held).
   return counting(held && options.exactBodyFrom === undefined && options.exactBodyTo === undefined ? 'held' : 'plain', () => fetchNow(input, options));
 }
 /** Work an answer awaits that is no held fetch (a fetch, `crypto.subtle`, `native.later`, a kept key): counted on
- * its answer (`call.plain`), so the answer is never held while it is out. */
+ * its answer (`call.plain`), so the answer is never held while it is out (LLP 1016.000 D9). */
 export const ordinary = start => counting('plain', start);
 globalThis.__exact_ordinary = ordinary; // for host modules ts-fetch.js does not reach (auth.js)
 // A render waits for I/O even after its source returns a value or its answer Promise settles.
@@ -47,7 +47,7 @@ function counting(kind, start) {
 }
 function fetchNow(input, options) {
   if (overlaying.on) return Promise.reject(inOverlay('fetch()'));
-  // A socket's mapper answering a frame makes no fetch.
+  // A socket's mapper answering a frame makes no fetch (D7).
   if (answering.mapper) return Promise.reject(new Error("fetch() is unavailable in a socket's mapper: it answers each frame now"));
   const call = answering.call;
   if (call?.mutation) {
@@ -84,8 +84,8 @@ function captured(options) {
   else if (typeof FormData === 'function' && body instanceof FormData) { init.body = new FormData(); for (const [k, v] of body) init.body.append(k, v); }
   return init;
 }
-// The origin a fetch carries: its answer's, or, after the answer's first await, where no call is
-// traced, the least privileged of the answers in flight.
+// The origin a fetch carries (LLP 1133.036 D6): its answer's, or, after the answer's first await, where no call is
+// traced, the least privileged of the answers in flight (LLP 1133.002 D12).
 export const activeCall = () => answering.call ?? [...answering.untraced].find(c => !c.settled);
 export const fetchOrigin = () => activeCall()?.origin ?? 'app';
 function fetchOf(input, options, call) {
@@ -132,7 +132,7 @@ function fetchOf(input, options, call) {
 
 export const files = { appId: null };
 
-// An answer that keeps coming, with Hermes's words
+// An answer that keeps coming (LLP 1016.000), with Hermes's words
 // (js/src/prelude.js): the stream is the answer's, so its fetch is made while
 // the answer is asked (`answering`, set by ts-data.js), which opens it. Its
 // promise never settles: the answer is what `exactStream` maps each event to.
@@ -148,14 +148,14 @@ function stream(input, init, redirect) {
   return new Promise(() => {});
 }
 
-// Time and seeds are source arguments: the app's modules see
+// Time and seeds are source arguments (LLP 1027.000 D3): the app's modules see
 // these in place of the page's Date, Math, Intl, timers and performance, each
 // refusing what Hermes refuses with Hermes's words (js/src/prelude.js), so an
 // app that reads the clock fails on the web as it would on a device. An
 // explicit date, UTC arithmetic and an explicit timestamp's formatting work.
 const refuse = api => { throw new Error(`${api} is unavailable in data sources; pass time or a random seed as an argument`); };
 const noTimers = api => () => { throw new Error(`${api} is unavailable in data sources: an answer waits with setTimeout; pass time as an argument`); };
-// An answer's own timers, with Hermes's rules (js/src/binary.js `timers`).
+// An answer's own timers (LLP 1027.000 D1 as amended 2026-10-28), with Hermes's rules (js/src/binary.js `timers`).
 // Each is an entry of the page's clock (the driver's under the agent, whose `clock +N` and `clock settle` fire it)
 // that goes after the tasks due with it and is no commit (rt.js `advance`). It belongs to the answer that armed it:
 // one that has answered, or whose ticket was let go, never runs it. An answer with only timers out counts in no
@@ -215,8 +215,8 @@ export function ownSignal(signal) {
 }
 // A request carrying an `AbortSignal.timeout`, or a signal composed of one, takes the time the signal has left on the
 // page's clock as a real-time deadline (the browser's `setTimeout`, which `clock +N` does not move), as natively
-// (prelude.js `timers.left`, `expire`): the signal's own timer goes with its answer, but a POST let go runs on,
-// and another answer may carry the signal. An earlier `exactTimeout` (`before`) stays the deadline instead. A
+// (prelude.js `timers.left`, `expire`): the signal's own timer goes with its answer, but a POST let go runs on (LLP 1146
+// D2), and another answer may carry the signal. An earlier `exactTimeout` (`before`) stays the deadline instead. A
 // `Request`'s own signal gives none: it is the browser's, following the one the Request was given.
 signalDeadline.arm = (signal, before) => {
   const t = signal && !signal.aborted ? Deadlines.get(signal) : undefined;
@@ -337,13 +337,13 @@ DateTimeFormat.prototype = Object.create(NativeFormat.prototype, {
   formatToParts: { configurable: true, writable: true, value(...args) { return args[0] === undefined ? refuse('Intl.DateTimeFormat.formatToParts()') : nativeParts.apply(this, args); } },
 });
 Object.setPrototypeOf(DateTimeFormat, NativeFormat);
-// A data module does no I/O of its own (its socket
+// A data module does no I/O of its own (LLP 1016.000 D3, D7: its socket
 // belongs to a resource opened by `fetch` with `exactStream`): the page's
 // XMLHttpRequest, WebSocket and EventSource refuse, as the wasm target's realm
 // refuses them (host/web/module-glue.js), so no independent socket or origin
 // is reached past the grants.
 const noIo = api => function () { throw new Error(`${api} is unavailable in data sources`); };
-// `scheduler.yield()`: the browser's where it has one, else
+// `scheduler.yield()` (LLP 1141.001 D10): the browser's where it has one, else
 // a task posted on a MessageChannel, which no timer clamp delays. The page has
 // no turn budget; a yield here lets it paint and answer input mid-walk.
 const pageYield = globalThis.scheduler?.yield?.bind(globalThis.scheduler) ?? (typeof MessageChannel === 'function'
@@ -385,7 +385,7 @@ const methods = new WeakMap();
 // names, the DOM and Node's globals, absent from the module here too, so a
 // test of one (`typeof document`) answers as it does natively
 // (js/bake/src/typescript.mjs `packageRefusals`). This keeps a module
-// portable; it is no security boundary: the module runs in the
+// portable; it is no security boundary (LLP 1027 D5): the module runs in the
 // page's realm, and its code is the app author's.
 const ABSENT = new Set(['window', 'self', 'frames', 'parent', 'top', 'opener', 'document', 'navigator', 'location', 'history', 'localStorage', 'sessionStorage',
   'indexedDB', 'HTMLElement', 'Element', 'getComputedStyle', 'customElements', 'alert', 'process', 'Buffer', 'global']);

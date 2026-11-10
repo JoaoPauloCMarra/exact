@@ -1,5 +1,5 @@
-//! An orderly exit: the module's storage an answer started
-//! and did not await, and a request with effects in flight,
+//! An orderly exit (LLP 1097 D10): the module's storage an answer started
+//! and did not await, and a request with effects in flight (LLP 1146 D2),
 //! finish before the process ends, the loop's turns running as they do while
 //! the app runs, without input, within five seconds (a second for an agent's
 //! quit, whose driver kills it soon after); what is left then is dropped and
@@ -45,7 +45,7 @@ pub fn finish<D: DataSource>(p: &mut Presenter<D>, bound: Duration) -> Option<St
     if let Some(left) = &dropped {
         eprintln!("exact: background: dropped at exit, {left}");
     }
-    // Every hatch scope ends before the module goes.
+    // Every hatch scope ends before the module goes (LLP 1075.003.000.001 §2.1).
     p.end_hatches();
     p.end_packages();
     // The store's writes, which its own thread makes, are on disk before the process ends (a moment past the

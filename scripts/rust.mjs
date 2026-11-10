@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Independently link and bake a Rust business-logic module.
+// Independently link and bake a Rust business-logic module. LLP 1029.000.
 // The dev server calls the same producer; CLI use is an explicit build boundary.
 import { filesystem } from './filesystem.mjs';
 import { appleCargo } from './cargo-check.mjs';

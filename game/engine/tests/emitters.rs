@@ -20,8 +20,8 @@ impl<const EXPLICIT: bool> Game for Rain<EXPLICIT> {
     }
 }
 
-// A running emitter is stepped once a tick; it must not stay empty and silent
-// until the game calls emitter::step.
+// Grow a Garden's rain emitter had no particles and no error until the tick
+// called emitter::step.
 #[test]
 fn a_running_emitter_no_tick_steps_is_stepped_once_a_tick() {
     let mut forgot = Sim::<Rain<false>>::new(()).unwrap();
@@ -99,8 +99,8 @@ fn trail<const WORLD: bool>() -> (Vec<Particle>, u64) {
         .particles(60, 1., |p| out.push(p));
     (out, s.world().hash())
 }
-// Particles that move with their emitter push a game to spawn an emitter per
-// smoke puff. With WorldSpace each batch stays where it was born.
+// Rivals spawned an emitter entity per smoke puff because particles moved with
+// their emitter. With WorldSpace each batch stays where it was born.
 #[test]
 fn world_space_particles_stay_where_they_were_born() {
     let (local, local_hash) = trail::<false>();

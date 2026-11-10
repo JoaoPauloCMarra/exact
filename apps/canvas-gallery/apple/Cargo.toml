@@ -1,4 +1,4 @@
-# The Canvas gallery on Apple platforms: the host's C exports
+# The Canvas gallery on Apple platforms (LLP 1056 §4): the host's C exports
 # over its TypeScript data module and baked plan.
 [package]
 name = "canvas-gallery-apple"

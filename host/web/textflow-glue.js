@@ -1,5 +1,5 @@
 import { createTimerScheduler } from "./timer-glue.js";
-// Optional browser executor of CSS Exclusions.
+// @ref LLP 1043.000 §3 D6–D8 — optional browser executor of CSS Exclusions.
 // Loaded by the existing script-module loader only after a textflow batch.
 // The Rust walker owns segmentation, shape resolution and stopping bounds.
 // DOM originals are retained offscreen (detached, never a second accessible copy).
@@ -8,7 +8,7 @@ import { createTimerScheduler } from "./timer-glue.js";
 // This is the exclusions executor, not a replacement for ordinary CSS text.
 // Per-fragment bidi/shaping is not paragraph-wide browser parity; detached
 // source alone cannot supply browser find or accessibility for unmounted lines.
-// giant-paragraph admission requires that parity first.
+// @ref LLP 1044.001 §7.4 — giant-paragraph admission requires that parity first.
 
 // Per-frame glue: O(P + E*ancestor-depth + R + F log R + changed source units),
 // plus wasm's documented bound; preparations are O(source + ranges*log runs).
@@ -201,7 +201,7 @@ function sourceInput(text, overflow, whiteSpace) {
   bytes.set(source, 12 + words.length * 4); return bytes;
 }
 function flowInput(snapshot, exclusions) {
-  // Wasm owns the fragment floor; send the strut font size.
+  // @ref LLP 1043.000 §3 D5 — wasm owns the fragment floor; send the strut font size.
   const bytes = floats([snapshot.width, snapshot.lineHeight, snapshot.font.size, 0, snapshot.height, 0,
     ...exclusions.flatMap(e => [0, e.width, e.height, e.x - snapshot.x, e.y - snapshot.y])]);
   const view = new DataView(bytes.buffer);
@@ -212,7 +212,7 @@ function flowInput(snapshot, exclusions) {
 }
 
 // getBoundingClientRect is the batched, fractional fast path. CSS transforms
-// never alter exclusions; transformed trees use untransformed offset boxes.
+// never alter exclusions (D8); transformed trees use untransformed offset boxes.
 // No animation value is sampled or sent to the walker.
 function layoutBox(el, styles) {
   const rect = el.getBoundingClientRect();
@@ -498,7 +498,7 @@ export function createTextFlow({ views, request, advance, present, admitTimers =
       if (s.boxStyle) styles.set(s.el, s.boxStyle);
       if (!box || box.hidden) return { s, skipped: 'paragraph is hidden' };
       const style = styles.get(s.el), font = fontStyle(style, mac, s.el.closest('[lang]')?.lang || document.documentElement.lang);
-      // Box intersection precedes source
+      // @ref LLP 1043.000 §3 D4/D7 — box intersection precedes source
       // extraction/preparation. Moving exclusions reuse stable paragraph boxes.
       const exclusions = [...s.info.exclusions].map(readBox).filter(b => {
         if (!b || b.hidden) return false;
@@ -507,7 +507,7 @@ export function createTextFlow({ views, request, advance, present, admitTimers =
           && b.y - margin < box.y + box.height && b.y + b.height + margin > box.y;
       });
       s.meetingIds = new Set(exclusions.map(e => e.id));
-      // Auto height flows where the kernel's admission
+      // @ref LLP 1043.000 §8 — auto height flows where the kernel's admission
       // rule holds; the walker's height becomes the paragraph's, written below.
       const auto = !s.info.definite;
       if (!exclusions.length && (auto || !definiteHeight(s.el))) return { s, inactive: true };
@@ -608,7 +608,7 @@ export function createTextFlow({ views, request, advance, present, admitTimers =
       const key = JSON.stringify([snapshot.width, snapshot.height, snapshot.lineHeight, snapshot.maxLines, snapshot.align,
         snapshot.direction, snapshot.x, snapshot.y, snapshot.exclusions, snapshot.cut]);
       if (s.geometry === key && s.rendered) return { s, unchanged: true };
-      // Canvas has no font-variant-numeric or
+      // Canvas has no font-variant-numeric (LLP 1053 G4) or
       // font-variant-ligatures: tabular figures and unjoined letters cannot be
       // measured for the walker, so such a paragraph keeps ordinary layout.
       const fonts = [snapshot.font, ...s.runs.map(r => r.font)];
@@ -648,7 +648,7 @@ export function createTextFlow({ views, request, advance, present, admitTimers =
       if (result.skipped) {
         release(s); restore(s); s.facts = { fragments: [], shapes: [], ...result.partial, skipped: result.skipped };
         if (result.autoHeight) {
-          if (!autoHeightWarned.has(s.id)) { autoHeightWarned.add(s.id); log(`wrap-flow: text #${s.id} has auto height and is not flowed: ${result.skipped}`); }
+          if (!autoHeightWarned.has(s.id)) { autoHeightWarned.add(s.id); log(`wrap-flow: text #${s.id} has auto height and is not flowed: ${result.skipped} (LLP 1043.000 §8)`); }
         } else if (s.error !== result.skipped) { log(`textflow #${s.id}: ${result.skipped}`); s.error = result.skipped; }
       }
       return;
@@ -737,7 +737,7 @@ export function createTextFlow({ views, request, advance, present, admitTimers =
     dirty = false;
     const selected = pendingSelection ?? selectionSnapshot(); pendingSelection = null;
     let moved = false;
-    // An auto paragraph's written height moves what follows
+    // @ref LLP 1043.000 §8 — an auto paragraph's written height moves what follows
     // it and nothing before it, so re-reading settles one more paragraph in
     // document order each round: at most one round per auto paragraph, in this frame.
     for (let round = 0; ; round++) {

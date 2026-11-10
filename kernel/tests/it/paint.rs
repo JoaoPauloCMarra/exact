@@ -1,4 +1,4 @@
-//! Paint motion's seam: only a node whose `transition` or
+//! Paint motion's seam (LLP 1062): only a node whose `transition` or
 //! `animation` names a paint property owns it in the engine; its targets are
 //! computed colours resolved by the host's appearance, and an appearance
 //! change re-targets them the way a browser's computed value changes.
@@ -10,7 +10,7 @@ use exact_motion::{Engine, Property, TransitionProperty, Transitions, Value};
 fn patch(rows: &[(StyleId, &str)]) -> Box<StyleProps> {
     let mut s = StyleProps::default();
     for (id, text) in rows {
-        // An animation row names keyframes the runner resolves.
+        // An animation row names keyframes the runner resolves (LLP 1055 D5).
         if text.contains("@keyframes") {
             let row = crate::keyframed(text);
             match id {
@@ -429,7 +429,7 @@ fn paint_transition_names_and_colour_keyframes_round_trip_the_wire() {
         (to.1.w - 0.5).abs() < 1e-6 && (to.1.z - 0.5).abs() < 1e-6,
         "{to:?}"
     );
-    // A `light-dark()` colour carries its dark value.
+    // A `light-dark()` colour carries its dark value (LLP 1062 D9).
     let from = &style.animation.0[0].keyframes.0[0];
     assert_eq!(from.values[0].1.x, 1.0);
     assert_eq!(from.dark[0].0, Property::BackgroundColor);
@@ -437,8 +437,8 @@ fn paint_transition_names_and_colour_keyframes_round_trip_the_wire() {
 }
 
 /// An `-exact-exit-animation` that names a colour owns it while the node lives, so
-/// the engine has the value its exit plays over when the node leaves. A
-/// `currentcolor` side that draws is the host's to paint in the
+/// the engine has the value its exit plays over when the node leaves (LLP
+/// 1063). A `currentcolor` side that draws is the host's to paint in the
 /// presented `color`.
 #[test]
 fn an_exit_owns_its_colours_and_currentcolor_sides_follow_color() {
@@ -527,7 +527,7 @@ fn shadow_targets_preserve_wide_gamut_and_profiles_are_discrete() {
     }
 }
 
-/// Under `still` (a scrub's frame) a colour change jumps: no
+/// Under `still` (a scrub's frame, LLP 1121 D13) a colour change jumps: no
 /// transition starts, and one under way stops at the new value. Outside it
 /// the next change moves as authored.
 #[test]

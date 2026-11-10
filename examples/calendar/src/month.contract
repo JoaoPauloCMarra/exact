@@ -10,9 +10,9 @@ component MonthPage
     panMonth: action
     releaseMonth: action
     page: Month
-    // The days with an event in the person's calendars.
+    // The days with an event in the person's calendars (LLP 1133.018 §11).
     deviceDays: number[]
-    // Each day's steps, where Health showed any.
+    // Each day's steps, where Health showed any (LLP 1133.026 §12).
     steps: ActivityDay[]
     left: number
     width: number

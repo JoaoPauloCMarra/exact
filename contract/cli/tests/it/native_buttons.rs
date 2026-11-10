@@ -1,7 +1,7 @@
-//! A `button` whose `appearance` is the literal `auto` is the platform's own
-//! button — a `Control` of type `button`, its `text` and symbol `image`
-//! children its face, its style from `buttonStyles` — and everything Contract
-//! can see that the platform cannot draw is refused.
+//! LLP 1069.011: a `button` whose `appearance` is the literal `auto` is the
+//! platform's own button — a `Control` of type `button`, its `text` and
+//! symbol `image` children its face, its style from `buttonStyles` — and
+//! everything Contract can see that the platform cannot draw is refused.
 
 use exact_kernel::{Kernel, NodeType, PressFace, PropId, PropValue};
 use exact_runner::{DataError, DataSource, Event, Runner, RunnerError, Value};
@@ -239,8 +239,8 @@ fn face_diagnostics_name_images_and_give_rasters_a_custom_layout() {
 
 #[test]
 fn a_coloured_symbol_is_told_its_tint_not_a_custom_button() {
-    // A builder who reads "write a custom `button`" here draws their own circle
-    // where the original floats iOS's glass.
+    // LLP 1141.001 D11: two ports' builders read "write a custom `button`" here and drew
+    // their own circle where the original floats iOS's glass.
     let (_, message) = refused(
         "button buttonStyle=\"glass\" aria-label=\"Bookmark\"\n  image \"symbol:sf/bookmark\" color=\"red\"",
     );
@@ -251,12 +251,12 @@ fn a_coloured_symbol_is_told_its_tint_not_a_custom_button() {
 #[test]
 fn its_face_is_a_title_a_symbol_or_both() {
     boot(&app("button appearance=\"auto\" press=go aria-label=\"Add\"\n  image (busy ? \"symbol:close\" : \"symbol:add\")"));
-    // A role by Apple's name for it or an alias.
+    // A role by Apple's name for it or an alias (LLP 1116.007 D3.1).
     boot(&app(
         "button appearance=\"auto\" press=go aria-label=\"Settings\"\n  image \"symbol:gearshape\"",
     ));
     boot(&app("button appearance=\"auto\" press=go aria-label=\"Add\"\n  image (busy ? \"symbol:xmark\" : \"symbol:plus\")"));
-    // An SF Symbol by name, literal or computed.
+    // An SF Symbol by name, literal or computed (LLP 1035.004.000).
     boot(&app("button appearance=\"auto\" press=go aria-label=\"Send\"\n  image \"symbol:sf/paperplane.fill\""));
     boot(&app("button appearance=\"auto\" press=go\n  image `symbol:sf/${busy ? \"hourglass\" : \"paperplane\"}`\n  text \"Send\""));
     for (body, says) in [
@@ -288,7 +288,7 @@ fn its_face_is_a_title_a_symbol_or_both() {
             "button appearance=\"auto\" press=go\n  if busy\n    text \"Wait\"",
             "neither",
         ),
-        // A blank title is no title.
+        // A blank title is no title (astra's code review).
         (
             "button appearance=\"auto\" press=go\n  image \"symbol:add\"\n  text",
             "give it one",
@@ -301,7 +301,7 @@ fn its_face_is_a_title_a_symbol_or_both() {
             "button appearance=\"auto\" press=go\n  image \"symbol:add\"\n  text (busy ? \"Add\" : \"\")",
             "aria-label",
         ),
-        // A label that can be empty is no label.
+        // A label that can be empty is no label (grok's code review).
         (
             "button appearance=\"auto\" press=go aria-label=(busy ? \"Add\" : \"\")\n  image \"symbol:add\"",
             "never empty",
@@ -339,11 +339,11 @@ fn its_box_carries_place_size_opacity_transforms_and_accent_only() {
     }
 }
 
-/// A native button is a tab, a toolbar item, a header's button, a menu row, a
-/// swipe action and a shortcut's button; it is not a menu's invoker, a link, a
-/// submit, below a menu row, inside a custom button or in a canvas. A row that
-/// only closes its popover or dialog — a confirmation's action or cancel — is
-/// not an invoker.
+/// LLP 1069.011.000: a native button is a tab, a toolbar item, a header's
+/// button, a menu row, a swipe action and a shortcut's button; it is not a
+/// menu's invoker, a link, a submit, below a menu row, inside a custom button
+/// or in a canvas. A row that only closes its popover or dialog — a
+/// confirmation's action or cancel — is not an invoker (astra's code review).
 #[test]
 fn it_goes_where_a_button_goes_and_admits_dialog_and_popover_invokers() {
     for body in [
@@ -377,8 +377,8 @@ fn it_goes_where_a_button_goes_and_admits_dialog_and_popover_invokers() {
     }
 }
 
-/// Every button has a face — a custom one read as a native one is — and only a
-/// button has one.
+/// LLP 1069.011.000 D1: every button has a face — a custom one read as a
+/// native one is — and only a button has one.
 #[test]
 fn every_button_has_a_face_custom_or_native() {
     let r = boot(&app(
@@ -403,7 +403,10 @@ fn every_button_has_a_face_custom_or_native() {
     assert!(raster.raster && raster.symbol.is_none() && raster.fits);
     let blank = face("blank").unwrap();
     assert_eq!(blank.title, None);
-    assert!(blank.leading, "a symbol after a blank title leads");
+    assert!(
+        blank.leading,
+        "a symbol after a blank title leads (grok's code review)"
+    );
     let badged = face("badged").unwrap();
     assert_eq!(badged.title.as_deref(), Some("Inbox"));
     assert!(!badged.fits, "a box beside the title does not fit");
@@ -664,10 +667,10 @@ fn the_default_is_native_and_explicit_none_is_bare() {
     boot(&app("button buttonStyle=\"filled\"\n  text \"Go\""));
 }
 
-/// A radio is a native button by default, as a tab is, so a radio group of them
-/// is the platform's segmented control on every host (the web's look keys on
-/// the native button); a role no host projects on a native button still leaves
-/// the default one bare.
+/// LLP 1116.004 D5.2: a radio is a native button by default, as a tab is, so
+/// a radio group of them is the platform's segmented control on every host
+/// (the web's look keys on the native button); a role no host projects on a
+/// native button still leaves the default one bare.
 #[test]
 fn a_radio_is_native_by_default_as_a_tab_is() {
     let radio = |checked: bool| {
@@ -846,7 +849,7 @@ fn a_bare_default_style_refusal_reports_its_first_reason() {
     ] {
         let (id, message) = refused(body);
         assert_eq!(id, "lower-button-style", "{message}");
-        // The custom-face edit, and a native button's where there is one.
+        // LLP 1116.014 D1: the custom-face edit, and a native button's where there is one.
         assert!(message.contains(reason) && message.contains("remove `buttonStyle`") && message.contains("appearance=\"none\""), "{message}");
         let native = message.contains("A native button's face is `text`s and a symbol `image`")
             || message.starts_with("to keep the native button, remove `");
@@ -910,11 +913,12 @@ fn bare_reasons_live_only_in_the_development_map_and_migration_uses_merged_rows(
     assert_eq!(map.button_migrations().len(), 1);
 }
 
-/// For a radio group: a radio that writes a background, border or radius on any
-/// arm (a one-sided class included) makes its group `appearance: none`,
-/// written, decided once in the plan, so no host projects it to the platform's
-/// segmented control and back as the selection moves. Unpainted radios, and a
-/// group that says its own `appearance`, are left to the platform.
+/// LLP 1115 and 1104 D2 for a radio group: a radio that writes a
+/// background, border or radius on any arm (a one-sided class included)
+/// makes its group `appearance: none`, written, decided once in the plan,
+/// so no host projects it to the platform's segmented control and back as
+/// the selection moves. Unpainted radios, and a group that says its own
+/// `appearance`, are left to the platform.
 #[test]
 fn a_radio_group_whose_radios_paint_is_the_authors_once() {
     let group = |radio: &str, own: &str| {

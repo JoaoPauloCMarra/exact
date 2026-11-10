@@ -1,4 +1,4 @@
-// The wire's scopes (scripts/tamber-pairing.mjs): one
+// The wire's scopes (LLP 1121 stage 10 A1; scripts/tamber-pairing.mjs): one
 // table, checked in the dispatcher before any handler, failing closed.
 import { afterAll, beforeAll, expect, test } from 'bun:test';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -207,7 +207,7 @@ test('a scope the wire can\'t name allows nothing; a read client reads a build\'
   }
 });
 
-// Pairing: codes, tokens and their ends, by an injected clock.
+// Stage 10 A2: codes, tokens and their ends, by an injected clock.
 import { CODE_MS, limiter, pairing, pairTtlOf, parseDuration } from './tamber-pairing.mjs';
 
 test('a code is 50 bits of base32, single use, gone after two minutes, and its token works until its time', () => {

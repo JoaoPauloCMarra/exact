@@ -17,7 +17,7 @@ private final class DrawnHalves: NSView {
 }
 
 final class PaintCaptureMacTests: XCTestCase {
-    override class func setUp() { super.setUp(); ExactSurfaces.install() }
+    override class func setUp() { super.setUp(); ExactSurfaces.install() } // LLP 1047.001 D4
     func testCanvasCapturesRanksFromTheCurrentBatch() throws {
         _ = NSApplication.shared
         let session = ExactApp.shared.makeSession(label: "paint-capture")
@@ -74,7 +74,7 @@ final class PaintCaptureMacTests: XCTestCase {
     }
 
     /// A canvas's children reach its surface top row first, as they show
-    /// (Caltrain's sky). In an app's window AppKit flips the page
+    /// (Caltrain's sky, LLP 1014). In an app's window AppKit flips the page
     /// scroller's layer, and the layer copy the capture draws has no
     /// ancestors to carry that: what a view drew came out upside down.
     func testCanvasChildrenUploadTopRowFirst() throws { try canvasChildrenUpload(firstEach: false) }

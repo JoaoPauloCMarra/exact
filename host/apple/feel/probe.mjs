@@ -254,7 +254,7 @@ export async function play({ touches, tracePath, steps = '', at = null, script =
       }
       await statusBar();
       await pull();
-      // The tap while decelerating and the carousel are the full script's: across 103 runs
+      // The tap while decelerating and the carousel are the full script's: in bake-off rounds r24 to r26 (103 runs)
       // they found nothing an app could fix. A scrub tests more than the flings only on a long list (`SCRUB_FROM`).
       if (list.cs[1] >= SCRUB_FROM) await scrub('scrub');
     } else {

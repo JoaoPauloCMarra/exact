@@ -1,4 +1,4 @@
-//! Development-only resource provenance. These identifiers
+//! Development-only resource provenance (LLP 1142 D9). These identifiers
 //! describe requests; settlement never consults them to decide what to show.
 use super::*;
 use crate::agent::{num, quote};

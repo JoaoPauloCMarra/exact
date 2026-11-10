@@ -1,4 +1,4 @@
-// formatDay: a day's label counted from `now` in the
+// formatDay (LLP 1116.020 D8): a day's label counted from `now` in the
 // offset's calendar days, each mode across a midnight, the year's turn and
 // the week's edge (six days back is a weekday, seven a date), and "" for an
 // invalid instant or offset, as formatDate's.

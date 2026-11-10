@@ -1,4 +1,4 @@
-//! `t("key", name=value)` against `strings/<locale>.json`:
+//! @ref LLP 1060 — `t("key", name=value)` against `strings/<locale>.json`:
 //! checked at compile, baked into the plan, the locale a slot the host's
 //! place writes, so a switch re-renders exactly the texts `t` produced.
 use exact_kernel::{Kernel, PropId};

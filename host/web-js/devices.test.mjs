@@ -1,4 +1,4 @@
-// devices.js, the JS target's substitute for serial ports, HID and USB devices, against the
+// devices.js, the JS target's substitute for serial ports, HID and USB devices (LLP 1133.037 §11), against the
 // packages' own declarations: the same answers the runner's `modules/devices.rs` gives (contract/cli/tests/it/devices.rs).
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';

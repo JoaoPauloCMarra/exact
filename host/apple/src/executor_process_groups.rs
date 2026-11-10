@@ -1,4 +1,4 @@
-//! The process groups real children lead: the record a
+//! The process groups real children lead (LLP 1133.007 D9): the record a
 //! crash leaves, the next launch's cleanup of it, the quit, and the
 //! process's exit.
 //!
@@ -25,7 +25,7 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Condvar, Mutex};
 use std::time::{Duration, Instant};
 
-/// After a quit's signal, the longest it waits before `SIGKILL`.
+/// After a quit's signal, the longest it waits before `SIGKILL` (D2).
 const QUIT_LIMIT_MS: f64 = 5000.0;
 
 /// Edits to the record files, which every session of the app shares.
@@ -173,7 +173,7 @@ pub(super) fn reap_once(shared: &Shared) {
     }
 }
 
-/// End what the app's crashed launches left, keeping the records of
+/// End what the app's crashed launches left (D9), keeping the records of
 /// processes that still run.
 pub(super) fn reap(shared: &Shared) {
     let Some(path) = records(shared) else {
@@ -237,7 +237,7 @@ fn survivors(entry: &Json) -> Vec<i32> {
 /// Escalations a quit left running, which the process's exit waits for.
 static ESCALATING: (Mutex<usize>, Condvar) = (Mutex::new(0), Condvar::new());
 
-/// The app quits, or this executor retires: every group this
+/// The app quits, or this executor retires (D2, D9): every group this
 /// executor started gets its kill signal now; each is waited for, off the
 /// caller's thread, up to its grace or 5 s, whichever is shorter, and then
 /// gets `SIGKILL`. The process's exit waits for that (at most 5 s), so a

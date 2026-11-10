@@ -1,4 +1,5 @@
 //! Per-frame culling inputs: draw groups, the retained setup and view planes.
+//! @ref llp/1046.003-game-engine-as-built.explainer.md#culling-and-environment-lighting-2026-09-23
 use super::*;
 use crate::cull::{
     Group, CAPSULE, EXEMPT, GROUP_WORDS, KEEP_ALL, PLAIN, RECORD_WORDS, SKIN_WORDS, SORTED_CHUNKS,

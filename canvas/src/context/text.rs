@@ -1,4 +1,4 @@
-//! The recorder's text members: the text
+//! The recorder's text members (LLP 1056 D8, §3 stage 2): the text
 //! attributes, `fillText`, `strokeText` and `measureText`. Measurement is
 //! the environment's engine, on this thread; alignment, baselines and
 //! `maxWidth` are resolved here, so the list carries a run's left end on its
@@ -272,7 +272,7 @@ impl Context2d {
 
     /// `measureText(text)`: measured by the host's engine on this thread, in
     /// CSS px, relative to the alignment point and baseline, never
-    /// multiplied by the drawing matrix.
+    /// multiplied by the drawing matrix (LLP 1056 D8).
     pub fn measure_text(&self, text: &str) -> Result<TextMetrics, DomException> {
         let g = self.g();
         let text = font::prepare(text);

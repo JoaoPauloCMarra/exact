@@ -1,5 +1,5 @@
 //! The packages this binary composes (`crate::package`), and the native
-//! slot's one handler that reaches them. The
+//! slot's one handler that reaches them (LLP 1133.022 D10 item 5). The
 //! handler queues every body with its reply, from any thread, and wakes the
 //! loop; the loop's turn (`modules_in`) hands a body that names a composed
 //! package's extension to that package's instance on the loop's thread, a
@@ -114,7 +114,7 @@ impl Packages {
             let args = args.cloned().unwrap_or(Json::Object(Default::default()));
             match admission(&request) {
                 Some((status, field, denied)) => {
-                    // The instance's own status first:
+                    // The instance's own status first (LLP 1133.002 D12):
                     // only a person may answer its prompt.
                     let (inbox, wake) = (inbox.clone(), wake.clone());
                     let mut again = request.clone();

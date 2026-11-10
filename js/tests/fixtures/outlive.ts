@@ -1,4 +1,4 @@
-// Work that outlives its answer: a renewal that one answer
+// Work that outlives its answer (LLP 1146 D2): a renewal that one answer
 // starts and others await, the way @exact/oauth refreshes, with no lock. The
 // renewal is a POST, which runs to its end when the answer that started it
 // is let go; what its continuation writes to the store stands.
@@ -55,7 +55,7 @@ async function tagged(): Promise<{ text: string }> {
   return { text: `call ${call} ${await reply.text()}` };
 }
 
-// A write the app can abort: the first call to ask starts it,
+// A write the app can abort (LLP 1146 D2): the first call to ask starts it,
 // beside the ordered lane, and its answer, let go while the POST is held, has
 // it kept. Its continuation's catch writes the store. `cancel` aborts it in a
 // reply's turn and answers outside its shape, refusing that turn's commit;

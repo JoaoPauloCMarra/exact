@@ -12,8 +12,8 @@ fn line_of(src: &str, needle: &str) -> u32 {
     src[..at].matches('\n').count() as u32 + 1
 }
 
-/// A recipe finder's page: its screens chosen in `choice`, inside one
-/// `scroll` under a bar laid out by hand, with no `header`.
+/// recipe-finder's round-7 page: its screens chosen in `choice`, inside one
+/// `scroll` under a bar laid out by hand, with no `header` (LLP 1116.005).
 fn finder(choice: &str) -> String {
     let choice: String = choice.lines().map(|l| format!("        {l}\n")).collect();
     format!(
@@ -265,7 +265,7 @@ fn sibling_comparisons_accept_option_and_list_operands() {
     }
 }
 
-/// A page named by one state, its arms without a heading, as a sample
+/// A page named by one state, its arms without a heading, as round 34's
 /// classifieds app did: `page == "browse"`, `"detail"`, `"form"`.
 fn pages(choice: &str) -> String {
     let choice: String = choice.lines().map(|l| format!("      {l}\n")).collect();
@@ -307,7 +307,7 @@ fn pages_named_by_one_state_are_named_without_headings_and_when_kept() {
 
 #[test]
 fn a_swap_inside_a_route_is_named_and_the_routes_are_not() {
-    // An issue tracker: its detail chosen by `selected` inside the one route.
+    // Round 34's issue tracker: its detail chosen by `selected` inside the one route.
     let detail = DETAIL
         .replace("\n  ", "\n    ")
         .replacen("  column", "    column", 1);

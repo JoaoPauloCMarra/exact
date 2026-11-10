@@ -556,8 +556,8 @@ fn oversized_module_output_is_a_structured_refusal() {
     std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
 }
 
-/// A surface record past the limit (a game's HUD after a harvest) must not
-/// fail the agent's `clock`. A refused record is
+/// Grow a Garden's HUD went past the record limit after a harvest and the
+/// agent's `clock` failed with it (diary 004, limit 2). A refused record is
 /// the surface's: the operation that carried it answers, `state` names the
 /// refusal with the record's size and the limit, and the last record stands.
 #[test]
@@ -593,7 +593,7 @@ fn an_oversized_record_is_reported_in_state_not_as_the_operations_error() {
     assert_eq!(state["surfaceRefusals"], json!({}));
 }
 
-// postMessage parity: a post waits for its surface's canvas, at
+// postMessage parity (review S2): a post waits for its surface's canvas, at
 // most POST_BOUND per name, on every host.
 #[test]
 fn posts_wait_for_their_surface_up_to_the_bound() {
@@ -681,7 +681,7 @@ fn a_module_is_absent_only_without_an_identity_or_a_file() {
     let _ = std::fs::remove_file(here);
 }
 
-/// The module's tier (here its own choice, low) is the
+/// LLP 1139.003 D2: the module's tier (here its own choice, low) is the
 /// page's `gpuTier`; `prefer gpu-tier` tells every module and remakes its
 /// renderers, and the page follows the module's answer.
 #[test]

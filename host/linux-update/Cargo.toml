@@ -1,4 +1,4 @@
-# Optional delivery adapter, above the Linux host.
+# Optional delivery adapter, above the Linux host (LLP 1030 D4).
 [package]
 name = "exact-linux-update"
 version.workspace = true

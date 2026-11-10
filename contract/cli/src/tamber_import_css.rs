@@ -1,10 +1,10 @@
-//! `contract tamber import css <stylesheet> [--app <dir>]`: a stylesheet's
-//! custom properties as tokens of the app's design, written in its `theme`
-//! block between `// tamber:import <file>` and `// tamber:end`. A later import
-//! of the same file rewrites that block and nothing else, so an edited
-//! stylesheet is imported again rather than translated by hand; the author's
-//! tokens outside the markers stay as written. With no design, `app.tamber` is
-//! written.
+//! @ref LLP 1153 D6.2 — `contract tamber import css <stylesheet> [--app <dir>]`:
+//! a stylesheet's custom properties as tokens of the app's design, written
+//! in its `theme` block between `// tamber:import <file>` and
+//! `// tamber:end`. A later import of the same file rewrites that block and
+//! nothing else, so an edited stylesheet is imported again rather than
+//! translated by hand; the author's tokens outside the markers stay as
+//! written. With no design, `app.tamber` is written.
 //!
 //! What it translates: each `--name: value` on `:root` is the token `name`,
 //! of the kind the evaluator infers; a redeclaration under

@@ -1,4 +1,4 @@
-// The Apple host's transfer carrier,
+// The Apple host's transfer carrier (LLP 1133.017 §14 stage 2, D8, D10),
 // driven through the probe (`test/probe`), a module outside the tree that
 // starts an upload with `context.transfers` and raises its ending as a wake
 // event of its own. The fixture app's handler tells this suite's server what
@@ -9,10 +9,10 @@
 // - Across termination: the server holds its response while the agent kills
 //   the app. On iOS the system relaunches the app in the background for the
 //   session's events (`handleEventsForBackgroundURLSession`), the host
-//   boots the session with no view and raises the ending; the suite
+//   boots the session with no view (D7) and raises the ending; the suite
 //   records whether the handler was heard, and whether the response body
-//   survived. On the Mac the next launch reconnects the
-//   session and delivers what the system finished.
+//   survived (D10's `bodyLost`). On the Mac the next launch reconnects the
+//   session and delivers what the system finished (D4's cell).
 //
 // What the measurement answers is printed as `note` lines; only the first
 // drive is a check.

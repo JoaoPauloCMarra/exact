@@ -1,4 +1,4 @@
-// The widget takes props only; the refresh owns schedule work.
+// @ref LLP 1126 D2/D3 — props only; the refresh owns schedule work.
 shape WidgetDeparture
   id: string
   train: number

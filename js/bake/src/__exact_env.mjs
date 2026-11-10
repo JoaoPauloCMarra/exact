@@ -1,4 +1,4 @@
-// The settings an app reads at build: `import.meta.env.NAME` in a top-level const of app.ts, each name
+// The settings an app reads at build (LLP 1153 D4): `import.meta.env.NAME` in a top-level const of app.ts, each name
 // declared in app.json's `env`, its value from the environment, then `.env.local`, then `.env` beside app.json, else
 // the const's `??` default. The value is inlined into the captured copy, so every host runs the same module. The
 // native bake writes this file into its stage beside `__exact_config.mjs`, which imports it

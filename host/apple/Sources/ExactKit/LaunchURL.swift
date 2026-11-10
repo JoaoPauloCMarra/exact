@@ -1,6 +1,8 @@
 // A launch URL (`openURL` before boot) the app cannot hear is said once,
 // as a URL arriving while it runs is (`navigate refused: …`): an app with
-// no navigation root otherwise drops it without a word.
+// no navigation root otherwise drops it without a word (#104).
+//
+// @ref LLP 1038 D8
 import Foundation
 import UniformTypeIdentifiers
 
@@ -26,7 +28,7 @@ extension ExactSession {
     }
 
     /// The `https` handler's template, when the app claims the web's links
-    /// (a Mac browser).
+    /// (a Mac browser, LLP 1030 D2).
     var webTemplate: String? {
         protocolHandlers.first { $0["protocol"]?.lowercased() == "https" }?["url"]
     }
@@ -73,13 +75,13 @@ extension ExactSession {
         return navigate(location)
     }
 
-    /// The view that hears `navigate`: the navigation root.
+    /// The view that hears `navigate`: the navigation root (LLP 1038 D8).
     var navigationRoot: NodeView? {
         presenter.views.values.first { $0.props["navigationBack"] != nil && $0.handlers.contains("navigate") }
     }
 
     /// The platform's Back from a route with no authored Back control: the
-    /// location beneath, to the root it came from, as a
+    /// location beneath, to the root it came from (LLP 1115 D5), as a
     /// popstate is to the web's.
     func navigate(_ location: String, at root: NodeView) {
         guard state != .destroyed, booted, presenter.views[root.id] === root, root.handlers.contains("navigate") else { return }
@@ -87,14 +89,14 @@ extension ExactSession {
     }
 
     /// The platform's Back from a route with no authored Back control under
-    /// a root with no `navigate` handler: the runner's own `back`.
+    /// a root with no `navigate` handler: the runner's own `back` (LLP 1115 D5).
     func hostBack(_ key: String) {
         guard state != .destroyed, booted, let batch = runtime.hostBack(key, now: now()) else { return }
         apply(batch)
     }
 
     /// The platform's Forward under a root with no `navigate` handler: the
-    /// runner's own `go` to the location ahead.
+    /// runner's own `go` to the location ahead (LLP 1115.000 D5.5).
     func hostGo(_ location: String) {
         guard state != .destroyed, booted else { return }
         apply(runtime.hostGo(location, now: now()))

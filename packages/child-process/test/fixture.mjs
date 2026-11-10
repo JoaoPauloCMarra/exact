@@ -1,4 +1,4 @@
-// The stage drives' fixture app: an app `exact new`
+// The stage drives' fixture app (LLP 1133.007 §10): an app `exact new`
 // made outside the repo, its files replaced by `fixture/`'s, depending on
 // this package by `file:`. `bun fixture.mjs` prints its directory; drive it
 // from there with `bun exact.mjs agent <macos|linux> --process

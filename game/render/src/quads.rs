@@ -745,6 +745,7 @@ impl Quads {
         let right = inv.x_axis.truncate().normalize();
         let up = inv.y_axis.truncate().normalize();
         // Quads the camera cannot see are neither derived nor uploaded.
+        // @ref llp/1046.003-game-engine-as-built.explainer.md#culling-and-environment-lighting-2026-09-23
         let camera = crate::cull::planes(f.proj * f.view);
         let mut left = exact_game::emitter::PARTICLE_BUDGET;
         for item in &self.particles {

@@ -121,7 +121,7 @@ test('malformed input is labelled before delivery; a state refusal is not', asyn
   carrier.ask = async () => ({ error: 'timer refused the advance' });
   await assert.rejects(() => s.clock('+100'), e => e.message.includes('timer refused') && e.malformed === undefined);
   await assert.rejects(() => main(['web', 'resize banana'], { open: async () => ({ close() {} }) }), e => e.malformed === true);
-  // A deep link is `type` on the navigation root: the refusal names that form.
+  // A deep link is `type` on the navigation root (euxy FRICTION 11): the refusal names that form.
   await assert.rejects(() => main(['web', 'open euxy://p/1'], { open: async () => ({ close() {} }) }), e => e.malformed === true && e.message.includes('`type <root> euxy://p/1`'));
   // A drive's flag inside the step was read as a form ("screenshot: unknown form 3"): the refusal names where it goes.
   await assert.rejects(() => main(['web', 'screenshot x.png --scale 3 window'], { open: async () => ({ close() {} }) }),
@@ -153,7 +153,7 @@ test('accepted pointer, wheel, media and zero-time forms still reach the carrier
     await s.tap('a', media);
     assert.deepEqual(calls.at(-1), [1, 'mediasession', media]);
   }
-  // Exact's picture-in-picture window is the Mac's: the web carrier is given no input.
+  // Exact's picture-in-picture window is the Mac's: the web carrier is given no input (LLP 1042 §9.1).
   const before = calls.length, pip = await s.tap('a', { pictureInPicture: 'close' });
   assert.equal(pip.delivery, 'unsupported');
   assert.ok(!calls.slice(before).some(Array.isArray));
@@ -186,7 +186,7 @@ test('Android relative clocks start where the reader hands its live clock to the
   assert.deepEqual(calls, [{ op: 'tags' }, { op: 'clock', to: 63.5 }]);
 });
 
-// A hold is the clock's (a charge that runs while held must move): the carrier is told it is virtual, no
+// A hold is the clock's (euxy FRICTION §2: a dice charge did nothing while held): the carrier is told it is virtual, no
 // wall time passes, and the app's clock moves by it; under --timing platform it stays real time.
 test('a held contact\'s hold moves the app\'s clock by its length', async () => {
   for (const timing of ['agent', 'platform']) {
@@ -291,7 +291,7 @@ test('stdio preserves malformed replies and leaves state refusals unlabelled', a
   readable.destroy(); writable.destroy();
 });
 
-// A suspended app answers nothing, so its pushed "background" fails what waits at once, and later ops
+// LLP 1143 D1: a suspended app answers nothing, so its pushed "background" fails what waits at once, and later ops
 // until it is back; the reply owed to the failed op is dropped when it comes, never taken as the next op's.
 test('an app that leaves the foreground fails the pending op and later ones until it is back', async () => {
   const readable = new PassThrough(), writable = new PassThrough(), host = [];
@@ -319,14 +319,14 @@ test('the driver grammar names an unquoted mediasession action beside pinch', ()
   assert.ok(usage.stderr.includes(form), usage.stderr);
 }, 60_000);
 
-test('rendered tree keeps focus; an accessible name is tree --ax\'s', async () => {
+test('rendered tree keeps focus; an accessible name is tree --ax\'s (LLP 1080.002)', async () => {
   const { render } = await import('./agent.mjs');
   const line = render('tree', {nodes:[{id:1, depth:0, type:'View', props:{testId:'play'}, focused:true}]});
   assert.match(line, /\[focused\]/);
   assert.doesNotMatch(line, /name=/);
 });
 
-// A route the host does not show reads `[hidden]` to its last node, so a stack's lower screens are
+// LLP 1153 D8: a route the host does not show reads `[hidden]` to its last node, so a stack's lower screens are
 // not taken for shown beside its top; a screen a sheet covers is shown beneath it and reads `[inactive]`.
 test('rendered tree marks a hidden route hidden and a covered one inactive', async () => {
   const { render } = await import('./agent.mjs');
@@ -431,7 +431,7 @@ test('compare: the two pictures side by side at half size, each region outlined 
 
 test('compare: an edge\'s anti-aliasing is no colour of the picture it is in', async () => {
   // The reference's box has a soft left edge (three grey columns), the screen's a hard one 7 pt further left: the
-  // reference's differing cells are white and that edge's greys, which are no ink of its own ("#bbb").
+  // reference's differing cells are white and that edge's greys, which are no ink of its own (euxy port: "#bbb").
   const soft = [[24, 60, 1, 40, [200, 200, 200]], [25, 60, 1, 40, [140, 140, 140]], [26, 60, 1, 40, [80, 80, 80]], [27, 60, 40, 40, [0, 0, 0]]];
   const { result } = await compared(soft, [[20, 60, 47, 40, [0, 0, 0]]]);
   const { reference, screen } = result.regions[0].colours;
@@ -556,7 +556,7 @@ test('compare: the CLI form and the reference are checked before any comparison'
   assert.match(helpText('agent'), /\(a select, date or checkbox: its value\)/);
 });
 
-// A library an earlier plain drive stored, where compare drives start empty.
+// The euxy port's "BPM +5 per tap": a library an earlier plain drive stored, where compare drives start empty.
 test('the first drive from an app directory that keeps the store `default` says so, once per directory and device', () => {
   const root = mkdtempSync(resolve(tmpdir(), 'exact-store-note-')), said = [], error = console.error;
   console.error = (line) => said.push(line);
@@ -574,7 +574,7 @@ test('a native named store is kept unless the drive resets it, under its lock; a
   try {
     for (const [host, flags, fresh, locked] of [['ios', [], false, true], ['ios', ['--reset-storage'], true, true], ['android', ['--reset-storage'], true, true],
       ['macos', [], false, true], ['mac', [], false, true], ['linux', ['--reset-storage'], true, true], ['web', [], true, false], ['web', ['--keep-storage'], false, false],
-      // A drive that compares starts empty everywhere unless kept (dice rolls an earlier drive stored).
+      // A drive that compares starts empty everywhere unless kept (euxy port: dice rolls an earlier drive stored).
       ['ios', ['screenshot a.png compare ref.png'], true, true], ['ios', ['--keep-storage', 'screenshot a.png compare ref.png'], false, true]]) {
       let env = 'unopened', lock = null;
       const fakeOpen = async (o) => { env = o.env; return { state: async () => ({}), close: async () => {} }; };
@@ -599,7 +599,7 @@ test('a native named store is kept unless the drive resets it, under its lock; a
   } finally { [console.log, console.error] = quiet; }
 });
 
-// A `tap` that misses on a mode an earlier drive persisted would read like a broken view.
+// The euxy port's `tap play` missed on a mode an earlier drive persisted, and the miss read like a broken view.
 test('a miss on a drive that kept its store says so, and how to start empty', async () => {
   const quiet = console.error;
   console.error = () => {};
@@ -767,7 +767,7 @@ test('a screenshot with a system sheet held says it is not drawn, and where the 
   } finally { console.error = quiet; }
 });
 
-// A menu painted in the page by the agent reads as an app bug.
+// The euxy port's pattern menu: painted in the page by the agent, it read as an app bug.
 test('a tap that opens a menu the agent paints says UIKit presents it, under --touch platform, once', async () => {
   const { driveNotes } = await import('./agent-test.mjs');
   const said = [], quiet = console.error;
@@ -851,7 +851,7 @@ test('compare on a capture: nodes where the window has them, its safe area not s
     const r = await compareOp(ios({ viewport: { x: 0, y: 0, w: 60, h: 200 }, window: { x: 678, y: 0, w: 60, h: 200 } }), resolve(dir, 'ref.png'), async () => ({ ...shot }));
     assert.match(r.text, /under card \[10,40 60×30\]/);
     assert.doesNotMatch(r.text, /draws at|painted by the agent/);
-    // A menu the agent painted is said on the score's line, which a reader filtering for `compare` keeps.
+    // A menu the agent painted is said on the score's line, which a reader filtering for `compare` keeps (euxy port).
     const painted = await compareOp(ios({ viewport: { x: 0, y: 0, w: 60, h: 200 }, window: { x: 678, y: 0, w: 60, h: 200 } }), resolve(dir, 'ref.png'), async () => ({ ...shot, paintedNote: 'the agent painted it' }));
     assert.match(painted.text.split('\n')[0], /^compare .* matches \(.*\), with the open menu or popover painted by the agent, not UIKit's \(--touch platform shows UIKit's\); diff /);
     // A floating sheet the platform draws scaled is said, in compare's report and in `layout`'s.

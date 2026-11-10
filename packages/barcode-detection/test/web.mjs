@@ -1,5 +1,5 @@
 // @exact/barcode-detection's and @exact/text-detection's conformance suite on
-// the web: the shared fixture app built for
+// the web (LLP 1133.027 §12 stages 1 and 2): the shared fixture app built for
 // the web and driven in each engine with the implementations bound, as in
 // production.
 //

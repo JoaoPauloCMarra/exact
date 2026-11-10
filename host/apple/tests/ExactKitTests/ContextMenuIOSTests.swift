@@ -3,7 +3,7 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// On UIKit, a node naming a popover with `contextPopover` is
+/// LLP 1021 §5.1 on UIKit: a node naming a popover with `contextPopover` is
 /// a UIContextMenuInteraction. The node lifts as its own targeted preview,
 /// the popover's `contextPreview` row is the preview controller's view
 /// (sized by its layout), its menu rows the UIMenu, and tapping the preview
@@ -32,7 +32,7 @@ final class ContextMenuIOSTests: XCTestCase {
     }
 
     private func boot() throws -> ExactSession {
-        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover") }
+        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover (D4)") }
         let plan = try Data(contentsOf: URL(fileURLWithPath: try XCTUnwrap(ProcessInfo.processInfo.environment["EXACT_FIXTURE_PLAN"], "build.mjs --test --ios compiles the fixture's plan")))
         let session = ExactApp.shared.makeSession(label: "context-menu")
         self.session = session

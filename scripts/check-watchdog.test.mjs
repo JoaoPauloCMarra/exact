@@ -1,5 +1,5 @@
-// `exact contract build`'s app.ts check, bounded (a `build.mjs --check` once spun
-// 4.7 days): a builder that outlasts the bound is stopped with its whole process group (a
+// `exact contract build`'s app.ts check, bounded (the design tool's `build.mjs --check` spun 4.7 days, found
+// 2026-10-26; theme2's conditions): a builder that outlasts the bound is stopped with its whole process group (a
 // `tsc` under it too), as it is when the check is told to stop or its caller is killed outright; a `tsc` that never
 // returns is stopped at the bound; a builder that finishes is passed through; the bound only shortens, and only under
 // the test switch.

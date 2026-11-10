@@ -1,6 +1,7 @@
 //! The expression VM.
 //!
-//! `opcodes.json` is the one authority; expressions are closed.
+//! @ref LLP 1004 D2 (`opcodes.json` is the one authority) / LLP 0508 §4.3
+//! (closed expressions; research)
 //!
 //! A stack machine over [`Value`]s. Type inference in the compiler guarantees
 //! stack discipline for compiled plans; the VM still checks everything and
@@ -33,7 +34,7 @@ pub const MAX_STRING: usize = 1 << 26;
 /// one counted once per place it appears: that expanded tree is what
 /// equality, shape checks and conversions walk. A list doubled through a
 /// local (`[x, x]`, then again) is otherwise exponential in instructions.
-/// A `some` is not counted: the checker refuses an option
+/// A `some` is not counted (LLP 1090 D2): the checker refuses an option
 /// directly inside an option, so a walk meets at most one per counted value.
 pub const MAX_VALUE_NODES: u64 = 1 << 24;
 
@@ -46,7 +47,7 @@ pub const MAX_VALUE_BYTES: u64 = MAX_STRING as u64;
 /// per action cannot grow past what walking or dropping it recurses through.
 pub const MAX_VALUE_DEPTH: u32 = 64;
 
-/// The most list steps one evaluation takes: each run of a
+/// The most list steps one evaluation takes (LLP 1017.003 D3): each run of a
 /// `map` or `filter` callback body is a step, nested runs each counted, and
 /// each item `join` prints is a step. A body is straight-line code with
 /// forward jumps, so this bounds how many instructions an evaluation runs.
@@ -57,8 +58,8 @@ pub const MAX_LIST_STEPS: u32 = 1 << 16;
 const REMEMBERED: u64 = 64;
 
 /// An instance's own slots — the values of the `state` a child component
-/// declared, one set per keyed row or shown `if`/`match` arm — shared by
-/// the instance and every frame that reaches it, so a
+/// declared, one set per keyed row or shown `if`/`match` arm (LLP 1017
+/// P4c) — shared by the instance and every frame that reaches it, so a
 /// read during an update and a write applied after an action's commit see
 /// one storage.
 pub type RowSlots = Rc<RefCell<BTreeMap<u32, Value>>>;
@@ -68,7 +69,7 @@ pub type RowSlots = Rc<RefCell<BTreeMap<u32, Value>>>;
 pub struct Frame {
     /// The `for` item, when this scope is a keyed row.
     pub item: Option<Value>,
-    /// The row's position in its list, from 0.
+    /// The row's position in its list, from 0 (LLP 1062 D8).
     pub index: Option<usize>,
     /// The `match` binding, when this scope is a `some(x)` arm.
     pub bound: Option<Value>,
@@ -97,13 +98,14 @@ pub struct Env<'a> {
     /// The plan's strings as values ([`Strings`]), made as they are read.
     pub strings: &'a Strings,
     /// Checked route table and shapes; present only for a plan with a router.
-    /// The same table across all calls in this runner.
+    /// @ref LLP 1038 D3/D9 — the same table across all calls in this runner.
     pub router: Option<&'a dyn crate::runner::Routing>,
-    /// The list engines, when this artifact links them.
+    /// The list engines, when this artifact links them (LLP 1047.000 §9).
     pub lists: Option<&'static crate::instance::ListLinks>,
-    /// The `format` capability, when linked.
+    /// The `format` capability, when linked (LLP 1054.000.003 D8).
     pub format: crate::runner::FormatLink,
-    /// Geometry reads: present only while an action's body runs.
+    /// Geometry reads: present only while an action's body runs
+    /// (LLP 1051.000 D2).
     pub geometry: Option<&'a crate::geometry::GeometryEnv<'a>>,
     /// State slots by index.
     pub slots: &'a [Value],
@@ -117,11 +119,11 @@ pub struct Env<'a> {
     pub frames: &'a [Frame],
     /// The clock, in milliseconds.
     pub now_ms: f64,
-    /// Whether each resource has a request in flight.
+    /// Whether each resource has a request in flight (LLP 1016 D3).
     pub pending_resources: &'a [bool],
-    /// Arguments whose latest request failed, by resource.
+    /// Arguments whose latest request failed, by resource (LLP 1054.000.002).
     pub failed_resources: &'a [Option<Vec<Value>>],
-    /// Why, while `failed_resources` holds; may be shorter.
+    /// Why, while `failed_resources` holds (LLP 1109 D3); may be shorter.
     pub failed_why: &'a [Option<crate::failure::Failure>],
     /// Whether each mutation has a request in flight.
     pub pending_mutations: &'a [bool],
@@ -245,7 +247,7 @@ fn measure(v: &Value, depth: u32, total: &mut Extent, pc: usize) -> Result<(), T
     #[cfg(test)]
     MEASURED.with(|m| m.set(m.get() + 1));
     total.depth = total.depth.max(depth);
-    // A `Some` is not a value of its own, only a level.
+    // A `Some` is not a value of its own (LLP 1090 D2), only a level.
     if let Value::Option(Some(inner)) = v {
         total.check(pc)?;
         return measure(inner, depth + 1, total, pc);
@@ -271,11 +273,12 @@ pub struct Outcome {
     pub value: Value,
     /// `(slot, value)` writes in execution order.
     pub writes: Vec<(u32, Value)>,
-    /// `(slot, value, row)` writes to row slots, with the row they belong to.
+    /// `(slot, value, row)` writes to row slots, with the row they belong to
+    /// (LLP 1017 P4c).
     pub row_writes: Vec<(u32, Value, RowSlots)>,
     /// `(name, args)` commands in execution order.
     pub commands: Vec<(String, Vec<Value>)>,
-    /// `(mutation, source, args)` sends in execution order.
+    /// `(mutation, source, args)` sends in execution order (LLP 1016).
     pub sends: Vec<(u32, String, Vec<Value>)>,
     /// Resources to re-request with their current arguments.
     pub refreshes: Vec<u32>,
@@ -375,7 +378,7 @@ pub fn instructions(code: &[u8]) -> impl Iterator<Item = Result<Instruction, Tra
 
 /// Whether `code` is a literal — pushes of values and `Return`, nothing
 /// read — so a binding can be told from an expression without running it
-/// (a row bound by an expression is `dynamic`). Malformed
+/// (LLP 1035.002 D5: a row bound by an expression is `dynamic`). Malformed
 /// code is not a literal.
 pub fn is_literal(code: &[u8]) -> bool {
     instructions(code).all(|i| {
@@ -808,7 +811,7 @@ impl Host<Value> for Run<'_, '_> {
         })
     }
 
-    // `failure(x)`: known once settled, as `failed(x)`;
+    // @ref LLP 1109 D3 — `failure(x)`: known once settled, as `failed(x)`;
     // the `Failure` record is `{ code, message, reason }` by position.
     fn resource_failure(&mut self, i: u64, pc: usize) -> Result<Value, Trap> {
         if !self.resource_flag(Opcode::FailedResource, i, pc)? {
@@ -865,7 +868,7 @@ impl Host<Value> for Run<'_, '_> {
             .unwrap_or(false)
     }
 
-    // A `Some` adds depth and nothing else: the JS
+    // @ref LLP 1090 D2 — a `Some` adds depth and nothing else: the JS
     // target erases it, and `type-option-option` keeps at most one above
     // each counted value, so walks stay within twice the count.
     fn some(&mut self, v: Value, pc: usize) -> Result<Value, Trap> {
@@ -1230,7 +1233,7 @@ mod tests {
         ));
     }
 
-    /// A `some` adds a level and no value: 23 doublings each
+    /// A `some` adds a level and no value (LLP 1090 D2): 23 doublings each
     /// wrapped in one fit as the bare doublings do (they would hold
     /// 3 · 2^23 values counted the old way), and the 24th still traps.
     #[test]
@@ -1300,7 +1303,7 @@ mod tests {
         run(body)
     }
 
-    /// 256 outer runs of 255 inner are 65,536 runs, which
+    /// LLP 1017.003 D3: 256 outer runs of 255 inner are 65,536 runs, which
     /// fit; one more run anywhere in the evaluation is `IterationLimit`.
     #[test]
     fn callback_runs_are_counted_across_nesting_and_capped() {

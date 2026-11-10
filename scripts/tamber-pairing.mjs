@@ -1,21 +1,22 @@
-// Scopes on the design server's wire (tamber/1.13).
+// Scopes on the design server's wire (LLP 1121 D13 "Authentication",
+// LLP 1122 D6 and D12, stage 10 A; tamber/1.13).
 //
 // Every request names a method, and every method has one scope here: the
 // dispatcher (scripts/tamber-server.mjs) checks it before any handler runs,
 // and a method with no entry is refused (fail closed). A new method, or a
-// gateway's (the canvas gateway's `canvas`), adds its entry here.
+// gateway's (stage 10 C's `canvas`), adds its entry here.
 //
 // - `read`: what reads the design, its history and the running builds'
 //   reports, and the change stream.
 // - `propose`: what only offers a change for someone else to accept (a held
 //   proposal: `propose` with `hold`, `import`, `revert`; `drop`, `edit-held` and `choose` of one's own).
 // - `write`: what writes the design, or changes what the developer's screens
-//   show (`pin`, `preview`, `outline`, `hold`), or drives
+//   show (`pin`, `preview`, `outline`, `hold`: the lead's ruling 5), or drives
 //   the running builds (a scrub).
 // - `local`: the local token only, never a paired client's, whatever its
-//   scope (`clients`, `revoke`, `pair-code`).
+//   scope (stage 10 A2's `clients`, `revoke`, `pair-code`).
 //
-// `inspect` is `read`: a client below `write` may read the
+// `inspect` is `read` (ruling 5): a client below `write` may read the
 // selection each build last reported (`refresh`); turning inspect mode on or
 // off, which takes the developer's builds' input, is `write`, as is asking
 // the builds again (their answer outlines on the developer's screens).
@@ -58,7 +59,7 @@ export const METHOD_SCOPE = Object.freeze({
   clients: 'local',
   revoke: 'local',
   'pair-code': 'local',
-  // The canvas gateway's grant (scripts/tamber-canvas.mjs): seeing the canvas is reading.
+  // Stage 10 C's gateway grant (scripts/tamber-canvas.mjs): seeing the canvas is reading.
   canvas: 'read',
 });
 
@@ -72,7 +73,8 @@ export function allows(scope, needs, local = false) {
 
 /** What `request` needs: its method's entry (an own property only: no
  * inherited name is a method), `drop`, `edit-held` or `choose` of another client's held proposal
- * `write`, and `inspect` other than `refresh` `write`. `owner(id)` is a held proposal's client. Null for a method
+ * `write` (theme2's ruling (a)), and `inspect` other than `refresh` `write`
+ * (ruling 5). `owner(id)` is a held proposal's client. Null for a method
  * with no entry. */
 export function needs(request, owner = () => null) {
   if (!Object.hasOwn(METHOD_SCOPE, String(request.method))) return null;
@@ -91,7 +93,7 @@ export function refusal(method, scope, need) {
   return { status: 403, error: { message: `${method} needs ${why}; this client has \`${scope}\``, scope, needs: need } };
 }
 
-// Pairing.
+// Pairing (stage 10 A2; LLP 1121 D13, the lead's rulings 2–4 and 7).
 //
 // A local client mints a code (`pair-code {scope, name?}`, or
 // `bun exact.mjs tamber pair`); a remote client presents it once at
@@ -107,8 +109,8 @@ export function refusal(method, scope, need) {
 // `x-exact-tamber-token` header. A paired client's name is `remote:<name>#n`,
 // a name no local client may take, so neither can act as the other.
 //
-// The interface the canvas gateway and the remote transport build on, from
-// `pairing(...)`:
+// The interface stage 10 C (the canvas gateway) and B (the transport) build
+// on, from `pairing(...)`:
 // - `lookup(token) → {client, scope, expires} | null`: a paired token's
 //   client; null for an unknown, revoked or expired one (past its deadline,
 //   whether or not its end has run yet). Look it up on every
@@ -131,14 +133,14 @@ export function refusal(method, scope, need) {
 // - `allows(scope, needs)` and METHOD_SCOPE (above): the gateway's `canvas`
 //   entry goes in the table, and its routes check scope as the dispatcher
 //   does.
-// - From the transport, per request, the wire reads `access.remote` (the request came
+// - From B, per request, the wire reads `access.remote` (the request came
 //   on the remote listener), `access.tunnel` (on loopback through a tunnel
 //   the developer trusted, `--trust-tunnel`) and `access.peer`, the rate
 //   limit's key: the connection's own address (never a header's), canonical
 //   (an IPv4-mapped IPv6 address as its IPv4). A remote or tunnelled request
 //   is never local (no token page, no tool), reaches only `POST
 //   /__tamber/pair` without a paired token, and the local token is refused
-//   there.
+//   there (ruling 3).
 
 
 const CROCKFORD = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
@@ -219,9 +221,9 @@ const normal = c => String(c ?? '').toUpperCase().replace(/[\s-]/g, '').replace(
 export function pairing({ ttlMs = PAIR_TTL_MS, clock = Date.now, say = () => {} } = {}) {
   const codes = [], tokens = new Map(), clients = new Map(), ends = new Map(), names = new Map(), gone = new Map();
   const attempts = limiter({ rate: 5, per: 60_000, clock });
-  // A relay's session is one peer for every client it hands down: 10 a
-  // minute across them, its own bucket, so a flood through the relay never
-  // limits the direct doors or the local tool.
+  // A relay's session is one peer for every client it hands down (stage
+  // 10c, theme2's 6): 10 a minute across them, its own bucket, so a flood
+  // through the relay never limits the direct doors or the local tool.
   const relayed = limiter({ rate: 10, per: 60_000, clock });
   const live = () => { const now = clock(); for (let i = codes.length - 1; i >= 0; i--) if (codes[i].expires <= now || codes[i].burned) codes.splice(i, 1); };
   const end = (client, reason) => {
@@ -328,10 +330,10 @@ export function pairing({ ttlMs = PAIR_TTL_MS, clock = Date.now, say = () => {} 
   };
 }
 
-/** `bun exact.mjs tamber pair <url> --scope read|propose|write [--name n]`:
- * a pairing code from the local server, which a remote client presents once
- * at `POST /__tamber/pair`. It takes the local token as `op` does, so it
- * works from this machine only. */
+/** `bun exact.mjs tamber pair <url> --scope read|propose|write [--name n]`
+ * (stage 10 A2, the lead's ruling 7): a pairing code from the local server,
+ * which a remote client presents once at `POST /__tamber/pair`. It takes the
+ * local token as `op` does, so it works from this machine only. */
 export async function pairCode(argv) {
   const at = name => { const i = argv.indexOf(name); return i < 0 ? undefined : argv[i + 1]; };
   const base = argv.find((a, i) => !a.startsWith('-') && !['--scope', '--name'].includes(argv[i - 1]));
@@ -344,7 +346,7 @@ export async function pairCode(argv) {
   const reply = await res.json();
   if (!reply.ok) { console.error(`tamber pair: ${reply.error?.message ?? res.status}`); return 1; }
   console.log(`${reply.ok.code}  (${reply.ok.scope}; until ${reply.ok.expires}, once)`);
-  // Where the other machine pairs, and the certificate it checks.
+  // Where the other machine pairs, and the certificate it checks (the lead's ruling 2).
   const doors = reply.ok.remote ?? [];
   for (const door of doors) console.log(door.tunnel
     ? `  ${doors.some(d => !d.tunnel) ? 'or ' : ''}through the trusted tunnel to ${door.origin}: open /__tamber/tool/ at the other machine's end of it`

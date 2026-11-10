@@ -1,7 +1,7 @@
-//! The viewport height units are the window's
+//! LLP 1075.003 §9.11: the viewport height units are the window's
 //! (`Env::screen`), in every sheet, through native measurement too — a field's
 //! floor, a native button's padding — so the measure is the same at any
-//! sheet height and the layout agrees with it.
+//! sheet height and the layout agrees with it (Astra's r6 cases).
 use exact_kernel::*;
 
 struct Native;
@@ -155,7 +155,7 @@ fn a_native_buttons_viewport_padding_is_the_screens() {
             "{sheet}: {fit} {laid}"
         );
         // The face UIKit draws (`exact_press_face`) has the padding the
-        // measure had: the screen's 84.4, not the sheet's.
+        // measure had (Astra's review): the screen's 84.4, not the sheet's.
         let face = k.button_face_style(3).unwrap();
         match face.button.padding_top {
             Dimension::Points(p) => assert!((p - (fit - 20.0)).abs() < 0.01, "{sheet}: {p}"),
@@ -164,8 +164,8 @@ fn a_native_buttons_viewport_padding_is_the_screens() {
     }
 }
 
-/// The segment variables read the grid the host sends, the window's,
-/// whatever the sheet's height: measured and laid out
+/// The segment variables read the grid the host sends, the window's
+/// (LLP 1075.003 §9.11), whatever the sheet's height: measured and laid out
 /// alike.
 #[test]
 fn segments_are_the_windows_at_any_sheet_height() {

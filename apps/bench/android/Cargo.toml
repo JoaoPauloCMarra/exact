@@ -1,4 +1,4 @@
-# Bench on Android's Canvas host: the library the reader
+# Bench on Android's Canvas host (LLP 1133.037 §12.2): the library the reader
 # (host/android) loads as libexactcanvas.so, with the runner, the kernel, the
 # baked plan and the app's TypeScript data module as Hermes bytecode (written
 # by build.rs, never committed). Off Android the library is empty.

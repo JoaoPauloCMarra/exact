@@ -1,4 +1,4 @@
-//! The async render host.
+//! The async render host (LLP 1048.000 D9).
 //!
 //! A render boots a fresh runner at a location with the app's own data
 //! source, in an environment that holds nothing private — no store, no
@@ -8,7 +8,7 @@
 //! ([`settle`]). Its checkpoint is the page's state; the document is that
 //! checkpoint's projection (`exact_web::document`), from a runner booted
 //! from it as the runtime boots. The build runs it through [`main`]; the
-//! server runs the same render per request.
+//! server (LLP 1048.000 D10) runs the same render per request.
 //!
 //! No action runs, no timer fires and the clock stays where boot put it:
 //! the completion rule ignores them. A source asking for what the
@@ -59,7 +59,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Condvar, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
-/// A render's deadline unless the caller names one.
+/// A render's deadline unless the caller names one (LLP 1048.000 D9).
 pub const DEADLINE: Duration = Duration::from_secs(2);
 
 /// How a render ended.
@@ -78,7 +78,7 @@ pub enum Settled {
 }
 
 impl Rendered {
-    /// The HTTP status, in this order:
+    /// The HTTP status (LLP 1048.000 D11), in this order:
     /// 1. a location the router sends to its not-found route is 404 — or
     ///    410 if its head says so. Neither its data failing nor the
     ///    deadline makes an unknown URL one to try again;
@@ -104,7 +104,7 @@ pub struct Rendered {
     pub head: String,
     /// The checkpoint, as the page carries it.
     pub checkpoint: String,
-    /// The document's digest, which the page carries
+    /// The document's digest (LLP 1048.000 D6), which the page carries
     /// beside the checkpoint for the runtime to match.
     pub digest: String,
     /// What the document read: its answers and what was still pending.
@@ -115,10 +115,10 @@ pub struct Rendered {
     pub activate: exact_plan::ActivatePolicy,
     /// For a page that waits for the reader, the viewport comparisons it
     /// was laid out by and their answers, which the capture script checks
-    /// (`[[query, holds], …]`); empty otherwise.
+    /// (`[[query, holds], …]`, LLP 1048.007 D2); empty otherwise.
     pub wake: String,
     /// The document's root is already as the JavaScript runtime adopts it
-    /// (written so without a kernel): the page doesn't
+    /// (written so without a kernel, LLP 1048.004): the page doesn't
     /// rewrite it (`page::for_runtime`), and the digest is over this form.
     pub runtime_form: bool,
 }
@@ -146,7 +146,8 @@ pub enum Ids {
     Runtime,
     /// None the reader keeps (the JavaScript runtime adopts by tag and drops
     /// them, `page::for_runtime`): the settled runner's tree is projected
-    /// when it is provably the checkpoint boot's ([`projects_as_booted`]),
+    /// when it is the checkpoint boot's, but for an open stream's `pending(x)`
+    /// ([`projects_as_booted`]),
     /// saving the second tree (~1.4 ms of RealWorld's ~4.5 ms CPU a page).
     Any,
 }
@@ -164,13 +165,17 @@ fn project_for<D: DataSource>(
 
 /// Whether the tree a runner settles to projects as the tree one booted from
 /// its checkpoint builds, view ids apart. Regions, rows and bindings follow
-/// state; what could differ is only state fixed where a slot is first made:
+/// state; what could differ is state fixed where a slot is first made:
 /// an initializer that read a resource (or a derive, or a pending or failed
 /// flag) would see the placeholder in the runner that settled and the answer
 /// in a boot from the checkpoint. An initializer reads props, injects and
 /// earlier slots, and a prop may carry a parent's resource (a row's state
 /// seeded from it, `host/web-js/conformance/budget.contract`); such a plan
-/// renders with a kernel.
+/// renders with a kernel. One difference is not looked for, since a plan
+/// does not say which source streams: a view that reads `pending(x)` of an
+/// open stream reads false here and true in a boot whose source can answer at
+/// once, which asks the stream again (LLP 1048.000 D6). A runtime whose first
+/// tree differs this way renders the page afresh.
 pub fn projects_as_booted(plan: &Plan) -> bool {
     use exact_plan::Opcode::*;
     plan.slots.iter().all(|slot| {
@@ -212,7 +217,7 @@ pub fn render_as<D: DataSource + 'static>(
     )
 }
 
-/// How a render writes its document.
+/// How a render writes its document (LLP 1048.004).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Projection {
     /// From the runner's instance tree, with no kernel, where the page's
@@ -336,7 +341,7 @@ pub fn render_with_at<D: DataSource + 'static, F: Fn() -> D>(
     };
     let (checkpoint, settled, clocked) = (page.checkpoint.clone(), page.settled, page.clocked);
     retire(page, data);
-    // The document is the checkpoint's projection,
+    // @ref LLP 1048.000 D6 — the document is the checkpoint's projection,
     // from a runner booted from the page's checkpoint with a fresh source,
     // as the runtime boots: its first tree is built in one pass, so its view
     // ids are the runtime's, a pending answer's placeholder included. The
@@ -368,28 +373,28 @@ pub fn render_with_at<D: DataSource + 'static, F: Fn() -> D>(
         }
     };
     // Only the JavaScript runtime's pages, whose document carries no view
-    // ids, infer an activation.
+    // ids, infer an activation (LLP 1048.007 D1).
     let clocked = clocked || ids != Ids::Any;
     finish(
         plan, site, location, document, handlers, checkpoint, state, settled, clocked, viewport,
     )
 }
 
-/// A runner settled at a location, its document not yet
+/// A runner settled at a location (LLP 1048.000 D9), its document not yet
 /// written.
 pub(crate) struct Settling<D: DataSource> {
     pub(crate) runner: Runner<Anonymous<D>>,
     pub(crate) settled: Settled,
     pub(crate) checkpoint: String,
     /// Something was still due on its clock when it settled: a timer, a
-    /// frame task.
+    /// frame task (LLP 1048.007 D1).
     pub(crate) clocked: bool,
 }
 
-/// Boot a fresh runner at `location` with a fresh source
+/// Boot a fresh runner at `location` with a fresh source (LLP 1048.000 D10)
 /// and run its requests until the document settles or `deadline` passes.
 /// `detached`: its kernel keeps nothing, and its document is written from
-/// its instance tree.
+/// its instance tree (LLP 1048.004).
 fn render_time() -> f64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -398,7 +403,7 @@ fn render_time() -> f64 {
 }
 
 /// What sees a render's runner as it boots, before its first answer (a
-/// route's boot document).
+/// route's boot document, LLP 1048.005).
 pub(crate) type OnBoot<'a, D> = &'a mut dyn FnMut(&mut Runner<Anonymous<D>>);
 
 #[allow(clippy::too_many_arguments)]
@@ -414,13 +419,14 @@ pub(crate) fn settle_at<D: DataSource + 'static, F: Fn() -> D>(
 ) -> Result<Settling<D>, String> {
     // Both complete documents and streamed JS pages settle through this entry.
     exact_kernel::style::roles::set_column(exact_kernel::style::roles::Column::Neutral);
-    // A renderer runs any plan it is handed: every capability is linked,
-    // so a projection never meets one it can't write.
+    // A renderer runs any plan it is handed: every capability is linked
+    // (LLP 1047 D7), so a projection never meets one it can't write.
     exact_web::link(exact_web_capabilities::ALL);
-    // `EXACT_RENDER_REALMS=warm`: a worker keeps the data source (its module realm, activated) of a
-    // render that settled and renders the next page with it, instead of building a realm per
-    // render. For anonymous pages only: a realm's module state (its caches, counters) carries from
-    // one render to the next.
+    // `EXACT_RENDER_REALMS=warm`: a worker keeps the data source (its module
+    // realm, activated) of a render that settled and renders the next page
+    // with it, instead of building a realm per render (LLP 1048.000 D10's
+    // fresh realm). For anonymous pages only: a realm's module state (its
+    // caches, counters) carries from one render to the next.
     let warm = warm_realms();
     // The last render's runner, if its worker did not drop it after sending.
     retire_renders();
@@ -478,11 +484,12 @@ pub(crate) fn settle_at<D: DataSource + 'static, F: Fn() -> D>(
     // The page is the web's: its packages answer as there, not as on this machine.
     runner.set_module_target("web");
     // A rendered page holds every tab panel, which the JS target adopts at
-    // boot, building every one.
+    // boot, building every one (LLP 1075.003 §9.14).
     runner
         .build_every_tab()
         .map_err(|e| format!("boot: {e:?}"))?;
-    // The boot document, before any answer: a route's `paint=boot`.
+    // The boot document, before any answer: a route's `paint=boot`
+    // (LLP 1048.005).
     if let Some(on_boot) = on_boot {
         on_boot(&mut runner);
     }
@@ -500,7 +507,8 @@ pub(crate) fn settle_at<D: DataSource + 'static, F: Fn() -> D>(
     };
     drop(watchdog);
     // Whatever is still in flight is abandoned with the render; an executor
-    // with nothing in flight goes back to this worker's pool.
+    // with nothing in flight goes back to this worker's pool, its open
+    // streams let go.
     if matches!(settled, Settled::Deadline) {
         drop(executor);
     } else {
@@ -620,13 +628,14 @@ pub(crate) fn shutdown_render_thread() {
     drop(executors);
 }
 
-/// Make this worker's next render's module realm now, made ahead: a new source
-/// from `data`, loaded, which only the next render on this thread takes, once.
-/// A worker calls it when it is idle and nothing waits for it, and keeps at
-/// most one: the realm is made on the thread that will use it (an engine never
-/// crosses a thread), and every realm made is one a render would have made, so
-/// the CPU is moved off the request's path, not added. A source that cannot
-/// load now is left for the render to make, and to report.
+/// Make this worker's next render's module realm now (LLP 1048.000 D10's
+/// fresh realm, made ahead): a new source from `data`, loaded, which only
+/// the next render on this thread takes, once. A worker calls it when it is
+/// idle and nothing waits for it, and keeps at most one: the realm is made
+/// on the thread that will use it (an engine never crosses a thread), and
+/// every realm made is one a render would have made, so the CPU is moved
+/// off the request's path, not added. A source that cannot load now is
+/// left for the render to make, and to report.
 pub(crate) fn make_realm<D: DataSource + 'static>(data: fn() -> D) {
     if warm_realms() || MADE.with(|m| m.borrow().is_some()) {
         return;
@@ -637,7 +646,7 @@ pub(crate) fn make_realm<D: DataSource + 'static>(data: fn() -> D) {
     }
 }
 
-/// The deadline, for a source call still running then:
+/// The deadline, for a source call still running then (LLP 1048.000 D10):
 /// the source's interrupt triggers at `until`, unless the render finished
 /// first. A source without one runs its calls to the end. One thread keeps
 /// every render's deadline ([`Deadlines`]); a render arms and disarms an
@@ -738,7 +747,7 @@ impl Deadlines {
     }
 }
 
-/// A module that loads after first pixel on a device loads
+/// A module that loads after first pixel on a device (LLP 1027 D4) loads
 /// now: a render has no first pixel to protect. What it would have been
 /// asked at `data_ready` it is asked here.
 fn activate<D: DataSource>(runner: &mut Runner<D>, until: Instant) -> Result<(), String> {
@@ -764,8 +773,8 @@ fn activate<D: DataSource>(runner: &mut Runner<D>, until: Instant) -> Result<(),
 
 /// Run `runner`'s requests through `executor` until none is in flight but
 /// the ones the environment refused, or until `deadline`. Each reply is a
-/// commit, as on a host; a failed request is the source's data to shape.
-/// A reply the source cannot shape is the render's failure.
+/// commit, as on a host; a failed request is the source's data to shape
+/// (LLP 1016 D4). A reply the source cannot shape is the render's failure.
 pub fn settle<D: DataSource>(
     runner: &mut Runner<D>,
     executor: &Executor,
@@ -776,6 +785,29 @@ pub fn settle<D: DataSource>(
         requests::hand_out(runner, executor, &mut held);
         if requests::settle_aborts(runner, executor)? {
             continue;
+        }
+        // Check before taking the next reply: an open stream may always have
+        // one waiting.
+        if runner
+            .pending()
+            .iter()
+            // A re-ask's wait is the runner's, never the executor's: no timer
+            // fires here, and the checkpoint lists it for the client to ask.
+            // A stream that has answered is open, not in flight: the page
+            // shows its message, and the checkpoint lists it for the client
+            // to subscribe again. A mutation's stream ends with the render.
+            .all(|(_, t)| {
+                held.refused.contains(t)
+                    || held.busy.contains(t)
+                    || runner.is_reask_wait(*t)
+                    || runner.is_open_stream(*t)
+            })
+        {
+            return Ok(if held.busy.is_empty() {
+                Settled::Complete
+            } else {
+                Settled::Busy
+            });
         }
         let outcomes = executor.drain();
         if !outcomes.is_empty() {
@@ -801,21 +833,6 @@ pub fn settle<D: DataSource>(
             }
             continue;
         }
-        if runner
-            .pending()
-            .iter()
-            // A re-ask's wait is the runner's, never the executor's: no timer
-            // fires here, and the checkpoint lists it for the client to ask.
-            .all(|(_, t)| {
-                held.refused.contains(t) || held.busy.contains(t) || runner.is_reask_wait(*t)
-            })
-        {
-            return Ok(if held.busy.is_empty() {
-                Settled::Complete
-            } else {
-                Settled::Busy
-            });
-        }
         if Instant::now() >= deadline {
             return Ok(Settled::Deadline);
         }
@@ -823,9 +840,10 @@ pub fn settle<D: DataSource>(
     }
 }
 
-/// What the last commit asked for goes to the executor; a continuation is dispatched on this
-/// thread, after that commit, and one its source holds waits for a later release. A render's
-/// requests that aren't simply in flight.
+/// What the last commit asked for goes to the executor (LLP 1016 D2); a
+/// continuation is dispatched on this thread, after that commit (LLP
+/// 1027.002 D3), and one its source holds waits for a later release.
+/// A render's requests that aren't simply in flight.
 #[derive(Default)]
 struct Held {
     /// Held by their source until a later commit releases them.
@@ -861,7 +879,7 @@ fn run(executor: &Executor, held: &mut Held, r: RequestOut, dispatch: Dispatch) 
             }
             Ok(())
         }
-        // A re-ask: settled in its ordered place, no work.
+        // A re-ask: settled in its ordered place, no work (LLP 1041 §8.4).
         Dispatch::Again => executor.again(&r),
         Dispatch::Host(_) | Dispatch::Missing => executor.run(r, None),
     };
@@ -883,15 +901,15 @@ fn run(executor: &Executor, held: &mut Held, r: RequestOut, dispatch: Dispatch) 
 /// `settled`, `robots`, `root` (what `#exact-root` holds), `head` (what
 /// `<head>` holds after the shell's charset and base), `checkpoint`,
 /// `digest`, and with `--shell` the whole `page` ([`page`]), or `error`.
-/// `--compare` renders each location with a kernel and without one
-/// and prints `same`, or the first difference (`differs`), or
+/// `--compare` renders each location with a kernel and without one (LLP
+/// 1048.004 D6) and prints `same`, or the first difference (`differs`), or
 /// why the page has no kernel-free render (`direct`) — with `--shell` the
 /// streamed page too; any difference fails the run.
 /// `--build` renders every location the plan declares `render=build`
 /// (`exact_web::document::build_locations`) and every page a build route's
 /// `pages=` source lists. `baked` is the app's own plan; the web build
 /// passes the one it extracted from the shipped wasm instead. `data` makes
-/// the app's source: a fresh one for each render (two per render), for
+/// the app's source: a fresh one for each render (two per render, D6), for
 /// each enumeration, and for the server's grants — so an entry is one call,
 /// `exact_render::main(PLAN, || …)`, with no wrapper to forward the source's
 /// methods.
@@ -956,7 +974,7 @@ pub fn main<D: DataSource + 'static>(baked: &[u8], data: fn() -> D) -> std::proc
                 None => return usage(),
             },
             "--shell" => match args.next().map(|path| {
-                // The build's analyzed sheet beside it.
+                // The build's analyzed sheet beside it (LLP 1048.007 D4).
                 let beside = std::path::Path::new(&path).with_file_name(".gen/page-style.json");
                 rules = std::fs::read_to_string(beside).ok();
                 std::fs::read_to_string(path)
@@ -1040,7 +1058,7 @@ pub fn main<D: DataSource + 'static>(baked: &[u8], data: fn() -> D) -> std::proc
                 return ExitCode::FAILURE;
             }
         }
-        // Add every page a build route's source lists.
+        // @ref LLP 1048.000 D2 — and every page a build route's source lists.
         for row in decoded
             .routes
             .iter()
@@ -1176,7 +1194,7 @@ fn run_server<D: DataSource + 'static>(server: Server, data: fn() -> D) -> std::
 #[cfg(all(test, unix))]
 mod stdout_tests;
 
-/// SIGTERM or SIGINT drains the server: a restart loses no render
+/// SIGTERM or SIGINT drains the server (D10): a restart loses no render
 /// in flight.
 fn drain_on_signal(stopper: Stopper) {
     use std::sync::atomic::{AtomicBool, Ordering};
@@ -1243,7 +1261,7 @@ mod realm_tests {
 
     use exact_plan::Value;
 
-    /// A realm made ahead serves the next render, and only that one.
+    /// D10: a realm made ahead serves the next render, and only that one.
     #[test]
     fn a_realm_made_ahead_serves_one_render() {
         let src = std::fs::read_to_string(
@@ -1357,7 +1375,8 @@ mod fence_tests {
 
     /// Eighteen asks with room for sixteen: the seventeenth is refused (the
     /// render is busy) and the eighteenth, held behind it, runs once a
-    /// completion has made room, not refused at once against the full lane.
+    /// completion has made room, not refused at once against the full lane
+    /// (Astra, round 2).
     #[test]
     fn a_burst_past_the_limit_refuses_one_and_runs_the_rest() {
         let mut src = String::from("component App\n");
@@ -1412,9 +1431,9 @@ mod fence_tests {
     }
 
     /// 150 waiting answers, past the re-ask markers' window of 128: each is
-    /// settled with no work and the render completes, not busy. An answer that
-    /// never stops waiting keeps the render open until its deadline: a pending
-    /// re-ask is not complete.
+    /// settled with no work and the render completes, not busy (LLP 1041
+    /// §8.4, amended 2026-10-09). An answer that never stops waiting keeps
+    /// the render open until its deadline: a pending re-ask is not complete.
     #[test]
     fn re_asks_complete_a_render_and_one_still_waiting_meets_the_deadline() {
         let mut src = String::from("component App\n");

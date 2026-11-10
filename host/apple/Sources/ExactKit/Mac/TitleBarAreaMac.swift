@@ -11,11 +11,11 @@ import AppKit
 /// horizontally corner-adapted safe area begins.
 enum TitleBarAreaMac {
     /// x, y, width, height from the view's top left; all zero while the
-    /// title bar is hidden (full screen) or a route's toolbar fills it;
-    /// `nil` where the page does not underlap the title bar, so
+    /// title bar is hidden (full screen) or a route's toolbar fills it (LLP
+    /// 1115.002 D2); `nil` where the page does not underlap the title bar, so
     /// every variable is undefined and its fallback applies, as in a browser
     /// tab. `overlay`: the toolbar is `window-controls-overlay`'s empty one,
-    /// whose band is the title bar's.
+    /// whose band is the title bar's (LLP 1039 D8).
     static func rect(of view: NSView, cover: Bool, overlay: Bool = false) -> [CGFloat]? {
         guard cover, let window = view.window, window.styleMask.contains(.titled),
               window.styleMask.contains(.fullSizeContentView) else { return nil }

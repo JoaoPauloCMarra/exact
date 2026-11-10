@@ -1,5 +1,7 @@
 //! The safe document projection: the page the live host builds, as HTML,
-//! before browser layout. The document is the page.
+//! before browser layout.
+//!
+//! @ref LLP 1048 D1 (the document is the page) / LLP 1048.000 D1
 //!
 //! One walk over the kernel tree from the runner's roots. Each element's tag,
 //! attributes and inline style come from the live host's own rules —
@@ -68,14 +70,14 @@ pub struct Document {
     pub viewport_fit: Option<String>,
     /// The first root's `interactive-widget`, likewise.
     pub interactive_widget: Option<String>,
-    /// The active head's fields: the page's `<head>`. A
+    /// The active head's fields: the page's `<head>` (LLP 1048.003 D1). A
     /// head node has no element in the root.
     pub head: exact_runner::Head,
-    /// Every `@keyframes` rule an element's `animation` names, once each,
-    /// for the head: a reader without JavaScript sees it play.
+    /// Every `@keyframes` rule an element's `animation` names, once each
+    /// (LLP 1055 D7), for the head: a reader without JavaScript sees it play.
     pub keyframes: String,
-    /// An element is the page's scroller (`scroll document`):
-    /// `<html data-scrolldocument>`, which the shell's rule reads.
+    /// An element is the page's scroller (`scroll document`, LLP 1048.003
+    /// D4): `<html data-scrolldocument>`, which the shell's rule reads.
     pub scroll_document: bool,
 }
 
@@ -108,8 +110,8 @@ pub fn project<D: DataSource>(runner: &Runner<D>) -> Result<Document, DocumentEr
     walk(runner, None, true).map(|(document, _)| document)
 }
 
-/// [`project`], with the JavaScript template's conditional text-style fills,
-/// so its static styles can become classes at adoption.
+/// [`project`], with the JavaScript template's conditional text-style fills
+/// (LLP 1115.000 D12.2), so its static styles can become classes at adoption.
 pub fn project_for_js<D: DataSource>(runner: &Runner<D>) -> Result<Document, DocumentError> {
     walk(runner, None, false).map(|(document, _)| document)
 }
@@ -126,7 +128,7 @@ pub(crate) fn project_keeping<D: DataSource>(
 }
 
 /// A tree a document is written from: a kernel's nodes, or those a render
-/// holds without one ([`DocTree`]). One walk writes both, so
+/// holds without one ([`DocTree`], LLP 1048.004). One walk writes both, so
 /// the two documents differ only where the trees do.
 pub trait Source {
     /// Whether CSS must resolve text-style fills after the document is adopted.
@@ -140,7 +142,7 @@ pub trait Source {
     /// The element an SVG reference from `from` names.
     fn resolve(&self, from: ViewId, id: &str) -> Option<ViewId>;
     /// `style`, node `id`'s, with the weight and leading a text style named
-    /// on it gives the wasm host. JavaScript's fills
+    /// on it gives the wasm host (LLP 1115.000 D12.2). JavaScript's fills
     /// are written from the node's facts instead.
     fn with_style_rows<'s>(
         &self,
@@ -298,7 +300,7 @@ fn walk<D: DataSource>(
     computed: Option<Computed>,
     bare: bool,
 ) -> Result<(Document, Option<Computed>), DocumentError> {
-    let _roles = runner.bind_roles(); // Its own.
+    let _roles = runner.bind_roles(); // Its own (LLP 1121 stage 5).
     let src = KernelSource {
         kernel: runner.kernel(),
         bare,
@@ -454,7 +456,7 @@ fn isolation<S: Source>(src: &S, roots: &[ViewId]) -> SortedMap<ViewId, Child> {
 }
 
 /// Add the rules `style`'s animations name, once each by name, for the
-/// head: a reader without JavaScript sees them play.
+/// head: a reader without JavaScript sees them play (LLP 1055 D7).
 fn animations(style: &exact_kernel::StyleProps, keyframes: &mut SortedMap<String, String>) {
     if let Some(link) = crate::link::linked().animations {
         let press = css::press_composes(style);
@@ -483,7 +485,7 @@ struct Route {
 pub(crate) type Computed = Vec<(ViewId, String, SortedMap<String, String>, String)>;
 
 /// A navigation root's routes as `navigation.project` marks them when the
-/// root has tabs, the `tabs` capability's walk:
+/// root has tabs (LLP 1075.003 §3.7), the `tabs` capability's walk:
 /// `(view, hidden, inert)` for each tabpanel and each route. Every panel but
 /// the selected one is hidden and inert, and each stack shows its own route;
 /// without tabs the stack is the root's own rows. Empty when the key names
@@ -582,7 +584,7 @@ struct Walk<'r, 'w, S: Source> {
     handlers: SortedMap<ViewId, Vec<EventKind>>,
     presses: SortedMap<ViewId, bool>,
     /// Whether an image's view is a row's, which loads as the row comes into
-    /// view (`loading="lazy"`, as the JS build writes it).
+    /// view (`loading="lazy"`, LLP 1048.007 D5, as the JS build writes it).
     lazy: &'r dyn Fn(ViewId) -> bool,
     routes: SortedMap<ViewId, Route>,
     /// The headers marked as their route's bar ([`bar_header`]).
@@ -649,7 +651,7 @@ impl<S: Source> Walk<'_, '_, S> {
         }
         let resolve = |from: ViewId, target: &str| src.resolve(from, target);
         let mut props = props_of(&node);
-        // A decoration's and an atom kind's paint rows as CSS text by name.
+        // A decoration's and an atom kind's paint rows as CSS text by name (LLP 1114.007, 1045.000 D3).
         for name in ["data-decoration-styles", "data-atom-styles"] {
             if let Some(raw) = props.get(name) {
                 let css = crate::css::decoration_styles(raw, &self.fonts);
@@ -883,7 +885,7 @@ impl<S: Source> Walk<'_, '_, S> {
                 .any(|k| matches!(k, EventKind::Focus | EventKind::Blur | EventKind::Key))
         });
         // An authored `tabindex` is explicit and wins, a negative one
-        // included, as `glue.js`'s `hasAttribute` check does.
+        // included (LLP 1088 D7.3), as `glue.js`'s `hasAttribute` check does.
         if hears
             && !matches!(element, "input" | "button")
             && !attrs.iter().any(|(n, _)| n == "tabindex")
@@ -1130,7 +1132,7 @@ impl<S: Source> Walk<'_, '_, S> {
     /// `renderMarkup`: each piece a `span`, or an `a` when it is a link to
     /// a navigable destination; newlines are `<br>`s. A list item's
     /// paragraph is a block `span` padded by its indent, its marker hung in
-    /// the gutter by a negative `text-indent`.
+    /// the gutter by a negative `text-indent` (LLP 1045 D4).
     fn markup(&mut self, id: ViewId, json: &str) -> Result<(), DocumentError> {
         let refuse = |reason: String| DocumentError { view: id, reason };
         // At a paragraph's start; inside a list item's block.

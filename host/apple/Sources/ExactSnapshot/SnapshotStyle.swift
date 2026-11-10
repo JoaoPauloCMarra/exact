@@ -1,5 +1,5 @@
 // A node's style rows as SwiftUI takes them, within the snapshot
-// vocabulary v1 (what the snapshot profile admits):
+// vocabulary v1 (LLP 1126 D4's narrowing; what WP2's profile admits):
 // colours as roles (never a resolved colour, so the rendering modes can
 // tint them), sRGB and Display P3 values, `light-dark()` by the
 // environment's scheme; one border for all four sides; elliptical radii in
@@ -16,8 +16,8 @@ import AppKit
 
 /// A colour row: four channels (0–255), a `[light, dark]` pair, a platform
 /// colour by name with its fallback pair (`{"sys": …, "c": …}`), or a
-/// colour in its own space (`{"cs": [{"s": …, "v": …}, …], "c": …}`):
-/// sRGB, Display P3 and linear sRGB resolve exactly; a profiled
+/// colour in its own space (`{"cs": [{"s": …, "v": …}, …], "c": …}`, LLP
+/// 1100 D2): sRGB, Display P3 and linear sRGB resolve exactly; a profiled
 /// colour shows its sRGB fallback (the profile refuses it).
 @available(iOS 17.0, macOS 14.0, watchOS 10.0, visionOS 26.0, *)
 indirect enum ColorRow: Equatable {
@@ -345,7 +345,7 @@ struct SnapshotPaint {
     }
 
     /// The gradient layers alone, over whatever holds the colour (a Live
-    /// Activity's tint), positioned on `rect`.
+    /// Activity's tint, LLP 1126.001 WP10), positioned on `rect`.
     @ViewBuilder
     func gradients(in rect: CGRect) -> some View {
         let layers = style.gradients("background_image")

@@ -1,5 +1,5 @@
 //! A request body read from an app file (`Request::body_from`, TypeScript's
-//! `exactBodyFrom`): the worker reads it under the request's
+//! `exactBodyFrom`; LLP 1108 D6 R2): the worker reads it under the request's
 //! `fs.read` grant just before the request goes out, and refuses, sending
 //! nothing, when it may not or cannot.
 use super::*;
@@ -223,7 +223,7 @@ fn naming_the_roots_does_not_make_them() {
 
 /// A root that is already a symbolic link when the first file body opens
 /// the roots is refused, not pinned; nothing is sent or made, and the
-/// refusal stands once the link is gone.
+/// refusal stands once the link is gone (Grok, Astra: review).
 #[cfg(unix)]
 #[test]
 fn a_root_that_is_a_symlink_at_the_first_file_body_is_refused() {
@@ -259,7 +259,7 @@ fn a_root_that_is_a_symlink_at_the_first_file_body_is_refused() {
 }
 
 /// A stream's body read from an app file opens the roots when it is the
-/// first file body, as a worker's request does.
+/// first file body, as a worker's request does (Astra, Grok: review).
 #[test]
 fn a_stream_whose_body_is_the_first_app_file_opens_the_roots() {
     let _turn = one_at_a_time();
@@ -287,7 +287,7 @@ fn a_stream_whose_body_is_the_first_app_file_opens_the_roots() {
 
 /// A read that outlasts the request's deadline does not hold it: the worker
 /// settles `Timeout` when the deadline passes, tells the read, which stops
-/// at its next chunk, and drops its late bytes.
+/// at its next chunk, and drops its late bytes (Astra, round 3).
 #[test]
 fn a_stalled_read_is_settled_by_the_deadline_and_told_to_stop() {
     static READERS: super::body::Readers = super::body::Readers::new();
@@ -352,7 +352,7 @@ fn a_stalled_read_is_settled_by_the_deadline_and_told_to_stop() {
 
 /// Readers stuck on a stalled disk keep their places after their requests
 /// were settled; past the bound a new file body is refused, unsent, until
-/// one returns.
+/// one returns (Astra, post-landing).
 #[test]
 fn stuck_readers_are_bounded_and_keep_their_place_until_they_return() {
     static READERS: super::body::Readers = super::body::Readers::new();

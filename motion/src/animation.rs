@@ -1,7 +1,7 @@
 //! CSS Animations: `@keyframes` and the `animation` row, sampled in closed form.
 //!
-//! CSS Animations Level 1 over the Web Animations timing model; the style
-//! row is the binding.
+//! @ref LLP 1055 D5 (CSS Animations Level 1 over the Web Animations timing
+//! model); LLP 1002 D1 (the style row is the binding)
 //!
 //! An [`Animations`] list is the value of a node's `animation` style row. Each
 //! entry carries the keyframes its `animation-name` resolved to, so a host has
@@ -10,7 +10,7 @@
 //! Sampling is a pure function of local time, so a seek and sixty frames give
 //! the same bits.
 //!
-//! A keyframe colour may be a `light-dark()` pair: the light
+//! A keyframe colour may be a `light-dark()` pair (LLP 1062 D9): the light
 //! value is the keyframe's, the dark one rides beside it, and which one plays
 //! is the appearance the animation started under, as Chrome resolves a rule
 //! once.
@@ -115,7 +115,7 @@ pub struct Keyframe {
     /// The declared values, one per property.
     pub values: Vec<(Property, Value)>,
     /// A `light-dark()` colour's value under a dark appearance, for each of
-    /// `values` that has one; `values` holds the light one.
+    /// `values` that has one; `values` holds the light one (LLP 1062 D9).
     pub dark: Vec<(Property, Value)>,
 }
 
@@ -196,7 +196,7 @@ pub enum AnimationError {
     /// the other, or a dark value for no colour of the keyframe.
     NotAnimatable(Property),
     /// An `-exact-exit-animation` that never ends — an `infinite` count, or
-    /// `paused` — would keep its leaving node forever.
+    /// `paused` — would keep its leaving node forever (LLP 1063).
     Endless,
 }
 
@@ -283,7 +283,7 @@ impl Keyframes {
                     return Err(AnimationError::ValueShape);
                 }
                 // `box-shadow` is one declaration: its geometry and colour
-                // are set together or not at all.
+                // are set together or not at all (LLP 1062 D9).
                 let half = match p {
                     Property::BoxShadow => Some(Property::ShadowColor),
                     Property::ShadowColor => Some(Property::BoxShadow),
@@ -465,7 +465,7 @@ impl Animation {
     }
 
     /// [`Animation::sample`] under an appearance: a keyframe's `light-dark()`
-    /// colour takes its dark value when `dark`.
+    /// colour takes its dark value when `dark` (LLP 1062 D9).
     pub fn sample_in(
         &self,
         t: f64,
@@ -538,7 +538,7 @@ impl Animations {
     }
 
     /// [`Animations::validate`], and every entry runs to an end: the rule for
-    /// an `-exact-exit-animation`, whose node is removed when it ends.
+    /// an `-exact-exit-animation`, whose node is removed when it ends (LLP 1063).
     pub fn validate_ending(&self) -> Result<(), AnimationError> {
         self.validate()?;
         if self.0.iter().any(|a| a.paused || !a.end_time().is_finite()) {

@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { open } from '../../scripts/agent.mjs';
 import { webCompiler } from './module.mjs';
 
-// Files dragged or pasted in ("Files dropped or pasted"): any
+// Files dragged or pasted in (LLP 1069.010, "Files dropped or pasted"): any
 // type with no `file_handlers`, a folder as a folder's handle, a drag over a
 // textarea landing on the column's `drop`, `dragenter`/`dragleave` around
 // it (a drop sends no `dragleave`, as the DOM's), and a paste's files. The drags are Chrome's own (`Input.dispatchDragEvent`).

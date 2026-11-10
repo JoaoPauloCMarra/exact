@@ -1,4 +1,4 @@
-// tamber-paths.mjs (tamber/1.15): one rule
+// tamber-paths.mjs (tamber/1.15; round 1's rework): one rule
 // names a file, and machine-written messages lose this machine's
 // directories only where a whole path stands. Every directory here is made
 // for the test and removed after.

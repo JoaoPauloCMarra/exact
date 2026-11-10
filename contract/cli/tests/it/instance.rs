@@ -1,5 +1,5 @@
-//! Per-instance state, proven on the runner — a row's state follows its key, a
-//! use's own state is its own, and neither leaks.
+//! LLP 1017 P4c: per-instance state, proven on the runner — a row's state
+//! follows its key, a use's own state is its own, and neither leaks.
 
 use exact_kernel::{Kernel, PropValue};
 use exact_plan::builder::PlanBuilder;
@@ -60,7 +60,7 @@ fn derived_row_state_in_action_props_uses_resolved_types_and_child_spans() {
         source.clone(),
         source
             .replace("Screen(entry=e, data=data, save=save)", "Screen(entry=e)")
-            // Bare names provide the values of those names.
+            // Bare names provide the values of those names (LLP 1035.005.000 D9).
             .replace(
                 "  view\n    main",
                 "  provide\n    data\n    save\n  view\n    main",
@@ -103,9 +103,9 @@ fn derived_row_state_in_action_props_uses_resolved_types_and_child_spans() {
         + 1;
     assert_eq!(error.id, "type-condition");
     assert_eq!(error.span.line as usize, line);
-    // A derive starts the type fixpoint as `?`, so a ternary over one could be
-    // refused outright while the same expression written inline compiles. Naming the
-    // type in the message defers the round, the way a binary operand does.
+    // A derive starts the type fixpoint as `?`, so a ternary over one used to be
+    // refused outright while the same expression written inline compiled. Naming the
+    // type in the message defers the round, the way a binary operand already did.
     let ternary_over_derive = r#"component T
   state count = 0
   derive ready = count > 0
@@ -755,10 +755,11 @@ fn a_row_owned_state_reaches_the_rows_of_the_uses_own_each() {
     }
 }
 
-/// Two compiler repros, by one ordered pass and not its (deferred) fixed point:
-/// a row's state is typed from its initializer before the derives that read it,
-/// and a `for` over a list a later write types (`state items = []`) no longer
-/// stops the row scopes the other rows' state is typed in.
+/// LLP 1088 D6's two compiler repros, by one ordered pass and not its
+/// (deferred) fixed point: a row's state is typed from its initializer
+/// before the derives that read it (shop F3), and a `for` over a list a
+/// later write types (`state items = []`) no longer stops the row scopes
+/// the other rows' state is typed in.
 #[test]
 fn a_rows_state_types_before_its_derives_and_an_untyped_list_waits() {
     let shop = "shape Item\n  name: string\n  images: string[]\nshape Product\n  id: string\n  items: Item[]\ncomponent App\n  resource products = loadProducts() as shape Product[]\n  view\n    column\n      for p in products key=p.id\n        Child(b=p)\ncomponent Child\n  props\n    b: Product\n  state pick = 0\n  derive chosen = b.items.at(pick)\n  derive images = match chosen { case some(i) => i.images, case none => [] }\n  view\n    column\n      for img, i in images key=img\n        text `${i} of ${images.length}`\n";
@@ -769,8 +770,9 @@ fn a_rows_state_types_before_its_derives_and_an_untyped_list_waits() {
         assert!(plan.is_ok(), "{src}\n{plan:?}");
     }
     // What that pass cannot grow: a derive of itself and an action handed
-    // itself are still refused, once. A derive that wraps itself in `some` is
-    // refused at its second option before it can grow.
+    // itself are still refused, once, as before (Astra's r3 review). A
+    // derive that wraps itself in `some` is refused at its second option
+    // (LLP 1090 D2) before it can grow.
     for (src, id) in [
         (
             "component App\n  derive d = d\n  view\n    text \"a\"\n",

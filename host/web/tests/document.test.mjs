@@ -1,4 +1,4 @@
-// The document parity check: Caltrain's page as the
+// The document parity check (LLP 1048.000 §4): Caltrain's page as the
 // projection renders it, parsed by Chrome with JavaScript off, against the
 // live host's DOM at the same URL once the runtime is ready. A difference
 // names the view. What the browser owns after layout — a symbol's sized
@@ -90,7 +90,7 @@ const NORMALIZED = `(() => {
     if (tag === 'input') { delete attrs.checked; attrs['.checked'] = String(el.checked); }
     if (tag === 'a' && 'href' in attrs) attrs.href = el.href;
     for (const p of el.style) if (!p.startsWith('--exact-symbol-')) style[p] = el.style.getPropertyValue(p) + (el.style.getPropertyPriority(p) ? ' !important' : '');
-    // A surface's box follows its host's content box once laid out (canvas2d-glue.js report).
+    // A surface's box follows its host's content box once laid out (canvas2d-glue.js report, LLP 1056 D6).
     if (tag === 'canvas' && 'data-surface' in attrs) for (const p of ['top', 'right', 'bottom', 'left', 'width', 'height']) delete style[p];
     if (tag === 'canvas' && 'data-surface' in attrs) for (const p of Object.keys(style)) if (/^border-.*-radius$/.test(p)) delete style[p];
     const content = [];
@@ -179,7 +179,7 @@ async function withDocument(location, drive, { wasmAfter = null, glueAfter = nul
       await call('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
       await call('Emulation.setScriptExecutionDisabled', { value: !scripts });
       if (onNew) await call('Page.addScriptToEvaluateOnNewDocument', { source: onNew });
-      // A returning reader's browser sends the viewport hints the server asked for:
+      // A returning reader's browser sends the viewport hints the server asked for (LLP 1048.006):
       // a first visit gets its user agent's class, a desktop's 1280 px, which a page that breaks
       // between the tab's width and 1280 renders differently and the runtime does not adopt.
       if (hints) {
@@ -219,7 +219,7 @@ check(`Caltrain's served document is the live host's DOM`, async () => {
     const plain = await tab(false);
     await plain.until("document.readyState === 'complete' && !!document.getElementById('exact-root')?.firstElementChild", 'the served document');
     const served = JSON.parse(await plain(NORMALIZED));
-    // The document stays on screen until the runtime's own
+    // LLP 1048.000 D6: the document stays on screen until the runtime's own
     // tree has settled; its wasm downloads with the document, the runtime
     // starts at idle, from the checkpoint, and adopts the document — its
     // first tree is the document's.
@@ -276,7 +276,7 @@ check(`a press on the document before the runtime starts is replayed once`, asyn
 }, 180000);
 
 check(`a press before the glue runs is captured, replays once, and a later one isn't doubled`, async () => {
-  // The page's inline capture script hears a
+  // LLP 1048.000 D6, 1048.001 D5: the page's inline capture script hears a
   // press from first parse; here the glue is held back until after it.
   let release;
   const glueAfter = new Promise((resolve) => { release = resolve; });
@@ -305,7 +305,7 @@ check(`a press before the glue runs is captured, replays once, and a later one i
   }, { glueAfter });
 }, 180000);
 
-// A link that leaves the page stops its runtime's download,
+// LLP 1048.000 D6: a link that leaves the page stops its runtime's download,
 // which would share the link with the next document; a page that stays gets
 // its runtime all the same. Here the wasm is held back, so it is still
 // downloading when the link is followed.
@@ -346,7 +346,7 @@ check(`Back from the bfcache downloads the runtime a link stopped`, async () => 
   }, { wasmAfter, answers: { '/elsewhere': [200, '<!doctype html><p>elsewhere</p>'] }, needs: ['bfcache'] });
 }, 180000);
 
-/** An app's render server over its dist, on loopback —
+/** An app's render server (LLP 1048.000 D10) over its dist, on loopback —
  * Caltrain's over dist/ unless told; `stop` ends the one process it started. */
 async function renderServer({ app = 'caltrain', dir = dist, name = 'Caltrain' } = {}) {
   const child = spawn('cargo', ['run', '-q', '-p', `${app}-linux`, '--bin', `${app}-render`, '--', '--serve', dir, '--name', name],
@@ -390,7 +390,7 @@ check(`the render server's page is the document, and the runtime adopts it`, asy
 }, 240000);
 
 
-// A TypeScript app through the server: Weatherlight's
+// A TypeScript app through the server (LLP 1048.000 D6, D11): Weatherlight's
 // first frame answers offline (revision 0 is the empty forecast), so its
 // document renders at build and per request with no network. The runtime
 // adopts it, and the module's realm runs under the server's CSP: its two
@@ -584,8 +584,9 @@ browserCheck(`early capture updates keep the same view's bubble handler`, async 
   }, { html, files });
 }, 60000);
 
-// The shipped shell isolates button layout and
-// truncates only the requested titles. A disabled button is the disabled look whatever
+// LLP 1069.011.001 D5/D6: the shipped shell isolates button layout and
+// truncates only the requested titles. LLP 1116.005 D8 (superseding D16's
+// kept accent on the web): a disabled button is the disabled look whatever
 // its accent, a glass its own material (form-chrome.test.mjs has the rest).
 for (const concern of ['defaults', 'nowrap', 'clamp', 'floor', 'disabled accent', 'disabled plain accent', 'disabled glass accent', 'disabled clear-glass accent']) browserCheck(`native button ${concern}`, async () => {
   const shell = SHIPPED;
@@ -612,7 +613,7 @@ for (const concern of ['defaults', 'nowrap', 'clamp', 'floor', 'disabled accent'
       expect(facts.nowrap.scroll).toBeGreaterThan(facts.nowrap.width);
       expect(facts.nowrap.ellipsis).toBe('ellipsis');
     }
-    // A wrapping title keeps its min-content floor in a squeezed
+    // LLP 1116 D1: a wrapping title keeps its min-content floor in a squeezed
     // row, so no word is cut to an ellipsis.
     if (concern === 'floor') {
       expect(facts.floor.width).toBeGreaterThan(40);
@@ -653,13 +654,13 @@ browserCheck('native button stacked image', async () => {
   }, {html});
 });
 
-// As the neutral look draws it:
+// LLP 1116.003 D3.1, as the neutral look draws it (LLP 1115.000 D4 part B):
 // the ink on an accent fill is white or black, whichever reads at 4.5:1 or
 // better on the accent as the scheme resolves it. A pale dark-scheme accent
 // (event-rsvp's, recipe-finder's) takes black, and so does a mid-light blue
 // (`#007aff`, on which white is 4.0:1); the unsaid accent and the destructive
 // red are dark in light and light in dark, so white and then black; an
-// authored colour wins.
+// authored colour wins. (LLP 1116 D1's look kept white down to 3:1.)
 browserCheck('the ink on an accent fill is chosen for contrast in each scheme', async () => {
   const shell = SHIPPED;
   const cases = {
@@ -699,8 +700,9 @@ browserCheck('the ink on an accent fill is chosen for contrast in each scheme', 
   }, {html});
 });
 
-// A symbol is drawn in its `color`, as the Apple hosts
-// draw a page symbol, not the nearest accent: under an authored accent an unstyled symbol is still its
+// LLP 1081 stage 2: a symbol is drawn in its `color`, as the Apple hosts
+// draw a page symbol (130e009940), not the nearest accent (LLP 1116.003 D3.2
+// had it so): under an authored accent an unstyled symbol is still its
 // text's colour. Both targets' symbol sheets; an ink a native face or a bar
 // sets (`--exact-tint`) still wins.
 for (const sheet of ['host/web/glue.js', 'host/web-js/symbols.js']) browserCheck(`an untinted symbol is its text's colour (${sheet})`, async () => {
@@ -719,7 +721,7 @@ for (const sheet of ['host/web/glue.js', 'host/web-js/symbols.js']) browserCheck
   }, {html});
 });
 
-// A symbol nobody tinted draws
+// LLP 1121 stage 9 B (D10), LLP 1081 stage 2: a symbol nobody tinted draws
 // in its `color`, written (`data-symbol-color`, element.rs) or inherited, a
 // `light-dark()` one by its scheme and a later one at once; an ink set on it
 // (`--exact-tint`) still wins. Both targets' sheets.
@@ -738,7 +740,7 @@ for (const sheet of ['host/web/glue.js', 'host/web-js/symbols.js']) browserCheck
   }, {html});
 });
 
-// An SVG shape nobody filled is its text's colour, where
+// LLP 1115.000 D3.8: an SVG shape nobody filled is its text's colour, where
 // the browser's own initial `fill` is black. The page's sheet says it on the
 // outermost `svg`, so a `fill` on a shape or on a group wins and reaches a
 // nested `svg` below the group; `currentcolor` is each element's own colour;
@@ -773,7 +775,7 @@ browserCheck('an unsaid SVG fill is the text colour', async () => {
   }, {html});
 });
 
-// A date, time or local date-time control takes the text
+// LLP 1116.001 D1: a date, time or local date-time control takes the text
 // field's look (a 1 px line, 8 px corners, the field's background, 36 px
 // tall at the body size) in light and dark, as a border box the kernel
 // models; the author's rows win, and `appearance: none` (no marker) is bare.
@@ -811,7 +813,7 @@ browserCheck('date and time controls take the field look', async () => {
   }, {html});
 });
 
-// A determinate progress is the platform's bar, as UIKit draws
+// LLP 1116.003: a determinate progress is the platform's bar, as UIKit draws
 // its own and Linux paints it: a 4 px capsule centred across its box, the
 // accent's over a track of the system fill, the same fill whatever the
 // accent, in light and dark. Chrome's own takes its track by contrast with

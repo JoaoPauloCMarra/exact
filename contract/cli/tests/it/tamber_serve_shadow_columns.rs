@@ -1,5 +1,6 @@
-//! Per-column shadow values on the wire (`tamber/1.16`): a shadow token's
-//! value over unset base names gains a length's `columns` (`{value}`, the whole shadow's text as that column's
+//! Per-column shadow values on the wire (LLP 1121 stage 12, `tamber/1.16`,
+//! theme2's 20:50 ruling): a shadow token's value over unset base names
+//! gains D1's `columns` (`{value}`, the whole shadow's text as that column's
 //! host reads it) on `explain`'s value, each `when` line and each of
 //! `resolve`'s tuples, and each such shadow in a tuple gains
 //! `columns: {col: {value, lengths}}`. No terminal column for a shadow (the
@@ -95,7 +96,7 @@ fn a_shadow_over_base_names_answers_each_column_but_the_terminal() {
         );
     }
     assert!(shadow["columns"].get("terminal").is_none(), "{r}");
-    // (the shadow's own fields beside, unchanged)
+    // (B3's fields beside, unchanged)
     assert_eq!(shadow["lengths"], json!([0.0, null, null]), "{r}");
     let tight = &r["tuples"][1];
     assert!(tight.get("columns").is_none(), "{r}");
@@ -212,7 +213,7 @@ fn a_shadow_over_no_unset_base_has_no_columns() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A length over a base still answers the terminal's column;
+/// theme2's Q1: a length over a base still answers the terminal's column;
 /// a shadow never does.
 #[test]
 fn a_length_keeps_the_terminal_column_and_a_shadow_has_none() {
@@ -245,10 +246,10 @@ fn a_length_keeps_the_terminal_column_and_a_shadow_has_none() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A zero is never negative: `calc(space.md * -0)`
+/// A zero is never negative (rt1's D1 carry-over): `calc(space.md * -0)`
 /// compiles to a px length of -0, and a length over a base may fold to
 /// zero; each is `0px` in every column's text and 0 among its numbers, and
-/// a shadow's own `lengths` write it 0 too.
+/// B3's own `lengths` write it 0 too (theme2's 18:45, *1.16*).
 #[test]
 fn a_zero_is_never_negative() {
     let dir = app("shadow-columns-zero", DESIGN);
@@ -258,7 +259,7 @@ fn a_zero_is_never_negative() {
     let lengths = &tuple["shadows"][0]["lengths"];
     assert!(
         !lengths[0].as_f64().unwrap().is_sign_negative(),
-        "the shadow's lengths: {r}"
+        "B3's lengths: {r}"
     );
     for (key, c) in drawing() {
         let text = format!("0px 0px {}px #000000ff", px("space.md", c));

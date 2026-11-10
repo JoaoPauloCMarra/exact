@@ -1,4 +1,4 @@
-// Whether the dev loop's page lets the design tool frame it: a tool on another
+// Whether the dev loop's page lets the design tool frame it (the second hands-on pass, finding 3): a tool on another
 // port than the one the loop was started for (EXACT_TOOL_PORT) is refused by the page's frame-ancestors, and Chrome
 // shows an empty canvas, saying why only in the console. `tamber tool --via` asks the page itself, says it once on
 // the terminal, and answers the tool's page at /__tamber/tool/canvas-check (the tool's own, not tamber/1).

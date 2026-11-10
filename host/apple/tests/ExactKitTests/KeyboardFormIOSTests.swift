@@ -4,9 +4,9 @@ import XCTest
 @testable import ExactKit
 @testable import ExactGroupedLists
 
-/// Keyboard avoidance and Next-field navigation in native grouped lists,
-/// including pinned controls, and the caret of a text area that grows as
-/// it is typed into.
+/// Keyboard avoidance and Next-field navigation in native grouped lists
+/// (LLP 1116.003 D2), including pinned controls (LLP 1116.008 D8), and the
+/// caret of a text area that grows as it is typed into.
 final class KeyboardFormIOSTests: XCTestCase {
     private var window: UIWindow?
     private var session: ExactSession?
@@ -98,7 +98,7 @@ final class KeyboardFormIOSTests: XCTestCase {
     }
 
     /// The page's own scroller takes the keyboard down with a drag that
-    /// reaches it, as a scroller's unsaid dismissal does,
+    /// reaches it, as a scroller's unsaid dismissal does (LLP 1115.000 D9.1),
     /// and its drag counts as the keyboard's interactive drag.
     func testThePagesOwnScrollerPutsTheKeyboardAwayOnADrag() throws {
         let session = try fixture()

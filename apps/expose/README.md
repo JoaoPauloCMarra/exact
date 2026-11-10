@@ -24,7 +24,7 @@ you": an unread dot, the send button, the assistant's caret while it writes.
   from OpenRouter. On the web's page runtime the reply streams in (the module
   reads the events from the response body); on native hosts it arrives as one
   completion, because a host keeps only the newest undelivered stream message
-  and a token stream cannot afford a gap. It sees the thread
+  (LLP 1016.000 D4) and a token stream cannot afford a gap. It sees the thread
   and, when you press *Ask Expose* in Reader, the article. Leave the thread
   while it is writing and the answer arrives as a banner; on the lock screen it
   becomes a notification.
@@ -85,4 +85,5 @@ Drive it: `bun scripts/agent.mjs --app expose web --url <url> "tap lock-unlock"
 - `assets/` — the fonts, copied from the Expose repository
   (`fonts/exciting/handoff/Exciting-Black.ttf`, `fonts/exciting-lilt/`,
   `fonts/exposure-sans/original-10/`); re-copy when a new build lands. Both
-  families are declared in the Contract and bound to these bytes, so an installed font of the same name is never consulted.
+  families are declared in the Contract and bound to these bytes (LLP 1019
+  D3), so an installed font of the same name is never consulted.

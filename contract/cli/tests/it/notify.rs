@@ -1,4 +1,4 @@
-//! `@exact/notifications`, the real package linked
+//! `@exact/notifications` (LLP 1133.004 stage 1), the real package linked
 //! into the app's `node_modules` as a `file:` dependency installs it: its
 //! sends are statements, its click an event on the root, and under the agent
 //! its declared substitute lists posts, keeps the app's badge and holds the
@@ -176,7 +176,7 @@ fn the_package_compiles_its_sends_as_statements_and_its_click_as_a_root_event() 
     }
 }
 
-/// Under the agent, the post waits on the permission ticket, then is
+/// §7 under the agent: the post waits on the permission ticket, then is
 /// listed with what it wrote; a tag replaces; `closeNotification` takes it
 /// away; the badge is a number, a flag or none; `tap @ref` raises
 /// `notificationclick` with the tag and `data`, or opens `navigate`; a post
@@ -258,7 +258,7 @@ fn without_the_grant_a_post_is_refused_and_the_badge_is_not() {
     assert_eq!(state(&r)["badge"], 3);
 }
 
-/// The count's `[EnforceRange] unsigned long long`: a negative count refuses
+/// D1's `[EnforceRange] unsigned long long`: a negative count refuses
 /// `TypeError` (the declaration's `checks`) and leaves the badge.
 #[test]
 fn a_negative_badge_count_is_refused() {
@@ -273,7 +273,7 @@ fn a_negative_badge_count_is_refused() {
     );
 }
 
-/// On a target the package does not implement (Linux, the terminal,
+/// §8: on a target the package does not implement (Linux, the terminal,
 /// Android, Windows, tvOS) its sends are refused, journaled, and the status
 /// reads unavailable, under the agent as outside it.
 #[test]

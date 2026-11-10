@@ -1,6 +1,6 @@
 //! The Markdown reader's parser: text in, an ordered list of blocks out.
 //!
-//! Shared by both readers: `apps/markdown` opens one file,
+//! Shared by both readers (LLP 1033): `apps/markdown` opens one file,
 //! `apps/llp` opens a directory of them, and the document they draw is the
 //! same document, parsed once here. Pure — no I/O, no host, no allocation
 //! the caller cannot see — so the same code runs in the wasm the browser
@@ -15,7 +15,7 @@
 //! one exception: `<img>` and `<picture>` markup is images, read as T3
 //! Code's sanitizer reads it (`html`; [`Html`] turns it off).
 //!
-//! (the reader, D9 raw HTML images) (names stay CSS)
+//! @ref LLP 1033 (the reader, D9 raw HTML images), LLP 1115 §2 (names stay CSS)
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]

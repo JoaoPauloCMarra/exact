@@ -15,7 +15,7 @@ import android.view.inputmethod.InputMethodManager
  * dispatch, the IME's) reach it; each character, Enter and Backspace goes to exact2's focused field
  * ([Native.key]), as the Linux host's display keyboard does. While an editable field holds the focus the view
  * shows the platform's keyboard, and hides it when the focus leaves, as a focused `<input>` does in Chrome on
- * Android: exact2 says so as a request ([show]), whatever moved the focus (a tap, a key, the app).
+ * Android: exact2 says so as a request ([show], LLP 1115.001 D5), whatever moved the focus (a tap, a key, the app).
  * The IME talks to a [BaseInputConnection] in its dummy mode: what it commits arrives as key events.
  */
 class Keys(private val view: ExactView) {
@@ -74,7 +74,7 @@ class Keys(private val view: ExactView) {
         return true
     }
 
-    /** A TV remote's key by the web's `code` and `key`: the D-pad's arrows, and Select, which a
+    /** A TV remote's key by the web's `code` and `key` (LLP 1115.001.003 D3): the D-pad's arrows, and Select, which a
      * `key` handler hears as Enter, as Chrome on Android sends DPAD_CENTER; null for any other key, and on a phone. */
     private fun remote(keyCode: Int): Pair<String, String>? = if (!tv) null else when (keyCode) {
         KeyEvent.KEYCODE_DPAD_UP -> "ArrowUp" to "ArrowUp"

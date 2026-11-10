@@ -432,8 +432,9 @@ fn the_map_says_each_source_and_the_digest_of_its_text_as_compiled() {
     assert_eq!(of(&design), Some(hex(design_text)));
 }
 
-/// An `:active` row lowers to the press paint, and the map names its
-/// `:active` line (the class's or the node's), not the lowered row's node.
+/// @ref LLP 1121 D8 — an `:active` row lowers to the press paint, and the
+/// map names its `:active` line (the class's or the node's), not the
+/// lowered row's node.
 #[test]
 fn an_active_row_keeps_its_own_location() {
     let app = App::new("active");
@@ -462,8 +463,8 @@ component App
             .find(|r| r["row"] == name)
             .unwrap_or_else(|| panic!("{name}: {rows:?}"))
     };
-    // Each press row is its `:active` part's alone: no base value, so no base
-    // `origin`, `at` or `attr`.
+    // Each press row is its `:active` part's alone (theme2's 02:46 and
+    // 03:18 rulings): no base value, so no base `origin`, `at` or `attr`.
     for (name, line, origin) in [
         ("press_background_color", 11, "own"),
         ("press_opacity_to", 12, "own"),
@@ -481,9 +482,10 @@ component App
     assert!(row("display").get("states").is_none());
 }
 
-/// A `:hover` or `:focus-visible` row is its row's, keyed by (row, state):
-/// beside the base value's place, never in it, so the two never collide,
-/// and a border colour's four sides each say the part's `border-color` line.
+/// LLP 1122 queue item (1), theme2's 02:46 ruling: a `:hover` or
+/// `:focus-visible` row is its row's, keyed by (row, state): beside the
+/// base value's place, never in it (review2's 02:46: no collision), and
+/// a border colour's four sides each say the part's `border-color` line.
 #[test]
 fn a_look_row_is_its_rows_part_beside_the_base() {
     let app = App::new("looks-map");
@@ -551,7 +553,7 @@ component App
     }
 }
 
-/// A row only a state part writes (a `:hover`
+/// theme2's 03:18 ruling: a row only a state part writes (a `:hover`
 /// background on a node with none) has no base: no `origin`, `at` or
 /// `attr` of the part's borrowed, only its part in `states`.
 #[test]
@@ -582,7 +584,7 @@ fn a_row_only_a_look_writes_has_no_base() {
     assert_eq!(bg["states"][0]["at"]["line"], 5);
 }
 
-/// A row an author wrote says where (`set-row`'s address):
+/// LLP 1122 D6: a row an author wrote says where (`set-row`'s address):
 /// its attribute's span and name, a shorthand's for an expansion, a class's
 /// in the style's own file; a tag's row and a derived one say nowhere.
 #[test]
@@ -633,7 +635,7 @@ component Card
     );
     assert_eq!(color["attr"], "color");
     assert_eq!(color["at"]["line"], 4);
-    // A layout row says so (`set-row` refuses it); a paint row doesn't.
+    // A layout row says so (D14: `set-row` refuses it); a paint row doesn't.
     assert_eq!(top["layout"], true, "{top}");
     assert!(color.get("layout").is_none(), "{color}");
     // A paint shorthand's longhands carry none; a shorthand writing a layout
@@ -660,11 +662,11 @@ component Card
     let _ = root;
 }
 
-/// A row the compiler composed or renamed, or a
+/// Review round 1: a row the compiler composed or renamed, or a
 /// conditional class's, says nowhere: an animation's longhands composed,
 /// a symbol's tint from its `color`, a `class=(c ? A : B)` row; a folded
 /// `:disabled` or `:checked` row says its base's attribute (a shorthand's
-/// for a side), its parts beside it.
+/// for a side), its parts beside it (LLP 1122's queue item (2)).
 #[test]
 fn a_composed_or_renamed_row_says_nowhere() {
     let app = App::new("composed");
@@ -702,8 +704,9 @@ component App
             .unwrap()
             .clone()
     };
-    // A folded `:checked` row: its base's attribute is its base place, its
-    // part in `states`, never one for the other.
+    // A folded `:checked` row (LLP 1122's queue item (2)): its base's
+    // attribute is its base place, its part in `states`, never one for the
+    // other.
     let chk = rows("chk");
     let ground = chk.iter().find(|r| r["row"] == "background_color").unwrap();
     assert_eq!(
@@ -734,7 +737,7 @@ component App
         .all(|r| r.get("at").is_none() || r["origin"] != "class:A/B"));
 }
 
-/// A row's origin is its place's, whatever a rewrite does
+/// Review round 2: a row's origin is its place's, whatever a rewrite does
 /// to its position: a grouped list's inserted rows don't move a
 /// conditional class's row into the node's own; a class's composed
 /// animation doesn't take a node's own attribute's place. A grouped
@@ -808,7 +811,8 @@ component App
 /// A look row's origin is its part's by its span, as a base row's is: a
 /// class whose animation longhands are composed into one row moves the
 /// node's own rows across the class's count, never their spans, so the
-/// node's own `:hover` row stays its own.
+/// node's own `:hover` row stays its own (Astra, round 1 of LLP 1122's
+/// queue item (1)).
 #[test]
 fn a_look_row_beside_a_composed_animation_is_still_its_nodes() {
     let app = App::new("looks-animated");
@@ -857,7 +861,8 @@ component App
 }
 
 /// A conditional class's state part is either style's, as its base row
-/// is: its `states` entry names its state and origin and says nowhere.
+/// is: its `states` entry names its state and origin and says nowhere
+/// (Grok, round 1 of LLP 1122's queue item (1)).
 #[test]
 fn a_conditional_class_part_says_nowhere() {
     let app = App::new("looks-conditional");
@@ -890,7 +895,7 @@ component App
     assert!(bg["states"][0].get("at").is_none(), "{bg}");
 }
 
-/// A row a `:disabled` or `:checked` part folds
+/// LLP 1122's queue item (2): a row a `:disabled` or `:checked` part folds
 /// over its base says the base's attribute as its base place, where an
 /// author wrote it, and each part folded over it in `states`: a param's
 /// base, both parts on one row, a class's base and part; none for a base
@@ -1023,7 +1028,8 @@ component Pill
 
 /// Two parts of one state on one row each stay in `states`: the node's
 /// `:disabled border-top-color` with a `none` arm leaves its class's
-/// `:disabled border-color` showing on that side when it is `none`.
+/// `:disabled border-color` showing on that side when it is `none`
+/// (Astra and Grok, round 2 of LLP 1122's queue item (2)).
 #[test]
 fn a_folded_row_keeps_each_part_of_a_state() {
     let app = App::new("folds-two-parts");
@@ -1080,8 +1086,9 @@ style Card
     );
 }
 
-/// Each source says its home, as its components' identities name it, so
-/// a reader names a param by its full name from the file it reads it in.
+/// Each source says its home, as its components' identities name it
+/// (LLP 1121 D15), so a reader names a param by its full name from the
+/// file it reads it in (LLP 1122's queue item (2)).
 #[test]
 fn each_source_says_its_home() {
     let app = App::new("homes");
@@ -1095,7 +1102,7 @@ fn each_source_says_its_home() {
     assert_eq!(sources[0]["home"], "app.contract", "{sources:?}");
 }
 
-/// A node's `walk` into the map's `walks`: its chain as the page's walk up its own tree takes it, where that differs
+/// A node's `walk` into the map's `walks` (stage 15 D3): its chain as the page's walk up its own tree takes it, where that differs
 /// from the call-site chain. A slot's host is a step (`slot: true`, named by its own call); a component that
 /// renders only another is none; a node with no fill or element-less component on its way has no `walk`.
 #[test]

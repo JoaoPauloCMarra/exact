@@ -1,4 +1,5 @@
 //! File loading and source identity shared by Contract compilation and navigation.
+//! @ref LLP 1017.000 P8; LLP 1035.005 D2/D3; LLP 1091 (module scope).
 
 mod home;
 mod library;
@@ -24,7 +25,7 @@ use std::{
 
 pub(crate) struct Sources {
     paths: Vec<PathBuf>,
-    /// Where each source came from, by source id.
+    /// Where each source came from, by source id (LLP 1091 D10).
     pub(crate) origins: Vec<Origin>,
     /// Every name a `use` brought, resolved, for navigation.
     pub(crate) imports: Vec<Import>,
@@ -35,19 +36,19 @@ pub(crate) struct Sources {
     pub(crate) consulted: Vec<PathBuf>,
     /// Each source's text as compiled, its SHA-256 (hex), by source id: the
     /// source map says them, so a reader knows a file has not moved since
-    /// and refuses, rather than guesses, when one has.
+    /// (LLP 1122 D5, D6's fail-closed rule).
     pub(crate) digests: Vec<String>,
     /// Each source's home, by source id, as its components' identities
-    /// name it (`home`): the source map says it, so a reader
+    /// name it (`home`; LLP 1121 D15): the source map says it, so a reader
     /// names a param by its full name from the file it reads it in.
     pub(crate) homes: Vec<Option<String>>,
     /// Each source's text as compiled, by source id: the source map checks
-    /// a row's written place against it, never the disk.
+    /// a row's written place against it (LLP 1122 D6), never the disk.
     pub(crate) texts: Vec<std::sync::Arc<str>>,
     /// The literals a motion token was written into, or that a component's
-    /// argument names one in: what `uses` reports for one.
+    /// argument names one in (LLP 1121 D3): what `uses` reports for one.
     pub(crate) motion: Vec<contract_lower::motion::Site>,
-    /// Each `var()` whose fallback the loader dropped: one
+    /// Each `var()` whose fallback the loader dropped (LLP 1153 D6): one
     /// warning says them.
     pub(crate) var_fallbacks: Vec<(Span, String)>,
 }
@@ -63,7 +64,7 @@ impl Sources {
     /// Map each source from where it was captured to where it lives: the
     /// first `(captured, original)` pair whose captured directory holds it
     /// (a bake's stage, and each package mirrored into the stage's
-    /// `node_modules`, listed first).
+    /// `node_modules`, listed first; LLP 1091 D10).
     /// Each source's path, by source id.
     pub(crate) fn paths(&self) -> &[PathBuf] {
         &self.paths
@@ -204,7 +205,7 @@ impl Loader<'_> {
         if let Err(all) = self.load_source(&root_key, src, 0) {
             return Err(resolve(&self.sources, all));
         }
-        // Each component's `param.` names, as their tokens,
+        // Each component's `param.` names, as their tokens (LLP 1121 D15),
         // before anything reads a row.
         let mut params_refused: Vec<CompileError> = Vec::new();
         let mut owned = Vec::new();
@@ -241,7 +242,8 @@ impl Loader<'_> {
         let package_designs =
             packages::designs(&mut self.sources, code_beside(path)).map_err(|e| vec![e])?;
         // The design's components that aren't Contract, and its packages'
-        // designs', named and checked as Contract params are.
+        // designs' (stage 12 B1), named and checked as Contract params are
+        // (D15).
         if design.is_some() || !package_designs.is_empty() {
             let (mut designed, mut refused) = (Vec::new(), Vec::new());
             for d in design.iter().chain(&package_designs) {
@@ -302,7 +304,7 @@ fn unnamed(package: &str) -> String {
     format!("the package `{package}` is outside the app and its `package.json` has no `name`: a package outside the app needs a name in its package.json")
 }
 
-/// Where the app's design is: the file `app.json`'s
+/// Where the app's design is (LLP 1121 D2): the file `app.json`'s
 /// `"tamber"` names, else `app.tamber` beside the app's `app.contract`.
 pub fn design_path(root: &Path) -> Option<PathBuf> {
     let dir = root.parent()?;
@@ -317,14 +319,14 @@ pub fn design_path(root: &Path) -> Option<PathBuf> {
 }
 
 std::thread_local! {
-    /// A scrub's design text (commit 6), compiled in
+    /// A scrub's design text (LLP 1121 stage 4, commit 6), compiled in
     /// place of the file's while [`with_design_text`] runs.
     static DESIGN_TEXT: std::cell::RefCell<Option<(PathBuf, String)>> =
         const { std::cell::RefCell::new(None) };
 }
 
 std::thread_local! {
-    /// The design server's planned `.contract` texts,
+    /// The design server's planned `.contract` texts (LLP 1121 stage 8 D),
     /// compiled in place of the files' while [`with_contract_texts`] runs.
     static CONTRACT_TEXT: std::cell::RefCell<Vec<(PathBuf, String)>> =
         const { std::cell::RefCell::new(Vec::new()) };
@@ -376,7 +378,7 @@ pub fn with_design_text<R>(path: &Path, text: String, f: impl FnOnce() -> R) -> 
     f()
 }
 
-/// The app's design, read, and a source of its own, so a
+/// The app's design, read (LLP 1121 D2), and a source of its own, so a
 /// refusal in it names it.
 fn design(
     root: &Path,
@@ -425,10 +427,10 @@ fn design(
     }))
 }
 
-/// Whether the app at `root` (its `app.contract`) has code beside it that
-/// can name a design token outside its views: a TypeScript data module
-/// (`app.ts`), a Rust data crate (`data/Cargo.toml`), or native modules or
-/// hatches its `app.json` declares. The driver's half of
+/// @ref LLP 1121 D7 — whether the app at `root` (its `app.contract`) has code
+/// beside it that can name a design token outside its views: a TypeScript
+/// data module (`app.ts`), a Rust data crate (`data/Cargo.toml`), or native
+/// modules or hatches its `app.json` declares. The driver's half of
 /// `contract_lower::names_tokens_outside_views`.
 pub fn code_beside(root: &Path) -> bool {
     let dir = root.parent().unwrap_or(Path::new("."));
@@ -451,7 +453,7 @@ pub fn code_beside(root: &Path) -> bool {
 use home::{home, linked_home, named_home};
 pub(crate) use uses::{apply as apply_uses, unreached, use_fixes};
 
-/// One source a compilation reads.
+/// One source a compilation reads (LLP 1091 D10).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Source {
     /// Its canonical path, or its `exact:` name.
@@ -483,13 +485,13 @@ pub struct SourceGraph {
     pub packages: Vec<Package>,
     /// Every `package.json` resolution read, including one whose `exports`
     /// then refused: what a fix would edit; and an icon's SVG the build
-    /// looked for and did not find.
+    /// looked for and did not find (LLP 1121 D10).
     pub consulted: Vec<PathBuf>,
     /// The loader's refusals; empty when every source loaded and scoped.
     pub errors: Vec<CompileError>,
-    /// Each named package whose `assets/` an icon's SVG is read from, the
-    /// SVG there or not (one vendored in the app included): what a watcher
-    /// watches and digests for it.
+    /// Each named package whose `assets/` an icon's SVG is read from (LLP
+    /// 1121 stage 13), the SVG there or not (one vendored in the app
+    /// included): what a watcher watches and digests for it.
     pub owners: Vec<Package>,
 }
 
@@ -523,12 +525,12 @@ pub(crate) fn graph_base(path: &Path, src: &str, app_root: &Path) -> GraphBase {
         refused: Refused::default(),
     };
     let loaded = loader.load_source(&root_key, src, 0);
-    // The components' params, named as the build names them
+    // The components' params (LLP 1121 D15), named as the build names them
     // (an icon param naming another): an icon param's SVG is read too.
     for unit in &mut loader.units {
         let _ = contract_lower::params::rewrite(&mut unit.file);
     }
-    // The Contract components' params, before scoping: the tail adds its package designs' (and so reads none here).
+    // The Contract components' params (D15), before scoping: the tail adds its package designs' (and so reads none here).
     let contract_params: Vec<_> = loader
         .units
         .iter()
@@ -581,7 +583,7 @@ pub(crate) fn graph_base(path: &Path, src: &str, app_root: &Path) -> GraphBase {
 struct Unit {
     file: File,
     targets: Vec<usize>,
-    /// What its components' `members` lines loaded.
+    /// What its components' `members` lines loaded (LLP 1091.002).
     parts: Vec<members::Part>,
 }
 
@@ -598,16 +600,16 @@ struct Loader<'a> {
     cache: HashMap<PathBuf, usize>,
     /// What `scope` found each file lacks, when it refused for that.
     fixes: Vec<uses::UseFix>,
-    /// Every `use` edge `fixes` would add, `(from, to)`: a cycle may be
+    /// Every `use` edge §21's fixes would add, `(from, to)`: a cycle may be
     /// two new edges, neither on disk yet.
     proposed: Vec<(usize, usize)>,
-    /// Each unit's declarations as written, before renaming, for `fixes` to
-    /// judge what a `use` would bring.
+    /// Each unit's declarations as written, before renaming, for §21's
+    /// fixes to judge what a `use` would bring.
     declared: Vec<Vec<(Kind, String)>>,
-    /// The app's duration and easing tokens, written into the
+    /// The app's duration and easing tokens (LLP 1121 D3), written into the
     /// motion rows before scoping.
     motion: Vec<(String, String)>,
-    /// The app's tokens as a `var()` names them, once its
+    /// The app's tokens as a `var()` names them (LLP 1153 D6), once its
     /// design is read: each file's style rows are written with them before
     /// scoping.
     vars: Option<contract_lower::var_tokens::Tokens>,
@@ -643,7 +645,7 @@ impl Loader<'_> {
             }
         };
         // Each component's identity, its file relative to its root and its
-        // name: what its params are named by.
+        // name (LLP 1121 D15): what its params are named by.
         let origin = &self.sources.origins[source_id as usize];
         let found = named_home(path, origin, self.app_root);
         let linked = || match source_id {
@@ -663,8 +665,8 @@ impl Loader<'_> {
             return Err(vec![name_error(UNNAMED, unnamed(name), span)]);
         };
         // A package's components know their package, whose `assets/` a
-        // literal icon default reads: the named package their identity
-        // names, vendored ones included.
+        // literal icon default reads (stage 13): the named package their
+        // identity names, vendored ones included (round 2, Astra 1).
         let (package, root) = match owner {
             Some((name, dir)) => (Some(name), Some(dir.display().to_string())),
             None => (None, None),
@@ -734,7 +736,7 @@ impl Loader<'_> {
         self.link_members(path, index)
     }
 
-    /// `file`'s style rows with each `var()` that names a
+    /// @ref LLP 1153 D6 — `file`'s style rows with each `var()` that names a
     /// token written as the name, before a motion token is written in or a
     /// keyframes name is scoped; a row naming none is refused beside the
     /// syntax's refusals, and dropped.
@@ -747,9 +749,9 @@ impl Loader<'_> {
         self.sources.var_fallbacks.extend(found.fallbacks);
     }
 
-    /// Give every declaration its program-unique name, rewrite each file
-    /// through its own scope, and merge the files into the one `File` every
-    /// later pass reads.
+    /// Give every declaration its program-unique name (D4), rewrite each
+    /// file through its own scope (D1, D5), and merge the files into the one
+    /// `File` every later pass reads.
     fn scope(&mut self) -> Result<File, Vec<CompileError>> {
         self.prepare_members()?;
         if self.units.len() == 1 {
@@ -800,9 +802,9 @@ impl Loader<'_> {
                 })
             })
             .collect();
-        // The design's duration and easing tokens are written into each
-        // motion row before scoping reads an animation's keyframes name (the
-        // root's design, the app's).
+        // @ref LLP 1121 D3 — the design's duration and easing tokens are
+        // written into each motion row before scoping reads an animation's
+        // keyframes name (the root's design, the app's).
         let motion = std::mem::take(&mut self.motion);
         let mut units = std::mem::take(&mut self.units);
         for unit in units.iter_mut() {
@@ -912,7 +914,7 @@ impl Loader<'_> {
         let mut taken: HashSet<(Kind, String)> = HashSet::new();
         // Each file's local bindings: another file's `fn` or shape of one of
         // these names is renamed, or the binding's calls would reach it. A
-        // members block's are its listing file's.
+        // members block's are its listing file's (LLP 1091.002 D4).
         let listed = self.listed_by();
         let (bound, in_blocks) = self.bindings_by_file();
         let called: Vec<HashSet<String>> = self
@@ -1013,7 +1015,7 @@ impl Loader<'_> {
 
     /// A unit's scope: its own declarations and the names its uses bring.
     /// A used file's scope is what can be named from it, its uses included,
-    /// so a file can gather a library's names for others.
+    /// so a file can gather a library's names for others (LLP 1091 D3).
     fn scope_of(
         &mut self,
         index: usize,
@@ -1044,12 +1046,13 @@ impl Loader<'_> {
                     return Err(unknown(u, n, from));
                 }
                 if let Some(m) = self.data_only(unique, &found) {
-                    // Bytes are data code's.
+                    // Bytes are data code's (LLP 1133.006 D8 item 1; LLP
+                    // 1133.022 D19 item 4).
                     if m.substitute.contains(r#""bytes":true"#) {
                         return Err(name_error(
                             "contract-module-bytes",
                             format!(
-                                "`{}` of `{}` carries bytes, which Contract has none of: call it in `app.ts` and send Contract what it needs",
+                                "`{}` of `{}` carries bytes, which Contract has none of: call it in `app.ts` and send Contract what it needs (LLP 1133.006 D8)",
                                 m.declared, m.package
                             ),
                             n.span,
@@ -1058,7 +1061,7 @@ impl Loader<'_> {
                     return Err(name_error(
                         "module-name-data-only",
                         format!(
-                            "`{}` of `{}` is called from data code alone: its answer would become a mutation's value in `state`; call it in `app.ts`, and send what the server answers",
+                            "`{}` of `{}` is called from data code alone (LLP 1133.011 D12): its answer would become a mutation's value in `state`; call it in `app.ts`, and send what the server answers",
                             m.declared, m.package
                         ),
                         n.span,
@@ -1083,7 +1086,7 @@ impl Loader<'_> {
                         Some(prior) => {
                             // Named by the files that declare them: two
                             // files' declarations are two however alike
-                            // their text (splitter rough 1
+                            // their text (LLP 1091 D7; splitter rough 1
                             // read "different" as a different text).
                             let file = |name: &str| {
                                 unique
@@ -1095,7 +1098,7 @@ impl Loader<'_> {
                             return Err(name_error(
                                 "contract-use-duplicate",
                                 format!(
-                                    "`use {}` brings the {} `{}` declared in {}, and another `use` already brought the one declared in {}: a declaration is its file's, however alike the two read; declare it once and `use` it from that file, or rename one with `as`",
+                                    "`use {}` brings the {} `{}` declared in {}, and another `use` already brought the one declared in {}: a declaration is its file's, however alike the two read (LLP 1091 D7); declare it once and `use` it from that file, or rename one with `as`",
                                     n.name,
                                     kind.what(),
                                     n.local(),
@@ -1208,7 +1211,7 @@ impl Loader<'_> {
             faces.sort();
             faces
         };
-        // Fonts stay app-global, as `@font-face` is: one family declared
+        // Fonts stay app-global, as `@font-face` is (D6): one family declared
         // alike in two files is one; declared differently, lowering refuses it.
         let mut fonts: Vec<contract_syntax::FontDecl> = Vec::new();
         for font in files
@@ -1222,7 +1225,7 @@ impl Loader<'_> {
                 fonts.push(font);
             }
         }
-        // A module's `sound` lines join its user's, one per path.
+        // A module's `sound` lines join its user's (LLP 1096 D1), one per path.
         let mut sounds: Vec<contract_syntax::SoundDecl> = Vec::new();
         for sound in files
             .iter_mut()
@@ -1263,9 +1266,9 @@ impl Loader<'_> {
                 .collect(),
             keyframes: all!(keyframes),
             timelines: all!(timelines),
-            // CSS `@color-profile`s are global by name too.
+            // CSS `@color-profile`s are global by name too (LLP 1100 D3).
             color_profiles: all!(color_profiles),
-            // The app's theme is its root file's.
+            // The app's theme is its root file's (LLP 1095 D4).
             theme: files[0].theme.take(),
             // The design is the app's, read beside its root (`design`).
             design: None,
@@ -1275,7 +1278,7 @@ impl Loader<'_> {
             fns: all!(fns),
             modules: all!(modules),
             components: all!(components),
-            // Each block is spliced into its component.
+            // Each block is spliced into its component (LLP 1091.002 D4).
             members: None,
             deferred: Vec::new(),
         }

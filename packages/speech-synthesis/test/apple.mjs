@@ -1,8 +1,8 @@
-// @exact/speech-synthesis's conformance suite on Apple: th// te fixture
-// app made as the web suite makes it, built for macOS or an iOS simulator,
-// and driven by the agent with the implementation bound (`--bind
-// speech-synthesis`), so AVSpeechSynthesizer speaks and not the
-// substitute. It speaks aloud.
+// @exact/speech-synthesis's conformance suite on Apple (LLP 1133.001 D7,
+// LLP 1133.012 §10, stage 2): the fixture app made as the web suite makes it,
+// built for macOS or an iOS simulator, and driven by the agent with the
+// implementation bound (`--bind speech-synthesis`), so AVSpeechSynthesizer
+// speaks and not the substitute. It speaks aloud.
 //
 // usage: bun packages/speech-synthesis/test/apple.mjs [macos] [ios] [--sim <name|udid>]
 import { rmSync } from 'node:fs';
@@ -52,7 +52,7 @@ for (const host of hosts.length ? hosts : ['macos', 'ios']) {
     const ids = await until(s, 'ids', (t) => /^utterance-\S+ utterance-\S+$/.test(t));
     check(where, 'speak answers an id at once', /^utterance-\S+ utterance-\S+$/.test(ids), ids);
     const queued = await until(s, 'state', (t) => /^true true true false/.test(t));
-    // The unsaid type is the app's: `transient` in an app whose audio_session is not `playback`.
+    // The unsaid type is the app's: `transient` in an app whose audio_session is not `playback` (D3).
     check(where, 'one speaks while the other is queued, claiming transient', /^true true true false \d+ \d+ \S+ 1 transient$/.test(queued), queued);
     const seen = new Set(), end = Date.now() + 20000;
     while (Date.now() < end) {
@@ -95,7 +95,7 @@ for (const host of hosts.length ? hosts : ['macos', 'ios']) {
     const bad = await until(s, 'first', (t) => t.includes('voice-unavailable'));
     check(where, 'an unknown voice ends voice-unavailable', bad === 'ended error voice-unavailable', bad);
 
-    // A playback utterance claims the session's spoken-audio configuration.
+    // A playback utterance claims the session's spoken-audio configuration (D4).
     await s.tap('say-playback');
     const claimed = await until(s, 'state', (t) => /^true true /.test(t));
     check(where, 'a playback utterance claims playback', claimed.endsWith(' playback'), claimed);

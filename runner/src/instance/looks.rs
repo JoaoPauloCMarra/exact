@@ -1,4 +1,4 @@
-//! A node's host-known state looks: the plan's
+//! A node's host-known state looks (LLP 1121 D8, stage 8 B): the plan's
 //! `looks` rows for its site, each state's rows resolved as a static row is
 //! (in the node's tuple, a token's name to its value) and sent whole as
 //! `Op::SetLooks`, which each host composes over the base on its own
@@ -61,7 +61,7 @@ fn patch(rows: &[Row], plan: &Plan) -> StyleProps {
 
 /// `view`'s looks, resolved in `tuple`, as `Op::SetLooks` (empty: none),
 /// and the tokens they read as resolved: a token's new value may read one
-/// its old value didn't (a shadow over a base).
+/// its old value didn't (a shadow over a base, LLP 1121 stage 12 B3).
 pub(crate) fn op(view: ViewId, looks: &Looks, plan: &Plan) -> (Op, u64) {
     exact_kernel::style::theme::take_named();
     let _tuple = bridge::set_tuple(looks.tuple);

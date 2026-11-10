@@ -1,4 +1,4 @@
-# The coding-agent harness as a terminal app: the terminal host
+# The coding-agent harness as a terminal app (LLP 1101): the terminal host
 # over the harness's data module, inline by default (settled transcript in
 # the terminal's own scrollback, the live tail redrawn below it).
 [package]

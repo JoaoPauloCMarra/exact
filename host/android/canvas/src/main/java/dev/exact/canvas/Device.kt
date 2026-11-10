@@ -8,7 +8,7 @@ import android.view.View
 import android.view.accessibility.AccessibilityManager
 
 /**
- * The device's settings as the app is told them: read whole, and told whole in one call
+ * The device's settings as the app is told them (LLP 1115.001 D3.1): read whole, and told whole in one call
  * ([Native.configure]) before the host boots and again whenever one of them is not what was last told. exact2 does
  * with each what it has a door for (`host/linux/src/presenter/device.rs`).
  */
@@ -30,7 +30,7 @@ internal data class Device(
     val highContrast: Boolean,
     /** The screen is a finger's, and how far one moves before its touch is a drag, in dp (the system's touch slop). */
     val touch: Boolean,
-    /** The device is a television: its UI mode's type, which a TV's launcher sets. */
+    /** The device is a television (LLP 1115.001.003 D2): its UI mode's type, which a TV's launcher sets. */
     val tv: Boolean,
     val touchSlop: Float,
     /** How the device writes a date and a time: what a date control shows ([dates]). */
@@ -62,12 +62,12 @@ internal data class Device(
             )
         }
 
-        /** The device is a television: its UI mode's type, which a TV's launcher sets. */
+        /** The device is a television: its UI mode's type, which a TV's launcher sets (LLP 1115.001.003 D2). */
         fun tv(context: Context) =
             context.getSystemService(UiModeManager::class.java)?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
 
         /**
-         * How many pixels a CSS pixel is: the display's density, except on a TV, where the page is
+         * How many pixels a CSS pixel is: the display's density, except on a TV (LLP 1115.001.003 D6), where the page is
          * [TV_HEIGHT] CSS pixels tall, as Apple TV's is that many points, so an app's TV layout is the same on both.
          */
         fun scale(context: Context): Float {

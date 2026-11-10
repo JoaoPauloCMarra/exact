@@ -1,6 +1,6 @@
-//! A node's `:hover` and `:focus-visible` looks reach the kernel resolved, as a
-//! static row is, and a token's live edit resolves them again; `:active` is the
-//! node's press paint.
+//! @ref LLP 1121 D8 (stage 8 B): a node's `:hover` and `:focus-visible`
+//! looks reach the kernel resolved, as a static row is, and a token's live
+//! edit resolves them again; `:active` is the node's press paint.
 
 use exact_kernel::{Kernel, LOOK_HOVER};
 use exact_plan::{Plan, Value};
@@ -66,7 +66,7 @@ fn a_nodes_looks_reach_the_kernel_resolved_and_follow_a_live_token() {
         [LOOK_HOVER],
         "a :hover look; :active is the press paint"
     );
-    // `:active` is the node's own press rows.
+    // `:active` is the node's own press rows (LLP 1121 D8 as amended).
     let pressed = |r: &Runner<NoData>| {
         let k = r.kernel();
         let node = k.node_by_key(k.find_by_test_id("card")[0]).unwrap();
@@ -100,9 +100,9 @@ fn a_nodes_looks_reach_the_kernel_resolved_and_follow_a_live_token() {
     assert_eq!(looks(&r), inked);
 }
 
-/// One spelling a node: `:active` and the pressed paint saying the same paint
-/// on one node (or its class) is refused, naming both; different paint, or
-/// another state, is not.
+/// One spelling a node (LLP 1121 D8): `:active` and D7's pressed paint
+/// saying the same paint on one node (or its class) is refused, naming both;
+/// different paint, or another state, is not.
 #[test]
 fn an_active_look_and_the_pressed_paint_say_one_paint_once() {
     let refused = |rows: &str, part: &str| {
@@ -155,8 +155,8 @@ fn a_looks_unset_crosses_written_with_no_value() {
     );
 }
 
-/// An `:active` row lowered to the press paint is used where it is written:
-/// `uses` names its `:active` line and state.
+/// An `:active` row lowered to the press paint is used where it is written
+/// (theme2's 06:14 condition): `uses` names its `:active` line and state.
 #[test]
 fn uses_names_an_active_rows_own_line() {
     let path = app("uses", &[("app.tamber", DESIGN), ("app.contract", VIEW)]);
@@ -170,7 +170,8 @@ fn uses_names_an_active_rows_own_line() {
 }
 
 /// A token a `:hover` row reads is used where that row is written, as that
-/// state's: its `:hover` line, not its node's.
+/// state's: its `:hover` line, not its node's (LLP 1122's queue item (1);
+/// theme2's 03:18, a correction of the line it named).
 #[test]
 fn uses_finds_a_hover_looks_token() {
     let path = app(
@@ -188,9 +189,9 @@ fn uses_finds_a_hover_looks_token() {
     );
 }
 
-/// `layout <node>` says a node's looks' rows as it says its own: each row's
-/// value and the token it read, so inspect on a held hover names the look's
-/// tokens; a literal row reads none.
+/// LLP 1122 D8 (stage 9 E): `layout <node>` says a node's looks' rows as it
+/// says its own: each row's value and the token it read, so inspect on a
+/// held hover names the look's tokens; a literal row reads none.
 #[test]
 fn a_nodes_layout_says_its_looks_rows_and_their_tokens() {
     let view = VIEW.replace(
@@ -247,8 +248,9 @@ fn a_nodes_layout_says_its_looks_rows_and_their_tokens() {
     );
 }
 
-/// A conditional class's `:active` part says no place (either style's): `uses`
-/// reads it at its node, still as `:active`'s.
+/// A conditional class's `:active` part says no place (either style's):
+/// `uses` reads it at its node, still as `:active`'s (Astra, round 2 of
+/// LLP 1122's queue item (1)).
 #[test]
 fn uses_keeps_a_conditional_active_parts_state_at_its_node() {
     let view = "style A\n  :active\n    background-color = \"accent.soft\"\n\nstyle B\n  :active\n    background-color = \"accent.soft\"\n\ncomponent App\n  state n = 0\n  state flag = true\n  action go\n    n = n + 1\n  view\n    column class=(flag ? A : B) press=go testId=\"card\"\n      text \"c\"\n";
@@ -264,9 +266,9 @@ fn uses_keeps_a_conditional_active_parts_state_at_its_node() {
     assert_eq!(sites[0]["line"], 15, "the node's line: {sites:?}");
 }
 
-/// A look resolved again keeps what its new text read beside what it read, as a
-/// row does, so a base a re-set shadow newly reads sets the look again when it
-/// is edited.
+/// Stage 12 B3 (round 1, Grok 1): a look resolved again keeps what its new
+/// text read beside what it read, as a row does, so a base a re-set shadow
+/// newly reads sets the look again when it is edited.
 #[test]
 fn a_look_follows_a_base_its_shadows_new_value_reads() {
     let design =

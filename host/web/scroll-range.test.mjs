@@ -11,7 +11,7 @@ test('the wasm host binds no agent helper that agent-input.js does not hand it',
   for (const name of bound) expect([name, typeof agentInput[name]]).toEqual([name, 'function']);
 });
 
-test('the wasm host\'s layout reports a scroller\'s range beside its offset, a hidden overflow\'s too (rx/ry)', () => {
+test('the wasm host\'s layout reports a scroller\'s range beside its offset, a hidden overflow\'s too (LLP 1012 rx/ry)', () => {
   const saved = { style: globalThis.getComputedStyle, frame: globalThis.HTMLIFrameElement };
   globalThis.getComputedStyle = () => ({ display: 'block' });
   globalThis.HTMLIFrameElement ??= class {};

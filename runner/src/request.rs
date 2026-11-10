@@ -1,7 +1,7 @@
 //! A request the host runs, and what comes back.
 //!
-//! A data source answers now, or hands back a request; the host executes
-//! it, and a ticket names the reply. Failure is data.
+//! @ref LLP 1016 D1 (a data source answers now, or hands back a request) /
+//! D2 (the host executes; a ticket names the reply) / D4 (failure is data)
 //!
 //! `Request` and `Response` are the runner's own two structs — the fields of
 //! ibex2's `stdlib::fetch::{Request, Response}` minus what a plan runner
@@ -16,7 +16,7 @@ pub const MAX_HOST_WORK_BYTES: usize = 16 << 20;
 
 /// Grants understood by the platform I/O executor. Surface capabilities are
 /// enforced by the presenter, and device grants by the OS and the capability
-/// that asks; neither may make an older I/O parser reject
+/// that asks (LLP 1069.008 D3); neither may make an older I/O parser reject
 /// the otherwise independent filesystem, network, database, or secret grants.
 pub fn io_grants(spec: &str) -> String {
     spec.lines()
@@ -38,7 +38,7 @@ pub enum Answer {
 }
 
 impl Answer {
-    /// A stream: the host opens `request` and delivers
+    /// A stream (LLP 1016.000 D1): the host opens `request` and delivers
     /// each message it carries to the same ticket, and every message is
     /// parsed and commits as its own settlement. A stream is never on the
     /// ordered lane (it would hold everything behind it), so answering one is
@@ -137,24 +137,24 @@ pub struct Request {
     pub headers: Vec<(String, String)>,
     /// The body bytes (empty for a `GET`).
     pub body: Vec<u8>,
-    /// An answer that keeps coming: the host delivers each
+    /// An answer that keeps coming (LLP 1016.000): the host delivers each
     /// message as an [`Outcome::Message`], and anything else ends it.
     /// Set by [`Answer::stream`].
     pub stream: bool,
-    /// A `ws:`/`wss:` stream whose resource owns a two-way socket:
-    /// `open`, every frame in order (binary too), never
+    /// A `ws:`/`wss:` stream whose resource owns a two-way socket (LLP
+    /// 1016.000 D7): `open`, every frame in order (binary too), never
     /// coalesced, and a [`Outcome::Closed`] end; mutations send on it
-    /// ([`SocketSend`]). Unset, a socket only listens.
+    /// ([`SocketSend`]). Unset, a socket only listens, as in D4.
     pub socket: bool,
     /// An HTTP stream whose body, when it is not `text/event-stream`,
-    /// arrives as bytes: each
+    /// arrives as bytes (LLP 1016.000, the byte stream of 2026-10-23): each
     /// [`Message`] is `binary`, the bytes read since the runner took the
     /// last one, never dropped. Unset, such a body is the stream's one
     /// answer. Set by TypeScript's `fetch(url, {exactStream})`.
     pub bytes: bool,
     /// An HTTP stream that is an upload, which tells its bytes sent (`upload.rs`).
     pub upload_progress: bool,
-    /// An HTTP stream that is a long poll: the host asks
+    /// An HTTP stream that is a long poll (LLP 1016.000 D8): the host asks
     /// the URL, delivers each reply as one [`Message`] (its `id` the new
     /// cursor), and asks again with the cursor taken from that reply, one
     /// request at a time, a heartbeat asked again with no message, a
@@ -172,7 +172,7 @@ pub struct Request {
     /// runs the request, under the `fs.read` grant, at most
     /// [`MAX_BODY_FROM_BYTES`]: the bytes never cross the source. `body` is
     /// then empty. Set by TypeScript's `fetch(url, {exactBodyFrom})` and
-    /// [`Request::body_from`].
+    /// [`Request::body_from`] (LLP 1108 D6 R2).
     pub body_from: Option<String>,
     /// A 2xx reply's body is written to this app file (`app:/…`) by the
     /// host as it arrives, under the `fs.write` grant, and never crosses the
@@ -180,12 +180,12 @@ pub struct Request {
     /// written ([`Response::body_written`]). A reply that is not 2xx is read
     /// into the response as usual, at most [`BODY_TO_HELD_BYTES`], and the
     /// file is untouched. Set by TypeScript's `fetch(url, {exactBodyTo})` and
-    /// [`Request::body_to`].
+    /// [`Request::body_to`] (LLP 1108 D6 R2, 2026-10-26).
     pub body_to: Option<String>,
     /// What a redirect response does (`fetch`'s `redirect`).
     pub redirect: Redirect,
-    /// The server may hold the reply until something changes (a long
-    /// poll): pending as any request, but no clock waits on it,
+    /// The server may hold the reply until something changes (a long poll;
+    /// LLP 1016.000 D9): pending as any request, but no clock waits on it,
     /// neither a jump nor `clock settle` nor `clock data`, and each reply
     /// that leaves it out names it. Its answer must be safe to supersede: a
     /// send to its target meanwhile replaces it. Only a plain HTTP request
@@ -193,15 +193,15 @@ pub struct Request {
     /// Set by TypeScript's `fetch(url, {exactHeld: true})` and [`Request::held`].
     pub held: bool,
     /// Who asked it, for the check at each fetch hop and WebSocket open
-    /// and before a first capture of the login shell's
-    /// environment. The runner stamps it when the
+    /// (LLP 1133.036 D6) and before a first capture of the login shell's
+    /// environment (LLP 1133.007 D13). The runner stamps it when the
     /// request goes out.
     pub reach: crate::local_network::Reach,
-    /// A local listener's options: the URL is its
+    /// A local listener's options (LLP 1133.005 D1): the URL is its
     /// address, and the stream its events. Set by [`Request::listen`].
     pub listen: Option<Box<crate::listen::Listen>>,
-    /// A continuation that waits for an answer's own timer (`setTimeout`):
-    /// the runner's clock time, in ms, before which the
+    /// A continuation that waits for an answer's own timer (`setTimeout`,
+    /// LLP 1027.000 D1): the runner's clock time, in ms, before which the
     /// runner keeps it back. It is no I/O, so no clock waits on it, and an
     /// advance that reaches it hands it to the host. Set by [`Request::due`].
     pub due_ms: Option<u64>,
@@ -218,13 +218,13 @@ pub struct Request {
     pub fetch: Option<u64>,
 }
 
-/// The event of a long poll's message that is a reply but no event:
-/// a heartbeat or a transient failure, which takes the stream
+/// The event of a long poll's message that is a reply but no event (LLP
+/// 1016.000 D8): a heartbeat or a transient failure, which takes the stream
 /// out of every clock's wait and raises `heldReplies`, with no mapper call.
 /// A long poll's own events have an empty event; no other stream sends it.
 pub const LONG_POLL_REPLY: &str = "exact:reply";
 
-/// A long poll's terms.
+/// A long poll's terms (LLP 1016.000 D8).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LongPoll {
     /// The query parameter the next request carries the cursor in.
@@ -254,7 +254,7 @@ impl LongPoll {
     }
 }
 
-/// A long poll waiting to ask again after a transient failure, as
+/// A long poll waiting to ask again after a transient failure (D8), as
 /// `state.streams` shows it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Retrying {
@@ -266,7 +266,7 @@ pub struct Retrying {
     pub error: String,
 }
 
-/// The host's live view of its long polls' waits, by stream ticket;
+/// The host's live view of its long polls' waits (D8), by stream ticket;
 /// `None` for a ticket that is not waiting.
 pub type RetryReader = std::sync::Arc<dyn Fn(u64) -> Option<Retrying> + Send + Sync>;
 
@@ -301,8 +301,8 @@ pub const NATIVE_URL: &str = "exact-native:";
 
 impl Request {
     /// A long native call with this JSON body (`native.later`'s request, for
-    /// a Rust source): the independent lane with a 1 MiB answer.
-    /// The answer is an HTTP-shaped outcome: 200 carries the JSON reply.
+    /// a Rust source): the independent lane with a 1 MiB answer (LLP 1067
+    /// D3). The answer is an HTTP-shaped outcome: 200 carries the JSON reply.
     pub fn native(body: Vec<u8>) -> Request {
         Request {
             http: HttpScheduling::Independent {
@@ -334,7 +334,7 @@ impl Request {
         }
     }
 
-    /// An auth session (`openAuthSession`): the body is
+    /// An auth session (`openAuthSession`, LLP 1069.006 D1): the body is
     /// [`crate::auth::Session`]'s JSON; the independent lane, a 64 KiB reply.
     pub fn auth(body: Vec<u8>) -> Request {
         Request {
@@ -365,7 +365,7 @@ impl Request {
     /// Whether the request may change something at its server: an `http:`
     /// or `https:` request whose method is not safe (RFC 9110 §9.2.1), and
     /// no stream, socket, long poll or held request. One its answer lets go
-    /// runs to its end: cancelling it would not undo it.
+    /// runs to its end (LLP 1146 D2): cancelling it would not undo it.
     pub fn has_effects(&self) -> bool {
         let url = self.url.get(..8).unwrap_or(&self.url).to_ascii_lowercase();
         (url.starts_with("http://") || url.starts_with("https://"))
@@ -450,7 +450,7 @@ impl Request {
         }
     }
 
-    /// Host storage work as a bounded protocol payload.
+    /// Host storage work as a bounded protocol payload (LLP 1027.001 D2).
     pub fn storage(payload: Vec<u8>) -> Self {
         Self {
             storage: Some(payload),
@@ -539,8 +539,8 @@ impl Request {
         self
     }
 
-    /// Why this request's long poll is refused, if it is one and is:
-    /// a stream's GET with no body over `http:` or `https:`,
+    /// Why this request's long poll is refused, if it is one and is (LLP
+    /// 1016.000 D8): a stream's GET with no body over `http:` or `https:`,
     /// with good terms. Every host and seam checks it before anything is sent.
     pub fn long_poll_refusal(&self) -> Option<&'static str> {
         let poll = self.long_poll.as_deref()?;
@@ -750,7 +750,7 @@ impl Request {
         }
     }
 
-    /// A local listener on `address`, `unix:<path>`: a
+    /// A local listener on `address`, `unix:<path>` (LLP 1133.005 D1): a
     /// two-way stream, answered with [`Answer::stream`].
     pub fn listen(address: &str, options: crate::listen::Listen) -> Self {
         Self {
@@ -762,7 +762,7 @@ impl Request {
 
     /// Why this request's listener is refused, if it is one and is: not a
     /// stream, an address that is not a `unix:` path `sun_path` holds, or
-    /// options out of bounds. The grant is the host's to check.
+    /// options out of bounds. The grant is the host's to check (D11).
     pub fn listen_refusal(&self) -> Option<String> {
         let listen = self.listen.as_deref()?;
         if !self.stream || !self.socket {
@@ -837,21 +837,21 @@ pub struct Message {
     /// The event's type (`event:`); empty is `message`.
     pub event: String,
     /// The last event id (`id:`), the cursor a re-ask sends back as
-    /// `Last-Event-ID`; empty when the stream set none.
+    /// `Last-Event-ID` (LLP 1016.000 D6); empty when the stream set none.
     pub id: String,
     /// The event's data (`data:` lines joined by newlines).
     pub data: String,
     /// Messages the host dropped for this one because the runner had not
-    /// taken them yet (display data coalesces to the newest). Non-zero is
-    /// a gap a log re-asks across from its cursor.
+    /// taken them yet (LLP 1016.000 D4: display data coalesces to the
+    /// newest). Non-zero is a gap a log re-asks across from its cursor.
     pub coalesced: u32,
-    /// A two-way socket's binary frame: its bytes, with
+    /// A two-way socket's binary frame (LLP 1016.000 D7): its bytes, with
     /// `data` empty. `None` for text and for every server-sent event.
     pub binary: Option<Vec<u8>>,
 }
 
 /// One operation a mutation, or the socket's own mapper, stages on a
-/// resource's socket, published only once the commit
+/// resource's socket (LLP 1016.000 D7), published only once the commit
 /// that staged it stands.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SocketOp {
@@ -866,7 +866,7 @@ pub enum SocketOp {
         /// The close reason.
         reason: String,
     },
-    /// A listener's line to one connection, sent with a `\n`.
+    /// A listener's line to one connection, sent with a `\n` (LLP 1133.005 D6).
     Line {
         /// The connection's id.
         connection: u64,
@@ -874,12 +874,12 @@ pub enum SocketOp {
         text: String,
     },
     /// A listener's end of one connection, once what was sent before it
-    /// has been written.
+    /// has been written (LLP 1133.005 D6).
     End {
         /// The connection's id.
         connection: u64,
     },
-    /// An operation on a resource's child process,
+    /// An operation on a resource's child process (LLP 1133.007 D2),
     /// addressed to the incarnation whose handle made it: a host refuses it
     /// once that incarnation has ended.
     Process {
@@ -923,7 +923,7 @@ impl SocketOp {
     }
 }
 
-/// What staged a batch of socket operations.
+/// What staged a batch of socket operations (LLP 1016.000 D7).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SocketOrigin {
     /// A mutation's synchronous source, by the mutation's name.
@@ -932,7 +932,7 @@ pub enum SocketOrigin {
     /// or a `message`), by the resource's name.
     Mapper(String),
     /// One turn of an answer in flight, by its resource's or mutation's
-    /// name: sent once the commit that ran
+    /// name (the amendment of 2026-10-18): sent once the commit that ran
     /// the turn stands, whatever becomes of the answer.
     Answer(String),
 }
@@ -966,16 +966,16 @@ pub struct SocketSend {
 /// A request's outcome: a response (any status), or no response at all.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Outcome {
-    /// A portable storage operation completed.
+    /// A portable storage operation completed (LLP 1027.001 D2).
     Storage(Vec<u8>),
     /// Named surface work completed.
     Surface(SurfaceOutcome),
     /// The server answered.
     Response(Response),
-    /// One message of a stream: the stream stays open.
+    /// One message of a stream (LLP 1016.000 D1): the stream stays open.
     /// Every other outcome delivered to a stream's ticket ends it.
     Message(Message),
-    /// A two-way socket's end: the closing handshake's
+    /// A two-way socket's end (LLP 1016.000 D7): the closing handshake's
     /// code and reason, or 1006 when the connection dropped without one.
     Closed {
         /// The close code.
@@ -997,7 +997,7 @@ pub enum Outcome {
 impl Outcome {
     /// What came back, for the journal: a status and a size, or why nothing
     /// did, cut to 200 characters — never a body. A failure the app catches
-    /// is still on the record.
+    /// is still on the record (LLP 1016 D4).
     pub fn summary(&self) -> String {
         match self {
             Outcome::Response(r) => text!("HTTP {}, {} bytes", r.status, r.body.len()),
@@ -1038,8 +1038,8 @@ impl Outcome {
 pub enum FailureKind {
     /// No connection, TLS, a rejected fetch.
     Network,
-    /// Outside the app's grant or its limits: admission, or a
-    /// response over its size limit, on every host.
+    /// Outside the app's grant (LLP 1016 D6) or its limits: admission, or a
+    /// response over its size limit, on every host (LLP 1109 D3).
     Refused,
     /// The host has no executor (Linux before its transport).
     Unsupported,
@@ -1048,11 +1048,11 @@ pub enum FailureKind {
     /// Its deadline ([`Request::timeout_ms`]) passed; the host cancelled it.
     Timeout,
     /// What it names does not exist: a program a spawn could not find
-    /// (`ENOENT`).
+    /// (`ENOENT`, LLP 1133.007 D2).
     NotFound,
 }
 
-/// Where a module instance runs: on the runner's thread,
+/// Where a module instance runs (LLP 1027.002 D1): on the runner's thread,
 /// or on an owner of its own. `Main` is the default and, for a source that
 /// never says otherwise, the only behavior.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -1084,7 +1084,7 @@ impl Placement {
     }
 }
 
-/// The reply to host work that finishes on another owner:
+/// The reply to host work that finishes on another owner (LLP 1027.002 D3):
 /// `send` once, when the outcome exists. Dropped unsent — the owner died
 /// mid-turn, or never took the job — it reports `Aborted`, so the ticket
 /// still ends and a queue behind it can move. A stream's reply
@@ -1102,7 +1102,7 @@ impl Reply {
         Reply(Some(Deliver::Once(Box::new(deliver))))
     }
 
-    /// A stream's reply: each `message` goes through
+    /// A stream's reply (LLP 1016.000 D1): each `message` goes through
     /// `deliver` and leaves it open; `send`, or a drop, ends it.
     pub fn stream(deliver: impl FnMut(Outcome) + Send + 'static) -> Reply {
         Reply(Some(Deliver::Many(Box::new(deliver))))
@@ -1153,13 +1153,13 @@ pub enum Work {
     Now(Box<dyn FnOnce() -> Outcome + Send>),
     /// Hands the reply to another owner and returns at once; the outcome
     /// arrives when that owner sends it. The I/O worker is never held
-    /// while a module computes.
+    /// while a module computes (LLP 1027.002 D4).
     Later(Box<dyn FnOnce(Reply) + Send>),
 }
 
 /// What a continuation token is at dispatch — asked on the runner's thread,
 /// after the commit that handed the request out, with the store as
-/// committed then.
+/// committed then (LLP 1027.002 D3).
 pub enum Dispatch {
     /// Work for the host to run.
     Run(Work),
@@ -1170,8 +1170,8 @@ pub enum Dispatch {
     /// releases it from `DataSource::release` after a later commit.
     Held,
     /// Ask the answer again: no work to run, only its settlement, in its
-    /// place among the ordered requests.
-    /// A host settles it with [`Dispatch::again_outcome`]; a
+    /// place among the ordered requests (LLP 1041 §8.4, amended
+    /// 2026-10-09). A host settles it with [`Dispatch::again_outcome`]; a
     /// native executor never makes it worker work, never counts it against
     /// the sixteen effects, and keeps it pending rather than refusing it
     /// when its settlement window is full.

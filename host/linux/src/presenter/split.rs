@@ -1,5 +1,5 @@
-//! Windows list/details.
-//! The root list stays in the page; details have pane blocks.
+//! @ref LLP 1115.004 D16 — Windows list/details.
+//! @ref LLP 1115.002 D4 — the root list stays in the page; details have pane blocks.
 use super::*;
 use exact_kernel::{BlockAxis, Display, HostBlock, HostCover, Kernel, NodeKey};
 use exact_runner::Runner;

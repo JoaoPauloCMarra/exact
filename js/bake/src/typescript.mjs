@@ -3,7 +3,7 @@
 // resident, js/bake/src), which copies this file into its stage as
 // `__exact_config.mjs`, and the web build (host/web-js/build.mjs), which
 // imports it from here. One app.ts builds on every host or on none, refused
-// with the same diagnostics at the same point.
+// with the same diagnostics at the same point (calc F2, calendar F9/F11).
 // It reads only captured configuration; the producer owns the stage.
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, readSync, readdirSync, realpathSync, rmdirSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { execFile } from 'node:child_process';
@@ -126,7 +126,7 @@ const developmentTrust = (env) => env.EXACT_UPDATE_TRUST === undefined || env.EX
 
 /** A `net.fetch local-network` or `net.websocket local-network` line, as the native bake's entry matches it too. */
 export const LOCAL_NETWORK_LINE = /^([ \t]*net\.(?:fetch|websocket)[ \t]+local-network)[ \t]*$/gm;
-/** In a development build each such line gains the word that admits loopback as well, so a
+/** In a development build each such line gains the word that admits loopback as well (LLP 1133.036 D5), so a
  * drive's fixture on this machine stands in for a device on the LAN. A production build's lines stay as written,
  * and its bake refuses the word. */
 export const developmentLocalNetwork = (spec, env=process.env) => developmentTrust(env) ? spec.replace(LOCAL_NETWORK_LINE, '$1 development') : spec;
@@ -214,8 +214,8 @@ export function injectBackendOrigin(code, origin, parse, env=process.env) {
 
 /** A grant line that begins with the word `development` is a development
  * build's only: a production bake leaves it out, any other build keeps it
- * without the word (a chat app's test call, `development device.calls
- * purpose.calls`). No grant family is a bare
+ * without the word (Harmony's test call, `development device.calls
+ * purpose.calls`, LLP 1133.033 §13 question 4). No grant family is a bare
  * word, so the marker is never a grant's own; the bake's trailing
  * `local-network development` is another thing. Only the captured copy is
  * rewritten, so the app's own `grants` is the build's at run time too. Run
@@ -240,7 +240,7 @@ export function developmentGrants(code, parse, env=process.env) {
 }
 
 // Rolldown IDs are file paths, not URL or slash-normalized strings. Both
-// producers enforce the same captured-file boundary. A
+// producers enforce the same captured-file boundary (LLP 1027 D5). A
 // package's declarations are captured for the checker alone (`stagePackages`)
 // and never load; a package's code loads only from where `capturedSources`
 // captured it, which admits it before this check.
@@ -253,7 +253,7 @@ export function assertCapturedModule(stage, id) {
   if (path.split(sep).includes('node_modules')) throw new Error('module outside captured app: '+packageOrigin(root,file));
 }
 
-// Package declarations ("Type-only package imports"). A bare
+// Package declarations (LLP 1027 D5, "Type-only package imports"). A bare
 // specifier names a package. Its declaration files (`.d.ts`, which emit
 // nothing) and `package.json` files are captured into the stage's
 // `node_modules`, at the place TypeScript looks for them, so the checker reads
@@ -393,7 +393,7 @@ export function stagePackages(stage) {
   if (!existsSync(recordPath) || readFileSync(recordPath,'utf8')!==record) writeFileSync(recordPath,record);
 }
 
-// Package code ("Package code"). A package's JavaScript is
+// Package code (LLP 1027 D5, "Package code"). A package's JavaScript is
 // captured file by file as the bundle reaches it: each import is resolved
 // from where its importer really is (Node's lookup, a package's `exports`,
 // `main` and `browser` fields, as a browser bundle resolves them), and the
@@ -447,7 +447,7 @@ const kindOf=(options)=>options?.kind==='require-call' ? 'require' : 'import';
 // the page and Hermes run the same file of a package; `process.env.NODE_ENV`
 // is the constant packages test.
 export const bundleOptions={platform:'browser',transform:{define:{'process.env.NODE_ENV':'"production"'}}};
-// An async function resumes under the answer it began in,
+// An async function resumes under the answer it began in (LLP 1133.002 D14),
 // so a call it makes after an `await` is that answer's, even when it awaited
 // a promise another answer made. No engine carries context across a native
 // `await`, so a data module's bundles lower `async` to generators
@@ -464,7 +464,7 @@ export const asyncContextHelper=`export default function _asyncToGenerator(fn) {
     return new Promise(function (resolve, reject) {
       var gen = fn.apply(self, args);
       function step(key, arg) {
-        // A live answer's step that a module turn settled runs in that answer's own turn
+        // A live answer's step that a module turn settled runs in that answer's own turn (LLP 1146 D2)
         if (context && context.route && context.route(at, step, key, arg)) return;
         var before = context ? context.swap(at) : undefined, info;
         try { info = gen[key](arg); } catch (error) { if (context) context.swap(before); reject(error); return; }
@@ -511,7 +511,7 @@ export function capturedSources(stage, refusals=null) {
     if (!existsSync(to) || !readFileSync(to).equals(bytes)) { mkdirSync(dirname(to),{recursive:true}); writeFileSync(to,bytes); }
     files.set(to,{real:from,package:pkg,sha256:createHash('sha256').update(bytes).digest('hex')});
   };
-  // The files a package's exact.json declares in `web.assets`, with that declaration: captured with its
+  // The files a package's exact.json declares in `web.assets` (LLP 1154 D2), with that declaration: captured with its
   // code, so its digest covers their bytes and the web build serves them from the capture (host/web-js/build.mjs).
   const assets=(pkg)=>{
     const at=join(pkg.root,'exact.json');
@@ -671,7 +671,7 @@ export function replayCaptured(stage, allowed=[]) {
 // host/web-js/ts-fetch.js hides the page's), so a test of one (`typeof
 // window`) answers the same everywhere; a use that test does not guard is
 // refused here, by name. This keeps a module portable; it is no security
-// boundary: on the web the module runs in the page's realm.
+// boundary (LLP 1027 D5): on the web the module runs in the page's realm.
 const DOM=['window','frames','parent','top','opener','document','navigator','location','history','localStorage','sessionStorage','indexedDB','HTMLElement','Element','getComputedStyle','customElements','alert'];
 // The global object's names for itself, through which a member reaches the page.
 const HOSTS=['globalThis','self','window','frames','parent','top','opener'];
@@ -794,8 +794,8 @@ export function packageRefusals(code, label, parse) {
   return found;
 }
 
-// Time and seeds are source arguments: every executor refuses the clock, randomness and every
-// timer but an answer's own `setTimeout` when they are used, with these words (js/src/prelude.js,
+// Time and seeds are source arguments (LLP 1027.000): every executor refuses the clock, randomness and every
+// timer but an answer's own `setTimeout` (D1) when they are used, with these words (js/src/prelude.js,
 // js/src/binary.js, host/web-js/ts-fetch.js). A direct use in the app's own code is refused here too, at
 // build, by file and line, so a test that runs the module under Bun, which has no such guard, cannot hide it.
 const ambient=(api)=>api+' is unavailable in data sources; pass time or a random seed as an argument';
@@ -1092,7 +1092,7 @@ export function configure(stage, incremental=false, parse) {
   stagePackages(stage);
 }
 
-// A native module's names in data code: an `import … from
+// A native module's names in data code (LLP 1133.002 D13): an `import … from
 // "@exact/geolocation"` reaches a binding generated here from the package's
 // `exact.json`, never committed, so a published package and a `file:` one
 // read alike. Each interface installed above the app, the nearest first, is
@@ -1100,8 +1100,8 @@ export function configure(stage, incremental=false, parse) {
 // `paths`, which the checker and Rolldown share. A call goes through the
 // runner's admission: the web runtime's `__exact_module`, else a native
 // request (`exact-native:`), whose answer the runner gives as the module's
-// declaration says, an error as `{code, message}`.
-// Members other interfaces declare on `name`'s names, by name, with their interface's shapes.
+// declaration says, an error as `{code, message}` (D1).
+// Members other interfaces declare on `name`'s names, by name, with their interface's shapes (LLP 1133.014 D10 item 1).
 const membersOf=(name, interfaces)=>interfaces.flatMap(i=>Object.entries(i.declaration.members ?? {}).filter(([o])=>o.split('#')[0]===name).flatMap(([o,m])=>Object.entries(m ?? {}).map(([option,spec])=>[o.split('#')[1],{ option, type: spec.type, answers: spec.answers, shapes: i.declaration.shapes ?? {} }]))).reduce((out,[fn,m])=>((out[fn] ??= []).push(m), out),{});
 function moduleBindings(stage, app) {
   // The target the build compiles, as an implementation's `targets` names it, or none (a loop serving several).
@@ -1110,7 +1110,7 @@ function moduleBindings(stage, app) {
   const interfaces=moduleInterfaces(app); for (const {name,root,declaration,implementations} of interfaces) {
     const file='__exact_modules/'+name.replace(/^@/,'').replace(/\//g,'__')+'.ts';
     mkdirSync(resolve(stage,'__exact_modules'),{recursive:true});
-    // An interface the executor implements carries its own binding.
+    // An interface the executor implements carries its own binding (LLP 1133.007 D12).
     const own=Array.isArray(declaration.executor) && typeof declaration.binding==='string' ? readFileSync(resolve(root,declaration.binding),'utf8') : null;
     const text=own ?? moduleBinding(name,declaration,implementations.map(i=>i.json),names=>domDeclarations(app,names),membersOf(name,interfaces),target), at=resolve(stage,file);
     if (!existsSync(at) || readFileSync(at,'utf8')!==text) writeFileSync(at,text);
@@ -1149,8 +1149,8 @@ export function moduleInterfaces(app) {
   return [...out.values()];
 }
 
-/** The implementation bound to interface `iface` for `target`:
- * the one `app.json` names for the target, else the app's one direct
+/** The implementation bound to interface `iface` for `target` (LLP 1133.001
+ * D4): the one `app.json` names for the target, else the app's one direct
  * dependency that implements it there, else the one the interface carries;
  * `null` for none. Each choice is checked against the interface's version. */
 export function implementationFor(app, iface, target) {
@@ -1197,8 +1197,8 @@ function appText(app) {
   return [join(app,'app.ts'),...contracts(app)].map(f=>{ try { return readFileSync(f,'utf8'); } catch { return ''; } }).join('\n');
 }
 
-/** The packages the app imports, wherever it imports them: every Contract
- * file `app.contract` reaches
+/** The packages the app imports, wherever it imports them (LLP 1133.004
+ * stage 0, LLP 1133 D6 rule 6): every Contract file `app.contract` reaches
  * through relative `use … from "./…"`, and every TypeScript file `app.ts`
  * reaches through relative imports, each bare specifier taken to its
  * package's name. `text` is those files' text, where a literal option a
@@ -1232,9 +1232,9 @@ export function usedPackages(app) {
 
 /** The Swift implementations the app's interfaces carry for `target` (`ios`,
  * `macos`, `tvos`), of the interfaces the app names in `app.contract` or
- * `app.ts`: each extension, its own Swift module's name,
+ * `app.ts` (LLP 1133.001 D4): each extension, its own Swift module's name,
  * its class, its source files, and the system frameworks it needs from an OS
- * version (`frameworks`). */
+ * version (`frameworks`, LLP 1133.016 D15). */
 export function appleImplementations(app, target) {
   const { names: used, text } = usedPackages(app), named = `${text}\n${appText(app)}`;
   return moduleInterfaces(app).filter(i=>used.has(i.name) || usesInterface(i,named)).flatMap(i=>{
@@ -1242,7 +1242,7 @@ export function appleImplementations(app, target) {
     const files=impl?.json.platform==='apple' && impl.json.sources?.swift;
     if (!impl || !files?.length || !impl.json.class) return [];
     const extension=i.name.split('/').at(-1);
-    // An Info.plist dictionary keyed by each literal strings key the app passes at `name.option`.
+    // An Info.plist dictionary keyed by each literal strings key the app passes at `name.option` (LLP 1133.002 D10).
     const plist=Object.entries(impl.json.plist ?? {}).map(([key,at])=>{
       const [name,option]=at.split('.'), keys=new Set();
       for (const [,inside] of named.matchAll(new RegExp(`\\b${name}\\s*\\(([^)]*)\\)`,'g')))
@@ -1252,14 +1252,14 @@ export function appleImplementations(app, target) {
       for (const [,value] of rustSources(app).matchAll(new RegExp(`\\b${snake}\\s*:\\s*(?:Some\\()?"([^"]+)"`,'g'))) keys.add(value);
       return {key,keys:[...keys].sort()};
     }).filter(p=>p.keys.length);
-    // An interface that declares an authenticator entry: its class serves it in process.
+    // An interface that declares an authenticator entry (LLP 1133.010 D13): its class serves it in process.
     const authenticator=!!i.declaration?.authenticator?.apple;
     const events=(i.declaration.names ?? []).some(n=>n.event);
     return [{extension,module:'ExactPkg_'+extension.replace(/\W/g,'_'),className:impl.json.class,sources:files.map(f=>resolve(impl.dir,f)),plist,views:packageViewTags(i,impl),authenticator,start:i.declaration?.start==='load',frameworks:impl.json.frameworks??{},activity:impl.json.apple?.activity??null}];
   });
 }
 
-/** The view tags an implementation serves: every view its interface declares, and its own. */
+/** The view tags an implementation serves (LLP 1133.001 D1): every view its interface declares, and its own. */
 function packageViewTags(iface, impl) {
   const tags=v=>Array.isArray(v) ? v.filter(t=>typeof t==='string') : v && typeof v==='object' ? Object.keys(v) : [];
   return [...new Set([...tags(iface.declaration.views), ...tags(impl?.json.views)])].sort();
@@ -1271,9 +1271,9 @@ function usesInterface(i, named) {
   return packageViewTags(i, null).some(tag => new RegExp(`(^|[^\\w-])${tag}([^\\w-]|$)`).test(named));
 }
 
-/** The Kotlin implementations bound for Android of the interfaces the app names: each extension,
+/** The Kotlin implementations bound for Android (LLP 1133.001 D4) of the interfaces the app names: each extension,
  * its class, its source directories, which join the APK's Kotlin, and the Maven coordinates it names, which join the
- * one locked Gradle graph. */
+ * one locked Gradle graph (LLP 1133.008 D8 item 5). */
 export function androidImplementations(app) {
   const { names: used, text } = usedPackages(app), named = `${text}\n${appText(app)}`;
   return moduleInterfaces(app).filter(i=>used.has(i.name) || usesInterface(i,named)).flatMap(i=>{
@@ -1283,7 +1283,7 @@ export function androidImplementations(app) {
   });
 }
 
-/** Each used interface's package configuration for `target`: extension name to the
+/** Each used interface's package configuration for `target` (LLP 1133.021 §9 item 7): extension name to the
  * values `app.json` gives under `packages.<interface>.<target>`, for the keys the interface's `config` declares. A
  * key typed `env` names a variable (`{"env": "NAME"}`) whose value is read here and never written to the repo. A
  * required key that is absent throws its declared code; one required only at `release` throws only for a release. */
@@ -1311,7 +1311,7 @@ export function packageConfig(app, target, { release = false } = {}) {
   return out;
 }
 
-/** Each extension's web implementation, as bound:
+/** Each extension's web implementation, as bound (LLP 1133.001 D4):
  * extension name to the implementation's JavaScript entry. */
 export function webImplementations(app) {
   const out=new Map();
@@ -1322,8 +1322,8 @@ export function webImplementations(app) {
   return out;
 }
 
-/** The declarations of the DOM's `names` (WebAuthn's JSON dictionaries),
- * and of each type they name, copied from the TypeScript
+/** The declarations of the DOM's `names` (WebAuthn's JSON dictionaries, LLP
+ * 1133.011 D10), and of each type they name, copied from the TypeScript
  * compiler's own `lib.dom.d.ts`, which the data module's libraries leave
  * out: the binding is in the stage, so the check reads them there. A name
  * the library lacks is an opaque object. */
@@ -1351,7 +1351,7 @@ function domDeclarations(app, names) {
 
 /** A name that is not a source (`Result<'posted'>`, a mutation's slot) fails
  * as "does not satisfy the constraint 'keyof SourceMap'", which lists none:
- * say which there are. */
+ * say which there are (sb4 farm wave 7, E3: 061 and 066, 15 minutes). */
 function sourceNames(stage,diagnostics) {
   if(!/constraint 'keyof SourceMap'/.test(diagnostics))return '';
   let text='';

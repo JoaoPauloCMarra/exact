@@ -1,5 +1,7 @@
 //! The kernel→motion seam: a commit, restated as what the engine needs to hear.
 //!
+//! @ref LLP 1002 §3 (the frame); LLP 1003 §4 (the seam)
+//!
 //! Motion's inputs are style. After a commit, the animatable rows of every
 //! node the commit created or touched are the engine's new targets, each
 //! node's `transition` row is how it gets there, and its `animation` row is
@@ -12,7 +14,7 @@
 //! generation-checked [`NodeKey`] packed into a `u64` ([`motion_node`]), so a
 //! reused slot never inherits its predecessor's motion.
 //!
-//! Colour is its own pass ([`Kernel::paint_sync`]): a native
+//! Colour is its own pass ([`Kernel::paint_sync`], LLP 1062 D2): a native
 //! host reports appearance to [`PaintMotion`], which resolves `light-dark()`
 //! and keeps the record of which nodes own paint motion. [`LayoutMotion`]
 //! observes boxes after layout; the hosts only present the resulting values.
@@ -33,7 +35,7 @@ use exact_motion::{Animations, Change, Engine, EngineError, Property, Transition
 use std::collections::BTreeMap;
 
 /// The live nodes a commit restates to motion, once each: those it created
-/// or touched, and those a producer renewed.
+/// or touched, and those a producer renewed (LLP 1078).
 pub fn receipt_nodes(receipt: &CommitReceipt) -> impl Iterator<Item = NodeKey> + '_ {
     let renewed: crate::id::IdSet<NodeKey> = receipt.renewed.iter().copied().collect();
     receipt
@@ -63,7 +65,7 @@ pub fn node_key(node: u64) -> NodeKey {
 /// `transition` row and targets.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct MotionSync {
-    /// Nodes destroyed by the commit, and those it renewed: a
+    /// Nodes destroyed by the commit, and those it renewed (LLP 1078): a
     /// renewed node is forgotten and heard again as new.
     pub removed: Vec<u64>,
     /// Which of `removed` are renewed nodes, ascending. A host with its own
@@ -76,24 +78,24 @@ pub struct MotionSync {
     pub retired: Vec<(u64, Property)>,
     /// Each created or touched node's `transition` row.
     pub transitions: Vec<(u64, Transitions)>,
-    /// Each created or touched node's `-exact-layout-transition` row.
+    /// Each created or touched node's `-exact-layout-transition` row (LLP 1063).
     /// Its targets are not here: a host observes `Property::Layout` after
     /// layout, from the laid-out origin in the parent.
     pub layout: Vec<(u64, Transitions)>,
     /// Each created or touched node's clock timeline, its
-    /// `animation-timeline: -exact-clock(Name)`. Before `animations`:
+    /// `animation-timeline: -exact-clock(Name)` (LLP 1055.002). Before `animations`:
     /// the plays they start join it once every row is applied.
     pub clocks: Vec<(u64, Option<String>)>,
-    /// Each created or touched node's `animation` row.
+    /// Each created or touched node's `animation` row (LLP 1055 D5).
     pub animations: Vec<(u64, Animations)>,
     /// Each created or touched node's drag timeline rows, and each consumer
-    /// whose name the commit resolved anew: whether the
+    /// whose name the commit resolved anew (LLP 1057.003 D4): whether the
     /// timeline it drives reads `x`, and what its animations follow (the
     /// source node its name resolved to, and their range).
     pub timelines: Vec<TimelineRows>,
     /// The sync's eligible targets; ordinary receipt sync has four per node.
     pub changes: Vec<Change>,
-    /// Each created or touched `path`'s `d`, absolute:
+    /// Each created or touched `path`'s `d`, absolute (LLP 1055.000 D15):
     /// `None` unless its `transition` covers `d` and the data is whole.
     pub paths: Vec<(u64, Option<exact_motion::PathValue>)>,
 }
@@ -101,7 +103,7 @@ pub struct MotionSync {
 impl MotionSync {
     /// Feed the engine, in order.
     pub fn apply(&self, engine: &mut Engine) -> Result<(), EngineError> {
-        // A clock timeline's joins wait for every row: the
+        // A clock timeline's joins wait for every row (LLP 1055.002): the
         // start a join takes does not depend on the order of the nodes.
         engine.hold_clock_joins();
         let applied = self.apply_rows(engine);
@@ -211,7 +213,7 @@ pub fn targets(style: &StyleProps) -> [(Property, Value); 4] {
 }
 
 /// Which nodes own paint motion, and which paint properties each owns: the
-/// record, so a commit retires exactly what an earlier
+/// record (LLP 1062 D2), so a commit retires exactly what an earlier
 /// one adopted and an appearance change re-resolves exactly those.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct PaintOwners(BTreeMap<u64, u16>);
@@ -232,7 +234,7 @@ impl PaintOwners {
 
 /// The appearance a node's `light-dark()` colours resolve by: one for the
 /// whole tree (`bool`), or per node (a function of its key), for a host
-/// whose views each have their own.
+/// whose views each have their own (LLP 1062 D4).
 pub trait Appearance {
     /// Whether `key` resolves dark.
     fn dark(&self, key: NodeKey) -> bool;
@@ -258,11 +260,11 @@ fn paint_bit(property: Property) -> u16 {
 }
 
 fn color(c: ColorValue, dark: bool) -> Option<Value> {
-    // A profile's colour is never interpolated; it flips discretely.
+    // LLP 1100 D3: a profile's colour is never interpolated; it flips discretely.
     if matches!(c, ColorValue::Profiled(_)) {
         return None;
     }
-    // A wide colour moves in Oklab, unclipped.
+    // LLP 1100 D2: a wide colour moves in Oklab, unclipped.
     if let ColorValue::Wide(id) = c {
         if let Some(w) = crate::style::wide::wide(id) {
             let half = w.half(dark);
@@ -280,14 +282,14 @@ fn color(c: ColorValue, dark: bool) -> Option<Value> {
     Some(Value::rgba8(c.r(), c.g(), c.b(), c.a()))
 }
 
-/// A node's paint targets under an appearance: only for the paint properties
-/// its `transition`, `animation` or `-exact-exit-animation` names, so a node
-/// that animates no colour costs nothing. `light-dark()` resolves by `dark`,
-/// `color` is inherited, and a shadow's opacity folds into its colour's alpha.
-/// `None` for a property that is not a colour now: paint `none` or a paint
-/// server (CSS: a discrete pair, no transition). An exit's colours are owned
-/// while the node lives, so the engine has the value its exit keyframes start
-/// over.
+/// A node's paint targets under an appearance (LLP 1055.000 D6, LLP 1062
+/// D2): only for the paint properties its `transition`, `animation` or
+/// `-exact-exit-animation` names, so a node that animates no colour costs nothing.
+/// `light-dark()` resolves by `dark`, `color` is inherited, and a shadow's
+/// opacity folds into its colour's alpha. `None` for a property that is not
+/// a colour now: paint `none` or a paint server (CSS: a discrete pair, no
+/// transition). An exit's colours are owned while the node lives, so the
+/// engine has the value its exit keyframes start over (LLP 1063).
 ///
 /// A `currentcolor` border side's target is the computed `color`. Its
 /// computed value is the keyword whatever `color` does, so CSS starts no
@@ -329,8 +331,8 @@ pub fn color_targets(
         _ => None,
     };
     let [top, right, bottom, left] = s.border_colors(text);
-    // The engine moves the list's first shadow; the
-    // rest change at once (a deliberate deviation from CSS).
+    // @ref LLP 1077 D4 — the engine moves the list's first shadow; the
+    // rest change at once (declared in LLP 1001).
     let first = s.box_shadow.0.first();
     let shadow = first.map_or(ColorValue::Fixed(crate::style::Color::TRANSPARENT), |f| {
         f.color
@@ -359,7 +361,7 @@ pub fn color_targets(
 }
 
 impl Kernel {
-    /// An SVG shape's two animatable geometry rows: its
+    /// An SVG shape's two animatable geometry rows (LLP 1055 D6): its
     /// computed `stroke-dashoffset` (inherited, as SVG says), and a circle's
     /// `r`.
     pub fn svg_targets(&self, key: NodeKey) -> Vec<(Property, Value)> {
@@ -373,7 +375,7 @@ impl Kernel {
         if let (NodeType::SvgCircle, Dimension::Points(r)) = (node.node_type, node.style.r) {
             out.push((Property::R, Value::scalar(r as f64)));
         }
-        // The geometry rows a shape draws from,
+        // @ref LLP 1055.000 D15 — the geometry rows a shape draws from,
         // when they are lengths in user units; a percentage resolves at
         // paint time and is not a target.
         let s = node.style;
@@ -401,7 +403,7 @@ impl Kernel {
         out
     }
 
-    /// The box a node's `-exact-layout-transition` animates, when it
+    /// The box a node's `-exact-layout-transition` animates (LLP 1063), when it
     /// declares one: its laid-out origin and size, relative to the box it is
     /// placed in. That is its parent, except for the root of a virtualized
     /// list's row: its wrapper (the node carrying `listItemKey`) exists only
@@ -444,7 +446,7 @@ impl Kernel {
 
     /// The border sides a node paints in `currentcolor` (CSS's initial
     /// `border-color`) and draws at all: a host paints them in the view's
-    /// presented `color` while that moves, own or inherited.
+    /// presented `color` while that moves, own or inherited (LLP 1062 D1).
     pub fn current_color_sides(&self, key: NodeKey) -> Vec<Property> {
         let Some(node) = self.node_by_key(key) else {
             return Vec::new();
@@ -471,7 +473,7 @@ impl Kernel {
             .collect()
     }
 
-    /// Restate a commit's paint for a native engine, after
+    /// Restate a commit's paint for a native engine (LLP 1062 D2), after
     /// [`Self::motion_sync`] has set the nodes' rows: each created or
     /// touched node's [`color_targets`], and a retirement for each property
     /// it owned and no longer has a colour for. The web never calls this;
@@ -505,7 +507,7 @@ impl Kernel {
 
     /// Re-resolve every owner's paint under a new appearance. A `light-dark()`
     /// target that changes transitions under the node's row, as a browser's
-    /// computed value does when `color-scheme` changes.
+    /// computed value does when `color-scheme` changes (LLP 1062 D4).
     pub fn paint_resync(&self, dark: impl Appearance, owners: &mut PaintOwners) -> MotionSync {
         let keys: Vec<NodeKey> = owners.nodes().map(node_key).collect();
         self.paint_adopt(keys, dark, owners)
@@ -690,7 +692,7 @@ impl Kernel {
     /// kernel produced; a key the commit destroyed resolves to nothing, which
     /// is exactly what makes it a removal.
     pub fn motion_sync(&self, receipt: &CommitReceipt) -> MotionSync {
-        // A renewed node is forgotten and heard again as new.
+        // A renewed node is forgotten and heard again as new (LLP 1078).
         let mut renewed: Vec<u64> = receipt.renewed.iter().copied().map(motion_node).collect();
         renewed.sort_unstable();
         let mut sync = MotionSync {
@@ -708,7 +710,7 @@ impl Kernel {
             self.motion_sync_node(key, &mut sync);
         }
         // A consumer the commit left alone whose name now finds another
-        // timeline.
+        // timeline (LLP 1057.003 D4).
         for key in &receipt.timelines {
             if let Some(slot) = self.arena().resolve(*key) {
                 sync.timelines
@@ -716,7 +718,7 @@ impl Kernel {
             }
         }
         // A `display` change cancels (`none`) or restarts every animation
-        // below it: only descendants with a row are told.
+        // below it (LLP 1055.000 D15): only descendants with a row are told.
         for key in &receipt.display_changed {
             let Some(node) = self.node_by_key(*key) else {
                 continue;
@@ -737,8 +739,8 @@ impl Kernel {
                 stack.extend(d.children());
             }
         }
-        // A list row that showed: the animations below it that waited start,
-        // as a resumed `animation-play-state` starts them.
+        // A list row that showed: the animations below it that waited start
+        // (LLP 1055 D13), as a resumed `animation-play-state` starts them.
         for key in &receipt.revealed {
             let Some(node) = self.node_by_key(*key) else {
                 continue;
@@ -762,7 +764,7 @@ impl Kernel {
     }
 
     /// A row a list mounted out of its port: whether an animation below it
-    /// waits for the row to show (`-exact-animation-trigger: view`).
+    /// waits for the row to show (`-exact-animation-trigger: view`, LLP 1055 D13).
     /// Until [`Kernel::reveal`] those are held at their start.
     pub fn await_view(&mut self, row: crate::ViewId) -> bool {
         // Rows destroyed before they showed are forgotten here.
@@ -824,7 +826,7 @@ impl Kernel {
     }
 
     /// The node's `animation` row as its executors hear it: every entry
-    /// paused while the node waits for its list row to show.
+    /// paused while the node waits for its list row to show (LLP 1055 D13).
     pub fn animation_row(&self, node: &crate::kernel::NodeRef<'_>) -> Animations {
         let mut row = node.style.animation.clone();
         if !row.0.is_empty() && self.awaits_view(node) {
@@ -853,8 +855,8 @@ impl Kernel {
 
     /// Append one live node's `transition` row, targets and `animation` row
     /// to `sync`: what a commit says about a node it created or touched, and
-    /// what a host's boot says about every node (an animation starts when
-    /// its node is first seen, boot included).
+    /// what a host's boot says about every node (LLP 1055 D5: an animation
+    /// starts when its node is first seen, boot included).
     pub fn motion_sync_node(&self, key: NodeKey, sync: &mut MotionSync) {
         {
             let Some(node) = self.node_by_key(key) else {
@@ -871,7 +873,7 @@ impl Kernel {
                     velocity: None,
                 });
             }
-            // A path's `d`, read only where a
+            // @ref LLP 1055.000 D15 — a path's `d`, read only where a
             // transition moves it, as a colour target is.
             if node.node_type == NodeType::SvgPath {
                 let path = node
@@ -895,7 +897,7 @@ impl Kernel {
                 .push((id, node.style.rare.layout_transition.clone()));
             // An empty row is how a removed animation reaches the engine; an
             // empty row on a node that never had one costs one map lookup.
-            // A hidden node runs none.
+            // A hidden node runs none (LLP 1055.000 D15).
             let row = if !node.style.animation.0.is_empty() && self.hidden(&node) {
                 Animations::default()
             } else {

@@ -1,7 +1,9 @@
 // The executor's C++: a lean Hermes runtime (bytecode only — it cannot be
 // handed source), one module evaluated once, and calls into `exact.answer`
 // with strings. Storage uses Ibex2 bindings on this same runtime and the
-// caller owns every completion and microtask checkpoint.
+// caller owns every completion and microtask checkpoint (LLP 1027 D9/D10).
+//
+// @ref LLP 1027 D3 (the executor) / D10 (what the module can use)
 #include <hermes/hermes.h>
 #include <jsi/jsi.h>
 #include <ibex2_jsi.h>
@@ -55,8 +57,8 @@ static std::shared_ptr<jsi::Buffer> kept_bytecode(const uint8_t *data, size_t le
 
 // (ctx, op, a, b, out) -> 0 with `out` null (undefined) or a malloc'd string.
 typedef int (*HostFn)(void *ctx, uint32_t op, const char *a, const char *b, char **out);
-// (ctx, op, a, bytes, len, out): the host door for byte input (a digest's
-// data, a key's handle and a message to sign). Same result rules.
+// (ctx, op, a, bytes, len, out): the host door for byte input (LLP 1069.005:
+// a digest's data, a key's handle and a message to sign). Same result rules.
 typedef int (*BytesFn)(void *ctx, uint32_t op, const char *a, const uint8_t *bytes, size_t len,
                        char **out);
 
@@ -219,7 +221,7 @@ void install_console(State *state) {
 }
 
 // `__exact_host(op, a, b)`: the one door into Rust — the prelude takes it
-// off the global object and keeps it in a closure.
+// off the global object and keeps it in a closure (LLP 1027 D1a, D10).
 void install_host(State *state) {
   jsi::Runtime &rt = *state->rt;
   rt.global().setProperty(
@@ -245,7 +247,7 @@ void install_host(State *state) {
 }
 
 // `__exact_bytes(op, a, arrayBuffer)`: the door for bytes, which the string
-// door cannot carry. The prelude takes it too.
+// door cannot carry (LLP 1069.005 D1). The prelude takes it too.
 void install_bytes(State *state) {
   jsi::Runtime &rt = *state->rt;
   rt.global().setProperty(rt, "__exact_key", jsi::Function::createFromHostFunction(
@@ -487,8 +489,8 @@ bool exact_js_capture(void *h, size_t index, const char **path, size_t *path_len
 }
 void exact_js_clear_captures(void *h) { clear_captures(static_cast<State *>(h)); }
 
-// Stop the running execution, or the next to start, from any thread:
-// Hermes raises an uncatchable timeout at the next async break
+// Stop the running execution, or the next to start, from any thread (LLP
+// 1048.000 D10): Hermes raises an uncatchable timeout at the next async break
 // check, which bytecode compiled with -emit-async-break-check has in every
 // loop and function. The caller keeps the runtime alive through this call.
 void exact_js_interrupt(void *h) {

@@ -1,7 +1,7 @@
-//! `theme`: an app's own colours named once at its root, an entry named like
-//! a role overriding it; the plan carries the table, and a colour string
-//! naming an entry reads its colour, in the compiler and when the runner
-//! sets the row.
+//! @ref LLP 1095 D4 — `theme`: an app's own colours named once at its
+//! root, an entry named like a role overriding it; the plan carries the
+//! table, and a colour string naming an entry reads its colour, in the
+//! compiler and when the runner sets the row.
 
 use exact_kernel::{Color, ColorValue, Kernel, RowValue, StyleId};
 use exact_plan::Value;
@@ -85,8 +85,8 @@ fn names_read_their_entry_and_a_role_entry_overrides_the_role() {
         parsed("CanvasText"),
         "an unknown name is an invalid colour: the row's initial"
     );
-    // The plan carries the table, each value as the crate folds it (CSS's
-    // serialization).
+    // The plan carries the table, each value as the crate folds it (LLP
+    // 1121 D7: CSS's serialization).
     let plan = contract::compile(&src).unwrap();
     let rows: Vec<(&str, &str, &str)> = plan
         .theme
@@ -192,7 +192,7 @@ fn a_theme_is_checked_where_it_is_declared() {
         let errors = contract::compile(&src).unwrap_err();
         assert!(format!("{errors:?}").contains(id), "{body}: {errors:?}");
     }
-    // A row naming no token, role or colour.
+    // A row naming no token, role or colour (LLP 1121 D3).
     let src = format!("{THEME}component App\n  view\n    text \"a\" color=\"brnad\"\n");
     assert!(format!("{:?}", contract::compile(&src).unwrap_err()).contains("tamber-unknown-token"));
 }
@@ -230,7 +230,7 @@ fn an_overridden_role_is_replaced_where_the_kernel_resolves_it() {
 
 /// Each plan's names are its own, bound per parse: two runners on one
 /// thread, each with its own `brand`, each read their own as their rows
-/// are set; and each keeps its own role overrides,
+/// are set; and each keeps its own role overrides (LLP 1121 stage 5),
 /// bound around what is done for it, both ways round, with nothing said.
 /// An unknown name is an invalid colour in the log.
 #[test]
@@ -312,8 +312,8 @@ fn names_are_exact_profiles_are_colours_and_the_lint_reads_the_theme() {
     assert_eq!(lint("theme\n  card = \"light-dark(#f1f3f5, #0f1419)\"\n  Canvas = \"light-dark(#fff, #000)\"\n\ncomponent App\n  view\n    column background-color=\"card\"\n      text \"a\"\n"), 0);
 }
 
-/// White on an accent fill is a filled button's label (a sent bubble); white
-/// on any other fill, or on none, is still named.
+/// LLP 1116.020 D7: white on an accent fill is a filled button's label (a
+/// sent bubble); white on any other fill, or on none, is still named.
 #[test]
 fn white_on_an_accent_fill_is_not_one_scheme() {
     let lint = |body: &str| {
@@ -345,7 +345,7 @@ fn white_on_an_accent_fill_is_not_one_scheme() {
 }
 
 /// A plan with no overrides booted after one with them leaves the first
-/// its own: each session resolves `CanvasText` from its
+/// its own (LLP 1121 stage 5): each session resolves `CanvasText` from its
 /// own table, and nothing is said.
 #[test]
 fn a_plan_without_overrides_leaves_another_sessions_its_own() {
@@ -449,7 +449,7 @@ fn a_reload_with_other_overrides_re_presents() {
 
 /// A candidate its host refuses (dropped once booted) leaves the live
 /// session's roles resolving on the thread, not none; a session that boots
-/// inside another's scope leaves that scope the other's.
+/// inside another's scope leaves that scope the other's (LLP 1121 stage 5).
 #[test]
 fn a_refused_candidate_and_a_nested_boot_leave_the_live_sessions_roles() {
     let run = |canvas: &str| {
@@ -499,7 +499,7 @@ fn a_refused_candidate_and_a_nested_boot_leave_the_live_sessions_roles() {
 }
 
 /// A role resolved with no session bound while two live on the thread is a
-/// host path that forgot to bind: a debug build asserts,
+/// host path that forgot to bind: a debug build asserts (LLP 1121 stage 5),
 /// naming the call site; with one session, or bound, it is that one's.
 #[test]
 #[cfg(debug_assertions)]

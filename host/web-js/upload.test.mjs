@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { open } from '../../scripts/agent.mjs';
 import { webCompiler } from './module.mjs';
 
-// End to end on the web JS target: an app downloads a file
+// LLP 1016.000 D10, end to end on the web JS target: an app downloads a file
 // into its store (`exactBodyTo`), then uploads it as a resource's stream with
 // `exactUploadProgress`, against a stand-in that takes the body slowly. The
 // resource shows the bytes sent as they rise, is pending (and in

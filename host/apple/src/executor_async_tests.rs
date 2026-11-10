@@ -1,4 +1,4 @@
-//! The asynchronous core over a scripted transport whose
+//! The asynchronous core (LLP 1120 D3–D5) over a scripted transport whose
 //! exchanges the test answers by hand: the caps, the per-origin limit, the
 //! ordered slot at the terminal transition, the later-of release, a parked
 //! upload. The rest of the executor's suite runs on this core too
@@ -448,7 +448,8 @@ fn upload(url: &str, path: &str, ceiling: u32) -> Request {
     request
 }
 
-/// An upload parked behind a running request is not crowded out by one admitted
+/// Round 7's sequence (LLP 1120 §6 question 8, provisional): an upload
+/// parked behind a running request is not crowded out by one admitted
 /// later, and starts once the bytes it waits for drain.
 #[test]
 fn a_parked_upload_starts_when_its_bytes_drain_and_is_not_crowded_out() {

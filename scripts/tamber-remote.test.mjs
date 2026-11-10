@@ -1,4 +1,4 @@
-// The wire's remote doors (scripts/tamber-remote.mjs). Every
+// Stage 10 B: the wire's remote doors (scripts/tamber-remote.mjs). Every
 // listener here is on loopback and closed after.
 import { expect, test } from 'bun:test';
 import { X509Certificate } from 'node:crypto';
@@ -239,8 +239,8 @@ test('the real wire on the remote door: the local token works nowhere there, nor
   } finally { await remote.close(); await wire.close(); }
 });
 
-// The events' GET long poll (tamber/1.17) through the TLS door: a paired token of the POST read's
-// scope gets it, with its cursor; the local token, another origin and plaintext do not.
+// The events' GET long poll (tamber/1.17, LLP 1122 stage 14 D) through the TLS door: a paired token of the POST read's
+// scope gets it, with its cursor; the local token, another origin and plaintext do not (theme2's condition (a)).
 test('the events GET long poll through the TLS door: a paired read token gets it, the local token, another origin and plaintext do not', async () => {
   const wire = tamberServer({ appDir: '/nowhere', spawnServe: fakeServe, log: () => {} });
   const doors = await openRemote(wire, { remote: { host: '127.0.0.1', port: 0 } }, { say: () => {} });
@@ -261,7 +261,7 @@ test('the events GET long poll through the TLS door: a paired read token gets it
     expect((await send(true, port, { path: '/__tamber/events?client=agent%2Fcodex', headers: { 'x-exact-tamber-token': paired } })).status).toBe(200);
     expect((await send(true, port, { path: '/__tamber%2Fevents?client=laptop', headers: { 'x-exact-tamber-token': paired } })).status).toBe(404);
     // A raw backslash is refused anywhere in the target, a query value included; one encoded in a query value is the
-    // value's.
+    // value's (rt1's note on the door's query rule).
     expect((await send(true, port, { path: '/__tamber/events?client=agent%5Ccodex', headers: { 'x-exact-tamber-token': paired } })).status).toBe(200);
     expect((await send(true, port, { path: '/__tamber/events?client=agent\\codex', headers: { 'x-exact-tamber-token': paired } })).status).toBe(404);
     // The local token is no token here; another page's origin is refused; plaintext is nothing.
@@ -309,7 +309,7 @@ test('edit-held through the TLS door: a paired propose client edits its own held
     expect([mine.status, mine.ok?.client, mine.ok?.replaces]).toEqual([200, proposer.client, own]);
     const theirs = await edit(proposer, agents);
     expect([theirs.status, theirs.error?.needs]).toEqual([403, 'write']);
-    // A forged body client, the owner's name, is pinned to the paired one: still another's, still 403.
+    // (rt1's ask) A forged body client, the owner's name, is pinned to the paired one: still another's, still 403.
     const forged = await remote(proposer, { method: 'edit-held', client: 'agent:codex', proposal: agents, index: 0, value: '#0b0b0b' });
     expect([forged.status, forged.error?.needs]).toEqual([403, 'write']);
     const written = await edit(writer, agents);
@@ -354,7 +354,7 @@ test('choose through the TLS door (tamber/1.18): a paired propose client chooses
   } finally { await doors.close(); await wire.close(); }
 }, 30_000);
 
-// Under Bun a request on a socket handed to the HTTP server, as
+// The ghost builds' follow-up (review2's condition 1): under Bun a request on a socket handed to the HTTP server, as
 // every TLS door request is, never fires req 'close'. A paired client's subscription there still ends when the client
 // goes, on res 'close': it is present while the stream is open and not after.
 test('a subscription through the TLS door ends when its client leaves', async () => {
@@ -753,7 +753,7 @@ test('the main loopback port answers a sandboxed page\'s wire request as a remot
   } finally { server.close(); await wire.close(); }
 });
 
-test('a loopback --allow-host stays http; a default port written or not; Retry-After readable; the TLS door ignores the plugin flag', async () => {
+test('round 1 of E1: a loopback --allow-host stays http; a default port written or not; Retry-After readable; the TLS door ignores the plugin flag', async () => {
   const warned = [];
   const doors = await openRemote(recordingWire(), { remote: { host: '127.0.0.1', port: 0 }, tunnel: 0, plugin: true, hosts: ['localhost', 'tamber.example.com:443'] }, { say: () => {}, warn: l => warned.push(l) });
   try {
@@ -771,7 +771,7 @@ test('a loopback --allow-host stays http; a default port written or not; Retry-A
   } finally { await doors.close(); }
 });
 
-test('a public name takes https only; the loopback hook takes this port and no forwarded request', async () => {
+test('round 1 of E1: a public name takes https only; the loopback hook takes this port and no forwarded request', async () => {
   const warned = [];
   const doors = await openRemote(recordingWire(), { remote: null, tunnel: 0, hosts: ['tamber.example.com'] }, { say: () => {}, warn: l => warned.push(l) });
   try {
@@ -791,7 +791,7 @@ test('a public name takes https only; the loopback hook takes this port and no f
   } finally { server.close(); }
 });
 
-test('each side\'s left-out port is its own scheme\'s default; a bare --allow-host is 443; any x-forwarded-* is a proxy', async () => {
+test('round 2 of E1: each side\'s left-out port is its own scheme\'s default; a bare --allow-host is 443; any x-forwarded-* is a proxy', async () => {
   const warned = [];
   const doors = await openRemote(recordingWire(), { remote: null, tunnel: 0, plugin: true, hosts: ['tamber.example.com', 'alt.example.com:8443'] }, { say: () => {}, warn: l => warned.push(l) });
   try {
@@ -819,7 +819,7 @@ test('each side\'s left-out port is its own scheme\'s default; a bare --allow-ho
   } finally { server.close(); }
 });
 
-test('the real wire through the tunnel to a sandboxed page: the local token is no one; [::1] at its port is its own origin', async () => {
+test('round 3 of E1: the real wire through the tunnel to a sandboxed page: the local token is no one; [::1] at its port is its own origin', async () => {
   const wire = tamberServer({ appDir: '/nowhere', spawnServe: fakeServe, log: () => {} });
   const warned = [];
   const doors = await openRemote(wire, { remote: null, tunnel: 0, plugin: true, hosts: [] }, { say: () => {}, warn: l => warned.push(l) });
@@ -836,9 +836,9 @@ test('the real wire through the tunnel to a sandboxed page: the local token is n
   } finally { await doors.close(); await wire.close(); }
 });
 
-// tamber/1.15: what a client reads of this
+// tamber/1.15 (round 1's rework): what a client reads of this
 // machine's files. Every `file` is named by one rule (from the app, from its
-// package, or `<outside>/…`); a client that is not local (paired, through the remote
+// package, or `<outside>/…`); a client that is not local (paired, through B's
 // door or a tunnel) gets machine-written messages without this machine's
 // directories and `hello.app` as the directory's name; authored text comes
 // back byte for byte to every client. Through the real design server
@@ -1045,7 +1045,7 @@ test('a design server that is down says so to a remote client without this machi
   }
 });
 
-// A compile refusal names a linked package's file
+// Round 2 (Astra 1 = Grok 1): a compile refusal names a linked package's file
 // by its path; to a remote client that package, outside the app and the home
 // directory, is named by its package's name.
 test('a linked package outside the app whose design (under a missing dist/) is missing is named by its package to a remote client', async () => {
@@ -1080,7 +1080,7 @@ test('a linked package outside the app whose design (under a missing dist/) is m
   }
 }, 600_000);
 
-// A package linked from
+// The path fix's last finding (theme2: refuse it): a package linked from
 // outside the app and the home directory whose `package.json` has no `name`
 // is a compile refusal, `contract-package-unnamed`, at the app's `use`,
 // naming the package as the `use` does (`uses` says it). No answer to a remote client carries
@@ -1115,8 +1115,8 @@ test('an unnamed package linked from far outside the app is refused, and no remo
   }
 }, 600_000);
 
-// tamber/1.17's batched resolve through the TLS door, against the real design server: a paired
-// read client's batch whose answers pass 1 MiB (a stream's reply cap, not a fetch's) is read whole.
+// tamber/1.17's batched resolve (the third pass's #5 B) through the TLS door, against the real design server: a paired
+// read client's batch whose answers pass 1 MiB (a stream's reply cap, not a fetch's) is read whole (theme2's condition).
 test('a batched resolve past 1 MiB through the TLS door: a paired read client reads it whole', async () => {
   const app = mkdtempSync(join(tmpdir(), 'exact-remote-batch-'));
   // 180 families near the value bound (about 3.9 KB each, twice that in an answer): about 1.6 MB of answers.

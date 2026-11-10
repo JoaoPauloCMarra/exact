@@ -63,7 +63,7 @@ tapped #3 "go" · delivery platform
 typed #4 "q" · delivery platform · epoch 5 · clock 1500 ms
 
 --- tap unsupported
-tap #3 "Sky off" · delivery unsupported · epoch 5 · incarnation 2 · clock 1500 ms · reason="linux has no pinch" · pinch=2
+tap #3 "Sky off" · delivery unsupported · epoch 5 · incarnation 2 · clock 1500 ms · reason="linux has no pinch (LLP 1057.001 §4)" · pinch=2
 
 --- tap up
 tap up · delivery platform · epoch 6 · clock 1516 ms

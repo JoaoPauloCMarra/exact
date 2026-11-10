@@ -1,4 +1,4 @@
-//! The live table on the web: a batch or snapshot
+//! The live table on the web (LLP 1121 D13, stage 4): a batch or snapshot
 //! from the dev stream applied in place, no plan, no reload.
 
 use super::super::{Batch, Host};
@@ -20,8 +20,8 @@ impl<D: DataSource> Host<D> {
         let (receipts, live, unsupported) = match self.runner.apply_live(&edit) {
             Ok(applied) => (
                 {
-                    // The role sheet again, in this
-                    // batch's one style update; the
+                    // @ref LLP 1095 D11 — the role sheet again, in this
+                    // batch's one style update (LLP 1121 stage 5); the
                     // receipt sends every node's rows again.
                     if applied.roles {
                         batch.theme(&self.runner.theme_css());
@@ -50,7 +50,7 @@ impl<D: DataSource> Host<D> {
 }
 
 impl<D: DataSource> Host<D> {
-    /// Close a batch: the runner's deadline, frames wanted, clock, `seq`.
+    /// Close a batch: the runner's deadline, frames wanted (LLP 1073 D5), clock, `seq` (LLP 1079).
     pub(crate) fn finish(&self, batch: Batch, error: Option<&str>) -> String {
         let due = self.runner.timer_due_ms();
         let batch = batch.seq(self.runner.seq_range());

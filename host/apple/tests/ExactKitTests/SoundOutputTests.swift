@@ -1,4 +1,4 @@
-// The sound output is never opened at boot; the first
+// @ref LLP 1096 D8: the sound output is never opened at boot; the first
 // voice opens it, synchronously. An open that fails is journaled, reported
 // in `state.sounds.output`, skips its voices, gives back its session claim
 // and is tried again by a voice a second later; an engine the system stopped
@@ -103,7 +103,7 @@ final class SoundOutputTests: XCTestCase {
         XCTAssertEqual(Arm.plays, [1, 2])
     }
 
-    /// An advance across several of a sequence's fills hands
+    /// LLP 1125 D3: an advance across several of a sequence's fills hands
     /// over more ops than the ring holds; each is taken, in order, as renders
     /// make room, and none is dropped.
     func testOpsTheRingHasNoRoomForWaitAndGoInOrder() {
@@ -140,7 +140,7 @@ final class SoundOutputTests: XCTestCase {
         let output = output()
         play(output, 1)
         output.apply(["ops": [["op": "play", "id": 2, "sound": 0, "at": 0, "gain": 1, "playbackRate": 1.5, "pan": -0.25]]])
-        XCTAssertEqual(Arm.placed, [[1, 0], [1.5, -0.25]], "a play without them is at rate 1, unpanned")
+        XCTAssertEqual(Arm.placed, [[1, 0], [1.5, -0.25]], "a play without them is at rate 1, unpanned (LLP 1125 D10)")
     }
 
     func testAFailedOpenIsJournaledReportedSkippedAndTriedAgainASecondLater() {

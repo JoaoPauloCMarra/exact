@@ -1,4 +1,4 @@
-//! Work that outlives its answer. A let-go call whose awaited
+//! Work that outlives its answer (LLP 1146 D2). A let-go call whose awaited
 //! fetch has effects is set aside until the commit that let it go ends
 //! (`set_aside`); the runner then names the requests it keeps
 //! (`keep_sent_now`), the prelude adopts each one's fetch (`__exact_adopt`)
@@ -23,7 +23,8 @@ pub(crate) struct Letting {
     pub(crate) flight: HashMap<Key, Option<u64>>,
 }
 
-/// Start call `call`'s turn: the steps module work left for it run first.
+/// Start call `call`'s turn: the steps module work left for it run first
+/// (LLP 1146 §2.3).
 pub(crate) fn begin_turn(engine: &mut Watched, call: u64, source: &str) -> Result<(), DataError> {
     (engine
         .call("__exact_turn", [&call.to_string(), "", ""])

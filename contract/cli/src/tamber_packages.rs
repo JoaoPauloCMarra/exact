@@ -1,7 +1,7 @@
-//! Package designs on the wire (*1.14*): a package token's rows name its
-//! package and the file its value comes from, the package designs are listed
-//! read-only, and the app's override of a package (or base scale) token is
-//! one op, `set-token`.
+//! Package designs on the wire (LLP 1121 D11, stage 11 A2 part 2, *1.14*):
+//! a package token's rows name its package and the file its value comes
+//! from, the package designs are listed read-only, and the app's override
+//! of a package (or base scale) token is one op, `set-token`.
 
 use crate::tamber_serve::digest;
 use contract::tamber_params::AppParams;
@@ -41,11 +41,11 @@ pub(crate) fn packaged(app: &AppParams, out: &mut Value, paths: bool) {
 
 /// The local wire's watcher's `hello {paths: true}`: each package entry in
 /// `out` given `assets`, a digest of the package SVGs the app's build reads
-/// (an edit of one changes what `draws` says without touching the design's
-/// text), so the watcher announces it as a change of the package's design;
-/// and `watch.assets`, the same for each package with no design whose SVGs
-/// the build reads (a Contract component's icon param), named
-/// `<package>/assets/`.
+/// (stage 13 round 1, Astra 6: an edit of one changes what `draws` says
+/// without touching the design's text), so the watcher announces it as a
+/// change of the package's design; and `watch.assets`, the same for each
+/// package with no design whose SVGs the build reads (a Contract
+/// component's icon param, round 2, R2-4), named `<package>/assets/`.
 pub(crate) fn assets(app: &AppParams, out: &mut Value, graph: &contract::SourceGraph) {
     // Never `out["packages"]` written: none listed is no key.
     let listed = out.get_mut("packages").and_then(Value::as_array_mut);
@@ -59,7 +59,7 @@ pub(crate) fn assets(app: &AppParams, out: &mut Value, graph: &contract::SourceG
         .iter()
         .filter_map(|p| p.root.as_deref())
         .collect();
-    // Each owner of an SVG, there or not.
+    // Each owner of an SVG, there or not (narrow re-check, RE-1).
     let mut others: Vec<(String, std::path::PathBuf)> = graph
         .owners
         .iter()
@@ -75,9 +75,9 @@ pub(crate) fn assets(app: &AppParams, out: &mut Value, graph: &contract::SourceG
 }
 
 /// A digest of the SVGs under `root`'s `assets/` the build reads, each by
-/// its path and its bytes as the build reads them, from the file checked to
-/// be the package's own, one looked for and not there (or leaving) by its
-/// path.
+/// its path and its bytes as the build reads them, from the file checked
+/// to be the package's own (rounds 2 and 3, R2-3, R3-4), one looked for and
+/// not there (or leaving) by its path.
 fn assets_under(graph: &contract::SourceGraph, root: &std::path::Path) -> String {
     let under = root.join("assets");
     let mut read: Vec<(String, Option<Vec<u8>>)> = graph
@@ -111,7 +111,8 @@ fn assets_under(graph: &contract::SourceGraph, root: &std::path::Path) -> String
 pub(crate) fn watched(app_contract: &std::path::Path, graph: &contract::SourceGraph) -> Value {
     // Each package resolved, and each directory a resolution looked for a package.json in and failed
     // past (an export or a manifest missing for now): mending it inside the directory is a change too.
-    // And each package an icon's SVG is owned by, there or not, one vendored in the app included.
+    // And each package an icon's SVG is owned by, there or not, one vendored in the app included
+    // (round 3, R3-3; narrow re-check, RE-1).
     let owners = graph.owners.iter().map(|p| p.root.clone());
     let mut roots: Vec<String> = graph
         .packages
@@ -185,9 +186,9 @@ pub(crate) fn watched(app_contract: &std::path::Path, graph: &contract::SourceGr
 }
 
 /// Refused when one of `files` (the files a write edits, by their names on
-/// the wire) is a package's design: by its name, its path, or the file it is
-/// (an app design that is a package's), and, whatever the app's load says,
-/// any file in a package ([`in_package`]).
+/// the wire) is a package's design (D11): by its name, its path, or the file
+/// it is (an app design that is a package's), and, whatever the app's load
+/// says, any file in a package ([`in_package`]).
 pub(crate) fn read_only<'a>(
     app: &AppParams,
     dir: &std::path::Path,
@@ -200,7 +201,7 @@ pub(crate) fn read_only<'a>(
     let judge = |file: &str, real_file: &std::path::Path| -> Result<(), Value> {
         let refuse = |why: String| {
             Err(
-                json!({"message": format!("`{file}` {why}: not written (read-only); set the token in the app's design")}),
+                json!({"message": format!("`{file}` {why}: not written (D11, read-only); set the token in the app's design")}),
             )
         };
         match in_package(dir, real_file) {
@@ -239,7 +240,7 @@ pub(crate) fn read_only<'a>(
             file == p.home || file == p.path || (real_file.is_some() && real_file == real(&p.path))
         }) {
             return Err(json!({"message": format!(
-                "`{file}` is the package `{}`'s design, which is read-only: set the token in the app's design",
+                "`{file}` is the package `{}`'s design, which is read-only (D11): set the token in the app's design",
                 p.package.as_deref().unwrap_or_default()
             )}));
         }
@@ -328,7 +329,7 @@ fn in_package(dir: &std::path::Path, file: &std::path::Path) -> Result<Option<St
 }
 
 /// The package design that defines the token `name`, and its line for it;
-/// with `icons`, an icon of that name too: what a row says of
+/// with `icons`, an icon of that name too (stage 13): what a row says of
 /// it, where a write's ops take tokens alone (no op writes an icon).
 fn owner<'a>(
     app: &'a AppParams,
@@ -430,17 +431,17 @@ pub(crate) fn package_value(app: &AppParams, design: &str, name: &str) -> Option
     Some(json!({"value": token.value.value, "whens": whens, "file": source.home}))
 }
 
-/// The ops as the app's design takes them: an op on a package's design is
-/// refused (read-only); `set-token` of a name the app's design doesn't
-/// define (as the ops before it leave it) but a package or the base scale
-/// does is the app's override, written as a line of its own (`add-token`);
-/// `add-token` is for the app's own names, refusing a package's or the base
-/// scale's (that is `set-token`'s) and a new name in a package's namespace,
-/// as `rename-token` refuses renaming onto one. `restoring` (a revert or an
-/// import the server planned): its `add-token` of a package's or base name
-/// is the app's override line too. `dir`: the app's directory, where its
-/// files are judged read-only (none for a scrub's frame, which writes
-/// nothing).
+/// The ops as the app's design takes them (theme2's ruling 17:09): an op on
+/// a package's design is refused (read-only, D11); `set-token` of a name the
+/// app's design doesn't define (as the ops before it leave it) but a package
+/// or the base scale does is the app's override, written as a line of its
+/// own (`add-token`); `add-token` is for the app's own names, refusing a
+/// package's or the base scale's (that is `set-token`'s) and a new name in a
+/// package's namespace, as `rename-token` refuses renaming onto one.
+/// `restoring` (a revert or an import the server planned): its `add-token`
+/// of a package's or base name is the app's override line too. `dir`: the
+/// app's directory, where its files are judged read-only (none for a
+/// scrub's frame, which writes nothing).
 pub(crate) fn ops(
     ops: &mut [(String, Op)],
     app: &AppParams,

@@ -1,4 +1,4 @@
-//! One width's lines as the host keeps them (the storage
+//! One width's lines as the host keeps them (LLP 1085.000 §4, the storage
 //! spike's arrangement (b)): extracted from the paragraph's Parley layouts
 //! once they are broken at that width, owned by the host and independent of
 //! them, so a shaped layout is broken again for the next width while every
@@ -92,7 +92,7 @@ pub struct LayoutLine {
     pub glyphs: (u32, u32),
     /// Its width, points: what its content takes, indent included.
     pub w: f32,
-    /// A flowed line's band: ascent, descent and line
+    /// A flowed line's band (LLP 1043.000 §3 D7): ascent, descent and line
     /// height; zero for ordinary lines, whose box is the host's line pass.
     pub max_ascent: f32,
     /// See `max_ascent`.
@@ -101,7 +101,7 @@ pub struct LayoutLine {
     pub line_height: Option<f32>,
 }
 
-/// An image's box in a line: where its run's box went.
+/// An image's box in a line (LLP 1011.002): where its run's box went.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LayoutBox {
     /// The visual line it is on, an index into [`Lines::lines`].

@@ -1,4 +1,4 @@
-//! One checked table, four positional shapes, encoded paths.
+//! @ref LLP 1038 D2/D3 — one checked table, four positional shapes, encoded paths.
 
 use super::*;
 
@@ -40,7 +40,7 @@ pub(super) fn declare(file: &File, shapes: &mut Shapes) -> Result<(), TypeError>
             routes.rows.get(e.route).map_or(routes.span, |r| r.span),
         );
     }
-    // The `notfound` the compiler writes, beside the
+    // @ref LLP 1116.009 D2 — the `notfound` the compiler writes, beside the
     // table the author wrote and checked: the check above is of that table,
     // so a missing `/` is still refused.
     if contract_syntax::implicit_notfound(file) {
@@ -87,11 +87,11 @@ pub(super) fn declare(file: &File, shapes: &mut Shapes) -> Result<(), TypeError>
                 ("url", Ty::String),
                 ("tab", Ty::String),
                 ("params", record("Params")),
-                // Beside the url, never part of it.
+                // @ref LLP 1153 D5 — beside the url, never part of it.
                 ("fragment", Ty::String),
             ],
         ),
-        // What `sharedFiles(entry, name)` answers.
+        // @ref LLP 1133.024 D3 — what `sharedFiles(entry, name)` answers.
         (
             "SharedFiles",
             vec![
@@ -131,7 +131,7 @@ pub(super) fn value_call(name: &str, args: &[Expr], scope: &Scope, shapes: &Shap
 /// Router roster entries require the runtime context declared by `routes`.
 /// The router's `push` and `replace` are also the web's list and text
 /// spellings (`xs.push(x)`, `s.replace(a, b)`): a call that cannot be the
-/// router's says what to write instead.
+/// router's says what to write instead (@ref LLP 1088 D7.4).
 pub(super) fn not_the_router(
     f: Stdlib,
     args: &[Expr],
@@ -147,7 +147,7 @@ pub(super) fn not_the_router(
         Stdlib::Push if list() => {
             contract_syntax::idioms::refusal("push").expect("refused")
         }
-        Stdlib::Replace if args.len() == 3 => "`replace(nav, location)` is the router's; for text, write `s.replaceAll(find, with)`, the web's `String.prototype.replaceAll`".into(),
+        Stdlib::Replace if args.len() == 3 => "`replace(nav, location)` is the router's; for text, write `s.replaceAll(find, with)`, the web's `String.prototype.replaceAll` (LLP 1088 D2)".into(),
         _ => return Ok(()),
     };
     err("type-refused-idiom", why, span)
@@ -385,7 +385,7 @@ pub fn expand_path(
     Ok(Expr::Template(parts, span))
 }
 
-/// A route's `pages=`: a source call over
+/// A route's `pages=` (LLP 1048.000 D2, LLP 1048.003 D5): a source call over
 /// values that lists the values of the route's one parameter, `list<string>`.
 /// The build asks it once, and the server for its sitemap. Its signature
 /// joins the seam's.

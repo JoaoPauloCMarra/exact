@@ -213,7 +213,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// Tell the runner where every scroller and the page stand, for
-    /// `frame()`: after a clamp, and wherever a scroll
+    /// `frame()` (LLP 1051.000 D1): after a clamp, and wherever a scroll
     /// moves geometry (`refresh_transform_geometry`).
     pub(crate) fn publish_scroll(&mut self) {
         self.restore_scroll_anchors();

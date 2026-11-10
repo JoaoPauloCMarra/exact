@@ -99,7 +99,7 @@ fn the_tree_lays_out_with_real_text_and_every_node_has_a_box() {
     let live = p.host().kernel().live_count();
     assert_eq!(p.boxes().len(), live, "every live node is painted");
     // The root is a block as wide as the viewport and, since the app lives
-    // inside a sky canvas that fills the window, as tall as
+    // inside a sky canvas that fills the window (LLP 1014 §1a), as tall as
     // it: its `scroll` child holds the page.
     let root = boxed(&mut p, "caltrain-main");
     assert_eq!(
@@ -134,8 +134,7 @@ fn layout_json_is_the_agent_api_shape() {
         &l[..200]
     );
     assert_eq!(l.matches("\"sx\":").count(), 1, "one scroll container");
-    // Its range (`rx`/`ry`): the stations scroll down, not sideways, as far as a long wheel takes
-    // them
+    // Its range (LLP 1012 `rx`/`ry`): the stations scroll down, not sideways, as far as a long wheel takes them
     let reply: serde_json::Value = serde_json::from_str(&l).unwrap();
     let scroller = reply["nodes"]
         .as_array()
@@ -244,7 +243,7 @@ fn disabled_controls_refuse_pointer_and_text_input() {
 
 /// A keydown bubbles to every ancestor's `key` handler, innermost first, and
 /// a handler's `preventDefault()` keeps its character out of the field
-/// (docs/contract-grammar.md#keys).
+/// (docs/contract-grammar.md#keys; calc F3, minesweeper F7).
 #[test]
 fn a_key_bubbles_and_prevent_default_keeps_its_character_out() {
     pin_font();
@@ -369,7 +368,7 @@ fn unsupported_emoji_picker_does_not_dispatch_a_fake_selection() {
 
 #[test]
 fn a_wheel_scrolls_the_apps_scroll_node_and_the_page_stays() {
-    // The app's page is the `scroll` inside the sky canvas:
+    // The app's page is the `scroll` inside the sky canvas (LLP 1014 §1a):
     // the wheel goes there, and the page — the viewport over a document
     // exactly its size — has nothing to take.
     let mut p = boot();
@@ -571,8 +570,8 @@ fn agent_requests_answer_on_the_wire() {
         &mut p,
         &format!("{{\"op\":\"type\",\"id\":{field},\"text\":\"Sunny\"}}"),
     );
-    // Every host reply is tagged with the runner's epoch and incarnation;
-    // a `clock` reply keeps its own `clock`.
+    // Every host reply is tagged with the runner's epoch and incarnation
+    // (LLP 1035.002 D3); a `clock` reply keeps its own `clock`.
     assert!(
         ty.starts_with(&format!(
             "{{\"typed\":{field},\"value\":\"Sunny\",\"epoch\":"
@@ -643,7 +642,7 @@ fn a_reload_carries_state_and_starts_the_pictures_over() {
     );
 }
 
-/// On this host a `send` whose source answers later goes to
+/// LLP 1016 D2 on this host: a `send` whose source answers later goes to
 /// the executor thread, the reply comes back through `pump`, and the tree
 /// shows it — against a loopback server, the real transport underneath.
 #[test]
@@ -762,7 +761,7 @@ component App
         case none
           text "Signed out" testId="signed-out"
 "#;
-    // The grant is an origin, port included: the loopback
+    // The grant is an origin, port included (ibex LLP 0067): the loopback
     // server's, for this run only.
     let grants: &'static str =
         Box::leak(format!("net.fetch http://127.0.0.1:{port}\n").into_boxed_str());
@@ -796,7 +795,7 @@ component App
 #[test]
 fn a_launch_location_precedes_initializers_and_root_type_navigates_once() {
     pin_font();
-    // First pixel and the Linux agent input path.
+    // @ref LLP 1038 D5/D8/D11 — first pixel and the Linux agent input path.
     let source = "routes nav\n  home \"/\"\n    post \"/post/:post\"\ncomponent App\n  state first = top(nav).url\n  action follow(location: string)\n    nav = open(nav, location)\n  view\n    main navigate=follow navigationKey=`${top(nav).id}` navigationBack=\"back\" width=390 height=844\n      for e in stack(nav) key=e.id\n        column navigationKey=`${e.id}`\n          text e.url\n";
     let plan = contract::compile(source).unwrap().encode();
     let (host, error) = exact_linux::Host::boot_at(
@@ -825,7 +824,7 @@ fn a_launch_location_precedes_initializers_and_root_type_navigates_once() {
     );
 }
 
-// Linux keeps a video box even without a playback executor.
+// @ref LLP 1042 §2 — Linux keeps a video box even without a playback executor.
 #[test]
 fn new_trunk_apps_compile_and_present_on_the_linux_cpu_host() {
     pin_font();
@@ -965,7 +964,7 @@ fn popover_invocation_reports_unsupported_without_dispatching_a_partial_action()
         .contains("Linux does not support popover presentation"));
 }
 
-/// Linux presents no popover, so a context menu is refused
+/// LLP 1021 §5.2: Linux presents no popover, so a context menu is refused
 /// with the popover refusal (and logged), its rows and its submenu's stay
 /// hidden, and no action runs.
 #[test]
@@ -1102,7 +1101,7 @@ fn tap_passive_descendant_activates_parent_but_actionable_descendant_refuses() {
         assert!(error.is_none());
         let result = p.tap(view(&p, "parent"));
         if actionable {
-            // Covered by the child's own press: refused, naming it.
+            // Covered by the child's own press: refused, naming it (LLP 1012 §1).
             assert!(result.unwrap_err().contains("would press"));
             assert_eq!(p.host().runner().slot("count"), Some(&Value::Number(0.)));
         } else {

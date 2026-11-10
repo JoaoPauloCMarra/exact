@@ -1,14 +1,14 @@
-//! Calls to a native module's sources and sends. A call
+//! Calls to a native module's sources and sends (LLP 1133.002 D13). A call
 //! takes keyword arguments only, the interface's options and each
 //! platform's words, `apple.desiredAccuracy="threeKilometers"`. After
 //! scoping, each call is rewritten into an ordinary data-source call of one
 //! record, so the checker, lowering and the seam need nothing new: an option
 //! the call writes is `some(value)`, one it omits is `none`, and a platform's
 //! words are a record of their own, `none` when the call writes none of them.
-//! An omitted word so stays distinct from a written one.
+//! An omitted word so stays distinct from a written one (D2).
 //!
 //! A send that answers nothing is called as a statement, as a host command
-//! is, its arguments rewritten the same way; an event is
+//! is (LLP 1133.004 D5), its arguments rewritten the same way; an event is
 //! bound by `name=action` on the root (`module_events.rs`).
 
 use crate::CompileError;
@@ -373,7 +373,7 @@ fn call(
             ));
         }
     }
-    // A shape named by its literal goes as its schema.
+    // A shape named by its literal goes as its schema (LLP 1133.016 D15 item 4).
     let sub: serde_json::Value = serde_json::from_str(&m.substitute).unwrap_or_default();
     let paths: Vec<String> = (sub["shapeNames"].as_array().into_iter().flatten())
         .filter_map(|p| p.as_str().map(str::to_owned))
@@ -438,10 +438,10 @@ fn call(
     Ok(vec![Expr::Call(options_record(m), fields, span)])
 }
 
-/// A literal outside what the declaration admits for `option`: a number past
-/// its `min` or `max` (a poll faster than its floor, a batch past its bound),
-/// or a surface no canvas of the file places. A computed one is the runtime's
-/// to clamp or refuse.
+/// A literal outside what the declaration admits for `option` (LLP 1133.013
+/// D12 items 2 and 3): a number past its `min` or `max` (a poll faster than
+/// its floor, a batch past its bound), or a surface no canvas of the file
+/// places. A computed one is the runtime's to clamp or refuse.
 fn bounded(
     m: &ModuleDecl,
     option: &str,
@@ -501,9 +501,9 @@ fn bounded(
     }
 }
 
-/// A computed value where the declaration requires a literal: the Android
-/// manifest and the Play Console name each permission a `read` list can ask, so
-/// the list is written out.
+/// A computed value where the declaration requires a literal (LLP 1133.026
+/// D19 item 4): the Android manifest and the Play Console name each
+/// permission a `read` list can ask, so the list is written out.
 fn literal(m: &ModuleDecl, option: &str, value: &Expr) -> Option<CompileError> {
     let sub: serde_json::Value = serde_json::from_str(&m.substitute).unwrap_or_default();
     let required = (sub["literal"].as_array().into_iter().flatten()).any(|o| o == option);
@@ -524,7 +524,7 @@ fn literal(m: &ModuleDecl, option: &str, value: &Expr) -> Option<CompileError> {
     })
 }
 
-/// A handler named by anything but a string literal: the
+/// A handler named by anything but a string literal (LLP 1133.034 D5): the
 /// runner admits the module's call back by the name the call wrote.
 fn handler(m: &ModuleDecl, option: &str, value: &Expr) -> Option<CompileError> {
     let sub: serde_json::Value = serde_json::from_str(&m.substitute).unwrap_or_default();
@@ -634,8 +634,8 @@ fn check_answers(
     }
 }
 
-/// What a call of `m` answers when its answer is typed by an argument: the
-/// shape its literal option names.
+/// What a call of `m` answers when its answer is typed by an argument (LLP
+/// 1133.016 D15 item 4): the shape its literal option names.
 fn typed_answer(m: &ModuleDecl, args: &[Expr]) -> Option<TypeExpr> {
     let sub: serde_json::Value = serde_json::from_str(&m.substitute).ok()?;
     let by = sub["answersBy"].as_str()?;
@@ -649,7 +649,7 @@ fn typed_answer(m: &ModuleDecl, args: &[Expr]) -> Option<TypeExpr> {
 }
 
 /// The agent's own top-level state keys, which a module's declared list or
-/// value cannot take.
+/// value cannot take (LLP 1133.004 §7).
 const RESERVED_STATES: &[&str] = &[
     "slots",
     "derives",

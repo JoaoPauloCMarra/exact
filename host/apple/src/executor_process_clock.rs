@@ -1,4 +1,4 @@
-//! The clock a child's supervision keeps: the wall's, or
+//! The clock a child's supervision keeps (LLP 1133.007 §7): the wall's, or
 //! under the agent the agent's, which moves only when the drive moves it.
 //! Each supervisor waits for its next deadline (a restart's delay, a
 //! readiness probe, the drain, the kill's escalation, a script's next step)

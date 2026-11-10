@@ -34,7 +34,7 @@ pub struct Oracle {
     /// By resource, what each whose source the runner answers itself held
     /// at boot.
     pub facts: Rc<RefCell<Vec<(String, TypesId, Value)>>>,
-    /// The device's store at launch: a persisted state's kept
+    /// The device's store at launch (LLP 1116 D5): a persisted state's kept
     /// value, by the state's name. Empty, a fresh install's, unless
     /// [`Oracle::with_store`].
     pub stored: Rc<Vec<(String, TypesId, Value)>>,
@@ -90,7 +90,7 @@ impl Oracle {
 
     /// This source with a device store at launch: for each persisted state,
     /// a pure function of the seed and its name, nothing kept, a value of
-    /// its type, or one of another.
+    /// its type, or one of another (LLP 1116 D5).
     pub fn with_store(mut self) -> Self {
         let mut stored = Vec::new();
         for row in self.plan.slots.iter().filter(|s| s.persist) {

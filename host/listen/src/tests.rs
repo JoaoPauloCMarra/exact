@@ -1,7 +1,6 @@
 //! The listener over real `unix:` sockets: lines in and out, the ends a
-//! connection can have, the hold within the process and publication
-//! under the lock. Real sockets and wall-clock waits, so the tests are
-//! ignored: `cargo test -p exact-listen -- --ignored` runs them.
+//! connection can have, the hold within the process (D2) and publication
+//! under the lock (D4). Real sockets and wall-clock waits: the async lane.
 use super::*;
 use std::io::{BufRead, BufReader};
 use std::sync::mpsc;
@@ -67,7 +66,7 @@ fn standing(rx: &mpsc::Receiver<Seen>) -> Seen {
 }
 
 #[test]
-#[ignore = "binds real unix sockets; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: binds real unix sockets"]
 fn lines_in_and_a_reply_out() {
     let d = dir("echo");
     let path = d.join("a.sock");
@@ -96,7 +95,7 @@ fn lines_in_and_a_reply_out() {
 }
 
 #[test]
-#[ignore = "binds real unix sockets; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: binds real unix sockets"]
 fn peer_timeout_overflow_and_the_connection_bound() {
     let d = dir("ends");
     let path = d.join("a.sock");
@@ -133,7 +132,7 @@ fn peer_timeout_overflow_and_the_connection_bound() {
 }
 
 #[test]
-#[ignore = "binds real unix sockets; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: binds real unix sockets"]
 fn within_the_process_a_newcomer_waits_or_takes_over() {
     let d = dir("hold");
     let path = d.join("a.sock");
@@ -168,7 +167,7 @@ fn within_the_process_a_newcomer_waits_or_takes_over() {
 }
 
 #[test]
-#[ignore = "binds real unix sockets; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: binds real unix sockets"]
 fn another_process_taking_over_displaces_and_its_close_gives_it_back() {
     let d = dir("watch");
     let path = d.join("a.sock");
@@ -189,7 +188,7 @@ fn another_process_taking_over_displaces_and_its_close_gives_it_back() {
 }
 
 #[test]
-#[ignore = "binds real unix sockets; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: binds real unix sockets"]
 fn a_takeover_while_the_older_closes_keeps_the_newer_socket() {
     let d = dir("race");
     let path = d.join("a.sock");
@@ -210,7 +209,7 @@ fn a_takeover_while_the_older_closes_keeps_the_newer_socket() {
 }
 
 #[test]
-#[ignore = "binds real unix sockets; `cargo test -- --ignored` runs it"]
+#[ignore = "async lane: binds real unix sockets"]
 fn a_live_socket_without_takeover_is_an_error() {
     let d = dir("busy");
     let path = d.join("a.sock");

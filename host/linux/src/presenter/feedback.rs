@@ -1,13 +1,13 @@
 //! Which control a pointer hovers and which a contact holds down, for the
-//! neutral look: a state adds one thing there, a wash
+//! neutral look (LLP 1115.000 D17): a state adds one thing there, a wash
 //! where a pointer hovers and a stronger one while pressed, and a painted
 //! control is this host's to show them on. Kept on the painter, which reads
 //! them as it walks, and a change of either paints again. Material's field
-//! shows the same two as its state layers, and a text
+//! (LLP 1115.001.000 D6) shows the same two as its state layers, and a text
 //! field is one there.
 //!
 //! What presses in a row of a list whose rows are cells answers the same
-//! way: the look's row is this host's to draw too, and a
+//! way (LLP 1115.000 D16): the look's row is this host's to draw too, and a
 //! row's press is its wash, as the web's sheet has it (`neutral.css`).
 use super::*;
 
@@ -16,7 +16,7 @@ impl<D: DataSource> Presenter<D> {
     /// button's title is the button's), or the nearest node that presses
     /// when it is in a list's row. A row's own press look replaces the
     /// wash, as it does on the web: `-exact-press-scale`, the pressed paint
-    /// (which `:active` lowers to), or `pointerdown`
+    /// (LLP 1061 D7, which `:active` lowers to), or `pointerdown`
     /// or `pointerup` handlers, which draw one. A disabled row shows none.
     fn feedback_at(&self, id: ViewId) -> Option<ViewId> {
         let kernel = self.host.kernel();
@@ -79,7 +79,7 @@ impl<D: DataSource> Presenter<D> {
         self.refresh_looks(Some(hit));
     }
 
-    /// The nodes whose `:hover` look holds: the pointer's hit
+    /// The nodes whose `:hover` look holds (LLP 1121 D8): the pointer's hit
     /// and its ancestors that have one, as CSS's `:hover` matches; none for
     /// a finger. The focus's `:focus-visible` look holds where its ring
     /// would show. A state held keeps its look beside them, until what lets

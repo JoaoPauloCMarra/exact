@@ -1,17 +1,17 @@
-// @exact/media-capture's video half on Android: cameras as Media CameraCapture's video tracks
+// @exact/media-capture's video half on Android (LLP 1133.008 D1-D3, D6): cameras as Media CameraCapture's video tracks
 // through CameraX, each in the session's track table with its state and, while leased, its capture (`VideoSource`),
 // to which a consumer such as @exact/camera's viewfinder adds its use cases. MediaCapture.kt routes its names here
 // for a video track and `video=`.
 //
-// - One capture for the process: CameraX's `ProcessCameraProvider` with one lifecycle this file drives, started
+// - One capture for the process (D3): CameraX's `ProcessCameraProvider` with one lifecycle this file drives, started
 //   while a lease is live and the app is in front, and the whole set of use cases bound in one `bindToLifecycle` on
 //   main whenever it changes. A lease on another camera while one is live waits, `in-use`.
 // - A consumer that shows the capture takes the lease whenever its origin is the person's or the app's own code and
-//   the app is in front; a tool's or a wake's takes none. The last consumer gone, the track is `idle` and the
+//   the app is in front (§14); a tool's or a wake's takes none. The last consumer gone, the track is `idle` and the
 //   set is unbound.
 // - The camera's state becomes `muteReason`: `CameraState`'s errors for another app's use or the policy, and the
 //   activity's stop, `background`.
-// - The permission is `CAMERA`, its state a fact from the host's one history (`ExtensionContext.permission`).
+// - The permission is `CAMERA`, its state a fact from the host's one history (`ExtensionContext.permission`, D8 item 7).
 // - Under the agent no provider is made and nothing is asked: two cameras, "Agent back camera" and "Agent front
 //   camera", whose consumers are told `liveVideo(null)`.
 @file:androidx.annotation.OptIn(androidx.camera.camera2.interop.ExperimentalCamera2Interop::class)
@@ -67,7 +67,7 @@ internal class VideoTracks(private val context: ExtensionContext, private val ne
     private fun say(line: String) = context.log("media-capture: $line")
     private fun announce() { context.changed("media-capture.mediaStreamTrack"); disclose() }
 
-    /** Under the agent, each track for `state.extensions` (Disclosure). */
+    /** Under the agent, each track for `state.extensions` (LLP 1133.008 §9, Disclosure). */
     private fun disclose() = context.state(JSONObject().put("videoTracks", JSONArray(tracks.values.map { t ->
         shape(t).put("consumers", JSONArray(t.consumers.values.sorted())).put("lease", t.leased).put("waiting", t.waiting ?: JSONObject.NULL)
     })))
@@ -111,7 +111,7 @@ internal class VideoTracks(private val context: ExtensionContext, private val ne
         val next = args.optString("deviceId").ifEmpty { null }
             ?: when (args.optString("facingMode")) { "user" -> "front"; "environment" -> "back"; else -> null }
         if (next != null && next != t.camera) {
-            // Another camera under the same id: a capture start, refused while another lease holds the camera.
+            // Another camera under the same id (D1): a capture start (D6), refused while another lease holds the camera.
             if (context.origin != "app" || !context.foreground) return reply(error("NotAllowedError"))
             if (t.leased && CameraCapture.holders.size > 1) return reply(error("NotReadableError"))
             t.camera = next
@@ -192,7 +192,7 @@ internal class VideoTracks(private val context: ExtensionContext, private val ne
     fun dispose(id: String) { tracks.values.filter { it.id == id || it.stream == id }.forEach { end(it, "disposed") } }
     fun endAll(why: String) = tracks.values.toList().forEach { end(it, why) }
 
-    // Leases
+    // Leases (D3)
 
     override fun subscribe(id: String, consumer: TrackConsumer, start: Boolean, origin: String): () -> Unit {
         val t = tracks[id] ?: throw TrackError("NotFoundError")
@@ -330,7 +330,7 @@ internal class VideoTracks(private val context: ExtensionContext, private val ne
     }
 }
 
-/** The process's one capture: a provider, one lifecycle, and the set of use cases bound together. */
+/** The process's one capture (D3): a provider, one lifecycle, and the set of use cases bound together. */
 internal object CameraCapture : VideoSource {
     var ready: ProcessCameraProvider? = null
         private set

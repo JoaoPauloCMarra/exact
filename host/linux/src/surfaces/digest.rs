@@ -113,7 +113,7 @@ impl DigestStore {
 }
 
 /// Definition: `update/src/gpu.rs::code_digest`; copied so an L=0 host
-/// links no updater. Completed development receipts bind
+/// links no updater (LLP 1030 D4). Completed development receipts bind
 /// every byte. The parity test below holds this copy to the definition.
 pub(super) fn bytes_digest(bytes: &[u8], code: bool) -> String {
     use sha2::Digest;

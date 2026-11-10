@@ -1,5 +1,5 @@
 //! Inline mode as a person sees it: the host's frames written into a
-//! terminal emulator and read back from its screen.
+//! terminal emulator and read back from its screen (LLP 1101.002 §0 P1).
 //! Each test is a bug the harness found by hand.
 
 use exact_terminal::host::{Host, Key, Mode};
@@ -625,7 +625,7 @@ fn live_time_ticks_in_the_terminal_without_an_app_task() {
     assert!(vt.text(false).contains("3 min. ago"));
 }
 
-/// A grouped row's separator is no border. It is drawn on the
+/// LLP 1084 D7: a grouped row's separator is no border. It is drawn on the
 /// row's last line from its content edge, though no row has a bottom border
 /// width; not under the card's last row, which follows a row that comes and
 /// goes; and a colour the author gives the bottom edge alone recolours
@@ -676,7 +676,7 @@ fn a_grouped_rows_separator_is_drawn_without_a_border_and_not_under_the_last_row
     assert_eq!(host.frame().grid.cell(x, y).text, "─");
 }
 
-/// A native button row as wide as its row stays in its card:
+/// LLP 1084 D7: a native button row as wide as its row stays in its card:
 /// its inset is its margin and its widest the card less its insets.
 #[test]
 fn a_full_width_native_button_row_stays_in_its_card() {
@@ -710,7 +710,7 @@ fn a_full_width_native_button_row_stays_in_its_card() {
 /// A `press` on a box (a card, a pressable column) is on the screen and
 /// taps as a control does, and a click on its text reaches it; a button
 /// inside a pressable column is the click's target there, its own press
-/// alone.
+/// alone (QUEUE: "the terminal never taps a pressable box", iosfix's repro).
 const PRESSABLE: &str = r#"component App
   state solo = 0
   state card = 0
@@ -791,7 +791,7 @@ fn a_pressable_box_taps_and_clicks_as_a_control_does() {
     );
 }
 
-/// What a pressable box must not lend its cells to: a
+/// What a pressable box must not lend its cells to (Astra's round 1): a
 /// link-like run in its text is the click's target, and a button scrolled
 /// out of a list it holds, or a hidden box inside it, is not on the screen.
 const COVERED: &str = r#"component App
@@ -848,8 +848,8 @@ fn a_pressable_box_lends_no_cells_to_what_it_hides_or_holds_inline() {
 }
 
 /// A press on a box that can't hold the focus moves the focus away (the
-/// field blurs), as a click on a `div` does, and scrolls nothing into view:
-/// a card taller than its scroller stays where it is.
+/// field blurs), as a click on a `div` does, and scrolls nothing into view
+/// (Grok's round 1): a card taller than its scroller stays where it is.
 const BLURS: &str = r#"component App
   state blurs = 0
   state presses = 0
@@ -890,7 +890,7 @@ fn a_press_on_a_box_blurs_the_field_and_scrolls_nothing() {
 /// press: neither its own `press` nor an enclosing card's runs, by a tap,
 /// a click, or a click on a styled run of its text; a plain styled label
 /// inside a button leaves the click the button's: its own press runs and
-/// its `commandfor` opens the dialog.
+/// its `commandfor` opens the dialog (Astra's round 2 and its re-check).
 const INELIGIBLE: &str = r#"component App
   state presses = 0
   state outer = 0
@@ -951,8 +951,8 @@ fn a_disabled_or_inert_box_takes_no_press_and_a_buttons_label_is_its_own() {
 /// An `autofocus` control takes the focus once, as it arrives with nothing
 /// focused (HTML's candidates): a press on a box that can't hold the focus
 /// blurs it and the focus stays empty, so a key types nowhere; one that
-/// arrives later, with nothing focused, takes it: the
-/// terminal refills autofocus whenever the focus is empty.
+/// arrives later, with nothing focused, takes it (QUEUE: "the terminal
+/// refills autofocus whenever the focus is empty").
 const AUTOFOCUS: &str = r#"component App
   state draft = ""
   state other = ""

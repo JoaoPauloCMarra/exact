@@ -22,7 +22,7 @@ struct Options {
 impl History {
     fn place(&mut self, options: Options, anchor: Rect4, viewport: (f32, f32)) -> (f32, f32) {
         // ExactKit resets on size and style changes; moving the anchor or
-        // resizing the viewport keeps the last successful option (CSS Anchor Positioning).
+        // resizing the viewport keeps the last successful option (CSS §6.5).
         if self.inputs.as_ref() != Some(&options) {
             self.choice = 0;
         }
@@ -44,7 +44,7 @@ pub(in crate::presenter) fn at_point(
 }
 
 /// Where a popover's authored `left` and `top` put its border box in a
-/// viewport `viewport` big: past its margin, as CSS places a
+/// viewport `viewport` big (LLP 1021 D2): past its margin, as CSS places a
 /// fixed box by its insets; an axis with none at its margin. `None` when it
 /// writes neither, and its invoker places it; `None` too under an authored
 /// `position-area`, which CSS lets win. A host presents it as it presents a

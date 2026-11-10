@@ -1,5 +1,6 @@
-//! Package designs: each linked package's `<name>.tamber`, read as a source
-//! of the app's, and where one not there yet would be, for a watcher.
+//! Package designs (LLP 1121 D11, stage 11 A): each linked package's
+//! `<name>.tamber`, read as a source of the app's, and where one not there
+//! yet would be, for a watcher.
 
 use super::{digest, Package, Source, Sources};
 use crate::resolve::{namespace, package_design, Origin};
@@ -98,13 +99,13 @@ fn refusal(id: &str, path: &Path, message: String) -> CompileError {
     }
 }
 
-/// The designs of the packages the app's sources are in, in
+/// The designs of the packages the app's sources are in (LLP 1121 D11), in
 /// link order, each a source of its own so a refusal in it names it. A file
 /// outside its package (a `"tamber"` path, or a link out) is refused, and
 /// so are two that would take one namespace (the last part of their
 /// names: `@exact/reading` and `@else/reading`), naming both: no app line
 /// can tell their tokens apart. `bindable`: the app has code that can name
-/// a token outside its views, as its own design's `bindable`.
+/// a token outside its views (D7), as its own design's `bindable`.
 pub(super) fn designs(
     sources: &mut Sources,
     bindable: bool,

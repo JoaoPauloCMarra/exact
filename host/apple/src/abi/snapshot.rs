@@ -23,7 +23,7 @@ impl<D: DataSource> Bridge<D> {
         let Ok(kind_name) = std::str::from_utf8(&bytes[plan..plan + kind]) else {
             return self.refuse("entry kind is not UTF-8");
         };
-        // Snapshot admission has no controls. Controls will need field/button
+        // Snapshot admission has no controls. Stage 2 must install field/button
         // chrome, measurement revisions and control_text::prepare with intents.
         let measurer: Box<dyn TextMeasurer> = match hooks.measure {
             Some(f) => Box::new(CallbackMeasurer::of(f, &hooks)),

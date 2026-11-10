@@ -1,8 +1,8 @@
-//! A held state: the build channel's
+//! A held state (LLP 1122 D8, LLP 1121 stage 8 E3): the build channel's
 //! `hold` and the agent's `holdState` hold one state on one node as this
 //! host's own, on its own tracking, with no handler told. `active` is the
 //! press of the node the press resolves to (the innermost at or above it
-//! with a `press` handler): its press paint and scale
+//! with a `press` handler, as theme2's 07:48 says): its press paint and scale
 //! ease as a real press's, at once on the agent's clock, and a real press's
 //! release leaves it (`Host::press_feedback`). `hover` and `focus-visible`
 //! are that node's look, which the held node keeps beside the pointer's and
@@ -17,7 +17,7 @@ use crate::build_channel::HoldTarget;
 use crate::host::press::{Held, HoldState};
 use serde_json::{json, Value};
 
-/// The press rows a held `active` shows, by wire name (which
+/// The press rows a held `active` shows, by wire name (LLP 1061 D7, which
 /// `:active` lowers to).
 const PRESS_ROWS: [exact_kernel::StyleId; 5] = {
     use exact_kernel::StyleId::*;
@@ -332,8 +332,8 @@ impl<D: DataSource> Presenter<D> {
         views
     }
 
-    /// The agent's `{"op":"tap","id":V,"holdState":…}`:
-    /// the state held on the node as the real one, one hold shared with
+    /// The agent's `{"op":"tap","id":V,"holdState":…}` (LLP 1012, LLP 1122
+    /// D8): the state held on the node as the real one, one hold shared with
     /// the build channel's, or let go (null).
     pub(crate) fn hold_tap(&mut self, id: Option<u32>, state: &Value) -> Value {
         let state = match state {
@@ -361,7 +361,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// The agent's `layout` (`layout_json`), its node answer carrying
-    /// `held {state, rows}` when a state is held on it: the
+    /// `held {state, rows}` when a state is held on it (LLP 1122 D8): the
     /// press rows the node has for `active`, else its look's rows for that
     /// state, by wire name.
     pub(crate) fn layout_held(&mut self, node: Option<u32>, include_plan: bool) -> String {
@@ -373,8 +373,8 @@ impl<D: DataSource> Presenter<D> {
         let Some(held) = held.filter(|_| layout.ends_with("}}")) else {
             return layout;
         };
-        // The runner's `node` answer for the node it is held on: its own rows (`:active` lowered to
-        // them) or its look's, each with the token it read, and its site and instance path.
+        // The runner's `node` answer for the node it is held on: its own D7 rows (`:active` lowered to them) or its
+        // look's, each with the token it read (stage 9 E), and its site and instance path.
         let id = held.view;
         let answer: Value = serde_json::from_str(
             &self

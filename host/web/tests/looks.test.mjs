@@ -1,6 +1,6 @@
-// State looks in a real browser: a `:hover` look as the
+// State looks in a real browser (LLP 1121 D8, stage 8 B): a `:hover` look as the
 // host writes it into the page's looks sheet (src/host/looks.rs), over a node's
-// inline base, at once; `:active` lowered to the press paint, whose
+// inline base, at once; `:active` lowered to the press paint (LLP 1061 D7), whose
 // opacity is an absolute target eased from what shows (the hover's included) and
 // whose paint goes over the hover; a hover look replaces the unsaid wash; rows neither names show the base, also a base
 // that moves while pressed; a disabled node takes no look.
@@ -19,7 +19,7 @@ const check = need('chrome', unavailable);
 
 const sheet = withLook(readFileSync(resolve(WEB, 'index.html'), 'utf8')).match(/<style>[\s\S]*?<\/style>/)[0];
 // As `looks::rules` writes a `:hover` look (a yellow face at 0.8); `:active` is the node's press paint as the
-// host writes it (a blue face, an absolute opacity of 0.6).
+// host writes it (LLP 1061 D7: a blue face, an absolute opacity of 0.6).
 const on = ':not(:disabled,[disabled]:not([disabled="false"]))';
 const hover = at => `:where(html:not([data-exact-input=touch])) ${at}:hover${on}{background-color:rgba(255,255,0,1)!important;opacity:0.8!important;--exact-hover-wash:none!important;}`;
 const rules = `@media (any-hover:hover){${['3', '6', '7', '9', '11'].map(id => hover(`[data-view="${id}"]`)).join('')}${hover('[data-exact-looks="1"]')}}[data-exact-looks="1"][data-exact-held~=hover]${on}{background-color:rgba(255,255,0,1)!important;opacity:0.8!important;}[data-exact-looks="2"]:focus-visible${on},[data-exact-looks="2"][data-exact-held~=focus-visible]${on}{background-color:rgba(0,255,255,1)!important;}`;
@@ -132,7 +132,7 @@ check('a look snaps through an authored transition, entering and leaving; a base
     expect((await shows('focused')).slice(0, 2)).toEqual(['rgb(0, 255, 255)', '1.00']);
     await evaluate(`document.getElementById('focused').blur()`);
     expect((await shows('focused')).slice(0, 2)).toEqual(['rgb(255, 255, 255)', '1.00']);
-    // A held state's edges are held still the same way: hover, and a keyboard's focus look.
+    // A held state's edges (stage 8 E's hold) are held still the same way: hover, and a keyboard's focus look.
     await evaluate(`exact.hold(document.getElementById('eased-js'), 'hover', () => {})`);
     expect(await shows('eased-js')).toEqual(['rgb(255, 255, 0)', '0.80']);
     await evaluate(`exact.hold(null, null)`);
@@ -194,7 +194,7 @@ check('a hover look composes over the base, under the press paint', async () => 
     await mouse('mouseMoved', away);
     expect(await now()).toEqual(['rgb(238, 238, 238)', 'rgb(18, 52, 86)', '1.00']); // and the new base, at once
 
-    // The look is the whole hover: it replaces the unsaid wash, which a node with no look keeps, and leaves
+    // The look is the whole hover: it replaces the unsaid wash (LLP 1129), which a node with no look keeps, and leaves
     // an image of the author's (the JS target's in a class); one inside the node keeps its own wash; the stronger
     // wash of a row's press still shows.
     const image = (id) => evaluate(`getComputedStyle(document.getElementById('${id}')).backgroundImage`);

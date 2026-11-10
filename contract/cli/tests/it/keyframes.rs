@@ -1,5 +1,5 @@
-//! `keyframes` declarations and `animation`, with what the
-//! grnl port added on them: palette functions of literal
+//! `keyframes` declarations and `animation` (LLP 1055 D5), with what the
+//! grnl port added on them (LLP 1062): palette functions of literal
 //! arguments in a keyframe, `light-dark()`, `box-shadow` and `border-color`
 //! keyframes, computed times and `for` positions — proven on the rows the
 //! runner resolves after boot, and on what the compiler refuses.
@@ -153,7 +153,7 @@ fn keyframes_format_and_keep_their_percentages_whole() {
     );
 }
 
-/// `for item, i in list` names the row's position, which a
+/// LLP 1062 D8: `for item, i in list` names the row's position, which a
 /// stagger multiplies; a row that moves reads its new position, keeping its
 /// identity (and an animation keeps its start: only the delay changes).
 #[test]
@@ -233,7 +233,7 @@ fn each_names_the_position_and_a_moved_row_reads_its_new_one() {
     );
 }
 
-/// An `animation` template interpolates only times, so a
+/// LLP 1062 D7: an `animation` template interpolates only times, so a
 /// stagger is computed while the keyframes stay resolved at compile time;
 /// colours may be keyframed, one fixed colour each.
 #[test]
@@ -263,13 +263,13 @@ fn a_computed_delay_staggers_and_colours_keyframe() {
     assert!((row.0[0].delay - 0.21).abs() < 1e-6);
 
     // Which keyframes play may be computed too: the runner resolves the
-    // name, and a name no rule has starts nothing.
+    // name, and a name no rule has starts nothing (LLP 1055 D5).
     contract::compile("keyframes enter\n  from opacity=0\ncomponent App\n  state n = 1\n  view\n    text \"a\" animation=`nope ${n}ms`\n").unwrap();
 }
 
-/// A keyframe takes a `light-dark()` colour, written or
+/// LLP 1062 D9: a keyframe takes a `light-dark()` colour, written or
 /// returned by a palette function, and carries both; the host's appearance
-/// picks one. A welcome screen: each word arrives lit in the accent and eases
+/// picks one. grnl's welcome: each word arrives lit in the accent and eases
 /// to ink, one after another.
 #[test]
 fn a_keyframe_takes_light_dark_through_a_palette_function() {
@@ -344,7 +344,7 @@ fn booted(source: &str) -> Runner<NoData> {
 /// A keyframe's palette function may take arguments, folded when the app
 /// compiles through conditions, templates and other palette functions; and
 /// `box-shadow` animates in a keyframe, its colour and geometry together
-///.
+/// (LLP 1062).
 #[test]
 fn keyframes_fold_palette_arguments_and_animate_box_shadow() {
     let source = "fn tone(level: string, alpha: number): string = level == \"strong\" ? `rgba(29, 78, 216, ${alpha})` : \"light-dark(#000000, #ffffff)\"\nfn accent(): string = tone(\"strong\", 0.5)\nfn glow(c: string): string = `0 16px 24px ${c}`\nkeyframes k\n  from color=tone(\"soft\", 1) box-shadow=\"none\"\n  to color=accent() box-shadow=glow(\"light-dark(#1d4ed8, #ffffff80)\")\ncomponent App\n  view\n    text \"a\" testId=\"a\" animation=\"k 1s\"\n";
@@ -446,7 +446,7 @@ fn keyframe_folding_matches_the_vms_operators_and_number_text() {
 }
 
 /// Computed times are not only `animation`'s: a `transition` and an
-/// `-exact-exit-animation` template compute theirs too.
+/// `-exact-exit-animation` template compute theirs too (LLP 1062 D7).
 #[test]
 fn transition_and_exit_templates_compute_their_times() {
     let source = "keyframes leave\n  to opacity=0\ncomponent App\n  state n = 2\n  view\n    text \"a\" testId=\"a\" transition=`opacity ${n * 100}ms ease ${n}ms, color ${n}s` -exact-exit-animation=`leave ${n * 80}ms linear ${n * 10}ms both`\n";
@@ -507,10 +507,10 @@ fn a_bare_hex_color_is_its_quoted_string_and_another_hash_says_why() {
     }
 }
 
-/// `translate` takes percentages of the box's own border box, as CSS does — in
-/// an attribute, bound to state, and in a keyframe — and the engine's
-/// `translate` carries them beside the lengths (x, y, then percentages),
-/// interpolated componentwise as CSS interpolates `calc()`.
+/// Chess diary #4: `translate` takes percentages of the box's own border
+/// box, as CSS does — in an attribute, bound to state, and in a keyframe —
+/// and the engine's `translate` carries them beside the lengths (x, y, then
+/// percentages), interpolated componentwise as CSS interpolates `calc()`.
 #[test]
 fn translate_takes_percentages_of_the_box_everywhere_it_takes_lengths() {
     let source = "keyframes slide\n  from translate=\"-50% 0\"\n  to translate=\"10px 25%\"\ncomponent App\n  state wide = false\n  action widen\n    wide = true\n  view\n    column\n      box testId=\"centred\" position=\"absolute\" left=\"50%\" top=\"50%\" width=120 height=40 translate=\"-50% -50%\"\n      box testId=\"one\" position=\"absolute\" left=\"50%\" width=20 height=10 translate=\"-50%\"\n      box testId=\"bound\" width=80 height=10 translate=wide ? \"12px -100%\" : \"0\"\n      box testId=\"slides\" width=10 height=10 animation=\"slide 1s\"\n      button testId=\"widen\" press=widen\n        text \"w\"\n";

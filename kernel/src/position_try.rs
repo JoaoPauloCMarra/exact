@@ -1,4 +1,4 @@
-//! Invoker-popover flip fallbacks. Each comma starts a new
+//! Invoker-popover flip fallbacks (LLP 1021 D2). Each comma starts a new
 //! attempt against the base style; whitespace combines flips in one attempt,
 //! applied in the order written (CSS Anchor Positioning §6.1: `flip-start`
 //! does not commute with the other two).

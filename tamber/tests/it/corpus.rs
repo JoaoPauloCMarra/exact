@@ -1,4 +1,5 @@
-//! Golden IR and refusals for the corpus under `tests/corpus/`. A `.tamber` that checks has a
+//! Golden IR and refusals for the corpus under `tests/corpus/` (LLP 1121
+//! §5's "golden IR and folded tables"). A `.tamber` that checks has a
 //! `.json` beside it; one that is refused has a `.err`, one diagnostic a
 //! line. `BLESS=1 cargo test -p exact-tamber` rewrites them.
 

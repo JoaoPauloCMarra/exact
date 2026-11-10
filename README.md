@@ -8,7 +8,7 @@ agent can build it, run it, see it, and test it on every one of them.**
 > give Claude Code this prompt:
 >
 > ```text
-> Clone https://github.com/expo/exact and follow its README to make a new Exact
+> Clone https://github.com/ccheever/exact2 and follow its README to make a new Exact
 > app with `exact new`. Run `bun scripts/exact.mjs setup` once first. Make a todo
 > list where I can add items, check them off, delete them,
 > and see how many are left. Put the view in Contract and keep the list in `app.ts`.
@@ -16,7 +16,7 @@ agent can build it, run it, see it, and test it on every one of them.**
 > `scripts/agent.mjs`, then open the app for me on all three.
 > ```
 >
-> A fresh agent given an earlier version of this prompt on a clean clone (Hermes already in the
+> A fresh agent given the earlier version of this prompt on a clean clone (2026-10-04, Hermes already in the
 > machine cache, Cargo's cache warm) finished in about 57 minutes, and its tests passed
 > on all three platforms. About 25 of those minutes were the first macOS and iOS builds,
 > roughly 13 minutes each; later builds take a minute or two. On a machine that has
@@ -54,12 +54,13 @@ in the UI, and no app JavaScript runs before the first pixel.
 
 > [!NOTE]
 > Exact is pre-1.0 and changes daily. There is no API stability, no backwards
-> compatibility, and no migration guide, by design.
+> compatibility, and no migration guide, by design (`rules/DEFERRED.md`). This
+> repository, `exact2`, is a rebuild of an earlier one ("exact1"). Its design documents
+> are imported under `llp/research/` as research, never as authority.
 
-Upgrade note: Snapback mutation replies with `ok: false` now throw
-`refused(why)` and expose `failure(slot)`; the
-[snapback4 package's README](https://www.npmjs.com/package/snapback4)
-has the before/after and inherited-app commands.
+Upgrade note (2026-10-16): Snapback mutation replies with `ok: false` now throw
+`refused(why)` and expose `failure(slot)`; see the
+[before/after and inherited-app commands](snapback4/README.md#updating-an-inherited-app).
 
 ## Contents
 
@@ -82,7 +83,8 @@ run it, look at it, operate it, and prove it works without a person in the loop.
 - **Ten operations, the same on every host.** `tree · screenshot · tap · type · state
   · layout · logs · clock · prefer · perf` drive the web, macOS, iOS (Simulator or a real
   iPhone), and Linux through one script, `scripts/agent.mjs`. There are ten on purpose:
-  an agent API grows one reasonable addition at a time until no one can hold it in mind.
+  the predecessor's agent API grew to eighty wire names, one reasonable addition at a
+  time.
 - **The clock belongs to the agent.** Between two operations nothing moves. Instead of
   sleeping until an animation finishes, the agent says `clock +60000` or
   `clock settle` and reads the result. No timing flakes, no waits.
@@ -124,7 +126,8 @@ How the design keeps those numbers:
   on a core crate.
 - **The web gets its own small runtime.** On the RealWorld ("Conduit") benchmark,
   Exact's runtime was up about 300 ms before the React SSR build had hydrated. It used
-  26 KB of code against React's 81 KB (the RealWorld benchmark in `apps/realworld`).
+  26 KB of code against React's 81 KB
+  ([LLP 1071](llp/1071-exact2-web-target.rfc.md)).
 - **Edits land in about a tenth of a second.** On a fresh app made by `exact new`, a
   saved Contract or TypeScript edit was rebuilt and in the page in 99 ms.
 
@@ -135,7 +138,7 @@ leave unsaid is the platform's: controls, colour, type, motion, gestures, the ke
 and accessibility come out as an app built by hand with UIKit or AppKit would have them,
 and on the web as a carefully built web app would. What you write wins. The order is
 author, then platform, then CSS's default, and one test settles a dispute: would someone
-who knows the platform notice?
+who knows the platform notice? ([LLP 1115](llp/1115-write-the-web-ship-the-platform.principle.md))
 
 - Layout is CSS's, because a person can't see a layout default, only its result. A bare
   node is `display: block`, `box-sizing: content-box`, `flex-direction: row`,
@@ -152,8 +155,9 @@ who knows the platform notice?
   against what Chrome draws.
 - The web is also the development loop. You work on the seconds-long web loop, and the
   native hosts are swept behind you.
-- Any unavoidable deviation in layout is declared, with its reason. For example, Taffy
-  has no `position: static`.
+- Any unavoidable deviation in layout is declared, with its reason, in
+  [`llp/1001-kernel-v1.spec.md`](llp/1001-kernel-v1.spec.md). For example, Taffy has no
+  `position: static`.
 
 Writing the web doesn't mean the lowest common denominator. Where a platform can do
 more (real HTML in an SVG `foreignObject` on the web, MapKit through a native module on
@@ -246,8 +250,8 @@ diagnostic are the check's result.
 ### 2. Run Caltrain in the browser
 
 ```sh
-git clone https://github.com/expo/exact.git
-cd exact
+git clone https://github.com/ccheever/exact2.git
+cd exact2
 bun scripts/exact.mjs setup
 bun host/web/dev.mjs            # Caltrain, at http://127.0.0.1:8765/
 ```
@@ -257,7 +261,7 @@ The first run compiles the toolchain, which takes a few minutes. After that, ope
 The page rebuilds and reloads in about a tenth of a second. Add `--lan` to open the
 same page from a phone on your network. The server answers only to the names it
 prints (a DNS-rebinding guard; any other `Host` gets 421); to share it through a
-tunnel, name the tunnel's host with `--allow-host <name>`
+tunnel such as `tuft host`, name the tunnel's host with `--allow-host <name>`
 (repeatable; `name:port` pins a port). An allowed name reaches the page and its
 reload stream, never the local installer's token.
 
@@ -516,14 +520,17 @@ the same on every host and looks at home on each.
 ```sh
 $ cargo run -q -p contract -- build app.contract
 app.contract:4:5 [type-assign] `count` is `number`, cannot assign `string`
-app.contract:7:23 [lower-unknown-attr] `text` has no attribute `size`; `size` is spelled `font-size` here, the web's name
+app.contract:7:23 [lower-unknown-attr] `text` has no attribute `size`; `size` is spelled `font-size` here, the web's name (LLP 1017 §8.1)
 ```
 
 One run reports up to twenty independent errors, not just the first. Other subcommands:
 `--json` for tools, `symbols` (definitions and references as JSON), `fmt`
 (source-preserving), `types` (generates `app.contract.d.ts` for TypeScript sources),
 and `rust` (shapes for a Rust data crate). The full language is specified in
-[`docs/contract-grammar.md`](docs/contract-grammar.md).
+[LLP 1006](llp/1006-contract-compiler-v1.spec.md),
+[LLP 1017.000](llp/1017.000-contract-v1-1.spec.md) (v1.1), and
+[LLP 1017.003](llp/1017.003-map-filter-join.spec.md). Data sources are covered in
+[LLP 1027](llp/1027-typescript-data-sources.rfc.md).
 
 ## Example apps
 
@@ -535,7 +542,7 @@ these screenshots come from the web host, taken by `scripts/agent.mjs`.
 To learn from, start with [Shelf](apps/shelf), the recipe app. It names no colour and no
 font size, and `scripts/no-tells.mjs` holds it to that, so it shows what an app that
 leaves presentation to the platform looks like on each host. Then read these four for
-what each teaches. They were written before Exact left presentation to the platform
+what each teaches. They were written before [LLP 1115](llp/1115-write-the-web-ship-the-platform.principle.md)
 and paint their own colours and sizes, so take their structure, not their style:
 
 | App | What it teaches |
@@ -594,7 +601,7 @@ and paint their own colours and sizes, so take their structure, not their style:
     <td><img src="docs/screenshots/realworld.webp" width="420" alt="Conduit, the RealWorld app"></td>
   </tr>
   <tr valign="top">
-    <td><a href="apps/markdown"><b>Markdown</b></a><br>A Markdown reader that opens files from Finder or the command line (<code>mdview README.md</code>). Its sibling <a href="apps/llp"><b>LLP</b></a> (<code>llpview</code>) reads a folder of numbered design documents.</td>
+    <td><a href="apps/markdown"><b>Markdown</b></a><br>A Markdown reader that opens files from Finder or the command line (<code>mdview README.md</code>). Its sibling <a href="apps/llp"><b>LLP</b></a> (<code>llpview</code>) reads this repository's design corpus.</td>
     <td><a href="apps/realworld"><b>Conduit</b> (RealWorld)</a><br>The RealWorld Medium clone against its hosted API. It's the benchmark that compared Exact's web build with React 19. Web only.</td>
   </tr>
 </table>
@@ -617,13 +624,13 @@ and paint their own colours and sizes, so take their structure, not their style:
 | [Carousel](apps/carousel) | A horizontal virtualized list of 25,000 cards | |
 | [Motion Gallery](apps/motion-gallery) | Animated GIF and WebP images and CSS keyframes, compared across hosts | |
 | [Update Lab](apps/update-lab) | Live replacement of Contract, TypeScript, and Rust in a running app | Hand-testing lab |
-| [Messages Stress](apps/messages-stress), [Completion Storm](apps/completion-storm), [Markdown Stress](apps/markdown-stress) | 100k-message histories, 128 parallel requests, and 4 MiB documents, under load | Opt-in workloads |
+| [Messages Stress](apps/messages-stress), [Completion Storm](apps/completion-storm), [Markdown Stress](apps/markdown-stress) | 100k-message histories, 128 parallel requests, and 4 MiB documents, under load | Opt-in workloads ([LLP 1041](llp/1041-graceful-overload.rfc.md)) |
 | [Native Fixture](apps/native-fixture), [Auth Fixture](apps/auth-fixture) | The native-module interface; OAuth with PAR, DPoP, and PKCE against a local server | Test fixtures |
 | [Beacons, Tennis, …](game/games) | Games on the optional [engine add-on](game/README.md): Rust gameplay, Contract menus | `bun game/dev.mjs beacons` |
 
 ## What works today, and what doesn't yet
 
-The v1 bar: *one real application, not a demo, runs from a
+The v1 bar, from `rules/DEFERRED.md`: *one real application, not a demo, runs from a
 single Contract source on web, macOS, iOS, and Linux, within the time budgets in
 `rules/RULES.md`.* Caltrain is that application, and it runs on all four. Everything
 else here was admitted because a real app needed it.
@@ -632,33 +639,44 @@ else here was admitted because a real app needed it.
 
 - **Four hosts.** Web, macOS (AppKit, no SwiftUI), iOS (UIKit, on the Simulator and
   on devices), and Linux (GPU or CPU painting, DRM/KMS or headless). Existing Swift apps
-  can embed Exact sessions through ExactKit.
+  can embed Exact sessions through ExactKit
+  ([LLP 1031](llp/1031-brownfield-embedding.rfc.md)).
 - **Layout and text.** CSS block, flex, and grid; `position: static` and containing
-  blocks; `aspect-ratio`; declared fonts; text around shapes.
-- **Paint.** Gradients, shadows, `backdrop-filter`, glass materials, complete SVG,
-  Canvas 2D on every host, and a wgpu GPU canvas loaded after first pixel.
+  blocks; `aspect-ratio`; declared fonts; text around shapes
+  ([LLP 1043.000](llp/1043.000-text-around-shapes.rfc.md)).
+- **Paint.** Gradients, shadows, `backdrop-filter`, glass materials, complete SVG
+  ([LLP 1055](llp/1055-svg-shapes-and-css-animations.rfc.md)), Canvas 2D on every host
+  ([LLP 1056](llp/1056-canvas-2d.rfc.md)), and a wgpu GPU canvas loaded after first
+  pixel.
 - **Motion.** CSS transitions, springs, `@keyframes`, follow-and-release gestures (pan,
   swipe, pinch) with release velocity, layout transitions, exit animations, and
-  scroll- or drag-linked timelines.
-- **Lists.** Virtualized lists, vertical or horizontal, one level deep. The rows of a
-  vertical `list` are its platform's: UIKit's separators and highlight, a table on the Mac, one
-  line between rows on the web, with nothing drawn by the app.
+  scroll- or drag-linked timelines ([LLP 1002](llp/1002-motion-v1.rfc.md),
+  [LLP 1063](llp/1063-presence-and-layout-motion.rfc.md)).
+- **Lists.** Virtualized lists, vertical or horizontal, one level deep
+  ([LLP 1070](llp/1070-nested-and-horizontal-lists.rfc.md)). The rows of a vertical
+  `list` are its platform's: UIKit's separators and highlight, a table on the Mac, one
+  line between rows on the web, with nothing drawn by the app
+  ([LLP 1115.000](llp/1115.000-no-tells-on-every-host.rfc.md), D16).
 - **Controls and media.** Inputs, `select`, a WYSIWYG Markdown editor on the web, macOS,
-  and iOS, images including animated ones, video, pickers for an app's declared file
+  and iOS ([LLP 1045](llp/1045-markdown-editor.rfc.md)), images including animated
+  ones, video ([LLP 1042](llp/1042-video.spec.md)), pickers for an app's declared file
   types, and share.
 - **Data.** TypeScript or Rust sources, optionally on a worker. Grant-checked `fetch` and
   streams, files and SQLite (native and in the browser), Keychain secrets, and OAuth
-  sign-in. A router keeps a stack per tab.
-- **Native modules.** Platform widgets as hyphenated tags.
+  sign-in. A router keeps a stack per tab ([LLP 1038](llp/1038-router.rfc.md)).
+- **Native modules.** Platform widgets as hyphenated tags
+  ([LLP 1024](llp/1024-native-modules.rfc.md)).
 - **The web, server side.** Pages pre-rendered at build time or per request by a Rust
-  renderer, then adopted in place instead of hydrated.
+  renderer, then adopted in place instead of hydrated
+  ([LLP 1048](llp/1048-rendering-across-the-curve.rfc.md)).
 - **Delivery.** `scripts/deploy.mjs` publishes the web root and signed update bundles,
   which installed apps fetch after first pixel. Apple apps check every fifteen
   minutes while active under every activation policy; `deploy.check.interval`
   overrides the interval in seconds. Checks stage a candidate; `deploy.activate`
   controls when it applies. TypeScript and Rust logic can be
   replaced live in development. Every web build gets an install page, and
-  `exact release` signs and notarizes a Mac app.
+  `exact release` signs and notarizes a Mac app
+  ([LLP 1030](llp/1030-delivery-unified.rfc.md)).
 - **Agents and tests.** The ten operations on every host, including a physical
   iPhone; Contract tests; source maps; filmed screenshots.
 
@@ -668,13 +686,15 @@ else here was admitted because a real app needed it.
   or CPU when the manifest declares `game`. `host.windows.painter: "ink"`
   or `"cpu"` selects either painter, and `EXACT_PAINTER` overrides both.
   Skirmish is a standalone game built with Exact's optional game engine;
-  the CPU default preserves its module-owned window presentation.
+  the CPU default preserves its module-owned window presentation. See [LLP 1149 D12](llp/1149-the-renderer.rfc.md#d12--where-it-is-the-presenter-and-what-the-same-everywhere-promises).
   [Windows Desk](apps/windows-desk/README.md) demonstrates
   native controls over Contract and the kernel with an app-local Win32 presenter;
   general Windows control parity and delivery remain unfinished.
-- **Android.** Early. An app builds for Android and runs on an emulator or a phone:
-  `bun exact.mjs android` builds it, `bun exact.mjs test android` runs its tests, and
-  `bun exact.mjs agent android …` drives it. It needs the Android SDK, the Rust target `aarch64-linux-android`, and the Hermes Android bundle
+- **Android.** Admitted (2026-10-07) and early. An app builds for Android and runs
+  on an emulator or a phone: `bun exact.mjs android` builds it, `bun exact.mjs test
+  android` runs its tests, and `bun exact.mjs agent android …` drives it
+  ([LLP 1107](llp/1107-driving-an-app-on-android.rfc.md)). It needs the Android SDK,
+  the Rust target `aarch64-linux-android`, and the Hermes Android bundle
   (`bun scripts/hermes-android.mjs build`) until an Ibex release ships one. Delivery and
   store packaging don't exist yet.
 - **No JSX or React tier.** Nothing runs JavaScript above the data seam. The door stays
@@ -692,6 +712,9 @@ else here was admitted because a real app needed it.
 - **No packaged CLI.** You work from a source checkout. `exact new` apps refer to it by
   path.
 
+[`QUEUE.md`](QUEUE.md) lists what would make sense to do next, and
+[`llp/current/`](llp/current) holds the design documents in play.
+
 ## Repository map
 
 | Path | What's there |
@@ -706,14 +729,15 @@ else here was admitted because a real app needed it.
 | [`route/`](route), [`update/`](update), [`bake/`](bake), [`filesystem/`](filesystem) | The router, the signed update store, delivery baking, and app-owned files |
 | [`apps/`](apps), [`examples/`](examples), [`game/`](game) | The apps above, the Calendar example, and the optional game engine |
 | [`scripts/`](scripts) | `exact.mjs`, `agent.mjs`, `smoke.mjs`, `metrics.mjs`, `deploy.mjs`, and the checks |
-| [`docs/`](docs) | Guides for app authors: start here, the Contract grammar, recipes, and pitfalls |
-| [`rules/`](rules) | [`RULES.md`](rules/RULES.md), how work on Exact happens |
+| [`llp/`](llp) | The design corpus: numbered RFCs, specs, and research ([LLP 1000](llp/1000-exact2-root.explainer.md) is the map) |
+| [`rules/`](rules) | [`RULES.md`](rules/RULES.md) and [`DEFERRED.md`](rules/DEFERRED.md), the two binding documents |
 | [`vendor/taffy/`](vendor/taffy) | Taffy, plus Exact's patches |
 
 ## Working on Exact
 
-Start with [`rules/RULES.md`](rules/RULES.md), one page on how work happens here. Agents
-should also read [`AGENTS.md`](AGENTS.md). In short:
+Start with [`rules/RULES.md`](rules/RULES.md), one page on how work happens here, and
+[`rules/DEFERRED.md`](rules/DEFERRED.md), what v1 deliberately leaves out. Agents should
+also read [`AGENTS.md`](AGENTS.md). In short:
 
 - **Six blocking checks, 65 seconds in total.** Anything slower runs asynchronously,
   per commit.
@@ -737,15 +761,17 @@ should also read [`AGENTS.md`](AGENTS.md). In short:
   files are built, never committed.
 - **Agents remove apparatus freely and add none** (checks, scripts, registries, design
   documents) without a person saying so.
-- **A spec gets written only when it has an implementer and a date.**
+- **Design happens in LLPs.** These are numbered documents in [`llp/`](llp). A spec gets
+  written only when it has an implementer and a date.
 
 Detailed operational notes cover toolchains, the Contract CLI's JSON formats, source
 maps, TypeScript and Rust data modules, storage, live replacement, delivery trust, the
 install page, and the stress harnesses. They're in
-[`docs/reference.md`](docs/reference.md).
+[`docs/reference.md`](docs/reference.md). Open issues are files under
+[`issues/`](issues) ([how that works](docs/issues.md)).
 
 The workspace is MIT-licensed (`Cargo.toml`).
 
 Exact’s Snapback4 adapter uses published **0.4.33** with the matching immutable
 Rust source revision `3653cae823145170df3e720f5e321bd1b5b4d79d`.
-See [the snapback4 package's README](https://www.npmjs.com/package/snapback4) for wiring and device rebuilds.
+See [the adapter guide](snapback4/README.md) for wiring and device rebuilds.

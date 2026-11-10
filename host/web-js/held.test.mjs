@@ -5,9 +5,9 @@ import { open } from '../../scripts/agent.mjs';
 import { driveHeld, heldApp, holdingServer } from '../../scripts/held-fixture.mjs';
 import { webCompiler } from './module.mjs';
 
-// A request the server holds (`exactHeld`) on the JS target: no clock waits on it, each
+// A request the server holds (`exactHeld`, LLP 1016.000 D9) on the JS target: no clock waits on it, each
 // clock reply names it, the answer's work after its reply is waited on again, and the same ask unmarked is
-// waited on before a due timer.
+// waited on before a due timer (calendar F10).
 test('the JS target leaves a held fetch out of every clock, names it, and counts the work after its reply', async () => {
   if (webCompiler().cmd === 'cargo') throw new Error('build the compiler first: cargo build -p exact-web-js');
   const root = resolve(import.meta.dir, '../..');

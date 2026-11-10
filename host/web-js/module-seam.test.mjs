@@ -5,8 +5,9 @@ import { extname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { open } from '../../scripts/agent.mjs';
 
-// The module seam's general pieces on the JS target, through an
-// interface outside the tree: `@fixture/sensor`,
+// The module seam's general pieces on the JS target (LLP 1133.002 D14; LLP
+// 1133.008 D8 item 9; LLP 1133.009 D10 items 3, 7, 10-12), through an
+// interface outside the tree, as LLP 1133.001 D8 asks: `@fixture/sensor`,
 // which is its own substitute, with a web implementation that records what
 // it is told, installed into an app `exact new` made outside the repo and
 // driven by the agent.

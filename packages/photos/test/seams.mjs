@@ -1,8 +1,8 @@
-// A package serves an `img` scheme, proved on the web runtime and macOS by a
-// fixture package outside the tree, `@fixture/swatches`, which serves
-// `swatch:<colour>` pictures, drawn at the asked size. An app `exact new`
-// made outside the repo depends on it by `file:` and shows two: a literal
-// source and a bound one. In each engine:
+// A package serves an `img` scheme (LLP 1133.019 D11 item 1, LLP 1133.001
+// D8), proved on the web runtime and macOS by a fixture package outside the tree,
+// `@fixture/swatches`, which serves `swatch:<colour>` pictures, drawn at the
+// asked size. An app `exact new` made outside the repo depends on it by
+// `file:` and shows two: a literal source and a bound one. In each engine:
 //
 // - under the agent, while the package's permission is `prompt`, both are
 //   refused: no source, and `error` with the reason; granted, the refused
@@ -206,7 +206,7 @@ for (const engine of engines.filter(e => Object.hasOwn(browserOf, e))) {
     const revoked = await img(ev, 'bound'), errors = (await s.state()).slots.errors;
     check(where, 'revoked, it is emptied and fires error "revoked"', revoked?.src == null && /bound:revoked;/.test(errors ?? ''), `${JSON.stringify(revoked)} ${errors}`);
     const logs = (await s.logs())?.lines ?? [];
-    check(where, 'the journal says each refusal', logs.some(l => l.includes('image refused: swatch:red: permission swatches is prompt')), logs.filter(l => /swatch/.test(l)).join(' | '));
+    check(where, 'the journal says each refusal', logs.some(l => l.includes('image refused: swatch:red: permission swatches is prompt (LLP 1133.019 D2)')), logs.filter(l => /swatch/.test(l)).join(' | '));
   } finally {
     await s.close();
   }

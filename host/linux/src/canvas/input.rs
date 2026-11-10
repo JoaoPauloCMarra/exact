@@ -1,6 +1,6 @@
-//! A driver's scroll steps and the reader's touches: a
+//! A driver's scroll steps and the reader's touches (LLP 1076 §3.3): a
 //! driver's scroll moves the feed (a finger's is `scroll.rs`), and a touch
-//! is the presenter's pointer at the view's pixels. Each touch says what touched: this entry is
+//! is the presenter's pointer at the view's pixels. Each touch says what touched (LLP 1115.001 D7.4): this entry is
 //! where a finger is told from a mouse, which desktop Linux's own inputs
 //! (evdev, VNC) and the agent remain.
 

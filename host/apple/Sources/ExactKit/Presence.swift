@@ -1,4 +1,5 @@
-// Locked secrets' keychain and the person's check. The Rust backend (`host/apple/src/presence_secrets.rs`) owns every
+// Locked secrets' keychain and the person's check (LLP 1133.010 D6, D8,
+// D13). The Rust backend (`host/apple/src/presence_secrets.rs`) owns every
 // move and calls the keychain through the hook installed here: one
 // generic-password item per name and generation, its service the app's
 // store service and `.presence`, its account `<name>#<generation>`, its
@@ -16,7 +17,7 @@
 //
 // The context crosses as an object and is invalidated through the runtime,
 // so ExactKit links no LocalAuthentication: only an app whose module
-// composes the implementation does.
+// composes the implementation does (LLP 1133.010 D16).
 import CExact
 import Foundation
 import Security
@@ -27,7 +28,7 @@ enum PresenceKeychain {
     /// Once a process, before the first boot reconciles the backend.
     static func install() { _ = installed }
 
-    /// The access control a presence line's words ask for.
+    /// The access control a presence line's words ask for (D6, D10).
     static func accessControl(_ words: String) -> SecAccessControl? {
         let w = words.split(separator: " ").map(String.init)
         var flags: SecAccessControlCreateFlags
@@ -52,7 +53,7 @@ enum PresenceKeychain {
 
     /// Whether this build keeps locked items: iOS's keychain is the data
     /// protection one; a Mac's only with a keychain access group, which a
-    /// provisioning profile authorizes. tvOS keeps none.
+    /// provisioning profile authorizes (D7). tvOS keeps none (D15).
     static var capable: Bool {
         #if os(macOS)
         guard let task = SecTaskCreateFromSelf(nil) else { return false }
@@ -116,7 +117,7 @@ enum PresenceKeychain {
     }
 
     /// The item, read with the context the sheet evaluated, off the main
-    /// thread: a value, nothing (the platform dropped it), or a failure.
+    /// thread: a value, nothing (the platform dropped it, D6), or a failure.
     static func read(service: String, account: String, context: AnyObject) -> [String: Any] {
         var q = query(service, account)
         q[kSecReturnData] = true
@@ -187,7 +188,7 @@ extension ExactSession {
             return failed("NOT_AVAILABLE", "this device cannot make the access control for \(policy)")
         }
         guard let (module, entry) = natives.authenticator() else {
-            return failed("NotSupportedError", "this build's module serves no authenticator")
+            return failed("NotSupportedError", "this build's module serves no authenticator (LLP 1133.010 D13)")
         }
         let service = op["service"] as? String, account = op["account"] as? String
         let check = PresenceCheck { context, error in

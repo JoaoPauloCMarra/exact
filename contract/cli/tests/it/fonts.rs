@@ -1,5 +1,5 @@
-//! Declared fonts lower to plan identity, and every portable refusal happens
-//! before a host can substitute a font.
+//! LLP 1019 D1–D3/§5: declared fonts lower to plan identity, and every
+//! portable refusal happens before a host can substitute a font.
 
 use exact_kernel::{FontStyle, Kernel};
 use exact_plan::Value;
@@ -111,8 +111,8 @@ fn shorthand_declares_one_400_normal_face() {
     assert!(!plan.faces[0].italic);
 }
 
-/// A variable face's range is its `@font-face` descriptor, read from the
-/// file's `wght` axis when the declaration leaves it unsaid.
+/// LLP 1019 D2: a variable face's range is its `@font-face` descriptor,
+/// read from the file's `wght` axis when the declaration leaves it unsaid.
 #[test]
 fn a_variable_face_declares_its_file_range_or_the_written_one() {
     let app = AppDir::new(
@@ -147,9 +147,9 @@ fn a_variable_face_declares_its_file_range_or_the_written_one() {
     assert_eq!(node.style.font_stretch, 75.0);
 }
 
-/// One variable file declared at several weights is one face over their
-/// span, so the web fetches it once; a span another face of the same style
-/// overlaps, a static file, and the italics stay apart.
+/// LLP 1019 D2: one variable file declared at several weights is one face
+/// over their span, so the web fetches it once; a span another face of the
+/// same style overlaps, a static file, and the italics stay apart.
 #[test]
 fn pinned_weights_of_one_variable_file_are_one_face() {
     let app = AppDir::new(
@@ -180,8 +180,8 @@ fn pinned_weights_of_one_variable_file_are_one_face() {
     );
 }
 
-/// `font-optical-sizing` is CSS's, inherited, and reaches the run style a
-/// host draws with.
+/// LLP 1019 §13: `font-optical-sizing` is CSS's, inherited, and reaches
+/// the run style a host draws with.
 #[test]
 fn font_optical_sizing_reaches_the_run_style() {
     let app = AppDir::new(
@@ -212,8 +212,8 @@ fn font_optical_sizing_reaches_the_run_style() {
     );
 }
 
-/// `font-variation-settings` reaches the kernel's row as CSS writes it, and
-/// a value CSS refuses is refused at compile.
+/// LLP 1019 D9: `font-variation-settings` reaches the kernel's row as CSS
+/// writes it, and a value CSS refuses is refused at compile.
 #[test]
 fn font_variation_settings_reach_the_row_and_bad_ones_are_refused() {
     let app = AppDir::new(
@@ -345,8 +345,8 @@ fn duplicate_style_attributes_cannot_bypass_the_face_diagnostic() {
     );
 }
 
-/// A choice between literal families compiles each arm to its stack id; the
-/// face checks cover every declared arm.
+/// LLP 1053 G7: a choice between literal families compiles each arm to its
+/// stack id; the face checks cover every declared arm.
 #[test]
 fn a_choice_of_literal_families_resolves_each_arm_to_its_stack() {
     let app = AppDir::new(&format!(

@@ -59,7 +59,8 @@ pub(crate) struct ScrollBounds {
 }
 impl ScrollBounds {
     /// `collection_max` is a collection's range on its main axis: y for a
-    /// block list, x for a flex (row) one, the runner's rule at creation.
+    /// block list, x for a flex (row) one, the runner's rule at creation
+    /// (LLP 1070 H1).
     fn capture(node: &NodeRef<'_>, kernel: &Kernel, collection_max: Option<f32>) -> Self {
         let axes = effective_overflow(node);
         // Not a scroll container: nothing to measure; it never moves.
@@ -102,9 +103,9 @@ enum Payload {
         Vec<RunPaint>,
         Option<Rc<inline_frame::Captured>>,
     ),
-    /// An `svg`'s scene as resolved at capture (SVG in a
+    /// An `svg`'s scene as resolved at capture (LLP 1055.000 §4: SVG in a
     /// retained region; the instant is the capture's), its wide colours
-    /// settled for the capture's appearance.
+    /// settled for the capture's appearance (LLP 1121 stage 4).
     Svg(Rc<exact_kernel::svg::Scene>),
 }
 struct NodePaint {
@@ -767,7 +768,7 @@ impl<'a> Replay<'a> {
                     if n.opacity < 1. {
                         painter.backend.push_opacity(n.opacity);
                     }
-                    // Retain the same CSS outline
+                    // @ref LLP 1043.000 §3 D7 — retain the same CSS outline
                     // through trunk's parent-first projection and replay.
                     if !n.css_clip.commands().is_empty() {
                         css_clips.push(painter.backend.push_css_clip(

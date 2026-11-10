@@ -1,5 +1,5 @@
-//! A navigation tab is built the first time it is selected:
-//! until then its panel is empty in the runner and `unopened` in the
+//! A navigation tab is built the first time it is selected (LLP 1075.003
+//! §3.7): until then its panel is empty in the runner and `unopened` in the
 //! agent's `tree`; once built it stays, with its state.
 use exact_kernel::Kernel;
 use exact_plan::Value;

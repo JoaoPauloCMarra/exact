@@ -1,4 +1,4 @@
-//! A package view's declared event: the
+//! A package view's declared event (LLP 1133.021 §9 item 2): the
 //! implementation sends a message whose text is `{"exact:event": name,
 //! "args": [...]}`, and the lowering made each `name=action` a `message`
 //! handler whose one bound argument is `exact:event:<name>`

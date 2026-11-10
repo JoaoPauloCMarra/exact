@@ -20,8 +20,8 @@ let EPOCH = 'stub-epoch', restarts = 0, writes = 0;
 let refuseCommit = '';
 // A session with nothing to commit (`/__stub/refuse-commit` `{nothing: true}`).
 let nothingToCommit = false;
-// Dry commits asked, and events read for no one (`design-tool:`, before the name), since a test last asked:
-// `/__stub/asked` answers whether each happened as the test says (409 if not), and counts again.
+// Dry commits asked, and events read for no one (`design-tool:`, before the name), since a test last asked (stage 15
+// D1.6): `/__stub/asked` answers whether each happened as the test says (409 if not), and counts again.
 let dryAsks = 0, namelessAsks = 0;
 // The dev loop's page hello names, as a test sets it (`/__stub/page`): none
 // by default, as `tamber tool` alone.
@@ -42,12 +42,12 @@ const present = new Set<string>();
 // both proposed and scrubbed; so is a motion token's, as the server says.
 const REBUILDS = new Set(['warmth', 'duration.fast', 'easing.standard', 'app.contract#Card.fade', 'Card.fade', 'app.tamber#MapCard.pan', 'MapCard.pan']);
 // A token the JS loop's pages write inline: rebuild-class while a web-js
-// build runs, as the serving loop says.
+// build runs, as the serving loop says (LLP 1121 stage 6).
 const INLINE = new Set(['opacity.muted']);
 // A state part's edit (`set-state`) rebuilds, as the server says.
-// Why the server would refuse a `set-row`, for the tests that ask.
+// Why the server would refuse a `set-row` (LLP 1121 stage 9 D2), for the tests that ask.
 const rowRefusal = (o: Record<string, unknown>) => o.op !== 'set-row' ? '' : o.sha256 === 'stale' ? `card.contract changed since it was compiled (sha256): select the view again` : o.value === 'not-a-colour' ? 'the app does not build with that: card.contract:3:9: `not-a-colour` is not a colour' : '';
-// A move the server refuses: a new param a component has already ("taken"), or a detach of
+// A move the server refuses (T5): a new param a component has already ("taken"), or a detach of
 // Card.fill that leaves Card.fade unread, said by its diagnostic, as the compile says it.
 const moveRefusal = (ops: Record<string, unknown>[]) => {
   if (ops.some(o => o.op === 'add-param' && o.name === 'taken')) return 'a param `taken` exists on `Card` already: give it another name';
@@ -61,7 +61,7 @@ const classOf = (ops: { name?: string; op?: string }[]) => ops.some(o => o.op ==
 // (`/__stub/reverse-axes`): describe says so from then on. `describe`
 // refused (an event's `refuseDescribe`), so a test sees whether the tool
 // reads the design again.
-// A design that declares no axes (`/__stub/no-axes`): describe names none and each token
+// A design that declares no axes (`/__stub/no-axes`, stage 15 D4 batch 1 #1): describe names none and each token
 // resolves at its one tuple.
 let noAxes = false;
 let LIVE = false, refuseRelease = '', previewMs = 0, reversed = false, refuseDescribe = '', describePasses = 0;
@@ -101,7 +101,7 @@ let held: any[] = [], holds = 0, moves = 0, protocolSaid: string | null = null; 
 // The `choose`s asked, as a test reads them (`/__stub/chooses`); `loseChooses`, how many more are recorded and their
 // answers lost, as a test asks (`/__stub/lose-choose` `{n}`).
 let chooses: { proposal: string; items: number[]; client: string }[] = [], loseChooses = 0;
-// Live copies, as a test turns them on (`/__stub/copies`):
+// Live copies (LLP 1122 T7), as a test turns them on (`/__stub/copies`):
 // hello's page is this stub's own origin, whose root is a copy's page: it
 // registers a build named by its frame (`copy-<name>`, a stable id, as a
 // real page keeps its id under its frame's name), after the delay a test
@@ -110,7 +110,7 @@ let chooses: { proposal: string; items: number[]; client: string }[] = [], loseC
 let copyDelays: Record<string, number> = {}, noNavigate: string[] = [], refuseLater: string[] = [];
 // Copies whose pages are the variant gallery's (`page: 'gallery'`, no `navigate`), as a test asks.
 let galleryCopies: string[] = [];
-// The describe of library components, as a test turns it on (`/__stub/library`): per
+// Stage 12 D3's describe of library components (LLP 1139 D5), as a test turns it on (`/__stub/library`): per
 // identity, its `parts` and `variants`, on describe's component entry (added when the app has none by that name).
 let LIBRARY: Record<string, { name: string; parts: unknown[]; variants: unknown[] }> = {};
 // A package's component with params on describe, and the app's own Contract sources in its files (a server lists
@@ -161,10 +161,10 @@ const preflight = () => new Response(null, { status: 204, headers: CORS });
 const driver = (req: Request) => req.headers.get('authorization') === 'Bearer ada';
 const seq = () => log.at(-1)?.seq ?? 0;
 
-// Pairing (tamber/1.13), as the server answers it: the local token mints a
+// Pairing (LLP 1121 stage 10 A2, tamber/1.13), as the server answers it: the local token mints a
 // code (`pair-code`), lists the clients (`clients`) and revokes one (`revoke`); a code presented at
 // `/__tamber/pair` gives a client its own token, random each time and kept in memory only, at the
-// code's scope, which the server's scope table checks on every request (scripts/tamber-pairing.mjs). A code is
+// code's scope, which A1's table checks on every request (scripts/tamber-pairing.mjs). A code is
 // the next of a fixed series, so a test can type it. The remote doors a test opens
 // (`/__stub/remote`) come with each code, as `{origin, fingerprint}`.
 type Paired = { client: string; name: string; scope: string; peer: string; created: string; expires: string; lastSeen: string; token: string };
@@ -236,7 +236,7 @@ Bun.serve({ hostname, port: Number(port), routes: {
       // (Refused once each, as a test asks: `/__stub/refuse-pairing`.)
       if ((request.method === 'pair-code' || request.method === 'clients') && refusePairing.delete(request.method)) return send({ error: { message: `${request.method}: refused, as the test asked` } }, 500);
       if (request.method === 'pair-code') return mint(request);
-      // The gateway's grant, for a paired client; its URL this stub's own, which has no gateway page.
+      // The gateway's grant (stage 10 C), for a paired client; its URL this stub's own, which has no gateway page.
       // (A test names the canvas origin a gateway would have, `/__stub/canvas`; by default the stub's host over
       // https, another port, which nothing serves: the frame is there, entered by nothing.)
       if (request.method === 'canvas') return asker.client ? send({ ok: { url: `${canvasAt || `https://${new URL(API).hostname}:${Number(new URL(API).port) + 1}`}/canvas/${encodeURIComponent(asker.client)}/`, grant: Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64url'), expires: Date.now() + 30_000 } }) : send({ error: { message: '`canvas` is a paired client\'s: the local tool frames the dev loop itself' } }, 400);
@@ -252,9 +252,9 @@ Bun.serve({ hostname, port: Number(port), routes: {
       }
       // Any other write ends a scrub first, as the server's do.
       if (['transaction', 'undo', 'accept'].includes(request.method)) scrubs.compete();
-      // Inspect goes to the builds that say they can; `uses`
+      // Inspect goes to the builds that say they can (LLP 1122 D4); `uses`
       // is canned for surface.card; `outline` answers with its sites.
-      // A hold: the server's record on the build, announced in a
+      // A hold (stage 8 E): the server's record on the build, announced in a
       // builds event; the build's own `held` a test adds as an event.
       if (request.method === 'hold') {
         const b = BUILDS.find(x => x.id === request.build);
@@ -264,7 +264,7 @@ Bun.serve({ hostname, port: Number(port), routes: {
         save();
         return send({ ok: { build: request.build } });
       }
-      // A navigation: one build that can, moved to the location, as its page then reports.
+      // A navigation (LLP 1122 T7): one build that can, moved to the location, as its page then reports.
       if (request.method === 'navigate') {
         if (!present.has(request.client)) return send({ error: { message: `navigate: \`${request.client}\` is not present` } }, 409);
         const b = BUILDS.find(x => x.id === request.build);
@@ -284,7 +284,7 @@ Bun.serve({ hostname, port: Number(port), routes: {
       }
       if (request.method === 'inspect') {
         // Below write a refresh reads the selection each build last reported, asking no build again
-        // and moving no inspect mode, as the server answers it.
+        // and moving no inspect mode (ruling 5), as the server answers it.
         if (request.refresh === true && asker.scope !== 'write') return send({ ok: { selections: BUILDS.map(b => log.findLast(e => e.event === 'selection' && e.build === b.id)).filter(Boolean) } });
         if (!present.has(request.client)) return send({ error: { message: `inspect: \`${request.client}\` is not present` } }, 409);
         // `select: {up}` (tamber/1.16): the build's page selects that ancestor, reported as a click would be: the last
@@ -370,7 +370,7 @@ Bun.serve({ hostname, port: Number(port), routes: {
       // Reordered axes put each tuple at its index in the new order.
       const at = (modes: Record<string, string>) => [...DIALS.describe.ir.axes].reverse().reduce((n: number, a: { name: string; values: string[] }) => n * a.values.length + a.values.indexOf(modes[a.name]), 0);
       const order = (tuples: { modes: Record<string, string> }[]) => noAxes ? tuples.slice(0, 1).map(t => ({ ...t, modes: {} })) : !reversed ? tuples : [...tuples].sort((x, y) => at(x.modes) - at(y.modes));
-      // A package param's resolve, its tuples' winning level and name, as the test gives them.
+      // A package param's resolve, its tuples' winning level and name (stage 12 B2-levels), as the test gives them.
       // (Each of the design's tuples, by its modes as a token's resolve gives them, its level the test's in turn: one given
       // as a string is both sides', as `{light, dark}` each side's.)
       const sides = (g: Record<string, unknown>) => Object.fromEntries(Object.entries(g).map(([k, v]) => [k, (k === 'level' || k === 'name') && typeof v === 'string' ? { light: v, dark: v } : v]));
@@ -395,12 +395,12 @@ Bun.serve({ hostname, port: Number(port), routes: {
         held.push({ proposal: id, client: request.client, diff: '', changed: [], ops: request.ops.map((op: unknown, index: number) => ({ index, op })), review: request.review });
         return send({ ok: { proposal: id, client: request.client } });
       }
-      // A `set-row` the server refuses, as a test names it: a file moved since the selection
+      // A `set-row` the server refuses (T5), as a test names it: a file moved since the selection
       // (`sha256` "stale"), or a value the app does not build with ("not-a-colour").
       const refusedRow = ['propose', 'transaction'].includes(request.method) && ((request.ops ?? []).map(rowRefusal).find(Boolean) || moveRefusal(request.ops ?? []));
       if (refusedRow) return send({ error: typeof refusedRow === 'string' ? { message: refusedRow } : refusedRow }, 409);
       if (request.method === 'propose') return send({ ok: { files: FILES, class: classOf(request.ops), changed: request.ops.filter((o: { name?: string; from?: string }) => o.name ?? o.from).map((o: { name?: string; from?: string }) => ({ file: 'app.tamber', token: o.name ?? o.from })), diff: `--- app.tamber\n+++ app.tamber\n${request.ops.map((op: unknown) => `+  ${JSON.stringify(op)}\n`).join('')}` } }); // (each operation a line)
-      // A write on digests the files have left is the server's conflict, naming who moved them.
+      // A write on digests the files have left is the server's conflict, naming who moved them (the third pass's #2).
       if (request.method === 'transaction' && request.files?.['app.tamber'] && request.files['app.tamber'] !== FILES['app.tamber']) return send({ error: { message: 'stale digests: app.tamber', conflict: true, files: FILES, stale: ['app.tamber'], by: { 'app.tamber': lastBy } } }, 409);
       if (request.method === 'transaction') return send({ ok: { files: FILES, written: ['app.tamber'], client: request.client, inverse: `inv-stub-${++writes}`, changed: [], class: 'live', diff: '' } });
       if (request.method === 'commit' && request.dry) dryAsks += 1;
@@ -441,7 +441,7 @@ Bun.serve({ hostname, port: Number(port), routes: {
           const review = p.review as { tokens?: number; offers?: { items?: number[] }[]; dials?: { items?: number[] }[]; pins?: { items?: number[] }[] } | undefined;
           const at = (i: number) => kept.findIndex(o => o.index === i);
           const renumber = (all: { items?: number[] }[]) => all.map(o => ({ ...o, items: (o.items ?? []).map(at).filter(i => i >= 0) }));
-          // A re-import's dials and pins too, those whose operations it kept.
+          // A re-import's dials and pins too, those whose operations it kept (stage 10b).
           const marks = review && Object.fromEntries((['dials', 'pins'] as const).filter(k => review[k]).map(k => [k, renumber(review[k]!).filter(m => m.items.length)]).filter(([, all]) => all.length));
           const remapped = review && { ...review, dials: undefined, pins: undefined, ...marks, tokens: kept.filter(o => o.index < (review.tokens ?? 0)).length, offers: renumber(review.offers ?? []) };
           const fresh = { ...p, choice: undefined, choiceBy: undefined, choiceAt: undefined, proposal: `${p.proposal}-r`, replaces: p.proposal, ops: kept.map((o, index) => ({ index, op: o.op })), ...(remapped ? { review: remapped } : {}), diff: `--- app.tamber\n+++ app.tamber\n${kept.map(o => `+  ${o.op.name} (kept)`).join('\n')}\n`, changed: kept.map(o => ({ file: 'app.tamber', token: o.op.name })) };
@@ -545,7 +545,7 @@ Bun.serve({ hostname, port: Number(port), routes: {
     },
   },
   '/__stub/long-poll': { POST: async (req) => { if (!driver(req)) return send({ message: 'Not found.' }, 404); longPolls = true; const { heartbeat } = await req.json().catch(() => ({})); beat = Number.isSafeInteger(heartbeat) && heartbeat > 0 ? heartbeat : LONG_POLL_MS; return send({ ok: true }); } },
-  // A reply the host folded into a later one (the host's coalescing), as a test makes one: the next GET answer
+  // A reply the host folded into a later one (LLP 1016.000 D4's coalescing), as a test makes one: the next GET answer
   // names a cursor the tool never had (`asked` moved on), so the tool reads the gap once by POST.
   '/__stub/refuse-hello': { POST: (req) => { if (!driver(req)) return send({ message: 'Not found.' }, 404); refuseHello = true; return send({ ok: true }); } },
   '/__stub/skip-cursor': { POST: (req) => { if (!driver(req)) return send({ message: 'Not found.' }, 404); skipCursor = true; return send({ ok: true }); } },

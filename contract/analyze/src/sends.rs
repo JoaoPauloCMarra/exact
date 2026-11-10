@@ -1,9 +1,9 @@
-//! A mutation keeps one reply: a second
-//! send forgets the first's in-flight reply, so two sends to
+//! @ref LLP 1088 D8 (flashcards F4) — a mutation keeps one reply: a second
+//! send forgets the first's in-flight reply (LLP 1016 D5), so two sends to
 //! one mutation on one path through an action are refused, not warned of.
 //!
 //! It runs on the root's actions with every call expanded (a caller and
-//! its callees are one commit), and names the calls a send is
+//! its callees are one commit, LLP 1089 D6), and names the calls a send is
 //! made through. The walk is path-sensitive, over the body's statements (`Action::effects`
 //! flattens branches): each `if`/`match` arm starts from what the paths
 //! into it may have sent, and the branch leaves their union, so exclusive
@@ -14,7 +14,7 @@
 //! or as a conjunct of an `and`), the literals differ, and nothing assigns
 //! or sends that name between them.
 //!
-//! A `queue` mutation is exempt: its sends wait in order and
+//! A `queue` mutation is exempt (LLP 1092 D6): its sends wait in order and
 //! each reply reaches its `then`.
 
 use super::{AnalyzeError, Related};
@@ -161,7 +161,7 @@ impl<'a> Walk<'a> {
             match stmt {
                 Stmt::Send { target, span, .. } => {
                     let mutation = self.c.mutations.iter().find(|m| &m.name == target);
-                    // A queue's sends each wait their
+                    // @ref LLP 1092 D2 — a queue's sends each wait their
                     // turn: none forgets another's reply.
                     if mutation.is_some_and(|m| m.queue) {
                         continue;
@@ -178,17 +178,17 @@ impl<'a> Walk<'a> {
                             None => format!("`{target}`"),
                         };
                         let action = contract_syntax::inline::calls::shown(self.action);
-                        // The fix names `queue` unless the
+                        // The fix names `queue` (LLP 1092 D6) unless the
                         // action also assigns the slot: a reply it means to
-                        // drop, which a queue would land anyway.
+                        // drop, which a queue would land anyway (D4).
                         let fix = if self.assigns.contains(target.as_str()) {
                             "send once, or use a mutation per request".to_string()
                         } else {
                             format!("send once, use a mutation per request, or declare `mutation {target} … queue` to run both in order")
                         };
-                        // Through a call, the refusal names the calls:
-                        // neither body shows both sends.
-                        // A send in an arm: say why both can run.
+                        // Through a call, the refusal names the calls (LLP
+                        // 1089 D6): neither body shows both sends.
+                        // A send in an arm: say why both can run (chess #2).
                         let message = if *armed || self.arms > 0 {
                             let both = if frame.is_none() && self.frame.is_none() {
                                 format!("at lines {} and {}", first.line, span.line)
@@ -205,17 +205,17 @@ impl<'a> Walk<'a> {
                                 format!("send once, make the sends arms of one `if … else if`, use a mutation per request, or declare `mutation {target} … queue` to run both in order")
                             };
                             format!(
-                                "`{action}` sends `{target}` twice on one path, {both}: every `if` is read as one that can run, unless the two sends are arms of one `if`/`else` or `match`, or sit in `if`s testing one unchanged name against different literals. Only the last send's reply reaches {reaches}: {fix}"
+                                "`{action}` sends `{target}` twice on one path, {both}: every `if` is read as one that can run, unless the two sends are arms of one `if`/`else` or `match`, or sit in `if`s testing one unchanged name against different literals. Only the last send's reply reaches {reaches} (LLP 1016 D5): {fix}"
                             )
                         } else if frame.is_none() && self.frame.is_none() {
                             let mut fix = fix;
                             fix[..1].make_ascii_uppercase();
                             format!(
-                                "`{action}` sends `{target}` twice; only the last send's reply reaches {reaches}. {fix}"
+                                "`{action}` sends `{target}` twice; only the last send's reply reaches {reaches} (LLP 1016 D5). {fix}"
                             )
                         } else {
                             format!(
-                                "`{action}` sends `{target}` twice on one path: {} and {}. Only the last send's reply reaches {reaches}: {fix}",
+                                "`{action}` sends `{target}` twice on one path: {} and {}. Only the last send's reply reaches {reaches} (LLP 1016 D5): {fix}",
                                 made_in(action, *frame, *first),
                                 made_in(action, self.frame, *span)
                             )
@@ -432,7 +432,7 @@ impl<'a> Both<'a> {
         self.out.push(AnalyzeError {
             id: "analyze-send-assigned",
             message: format!(
-                "`{action}` both sends `{target}` and assigns it on one path: it {that} {first_where} and {this} {this_where}. A send is asked when the action runs; once the writes land, a request still in flight for a mutation the action assigned is forgotten and its reply dropped, and `{target}` keeps the assigned value, whichever line comes first. To clear an old result before a retry, keep the send and hide the result while `pending({target})`; to sign out, forget the sign-in mutation here and send the logout through a mutation of its own; to dismiss an answer, assign alone"
+                "`{action}` both sends `{target}` and assigns it on one path: it {that} {first_where} and {this} {this_where}. A send is asked when the action runs; once the writes land, a request still in flight for a mutation the action assigned is forgotten and its reply dropped, and `{target}` keeps the assigned value (LLP 1016 D5), whichever line comes first. To clear an old result before a retry, keep the send and hide the result while `pending({target})`; to sign out, forget the sign-in mutation here and send the logout through a mutation of its own; to dismiss an answer, assign alone"
             ),
             span: at,
             related: vec![Related {
@@ -466,10 +466,10 @@ fn union<'a>(into: &mut Made<'a>, from: Made<'a>) {
     }
 }
 
-/// Every action that both sends a nonqueued
+/// @ref LLP 1035.005.002 C1 — every action that both sends a nonqueued
 /// mutation and assigns it on one path, through calls too, in either order:
-/// a warning, once a mutation an action. It is rare, and can be meant: a
-/// logout may send and then clear the slot.
+/// a warning, once a mutation an action. In 1,029 bake-off builds no action
+/// did; the one in the apps is Weird Castle's logout, which means it.
 pub(super) fn send_assigned(c: &Component) -> Vec<AnalyzeError> {
     let mut out: Vec<AnalyzeError> = Vec::new();
     for a in &c.actions {

@@ -238,7 +238,7 @@ component GalleryDemo
               HdrPaintTrio(kind="gradient", label="linear-gradient, 1× to 4× in srgb-linear", one=one, four=four)
               HdrPaintTrio(kind="svg-fill", label="SVG fill", one=one, four=four)
               HdrPaintTrio(kind="svg-stroke", label="SVG stroke", one=one, four=four)
-              text "Not yet HDR on Apple: SVG gradients, patterns, masks and filters, which are drawn into SDR pictures." class=Note padding-top=6
+              text "Not yet HDR on Apple: SVG gradients, patterns, masks and filters, which are drawn into SDR pictures (LLP 1100)." class=Note padding-top=6
             if nativeFeatures.reference
               text "UIKit reference · iOS 26+" class=Section
               text "Native gradient, PQ image and shadow under no-limit, constrained and standard. The gradient runs from 1× to 4× white; the shadow uses 4× white." class=Legend

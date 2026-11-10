@@ -1,6 +1,6 @@
 //! Conservative initial flow shape for opt-in variable-size collections: a
 //! block list scrolls vertically; a flex row scrolls horizontally, CSS's
-//! carousel.
+//! carousel (LLP 1070 H2).
 use super::{err, values::numeric_literal, LowerError, Lowerer};
 use contract_syntax::{Attr, Expr, Node, Span};
 use contract_types::{Scope, Ty};
@@ -22,7 +22,7 @@ pub(super) fn row_list(attrs: &[Attr]) -> bool {
     literal(attrs, "display").and_then(string) == Some("flex")
 }
 
-/// `reach-margin`: one or two literal nonnegative px or
+/// `reach-margin` (@ref LLP 1145 D4): one or two literal nonnegative px or
 /// % lengths, before and after, as the runner and list.js read them.
 fn reach_margin(a: &Attr, virtualized: bool) -> Result<(), LowerError> {
     if !virtualized {
@@ -49,7 +49,7 @@ fn reach_margin(a: &Attr, virtualized: bool) -> Result<(), LowerError> {
 }
 
 impl Lowerer<'_> {
-    /// `keep-mounted=keys`: a list of row keys, each a
+    /// `keep-mounted=keys` (@ref LLP 1010 §6.11): a list of row keys, each a
     /// string, number or bool or an option of one, as a `for`'s `key=` is.
     pub(super) fn bind_keep_mounted(
         &mut self,
@@ -95,9 +95,10 @@ impl Lowerer<'_> {
         span: Span,
         scope: &Scope,
     ) -> Result<(), LowerError> {
-        // Reorder is a collection's: every host
+        // Reorder is a collection's (LLP 1010 §6, LLP 1043.000): every host
         // drags only a virtualized list's measured rows, so anywhere else
-        // `reorderdrop` would never fire, on any host.
+        // `reorderdrop` would never fire, on any host (the weather diary's
+        // F1 met it as the web build's refusal).
         let virtualized = tag == "list"
             && attrs
                 .iter()
@@ -188,11 +189,11 @@ impl Lowerer<'_> {
         self.collection_flow(&expanded, None)
     }
 
-    /// `reorderGroup`: lists that share one exchange rows,
+    /// `reorderGroup` (@ref LLP 1094 D1): lists that share one exchange rows,
     /// so each takes the drop (`reorderdrop`), is named by its `id` in the
     /// drop's `ReorderEvent`, and keys its rows by strings, the keys a row
     /// carries from one list to another. A row list and a nested list are
-    /// refused by their own reorder rules.
+    /// refused by their own reorder rules (LLP 1094 §7).
     fn check_group(
         &self,
         virtualized: bool,
@@ -231,7 +232,7 @@ impl Lowerer<'_> {
     }
 
     /// `keep-mounted`'s keys are the `for`'s key type: a number never names
-    /// a row keyed by a string.
+    /// a row keyed by a string (@ref LLP 1010 §6.11).
     fn check_kept_keys(
         &self,
         keep: &Attr,
@@ -278,7 +279,7 @@ impl Lowerer<'_> {
     }
 
     /// The rules that make a list's axis CSS's and keep its index's starts
-    /// prefix sums: a row list is a literal-height flex row,
+    /// prefix sums (LLP 1070 H2, §8): a row list is a literal-height flex row,
     /// left to right, that neither wraps, reverses nor spreads its items.
     fn collection_axis(&self, attrs: &[Attr], row: bool, span: Span) -> Result<(), LowerError> {
         if let Some(display) = literal(attrs, "display") {
@@ -313,7 +314,7 @@ impl Lowerer<'_> {
             }
         }
         if let Some(reorder) = literal(attrs, "reorderdrop").filter(|_| row) {
-            return err("lower-collection-reorder", "reordering is vertical; a virtualized row list refuses `reorderdrop` until a consumer needs it", reorder.span);
+            return err("lower-collection-reorder", "reordering is vertical; a virtualized row list refuses `reorderdrop` until a consumer needs it (LLP 1070 §4.7)", reorder.span);
         }
         if !row {
             return Ok(());
@@ -343,7 +344,7 @@ impl Lowerer<'_> {
 
     // Component uses and slots have already expanded before lowering. Inspect
     // all arms, even currently inactive ones. A row may hold one virtualized
-    // list, one level down, whose lifetime is the row's; it
+    // list, one level down, whose lifetime is the row's (LLP 1070 N1, N6); it
     // may not hold another, reorder, or scroll vertically without a literal
     // height, since a row's height is its content's and `flex` alone bounds
     // nothing there.
@@ -363,11 +364,7 @@ impl Lowerer<'_> {
                             return err("lower-collection-depth", "virtualized lists nest one level deep: this list is inside a virtualized list that is itself in a virtualized list's row", opt.span);
                         }
                         if let Some(reorder) = attrs.iter().find(|a| a.name == "reorderdrop") {
-                            return err(
-                                "lower-collection-reorder",
-                                "reordering is not built for a virtualized list in another's row",
-                                reorder.span,
-                            );
+                            return err("lower-collection-reorder", "reordering is not built for a virtualized list in another's row (LLP 1070 §4.7)", reorder.span);
                         }
                         let bounded = attrs.iter().any(|a| {
                             matches!(a.name.as_str(), "height" | "max-height")
@@ -401,7 +398,7 @@ impl Lowerer<'_> {
         Ok(())
     }
 
-    /// Main-axis padding on a virtualized list: CSS's
+    /// Main-axis padding on a virtualized list (@ref LLP 1010 §6.9): CSS's
     /// room before the first row and after the last, inside the scroll
     /// content. It takes what padding takes elsewhere (a number,
     /// `env(safe-area-inset-*)`, `calc(env(…) ± px)`), computed too: each
@@ -495,7 +492,7 @@ impl Lowerer<'_> {
                 && a.name == "position"
                 && matches!(&a.value, Expr::Str(s, _) if s == "sticky")
             {
-                // Each row is laid out in a wrapper of its own.
+                // @ref LLP 1083 D5 — each row is laid out in a wrapper of its own.
                 return err("lower-collection-flow", "a windowed row's root would stick only inside its own row: make a section one row, and its header `position: sticky` inside it", a.span);
             }
             if !allowed {

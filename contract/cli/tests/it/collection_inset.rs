@@ -1,8 +1,8 @@
-//! A virtualized list's main-axis padding is CSS's room before the first row
-//! and after the last, inside the scroll content. The host reports offsets from
-//! the first row's start and the padding it laid out, so the runner's end (the
-//! window, `reachend`, a followed end, `scroll-start: end`, a clamped
-//! `scrollIntoView`) is the true one.
+//! LLP 1010 §6.9: a virtualized list's main-axis padding is CSS's room
+//! before the first row and after the last, inside the scroll content. The
+//! host reports offsets from the first row's start and the padding it laid
+//! out, so the runner's end (the window, `reachend`, a followed end,
+//! `scroll-start: end`, a clamped `scrollIntoView`) is the true one.
 use exact_kernel::{Env, Kernel, Offer};
 use exact_plan::Value;
 use exact_runner::{
@@ -277,7 +277,7 @@ fn a_followed_end_follows_the_padding_as_it_changes() {
     assert_eq!(top, max_top_with(&list(&r), 49.0), "and still following it");
 }
 
-/// `scroll-padding`: `scrollIntoView` aligns a row within
+/// `scroll-padding` (LLP 1010 §6.9): `scrollIntoView` aligns a row within
 /// the port less its scroll padding, as CSS aligns in the snapport. With
 /// `scroll-padding-top` the header's height, the first row's `start` is
 /// `scrollTop` 0 (Bluesky's soft reset under its header).
@@ -357,8 +357,9 @@ fn without_scroll_padding_start_is_the_ports_top_edge() {
 }
 
 /// A request before the list's first report, when the runner knows no
-/// padding yet, still lands at the very top once a report brings it, not a padding's
-/// height down after a report of 0 for the whole padding.
+/// padding yet, still lands at the very top once a report brings it (Grok's
+/// first scroll-padding review: a report of 0 for the whole padding finished
+/// it a padding's height down).
 #[test]
 fn the_soft_reset_before_any_report_still_reaches_the_top() {
     let mut r = boot(SNAP);
@@ -452,8 +453,8 @@ const AXES: [ListAxis; 2] = [ListAxis::Vertical, ListAxis::Horizontal];
 /// A list shorter than its port and paddings ends in the padding before its
 /// rows: four rows (600 points of port hold all of them and both paddings,
 /// so the only offset is `scrollTop` 0) and five (`scrollTop` 0 to 75). A
-/// request for the last row clamps there and settles, not at the first row's start, which the host
-/// cannot reach.
+/// request for the last row clamps there and settles (Astra's review: it
+/// clamped at the first row's start, which the host cannot reach).
 #[test]
 fn a_short_list_ends_in_the_padding_before_its_rows() {
     for axis in AXES {
@@ -495,8 +496,8 @@ fn scroll_start_end_on_a_short_list_opens_and_lets_go() {
 
 /// The padding before the rows grows under a followed end: the host's port
 /// stays where it was on the page, which is now short of the end, and the
-/// list moves it to the new end (the shorter offset from the first row is
-/// not the reader leaving the end). A reader among the
+/// list moves it to the new end (Astra's review: the shorter offset from
+/// the first row read as the reader leaving the end). A reader among the
 /// rows keeps them where they were on screen, as the end padding keeps them.
 #[test]
 fn a_followed_end_follows_the_padding_before_the_rows_as_it_grows() {

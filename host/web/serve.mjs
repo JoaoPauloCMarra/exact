@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // Serve a web build for a browser — and, through exact.json, for a native
-// client: the app's (`web-build`'s target/web-dist), or the
-// directory named. LAN by default; --loopback (or EXACT_LOOPBACK=1) binds
+// client (LLP 1023 D1): the app's (`web-build`'s target/web-dist), or the
+// directory named. LAN by default (D8); --loopback (or EXACT_LOOPBACK=1) binds
 // 127.0.0.1 only, as the app's `serve` verb does unless given --lan.
 // Usage: bun host/web/serve.mjs [<dir> | --origin <dir>] [--port <n>] [--loopback|--lan]
 import { createServer } from 'node:http';
@@ -31,26 +31,26 @@ const PUBLIC_FILES = new Set([
   '/app.js', '/app.hbc', '/app.module.json', '/app.plan', '/app.wasm', '/exact.json',
   '/gpu.js', '/gpu_bg.wasm', '/markup-editor.wasm', '/textflow.wasm', '/index.html', '/manifest.json',
   // The one dot path a static origin serves: the deep-link association
-  // file bake generates, read by Apple's CDN over HTTPS.
+  // file bake generates (LLP 1030 D1), read by Apple's CDN over HTTPS.
   '/.well-known/apple-app-site-association',
 ]);
-// `/gpu/`: each declared GPU module's wasm and its glue.
-// `/stages/`: the core's staged capabilities, named by digest.
-// `/modules/`: the app's native-module web executor, page code.
+// `/gpu/`: each declared GPU module's wasm and its glue (LLP 1009 D6).
+// `/stages/`: the core's staged capabilities, named by digest (LLP 1047.000).
+// `/modules/`: the app's native-module web executor (LLP 1024 D3), page code.
 const PUBLIC_TREES = ['/assets/', '/deck/', '/shaders/', '/rust/', '/gpu/', '/stages/', '/modules/', '/plans/', '/activities/'];
 const REQUIRED_BUILD_FILES = ['app.plan', 'app.wasm', 'exact.json', 'glue.js', 'navigation.js', 'index.html', 'manifest.json'];
-// An origin's update streams (`scripts/origin.mjs`):
+// An origin's update streams (LLP 1030.000 D7; `scripts/origin.mjs`):
 // `.exact/blobs/<sha256>` and `.exact/<channel>/<compatibility id>/…` — the
 // one dot path a client fetches. Inside it every other dot name (the
 // stream's `.lock`) stays private.
 const UPDATE_TREE = '/.exact/';
-// The web's auth callback page and its script, under the
+// The web's auth callback page and its script (LLP 1069.006 D4), under the
 // update tree: never stored, and sent with no referrer.
 export const AUTH_CALLBACK = '/.exact/auth/callback';
 
 /** Dev-only opening instructions. Never infers installation or publishes a
  * build. `links` are the token-bearing opening links this Mac's development
- * clients admit for the page's origin (`developmentLinks`). */
+ * clients admit for the page's origin (`developmentLinks`, LLP 1030.000 §7). */
 export function developmentOpenPage(app, links = [], page = '/') {
   const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const name = escape(app.displayName), crate = escape(app.crate('apple')), url = escape(page);
@@ -571,7 +571,7 @@ function planRoutes(bytes) {
   return routes;
 }
 /** The plan's route table, in its order: each route's name, pattern, render policy and whether it is the
- * `notfound` route (`routes.json`). Throws on a plan this format does not read. */
+ * `notfound` route (`routes.json`, LLP 1153 D3). Throws on a plan this format does not read. */
 export function planRouteTable(bytes) {
   if (bytes.subarray(0, 4).toString() !== 'EXPL' || bytes.readUInt32LE(4) !== planFormat.formatVersion
     || !bytes.subarray(8, 16).equals(planFormatDigest)) throw new Error('unknown plan format');
@@ -698,7 +698,7 @@ export async function builtAppMatches(dist, app) {
         || Object.keys(marker.files[i]).sort().join(',') !== 'bytes,name,sha256')) return false;
     const identity = marker.exactBuild === 1 && marker.app?.id === app.id
       && marker.app.name === app.displayName && marker.manifestSha256 === appManifestDigest(app);
-    // A JS-target build has no envelope; its plan names the app.
+    // A JS-target build (LLP 1071) has no envelope; its plan names the app.
     if (js) return identity && planAppId(readFileSync(resolve(root, 'app.plan'))) === app.id;
     const found = await readStaticFileAsync(dist, '/exact.json');
     const plan = await readStaticFileAsync(dist, '/app.plan');
@@ -713,7 +713,7 @@ export async function builtAppMatches(dist, app) {
   } catch { return false; }
 }
 
-// A JS-target build (`host/web-js/build.mjs`) is whatever its
+// A JS-target build (LLP 1071, `host/web-js/build.mjs`) is whatever its
 // bundler wrote — the entry, content-named chunks, pages at their locations —
 // so the local tools list and serve it as a tree: every regular file whose
 // path has no dot component, never through a symlink. Its completion marker
@@ -739,7 +739,7 @@ export const buildFileCards = (dist) => listBuildFiles(dist).map((name) => {
 /** Put the complete build in `stage` (a sibling of `dist`, or on its volume) in place of `dist`; a server reads
  * `dist.previous` meanwhile. Builds that run at once (`test web` beside `agent web`, the dev loop's watcher) each
  * build in a stage of their own and swap here in turn, under `dist.lock`, so none deletes or overwrites the files
- * another is writing. */
+ * another is writing (app farm round 1: two of three concurrent builds failed and the third lost `app.css`). */
 export function replaceBuild(stage, dist) {
   mkdirSync(dirname(dist), { recursive: true });
   withLock(`${dist}.lock`, () => {
@@ -762,7 +762,7 @@ export function replaceBuild(stage, dist) {
   });
 }
 
-/** The lines `web-build --out` ends with: the routes the browser draws, each route a static root
+/** The lines `web-build --out` ends with (LLP 1153 D3): the routes the browser draws, each route a static root
  * cannot render on request, which `serve` renders, then the directory and the rule any static host serves it by, which `serve` applies
  * (`buildTreeFile`). */
 export function hostingNotes(dist, serve = 'bun exact.mjs serve') {
@@ -826,7 +826,7 @@ export function jsTargetBuild(dist) {
   try { return JSON.parse(readFileSync(resolve(dist, '.exact-build.json'), 'utf8')).target === 'js'; }
   catch { return false; }
 }
-/** A file of a JS-target build for a request path, by the hosting rule: the file, or a directory's
+/** A file of a JS-target build for a request path, by the hosting rule (LLP 1153 D3): the file, or a directory's
  * index.html (a page rendered at build); else, for an HTML navigation (`acceptsHTML`) whose path a route in the
  * build's `routes.json` matches, `shell.html`. With `miss`, a request the rule finds nothing for gets the build's
  * `404.html`, else, for a navigation to a page, the shell, whose client draws the notfound route; either marked
@@ -836,8 +836,8 @@ export function buildTreeFileAsync(dist, pathname, accept = '', { miss = false }
 function* treeFile(dist, pathname, accept, miss) {
   let path;
   try { path = installRoute(decodeURIComponent(pathname)); } catch { return null; }
-  // No dot path, but the auth callback page's (`/.exact/auth/…`)
-  // and the install pages and their data.
+  // No dot path, but the auth callback page's (LLP 1069.006 D4: `/.exact/auth/…`)
+  // and the install pages and their data (LLP 1030.003 D6a).
   if (!path.startsWith('/') || path.includes('\\') || path.includes('\0') || (!INSTALL_PUBLIC.includes(path) && path.replace(/^\/\.exact\/auth\//, '/').split('/').some((part) => part.startsWith('.')))) return null;
   const navigation = acceptsHTML(accept), page = navigation && appDocumentPath(pathname, true);
   // Asked again, three times at most: a build put in place as it was looked up
@@ -886,7 +886,7 @@ const asksPage = (req, pathname) => acceptsHTML(req.headers.accept) || (!!pathna
 /** A JS-target build's file for a request, from the build the page booted (generations.mjs): a document names its
  * generation in its base, and a path under one, or any path for a drive's `pinned` one, is read from that build. A
  * generation kept no more is 410, which the page's glue answers by loading the page again. With `pages` (`serve`'s
- * `sitePages`), a `render=request` or `cached` route's page is rendered for the request in place of
+ * `sitePages`, LLP 1153 D3.4), a `render=request` or `cached` route's page is rendered for the request in place of
  * its shell. With `compression` (`serve`'s, `compressionCache`), it is a site's server: a page goes compressed as the
  * reader accepts, and a file as its warmed variant, revalidated by its ETag; else (the drivers, the dev server) every
  * response is identity and never kept. */
@@ -894,7 +894,7 @@ export async function serveBuildTree(dist, req, res, { pinned = null, pages = nu
   // The raw target is refused as serveStatic refuses it (an encoded dot
   // segment); a parsed URL would resolve one into another route.
   const target = webRequestURL(req.url);
-  // A waiting page's answers, kept by the renderer that made it (render.mjs `deferredAnswers`).
+  // A waiting page's answers, kept by the renderer that made it (render.mjs `deferredAnswers`, LLP 1048.007 D10).
   const answers = target && pages?.answers?.(target.pathname);
   if (answers) {
     sendStaticBody(req, res, answers.body, { 'content-type': answers.status === 200 ? 'application/json' : 'text/plain; charset=utf-8', 'cache-control': answers.status === 200 ? 'private, max-age=3600, immutable' : 'no-store' }, answers.status);
@@ -915,9 +915,9 @@ export async function serveBuildTree(dist, req, res, { pinned = null, pages = nu
       res.writeHead(500, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' }); res.end('This page could not be rendered.\n'); return;
     }
     if (page) {
-      const headers = { 'content-type': 'text/html; charset=utf-8', 'cache-control': page.cacheControl, ...(page.acceptCH ? { 'accept-ch': page.acceptCH } : {}) };
+      const headers = { 'content-type': 'text/html; charset=utf-8', 'cache-control': page.cacheControl, ...(page.acceptCH ? { 'accept-ch': page.acceptCH } : {}), ...(page.retryAfter ? { 'retry-after': page.retryAfter } : {}) };
       // A page made for this request is compressed as it goes: brotli at quality 5 takes a few milliseconds for a
-      // page and is a tenth of its size, which the reader's first paint waits on.
+      // page and is a tenth of its size, which the reader's first paint waits on (LLP 1048.007 D6).
       const accepted = compression ? acceptedEncodings(req.headers['accept-encoding']) : new Set();
       const encoding = ['br', 'gzip'].find(name => accepted.has(name));
       const body = encoding === 'br' ? brotliCompressSync(page.html, { params: { [zlib.BROTLI_PARAM_QUALITY]: 5 } }) : encoding ? gzipSync(page.html) : page.html;
@@ -970,7 +970,7 @@ function sitePages(dist, { pageServer, deferredAnswers, deferredPath }) {
   };
   const pages = async (id, location, header) => {
     // The page whole (no `sec-fetch-dest`) and uncompressed (no `accept-encoding`), as every file here is sent; laid
-    // out for the viewport the request tells (render.mjs `viewportOf`).
+    // out for the viewport the request tells (render.mjs `viewportOf`, LLP 1048.006).
     const asked = (name) => (name === 'cache-control' || name === 'user-agent' || name.startsWith('sec-ch-') || name === 'viewport-width' ? header(name) : undefined);
     for (let attempt = 0; attempt < 3; attempt++) {
       const current = !id || generationOf(dist) === id, tree = current ? dist : resolve(`${dist}.gen`, id);
@@ -979,7 +979,7 @@ function sitePages(dist, { pageServer, deferredAnswers, deferredPath }) {
       const { status, headers, body } = await render(location, asked);
       if (current && id && generationOf(dist) !== id) continue;
       const html = Buffer.from(body).toString('utf8');
-      return { status, cacheControl: headers['cache-control'], vary: headers.vary, acceptCH: headers['accept-ch'], html: id ? withGenerationBase(html, id) : html };
+      return { status, cacheControl: headers['cache-control'], vary: headers.vary, acceptCH: headers['accept-ch'], retryAfter: headers['retry-after'], html: id ? withGenerationBase(html, id) : html };
     }
     return null;
   };
@@ -1041,7 +1041,7 @@ export function entryPlans(assets) {
   return Object.keys(plans).length ? { plans } : {};
 }
 
-/** A dev generation's identity: the SHA-256 of the canonical
+/** A dev generation's identity (LLP 1007 §6): the SHA-256 of the canonical
  * JSON of its plan, asset, module and Rust cards, each by its name, digest
  * and length, assets in UTF-8 order, as a client checks it (host/web/dev.js
  * `fetchGeneration`), never by its url (an asset card captured from disk
@@ -1077,7 +1077,7 @@ export function webContentType(route) {
   if (route === '/exact.json') return 'application/vnd.exact.envelope+json';
   if (route === '/manifest.json') return 'application/manifest+json';
   if (route === '/.well-known/apple-app-site-association') return 'application/json';
-  // The auth callback page: one static page at exactly this path.
+  // The auth callback page (LLP 1069.006 D4): one static page at exactly this path.
   if (route === AUTH_CALLBACK) return 'text/html';
   return {
     '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json',
@@ -1165,7 +1165,7 @@ export async function warmCompression(dist, compression, js = false) {
   return warmed;
 }
 
-// Preserve file precedence and negotiate the app
+// @ref LLP 1038 D7 — preserve file precedence and negotiate the app
 // document after resolving the shared extensionless-location fallback.
 export async function readWebRequest(dist, pathname, accept = '', admittedPlan = undefined) {
   if (!webRequestURL(pathname)) return { found: null, index: false };
@@ -1194,7 +1194,7 @@ export async function readWebRequest(dist, pathname, accept = '', admittedPlan =
     route = release ? release[0] + 'exact.json' : '/exact.json';
     found = await readStaticFileAsync(dist, route);
     // An envelope resolves against its response URL, not HTML's <base>.
-    // A deep location must still name the root's payloads.
+    // A deep location must still name the root's payloads (1023 D2).
     if (found && !found.published && route === '/exact.json' && pathname !== '/' && pathname !== '/index.html') {
       const body = JSON.stringify(JSON.parse(found.body), (key, value) => {
         if (key !== 'url' || typeof value !== 'string') return value;
@@ -1276,12 +1276,12 @@ async function main() {
   const dist = resolve(origin ?? named[0] ?? webDist());
   const settled = settleBuild(dist);
   if (settled) return settled;
-  // A JS-target build is served as its tree. A published root is its pointer's release, whose page is the
+  // A JS-target build (LLP 1071) is served as its tree. A published root is its pointer's release, whose page is the
   // JS target's or the wasm's.
   const js = jsTargetBuild(dist);
   if (!js && !await readStaticFileAsync(dist, origin && existsSync(resolve(dist, webRootPath)) ? '/index.html' : '/app.wasm')) {
     // A build that is there but unreadable says why: the reader is a Cargo-built
-    // helper, and "build first" misled when cargo was not on PATH.
+    // helper, and "build first" misled when cargo was not on PATH (LLP 1054 O5).
     let why = null;
     if (existsSync(resolve(dist, 'app.wasm'))) {
       try { filesystem({ op: 'get', root: resolve(dist), path: 'app.wasm' }); } catch (error) { why = error.message; }
@@ -1290,9 +1290,9 @@ async function main() {
     console.error(why ? `${dist}/app.wasm is built but could not be read: ${why}` : `no build in ${dist}: run ${build} first, or serve a published --origin <dir>`);
     return 2;
   }
-  // TODO: compare each setting app.json declares with the value the build inlined before serving.
+  // TODO(LLP 1153 D4): compare each setting app.json declares with the value the build inlined before serving.
   const loopback = !argv.includes('--lan') && (argv.includes('--loopback') || process.env.EXACT_LOOPBACK === '1');
-  // `--port`, else `PORT`, which a host sets for `npm start`, else 8765.
+  // `--port`, else `PORT`, which a host sets for `npm start` (LLP 1153.001 D3), else 8765.
   const portText = portFlag ?? process.env.PORT ?? null;
   const port = portText === null || portText === '' ? 8765 : Number(portText);
   if (!Number.isInteger(port) || port < 0 || port > 65535) { console.error(`serve: ${portFlag === null ? 'PORT' : '--port'} ${portText} is not a port`); return 2; }
@@ -1315,7 +1315,7 @@ async function main() {
       const priv = (a) => /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(a);
       urls.push(...Object.values(networkInterfaces()).flat().filter((a) => a && !a.internal && a.family === 'IPv4').map((a) => a.address).sort((a, b) => priv(b) - priv(a)).map((a) => `http://${a}:${server.address().port}/`));
     }
-    // Name the app, so a directory another build replaced is seen at once.
+    // Name the app, so a directory another build replaced is seen at once (LLP 1054 O5).
     let served = '';
     try { const { app } = JSON.parse(readFileSync(resolve(dist, js ? '.exact-build.json' : 'exact.json'), 'utf8')); served = ` ${app.name} (${app.id})${js ? ', the JS target' : ''}`; } catch { /* an older build has no envelope */ }
     console.log(urls.join('\n') + `\n  (serving${served} from ${dist}; ctrl-c to stop)`);
@@ -1328,7 +1328,7 @@ async function main() {
   return 0;
 }
 
-/** The build in `dist` brought to this environment's settings: a setting it inlined that the
+/** The build in `dist` brought to this environment's settings (LLP 1153 D4): a setting it inlined that the
  * environment or the app's files now give another value is built again when the app's sources are beside the build,
  * and refused, naming the setting and both values, when they are not (a build copied elsewhere). 0 when it may be
  * served, else the exit code. */
@@ -1416,7 +1416,7 @@ function sourcesOf(dist, id) {
   return null;
 }
 
-/** A development page's trace: ⌥⇧T posts its journal, frames and
+/** A development page's trace (LLP 1079 D5): ⌥⇧T posts its journal, frames and
  * `perf`; this adds what only the server knows — the build's identity, as
  * stress-metrics.mjs writes it, the plan's digest and its source map — and
  * writes it under the app's target/traces/ for `agent.mjs trace <file>`. */
@@ -1446,7 +1446,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
 
 /** A dev loop its launcher started stops when that process is gone, however it ended: `EXACT_LAUNCHER_PID` names
  * it (an app's `exact.mjs`, or the JS loop for the resident producers it starts). A SIGKILL forwards no signal, and
- * an orphaned server keeps its port. Without the variable a loop runs until stopped. */
+ * an orphaned server keeps its port (chat and onboarding F20). Without the variable a loop runs until stopped. */
 /** A dev loop answers on IPv6's loopback too, the same port: `localhost`
  * resolves to [::1] first, and the design tool frames the page as
  * localhost (another site than the tool's 127.0.0.1). An HTTP server of

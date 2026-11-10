@@ -1,4 +1,4 @@
-//! The desktop modules' Windows implementations (`packages/*/windows/lib.rs`)
+//! LLP 1133.025's Windows implementations (`packages/*/windows/lib.rs`)
 //! on this loop, over a fake of the host's services: a chord registered,
 //! refused and released by its reader, a check that keeps nothing, the
 //! login item set and read with the launch, attention asked, and a press

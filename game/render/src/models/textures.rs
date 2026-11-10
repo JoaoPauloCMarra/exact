@@ -1,4 +1,5 @@
 //! Baked texture upload: RGBA8 or a GPU block format, exactly as delivered.
+//! @ref llp/1046.003-game-engine-as-built.explainer.md#compressed-textures-2026-09-23
 use crate::RenderError;
 use exact_game::asset::{Filter, TextureData, TextureFamily, TextureFormat, Wrap};
 use exact_gpu::wgpu;

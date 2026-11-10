@@ -1,4 +1,4 @@
-//! The design server owns the app's `.contract`
+//! @ref LLP 1121 stage 8 D — the design server owns the app's `.contract`
 //! files: `set-state` and `unset-state` write a `style`'s state part
 //! through `contract fmt`, compiled whole first; the inverse gives the
 //! bytes back, an unformatted file's included; `propose` says `rebuild`.
@@ -103,7 +103,7 @@ fn a_set_state_the_app_cannot_build_writes_nothing() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A negative literal replaced whole; a row with a comment
+/// Review round 1: a negative literal replaced whole; a row with a comment
 /// after it unset with its block (the comment on the header too); a new
 /// block at a four-space style's own indent; a row's name one name.
 #[test]
@@ -147,7 +147,7 @@ fn set_state_holds_its_edges() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A row in parentheses unset whole; a value over two lines
+/// Review round 2: a row in parentheses unset whole; a value over two lines
 /// refused (the server answers on); a package linked into `node_modules`
 /// and reached by a relative path is not the app's to write.
 #[test]
@@ -238,7 +238,7 @@ fn set_state_refuses_what_it_cannot_splice_and_a_linked_package() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A package linked file by file (a vendored directory
+/// Review round 3: a package linked file by file (a vendored directory
 /// with its `package.json`) is read-only; a negative in parentheses set
 /// whole; a `(` in a row's comment no line's open one; an imported source
 /// stays the server's while the root does not parse.
@@ -362,7 +362,7 @@ fn history_reads_state_rows_and_revert_plans_them() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A literal's kind counts
+/// Review round 1 of the history follow-up: a literal's kind counts
 /// (`0.5` to `"0.5"`, `true` to `false`); a style declared twice is
 /// refused; a node's state header is code; a file the commit created is
 /// refused, not stripped; a border row put back last is refused.
@@ -427,7 +427,7 @@ fn history_holds_its_edges() {
             .contains("paint over"),
         "{back}"
     );
-    // Put back last where it was last, it goes back.
+    // Round 2: put back last where it was last, it goes back.
     let last = base.replace(
         "    border-left-color=\"#00ff00\"\n",
         "    border-left-color=\"#00ff00\"\n    border-color=\"#ff0000\"\n",
@@ -467,7 +467,7 @@ fn history_holds_its_edges() {
             .contains("comment"),
         "{added}"
     );
-    // Two rows a commit added, unset together, empty a block
+    // Round 3: two rows a commit added, unset together, empty a block
     // whose header has a comment now.
     let two = base.replace(
         "  :active\n    opacity=0.5\n    border-left-color=\"#00ff00\"\n",

@@ -1,4 +1,4 @@
-// An entry address on the existing agent channel.
+// LLP 1126.000 WP6: an entry address on the existing agent channel.
 import { resolve } from 'node:path';
 import { MalformedOperation } from './agent-keys.mjs';
 

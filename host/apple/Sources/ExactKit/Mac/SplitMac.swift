@@ -1,9 +1,9 @@
-// A list and its detail are a split view. Where a
+// @ref LLP 1115.002 D4 — a list and its detail are a split view. Where a
 // stack's root route holds a list whose rows push (the runner's rule,
 // `Runner::stack_split`, shared by every host that splits), a hand-built
 // Mac window shows the list and the detail side by side: an
 // `NSSplitViewController` whose divider, minimums and narrowing are
-// AppKit's. On the Mac it is so at every window width (measured): the
+// AppKit's. On the Mac it is so at every window width (measured, D4): the
 // window stops narrowing instead.
 //
 // **Which view is which pane.** The page's view is the list's column: the
@@ -11,14 +11,14 @@
 // column as it narrows beside a sidebar. The stack's routes above the list,
 // up to its first sheet, live in the detail's pane: each is a subtree of
 // the one session laid out in a containing block the pane's size
-// (`BlockHost`), so nothing about a route changes but the box it is
+// (`BlockHost`, D8.2), so nothing about a route changes but the box it is
 // laid out in. The pane shows the top one. With none it shows the box the
-// root route marks `navigationSplit="placeholder"`, as
+// root route marks `navigationSplit="placeholder"` (LLP 1116.006 D2), as
 // the web's shell does, or else says so in AppKit's words.
 //
-// **A row of the list draws no disclosure chevron**: a table's row
+// **A row of the list draws no disclosure chevron** (D5): a table's row
 // draws none in its cell (TableInkMac.swift), and a painted list's row (the
-// grouped form) draws none while its list is the list's column.
+// grouped form, D6) draws none while its list is the list's column.
 //
 // **What a row's detail is.** A route some row of the list links to is
 // that row's detail (the rule names the pairs), and so is one that came
@@ -97,8 +97,8 @@ final class SplitHost {
     private unowned let presenter: Presenter
     init(_ presenter: Presenter) { self.presenter = presenter }
 
-    /// Whose the window is where two headers are in view: the list's. Its
-    /// heading is the
+    /// Whose the window is where two headers are in view (LLP 1115.002 §5
+    /// Q10, ruled as a trial on 2026-10-12): the list's. Its heading is the
     /// window's title and the detail's stays the first line of its pane,
     /// which is what SwiftUI's three columns and AppKit's show. False is
     /// the other reading, SwiftUI's two columns: the detail's heading is
@@ -298,7 +298,7 @@ final class SplitHost {
             rowOf[detail.id] = (rule.rows[detail.id] ?? pressing, rule.locations[detail.id])
         }
         // One that has moved since (`replace` keeps a route's id) to where no row's press or link took it
-        // keeps its place in the pane and has no row.
+        // keeps its place in the pane and has no row (LLP 1127 D3).
         for (route, entry) in rowOf where entry.row != nil {
             if let at = entry.at, let now = rule.locations[route], now != at { rowOf[route] = (nil, now) }
         }
@@ -371,7 +371,7 @@ final class SplitHost {
         pane.positionChanged = { [weak self, weak pane] in
             if let pane { self?.resized(pane.bounds.size) }
         }
-        // The pointer over the pane hovers what is under it, as over the page: in the key window.
+        // The pointer over the pane hovers what is under it, as over the page: in the key window (LLP 1115.000 D7.9).
         if pane.pointerTracking == nil {
             pane.pointerTracking = { [weak presenter] event in
                 if event.window?.isKeyWindow == true || event.type == .mouseExited { presenter?.trackPointer(event) }
@@ -467,7 +467,7 @@ final class SplitHost {
         return (presenter.tables.authoredRow(of: row) ?? row).rowPress === node
     }
 
-    /// Draw `row` selected, and no other row of a painted list. Asked
+    /// Draw `row` selected, and no other row of a painted list (D5). Asked
     /// again after every batch, and as its window's key state or first
     /// responder changes.
     private func mark(_ row: NodeView?) {

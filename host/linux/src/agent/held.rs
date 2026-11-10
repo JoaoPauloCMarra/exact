@@ -1,10 +1,10 @@
-//! Requests the server holds in this host's agent replies:
+//! Requests the server holds (LLP 1016.000 D9) in this host's agent replies:
 //! each clock reply that left one out names it, and the tree lists what is
 //! still out, held asks marked, as Apple's does.
 use super::*;
 
-/// `reply` naming the requests the server holds, which no clock waited on:
-/// `held` and `heldTargets`, as the web hosts' do. An
+/// `reply` naming the requests the server holds, which no clock waited on
+/// (LLP 1016.000 D9): `held` and `heldTargets`, as the web hosts' do. An
 /// error reply is left as it is.
 pub(super) fn held_named<D: DataSource>(p: &Presenter<D>, mut reply: String) -> String {
     let held = p.host().runner().held_requests();

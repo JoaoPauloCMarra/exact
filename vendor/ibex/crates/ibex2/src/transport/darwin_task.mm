@@ -1,14 +1,14 @@
-// NSURLSession tasks with delegates, for the asynchronous transport: one
-// session per lane, created on first use; each task has its own delegate,
-// and every callback of the lane runs on the session's one serial delegate
-// queue, never waiting on anything.
+// NSURLSession tasks with delegates, for the asynchronous transport
+// (LLP 0068.000 §5): one session per lane, created on first use; each
+// task has its own delegate, and every callback of the lane runs on the
+// session's one serial delegate queue, never waiting on anything.
 //
 // The rules of darwin_http.mm hold here too: an ephemeral session with no
 // cookies and no URL cache, and no redirect followed by the platform
 // (willPerformHTTPRedirection completes with nil), because Rust re-checks
 // the net.fetch grant on every hop.
 //
-// The platform executes; it does not decide.
+// @ref LLP 0057#3-the-boundary — the platform executes; it does not decide
 
 #import <Foundation/Foundation.h>
 

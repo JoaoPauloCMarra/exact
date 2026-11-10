@@ -64,7 +64,7 @@ impl Backend for Keeps {
     }
 }
 
-/// A row a commit bound to another item is a new row to the
+/// A row a commit bound to another item (LLP 1078) is a new row to the
 /// backend: not the row it was, whose recording is the other item's (a
 /// reader told otherwise draws that in its place until the new one is
 /// made), and the old recording is freed. A row that only changed is still
@@ -124,8 +124,9 @@ fn a_renewed_row_is_not_the_row_it_was() {
     assert!(heard.freed.contains(&was_renewed), "its old recording goes");
 }
 
-/// A reader made again holds none of the last one's rows: the backend that records for it is told
-/// every row as a new one, and of none to free, though nothing in the app changed.
+/// A reader made again holds none of the last one's rows (LLP 1115.001
+/// D15.1): the backend that records for it is told every row as a new one,
+/// and of none to free, though nothing in the app changed.
 #[test]
 fn a_new_reader_is_sent_every_row_again() {
     let cells: String = (0..6)

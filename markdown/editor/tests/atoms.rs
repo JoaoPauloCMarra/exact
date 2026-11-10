@@ -1,4 +1,4 @@
-//! Editing at an inline atom, driven as a browser drives
+//! LLP 1045.000 D5: editing at an inline atom, driven as a browser drives
 //! the editor (`beforeinput`, platform selections) and as an app does
 //! (`setSelectionRange`, `setRangeText`, faces arriving).
 

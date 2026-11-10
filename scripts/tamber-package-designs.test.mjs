@@ -1,4 +1,5 @@
-// A linked package's design on the local wire (*1.14*): listed read-only by `hello` and `describe`, a change to
+// A linked package's design on the local wire (LLP 1121 D11, stage 11 A2
+// part 2, *1.14*): listed read-only by `hello` and `describe`, a change to
 // it on disk announced as a hand edit is, and a held proposal planned on
 // the old fold checked again when it is accepted.
 import { afterAll, beforeAll, expect, test } from 'bun:test';
@@ -66,7 +67,7 @@ test('hello and describe list the package designs read-only; a change to one on 
   expect(JSON.stringify(taken)).toContain('reading.ink');
 }, 120_000);
 
-test('a package SVG its design reads, edited, is announced as a change of the design', async () => {
+test('a package SVG its design reads, edited, is announced as a change of the design (stage 13)', async () => {
   const star = d => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="${d}"/></svg>`;
   mkdirSync(join(dir, 'node_modules/@acme/reading/assets'), { recursive: true });
   writeFileSync(join(dir, 'node_modules/@acme/reading/assets/star.svg'), star('M1 1h22v22H1Z'));
@@ -79,7 +80,7 @@ test('a package SVG its design reads, edited, is announced as a change of the de
   expect(drawn.client).toBe(null);
 }, 120_000);
 
-test('a package with no design whose SVG the build reads, edited, is announced', async () => {
+test('a package with no design whose SVG the build reads, edited, is announced (stage 13)', async () => {
   const star = d => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="${d}"/></svg>`;
   const notes = join(dir, 'node_modules/@acme/notes');
   mkdirSync(join(notes, 'assets'), { recursive: true });
@@ -93,7 +94,7 @@ test('a package with no design whose SVG the build reads, edited, is announced',
   writeFileSync(join(notes, 'index.contract'), 'component NotesCard\n  view\n    text "n"\n');
 }, 120_000);
 
-test('a package vendored in the app, reached by a relative use, has its SVG edit announced', async () => {
+test('a package vendored in the app, reached by a relative use, has its SVG edit announced (stage 13)', async () => {
   const star = d => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="${d}"/></svg>`;
   const vendor = join(dir, 'vendor/shelf');
   mkdirSync(join(vendor, 'assets'), { recursive: true });
@@ -111,7 +112,7 @@ test('a package vendored in the app, reached by a relative use, has its SVG edit
   writeFileSync(app, before);
 }, 120_000);
 
-test('a package vendored in the app whose SVG is not there yet has it announced when made', async () => {
+test('a package vendored in the app whose SVG is not there yet has it announced when made (stage 13)', async () => {
   const star = d => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="${d}"/></svg>`;
   const vendor = join(dir, 'vendor/rack');
   mkdirSync(join(vendor, 'assets'), { recursive: true });

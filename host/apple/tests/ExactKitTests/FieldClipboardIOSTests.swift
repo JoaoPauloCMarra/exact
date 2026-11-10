@@ -4,7 +4,7 @@ import XCTest
 @testable import ExactKit
 @testable import ExactMarkdown
 
-/// On UIKit, a text view's or text field's paste:, copy: and cut: (the
+/// #125 on UIKit: a text view's or text field's paste:, copy: and cut: (the
 /// edit menu, a hardware keyboard's ⌘V, ⌘C, ⌘X) are DOM's `paste`, `copy`
 /// and `cut` at the nearest handler, before the editor's own, which an
 /// action's `preventDefault()` cancels. A simulator runs it:

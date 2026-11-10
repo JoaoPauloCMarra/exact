@@ -1,5 +1,6 @@
-//! What of the viewport a plan reads, and the media
-//! queries that tell a browser's viewport apart as the plan does.
+//! What of the viewport a plan reads (LLP 1048.006 D4), and the media
+//! queries that tell a browser's viewport apart as the plan does (LLP
+//! 1048.007 D2).
 //!
 //! Every code body is walked for `exactViewport` field reads. A field read
 //! only to be compared with a constant (`viewport.width >= 640`) is

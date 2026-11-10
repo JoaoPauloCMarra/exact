@@ -1,13 +1,13 @@
 // NSURLSessionWebSocketTask behind SocketTransport: the platform half of a
-// WebSocket. The platform owns TLS with the system trust store, proxies,
-// pings and the closing handshake and send queue; Rust owns admission and the
-// message vocabulary.
+// WebSocket (LLP 0057 §3; LLP 0059.000 §3.12). The platform
+// owns TLS with the system trust store, proxies, pings and the closing
+// handshake and send queue; Rust owns admission and the message vocabulary.
 //
 // Each socket has its own ephemeral session (no cookies, no cache) whose
 // delegate refuses redirects: a handshake that redirects fails, as it does in
 // a browser, and the grant was checked for this origin only. Nothing is ever
-// The platform executes; it does not decide.
-// Send does not require replacing the platform task.
+// @ref LLP 0057#3-the-boundary — the platform executes; it does not decide
+// @ref LLP 0057.000#l4--websocket--completed-2026-10-04 — send does not require replacing the platform task
 
 #import <Foundation/Foundation.h>
 #import <Security/Security.h>
@@ -368,7 +368,7 @@ int send_message(Ibex2Socket *socket, NSURLSessionWebSocketMessage *message,
   await_test_send(testGate);
   note_test_send_submission(testGate);
   __weak Ibex2Socket *weak = socket;
-  // Admission and NSURLSession submission are atomic with close.
+  // @ref LLP 0059.000#312-websocket--delegating-capability-bearing-author-required — admission and NSURLSession submission are atomic with close
   [socket.task sendMessage:message completionHandler:^(NSError *error) {
     Ibex2Socket *strong = weak;
     if (strong == nil) return;

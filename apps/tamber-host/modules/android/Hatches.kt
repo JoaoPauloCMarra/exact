@@ -9,11 +9,11 @@ import dev.exact.canvas.ExactHatches
 import dev.exact.canvas.ExactTamber
 
 /**
- * The Tamber binding's sample on Android: the `swatch` hatch hosts a view in its node's box
+ * The Tamber binding's sample on Android (LLP 1121 D12, stage 5): the `swatch` hatch hosts a view in its node's box
  * that fills itself with the design's `swatch.fill` through `ExactTamber(view).color(…)`, inset by `swatch.inset`
- * (`length(…)`), and draws again when its observation says the place's inputs moved (a `setMode`, the
+ * (`length(…)`, stage 6 G), and draws again when its observation says the place's inputs moved (a `setMode`, the
  * pin above it, the scheme, the person's text size). Each colour and inset it draws is logged under `ExactTamber`
- * with its node, which the gate reads beside a screen capture. It strokes a ring in its own params
+ * with its node, which the gate reads beside a screen capture. Since stage 7 D it strokes a ring in its own params
  * (`component Swatch` in the design), named by the generated bindings (`TamberColor.SWATCH_RING`).
  */
 class Hatches : ExactHatches() {

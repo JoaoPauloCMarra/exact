@@ -1,4 +1,4 @@
-// The region carrier: one `CLMonitor` named
+// The region carrier (LLP 1133.021 D14): one `CLMonitor` named
 // `<bundle id>.regions` and the store of regions and their undelivered
 // transitions. On iOS a relaunch for a region event must "recreate the
 // monitor with the same identifier" before anything else, which is before a
@@ -12,7 +12,7 @@
 // name}`, `{op: list, package}`, `{op: pending, package, name}`, `{op:
 // delivered, package, name}`.
 //
-// The store is the truth: a crossing is written to it first, the
+// The store is the truth (D14): a crossing is written to it first, the
 // region's `inside` set and its one undelivered transition replaced, then
 // offered to the package that added it as a wake of kind `region`, its keys
 // the regions' names. A transition stays until the package says it was
@@ -138,7 +138,7 @@ public enum RegionCarrier {
         guard !fresh.isEmpty else { return }
         offering.formUnion(fresh)
         #if os(iOS)
-        // Its time bounds the wake.
+        // Its time bounds the wake (D14 step 1).
         var task = UIBackgroundTaskIdentifier.invalid
         task = UIApplication.shared.beginBackgroundTask(withName: "exact.regions") {
             UIApplication.shared.endBackgroundTask(task)

@@ -1,6 +1,6 @@
-// The hatches' frame clock: logical time,
+// The hatches' frame clock (@ref LLP 1075.003.000.001 §2.4): logical time,
 // for behaviour that keeps step with the app. A module's `context.frames`
-// ticket ticks at the instants the runner's frame tasks fire, after that
+// ticket ticks at the instants LLP 1073's frame tasks fire, after that
 // frame's tasks and timers: each presented frame on the wall, and under the
 // agent the virtual display, `base + k·1000/60`. `context.after` waits on the
 // session clock.
@@ -75,7 +75,7 @@ final class HatchClock {
     func beginCommand() { fires = 0; acts = 0 }
 
     /// The next `after` due, which a reply in flight can wait on: a bound
-    /// package's effect answers at its span's end.
+    /// package's effect answers at its span's end (LLP 1133.022 §21).
     var nextAfter: Double? { afters.map(\.due).min() }
 
     /// The next hatch instant, for a seek to stop at.

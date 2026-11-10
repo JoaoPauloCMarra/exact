@@ -1,8 +1,8 @@
-//! A component's `params` section: each param a token its component owns, named
-//! by the component's identity (its declaring file and name), `param.x` in its
-//! rows and defaults rewritten to it, folded with the design, checked (kind,
-//! reach, range, controls), retained as any token, and listed in the IR's
-//! `components` block.
+//! @ref LLP 1121 D15 (stage 7 A) — a component's `params` section: each
+//! param a token its component owns, named by the component's identity (its
+//! declaring file and name), `param.x` in its rows and defaults rewritten to
+//! it, folded with the design, checked (kind, reach, range, controls),
+//! retained as any token, and listed in the IR's `components` block.
 
 use exact_plan::Plan;
 use std::path::PathBuf;
@@ -58,7 +58,7 @@ fn a_param_is_a_token_its_component_owns() {
         "{rows:?}"
     );
     // A param only another's default reads folds into it, and the plan
-    // keeps what its rows read.
+    // keeps what its rows read (D7).
     assert!(named("pressed").is_some(), "{rows:?}");
     assert!(named("fill").is_none(), "{rows:?}");
     // Two instances, one token: the rows of both read it.

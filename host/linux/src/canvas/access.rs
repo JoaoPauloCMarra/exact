@@ -1,4 +1,4 @@
-//! The accessibility tree for the Canvas host's reader.
+//! The accessibility tree for the Canvas host's reader (LLP 1115.001 D13).
 //! Android's reader answers TalkBack through an `AccessibilityNodeProvider`
 //! (`host/android/canvas`, `Access.kt`) whose virtual nodes are the
 //! presenter's ([`crate::presenter::access`]): what is in the reader's view

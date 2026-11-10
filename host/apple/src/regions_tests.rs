@@ -1,4 +1,4 @@
-//! The layout regions as the Apple host sets them: a node
+//! The layout regions as the Apple host sets them (LLP 1123 D10): a node
 //! that reads one is re-sent and laid out again when the host reports them.
 
 use super::Host;

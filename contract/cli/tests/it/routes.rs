@@ -1,4 +1,4 @@
-//! Compiled declarations, visits and keyed screens.
+//! @ref LLP 1038 D2/D3, D5/D6 — compiled declarations, visits and keyed screens.
 use exact_kernel::{Kernel, PropId};
 use exact_plan::Plan;
 use exact_runner::{agent, DataError, DataSource, Runner, Value};
@@ -469,7 +469,7 @@ component App
     let mut r = boot(contract::compile(source).unwrap(), "/");
     r.act("visit", vec![]).unwrap();
     let prior = rows(&r);
-    // A push of the location on top is no new visit.
+    // A push of the location on top is no new visit (LLP 1038 `push`).
     r.act("visit", vec![]).unwrap();
     assert_eq!(rows(&r), prior);
     r.act("visitOther", vec![]).unwrap();
@@ -650,7 +650,7 @@ fn path_refuses_empty_and_dot_only_parameters_before_fallback_or_slot_writes() {
 
 #[test]
 fn navigate_delivers_one_location_or_lets_the_action_ignore_it() {
-    // The ordinary dispatch, including its journal.
+    // @ref LLP 1038 D8/D11 — the ordinary dispatch, including its journal.
     let mut runner = boot(contract::compile(SOURCE).unwrap(), "/");
     let root = runner.kernel().roots()[0];
     runner
@@ -691,8 +691,8 @@ fn navigate_delivers_one_location_or_lets_the_action_ignore_it() {
 
 #[test]
 fn a_route_is_a_child_of_its_root_or_of_a_tabpanel_and_nowhere_else() {
-    // Where every host finds routes: a route behind a centering column is
-    // still a route.
+    // @ref LLP 1038 D6, LLP 1075.003 §3.7 — where every host finds routes
+    // (hn-reader F5: a route behind a centering column was ignored).
     let tabs = r#"routes nav
   tab home "/"
     item "/item"
@@ -731,8 +731,8 @@ component App
             .contains("`main > column > column > column > column`"),
         "{error}"
     );
-    // Beside the tabpanels: with tabs a route is a panel's, so a sheet drawn
-    // there is no sheet.
+    // @ref LLP 1116.020 D2 — beside the tabpanels: with tabs a route is a
+    // panel's, so a sheet drawn there is no sheet (round 18's contacts).
     let sheet = "if top(nav).name == \"item\"\n        column navigationKey=`${top(nav).id}` navigationPresentation=\"modal\" position=\"absolute\" inset=0\n          text \"Item\"\n      row role=\"tablist\"";
     let beside = tabs
         .replace("STACK", stack)
@@ -747,8 +747,9 @@ component App
     // A root without tabs keeps its own children as routes.
     let plain = "routes nav\n  home \"/\"\n    add \"/add\"\ncomponent App\n  view\n    main navigationKey=`${top(nav).id}`\n      for e in stack(nav) key=e.id\n        column navigationKey=`${e.id}` navigationPresentation=(e.name == \"add\" ? \"modal\" : \"\") position=\"absolute\" inset=0\n          text e.url\n";
     contract::compile(plain).unwrap();
-    // A key outside any root is not a route: below a root that carries none,
-    // nothing is a navigation root (the first root with a key is one).
+    // A key outside any root is not a route: below a root that carries
+    // none, nothing is a navigation root (LLP 1116 D6 makes the first root
+    // with a key one).
     contract::compile(
         "component App\n  view\n    column\n      column navigationKey=\"a\"\n        column navigationKey=\"b\"\n",
     )
@@ -757,9 +758,10 @@ component App
 
 #[test]
 fn a_root_with_a_key_and_no_back_control_named_is_the_navigation_root() {
-    // `navigationBack` is optional: the first root with a `navigationKey` is
-    // the navigation root, naming the empty id, which no control carries, so
-    // the platform's Back is the router's own.
+    // @ref LLP 1116 D6, LLP 1115 D5 — `navigationBack` is optional: the
+    // first root with a `navigationKey` is the navigation root, naming the
+    // empty id, which no control carries, so the platform's Back is the
+    // router's own (the unit-converter builder lost the native bar to it).
     let source = r#"routes nav
   home "/"
     detail "/detail"
@@ -784,8 +786,8 @@ component App
     );
     assert_eq!(selected(&state(&r)["slots"]["nav"]).len(), 1);
     assert_rows(&r);
-    // Back left the detail ahead: the platform's Forward goes there by the
-    // runner's own `go`, and nothing is ahead then.
+    // @ref LLP 1115.000 D5.5 — Back left the detail ahead: the platform's
+    // Forward goes there by the runner's own `go`, and nothing is ahead then.
     assert_eq!(r.location_ahead().as_deref(), Some("/detail"));
     r.host_go("/detail").unwrap().unwrap();
     assert_eq!(selected(&state(&r)["slots"]["nav"]).len(), 2);
@@ -817,10 +819,10 @@ component App
 
 #[test]
 fn an_app_with_no_notfound_route_is_given_one_that_keeps_the_url_and_says_so() {
-    // A location no route matches keeps its URL: the compiler writes `notfound`
-    // and a screen for it where the app draws a route per stack entry, whether
-    // the route element is under an `if` or stands for every entry (a blank
-    // screen for one no branch names).
+    // @ref LLP 1116.009 D2 — a location no route matches keeps its URL: the
+    // compiler writes `notfound` and a screen for it where the app draws a
+    // route per stack entry, whether the route element is under an `if` or
+    // stands for every entry (a blank screen for one no branch names).
     let source = r#"routes nav
   home "/"
     detail "/detail"
@@ -900,7 +902,7 @@ component App
 
 #[test]
 fn a_route_scroll_names_an_element_of_the_route_that_scrolls_on_y() {
-    // `navigationScroll` names the route's content
+    // @ref LLP 1075.003 §3.5 — `navigationScroll` names the route's content
     // scroller by HTML id; refused only where that provably fails.
     let source = r#"routes nav
   home "/"

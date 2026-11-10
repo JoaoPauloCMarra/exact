@@ -1,14 +1,14 @@
-//! The app's native-module roster: the tags its module
+//! The app's native-module roster (LLP 1024 D1): the tags its module
 //! artifact serves, declared in `app.json` as `"modules": ["tag", …]`, and
 //! the views its packages serve (`package_views`). A module tag neither
 //! names is `bake-unknown-module`, so a typo
 //! is a named diagnostic in the dev loop and in every build, never an empty
-//! box at runtime. Beside it, the app's `data-*` words:
+//! box at runtime. Beside it, the app's `data-*` words (LLP 1075.003 Q2):
 //! `"data": ["word", …]`, from which the Apple build also writes the Swift
 //! module's typed keys; a word the list lacks is `bake-undeclared-data`.
-//! And its `hatch` words: `"hatches": ["word", …]`, the
+//! And its `hatch` words (LLP 1075.003.000 Q1): `"hatches": ["word", …]`, the
 //! same way, `bake-undeclared-hatch`; or `{"word": ["ios", …]}`, each word
-//! with the platforms that handle it.
+//! with the platforms that handle it (LLP 1075.003.000.001 §5).
 
 use super::{CompileError, Manifest};
 use crate::package_views::PackageView;
@@ -33,7 +33,7 @@ pub fn roster(manifest: &Manifest) -> Result<Vec<String>, String> {
         .map(|name| match name.as_str() {
             Some(tag) if contract_lower::is_module_tag(tag) => Ok(tag.to_owned()),
             _ => Err(format!(
-                "app.json `modules`: {name} is not a lowercase custom-element name"
+                "app.json `modules`: {name} is not a lowercase custom-element name (LLP 1024 D1)"
             )),
         })
         .collect()
@@ -45,18 +45,18 @@ pub fn data_words(manifest: &Manifest) -> Result<Vec<String>, String> {
     words(manifest, &Words::DATA)
 }
 
-/// The `hatch` words in `manifest`: the nodes the
+/// The `hatch` words in `manifest` (LLP 1075.003.000 Q1): the nodes the
 /// app's native code receives, each a word as `data-*`'s are. Either form
 /// of the declaration, every platform's words.
 pub fn hatch_words(manifest: &Manifest) -> Result<Vec<String>, String> {
     Ok(hatch_table(manifest)?.into_iter().map(|(w, _)| w).collect())
 }
 
-/// The platforms a hatch word may name.
+/// The platforms a hatch word may name (LLP 1075.003.000.001 §5).
 pub const HATCH_PLATFORMS: [&str; 7] =
     ["ios", "tvos", "macos", "web", "linux", "windows", "android"];
 
-/// The words `platform`'s module handles,
+/// The words `platform`'s module handles (LLP 1075.003.000.001 §4.3, §5),
 /// sorted: every word of a plain list, and of the object form the words
 /// that name the platform. The bake reads this for the plan's requirement
 /// and the cohort's capability; nothing is scanned or run.
@@ -73,7 +73,7 @@ pub fn hatches_on(manifest: &Manifest, platform: &str) -> Result<Vec<String>, St
     Ok(words)
 }
 
-/// The plan's `hatches` rows: each declared
+/// The plan's `hatches` rows (LLP 1075.003.000.001 §4.3): each declared
 /// word with the mask of the platforms that handle it.
 pub fn hatch_rows(manifest: &Manifest) -> Result<Vec<(String, u16)>, String> {
     let mut rows: Vec<(String, u16)> = hatch_table(manifest)?
@@ -95,7 +95,7 @@ pub fn hatch_rows(manifest: &Manifest) -> Result<Vec<(String, u16)>, String> {
 }
 
 /// What an app's Linux crate adds to its generated entry for its hatches,
-/// and the host call its `main` makes: the text of
+/// and the host call its `main` makes (LLP 1075.003.000.001 §5): the text of
 /// [`rust_hatches`] and `run_with_hatches`, or nothing and plain `run` when
 /// the app has no hatch files. The platform is the build target's own, so
 /// an Android or Windows build of the crate handles that platform's words.
@@ -128,7 +128,7 @@ pub fn rust_hatch_entry(
 }
 
 /// What an app's Android crate (the Canvas host's library) writes beside
-/// its plan: `hatches.rs`, which defines
+/// its plan (LLP 1115.001.000 D2, D4): `hatches.rs`, which defines
 /// `exact_hatches()`, the install `canvas_jni!` hands the host (the app's
 /// Rust hatches, `modules/android/*.rs` or `modules/linux/*.rs`, with the
 /// reader's Kotlin ones told beside them; the reader's alone when the app
@@ -202,7 +202,7 @@ pub fn android_reach(
 }
 
 /// What the app's use of its module names declares to `target`'s platform
-/// beside its grant lines (`derives`: `ios` usage
+/// beside its grant lines (`derives`, LLP 1133.026 D19 item 4: `ios` usage
 /// keys, `android` permissions), each with the grant line whose purpose a
 /// usage key takes: a name's own list where the app's source names it; per
 /// option, the permission of each value the source writes as a string
@@ -274,13 +274,13 @@ pub fn derived(plan: &exact_plan::Plan, text: &str, target: &str) -> Vec<(String
 }
 
 /// The Android permissions the plan's module names derive beside what
-/// their grant lines do: a name that writes the person's
+/// their grant lines do (LLP 1133.018 D11): a name that writes the person's
 /// store (`"writes": true`) and that the app `uses` derives each of its
 /// lines' `android_writes` where `grants` grants that line (every line, with
 /// no `grants`). So an app that only reads its calendar declares no
 /// `WRITE_CALENDAR`. The plan holds every name of a module the app uses, so
 /// which the app calls is read from its source, as the Apple build finds the
-/// strings keys an option names.
+/// strings keys an option names (LLP 1133.002 D10).
 pub fn android_write_permissions(
     plan: &exact_plan::Plan,
     grants: Option<&str>,
@@ -361,7 +361,8 @@ fn names(text: &str, name: &str) -> bool {
     word(name) || word(&snake)
 }
 
-/// A painting host's hatches for an app's own crate: Rust for its generated entry, or `None` when the app has no
+/// A painting host's hatches for an app's own crate (LLP 1075.003.000.001
+/// §5): Rust for its generated entry, or `None` when the app has no
 /// `modules/linux/*.rs`. The text is the typed `HatchKey`, with only the
 /// words `platform` (`linux`, `windows` or `android`) handles, so module code that
 /// names another platform's word does not compile; then a module `hatches`
@@ -375,7 +376,7 @@ pub fn rust_hatches(
 ) -> Result<Option<String>, String> {
     // A painting host's own Rust when the app has some (`modules/android`,
     // `modules/windows`), else the presenter's, `modules/linux`. Android's
-    // directory may hold only the reader's Kotlin.
+    // directory may hold only the reader's Kotlin (LLP 1115.001.000 D4).
     let rust = |directory: &Path| {
         std::fs::read_dir(directory)
             .into_iter()
@@ -449,7 +450,7 @@ fn hatch_table(manifest: &Manifest) -> Result<Vec<HatchRow>, String> {
         .map(|(word, on)| {
             if !contract_lower::dataset::is_word(word) {
                 return Err(format!(
-                    "app.json `hatches`: \"{word}\" is not a word: lowercase words of letters and digits joined by `-`"
+                    "app.json `hatches`: \"{word}\" is not a word: lowercase words of letters and digits joined by `-` (LLP 1075.003 Q2)"
                 ));
             }
             let listed = on.as_array().ok_or_else(|| {
@@ -525,10 +526,10 @@ fn words(manifest: &Manifest, kind: &Words) -> Result<Vec<String>, String> {
                 Ok(w.to_owned())
             }
             Some(w) if contract_lower::dataset::is_word(w) => Err(format!(
-                "app.json `{key}`: `{w}` is written by the web host on its own elements"
+                "app.json `{key}`: `{w}` is written by the web host on its own elements (LLP 1075.003 §3.3)"
             )),
             _ => Err(format!(
-                "app.json `{key}`: {word} is not a word: lowercase words of letters and digits joined by `-`"
+                "app.json `{key}`: {word} is not a word: lowercase words of letters and digits joined by `-` (LLP 1075.003 Q2)"
             )),
         })
         .collect()

@@ -1,9 +1,9 @@
-//! The grouped list's refusals that name an edit.
+//! The grouped list's refusals that name an edit (LLP 1116.014 D1, LLP 1116.018).
 
 use super::{is, Stray};
 use contract_syntax::{Attr, Expr, Node};
 
-/// The edit that puts a `header` or `footer` where UIKit
+/// LLP 1116.014 D1: the edit that puts a `header` or `footer` where UIKit
 /// draws one. Its words may change (`text (on ? "A" : "B")`); what comes and
 /// goes is a section, since a `header` holds one `text` and nothing else.
 pub(super) fn stray_message(stray: &Stray) -> String {
@@ -45,7 +45,7 @@ fn texts_chosen(node: &Node) -> Option<usize> {
     Some(arm(then)? + arm(otherwise)?)
 }
 
-/// The edit for a `header` or `footer` that holds more than one
+/// LLP 1116.018: the edit for a `header` or `footer` that holds more than one
 /// `text`. A repair told only the rule moved or dropped the status a chain of
 /// texts showed; this names the edit that keeps every arm.
 pub(super) fn label(tag: &str, children: &[Node]) -> String {
@@ -73,7 +73,7 @@ pub(crate) fn folds(c: &Node) -> bool {
         && fold_label(c).is_some()
 }
 
-/// A `header` or `footer` whose one child is an `if` /
+/// LLP 1116.017 D3: a `header` or `footer` whose one child is an `if` /
 /// `else if` / `else` chain, every arm one `text` with the same literal
 /// attributes, is that one `text` with its words chosen by the same
 /// conditions in order. `None` leaves the label to its refusal.

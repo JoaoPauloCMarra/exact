@@ -1,4 +1,4 @@
-//! @exact/global-shortcuts on Windows: a chord registered
+//! @exact/global-shortcuts on Windows (LLP 1133.025 D3): a chord registered
 //! system-wide while something reads it, through the host's one hot-key
 //! table (`exact_linux::desktop`, `RegisterHotKey`), which raises
 //! `globalshortcut` as a person's activation when it is pressed. Under the

@@ -1,4 +1,4 @@
-//! A design value naming a base
+//! LLP 1121 stage 11 B, round 1 (theme2's (a)): a design value naming a base
 //! name bare (`card.pad: length = space.md`, a `when` arm too) that the design
 //! leaves unset stays a per-host reference, never folded: each column reads
 //! its own. One the design sets is its token, so the app's value wins through
@@ -85,7 +85,7 @@ fn an_alias_to_a_base_name_reads_each_columns_and_the_apps_own_live() {
             "{column:?}: {}",
             padding(&r)
         );
-        // A native binding reads the alias, and a base name itself, as a row does.
+        // A native binding reads the alias, and a base name itself, as a row does (round 2, Astra 1).
         let number = |v: Option<f64>| format!("({:?})", v.unwrap());
         assert_eq!(
             number(r.tamber().get(CARD_PAD, Place::Root)),
@@ -124,7 +124,7 @@ fn an_alias_to_a_base_name_reads_each_columns_and_the_apps_own_live() {
             "{column:?}"
         );
     }
-    // The terminal's column is cells: a binding reads their
+    // The terminal's column is cells (round 3, Grok): a binding reads their
     // px, an alias's too, and a radius is 0.
     set_column(Column::Terminal);
     let mut r = boot(&alias);

@@ -1153,7 +1153,7 @@ fn inline_admission_evaluates_size_branches_with_preview_props() {
 
 #[test]
 fn a_source_text_entry_names_no_members_file() {
-    // A text has no path to read members from.
+    // A text has no path to read members from (LLP 1091.002).
     let src = source("    text title", "", "  members \"./more.contract\"\n");
     let errors = compile(&src, &widget()).unwrap_err();
     assert_eq!(errors[0].id, "contract-use-unresolved", "{errors:?}");

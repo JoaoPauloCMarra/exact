@@ -1,4 +1,4 @@
-//! Keyframe animations on the web: the browser plays them. The
+//! Keyframe animations on the web (LLP 1055 D7): the browser plays them. The
 //! host sends each `@keyframes` rule once, by its name, ahead of the
 //! `animation` declaration that uses it; nothing runs per frame. A projected
 //! document carries the rules in its head.
@@ -45,7 +45,7 @@ fn each_rule_reaches_the_page_once_before_the_declaration_naming_it() {
     let [(breathe, breathe_rule), (appear, appear_rule)] = sent.as_slice() else {
         panic!("{first}")
     };
-    // By the authored name: keyframes are global by name.
+    // By the authored name: keyframes are global by name (LLP 1055 D5, D7).
     assert_eq!((breathe.as_str(), appear.as_str()), ("breathe", "appear"));
     assert_eq!(
         breathe_rule,

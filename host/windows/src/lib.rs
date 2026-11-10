@@ -71,8 +71,8 @@ impl Default for Window {
 }
 
 /// The `windows` crate, for a package's Rust: the desktop builder includes
-/// that source in the app's crate and writes no manifest of its own,
-/// so the package names it through this host.
+/// that source in the app's crate and writes no manifest of its own
+/// (LLP 1133.022 D10 item 5), so the package names it through this host.
 #[cfg(windows)]
 pub use windows;
 
@@ -87,8 +87,8 @@ pub fn run<D: exact_runner::DataSource + Default + 'static>(
 }
 
 /// [`run`] with what the app's build composed: its hatches and its
-/// packages' Windows implementations (`exact_linux::package`), whose
-/// calls run on the window's thread.
+/// packages' Windows implementations (`exact_linux::package`, LLP 1133.022
+/// D10 item 5), whose calls run on the window's thread.
 pub fn run_composed<D: exact_runner::DataSource + Default + 'static>(
     name: &str,
     window: Window,
@@ -107,7 +107,7 @@ pub fn run_composed<D: exact_runner::DataSource + Default + 'static>(
     }
 }
 
-/// [`run`] with the app's hatches: `H` is the one
+/// [`run`] with the app's hatches (LLP 1075.003.000.001 §5): `H` is the one
 /// type the app's `modules/linux` names (the trait is the shared
 /// presenter's), `words` the hatch words `app.json` gives this platform.
 /// The window's loop tells the window moments and its frame loop the ticks;

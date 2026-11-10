@@ -1,9 +1,9 @@
-// Script, input and prompts for a partitioned frame's guest,
-// by WebDriver BiDi's names: `@exact/browser-automation`'s
+// Script, input and prompts for a partitioned frame's guest (@ref LLP
+// 1020.002 D9), by WebDriver BiDi's names: `@exact/browser-automation`'s
 // package calls `exact_web_automation`, after the runner admitted the call
 // under `browser.automation`. Only a partitioned frame is always the web
 // view's own top-level browsing context, so only it is driven; a picture
-// is any frame's.
+// (D7) is any frame's.
 import Foundation
 import WebKit
 
@@ -362,7 +362,7 @@ final class FrameAutomation {
     }
 
     /// The input is dispatched: once the page has answered (`pace`), the
-    /// window's focus goes back to what had it ("Focus").
+    /// window's focus goes back to what had it (D9, "Focus").
     private func settle(_ web: WKWebView, _ then: @escaping () -> Void) {
         pace(web) { [weak self, weak web] in
             #if os(macOS)
@@ -439,7 +439,7 @@ final class FrameAutomation {
 
     #if os(macOS)
     /// macOS: `NSEvent`s to the web view's own responder methods, in-process,
-    /// as a person's arrive there; never posted to the OS.
+    /// as a person's arrive there; never posted to the OS (LLP 1020 §3.3).
     private func mouse(_ phase: String, _ source: String, _ css: CGPoint, button: Int, _ web: WKWebView) {
         guard let window = web.window else { return }
         let scale = Double(web.pageZoom * web.magnification)

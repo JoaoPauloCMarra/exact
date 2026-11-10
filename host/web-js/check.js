@@ -1,11 +1,11 @@
-// `check` on the web: what the presented page shows, as
+// `check` on the web (LLP 1116.003 D8): what the presented page shows, as
 // observations the driver judges (scripts/agent-check.mjs): each view's box in
 // the viewport, a text's own text, ink and type, whether it fits its box or an
 // ancestor's clip cuts it, a control and who sized it, what lies over its
 // middle at rest, a filled box's fill and edge, and how far a view runs past
 // the viewport's sides. Read from the page, never a second model; the
-// background a text stands on is the nearest fill painted under it,
-// else the driver's, from the pixels.
+// background a text stands on is the nearest fill painted under it (LLP
+// 1116.006 D5), else the driver's, from the pixels.
 import { inertAncestor } from './navigation.js';
 const CONTROL = 'button, a[href], input:not([type="hidden"]), select, textarea, [role="button"], [role="link"], [role="tab"], [role="switch"], [role="checkbox"], [role="radio"], [role="menuitem"], [data-exact-on~="press"]';
 // A user agent's own control at its own size (WCAG 2.5.8's exception), unless the author sized it.
@@ -42,7 +42,7 @@ export function observe(views, inactive = () => false) {
   const opaque = (e, s) => /^(img|svg|canvas|video|iframe|picture|object|embed)$/.test(e.localName) || s.backgroundImage !== 'none'
     || (/^(button|input|select|textarea|progress|meter)$/.test(e.localName) && (s.appearance ?? s.webkitAppearance ?? 'none') !== 'none');
   const paints = (e) => { const s = getComputedStyle(e); return opaque(e, s) || (s.backgroundClip !== 'text' && !!rgba(s.backgroundColor)); };
-  // What a text stands on, at its ink's middle: the nearest painted fill — its own box's, a bubble's, a
+  // LLP 1116.006 D5: what a text stands on, at its ink's middle: the nearest painted fill — its own box's, a bubble's, a
   // card's, the page's — composited over what lies below where it is translucent, and whose it is (the page's: null).
   // Unknown where something the styles do not say paints there (a picture, a native widget, a box laid between that is not
   // its ancestor): the capture's pixels answer then.
@@ -93,7 +93,7 @@ export function observe(views, inactive = () => false) {
   };
   const mix = (fg, bg) => [0, 1, 2].map((i) => fg[i] * fg[3] + bg[i] * (1 - fg[3]));
   // The part of box `b` (el's) that is presented: each ancestor that clips or scrolls its overflow cuts it at its padding
-  // box, up to a fixed box, which escapes them (a row its list cuts overlaps nothing past the list).
+  // box, up to a fixed box, which escapes them (LLP 1116.006 D5: a row its list cuts overlaps nothing past the list).
   const visible = (el, b) => {
     let l = b.left, t = b.top, r = b.right, btm = b.bottom;
     for (let e = el; e && e !== document.documentElement; e = e.parentElement) {
@@ -119,12 +119,12 @@ export function observe(views, inactive = () => false) {
   // What keeps a box's sideways overflow its own: a box that clips on x, or one that scrolls sideways on purpose (an authored
   // `overflow-x`, or the shorthand's first value). A vertical scroller's x is `auto` only because CSS computes `visible`
   // beside `auto` so (CSS Overflow 3 §3.1), and a native host neither scrolls nor clips there as a person would scroll to it:
-  // UIKit's vertical scroll view cuts it at the screen's edge.
+  // UIKit's vertical scroll view cuts it at the screen's edge (LLP 1116.020 D4; round 18's focus-timer and trivia-quiz).
   const holdsX = (e, s = getComputedStyle(e)) => /^(hidden|clip)$/.test(s.overflowX)
     || (/^(auto|scroll)$/.test(s.overflowX) && (/^(auto|scroll)$/.test(authored(e, 'overflow-x').trim()) || /^(auto|scroll)(\s|$)/.test(authored(e, 'overflow').trim())));
   // A box whose written percentage width fits its parent, and whose own padding and border (content-box sizing) push it past
-  // the parent's content edge (`width="100%"` with padding clips the phone's right side while the scroller
-  // around it holds the overflow, so nothing else reports it). The cause is judged, not
+  // the parent's content edge (LLP 1116.009 D5; focus-timer and recipe-finder, round 11: `width="100%"` with padding clipped
+  // the phone's right side while `check` said nothing, the scroller around it holding the overflow). The cause is judged, not
   // where it lands: only a written percentage, only content-box, only a parent that takes the percentage of its own content
   // (a block, or a column: a row's items shrink to fit, a grid's resolve against a cell) and does not scroll sideways on purpose
   // (an authored `overflow-x`). A wider percentage, a fixed width, a bar's or sheet's own chrome (border-box) are none of it.
@@ -146,7 +146,7 @@ export function observe(views, inactive = () => false) {
   // clears it by landing above it (the content moves up: room toward the end of at least `my - top`) or below it (the
   // content moves down: room back of at least `bottom - my`), within what the scroller shows of the screen: a bar along
   // its bottom edge is cleared only upward, a header along its top only downward, and a last row that scrolls only a few
-  // points does not clear a bar taller than that (a fold row under an in-flow tab bar is cleared,
+  // points does not clear a bar taller than that (LLP 1116.012 D3; contacts, round 14: a fold row under an in-flow tab bar,
   // with the list's whole range to scroll it up by). With no `hit` (`my` unused), `above` says the element lies above
   // the screen: scrolling back reveals.
   const reach = (el, hit, above, my) => {
@@ -202,7 +202,7 @@ export function observe(views, inactive = () => false) {
     }
     const past = Math.max(b.right + sx - W, -(b.left + sx));
     if (!held && past > 1 && !fixed(el)) { item.outX = r2(past); out.add(el); }
-    // A flex or grid item past its container's sides, within the viewport (tip-splitter's fifth radio at 320 px,
+    // A flex or grid item past its container's sides, within the viewport (LLP 1116.007 D3: tip-splitter's fifth radio at 320 px,
     // an option wider than its row, poking out of its card): the container neither scrolling nor clipping it, nor any ancestor
     // it lies beyond, nor transformed or placed out of flow. Past the viewport it is the finding above.
     const parent = el.parentElement, ps = parent && parent.id !== 'exact-root' ? getComputedStyle(parent) : null;
@@ -223,7 +223,7 @@ export function observe(views, inactive = () => false) {
       item.size = parseFloat(cs.fontSize); item.weight = parseInt(cs.fontWeight, 10) || 400;
       const fgRole = role(el, 'color');
       if (fgRole) item.fgRole = fgRole;
-      // A control's own label on the control's own fill (the ink rule): the nearest control within three levels. Ink no
+      // A control's own label on the control's own fill (D3's ink rule): the nearest control within three levels. Ink no
       // one authored on a host-drawn control (a tab bar's item) is the platform's, as UIKit's own labels are.
       for (let e = el.parentElement, k = 0; e && k < 3; e = e.parentElement, k++) if (e.matches(CONTROL)) {
         item.of = viewOf(e);
@@ -326,7 +326,7 @@ export function observe(views, inactive = () => false) {
     }
     if (item.text || item.control || item.fill || item.outX || item.spill || item.padded) items.push(item);
   }
-  // A phone's layout at a desktop width, as advice (never a finding): a root tab bar stretched along
+  // LLP 1116.004 D1.3: a phone's layout at a desktop width, as advice (never a finding): a root tab bar stretched along
   // the window's bottom, and a stack the projection did not split whose root route's list pushed the detail shown. A
   // list at the root may push or not (a settings list's steppers): nothing says, so nothing is advised.
   const advice = [];

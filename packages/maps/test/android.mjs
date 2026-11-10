@@ -1,6 +1,6 @@
-// @exact/maps on Android: Map Demo's view made outside the repo by `exact new`, built as
+// @exact/maps on Android (LLP 1133.021 §15 stage 3): Map Demo's view made outside the repo by `exact new`, built as
 // the Canvas reader's APK, which compiles Maps.kt against the Maps SDK in the app's one locked, verified Gradle graph
-//. The Maps key comes from the variable `app.json` names, here a value that
+// (LLP 1133.008 D8 item 5). The Maps key (§9 item 7, D18) comes from the variable `app.json` names, here a value that
 // is not a key: the build writes it as `com.google.android.geo.API_KEY`; without it a development build says so and
 // leaves the meta-data out, and a release build is refused `maps-key-missing` before it compiles. No map is drawn:
 // the APK is not installed anywhere (checklist.md's Android part is a person's, with a real key).

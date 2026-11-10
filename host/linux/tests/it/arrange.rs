@@ -60,7 +60,7 @@ impl DataSource for Rows {
     }
 }
 // Each row's grip spans its row, as the points below assume: the row writes
-// its inline ends, so a cells list's inset leaves it alone.
+// its inline ends, so a cells list's inset (LLP 1138) leaves it alone.
 const APP: &str = r#"shape Row
   id: string
   color: string
@@ -482,7 +482,7 @@ fn typing_under_empty_when_arms_preserves_mapping_hold_and_exactly_one_drop() {
     assert!(p.collection_interaction().is_none());
 }
 
-// Dropping across lists through the same contact path: two
+// Dropping across lists (LLP 1094) through the same contact path: two
 // grouped lists side by side; a row carried from one to the other drops
 // once, on the target, then its ghost lands and the session finishes.
 struct Cards(Vec<(String, String)>);
@@ -583,7 +583,7 @@ fn a_grouped_row_crosses_to_another_list_and_its_session_finishes() {
         "the row shows once the ghost has landed"
     );
 }
-/// A grip inside a row the cells list insets (16 at each end of a
+/// A grip inside a row the cells list insets (LLP 1138: 16 at each end of a
 /// row whose author wrote none) lifts and drops from its own measured box.
 #[test]
 fn a_grip_in_an_inset_row_lifts_and_drops() {

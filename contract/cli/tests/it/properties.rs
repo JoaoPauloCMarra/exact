@@ -67,12 +67,12 @@ fn refused_forms_name_the_authored_line() {
         (
             "always \"p\"\n  expect state n.field whole\n",
             2,
-            "a property names a state or a derive by its bare name; a field is not yet a property",
+            "a property names a state or a derive by its bare name; fields are stage 2",
         ),
         (
             "always \"p\"\n  expect state n[0] whole\n",
             2,
-            "a field is not yet a property",
+            "fields are stage 2",
         ),
         (
             "always \"p\"\n  expect state n approximately 1\n",

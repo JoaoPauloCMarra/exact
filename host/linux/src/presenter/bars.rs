@@ -1,4 +1,4 @@
-//! Structure as the platform's bars: where a shell has
+//! Structure as the platform's bars (LLP 1115.001 D11): where a shell has
 //! bars, a route's `header` is Material 3's top app bar and the navigation
 //! root's `tablist` its navigation bar. What counts as either is the
 //! kernel's rule (`exact_kernel::bars`), which the iOS host reads too; the
@@ -27,11 +27,12 @@
 //! picture, when either is not what the shell was last told. In, one call
 //! ([`Presenter::bar_event`]): a touch in a bar at its own points.
 //!
-//! **What a touch does.** The Up arrow goes Back, in Back's order
-//! ([`Presenter::system_back`]). A header's button is pressed as a touch in
+//! **What a touch does.** The Up arrow goes Back, in Back's order (D6,
+//! [`Presenter::system_back`]). A header's button is pressed as a touch in
 //! the page would press it, a popover's invoker included. A destination is
 //! pressed too; one tapped again while it is selected and its stack is at
-//! its root scrolls that route's content to its top, as iOS does.
+//! its root scrolls that route's content to its top, as iOS does (LLP
+//! 1115.000 D11.3).
 use super::top::shape;
 use super::top::SurfacePainter;
 use super::*;
@@ -80,8 +81,8 @@ pub(super) struct State {
     bottom: Option<Shown<Bottom>>,
     /// The target a finger holds: the bar, and its place among the targets.
     pressed: Option<(i32, usize)>,
-    /// The target a TV remote's focus is on, lit as a held one is: the
-    /// bar, and its place among the targets.
+    /// The target a TV remote's focus is on, lit as a held one is (LLP
+    /// 1115.001.003 D4): the bar, and its place among the targets.
     focused: Option<(i32, usize)>,
     /// Moved on whenever a bar's picture or frame changes.
     revision: u32,
@@ -112,7 +113,7 @@ fn scrolls_down(node: &exact_kernel::NodeRef<'_>) -> bool {
 
 impl<D: DataSource> Presenter<D> {
     /// A shell shows this presenter's bars from now on, drawn through
-    /// `painter`: a route's header and the root's
+    /// `painter` (LLP 1115.001 D11): a route's header and the root's
     /// tablist leave the page for them. A host with no such shell keeps
     /// painting both in the page.
     pub fn serve_bars(&mut self, painter: Box<dyn SurfacePainter>) -> Option<String> {
@@ -137,7 +138,7 @@ impl<D: DataSource> Presenter<D> {
         let frame = self.chrome().frame;
         match self.window() {
             Some(w) => {
-                // A TV's overscan margin too, as the page's.
+                // A TV's overscan margin too, as the page's (LLP 1115.001.003 D7).
                 let overscan = self.tv_margin(w.size);
                 let safe: [f32; 4] =
                     std::array::from_fn(|i| w.bars[i].max(w.cutout[i]).max(overscan[i]));
@@ -183,7 +184,7 @@ impl<D: DataSource> Presenter<D> {
         bars.stacks.iter().flatten().copied().find(live)
     }
 
-    /// A route's content scroller (the iOS host's
+    /// A route's content scroller (LLP 1115.000 D11.1, the iOS host's
     /// `contentScroller`): the one its `navigationScroll` names, else the
     /// shallowest node under it that scrolls up and down, in tree order at
     /// each depth, eight levels down at most.
@@ -234,7 +235,7 @@ impl<D: DataSource> Presenter<D> {
         let kernel = self.host.kernel();
         let node = kernel.node(id)?;
         let row = shape::row(kernel, &node, false);
-        // The colour its author wrote on it wins (author over
+        // The colour its author wrote on it wins (LLP 1115: author >
         // platform); one it only inherits leaves Material's.
         let _accent = crate::paint::accent_scope(&node);
         let tint = (node.style.written.has(exact_kernel::StyleId::TextColor))
@@ -259,7 +260,7 @@ impl<D: DataSource> Presenter<D> {
         let top = (bars.routes.iter())
             .find(|r| Some(r.route) == route)
             .map(|r| {
-                // A readout (`role="status"`) is no
+                // A readout (`role="status"`, LLP 1075.003 §9.15) is no
                 // button, and Material's top app bar has no item for it.
                 let buttons = |ids: &[ViewId]| -> Vec<Button> {
                     (ids.iter())
@@ -493,7 +494,7 @@ impl<D: DataSource> Presenter<D> {
 
     /// A person chose what `what` is. Its press carries no point: the bar is
     /// the shell's, outside the page, and a popover it opens hangs from the
-    /// item (`surface_anchor`), as the Mac's toolbar item's.
+    /// item (`surface_anchor`), as the Mac's toolbar item's (LLP 1021 D2).
     fn bar_choose(&mut self, what: What, now_ms: f64) {
         self.press_point = None;
         match what {
@@ -505,7 +506,8 @@ impl<D: DataSource> Presenter<D> {
                 // Read before the tab's press, scrolled after it. The scroll
                 // gives way to a `scrollIntoView` the press asked for in the
                 // screen's list, landed or already shown: the author's
-                // answer to the tap wins over the platform's. Every list's latest request is read before the
+                // answer to the tap wins over the platform's (LLP 1070.000
+                // §2.6). Every list's latest request is read before the
                 // press: the press may make the screen's list, or make
                 // another list the screen's.
                 let root = self.reselected_root(node);
@@ -618,8 +620,8 @@ impl<D: DataSource> Presenter<D> {
         Some((frame[0] + x, frame[1] + y, w, h))
     }
 
-    /// The bars' targets a TV remote can move the focus to: each
-    /// enabled header button and destination, by its authored
+    /// The bars' targets a TV remote can move the focus to (LLP 1115.001.003
+    /// D4): each enabled header button and destination, by its authored
     /// node, with its box in the page's coordinates. The Up arrow has no
     /// node; Back does what it does.
     pub(super) fn bar_stops(&mut self) -> Vec<(ViewId, Rect4)> {

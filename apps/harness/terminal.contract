@@ -1,9 +1,9 @@
 // Harness — a coding agent in the terminal, written for the terminal
-// The transcript is a `role="log"` whose settled entries an
+// (LLP 1101): the transcript is a `role="log"` whose settled entries an
 // inline terminal prints once into its own scrollback (so the terminal
 // scrolls, selects and copies them, tmux included); below it the live tail
 // — a streaming reply, a spinner, an approval, an animation, the prompt —
-// is redrawn. Printed entries are retired: the host says
+// is redrawn. Printed entries are retired (LLP 1101.001 P1): the host says
 // what it printed through `exactSurface("terminal")`, and the data module
 // stops answering them, so a long session costs what a short one does.
 // The conversation, the models and the tools live in the Rust data module
@@ -20,7 +20,7 @@ shape Viewport
   width: number
   height: number
 
-// The host's record: how it occupies the terminal, how
+// The host's record (LLP 1101.001 P10): how it occupies the terminal, how
 // it draws images, its colour depth, which log it is printing (one more
 // for each new one), and the `id` of that log's last entry it printed into
 // scrollback. Entry ids never repeat here, so retiring reads `printed`
@@ -222,7 +222,7 @@ component Harness
   action writeKey(value)
     keyDraft = value
   // Escape or a click outside: a half-pasted key does not wait for the next
-  // open (HTML's `cancel`).
+  // open (HTML's `cancel`, LLP 1101.002 §0 P8).
   action dropKey
     keyDraft = ""
   action saveKey
@@ -256,7 +256,7 @@ component Harness
             text `${star(tick)} ${phaseWord(session.phase)}…` font-weight=700
             text ` (${seconds(busyMs)} · ↓ ${kilo(session.tokensOut)} tokens · esc to interrupt)` white-space="pre" color="#8a8a8a"
         // An approval takes no default focus: Enter answers nothing, and a
-        // key typed before it appeared cannot press it.
+        // key typed before it appeared cannot press it (LLP 1101.001 P11).
         if session.approval.id != ""
           column margin-top="1lh" border="thin solid #ffaf00" border-radius="1ch" padding="0 1ch" testId="approval"
             text session.approval.summary font-weight=700 color="#ffaf00"
@@ -421,7 +421,7 @@ component EntryView
           text (e.busy ? `${star(tick)} ` : "⏺ ") white-space="pre" color=(e.busy ? "#d78700" : "#d0d0d0") flex-shrink=0
           column flex-grow=1 min-width=0
             // Which model answered: a turn keeps the one it started with
-            //.
+            // (LLP 1101.002 §0 P12).
             if e.model != ""
               text e.model color="#6c6c6c" font-style="italic"
             for b, i in e.blocks key=i

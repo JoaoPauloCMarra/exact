@@ -1,7 +1,7 @@
-//! `lower-row-lookup`: a `for` over a list of records from
+//! `lower-row-lookup` (LLP 1116.016 D4): a `for` over a list of records from
 //! the app's data whose rows each search another data list of records
 //! (`users.filter(u => u.id == r.userId)`, a nested `for`). The list
-//! bound is per evaluation of one binding, so each row stays
+//! bound is per evaluation of one binding (LLP 1017.003 D3), so each row stays
 //! under it while an update does rows × items steps: measured on a Mac's
 //! runner, 1,000 rows over 1,000 users took about 100 ms an update, 5,000 over
 //! 5,000 about 2 s; the same rows joined in the data module, 16 and 44 ms.
@@ -292,7 +292,7 @@ fn reads(e: &Expr, name: &str) -> bool {
     }
 }
 
-/// `lower-key-position`: a `for` whose `key=` reads its
+/// `lower-key-position` (LLP 1142 D6): a `for` whose `key=` reads its
 /// position variable. After an insertion or a removal before them, rows keep
 /// a key that now names another record: what an instance holds (its state, a
 /// field's text, its motion) goes with the position, not the record, and rows

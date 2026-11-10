@@ -1,8 +1,8 @@
 // Press feedback in a real browser: the shell's CSS and the input glue,
-// driven by CDP mouse and key events. A declared press goes by
+// driven by CDP mouse and key events. A declared press (LLP 1061 D3) goes by
 // UIKit's rule, not `:active`'s: only the innermost pressable shows it, only
 // while the pointer is inside its box, including under reduced motion. A
-// pressable that declares none dims by the same rule.
+// pressable that declares none dims by the same rule (LLP 1115.000 D6).
 import { test, expect, beforeAll, afterAll } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -40,7 +40,7 @@ const page = sheet + `
   window.ready = true;
 </script>`;
 
-// Nodes as both web targets write them: pressables that
+// LLP 1115.000 D6, nodes as both web targets write them: pressables that
 // declare no feedback (a box, one that hears `hover`, a custom button, a
 // link, a card holding a button and a field), those whose press is the
 // author's (a scale, `pointerdown`, an `opacity` of its own), native
@@ -102,7 +102,7 @@ const unsaid = sheet + `
   window.ready = true;
 </script>`;
 
-// The pressed paint as both web targets write it: a card holding
+// LLP 1061 D7, the pressed paint as both web targets write it: a card holding
 // a box that dims to half its own opacity and turns blue with red text (one
 // span inheriting the colour, one writing its own), a box that only recolours
 // its text, a button that also scales, and a row of a cell list. `?agent`
@@ -193,9 +193,9 @@ check('only the innermost pressable shows the press, and only while inside', asy
     await mouse('mouseReleased', button);
     expect(await pressed()).toBe('');
 
-    // The innermost pressable has no row: it dims (the test
+    // The innermost pressable has no row: it dims (LLP 1115.000 D6; the test
     // below), and its card, pressed through it, shows nothing.
-    // Its `-exact-press-haptic` plays at the press, as `haptic()`'s length.
+    // Its `-exact-press-haptic` plays at the press, as `haptic()`'s length (LLP 1077 D14).
     const vibrations = () => evaluate('vibrations.join()');
     const opacity = (id) => evaluate(`(globalThis.exact?.pressShown?.(document.getElementById('${id}')) ?? getComputedStyle(document.getElementById('${id}'))).opacity`);
     expect(await vibrations()).toBe('');
@@ -231,7 +231,7 @@ check('only the innermost pressable shows the press, and only while inside', asy
     await call('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 1, y: 1 }); // off it: a pointer left over it is its hover
     await settle(); // it eases out of the highlight (the test below)
     expect([await fill(), await face()]).toEqual([rest, '1']);
-    // The keyboard shows the same state: Space holds a
+    // The keyboard shows the same state (LLP 1115.000 D4.14): Space holds a
     // native button's highlight, and a button's `-exact-press-scale`, until
     // its keyup.
     const space = (type) => call('Input.dispatchKeyEvent', { type, key: ' ', code: 'Space', windowsVirtualKeyCode: 32, ...(type === 'keyDown' ? { text: ' ' } : {}) });
@@ -332,7 +332,7 @@ check('a pressable that declares no feedback dims while pressed; a row, a native
       return seen;
     };
     expect(await shown('box', 'custom', 'link', 'off')).toBe('1,1,1,0.5'); // at rest only a disabled custom button is dimmed
-    expect(await shown('ownoff')).toBe('1'); // not one whose author styles its own disabled state (Contract's mark)
+    expect(await shown('ownoff')).toBe('1'); // not one whose author styles its own disabled state (Contract's mark, LLP 1115.000 D6)
 
     // This piece's mark, not the browser's `:active`: gone at the release, and while the pointer is off the box.
     expect(await held('box', 'box')).toBe('0.65');
@@ -351,7 +351,7 @@ check('a pressable that declares no feedback dims while pressed; a row, a native
     await mouse('mouseReleased', custom);
     expect(await faded('custom')).toBe('1');
     // A link without a `press` handler shows nothing under a mouse when it declares its own feedback; otherwise
-    // it dims. A finger shows the authored feedback (below). The hosts do not yet agree on this.
+    // it dims. A finger shows the authored feedback (below). LLP 1061 has yet to unify this behavior across hosts.
     await evaluate(`document.getElementById('away').insertAdjacentHTML('beforebegin', '<a id="bare" data-view="" href="#there" style="scale:calc(var(--exact-scale,1) * var(--exact-press-factor,1))!important;--exact-press:0.9">bare</a>')`);
     const bare = () => evaluate(`document.getAnimations().forEach(a => a.finish()), [parseFloat(getComputedStyle(document.getElementById('bare')).scale) || 1, (globalThis.exact?.pressShown?.(document.getElementById('bare')) ?? getComputedStyle(document.getElementById('bare'))).opacity].join()`);
     await mouse('mousePressed', await centre('bare'));
@@ -399,7 +399,7 @@ check('a pressable that declares no feedback dims while pressed; a row, a native
     expect(await held('action', 'action')).toBe('1');
     expect(await held('off', 'off')).toBe('0.5');
 
-    // A row of a list whose rows are cells (`data-listrows`, Contract's mark) never dims: what
+    // A row of a list whose rows are cells (LLP 1115.000 D16: `data-listrows`, Contract's mark) never dims: what
     // presses in it shows the look's pressed wash over its own ground, wherever in the row it is (the list's child, a
     // windowed list's row in its wrapper, the content a swipe container holds, a link of text), and an authored press
     // still replaces it. A grouped list's row in its section keeps its own. A list that is no cell list (the author's
@@ -929,7 +929,7 @@ check('the pressed paint shows by the press rule, eased, and replaces the platfo
     await evaluate('new Promise(ok => setTimeout(ok, 0))');
     await evaluate(`document.getAnimations().filter(a => !(a instanceof CSSTransition)).forEach(a => a.finish())`);
     // The paint shows over the authored transition, which runs on beneath it, as authored, on its way to green
-    // (the node's transitions are left alone, under the paint's layer).
+    // (LLP 1061: the node's transitions are left alone, under the paint's layer).
     expect(await evaluate(`document.getElementById('inked').getAnimations().filter(a => a instanceof CSSTransition).map(a => a.transitionProperty + ' ' + a.effect.getKeyframes().at(-1).backgroundColor).join()`)).toBe('background-color rgb(0, 255, 0)');
     expect(await evaluate(`rgb((globalThis.exact?.pressShown?.(document.getElementById('inked')) ?? getComputedStyle(document.getElementById('inked'))).backgroundColor)`)).toBe('rgb(0, 0, 255)');
     await mouse('mouseReleased', inked);
@@ -1149,7 +1149,7 @@ for (const engine of ['chromium', 'firefox', 'webkit']) test(`${engine}: the pai
 
 // Every engine, the final pass's three: (1) under a declared transition, a node's own opacity or colour changed
 // while held, or its pressed colour cleared, takes effect at once (the paint goes on from the new look beneath; the
-// node's transition times the base's move), not at the release; (2) with no images of its own, the paint's layer
+// node's transition times the base's move, D8), not at the release; (2) with no images of its own, the paint's layer
 // takes the node's own background-clip and -origin, so a content-box background stays content-box; (3) a transition
 // on a position axis (background-position-x) leaves the layer out, as one on the position does.
 for (const engine of ['chromium', 'firefox', 'webkit']) test(`${engine}: a held press follows the node's own changes; the layer keeps its clip and axis`, async () => {

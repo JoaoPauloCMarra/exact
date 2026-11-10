@@ -1,5 +1,6 @@
-//! The window a device's shell shows the page in, edge to edge: the shell tells its size and the
-//! raw insets the system reports, and pads nothing itself. The presenter alone decides what they
+//! The window a device's shell shows the page in, edge to edge (LLP 1115.001
+//! D3.3, D3.4, D3.6): the shell tells its size and the raw insets the system
+//! reports, and pads nothing itself. The presenter alone decides what they
 //! mean, so no inset is applied twice:
 //!
 //! - **The viewport.** Under `viewport-fit="cover"` on the first root the
@@ -9,7 +10,7 @@
 //!   that did not ask for the edges.
 //! - **The keyboard.** A software keyboard ends the layout viewport at its
 //!   top (`interactive-widget="resizes-content"`, the default on a phone as
-//!   on iOS), where the bottom inset is the keyboard's and
+//!   LLP 1116 D2 has it on iOS), where the bottom inset is the keyboard's and
 //!   not the navigation bar's; the field being edited is then kept in view.
 //!   `overlays-content` on the root lays nothing out again. The overlap is
 //!   `layout.env["keyboard-inset-height"]` either way.
@@ -34,8 +35,8 @@ pub struct Window {
     /// The software keyboard.
     pub keyboard: [f32; 4],
     /// The edges the system's own gestures start from (Back's sides, Home's
-    /// bottom). An authored swipe yields the sides to them
-    /// ([`Presenter::in_gesture_edge`]).
+    /// bottom). An authored swipe yields the sides to them (D7.5,
+    /// [`Presenter::in_gesture_edge`]).
     pub gestures: [f32; 4],
 }
 
@@ -47,7 +48,7 @@ pub struct Chrome {
     /// The colour behind the page and in the edges it is kept out of (RGBA):
     /// the first root's own background where it paints an opaque one, as a
     /// browser carries the root's background over the whole canvas; else the
-    /// platform's surface for the scheme (`Canvas`).
+    /// platform's surface for the scheme (`Canvas`, LLP 1115 D2).
     pub background: [u8; 4],
     /// Whether the page's scheme is dark: the bars' icons are light then.
     pub dark: bool,
@@ -119,7 +120,7 @@ impl<D: DataSource> Presenter<D> {
 
     /// A TV's screen may overscan its edges: Android TV keeps content 5% in
     /// from each (48 dp at the sides and 27 dp above and below its 960 × 540
-    /// dp), as Apple TV's safe area keeps it in. The
+    /// dp), as Apple TV's safe area keeps it in (LLP 1115.001.003 D7). The
     /// margin is the safe area's on a TV, and nothing elsewhere; top, right,
     /// bottom, left.
     pub(super) fn tv_margin(&self, (width, height): (f32, f32)) -> [f32; 4] {
@@ -211,7 +212,7 @@ impl<D: DataSource> Presenter<D> {
     /// What the shell draws around the page; on a host that told no window,
     /// the viewport at the origin.
     pub fn chrome(&self) -> Chrome {
-        let _roles = self.host.runner().bind_roles(); // Its session's.
+        let _roles = self.host.runner().bind_roles(); // Its session's (LLP 1121 stage 5).
         let dark = self.dark();
         let kernel = self.host.kernel();
         let authored = self
@@ -241,7 +242,7 @@ impl<D: DataSource> Presenter<D> {
     /// Whether a contact down at `x` (viewport points) starts in a side of
     /// the window the system's own gesture starts from: Back's, on a phone
     /// with gesture navigation. An authored swipe yields that edge to it
-    /// (the first precedence rule), by the width the
+    /// (LLP 1115.001 D7.5; LLP 1057.001 precedence rule 1), by the width the
     /// system says it is: nothing on a phone with a button for Back, and
     /// nothing on a host whose shell told no window, where no system
     /// gesture starts from a side. (UIKit and the web yield a fixed width,
@@ -262,7 +263,7 @@ impl<D: DataSource> Presenter<D> {
             .map_or((0.0, 0.0), |frame| (frame[0], frame[1]))
     }
 
-    /// `layout.env`'s insets: the four safe-area insets the
+    /// `layout.env`'s insets (LLP 1012 §1): the four safe-area insets the
     /// kernel resolves `env()` with, and the keyboard's overlap.
     pub(super) fn env_insets(&self) -> [f32; 5] {
         let env = self.host.kernel().env();

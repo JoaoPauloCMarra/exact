@@ -1,6 +1,6 @@
 # The Contract compiler driver: the pipeline as one call, the CLI, and the
 # build-time bake (one runner boot against the app's data source, so every
-# resource's boot value ships inside the plan).
+# resource's boot value ships inside the plan). @ref LLP 1004 D2/D4.
 [package]
 name = "contract"
 version.workspace = true
@@ -23,7 +23,7 @@ contract-lower = { path = "../lower" }
 contract-syntax = { path = "../syntax" }
 contract-types = { path = "../types" }
 exact-kernel = { path = "../../kernel" }
-# `contract tamber`: the design's own check, eval and IR.
+# `contract tamber`: the design's own check, eval and IR (LLP 1121 D2).
 exact-tamber = { path = "../../tamber" }
 exact-plan = { path = "../../plan" }
 exact-runner = { path = "../../runner" }
@@ -37,6 +37,6 @@ sha2 = "0.10"
 libc = "0.2"
 
 [dev-dependencies]
-# A Rust source's crypto, baked.
+# A Rust source's crypto, baked (LLP 1069.005 D5).
 exact-data = { path = "../../data" }
 exact-motion = { path = "../../motion" }

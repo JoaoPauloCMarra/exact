@@ -1,4 +1,4 @@
-//! A canvas holds children: they are laid out in its box — the
+//! A canvas holds children (LLP 1014 D1): they are laid out in its box — the
 //! web's `layoutsubtree`: block flow, the canvas as containing block — and
 //! never size it. Its size is its rows', else its natural 300×150 and
 //! ratio 2:1, as a replaced element's (`browser_replaced.rs`).

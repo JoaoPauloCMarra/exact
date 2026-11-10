@@ -155,7 +155,7 @@ fn style_rows_lower_to_css_by_their_names() {
         &StyleValue::Text("antialiased".into()),
     )
     .unwrap();
-    // multi-column layout reaches CSS by its own names.
+    // LLP 1093: multi-column layout reaches CSS by its own names.
     for (row, value) in [
         (StyleId::ColumnCount, StyleValue::Number(3.0)),
         (StyleId::ColumnWidth, StyleValue::Number(120.0)),
@@ -390,7 +390,7 @@ fn dynamic_unavailable_colors_take_the_initial_value() {
     }
 }
 
-/// The live page writes the pixels the kernel
+/// LLP 1069.000 D3 (#136): the live page writes the pixels the kernel
 /// resolves a `rem`/`em` row to, and re-resolves them; a page that keeps no
 /// kernel (the JS target's stylesheet) writes the units, for the browser.
 #[test]
@@ -440,7 +440,7 @@ fn relative_lengths_are_pixels_live_and_units_ahead_of_time() {
     }
 }
 
-/// A text style is the ramp's pixels live, and the ramp's size
+/// LLP 1115 D3: a text style is the ramp's pixels live, and the ramp's size
 /// at CSS's `medium` in `rem` ahead of time, so the browser's root scales it.
 #[test]
 fn a_text_style_is_pixels_live_and_rem_ahead_of_time() {
@@ -453,7 +453,7 @@ fn a_text_style_is_pixels_live_and_rem_ahead_of_time() {
     assert!(ahead.contains("font-size:1.6875rem;"), "{ahead}");
 }
 
-/// A `min()`, `max()` or `clamp()` length lowers to
+/// LLP 1001 §2 (2026-10-07): a `min()`, `max()` or `clamp()` length lowers to
 /// CSS's own function, which the browser resolves with the insets.
 #[test]
 fn comparison_lengths_lower_to_css_comparisons() {
@@ -653,8 +653,8 @@ fn text(s: &str) -> exact_kernel::StyleValue<'_> {
 }
 
 /// `-exact-press-haptic` is the custom property input-glue.js plays at the
-/// press; `rotate`'s axis part is written
-/// with the angle and skips nothing.
+/// press (LLP 1077 D14, workout F4); `rotate`'s axis part is written
+/// with the angle and skips nothing (kanban F30).
 #[test]
 fn press_haptic_is_the_glues_property_and_a_rotation_skips_nothing() {
     use exact_kernel::{StyleId, StyleProps};
@@ -672,7 +672,7 @@ fn press_haptic_is_the_glues_property_and_a_rotation_skips_nothing() {
 }
 
 /// The pressed paint is three custom properties input-glue.js reads from
-/// the pressed element's own style; a written 1 is still
+/// the pressed element's own style (LLP 1061 D7); a written 1 is still
 /// the author's, and a clear writes nothing.
 #[test]
 fn the_pressed_paint_is_the_glues_properties() {
@@ -694,8 +694,8 @@ fn the_pressed_paint_is_the_glues_properties() {
     assert_eq!(css_text(&cleared, &[]).0, "");
 }
 
-/// `-exact-fit` is the custom property navigation.js `fitText` reads;
-/// its initial value writes nothing.
+/// `-exact-fit` is the custom property navigation.js `fitText` reads
+/// (LLP 1116.001 D1.4); its initial value writes nothing.
 #[test]
 fn fit_is_navigations_property() {
     use exact_kernel::StyleId;
@@ -706,7 +706,7 @@ fn fit_is_navigations_property() {
     assert_eq!(declared(&[(StyleId::Fit, text("none"))]), "");
 }
 
-/// A mini or small control is titled in the
+/// LLP 1069.011.001 D8: a mini or small control is titled in the
 /// subheadline's `rem` and keeps no touch floor; medium in the body's, large
 /// in the body's × 18/16.
 #[test]

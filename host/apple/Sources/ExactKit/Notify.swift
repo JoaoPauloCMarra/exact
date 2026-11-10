@@ -1,4 +1,4 @@
-// The one notification delegate a process has, in
+// The one notification delegate a process has (LLP 1133.004 D7), in
 // ExactKit so an embedder gets it with the session. It is set at launch,
 // before the system can deliver a launching click, which a module's
 // implementation could not be: a module is made when its session boots.
@@ -47,7 +47,7 @@ final class NotificationPresenter: NSObject, UNUserNotificationCenterDelegate {
         deliver(id: request.identifier, date: notification.date, info: request.content.userInfo)
     }
 
-    /// A module's activation entry: the session that
+    /// A module's activation entry (LLP 1133.004 D6, D7): the session that
     /// posted it, and a location to open or an event to raise.
     func deliver(id: String, date: Date, info: [AnyHashable: Any]) {
         // A notification an older build scheduled carries its session fields

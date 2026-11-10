@@ -1,4 +1,4 @@
-// `fetch(url, {exactBodyTo})` on the web (2026-10-26), in a
+// `fetch(url, {exactBodyTo})` on the web (LLP 1108 D6 R2, 2026-10-26), in a
 // real browser with its own IndexedDB and Web Locks: the wasm host's request
 // (http-body.js) and the JS target's fetch (host/web-js/ts-fetch.js) write a
 // 2xx body into the app's store (storage-fs.js `bodyTarget`), whole or not

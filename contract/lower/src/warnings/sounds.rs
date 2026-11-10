@@ -3,12 +3,12 @@
 //! refuses a literal `playSound` source no `sound` declares
 //! (`type-sound-undeclared`); a path written anywhere else (a step's `src`,
 //! a `fn` that builds one from a kit's name) reaches the runner, which drops
-//! each voice and journals why, and the app is silent with
+//! each voice and journals why (LLP 1096 D5), and the app is silent with
 //! nothing at build time. The euxy port played its 72 kit samples through
 //! `` `assets/audio/${kit}/${slot}.wav` `` with none declared.
 //!
-//! Only what is certain is named, as in `miswiring.rs` (a miswiring the
-//! compiler can see is a warning): a literal under
+//! Only what is certain is named, as in `miswiring.rs` (@ref LLP 1116.010
+//! D5, a miswiring the compiler can see is a warning): a literal under
 //! `assets/` that no `sound` declares, or a built path whose fixed text names
 //! `assets/` and that no declared path completes, each hole taking any text.
 //! A built path that one declared path completes is given the benefit of the
@@ -201,7 +201,7 @@ fn path(e: &Expr, declared: &[&str], joined: &mut BTreeSet<*const Expr>) -> Opti
     };
     let mut pieces = Vec::new();
     built(e, &mut pieces, joined);
-    // A sound is under `assets/`: a built path whose fixed
+    // A sound is under `assets/` (LLP 1096 D1): a built path whose fixed
     // text says nothing of it may name a file of another kind.
     let under_assets = pieces
         .iter()

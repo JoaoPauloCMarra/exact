@@ -1,6 +1,6 @@
-//! `contract/corpus/inline-image.contract`, an image in a paragraph's text,
-//! lowered to an `Image` child of its `Text` and placed in the line by the
-//! reference measurer.
+//! LLP 1011.002: `contract/corpus/inline-image.contract`, an image in a
+//! paragraph's text, lowered to an `Image` child of its `Text` and placed in
+//! the line by the reference measurer.
 use exact_kernel::{Kernel, VerticalAlign, INLINE_BOX_TEXT};
 use exact_plan::Value;
 use exact_runner::{DataError, DataSource, Runner};

@@ -1,11 +1,11 @@
-//! The device, from the reader: its settings in one call,
+//! The device, from the reader (LLP 1115.001 D3): its settings in one call,
 //! its window and the system's raw insets in another, each before the host
 //! boots and again, whole, on every change. What the reader said last is
 //! kept for the process, so a host that boots after the calls is laid out
 //! in that window with those settings before its first frame is recorded,
 //! and nothing is ever painted without them.
 //!
-//! The reader pads nothing itself. The presenter decides where the
+//! The reader pads nothing itself (D3.3). The presenter decides where the
 //! page is in the window ([`crate::presenter::Presenter::fit_window`]), and
 //! the reader asks for that, with the colour behind the page and the
 //! scheme its bar icons follow ([`CanvasHost::chrome`]).

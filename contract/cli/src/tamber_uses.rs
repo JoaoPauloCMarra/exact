@@ -1,9 +1,10 @@
-//! `uses`: where the app reads a token, answered statically. The plan's
-//! style bindings whose code names the token, directly, through a token
-//! whose value names it, or through a synthetic token (a row's expression
-//! over tokens) that reads it; each joined with the plan's source map into a source span. A
+//! `uses` (LLP 1121 stage 4, commit 6; LLP 1122 T2b's `outline`): where the
+//! app reads a token, answered statically. The plan's style bindings whose
+//! code names the token, directly, through a token whose value names it, or
+//! through a synthetic token (a row's expression over tokens) that reads
+//! it; each joined with the plan's source map into a source span. A
 //! mounted-instance count would need a report from the builds, which the
-//! build channel does not carry.
+//! build channel does not carry (LLP 1121 §9 candidate).
 
 use exact_plan::{BindingKind, Opcode, Operand, Plan};
 use serde_json::{json, Value};
@@ -333,7 +334,7 @@ pub fn sites(
         .collect();
     let mut out = Vec::new();
     // Each node's rows, then each `:hover` and `:focus-visible` look's, read
-    // at the node.
+    // at the node (LLP 1121 D8).
     let rows = (plan.nodes.iter().enumerate())
         .map(|(i, node)| (i, node.bindings, None))
         .chain(plan.looks.iter().map(|l| {
@@ -350,7 +351,7 @@ pub fn sites(
             if b.kind != BindingKind::Style {
                 continue;
             }
-            // A row of the token's kind reads it: a colour
+            // A row of the token's kind reads it (LLP 1121 D3): a colour
             // only a row that takes one (`text-align: center` names none),
             // another kind the rows the kernel admits it in (a shadow its own).
             let Some(row) = exact_kernel::StyleId::from_bit(b.id as u32).filter(|r| {
@@ -386,8 +387,8 @@ pub fn sites(
                 "component": site["component"],
             });
             // A state part's row is read where it is written: `:active`'s
-            // press paint, a look's row at its `:hover` or
-            // `:focus-visible` line. The map
+            // press paint (LLP 1121 D8), a look's row at its `:hover` or
+            // `:focus-visible` line (LLP 1122's queue item (1)). The map
             // keys a part by (row, state): the row's `states`.
             let state = look.unwrap_or("active");
             let bound = site["bindings"].as_array().into_iter().flatten();
@@ -456,7 +457,7 @@ pub fn aliases<'a>(
     found
 }
 
-/// The sites a duration or easing token is read at: the build
+/// The sites a duration or easing token is read at (LLP 1121 D3): the build
 /// writes it into its rows, so the plan holds no name to find. They are the
 /// literals the loader wrote it into, in every source the app at `app`
 /// loads (a package's too), and the component arguments whose literals name
@@ -489,7 +490,7 @@ pub fn motion_sites(
             }
         };
         // The loader's path, which `motion_instances` joins against the
-        // elements': the finished reply names it
+        // elements' (round 2, Astra 2): the finished reply names it
         // (`relative_files`), never this list.
         let shown = sources.path(site.span).to_string_lossy().into_owned();
         let mut v = json!({
@@ -516,7 +517,7 @@ pub fn motion_sites(
 
 /// The elements of the app at `app` (every source it loads, a package's
 /// too), each with its component's identity, by walking each view: what
-/// `uses` joins to the map's nodes by span.
+/// `uses` joins to the map's nodes by span (LLP 1121 stage 9 C2).
 fn elements(
     app: &std::path::Path,
     map: &Value,
@@ -557,7 +558,7 @@ fn elements(
 ///   directory may be reached through a link), from it
 ///   (`node_modules/@acme/reading/index.contract`);
 /// - else inside a package (the nearest directory above the file whose
-///   `package.json` has a name), as a package's file is named
+///   `package.json` has a name), as D15 names a package's file
 ///   (`sources::home`): `<name>/<path inside it>` (`@acme/linked/index.contract`
 ///   for a package linked from outside the app);
 /// - else `<outside>/<its name>`.
@@ -772,7 +773,7 @@ fn site_of(site: usize, node: &Value, row: &str) -> Value {
     json!({"site": site, "row": row, "file": node["file"], "line": node["line"], "col": node["col"], "end_col": node["end_col"], "component": node["component"], "chain": node["chain"]})
 }
 
-/// Where the app draws an icon: each plan node of
+/// Where the app draws an icon (LLP 1121 stage 9 C2): each plan node of
 /// an `image` whose source ([`strings`]) is one of `reads`, each a source
 /// (`symbol:icon.reply`) with the reference it reads through (`via`), or a
 /// component's param, by identity, read as `param.<name>` or as the loader
@@ -840,11 +841,11 @@ pub fn icon_sites(
     Ok(out)
 }
 
-/// A motion token's literal sites ([`motion_sites`]) by instance: each
-/// plan node declared at the element whose attribute's
+/// A motion token's literal sites ([`motion_sites`]) by instance (LLP 1121
+/// stage 9 C2): each plan node declared at the element whose attribute's
 /// value holds the literal (in any part of it: a condition's arm, a `+`'s
 /// side), or, for a literal on a `style`'s row, each node whose row the map
-/// says is written at that attribute (its `at`), is a site, located as
+/// says is written at that attribute (D1's `at`), is a site, located as
 /// the map has it, the literal kept as `literal`. A literal no node is
 /// declared or written at (a component no one uses, a component
 /// argument's, which its expansion writes into its component's row) keeps

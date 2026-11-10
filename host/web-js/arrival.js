@@ -1,5 +1,5 @@
-// An arrival in the declared substitute on the JS target,
-// as the runner's `modules/arrival.rs`: an agent word that
+// An arrival in the declared substitute on the JS target (LLP 1133.035 D16
+// item 1, §10), as the runner's `modules/arrival.rs`: an agent word that
 // stands for something arriving. The interface's `"substitute": {"arrival":
 // …}` names the field word, the fixtures' word, and the names an arrival
 // reaches. Setting the field to a fixture tag's id brings that tag into the
@@ -61,7 +61,7 @@ const messageChecked = message => {
   return null;
 };
 
-/** The settings a claim's reader runs with, a word left out being the default. */
+/** The settings a claim's reader runs with (D6), a word left out being the default. */
 const settings = args => JSON.stringify({
   polling: args?.apple?.polling ?? null, technologies: args?.android?.technologies ?? null,
   skipNdefCheck: args?.android?.skipNdefCheck === true, presenceCheckDelay: args?.android?.presenceCheckDelay ?? null,
@@ -107,7 +107,7 @@ export function arrivals({ rows, held, preferred, release, raise, say, valueOf }
     for (const c of scans.filter(c => c.args?.once === true)) release(c, { reason: "read", reading: readingId, message: null });
   };
 
-  /** A write's steps by the fixture's `write`; on success the fixture takes the records, or is locked. */
+  /** D7's steps by the fixture's `write`; on success the fixture takes the records, or is locked. */
   const written = (extension, a, tag, args, lock) => {
     const fail = (error, message = null) => ({ error, message });
     if (!lock && args.overwrite === false && (tag.records ?? []).length) return fail("NotAllowedError", "overwrite");
@@ -176,7 +176,7 @@ export function arrivals({ rows, held, preferred, release, raise, say, valueOf }
       if (!a || a.field !== word || before === after) return;
       if (typeof after === "string") arrive(extension, a, after); else say(`${key}: the tag left the field`);
     },
-    /** The page left the foreground or came back (the web's `readerUI` is `app`). */
+    /** The page left the foreground or came back (D6's table, with the web's `readerUI` `app`). */
     visibility(hidden) {
       for (const [extension, a] of byExtension) {
         if (hidden) {

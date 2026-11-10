@@ -24,9 +24,9 @@ impl Executor {
     /// Start the core's owners under `grants` (the render's, never more
     /// than the app's).
     pub fn start(grants: &str) -> Self {
-        // A server, not an app on a device: its fetches go over rustls on
-        // macOS too, not NSURLSession, whose per-call cost was ~30% of a
-        // RealWorld page's CPU.
+        // @ref LLP 1048.000 D10 — a server, not an app on a device: its
+        // fetches go over rustls on macOS too (Charlie, 2026-09-29), not
+        // NSURLSession, whose per-call cost was ~30% of a RealWorld page's CPU.
         // `EXACT_RENDER_TRANSPORT=platform` keeps the platform's (a check
         // against the platform, or a way back).
         let platform = std::env::var("EXACT_RENDER_TRANSPORT").as_deref() == Ok("platform");
@@ -69,7 +69,7 @@ impl Executor {
     }
 
     /// Where an app's files are, for a request whose body is one of them
-    /// A render serves no app files and never sets them,
+    /// (LLP 1108 D6 R2). A render serves no app files and never sets them,
     /// so such a request is refused; an embedder that has them may.
     pub fn set_app_roots(&self, roots: [std::path::PathBuf; 3]) {
         self.core.set_app_roots(roots);
@@ -98,7 +98,8 @@ impl Executor {
     }
 
     /// Settle a re-ask (`Dispatch::Again`) in its ordered place, with no
-    /// work; kept pending while the window is full. An error is terminal, for the host to record.
+    /// work (LLP 1041 §8.4, amended 2026-10-09); kept pending while the
+    /// window is full. An error is terminal, for the host to record.
     pub fn again(&self, request: &RequestOut) -> Result<(), &'static str> {
         self.core.again(request.ticket)
     }
@@ -107,7 +108,7 @@ impl Executor {
         self.core.forget(held);
     }
     /// The uploads let go that had begun to go out, for
-    /// `Runner::uploads_started`.
+    /// `Runner::uploads_started` (LLP 1016.000 D10).
     pub fn let_go_started(&self, held: impl Fn(u64) -> bool) -> Vec<u64> {
         self.core.let_go_started(held)
     }

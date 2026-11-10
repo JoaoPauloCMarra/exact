@@ -4,7 +4,7 @@
 // locale/metadata queries and an immutable skeleton formatter: ICU computes,
 // but it does not decide which ECMA-402 option wins or what is observable.
 
-// Rust owns semantics; native libraries are computation backends.
+// @ref LLP 0057#3-the-boundary — Rust owns semantics; native libraries are computation backends
 
 #if defined(_WIN32)
 #include "intl_icu_windows.h"
@@ -173,7 +173,8 @@ Result *make_result(const Formatter *formatter, double number,
     }
   }
 #else
-  // Windows 10 2004 through 22H2 export `unumf_*` but not `ufmtval_*`/`ucfpos_*` (Windows 11),
+  // @ref LLP 0057.000#511-windows-intl-uses-the-os-icu — Windows 10 2004
+  // through 22H2 export `unumf_*` but not `ufmtval_*`/`ucfpos_*` (Windows 11),
   // so Windows always takes ICU 62's field-position iterator. It yields the
   // same UNumberFormatFields IDs and spans as the UFormattedValue walk above.
   int32_t length = unumf_resultToString(raw.get(), nullptr, 0, &status);

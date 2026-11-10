@@ -1,15 +1,15 @@
-// Standard tab semantics project to the platform's
+// @ref LLP 1035.001 D10 — standard tab semantics project to the platform's
 // segmented control, or — when every tab is a symbol over its label, which is
-// a tab bar item's own shape — to a tab bar. Contract remains the
+// a tab bar item's own shape — to a tab bar (LLP 1059). Contract remains the
 // state owner; UIKit owns the control. Layout stays authored: the control
 // fills the tablist's box and reports its native minimum height to layout.
-// A radio group of radios (a value chosen from a
+// @ref LLP 1116.004 D5.2 — a radio group of radios (a value chosen from a
 // few) is the same segmented control, its selection `aria-checked`.
 #if os(iOS) || os(tvOS)
 import UIKit
 
-/// A segmented control whose segments carry their tabs' names and test ids:
-/// a title segment's `aria-label`, when it says more than
+/// A segmented control whose segments carry their tabs' names and test ids
+/// (LLP 1116 D2, D6): a title segment's `aria-label`, when it says more than
 /// its words, is its accessibility label, and a tab's `testId` its
 /// accessibility identifier, so XCUITest and Maestro address it as any
 /// other node. UIKit has no API for either on a segment: they are written
@@ -67,7 +67,7 @@ private final class ExactSegmentedControl: LabelledSegmentedControl {
     /// image its picture was drawn from (a symbol's `faceImage`).
     var icons: [Int: (source: AnyObject, size: CGSize, label: String, drawn: UIImage?, configuration: UIImage.SymbolConfiguration?)] = [:]
     /// Its svg-only icons' paths drawn again at the body size its traits now
-    /// give (a text size change); nothing else is touched.
+    /// give (a text size change); nothing else is touched (stage 9 A2).
     func redrawPaths() {
         let points = UIFont.preferredFont(forTextStyle: .body, compatibleWith: traitCollection).pointSize
         for (index, icon) in icons {
@@ -137,11 +137,12 @@ private struct TabBarFace: Equatable {
     /// Its accessible name: the tab's explicit label, else its title.
     let label: String
     /// The selected item's colour when the author gave one; nil leaves the
-    /// bar UIKit's tint.
+    /// bar UIKit's tint (LLP 1115 D4).
     let tint: UIColor?
 
     init?(_ tab: NodeView) {
-        // A native tab's face, from the kernel; its tint its accent.
+        // A native tab's face, from the kernel; its tint its accent
+        // (LLP 1069.011.000 D4).
         if tab.isNativeButton {
             guard let face = tab.face, face.fits, let symbol = face.symbol, let title = face.title else { return nil }
             self.symbol = symbol
@@ -167,7 +168,7 @@ final class SegmentHost: NSObject, UIGestureRecognizerDelegate, UITabBarDelegate
     unowned let presenter: Presenter
     private var controls: [UInt32: ExactSegmentedControl] = [:]
     /// The segmented control a tablist or radio group projects to, if any:
-    /// a hatched node's platform object.
+    /// a hatched node's platform object (LLP 1075.003.000 §3.2).
     func control(of id: UInt32) -> UISegmentedControl? { controls[id] }
     func bar(of id: UInt32) -> UITabBar? { bars[id] }
     /// Whether `id` is drawn as UIKit's segmented control or tab bar, its own tabs hidden behind it.
@@ -186,7 +187,7 @@ final class SegmentHost: NSObject, UIGestureRecognizerDelegate, UITabBarDelegate
     private weak var adoptedList: NodeView?
     /// The last projection decision journaled per tablist, so each is said once.
     private var decisions: [UInt32: String] = [:]
-    /// The bar or control standing in for a tablist, the
+    /// LLP 1080.001 D3: the bar or control standing in for a tablist, the
     /// tabs hidden for it, and the tablist hidden for a tab container's bar.
     func inspectionOwns(_ view: UIView) -> Bool { bars.values.contains { $0 === view } || controls.values.contains { $0 === view } }
     func hides(_ node: NodeView) -> Bool { members.values.contains { $0.contains(node.id) } || node === adoptedList }
@@ -246,7 +247,7 @@ final class SegmentHost: NSObject, UIGestureRecognizerDelegate, UITabBarDelegate
     }
 
     /// A tablist's pressable tabs, or a radio group's pressable radios
-    /// (a value chosen from a few is the same control).
+    /// (LLP 1116.004 D5.2: a value chosen from a few is the same control).
     private func tabs(in owner: NodeView) -> [NodeView] {
         let role = Self.member(of: owner)
         return owner.container.subviews.compactMap { $0 as? NodeView }.filter {
@@ -279,7 +280,7 @@ final class SegmentHost: NSObject, UIGestureRecognizerDelegate, UITabBarDelegate
     /// An image-only authored tab stays image-only in UIKit. Its accessible
     /// name belongs to the segment image; it is not a visible fallback title.
     /// A text-only tab's words are its title, and an `aria-label` that says
-    /// otherwise its accessibility label (`SegmentFace`).
+    /// otherwise its accessibility label (`SegmentFace`, LLP 1116 D6).
     private func content(_ tab: NodeView, at index: Int, in control: ExactSegmentedControl) {
         let label = tab.accessibleName
         if case .image(let icon)? = tab.segmentFace {
@@ -304,7 +305,7 @@ final class SegmentHost: NSObject, UIGestureRecognizerDelegate, UITabBarDelegate
             control.setImage(image, forSegmentAt: index)
             control.icons[index] = (identity, size, label, source, source?.symbolConfiguration)
         } else if case .symbol(let name)? = tab.segmentFace {
-            // A native tab's symbol, carrying its label.
+            // A native tab's symbol, carrying its label (LLP 1069.011.000 D4).
             // A path is drawn at the control's body size, again as that changes (an SF Symbol follows it itself).
             let points = UIFont.preferredFont(forTextStyle: .body, compatibleWith: control.traitCollection).pointSize
             let size = FaceSymbol.isPath(name) ? CGSize(width: points, height: points) : CGSize(width: -1, height: -1)
@@ -381,7 +382,7 @@ final class SegmentHost: NSObject, UIGestureRecognizerDelegate, UITabBarDelegate
         if control is UISegmentedControl {
             // Its own height, at any width of the box: its height does not
             // follow that width, so a resize does not remeasure. Its width
-            // is the narrowest it can be, the tablist's
+            // is the narrowest it can be (LLP 1116.004 D2), the tablist's
             // automatic minimum: none, as UIKit fits its segments to any
             // box, so a row's other parts never push it past the row's edge
             // (unit-converter: four text tabs overflowed a grouped row by
@@ -470,7 +471,7 @@ final class SegmentHost: NSObject, UIGestureRecognizerDelegate, UITabBarDelegate
             assign(item, \.isEnabled, !tab.disabled)
             if tab.disabled || tab.ariaUnavailable { item.accessibilityTraits.insert(.notEnabled) }
             else { item.accessibilityTraits.remove(.notEnabled) }
-            // Its test id is the tab's.
+            // Its test id is the tab's (LLP 1116 D2).
             if item.accessibilityIdentifier != tab.props["testId"] { item.accessibilityIdentifier = tab.props["testId"] }
             // Its name is the tab's, as the hidden tab's was (astra's code review).
             if item.accessibilityLabel != face.label { item.accessibilityLabel = face.label }
@@ -494,11 +495,11 @@ final class SegmentHost: NSObject, UIGestureRecognizerDelegate, UITabBarDelegate
     }
 
     func sync() {
-        // Only explicit vertical tablists opt out; ignore invalid ARIA values.
-        // A tablist whose place a tab container's bar takes is the container's:
-        // it is hidden, and projects nothing of its own.
-        // A radio group of two or more radios is the same segmented control;
-        // it is never a tab bar. A written `appearance:
+        // @ref LLP 1039 D6 — only explicit vertical tablists opt out; ignore invalid ARIA values.
+        // A tablist whose place a tab container's bar takes is the container's
+        // (LLP 1075.003 §3.7): it is hidden, and projects nothing of its own.
+        // A radio group of two or more radios is the same segmented control
+        // (LLP 1116.004 D5.2); it is never a tab bar. A written `appearance:
         // none` keeps either one's authored tabs or radios.
         let owners = presenter.carrying("role:tablist").filter {
             $0.props["accessibilityRole"] == "tablist" &&
@@ -533,7 +534,7 @@ final class SegmentHost: NSObject, UIGestureRecognizerDelegate, UITabBarDelegate
             }
             removeBar(owner: owner.id)
             // Authored tabs a segment cannot show stay as authored, and the
-            // tablist tells VoiceOver it is a tab bar.
+            // tablist tells VoiceOver it is a tab bar (LLP 1035.001 D10).
             let unshown = tabs.first { $0.segmentFace == nil }
             if tabs.count <= 1 || unshown != nil {
                 restore(owner: owner.id)
@@ -597,8 +598,8 @@ final class SegmentHost: NSObject, UIGestureRecognizerDelegate, UITabBarDelegate
             control.selectedSegmentIndex = selected
         }
         if control.selectedSegmentIndex == selected { control.settled = selected }
-        // As wide as the content box and its own height, centred in it:
-        // a taller box (an authored height, a stretch)
+        // As wide as the content box and its own height, centred in it
+        // (LLP 1116.019 D1): a taller box (an authored height, a stretch)
         // does not stretch UIKit's control, as a hand-built screen's
         // never is.
         let box = owner.contentBox()
@@ -609,7 +610,7 @@ final class SegmentHost: NSObject, UIGestureRecognizerDelegate, UITabBarDelegate
         measure(owner, control)
         // Equal segments where they fit; in a narrower box UIKit gives
         // each segment its content's share, so "Temperature" keeps its
-        // letters beside "Length".
+        // letters beside "Length" (LLP 1116.004 D2).
         assign(control, \.apportionsSegmentWidthsByContent, frame.width + 0.5 < natural(owner.id, control).width)
         if !pending { control.layoutIfNeeded() }
     }
@@ -649,7 +650,7 @@ final class SegmentHost: NSObject, UIGestureRecognizerDelegate, UITabBarDelegate
     }
 
     /// Where a finger aimed at tab `node` lands, for a segment a control
-    /// draws (r5 weather): the control, and the segment's
+    /// draws (LLP 1080.000 D4; r5 weather): the control, and the segment's
     /// box in it — its segment view's, else an equal share. Nil for a node no
     /// segmented control draws (a tab bar's items are UIKit's private views).
     func drawn(_ node: NodeView) -> (control: UIControl, segment: CGRect)? {

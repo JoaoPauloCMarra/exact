@@ -1,8 +1,8 @@
-//! A rendered document as a page: the one place a
+//! A rendered document as a page (LLP 1048.000 D3, D6, D7): the one place a
 //! page is composed, for the build's `dist/` and the server alike.
 use crate::Rendered;
 
-/// The capture script: host code, inline in
+/// The capture script (LLP 1048.000 D6, 1048.001 D5): host code, inline in
 /// every document's head, that records presses — a click, or Enter or Space
 /// on an element that hears `press` and isn't a native control — against
 /// their elements from first parse, until the boot glue takes them over and
@@ -18,12 +18,13 @@ pub fn capture() -> &'static str {
     include_str!("../../web/capture.js").trim_end()
 }
 
-/// The built shell with the renderer's `<head>` and the capture script in place of its title and
-/// viewport meta, the document in `#exact-root`, and its checkpoint, with the document's digest,
-/// before the glue. An idle page keeps the shell's wasm and `navigation.js` preloads, so its
-/// runtime downloads with the document, where a CDN would send them as a 103; an interaction page's
-/// are removed: it fetches nothing before a handler's intent. Refuses a shell that no longer has
-/// those places.
+/// The built shell with the renderer's `<head>` and the capture script in
+/// place of its title and viewport meta, the document in `#exact-root`, and
+/// its checkpoint, with the document's digest, before the glue. An idle
+/// page keeps the shell's wasm and `navigation.js` preloads, so its runtime
+/// downloads with the document, where a CDN would send them as a 103 (D3, as
+/// built); an interaction page's are removed: it fetches nothing before a
+/// handler's intent. Refuses a shell that no longer has those places.
 pub fn page(shell: &str, rendered: &Rendered) -> Result<String, String> {
     if shell.contains(JS_ENTRY) {
         return page_js(shell, rendered);
@@ -106,7 +107,7 @@ pub fn page(shell: &str, rendered: &Rendered) -> Result<String, String> {
 /// The JavaScript runtime's entry in its shell (`host/web-js/build.mjs`).
 const JS_ENTRY: &str = "<script type=\"module\" src=\"./app.js\"></script>";
 
-/// The JavaScript runtime's capture script (as
+/// The JavaScript runtime's capture script (LLP 1048.001 D5, as
 /// `capture()`): presses and edits before activation, replayed after
 /// adoption. It also starts the runtime, by the page's policy
 /// ([`activate_js`]): an `eager` page's after its first paint, once the
@@ -117,8 +118,8 @@ pub fn capture_js() -> &'static str {
     include_str!("../../web-js/capture.js").trim_end()
 }
 
-/// `<html data-scrolldocument>` when an element is the page's scroller:
-/// the shell's rule reads the root, not a `:has()` over
+/// `<html data-scrolldocument>` when an element is the page's scroller
+/// (LLP 1048.003 D4): the shell's rule reads the root, not a `:has()` over
 /// the whole tree at every style recalculation.
 fn scroll_attr(on: bool) -> &'static str {
     if on {
@@ -135,7 +136,7 @@ pub fn scroll_document_js() -> &'static str {
     "document.documentElement.setAttribute(\"data-scrolldocument\",\"\")"
 }
 
-/// A route's activation on the JavaScript runtime: what it
+/// A route's activation on the JavaScript runtime (LLP 1071 D6): what it
 /// declared, with an undeclared one `eager`, the default (preloaded from
 /// the head, run after first paint).
 pub(crate) fn activate_js(activate: exact_plan::ActivatePolicy) -> &'static str {
@@ -149,7 +150,7 @@ pub(crate) fn activate_js(activate: exact_plan::ActivatePolicy) -> &'static str 
 /// server sends before its render: an `interaction` route fetches nothing
 /// before intent, and an undeclared one whose page may wait does not know
 /// yet, so it names them after its head once its render chose to run at
-/// once (`body_open_js`'s `late`).
+/// once (`body_open_js`'s `late`, LLP 1048.007 D1).
 pub(crate) fn preloads_early(plan: &exact_plan::Plan, location: &str) -> bool {
     match exact_web::document::route_at(plan, location).map(|route| route.activate) {
         Some(exact_plan::ActivatePolicy::Interaction) => false,
@@ -158,8 +159,8 @@ pub(crate) fn preloads_early(plan: &exact_plan::Plan, location: &str) -> bool {
     }
 }
 
-/// [`page`] over the JavaScript runtime's shell (exact2's JS web target):
-/// [`head_js`], then [`body_js`] — the page a server streams in
+/// [`page`] over the JavaScript runtime's shell (exact2's JS web target,
+/// LLP 1071): [`head_js`], then [`body_js`] — the page a server streams in
 /// those two parts is these bytes.
 fn page_js(shell: &str, rendered: &Rendered) -> Result<String, String> {
     Ok(page_with(shell, &Js::of(shell)?, rendered))
@@ -176,7 +177,8 @@ pub(crate) fn page_with(shell: &str, js: &Js, rendered: &Rendered) -> String {
 }
 
 /// [`page`] with the build's analyzed sheet (`.gen/page-style.json`), so
-/// a JavaScript page carries only the rules its document can match.
+/// a JavaScript page carries only the rules its document can match (LLP
+/// 1048.007 D4).
 pub fn page_with_rules(shell: &str, rules: &str, rendered: &Rendered) -> Result<String, String> {
     if !is_js(shell) {
         return page(shell, rendered);
@@ -293,7 +295,7 @@ fn preloads(shell: &str, places: &Places) -> Vec<(usize, usize)> {
 /// A rendered page's `<html lang>` value, escaped: the language of the
 /// strings table the render resolved, or, for a plan with no table (`lang`
 /// is empty), the one the shell carries, which the build wrote from the
-/// manifest's `lang`.
+/// manifest's `lang` (LLP 1115.000 D4.6).
 fn lang_attr(shell: &str, lang: &str) -> String {
     if !lang.is_empty() {
         return lang
@@ -312,8 +314,8 @@ fn lang_attr(shell: &str, lang: &str) -> String {
 }
 
 /// One of the shell's `modulepreload` lines (`<link …>\n`), marked
-/// `fetchpriority="low"`: a rendered page paints without
-/// the runtime, which only adopts it, so the runtime must not
+/// `fetchpriority="low"` (LLP 1153.001 D8): a rendered page paints without
+/// the runtime, which only adopts it (LLP 1048.001), so the runtime must not
 /// compete with the page for the link. The shell a `client` route is sent
 /// keeps it at the default priority: that page cannot paint until it runs.
 fn push_low(out: &mut String, line: &str) {
@@ -326,8 +328,8 @@ fn push_low(out: &mut String, line: &str) {
 /// doctype and `<html lang dir>`, the charset and base, the capture script,
 /// the entry's `modulepreload`s at low priority when `preload` (an
 /// `interaction` page has none: it fetches nothing before intent) and the
-/// stylesheet. A server sends it as a request arrives (the early flush),
-/// while the page's data is still being asked; the head stays open,
+/// stylesheet. A server sends it as a request arrives (LLP 1071 D6's early
+/// flush), while the page's data is still being asked; the head stays open,
 /// so what the render decides — the title, the metas, a late preload — still
 /// lands in `<head>`.
 pub(crate) fn head_js(
@@ -427,7 +429,7 @@ pub(crate) fn body_js(
 }
 
 /// A page's first shown image, when it loads with the page (no `for`
-/// repeats it), is likely its largest paint: it is fetched
+/// repeats it, LLP 1048.007 D5), is likely its largest paint: it is fetched
 /// at high priority and preloaded ahead of the document, as `render.mjs`
 /// `heroImage` does. A route the stack covers is `inert` and hidden, and
 /// what it holds is not the page's. Writes the priority into `root`;
@@ -509,8 +511,8 @@ pub(crate) enum Sheet<'a> {
 }
 
 /// [`body_js`] through `<div id="exact-root">`: what goes before the
-/// document, which a streamed page sends before its root is written,
-/// with the page's sheet when the build analyzed it
+/// document, which a streamed page sends before its root is written
+/// (LLP 1048.004 Q3), with the page's sheet when the build analyzed it
 /// ([`Sheet`]).
 pub(crate) fn body_open_js(
     shell: &str,
@@ -625,7 +627,7 @@ fn without_fonts(head: &str) -> String {
 }
 
 /// The document's element in the shell, `<div id="exact-root"></div>`,
-/// with what the build writes on it (`data-audio-session`):
+/// with what the build writes on it (`data-audio-session`, LLP 1096 D7):
 /// its opening tag's range and where its `</div>` ends.
 fn shell_root(shell: &str) -> Option<(std::ops::Range<usize>, usize)> {
     const OPEN: &str = "<div id=\"exact-root\"";
@@ -843,7 +845,7 @@ fn start_tag<'t>(
 /// class carrying most of it and only the live rows inline (a dynamic style
 /// row's element, as the runtime writes it after adoption), written to
 /// `out` as the attributes; `false`, writing nothing, when no class
-/// carries it. The kernel-free writer shares it.
+/// carries it. The kernel-free writer shares it (LLP 1048.004).
 pub(crate) fn runtime_style(classes: &Classes, css: &str, out: &mut String) -> bool {
     if let Some(class) = classes.exact.get(css) {
         out.push_str(" class=\"");
@@ -931,7 +933,7 @@ mod tests {
         assert!(!body_js(shell, &js, &rendered, false, false).contains(&mark));
     }
 
-    /// A rendered page keeps the manifest's `lang`, which
+    /// LLP 1115.000 D4.6: a rendered page keeps the manifest's `lang`, which
     /// the build wrote on the shell, when its plan has no strings table to
     /// name a language (`lang` empty); a resolved table's language still wins.
     #[test]

@@ -75,7 +75,7 @@ component Calendar
   state selectedDay = none
   derive day = match selectedDay { case some(value) => value, case none => clock.today }
   resource agenda = calendarDay(day, revision, clock.today) as shape Agenda
-  // The person's calendars beside the app's own, read by the
+  // The person's calendars beside the app's own (LLP 1133.018 §11), read by the
   // data crate through the module only while the switch is on: the day's
   // events, and the days of the six weeks shown that have one.
   state showMine = false persist
@@ -84,7 +84,7 @@ component Calendar
   derive mineRead = mineOn and calStatus.state != "denied"
   resource mineAgenda = calendarDeviceAgenda(day * 86400000 - time.utcOffset * 60000, mineRead, time.utcOffset) as shape DeviceAgenda
   resource mineDays = calendarDeviceDays(month, mineRead, time.utcOffset) as shape DeviceDays
-  // The person's activity, read by the data crate only
+  // The person's activity (LLP 1133.026 §12), read by the data crate only
   // while the switch is on and Health has been asked: the six weeks' daily
   // steps and the day's workouts. Turning the switch on asks.
   state showActivity = false persist
@@ -99,7 +99,7 @@ component Calendar
   state guestRevision = 0
   resource guests = calendarGuests(editId, guestRevision) as shape GuestList
   resource export = calendarExport(editId, revision) as shape Export
-  // The guests' mail and message composers: the
+  // The guests' mail and message composers (LLP 1133.024 D16): the
   // invitation's `.ics` written to the app's temporary directory, then
   // attached, or shared where this host's mail carries no attachment.
   resource composer = composeStatus() as shape ComposeStatus else empty(available=false, email=false, emailAttachments=false, emailCopiesWithAttachments=false, message=false, messageSubject=false, messageAttachments=false)

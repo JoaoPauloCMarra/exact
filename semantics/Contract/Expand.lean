@@ -16,7 +16,7 @@ component-level semantics (`Contract.CompSem`).
     actions lifted into the root as `name#n` with their owners, props
     captured as hidden action parameters `@capture:n:i` (inline.rs).
   * `ownCalls`, `callMarked`, `resolveCalls`, `hygiene`: action calls
-    (calls.rs). A call stays a `call`, as `contract lean` emits
+    (calls.rs, LLP 1089). A call stays a `call`, as `contract lean` emits
     it; its caller's parameters and binders are renamed as Rust's hygiene
     renames them.
 -/
@@ -613,7 +613,7 @@ def resolvedDerives (c : CComponent) : Except String (List (String × Expr)) := 
 /-! ## Calls (calls.rs, and inline.rs `with_captures`, `call_marked`)
 
 `contract lean` emits a call by its callee and whole argument list, never
-the body Rust expanded, so only what decides those is
+the body Rust expanded (LLP 1089 D9), so only what decides those is
 transcribed here: which statements are calls, the callee's lifted name,
 the arguments, and the names hygiene draws. -/
 
@@ -710,7 +710,7 @@ def binders : List Stmt → Nat
   | .matchS _ _ a b :: rest => 1 + binders a + binders b + binders rest
   | _ :: rest => binders rest
 
-/-- The names the resolver drew for the calls in a block
+/-- The names LLP 1017 §11's resolver drew for the calls in a block
 (calls.rs `drawn`): one for each call's parameters, one for each binder of
 the callee's statements, and its own calls' in turn. A call that does not
 expand (its arity refused) drew one. -/
@@ -1016,7 +1016,7 @@ end
 /-- The flat program `p` expands to (inline.rs `expand`): the root's own
 declarations (the router's slot first), the inlined view, every lifted
 state and action, every call resolved and its caller's names drawn apart
-. -/
+(LLP 1089). -/
 def expand (p : CProgram) : Except String Program := do
   let p := ownCallsProgram p
   let root := p.root

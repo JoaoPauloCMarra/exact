@@ -1,7 +1,8 @@
 //! CSS `transition` shorthand → [`Transitions`].
 //!
-//! Names stay CSS: the authored form is CSS's own `transition` shorthand;
-//! `-exact-spring(stiffness, damping, mass)` is the one declared extension.
+//! @ref LLP 1002 §2, LLP 1115 §2 (names stay CSS: the authored form is CSS's own
+//! `transition` shorthand; `-exact-spring(stiffness, damping, mass)` is the
+//! one declared extension, LLP 1081 D2)
 //!
 //! `transition: <property> || <duration> || <easing> || <delay>, …` — each
 //! part in CSS's own grammar, with `-exact-spring(k, d, m)` admitted where an easing
@@ -31,9 +32,9 @@ pub enum ParseError {
     BadShape(String),
     /// Parsed, but the evaluator refuses it.
     Invalid(TransitionError),
-    /// A keyframe value outside its property's grammar.
+    /// A keyframe value outside its property's grammar (LLP 1055 D6).
     BadValue(String),
-    /// Parsed, but the animation sampler refuses it.
+    /// Parsed, but the animation sampler refuses it (LLP 1055 D5).
     InvalidAnimation(crate::animation::AnimationError),
 }
 
@@ -110,14 +111,14 @@ pub(crate) fn time(s: &str) -> Result<f64, ParseError> {
         .map_err(|_| ParseError::BadTime(s.to_string()))
 }
 
-/// The functions an easing may be, each with its kind: CSS's,
+/// The functions an easing may be, each with its kind (LLP 1081 D8): CSS's,
 /// and the spring Exact adds, spelled `-exact-` because WebKit's own
 /// `-exact-spring()` takes other arguments in another order.
 pub const EASING_FUNCTIONS: &[(&str, &str)] = &[
     ("cubic-bezier", "css CSS Easing 1"),
     ("steps", "css CSS Easing 1"),
     ("linear", "css CSS Easing 2"),
-    ("-exact-spring", "exact"),
+    ("-exact-spring", "exact LLP 1002"),
 ];
 
 pub(crate) fn easing(s: &str) -> Result<TimingFunction, ParseError> {

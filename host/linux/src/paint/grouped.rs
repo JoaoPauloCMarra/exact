@@ -1,4 +1,4 @@
-//! The platform's separator under a grouped list's row:
+//! @ref LLP 1084 D7 — the platform's separator under a grouped list's row:
 //! decoration over the row's own ground and under its children, where and
 //! in the colour the kernel says (`Kernel::grouped_separator`).
 

@@ -1,5 +1,5 @@
-//! Elements a platform draws: `video`, `iframe`, a
-//! native module's view and a GPU canvas's window. The kernel owns only their box; the walk
+//! Elements a platform draws: `video` (LLP 1042), `iframe` (LLP 1020), a
+//! native module's view (LLP 1024) and a GPU canvas's window (LLP 1009). The kernel owns only their box; the walk
 //! names each with its box and what the platform needs to show it, and a
 //! backend whose reader hosts platform views draws the view's own drawing
 //! there, under the same clips and above what came before it, so it scrolls,
@@ -15,22 +15,22 @@ pub enum NativeKind {
     WebView = 1,
     /// A native module's view, by module name.
     Module = 2,
-    /// A GPU canvas's window: the reader makes one and gives it
+    /// A GPU canvas's window (LLP 1009): the reader makes one and gives it
     /// to the host, whose module presents into it.
     Surface = 3,
-    /// A text field the shell hosts: the platform's own
+    /// A text field the shell hosts (LLP 1115.001 D8): the platform's own
     /// field, drawn here in the content box of the container this host
     /// paints. What it is and what it holds are not in the stream: the
     /// shell is told of its fields beside it (`presenter/hosted.rs`).
     Field = 4,
-    /// A view an app's Kotlin hatch hosts at a node's border box,
-    /// over the node's own paint: what it is is the
+    /// A view an app's Kotlin hatch hosts at a node's border box (LLP
+    /// 1115.001.000 D4), over the node's own paint: what it is is the
     /// reader's; the props carry how many times the node has been given one.
     Hatch = 5,
 }
 
 impl Painter {
-    /// A view a Kotlin hatch hosts at `node`:
+    /// @ref LLP 1115.001.000 D4 — a view a Kotlin hatch hosts at `node`:
     /// over its paint, in its border box `rect`, where the node is. A node
     /// that is a platform element already is named by its own kind.
     pub(super) fn hosted_view(&mut self, node: &NodeRef<'_>, rect: Rect4, ts: Transform) {

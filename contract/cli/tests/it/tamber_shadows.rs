@@ -1,6 +1,7 @@
-//! Shadow tokens: a `box-shadow` or `text-shadow` row names one, the kernel
-//! reads the node's slice, a row of the other kind refuses it, and a live edit
-//! (its own, or a colour token's inside it) paints and lays nothing out.
+//! @ref LLP 1121 D3, D7 (stage 6 D) — shadow tokens: a `box-shadow` or
+//! `text-shadow` row names one, the kernel reads the node's slice, a row of
+//! the other kind refuses it, and a live edit (its own, or a colour token's
+//! inside it) paints and lays nothing out.
 
 use exact_kernel::{Kernel, StyleId};
 use exact_plan::{Plan, Value};
@@ -147,7 +148,7 @@ fn a_colour_inside_a_shadow_follows_its_own_live_edit() {
     );
 }
 
-/// `uses` finds a shadow token's rows (its own row kind).
+/// Review round 1: `uses` finds a shadow token's rows (its own row kind).
 #[test]
 fn uses_finds_a_shadow_tokens_rows() {
     let path = app(
@@ -166,7 +167,7 @@ fn uses_finds_a_shadow_tokens_rows() {
     }
 }
 
-/// A length token inside a shadow is read where the
+/// Review round 2: a length token inside a shadow is read where the
 /// shadow is (`uses` of the length lists the shadow's row too).
 #[test]
 fn uses_of_a_length_lists_a_shadow_folded_over_it() {
@@ -324,14 +325,14 @@ fn a_colour_token_inside_a_shadow_is_its_light_dark_pair() {
             ),
         ],
     );
-    // A name no token has, in the colour row's words, not the kernel's
-    // "neither a length nor a colour".
+    // A name no token has, in the colour row's words (stage 12 B3, QUEUE's
+    // item): no longer the kernel's "neither a length nor a colour".
     let e = contract::compile_path(&unknown).unwrap_err();
     assert_eq!(e.id, "tamber-unknown-token", "{e:?}");
     assert!(e.message.contains("`eu.nope` is no token"), "{e:?}");
 }
 
-/// A shadow over a base name reads the base as an alias does,
+/// Stage 12 B3: a shadow over a base name reads the base as an alias does,
 /// the design's own first, and the read is recorded, so a live edit of the
 /// base (`set-token space.md`) sets the shadow's row again. (The plan keeps
 /// `space.md` only where the design sets it; the shadow's text over it is

@@ -2,7 +2,7 @@
 
 A native module that needs the person's permission (location here) is asked
 for, read as a fact and recovered from in the app's own UI. exact2 never
-answers the platform's prompt.
+answers the platform's prompt (LLP 1133 D7).
 
 1. **Declare** one grant line, and its purpose in the strings table. The build
    derives every platform's manifest from it.

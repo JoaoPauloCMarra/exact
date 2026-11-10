@@ -1,4 +1,4 @@
-// The Hermes bundle for exact2's Android host: a TypeScript data
+// The Hermes bundle for exact2's Android host (LLP 1107): a TypeScript data
 // module runs on Android in the same lean Hermes VM as on every native host,
 // but the pinned Ibex release ships no `aarch64-linux-android` bundle yet.
 // This builds one with Ibex's own release script, whose Android target is the

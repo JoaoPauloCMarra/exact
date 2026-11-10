@@ -18,7 +18,7 @@ import java.time.ZoneOffset
 import java.util.Locale
 
 /**
- * A date or time control's picker as it opens: what the control holds and allows, in HTML's
+ * A date or time control's picker as it opens (LLP 1115.001.000 D1): what the control holds and allows, in HTML's
  * forms (`2026-10-16`, `14:05`, `2026-10-16T14:05`; empty where the author gave none), and what a hatch may change
  * before it shows ([ExactHatches.picker]). What a picker answers is held to HTML's rules for the kind
  * (<https://html.spec.whatwg.org/multipage/input.html#date-state-(type=date)> and the time and local date and time
@@ -32,7 +32,7 @@ class ExactPicker internal constructor(
     val max: String,
     val step: String,
     /** The control's `accent-color` (opaque ARGB), where it or an ancestor sets one: the picker is in its colours,
-     * the author's word over the device's. */
+     * the author's word over the device's (LLP 1115). */
     val accent: Int? = null,
 ) {
     /** The dialog's title; null for the platform's ("Select date"). */

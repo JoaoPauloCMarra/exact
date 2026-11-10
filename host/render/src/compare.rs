@@ -1,4 +1,4 @@
-//! The differential check: a location rendered with a
+//! The differential check (LLP 1048.004 D6): a location rendered with a
 //! kernel and without one, compared byte for byte — the document's root,
 //! head fields, checkpoint and activation, and with a JavaScript shell the
 //! page as the server streams it (its digest aside, which the kernel-free

@@ -1,6 +1,6 @@
 // A trace the app records (`startTrace_EXPERIMENTAL()`,
 // `stopTrace_EXPERIMENTAL()`; experimental while its fields may change): the
-// frames Save Trace keeps, from one press to the next, in any
+// frames Save Trace keeps (LLP 1079 D3–D5), from one press to the next, in any
 // build, a production bake included, put on the clipboard as compact JSON an
 // agent reads whole, or cut to a size a conversation takes
 // (`stopTrace_EXPERIMENTAL(maxBytes)`); tvOS, with no clipboard, only saves

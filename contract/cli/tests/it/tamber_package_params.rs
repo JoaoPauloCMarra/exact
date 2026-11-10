@@ -1,9 +1,10 @@
-//! A package component's params. A package's Contract component and a component
-//! its design declares (`component … params`) list their params in `describe`
-//! under the package's identity (`@acme/reading/index.contract#Card`,
-//! `@acme/reading/reading.tamber#Map`). The app sets one by full or short name
-//! in its own design, never the package's files; the build keeps it; `uses`
-//! lists a Contract component's sites in the package's file.
+//! LLP 1121 stage 12 B1: a package component's params (D15). A package's
+//! Contract component and a component its design declares (`component …
+//! params`, no longer `tamber-package-block`) list their params in
+//! `describe` under the package's identity (`@acme/reading/index.contract#
+//! Card`, `@acme/reading/reading.tamber#Map`). The app sets one by full or
+//! short name in its own design, never the package's files; the build keeps
+//! it; `uses` lists a Contract component's sites in the package's file.
 #![cfg(unix)]
 
 use super::tamber_serve::{app, digest, Serve};
@@ -124,7 +125,7 @@ fn set_and_unset_param_write_the_apps_line_alone() {
             p.display()
         );
     }
-    // The build keeps the app's value: the plan reads it.
+    // The build keeps the app's value (D7): the plan reads it.
     let (resolved, _) = s.ask(json!({"method": "resolve", "token": "Card.inset"}));
     assert_eq!(resolved["ok"]["tuples"][0]["value"], "20px", "{resolved}");
     let (resolved, _) =
@@ -140,7 +141,7 @@ fn set_and_unset_param_write_the_apps_line_alone() {
     assert!(plan.contains("20px"), "the plan keeps the set value");
     assert!(
         plan.contains("abcdef"),
-        "and the design component's (a root)"
+        "and the design component's (a root, D15)"
     );
     // `uses`: the Contract component's sites, in the package's file.
     let (uses, _) = s.ask(json!({"method": "uses", "token": "Card.inset"}));
@@ -225,8 +226,8 @@ fn two_packages_components_of_one_name_stay_apart() {
     let op = |name: &str| json!({"method": "transaction", "client": "one", "files": {"app.tamber": digest(&file)}, "ops": [{"op": "set-param", "name": name, "value": "#ffffff"}]});
     let (short, _) = s.ask(op("Map.pin"));
     assert_eq!(short["error"]["id"], "tamber-param-ambiguous", "{short}");
-    // describe advertises no short name that `set-param` would refuse;
-    // `Card.inset` stays short.
+    // describe advertises no short name that `set-param` would refuse
+    // (round 1, Astra 1 and Grok 1); `Card.inset` stays short.
     for p in params(&described) {
         let name = p["name"].as_str().unwrap();
         if name.ends_with("#Map.pin") {
@@ -240,7 +241,7 @@ fn two_packages_components_of_one_name_stay_apart() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// An app's own design component and a package's of one
+/// Round 1 (Astra 1): an app's own design component and a package's of one
 /// name: neither is advertised by its short name.
 #[test]
 fn an_apps_component_and_a_packages_of_one_name_have_no_short_name() {
@@ -261,7 +262,7 @@ fn an_apps_component_and_a_packages_of_one_name_have_no_short_name() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A param a package's design comes to declare after the
+/// Round 1 (Astra 2): a param a package's design comes to declare after the
 /// server read the app is a root of retention at once: overriding it over
 /// an axis is a rebuild, as a fresh server says, never `live`.
 #[test]
@@ -298,7 +299,7 @@ fn a_package_param_added_after_priming_is_retained() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A package param's default names its package's own
+/// Round 1 (Grok 2): a package param's default names its package's own
 /// tokens, roles, base names and its component's params only, and no dial:
 /// another package's token or an app token is refused at the default, in
 /// the package's file. A value the app sets names the app's tokens freely.
@@ -356,7 +357,7 @@ fn a_package_params_default_names_its_packages_own() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// What a package param's default reads moves with the
+/// Round 2 (Astra 1): what a package param's default reads moves with the
 /// package's design, whole: the server's cached retention follows it, as a
 /// fresh server's does.
 #[test]
@@ -402,7 +403,7 @@ fn a_package_tokens_edit_moves_what_its_params_keep() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A default written as a whole alias is
+/// Round 2 (Astra 2, Grok 1 and 2): a default written as a whole alias is
 /// judged as written: the app's profile colour (folded as `transparent`,
 /// naming none) and the app's icon are refused at the default in the
 /// package's file; a literal icon is the package's own.
@@ -446,7 +447,7 @@ fn a_package_params_written_alias_is_judged_as_written() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The app's `params` line sets a package's param only by
+/// Round 2 (Grok 3): the app's `params` line sets a package's param only by
 /// a name only it answers; an ambiguous short name sets none, so the
 /// default's own refusal is still said beside `tamber-param-ambiguous`.
 #[test]
@@ -483,10 +484,10 @@ fn an_ambiguous_short_name_sets_no_package_param() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A package design's icon param reads its SVG as the
+/// Round 3 (Astra): a package design's icon param reads its SVG as the
 /// build does: one there is a source (a watcher rebuilds on it), one not
 /// there yet is looked for, so making it rebuilds; with no app design file
-/// too. A default written in the package's design
+/// too. Stage 13 (theme2's Q1): a default written in the package's design
 /// reads the PACKAGE's `assets/`, never the app's same-named file.
 #[test]
 fn a_package_icon_params_svg_is_a_source() {
@@ -557,7 +558,7 @@ fn a_package_icon_params_svg_is_a_source() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The app's design whole keys what the server keeps of
+/// Round 3 (Grok 1): the app's design whole keys what the server keeps of
 /// retention. An app override of a package's token moves what a param's
 /// default reaches without moving a token's name: priming on the old chain
 /// and moving the override, an override of the old token varying over an
@@ -616,7 +617,7 @@ fn the_apps_design_whole_keys_what_its_params_keep() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The server's cached retention is keyed by what
+/// theme2's sign-off of B1: the server's cached retention is keyed by what
 /// can move it, parsed. A value edit that names nothing (a hex, a length)
 /// reuses it, where a whole compile of a large app costs seconds; an alias
 /// moved, or a param set, builds it again. Counted by the server's own
@@ -673,10 +674,11 @@ fn a_value_edit_naming_nothing_keeps_the_cached_retention() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The retention key compares names as the checker resolves them. A param set
-/// to `pick`, which names a role override in another case (`CANVAS`, the
-/// design's `Canvas = old`), moved to `CANVASTEXT` (`CanvasText = fresh`):
-/// retention follows, as a fresh server's does, and the server builds it again.
+/// The retention key's re-check (Astra): names compared as the checker
+/// resolves them. A param set to `pick`, which names a role override in
+/// another case (`CANVAS`, the design's `Canvas = old`), moved to
+/// `CANVASTEXT` (`CanvasText = fresh`): retention follows, as a fresh
+/// server's does, and the server builds it again.
 #[test]
 fn a_role_alias_moved_by_its_case_is_followed() {
     let dir = reading("pkg-params-role-case");
@@ -713,7 +715,7 @@ fn a_role_alias_moved_by_its_case_is_followed() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// Each key row says its section, so a name moved
+/// The re-check (Astra): each key row says its section, so a name moved
 /// from `icons` to `theme` builds again; and a token's `pair=` naming
 /// another token keys too.
 #[test]
@@ -742,7 +744,7 @@ fn a_name_moved_between_sections_or_a_pair_moved_builds_again() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A reference in the key is found folded but keyed
+/// The key's second re-check (Astra): a reference is found folded but keyed
 /// as written, so two tokens differing only in case (`Foo`, `foo`) stay two:
 /// a param's chain moved from one to the other builds again, and a `when`
 /// on the one no longer read is as a fresh server classes it.
@@ -780,7 +782,7 @@ fn two_tokens_of_one_name_in_two_cases_stay_two() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A library component's param is named in full in the app's
+/// LLP 1139 D8: a library component's param is named in full in the app's
 /// design, so `set-param` by its short name writes the new line by the full
 /// one, which the build takes (a short one is `tamber-param-short-library`);
 /// `propose` answers the same diff the write makes.
@@ -891,8 +893,8 @@ fn a_short_name_writes_a_library_params_line_in_full() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A kept icon's path, read through `exact_runner::icon_of` (the one
-/// reader of an `icons` row, which strips an even-odd icon's marker).
+/// A kept icon's path, read through `exact_runner::icon_of` (stage 14 C2:
+/// the one reader of an `icons` row, which strips an even-odd icon's marker).
 fn icon_path<'a>(plan: &'a exact_plan::Plan, row: &exact_plan::IconsRow) -> &'a str {
     exact_runner::icon_of(plan, row).map_or("", |icon| icon.path)
 }

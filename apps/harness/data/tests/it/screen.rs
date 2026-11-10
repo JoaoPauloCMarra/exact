@@ -1,6 +1,6 @@
-//! The real harness screen boots against this data module:
-//! `terminal.contract`, compiled as the terminal host compiles it, takes
-//! `session(mode)` and `animation(...)` through the shape check.
+//! The real harness screen boots against this data module (LLP 1101.002
+//! P2): `terminal.contract`, compiled as the terminal host compiles it,
+//! takes `session(mode)` and `animation(...)` through the shape check.
 
 use exact_kernel::Kernel;
 use exact_runner::{DataSource, Runner};

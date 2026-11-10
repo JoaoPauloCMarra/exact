@@ -1,4 +1,4 @@
-//! Actual Chrome history, the real glue and runner.
+//! @ref LLP 1038 D7/D11 — actual Chrome history, the real glue and runner.
 use exact_runner::{DataError, DataSource, Value};
 use std::path::Path;
 use std::process::Command;
@@ -30,8 +30,8 @@ fn incoming_notification_locations_use_the_route_corpus_through_the_web_abi() {
             let count = bridge.input_write(href.as_bytes());
             let len = bridge.location_of(count);
             let location = std::str::from_utf8(bridge.output_bytes(len as usize)).unwrap();
-            // A canonical case through a URL keeps its fragment,
-            // which its canonical form drops.
+            // A canonical case through a URL keeps its fragment (LLP 1153
+            // D5), which its canonical form drops.
             let location = match section {
                 "canonical" => location.split('#').next().unwrap_or_default(),
                 _ => location,
@@ -48,7 +48,7 @@ fn browser_session_history_and_published_deep_locations() {
     sweep(false);
 }
 
-/// The same sweep on the JS target: each plan a JS build.
+/// The same sweep on the JS target (LLP 1071): each plan a JS build.
 #[test]
 #[ignore = "real Chrome sweep: bun scripts/smoke.mjs web"]
 fn browser_session_history_on_the_js_target() {
@@ -96,7 +96,7 @@ fn sweep(js: bool) {
             "          if e.name == \"home\"\n            text \"Home\"\n            link href=\"javascript:globalThis.scriptProbe++\" testId=`script-link-${e.id}` padding=8\n              text \"Script link\"\n            text testId=`script-text-${e.id}`\n              text \"Script run\" href=scriptURL testId=`script-run-${e.id}`\n            iframe scriptURL width=40 height=20 testId=`script-frame-${e.id}`\n",
         )
         // A `data:` document shows in a sandbox without `allow-same-origin`
-        // and nowhere else: a literal or bound source, under a
+        // and nowhere else (LLP 1020 §10): a literal or bound source, under a
         // literal or bound sandbox that `flipFrame` opens and closes. A
         // flipped one posts its letter from the opaque origin (a post at
         // boot can come before the wasm host hears input, which drops it).
@@ -149,7 +149,7 @@ fn sweep(js: bool) {
     .unwrap();
     std::fs::write(dir.join("no-navigate.plan"), no_handler.encode()).unwrap();
     // No `notfound` route and a navigation root: the compiler writes the route and its screen, so a
-    // location no route matches keeps its URL and says so.
+    // location no route matches keeps its URL and says so (LLP 1116.009 D2).
     let no_notfound = contract::bake(
         contract::compile(
             "routes nav\n  home \"/\"\n    item \"/item/:id\"\n\ncomponent App\n  state backPresses = 0\n  state navigatePresses = 0\n  action back\n    backPresses = backPresses + 1\n    nav = back(nav)\n  action follow(url: string)\n    navigatePresses = navigatePresses + 1\n    nav = go(nav, url)\n  view\n    main navigationKey=`${top(nav).id}` navigationBack=\"back\" navigate=follow testId=\"navigation\" width=\"100%\" height=\"100%\"\n      for e in stack(nav) key=e.id\n        column navigationKey=`${e.id}` position=\"absolute\" inset=0\n          if e.name == \"home\"\n            text \"Home\" testId=\"home\"\n          if e.name == \"item\"\n            text e.params.id testId=\"item\"\n",
@@ -171,7 +171,8 @@ fn sweep(js: bool) {
     // A visit whose `#moves` and `#other` are far down its navigation root,
     // which scrolls, beside a picture the server is slow to send, and a bar
     // stuck at its top: links to its fragments, a `go` only computed, one
-    // in a commit that is refused, and the app's own `scrollIntoView`.
+    // in a commit that is refused, and the app's own `scrollIntoView` (LLP
+    // 1153 D5).
     let rows = |from: usize| -> String {
         (from..from + 20)
             .map(|i| format!("            box id=\"row-{i}\" height=100\n"))

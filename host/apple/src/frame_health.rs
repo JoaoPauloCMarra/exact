@@ -6,7 +6,7 @@ mod history;
 pub use history::{Hitch, Status as HistoryStatus, Work, CAPACITY as HITCH_CAPACITY, MAX_AGE_NS};
 
 /// Scalar counters copied only when a reader asks, on the producer's thread. A frame is a
-/// callback that ran its work.
+/// callback that ran its work; LLP 1079.000 §4.6 defines each measure.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Snapshot {

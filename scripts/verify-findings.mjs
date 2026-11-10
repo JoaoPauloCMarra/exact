@@ -1,8 +1,8 @@
-// The finding lines of a verify report: check's groups, each line's rule and place, and the lines by rule.
-// Pure text; verify.mjs re-exports what its callers import.
+// The finding lines of a verify report: check's groups, each line's rule and place, and the lines by rule (LLP 1116.004
+// D1.3). Pure text; verify.mjs re-exports what its callers import.
 
-/** check's text by scheme: each header's finding lines, how many its "… and N more" left out, and its advice,
- * which is never a finding. */
+/** check's text by scheme: each header's finding lines, how many its "… and N more" left out, and its advice
+ * (LLP 1116.004 D1.3), which is never a finding. */
 export function groups(text) {
   const out = [];
   for (const line of String(text ?? '').split('\n')) {

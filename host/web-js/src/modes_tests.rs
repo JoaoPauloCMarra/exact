@@ -1,4 +1,4 @@
-//! The app's modes on the JS target: varying tokens as
+//! @ref LLP 1121 D7 — the app's modes on the JS target: varying tokens as
 //! custom properties, one rule per tuple, and the boundaries' attributes.
 
 /// The JS target's output for an app directory holding `design` and `view`.
@@ -307,7 +307,7 @@ fn a_pinned_accent_naming_its_token_declares_the_accent_where_the_token_is_a_col
     );
 }
 
-/// A development build makes every token a
+/// LLP 1121 stage 4, commit 4: a development build makes every token a
 /// property, varying or not, so the live table can set it in place; its
 /// design names each one's CSS per tuple. A release build folds a token
 /// that does not vary inline, as before.
@@ -366,7 +366,7 @@ fn a_development_build_makes_every_token_a_property() {
     assert_eq!(card["css"][1], "light-dark(#ffffffff, #15202bff)");
 }
 
-/// A development build makes each role
+/// LLP 1121 stage 5, commit 2: a development build makes each role
 /// override live. A row naming an overridden role reads its sheet property
 /// (`--exact-canvas-text`), declared in the root's tuple rule after the
 /// theme's sheet; a role the kernel crosses reads it over its value; the
@@ -444,7 +444,8 @@ fn a_development_build_makes_every_role_override_a_property() {
 
 /// The JS loop's design reader (`exact-web-js design`, a design text read
 /// with no build) says the plan's structure, which its fast path compares:
-/// it moves for what the plan keeps and only that. With a data crate beside the app every
+/// it moves for what the plan keeps (theme2's ruling, LLP 1121 stage 5,
+/// D7's retention) and only that. With a data crate beside the app every
 /// token is kept, so an added one moves it; a first `when` on a kept token
 /// moves it; in a plain app an unnamed token's add does not.
 #[test]
@@ -505,7 +506,7 @@ fn the_design_readers_structure_moves_for_what_the_plan_keeps() {
     let _ = std::fs::remove_dir_all(plain);
 }
 
-/// A node's `:hover` and `:focus-visible`
+/// @ref LLP 1121 D8 (stage 8 B): a node's `:hover` and `:focus-visible`
 /// looks are the sheet's rules for its set, with a varying token as its
 /// property; the node names its set; `:active` is the node's press paint, an
 /// absolute opacity included; a node without looks has neither.
@@ -559,7 +560,7 @@ fn state_looks_are_sheet_rules_for_the_nodes_set() {
     );
 }
 
-/// Under a written token colour, a mode boundary below
+/// LLP 1121 stage 9 B: under a written token colour, a mode boundary below
 /// writes the token again as its implied row, no author's, so the kernel's
 /// symbol under the boundary takes no written colour; one beside it does.
 /// So does one under a boundary whose own bound colour clears or is refused,

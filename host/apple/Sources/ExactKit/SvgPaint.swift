@@ -1,4 +1,4 @@
-// A shape's paint when it is more than one solid
+// @ref LLP 1055.000 D7 — a shape's paint when it is more than one solid
 // colour, or not in the normal order: a part layer per paint, in
 // `paint-order`. A solid part is a `CAShapeLayer`; a gradient part is a
 // layer holding the gradient drawn by Core Graphics (the two-circle radial
@@ -29,8 +29,8 @@ enum SvgPaint {
     }
 
     /// A paint server (a gradient or a pattern): an object that is not a
-    /// colour in its own space, `{"cs": …}`, nor the tint,
-    /// `{"sys": "@tint", …}`.
+    /// colour in its own space, `{"cs": …}` (LLP 1100 D2), nor the tint,
+    /// `{"sys": "@tint", …}` (LLP 1116.001 D2).
     static func server(_ v: Any?) -> [String: Any]? {
         guard let o = v as? [String: Any], o["cs"] == nil, o["sys"] == nil else { return nil }
         return o
@@ -93,7 +93,7 @@ enum SvgPaint {
         }
     }
 
-    /// A `clip-path` as a mask: one opaque shape per clip
+    /// A `clip-path` as a mask (LLP 1055.000 D10): one opaque shape per clip
     /// child, so the mask is their union, and the clip's own clip as the
     /// mask's mask. No shapes masks everything.
     static func clip(_ v: Any?, path: ([Any]) -> CGPath) -> CALayer? {
@@ -226,7 +226,7 @@ enum SvgPaint {
             let fr = CGFloat(rg[5])
             if spread != 0, f == c, fr == 0, r > 0 {
                 // Concentric: repeating the stops is exact. A moving focus
-                // pads until the island draws it.
+                // pads until the island draws it (LLP 1055.000 §0).
                 let far = corners.map { hypot($0.x - c.x, $0.y - c.y) }.max() ?? r
                 let n = max(1, Int(ceil(far / r)))
                 stops = repeated(stops, from: 0, to: n, reflect: spread == 1)

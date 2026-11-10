@@ -30,7 +30,7 @@ The faces are copies of `fonts/exciting-lilt/ExcitingLilt-{Semibold,Bold}.ttf`
 (v10, 2026-09-29) and `fonts/exposure-sans/original-10/*.ttf` (0.010) from the
 Expose repository, MIT-licensed there; re-copy them into `assets/` when a new
 build lands. Both families are declared in the Contract and bound to these
-bytes, so an installed font of the same name is never consulted.
+bytes (LLP 1019 D3), so an installed font of the same name is never consulted.
 
 Run from the Exact2 root:
 

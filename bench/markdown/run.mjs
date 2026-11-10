@@ -28,7 +28,7 @@ const trackpad = (speed, duration) => ['--mode', 'trackpad', '--speed', String(s
 const resize = ['--mode', 'resize', '--duration', '4', '--widths', '900,640'];
 const jump = ['--mode', 'jump', '--duration', '5', '--jumps', '0.5,0.1,0.9,0.3,0.7'];
 const tiny = ['--mode', 'trackpad', '--speed', '900', '--duration', '2', '--settle', '1'];
-// name → [scrollbench arguments, document]; the reference scenarios first.
+// name → [scrollbench arguments, document]; LLP 1044 §3.2's rows first.
 const SCENARIOS = {
   slow: [trackpad(900, 6), 'corpus'],
   trackpad: [trackpad(3600, 6), 'corpus'],

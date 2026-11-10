@@ -1,10 +1,10 @@
-//! The Content-Security-Policy of the pages the render server serves, the
-//! boundary there, since the web runtime's admission is
-//! parity.
+//! The Content-Security-Policy of the pages the render server serves (LLP
+//! 1048.000 D11), the boundary there, since the web runtime's admission is
+//! parity (LLP 1133.036 D5).
 use std::fmt::Write as _;
 use std::path::Path;
 
-/// The pages' Content-Security-Policy: scripts only from the app's
+/// The pages' Content-Security-Policy (D11): scripts only from the app's
 /// origin (the only inline scripts are inert data), the wasm, and fetches
 /// and sockets to the origins the app's grants name.
 pub(crate) fn csp(grants: &str, dist: &Path) -> String {
@@ -17,7 +17,7 @@ pub(crate) fn csp(grants: &str, dist: &Path) -> String {
         if let Some(target) = words.next() {
             // An origin is scheme://host[:port]: the target up to its path.
             // A scheme-wide line (`ws:`) is already a CSP scheme source.
-            // `local-network`: CSP has no source for an
+            // `local-network` (LLP 1133.036 D5): CSP has no source for an
             // address range, and a scheme source would admit the internet,
             // so a served page reaches `.local` names alone by it.
             let origin = match target.strip_suffix(':').map(str::to_ascii_lowercase) {
@@ -41,8 +41,9 @@ pub(crate) fn csp(grants: &str, dist: &Path) -> String {
     // A document's one inline script, the host's capture script, likewise.
     use sha2::{Digest, Sha256};
     let hash = |bytes: &[u8]| exact_data::envelope::base64(&Sha256::digest(bytes));
-    // The JavaScript runtime's capture script too: its pages carry
-    // that one; and the script a boot document's page removes it with.
+    // The JavaScript runtime's capture script too (LLP 1071): its pages carry
+    // that one; and the script a boot document's page removes it with (LLP
+    // 1048.005).
     let mut scripts = format!(
         "'self' 'wasm-unsafe-eval' 'sha256-{}' 'sha256-{}' 'sha256-{}' 'sha256-{}'",
         hash(crate::page::capture().as_bytes()),

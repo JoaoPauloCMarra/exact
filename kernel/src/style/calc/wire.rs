@@ -62,7 +62,7 @@ fn node_out(n: &Node, w: &mut Writer) {
                     w.u8(*x);
                     w.u8(*y);
                 }
-                // A layout region's inset: 16 + region × 4 + edge
+                // A layout region's inset (LLP 1123 D10): 16 + region × 4 + edge
                 EnvTerm::Region(region, edge) => w.u8(16 + *region as u8 * 4 + *edge as u8),
                 EnvTerm::TitleBar(var) => w.u8(36 + *var as u8),
             }

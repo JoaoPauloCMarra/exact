@@ -1,5 +1,5 @@
 // A node's focus as AppKit asks for it: who takes it and is a Tab stop, whom
-// a click gives it to (no button, no pressable, not the
+// a click gives it to (LLP 1115.000 D7.1: no button, no pressable, not the
 // ground), what taking and losing it tells the app, and the ring a focused
 // pressable shows after the keyboard moved the focus, never after a
 // pointer's press.
@@ -12,7 +12,7 @@ extension NodeView {
     /// hears these. A pressable is in the tab order the way a `<button>` is.
     /// A paragraph takes the focus too, for selection, but plain text is
     /// never a Tab stop on the web. An explicit `tabindex` makes any box
-    /// focusable, and a Tab stop only when ≥ 0.
+    /// focusable, and a Tab stop only when ≥ 0 (LLP 1088 D7.3).
     package override var acceptsFirstResponder: Bool {
         if formDisabled || inert || isHiddenOrHasHiddenAncestor || cssVisibilityHidden { return false }
         if field != nil || textArea != nil || isNativeButton || nativeValueControl != nil { return false }
@@ -22,10 +22,10 @@ extension NodeView {
         if let index = explicitTabIndex { return index >= 0 }
         if ariaRadioGroup != nil { return ariaRadioTabStop } // an authored radio group is one stop too
         return kind == "button" || isNativeButton || isDateOrSelect || canvases?.wantsInput(id) == true || pressable || !handlers.isDisjoint(with: Self.focusEvents)
-            || reorderKeys || radioTabStop // a grouped grip takes the keys; a radio group one stop
+            || reorderKeys || radioTabStop // a grouped grip takes the keys (LLP 1094 D9); a radio group one stop (x2apps survey #2)
     }
-    /// Sequential focus honours macOS "Keyboard navigation" (`tabStop`,
-    /// KeyViewLoopMac.swift): off, a button is no key view,
+    /// Sequential focus honours macOS "Keyboard navigation" (LLP 1115.000
+    /// D7.2; `tabStop`, KeyViewLoopMac.swift): off, a button is no key view,
     /// as an `NSButton` is none; a `tabindex` the author wrote still decides.
     package override var canBecomeKeyView: Bool { acceptsFirstResponder && tabStop }
     package override func becomeFirstResponder() -> Bool {
@@ -39,7 +39,7 @@ extension NodeView {
         if ok { focusLeft() }
         return ok
     }
-    // Events are relayed from the node's single focus owner.
+    // @ref LLP 1104 D6 — events are relayed from the node's single focus owner.
     func focusEntered() {
         focusVisible = !isNativeButton && nativeValueControl == nil && presenter?.focusByPointer != true
         presenter?.collections.pinsChanged()
@@ -96,8 +96,8 @@ extension NodeView {
     var retainsFocus: Bool {
         sequence(first: self as NSView, next: \.superview).contains { ($0 as? NodeView)?.props["retainFocus"] == "true" }
     }
-    /// Whether a click here moves the focus to this node. On the Mac a
-    /// click on a button, a radio or a box that is only
+    /// Whether a click here moves the focus to this node (LLP 1115.000
+    /// D7.1). On the Mac a click on a button, a radio or a box that is only
     /// pressable never does, whatever its `tabindex`: the first responder
     /// stays where it is, as it does for a clicked `NSButton`, and a field
     /// beside the button keeps its caret. What `retainFocus` asked for is so
@@ -123,7 +123,7 @@ extension NodeView {
     /// Not for a node whose press a `pointerdown` handler (its own or an
     /// authored ancestor's) can prevent: AppKit would focus it before that
     /// handler runs, so `mouseDown` gives the focus itself, after it, unless
-    /// it prevented the press.
+    /// it prevented the press (LLP 1005 §3).
     package override var needsPanelToBecomeKey: Bool { takesClickFocus && !pointerdownHeard }
     /// Whether a `pointerdown` handler hears a press here: this node's or an
     /// enabled ancestor's up the authored tree.
@@ -136,7 +136,7 @@ extension NodeView {
         return false
     }
     /// Whether a click on this node in a window that is not key is also a
-    /// press. Every node used to answer true, a
+    /// press (LLP 1115.000 D7.9). Every node used to answer true, a
     /// browser's rule. AppKit's answer, measured on macOS 27.0
     /// (`acceptsFirstMouse(for:)` of each): true for an `NSButton` (false
     /// once it has `hasDestructiveAction`, which a native `destructive`
@@ -174,7 +174,7 @@ extension NodeView {
     /// box, as AppKit rings an `NSButton` the keyboard moved the focus to.
     /// AppKit draws no mask whose bounds are empty, which keeps it off a box
     /// that is not pressable, a field (its own ring), a focus that is not
-    /// visible, a box whose author wrote `outline: none` and a
+    /// visible, a box whose author wrote `outline: none` (LLP 1104 D6) and a
     /// ring a later backdrop covers (`BackdropCoverMac.swift`).
     var bareFieldFocused: Bool {
         !isNativeTextControl && (field?.currentEditor() != nil || (textArea != nil && window?.firstResponder === textArea))
@@ -193,7 +193,7 @@ extension Presenter {
     /// yet (its `change`) is committed first, the field keeping its editor
     /// and its caret. A click on a button used to end the editing, and the
     /// blur committed it; now that the click leaves the first responder
-    /// where it is the commit is its own step, as a
+    /// where it is (LLP 1115.000 D7.1) the commit is its own step, as a
     /// hand-built app commits its editors before a button acts
     /// (`NSEditor.commitEditing`). Text an input method is still composing
     /// is the input method's, and is left.

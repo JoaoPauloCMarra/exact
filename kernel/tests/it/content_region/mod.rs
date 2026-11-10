@@ -214,7 +214,7 @@ fn registration_refuses_auto_sized_outer_box_and_ordinary_layout_cannot_bypass_g
     .unwrap();
     let b = binding(&k);
     assert!(k.set_content_region(Some(b)).is_err());
-    // A static owner over an absolutely positioned box (the
+    // LLP 1074 T1: a static owner over an absolutely positioned box (the
     // fixture's placeholder) is refused too. A trial lays the owner out as
     // the top of its own tree, where it contains every absolutely
     // positioned descendant; the ordinary tree must agree.
@@ -1124,7 +1124,7 @@ fn review_grid_baseline_dependency_requires_refusal_or_ordinary_shell_parity() {
     }
 }
 
-// The selected region carries flow-only changes.
+// @ref LLP 1043.000 §3 D4 — the selected region carries flow-only changes.
 #[test]
 fn region_receipt_carries_resolved_exclusions_with_selected_frames() {
     let mut k = fixture();

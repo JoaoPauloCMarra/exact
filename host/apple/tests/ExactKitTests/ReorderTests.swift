@@ -31,7 +31,7 @@ final class ReorderRecorder: ReorderCalls {
     }
 }
 
-/// The grouped session's calls, recorded: the drop answers
+/// The grouped session's calls, recorded (LLP 1094 D5): the drop answers
 /// `holding` until the test says otherwise.
 final class ReorderGroupRecorder: ReorderGroupCalls {
     var log: [String] = []
@@ -67,7 +67,7 @@ final class ReorderGroupRecorder: ReorderGroupCalls {
 }
 
 final class ReorderTests: XCTestCase {
-    override class func setUp() { super.setUp(); ExactDrag.install() }
+    override class func setUp() { super.setUp(); ExactDrag.install() } // LLP 1047.001 D4
     func testStateKeepsTheSerialExactAndRefusesAMalformedOp() {
         let state = ReorderState(["token": "18446744073709551615", "list": 3, "wrapper": 9, "phase": "settling", "dispatched": true])
         XCTAssertEqual(state?.token, UInt64.max)

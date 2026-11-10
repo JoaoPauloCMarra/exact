@@ -1,11 +1,11 @@
 // Core Text measurement, shaping and paragraph geometry shared by headless
-// and presented sessions. ExactKit paints these same
+// and presented sessions (LLP 1126 D8, LLP 1008 §3). ExactKit paints these same
 // CTLines; it supplies paint attributes, controls and Markdown through
 // TextPresentation. The ink index and ellipsized lines remain here because
 // they are geometry over shaped text, with no drawing or platform view API.
 // One Core Text engine measures and paints: TextKit wrapped about 5× slower,
-// and measuring and painting with different engines costs correctness.
-// Each session owns its font catalog and caches; process-wide
+// and measuring and painting with different engines costs correctness (exact1 LLP 0418/0430).
+// Each session owns its font catalog and caches (LLP 1031 D12); process-wide
 // Core Text file registration belongs to FontRegistry.
 #if canImport(UIKit)
 import UIKit
@@ -22,7 +22,7 @@ import CoreText
 /// One styled run: what changes glyph metrics.
 extension Run {
     /// This run at `scale` of its size, in the kernel's f32 arithmetic
-    /// (`TextStyle::scaled`: a fitted paragraph).
+    /// (`TextStyle::scaled`, LLP 1116.001 D1.4: a fitted paragraph).
     package func scaled(_ scale: Float) -> Run {
         guard scale != 1 else { return self }
         var run = self
@@ -42,14 +42,14 @@ package struct Run: Hashable {
     package var lineHeight: CGFloat?
     package var letterSpacing: CGFloat
     /// CSS `font-variant-numeric` bits: 1 is `tabular-nums`, the face's own
-    /// `tnum` feature. It changes advances: a metric.
+    /// `tnum` feature. It changes advances: a metric (LLP 1053 G4).
     package var numeric: Int = 0
     /// CSS `font-variant-ligatures` as the kernel's `FontVariantLigatures`
     /// bits: the face's ligature features on or off. A metric.
     package var ligatures: Int = 0
-    /// CSS `font-stretch`, percent of normal width: a metric.
+    /// CSS `font-stretch`, percent of normal width: a metric (LLP 1019 D8).
     package var stretch: CGFloat = 100
-    /// CSS `font-variation-settings`: a metric.
+    /// CSS `font-variation-settings`: a metric (LLP 1019 D9).
     package var variations: [FontAxis] = []
     package var color: [Double]? = nil
     package var decoration: String = ""
@@ -71,18 +71,18 @@ package struct Run: Hashable {
     /// Its colour is one its author fixed: a literal or a `light-dark()`
     /// pair, not a role and not unsaid (`BatchValue.fixesInk`). Selected on
     /// the Mac in the light appearance, such text keeps its ink, as an
-    /// `NSTextView` leaves it. Paint, never metrics.
+    /// `NSTextView` leaves it (LLP 1115.000 D7.9). Paint, never metrics.
     package var fixedInk = false
     /// Its own `text-shadow` (offset x, y, blur, r g b a) when the
     /// paragraph's runs differ (`Spec.gatherShadows`), and its
-    /// `-webkit-text-stroke` (width, r g b a): paint.
+    /// `-webkit-text-stroke` (width, r g b a): paint (LLP 1077 D3, D7).
     package var shadow: [Double]? = nil
     package var stroke: [Double]? = nil
-    /// A Markdown list item's head indent and hung marker (`LineInsets`):
-    /// where its paragraph's lines start, so a metric.
+    /// A Markdown list item's head indent and hung marker (LLP 1045 D4,
+    /// `LineInsets`): where its paragraph's lines start, so a metric.
     package var indent: CGFloat = 0
     package var hang = false
-    /// An image in the paragraph's text: the box this run's
+    /// An image in the paragraph's text (LLP 1011.002): the box this run's
     /// U+FFFC reserves. A metric.
     package var box: InlineBox?
 
@@ -185,9 +185,9 @@ package struct Spec: Hashable {
     package var wraps: Bool { whiteSpace != 2 && whiteSpace != 4 }
     package var strut: Run? = nil // paragraph minimum line box, including smaller inline runs
     /// CSS `text-overflow: ellipsis` in a clipping box: paint ends an
-    /// over-wide line in "…"; never metrics.
+    /// over-wide line in "…"; never metrics (LLP 1053 G5).
     package var ellipsis = false
-    /// Collapsed → source offsets for the runs above.
+    /// Collapsed → source offsets for the runs above (LLP 1053 G5).
     package var source = SourceMap()
     /// CSS `text-indent` in points, the paragraph's first line only.
     package var textIndent: CGFloat = 0
@@ -199,7 +199,7 @@ package struct Spec: Hashable {
     /// The document language whose hyphenation points `auto` takes; empty
     /// for `none` and `manual`, which need none.
     package var language = ""
-    /// CSS `text-shadow` shared by every run: offset x, y and
+    /// CSS `text-shadow` (LLP 1077 D3) shared by every run: offset x, y and
     /// blur in points, then the colour's r g b a (0–255), resolved for the
     /// appearance. Nil when the runs' own differ (`gatherShadows`).
     package var shadow: [Double]? = nil
@@ -212,7 +212,7 @@ package struct Spec: Hashable {
     package var textBoxUnder = 0
     /// CSS `text-wrap-style: balance` (TextBreaks.swift, `balance`).
     package var balance = false
-    /// `-webkit-font-smoothing: antialiased`: the glyphs
+    /// `-webkit-font-smoothing: antialiased` (LLP 1019 D12): the glyphs
     /// paint with Core Graphics font smoothing off. Paint only.
     package var antialiased = false
     package init(runs: [Run], align: Int, lineClamp: Int, color: [Double], overflowWrap: Int = 0, direction: Int = 0, whiteSpace: Int = 0, strut: Run? = nil, ellipsis: Bool = false, source: SourceMap = SourceMap(), textIndent: CGFloat = 0, hyphens: Int = 0, language: String = "", shadow: [Double]? = nil, textBoxTrim: Int = 0, textBoxOver: Int = 0, textBoxUnder: Int = 0, balance: Bool = false) {
@@ -302,8 +302,8 @@ package struct SourceMap: Hashable {
 }
 
 /// Where a measured paragraph's lines break, as plain values: what
-/// measurement publishes and painting shapes its own lines from.
-/// `clamped`: a `line-clamp`'s last line, made again ending in "…"
+/// measurement publishes and painting shapes its own lines from (LLP 1072
+/// §8.1). `clamped`: a `line-clamp`'s last line, made again ending in "…"
 /// (`TextEngine.clampedLine`).
 package struct LineGeometry {
     package let ranges: [CFRange]
@@ -495,7 +495,7 @@ package enum FontRegistry {
     }
 }
 
-/// A session's text: two engines of one kind, never shared.
+/// A session's text: two engines of one kind, never shared (LLP 1072 §8.1).
 /// This one paints, on main; its `measurer` answers the kernel's
 /// measurements on the owner thread. Each keeps its own fonts, shaped text
 /// and caches; what painting reuses from measuring crosses as plain values
@@ -530,20 +530,21 @@ package final class TextEngine {
     /// text is held to two screens of them (`TextResidency.fitShaped`).
     package func fitShaped(visibleParagraphs: Int) { residency.fitShaped(visibleParagraphs: visibleParagraphs) }
     package var catalog: [Int: [RegisteredFace]] = [:]
-    /// Declared family names to their plan stacks, for Canvas 2D's `font`.
+    /// Declared family names to their plan stacks, for Canvas 2D's `font`
+    /// (LLP 1056 D8).
     private var familyStacks: [String: Int] = [:]
-    /// Canvas 2D's fonts and lines over this engine, which the
-    /// Surfaces module makes at first use.
+    /// Canvas 2D's fonts and lines over this engine (LLP 1056 D8), which the
+    /// Surfaces module makes at first use (LLP 1047.001 D4).
     package var canvasTextCache: AnyObject?
 
     /// A declared family's stack, by name.
     package func stack(named name: String) -> Int? { familyStacks[name] }
     /// Where a declared face's relative source resolves: the app's resolver
-    /// (the committed complete generation, else the root).
+    /// (LLP 1031 D1 — the committed complete generation, else the root).
     package let resolve: (String) -> URL?
     package let read: (String) -> Data?
     /// A face's file in the signed app bundle, when the generation is the
-    /// embedded one (the descriptor from the sandboxed URL).
+    /// embedded one (LLP 1019 D5: the descriptor from the sandboxed URL).
     /// CoreText maps it, so its pages stay clean; a delivered generation has
     /// none and binds the verified bytes instead.
     package let bundled: (String) -> URL?
@@ -597,7 +598,7 @@ package final class TextEngine {
         private let measurer: Checkpoint?
 
         fileprivate init(_ engine: TextEngine) {
-            // The measurer's state is the owner's.
+            // The measurer's state is the owner's (LLP 1072 §8.1).
             measurer = engine.measurer.map { m in Owner.shared.sync { Checkpoint(m) } }
             restorePresentation = engine.presentation?.checkpoint()
             pendingFonts = engine.pendingFonts
@@ -682,7 +683,7 @@ package final class TextEngine {
                 else {
                     // An installed family is its real faces, matched as declared
                     // ones are: traits on a family descriptor never chose the
-                    // italic or bold file (Georgia's, say).
+                    // italic or bold file (the reader diary's Georgia).
                     staged[stack, default: []] += Self.installedFaces(name)
                     continue
                 }
@@ -809,13 +810,13 @@ package final class TextEngine {
         }
         // A declared stack is drawn from its real descriptors (`font` above).
         // This trait resolver is only for a platform generic, never a shear
-        // applied to custom bytes.
+        // applied to custom bytes (LLP 1019 §5).
         if italic {
             #if canImport(UIKit)
             // Its bold trait kept: semibold and heavier would be regular italic.
             if let d = f.fontDescriptor.withSymbolicTraits(f.fontDescriptor.symbolicTraits.union(.traitItalic)) { f = UIFont(descriptor: d, size: size) }
             #else
-            // AppKit's font manager is main's: a variant first
+            // AppKit's font manager is main's (LLP 1072 §8.1): a variant first
             // met while the owner thread measures is resolved there.
             let upright = f
             f = Owner.shared.callMain { NSFontManager.shared.convert(upright, toHaveTrait: .italicFontMask) }
@@ -825,7 +826,7 @@ package final class TextEngine {
     }
 
     /// A color from the style dictionary's `[r,g,b,a]` bytes (sRGB), or
-    /// `textChannels`' nine, in the colour's own space.
+    /// `textChannels`' nine, in the colour's own space (LLP 1100 D2).
 
     package func attributed(_ spec: Spec) -> NSAttributedString {
         // The measure callback sees dense paragraphs as many small runs. Build
@@ -867,7 +868,7 @@ package final class TextEngine {
     /// CSS `tab-size: 8` (its initial value): a preserved tab advances to the
     /// next multiple of eight spaces of the paragraph's own font, letter
     /// spacing included, from the line's start. CoreText's default is twelve
-    /// stops 28 pt apart; Chrome's is this.
+    /// stops 28 pt apart; Chrome's is this (LLP 1053 G5).
     private func setTabStops(_ s: NSMutableAttributedString, run: Run) {
         TextEngine.setTabStops(s, interval: TextEngine.tabInterval(font(run) as CTFont, letterSpacing: run.letterSpacing))
     }
@@ -1009,7 +1010,7 @@ package final class TextEngine {
         return p
     }
 
-    // Only the view retains a flowed width.
+    // @ref LLP 1043.000 §3 D4–D7 — only the view retains a flowed width.
     package func paragraph(_ spec: Spec, width: CGFloat, flow: [TextFlowShape]) -> Paragraph {
         guard !flow.isEmpty else { return paragraph(spec, width: width) }
         let identity = residency.identity(spec)
@@ -1154,7 +1155,7 @@ package final class TextEngine {
                     let authored = spec.runs[index]
                     matched = true
                     if let b = authored.box {
-                        // An image's box, wherever its line breaks.
+                        // An image's box, wherever its line breaks (LLP 1011.002).
                         box.include(b.lineBox(font(authored) as CTFont, scale: lineScale))
                     } else if authored.lineHeight != nil {
                         // Explicit boxes use authored metrics; fallback ink
@@ -1415,12 +1416,12 @@ package final class TextEngine {
         }
         var runs = UnsafeBufferPointer(start: request.runs, count: request.count).map { r in
             var made = run(r)
-            // An image's box draws no ink of its own.
+            // An image's box draws no ink of its own (LLP 1011.002).
             if let box = InlineBox(r) { made.box = box; made.hidden = true }
             return made
         }
         // Markdown source arrives as one run; the archive expands it the
-        // same way the presenter paints it, and a text area's
+        // same way the presenter paints it (LLP 1045 D3), and a text area's
         // value as its editor lays it out, the kernel's caret line after it.
         if request.markup != 0, let source = runs.first {
             let utf8 = { (p: UnsafePointer<UInt8>?, n: Int) in p.map { String(decoding: UnsafeBufferPointer(start: $0, count: n), as: UTF8.self) } ?? "" }

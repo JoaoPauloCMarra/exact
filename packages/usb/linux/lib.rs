@@ -1,15 +1,15 @@
-//! @exact/usb on the Linux host: usbfs. The devices and their configurations come
+//! @exact/usb on the Linux host (LLP 1133.037 D13, D14, D21): usbfs. The devices and their configurations come
 //! from sysfs (`/sys/bus/usb/devices`); `open` opens the device's node, `/dev/bus/usb/BBB/DDD`, once per process and
-//! leases it to each connection; claims, configurations, alternates, resets and transfers are usbfs's ioctls
+//! leases it to each connection (D5); claims, configurations, alternates, resets and transfers are usbfs's ioctls
 //! (https://docs.kernel.org/driver-api/usb/usb.html).
 //!
 //! - Never `USBDEVFS_DISCONNECT`: an interface a kernel driver holds fails `NetworkError` at claim (`EBUSY`).
-//! - WebUSB's protected interface classes cannot be claimed (`SecurityError`).
+//! - WebUSB's protected interface classes cannot be claimed (`SecurityError`, D6).
 //! - A stall (`EPIPE`) answers `stall`; a node udev left unreadable reads `granted` false and fails
-//!   `NotAllowedError` at open.
+//!   `NotAllowedError` at open (D17).
 //! - Not built yet: transfers are the synchronous `USBDEVFS_CONTROL` and `USBDEVFS_BULK` on the loop's thread
 //!   (five seconds at most), where the text has URBs reaped by a thread with `USBDEVFS_DISCARDURB` for a call let go.
-//! - The painted presenter draws no chooser: `requestDevice` fails `NotSupportedError`.
+//! - The painted presenter draws no chooser (D2): `requestDevice` fails `NotSupportedError`.
 //!
 //! The package names only `exact_linux` and `std`, so the ioctls and their structures are declared here.
 

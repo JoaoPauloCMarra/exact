@@ -1,4 +1,4 @@
-//! Native button measurement before publication.
+//! Native button measurement before publication. LLP 1069.011.001 D11.
 use super::*;
 use crate::{ButtonMeasure, ButtonMeasureRequest, PropId};
 

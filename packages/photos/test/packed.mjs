@@ -1,4 +1,4 @@
-// The seam is public: @exact/photos
+// The seam is public (LLP 1133.001 D8, LLP 1133.019 stage 4): @exact/photos
 // packed as a registry would carry it (`bun pm pack`), installed into an app
 // `exact new` made outside the repo, builds unchanged, and its pictures are
 // drawn. The fixture package serving its own `img` scheme from outside the

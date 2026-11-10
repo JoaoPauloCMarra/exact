@@ -172,7 +172,7 @@ fn an_openrouter_turn_end_to_end() {
         "authorization: bearer {}",
         KEY.to_ascii_lowercase()
     )));
-    assert!(head.contains("http-referer: https://github.com/expo/exact"));
+    assert!(head.contains("http-referer: https://github.com/ccheever/exact2"));
     assert!(head.contains("x-title: exact harness"));
     let body: serde_json::Value = serde_json::from_str(body).unwrap();
     assert_eq!(body["model"], "anthropic/claude-sonnet-4.5");

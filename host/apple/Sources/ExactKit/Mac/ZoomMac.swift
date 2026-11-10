@@ -1,4 +1,4 @@
-// View ▸ Actual Size ⌘0, Zoom In ⌘+ and Zoom Out ⌘-, as
+// View ▸ Actual Size ⌘0, Zoom In ⌘+ and Zoom Out ⌘- (LLP 1021 §5.3.1), as
 // Safari, Preview and Electron's default menu have them, and the app's
 // `setPageZoom(factor)`, as Electron's `webContents.setZoomFactor`. A page
 // zoom, as Chromium's: the page's scroll view magnifies its document

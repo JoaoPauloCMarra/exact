@@ -1,4 +1,4 @@
-//! CSS animations in the engine: start on first sight,
+//! CSS animations in the engine (LLP 1055 D5, D7, D10): start on first sight,
 //! restart only when the name comes back, re-time in place, pause and resume,
 //! lowered hosts never sampled, and infinite animations never settle.
 
@@ -214,7 +214,7 @@ fn a_running_transition_wins_over_an_animation() {
     );
 }
 
-/// Held to the browser: values read with
+/// Held to the browser (LLP 1002 D2, LLP 1055 §8): values read with
 /// `getComputedStyle` in headless Chrome 154 from paused CSS animations at
 /// a set `currentTime` (local time, delay included), rounded as Chrome prints.
 #[test]
@@ -362,7 +362,7 @@ fn samples_match_chrome() {
     }
 }
 
-/// Colour animations interpolate premultiplied sRGB,
+/// Colour animations interpolate premultiplied sRGB (LLP 1055.000 D6),
 /// pinned to headless Chrome 154's `getComputedStyle` at a paused
 /// `currentTime` (alpha to Chrome's 8-bit rounding).
 #[test]
@@ -440,7 +440,7 @@ fn colour_samples_match_chrome() {
     }
 }
 
-// A drag timeline holds its consumer's
+// LLP 1057.003 D1: a drag timeline holds its consumer's
 // animation at the source's presented translate — the held value, then the
 // release spring — in the frame that presents it; the clock never moves it.
 #[test]
@@ -515,7 +515,7 @@ fn a_drag_timeline_holds_its_consumer_at_the_drag() {
     assert!(!e.timeline_bound(NODE));
 }
 
-// The range spans the delay and the active interval
+// LLP 1057.003 D2: the range spans the delay and the active interval
 // together, unclamped, on the horizontal axis, as a CSS scroll timeline maps
 // them (the parity fixture's `tl-` cases); an endless animation holds its
 // start; and a row that arrives after its binding is held at once, never
@@ -568,7 +568,7 @@ fn a_drag_timeline_spans_the_whole_animation_on_its_axis() {
     assert!(e.quiescent(), "and keeps no clock busy");
 }
 
-// What a name that finds no single source shows, as Chrome
+// LLP 1057.003 D4: what a name that finds no single source shows, as Chrome
 // 154 shows it (the phase 3 probe). Inactive (a scope with no declaring
 // descendant, or two): no effect, whatever the fill. Missing (no timeline in
 // scope): the time the animation has, where its source left it, or out of

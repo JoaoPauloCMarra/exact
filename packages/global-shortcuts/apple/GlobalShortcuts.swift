@@ -1,4 +1,4 @@
-// @exact/global-shortcuts on macOS: a chord registered
+// @exact/global-shortcuts on macOS (LLP 1133.025 D3): a chord registered
 // system-wide with Carbon's `RegisterEventHotKey` while something reads it,
 // and a modifier pair (`Shift+Shift`) heard by a `.flagsChanged` monitor.
 // The app's composed module calls it outside the agent; under the agent the
@@ -9,7 +9,7 @@
 // the readers of one session: the key window's if it reads the chord, else
 // the oldest reader's (the status session is the host's to know, so this
 // module does not prefer it). The RFC puts the one hot-key handler in the
-// host's package context; it lives here, process-wide, until a
+// host's package context (D11 item 2); it lives here, process-wide, until a
 // second package needs it.
 import AppKit
 import ApplicationServices

@@ -1,7 +1,7 @@
 #if os(iOS) || os(tvOS)
 import UIKit
 
-/// The layout regions UIKit lays out beside the safe area,
+/// The layout regions UIKit lays out beside the safe area (LLP 1123 D10),
 /// what `env(-exact-<region>-inset-<edge>)` resolves to: each region of the
 /// view controller's view that holds the session, as an inset per edge from
 /// the layout viewport. UIKit is the source: its margins are a controller's

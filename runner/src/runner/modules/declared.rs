@@ -1,5 +1,5 @@
-//! A send that answers nothing and the forms of the
-//! agent's substitute a module declares for it, so a third party's
+//! A send that answers nothing (LLP 1133.004 D5) and the forms of the
+//! agent's substitute a module declares for it (§7), so a third party's
 //! module is substituted as the standard library's is:
 //!
 //! - **Admission**, per name: `asks` holds a call under a `permission`
@@ -15,11 +15,11 @@
 //!   raises the declared event as an activation, and retires the entry.
 //!   `launch` names the launch flag that hands a relaunched app one entry.
 //! - **An app's list** (`"scope": "app"`), with a due time, the person's
-//!   choices and `update`: `app_list.rs`.
-//! - **Checks** every route holds a call to (`"checks"`):
+//!   choices and `update` (LLP 1133.030 D12 item 2): `app_list.rs`.
+//! - **Checks** every route holds a call to (`"checks"`, LLP 1133.030 D2):
 //!   exactly `one` of some options, an instant option `after` now, options
 //!   at least a `min`, options `nonEmpty`, each refused with its `error`.
-//! - **An entry that changes** (`update.rs`): a list's
+//! - **An entry that changes** (`update.rs`, LLP 1133.033 D21): a list's
 //!   `with`, `absent`, `stamp`, `refuse`, `ends` and `inCall`; `when`'s
 //!   alternatives, `set`'s value forms, and a choice's own `when`, `set`
 //!   and `event`, so a call is listed and its state moves.
@@ -108,7 +108,7 @@ enum Effect {
 }
 
 impl<D: DataSource> Runner<D> {
-    /// Share the host's app-wide state with this session (`"scope":
+    /// Share the host's app-wide state with this session (§7: `"scope":
     /// "app"`), before anything sets it.
     pub fn share_app_state(&mut self, state: AppState) {
         self.extensions.declared.app = Some(state);
@@ -166,8 +166,8 @@ impl<D: DataSource> Runner<D> {
         origin: CallOrigin,
     ) -> Effect {
         let declared = self.plan.str(row.declared).to_owned();
-        // The grants, origin and foreground every call is held to,
-        // before anything else; a grant matched by value
+        // The grants, origin and foreground every call is held to (LLP
+        // 1133.002 D14), before anything else; a grant matched by value
         // fails with its own code.
         if let Err((code, why)) = self.value_grants(row, &args) {
             self.log(format!("{}: refused, {why}", self.key(row)));
@@ -197,8 +197,8 @@ impl<D: DataSource> Runner<D> {
                 return Effect::Now(json!({ "error": "NotSupportedError" }));
             };
             // A data-code call settles from the implementation's reply, so
-            // it is the caller's work until the platform has the effect: a
-            // wake does not end on
+            // it is the caller's work until the platform has the effect (LLP
+            // 1133.004 D5; LLP 1133.021 §9 item 10): a wake does not end on
             // the handoff. A Contract statement answers nothing to wait for.
             let pending = reply.clone();
             handler(
@@ -378,14 +378,14 @@ impl<D: DataSource> Runner<D> {
             let state = list["state"].as_str().unwrap_or("listed").to_owned();
             let key = list["key"].as_str().unwrap_or_default().to_owned();
             let value = fields.get(&key).cloned().unwrap_or(Json::Null);
-            // A registration's kind keys it beside its key.
+            // A registration's kind keys it beside its key (LLP 1133.017 §10).
             let kind = list.get("kind").cloned();
             if let Some(kind) = &kind {
                 fields.insert("kind".into(), kind.clone());
             }
             self.due_fields(&sub["list"], &mut fields);
             // What an entry starts with beside its options (`initial`), and
-            // the most a list holds of its kind (`most`).
+            // the most a list holds of its kind (`most`, LLP 1133.021 D11).
             for (field, v) in list
                 .get("initial")
                 .and_then(Json::as_object)
@@ -540,7 +540,7 @@ impl<D: DataSource> Runner<D> {
 
     /// Permission `name` became `state`: its held effects are done
     /// (`granted`) or refused (`denied`). One whose own permission requires
-    /// another asks the next still `prompt` first.
+    /// another asks the next still `prompt` first (LLP 1133.030 D12 item 1).
     pub(super) fn settle_effects(&mut self, name: &str, state: &str) {
         if state == "prompt" {
             return;
@@ -642,7 +642,7 @@ impl<D: DataSource> Runner<D> {
                 out.insert(state.to_owned(), value.unwrap_or(Json::Null));
             }
         }
-        // The app's tools and the system's calls of them.
+        // The app's tools and the system's calls of them (LLP 1133.023 §10).
         if let Some(intents) = self.intents_state() {
             out.insert("intents".into(), intents);
         }
@@ -676,7 +676,7 @@ impl<D: DataSource> Runner<D> {
         }
     }
 
-    /// The agent's operations on listed entries: `{"op":"tap","ticket":ref}`
+    /// The agent's operations on listed entries (§7): `{"op":"tap","ticket":ref}`
     /// on one, or `{"op":"launchEntry","launch","entry"}`. `None` for any other.
     pub fn listed_op(&mut self, op: &str, request: &str) -> Option<Result<String, String>> {
         let v: Json = serde_json::from_str(request).ok()?;
@@ -740,7 +740,7 @@ impl<D: DataSource> Runner<D> {
         })
     }
 
-    /// `tap @ref` on a listed entry: what the platform's click would
+    /// `tap @ref` on a listed entry (§7): what the platform's click would
     /// do. `Ok` is the reply: `{"navigate": location}` for the host to open,
     /// or the event raised; the entry is retired either way.
     pub fn tap_listed(&mut self, reference: u64) -> Result<String, String> {
@@ -748,7 +748,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// [`Self::tap_listed`] with the person's choice, for an entry whose
-    /// list declares choices.
+    /// list declares choices (LLP 1133.030 D12 item 2).
     pub fn tap_listed_as(
         &mut self,
         reference: u64,
@@ -794,8 +794,8 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// A relaunched app's launch flag (`--notification '<entry>'`): the
-    /// entry as the agent's state printed it, delivered as its tap would be,
-    /// held until the session can hear it.
+    /// entry as the agent's state printed it, delivered as its tap would be
+    /// (LLP 1133.004 §7), held until the session can hear it.
     pub fn launch_listed(&mut self, launch: &str, entry: &str) -> Result<String, String> {
         let entry: Json =
             serde_json::from_str(entry).map_err(|e| format!("--{launch}: not JSON: {e}"))?;

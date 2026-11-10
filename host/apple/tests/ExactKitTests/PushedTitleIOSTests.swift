@@ -4,7 +4,7 @@ import XCTest
 @testable import ExactKit
 import ExactGroupedLists
 
-/// Over `scripts/fixtures/pushed-title.contract`: a pushed
+/// LLP 1115.000 D11.1 over `scripts/fixtures/pushed-title.contract`: a pushed
 /// screen whose title is large arrives with it expanded, as UIKit shows a
 /// pushed controller whose item says `.always` in a bar that prefers large
 /// titles. It collapses as its scroller scrolls and expands again at the top,
@@ -359,7 +359,7 @@ final class PushedTitleIOSTests: XCTestCase {
         XCTAssertEqual(short.below, 0, accuracy: 0.5, "its first line just below the bar")
         try back(nav, depth: 1)
 
-        // A content swap under a pushed, expanded bar: the
+        // A content swap under a pushed, expanded bar (LLP 1116.005 D4): the
         // scroller replaced in place, then a reason between the header and it.
         try tap("home-open-swap", in: nav, depth: 2)
         var swap = try state(nav, "swap", "swap-first", top: "swap-first-top")
@@ -444,7 +444,7 @@ final class PushedTitleIOSTests: XCTestCase {
     }
 
     /// Header search focuses after its push and commits its final edit and blur
-    /// once before native Back removes the route.
+    /// once before native Back removes the route (LLP 1035.001 D2).
     func testHeaderSearchFocusesAfterPushAndCommitsBeforeBack() throws {
         guard hostedWindowScene() != nil else {
             throw missing("scene", "native search editing needs the hosted app responder lifecycle")

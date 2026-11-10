@@ -1,10 +1,10 @@
-// The orientation lock's cases Beacons does not show: a sheet's lock over a
-// locked screen and over an unlocked one, an
+// @ref LLP 1133.029 §9.1 — the orientation lock's cases Beacons does not
+// show: a sheet's lock over a locked screen and over an unlocked one, an
 // unlocked sheet over a locked sheet over a locked page, a dialog over a
 // locked screen, nesting (a portrait root, a landscape screen pushed and
 // popped), a conflict, `any` releasing an ancestor, and a computed word
 // outside the table. The manifest says no `orientation`. The dialog also
-// holds `wakelock`, so closing it must release the wake lock.
+// holds `wakelock`, the case of QUEUE.md's closed-dialog wake lock.
 
 routes nav
   home "/"

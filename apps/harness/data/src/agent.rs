@@ -33,7 +33,7 @@ pub fn start(shared: &Arc<Shared>, prompt: &str) {
             ..Entry::default()
         });
         // The model is captured with the route: what this turn's entries
-        // say answered, even if the picker changes mid-turn.
+        // say answered, even if the picker changes mid-turn (P12).
         let model = s.model_label();
         match providers::route(&s.model, &s.provider(), &s.sources()) {
             Err(e) => {
@@ -92,7 +92,7 @@ fn run(shared: &Arc<Shared>, turn: &Turn, route: &Route) {
     }
 }
 
-/// Start the queued prompts, oldest first, while no turn runs.
+/// Start the queued prompts, oldest first, while no turn runs (P16).
 pub fn pump(shared: &Arc<Shared>) {
     loop {
         let next = {

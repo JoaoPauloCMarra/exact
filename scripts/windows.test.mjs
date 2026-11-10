@@ -657,7 +657,7 @@ test('paste sends the platform chord and a prevented keydown skips the clipboard
     return deliverClipboard({id:7, opts:{clipboard, ...(text == null ? {} : {text})}, evaluate, ask, call}).then(() => trace);
   };
 
-  // The chord's modifier is its own key first and last, as a keyboard's.
+  // The chord's modifier is its own key first and last, as a keyboard's (Charlie, 2026-10-07).
   const [name, code] = process.platform === 'darwin' ? ['Meta', 'MetaLeft'] : ['Control', 'ControlLeft'];
   const md = ['keyDown', name, code, 0, undefined], mu = ['keyUp', name, code, 0, undefined];
   expect(await drive({clipboard:'paste', text:'secret', prevented:true})).toEqual([

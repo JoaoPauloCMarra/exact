@@ -1,12 +1,12 @@
 //! CSS `background-image`: `none`, or up to four layers of
 //! `linear-gradient()`, `radial-gradient()` and `conic-gradient()` (CSS
-//! Images 3 §3, Images 4 §3.3).
+//! Images 3 §3, Images 4 §3.3). @ref LLP 1066, LLP 1077 D5
 //!
 //! Percentage stops are fixed up when parsed; length stops at paint time, so the row
 //! holds what every host paints and `css()` is canonical. Geometry depends on
 //! the box, so it is resolved by the host at paint time through
 //! [`Gradient::geometry`]; a colour may be a `light-dark()` pair, resolved per
-//! appearance like any colour row.
+//! appearance like any colour row (LLP 1034).
 
 pub use crate::style::wide::Lookup;
 use crate::style::{Color, ColorValue};
@@ -20,7 +20,7 @@ pub const MAX_STOPS: usize = 64;
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct BackgroundImage(Vec<Gradient>);
 
-/// Most layers one `background-image` takes.
+/// Most layers one `background-image` takes (LLP 1077 D5).
 pub const MAX_LAYERS: usize = 4;
 
 /// One gradient.
@@ -32,7 +32,7 @@ pub struct Gradient {
     pub kind: GradientKind,
     /// At least two; percentage-only lists are fixed up, lengths await the box.
     pub stops: Vec<Stop>,
-    /// `in <space> [<method> hue]`, as written.
+    /// `in <space> [<method> hue]`, as written (LLP 1100 D2).
     pub interpolation: Option<exact_color::Interpolation>,
 }
 
@@ -64,7 +64,7 @@ pub enum GradientKind {
     /// `linear-gradient()`: CSS degrees (0 is up, clockwise), or the magic
     /// corner of `to <corner>`, whose angle depends on the box.
     Linear(Direction),
-    /// `conic-gradient()`: stops around a centre, from an
+    /// `conic-gradient()` (LLP 1077 D5): stops around a centre, from an
     /// angle (CSS degrees: 0 is up, clockwise); stop positions are
     /// fractions of the turn.
     Conic {
@@ -163,10 +163,10 @@ pub enum Geometry {
 static LINKED: std::sync::OnceLock<fn(&str) -> Option<BackgroundImage>> =
     std::sync::OnceLock::new();
 
-/// Link `background-image`'s gradient grammar (linked by use):
+/// Link `background-image`'s gradient grammar (LLP 1047 D2, linked by use):
 /// ~3 KiB of a web core that none of Caltrain, RealWorld or the video player
 /// paints with. A web artifact links it when its plan binds the row, and a
-/// plan that binds it unlinked is refused at boot, so an unlinked
+/// plan that binds it unlinked is refused at boot (D6), so an unlinked
 /// artifact never parses one. Native artifacts and the compiler parse
 /// without it.
 pub fn link() {
@@ -213,7 +213,7 @@ impl BackgroundImage {
             .map(Self)
     }
 
-    /// The parse for `mask-image`: one layer only.
+    /// The parse for `mask-image` (LLP 1077 D2): one layer only.
     pub fn check_mask(css: &str) -> Result<Self, &'static str> {
         let image = Self::check(css)?;
         if image.0.len() > 1 {
@@ -238,7 +238,7 @@ impl BackgroundImage {
         self.text(ColorText::Css)
     }
 
-    /// The wire form: [`Self::css`], with every reference kept.
+    /// The wire form: [`Self::css`], with every reference kept (LLP 1095 D1).
     pub fn wire(&self) -> String {
         self.text(ColorText::Wire)
     }
@@ -418,7 +418,7 @@ impl Gradient {
     }
 
     /// [`resolved`](Self::resolved), each wide stop's colour read through
-    /// `wide` (a retained gradient's captured values);
+    /// `wide` (a retained gradient's captured values, LLP 1121 stage 4);
     /// any other colour as ever.
     pub fn resolved_with(&self, dark: bool, wide: Lookup<'_>) -> Vec<(f32, Color)> {
         if let Some(ramp) = self.interpolated_with(dark, wide) {
@@ -639,7 +639,7 @@ const EXPECTED: &str =
 /// The CSS image functions no host paints, by the text a value opens one
 /// with, and why: a browser would paint each, so every build refuses them
 /// where it can see them and the web target drops them at run time, as the
-/// native hosts do.
+/// native hosts do (studio diary R15).
 pub const REFUSED: [(&str, &str); 5] = [
     (
         "repeating-radial-gradient(",
@@ -694,7 +694,7 @@ fn hex(out: &mut String, c: Color) {
 
 /// Where a value's text goes: the browser, or the wire, which keeps a
 /// `-exact-platform-color()` as written so the reader interns the same reference
-///; the browser gets its web colour, else its fallback.
+/// (LLP 1095 D1); the browser gets its web colour, else its fallback.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ColorText {
     /// CSS a browser reads.
@@ -980,7 +980,7 @@ fn stops(args: &[&str], conic: bool) -> Result<Vec<Stop>, &'static str> {
         let color = ColorValue::parse_light_dark(&color)
             .or_else(|| Color::parse(&color).map(ColorValue::Fixed))
             .ok_or("a stop's colour is a CSS colour (hex, `rgb()`, `hsl()`, `hwb()`, a named colour, `transparent`) or `light-dark(a, b)`")?;
-        // Nothing converts a profile's colour, so nothing mixes it.
+        // LLP 1100 D3: nothing converts a profile's colour, so nothing mixes it.
         if matches!(color, ColorValue::Profiled(_)) {
             return Err("a color in a profile's space (`color(--name …)`) is drawn by the platform and never mixed: not in a gradient");
         }

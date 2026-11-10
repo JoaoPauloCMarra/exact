@@ -1,4 +1,4 @@
-//! The resolved scene — transforms composed as
+//! LLP 1055.000 D1, D4, D5: the resolved scene — transforms composed as
 //! Chrome composes them (pinned to Chrome 154's `getCTM()`), lengths against
 //! the nearest viewport, inheritance carried down, `display` and
 //! `visibility`, and an `svg`'s natural ratio from its view box.
@@ -328,7 +328,7 @@ fn inheritance_display_and_visibility() {
     );
 }
 
-/// A shape nobody filled is its text's colour, on every
+/// LLP 1115.000 D3.8: a shape nobody filled is its text's colour, on every
 /// host, where SVG's own initial `fill` is black: an icon with no `fill`
 /// was black on a dark page. `currentcolor` is each element's own `color`,
 /// so with none written anywhere it is the platform's text colour, which
@@ -425,7 +425,7 @@ fn a_view_box_is_the_natural_ratio() {
     assert_eq!(size(bare), (300.0, 150.0));
 }
 
-/// An animated inherited value on a `g` reaches the
+/// LLP 1055.000 D15: an animated inherited value on a `g` reaches the
 /// shapes that inherit it, and an animated `color` reaches `currentcolor`.
 #[test]
 fn animated_inherited_values_flow_to_descendants() {
@@ -495,7 +495,7 @@ fn animated_inherited_values_flow_to_descendants() {
     let _ = Property::Color;
 }
 
-/// A duplicate id resolves to the candidate
+/// LLP 1055.000 D3, D7, D8: a duplicate id resolves to the candidate
 /// nearest the reference; gradient defaults; `use` inherits from itself.
 #[test]
 fn references_resolve_nearest_and_instances_inherit_from_their_use() {
@@ -627,7 +627,7 @@ fn references_resolve_nearest_and_instances_inherit_from_their_use() {
     assert!(children[0].uid != dot as u64, "an instance has its own key");
 }
 
-/// A `clipPath` resolves to its children's union in the
+/// LLP 1055.000 D10: a `clipPath` resolves to its children's union in the
 /// clipped element's user space, `objectBoundingBox` mapped to its box, its
 /// own `clip-path` intersected; a missing one does not clip.
 #[test]
@@ -706,7 +706,7 @@ fn clips_resolve_in_the_element_space() {
     );
 }
 
-/// SVG text resolves into chunks of runs: a `tspan` with
+/// LLP 1055.000 D11: SVG text resolves into chunks of runs: a `tspan` with
 /// its own `y` starts a chunk, white space collapses, `dx` shifts a run.
 #[test]
 fn text_resolves_into_chunks_of_runs() {
@@ -763,7 +763,7 @@ fn text_resolves_into_chunks_of_runs() {
     );
 }
 
-// Markers at a path's vertices, oriented, scaled by the
+// LLP 1055.000 D9: markers at a path's vertices, oriented, scaled by the
 // stroke width, the reference point on the vertex; content inherits from
 // the marker, not the shape.
 #[test]
@@ -837,7 +837,7 @@ fn markers_sit_on_vertices() {
     );
 }
 
-/// A mask's region and content units against the
+/// LLP 1055.000 D7, D10: a mask's region and content units against the
 /// element's box, and a pattern's tile, content and template.
 #[test]
 fn masks_and_patterns_resolve_against_the_box() {
@@ -926,7 +926,7 @@ fn masks_and_patterns_resolve_against_the_box() {
     assert!(find(&s.items, mask).is_none() && find(&s.items, pat).is_none());
 }
 
-/// A filter's region against the box, primitive inputs by
+/// LLP 1055.000 D14: a filter's region against the box, primitive inputs by
 /// name, and a list whose functions chain after the reference.
 #[test]
 fn filters_resolve_into_one_chain() {
@@ -996,7 +996,7 @@ fn filters_resolve_into_one_chain() {
     assert!(f.region.0 <= 5.0 && f.region.2 >= 60.0, "{:?}", f.region);
 }
 
-/// Presented geometry moves the shape; blend and
+/// LLP 1055.000 D15, D19: presented geometry moves the shape; blend and
 /// isolation reach the item.
 #[test]
 fn geometry_moves_and_blends_resolve() {
@@ -1051,7 +1051,7 @@ fn geometry_moves_and_blends_resolve() {
     }
 }
 
-/// A path's `d` under `transition` moves through the
+/// LLP 1055.000 D15: a path's `d` under `transition` moves through the
 /// engine and the scene draws the path between (the issue #123 chevron);
 /// a pair with other commands changes at once, as Chrome shows it.
 #[test]

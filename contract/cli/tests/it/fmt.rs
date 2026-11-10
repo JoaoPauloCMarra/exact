@@ -1,4 +1,4 @@
-//! The formatter's three proofs over every corpus file and every app:
+//! LLP 1035.005 D1's three proofs over every corpus file and every app:
 //! `parse(fmt(src))` equals `parse(src)` up to spans and trivia,
 //! `fmt(fmt(src)) == fmt(src)`, and the compiled plans are byte-identical.
 //! No checked-in file is formatted: source snapshots use their original
@@ -329,7 +329,7 @@ fn test_steps_keep_their_viewport_and_signed_offsets() {
     assert_eq!(format(src).unwrap(), src);
 }
 
-/// A part's block (`::placeholder`) is not on its element's
+/// LLP 1104 D3: a part's block (`::placeholder`) is not on its element's
 /// head, so a long head breaks around it and the block stays as written.
 #[test]
 fn a_part_block_formats_in_place() {

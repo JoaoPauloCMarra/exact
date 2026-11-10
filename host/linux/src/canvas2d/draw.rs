@@ -1,7 +1,7 @@
-//! One paint pipeline for every drawing operation: the style's source (a
-//! colour, a gradient, a conic gradient, a pattern, an image), the shadow, and
-//! the compositing operator — the five clip-extent operators by a layer
-//! composited over the whole clip.
+//! One paint pipeline for every drawing operation (LLP 1056 §1, §3 stage
+//! 2): the style's source (a colour, a gradient, a conic gradient, a
+//! pattern, an image), the shadow, and the compositing operator — the five
+//! clip-extent operators by a layer composited over the whole clip.
 //!
 //! - **Shadows.** The shape is drawn into a transparent layer; its alpha is
 //!   blurred with σ = `shadowBlur`/2 in backing pixels, tinted with

@@ -1,4 +1,4 @@
-//! A popover in the terminal's top layer: laid out in the
+//! A popover in the terminal's top layer (stage 14 B): laid out in the
 //! viewport's block, painted by its insets in the grid, centred with none,
 //! anchored to the bottom inline, and not revealed through the page.
 use super::*;

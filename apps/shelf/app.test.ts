@@ -1,4 +1,4 @@
-// `bun test apps/shelf`: the recipe stays tell-free, and the data
+// `bun test apps/shelf`: the recipe stays tell-free (LLP 1115), and the data
 // module keeps its store's rules. The flows are app.test.contract's, driven on
 // the web and iOS.
 import { expect, test } from 'bun:test';
@@ -38,8 +38,8 @@ async function shelf() {
   return { call, book, reads: () => reads };
 }
 
-// Two edits that both wait on the first load (a tool's and the person's)
-// each apply to the newest state, so neither is lost.
+// Two edits that both wait on the first load (a tool's and the person's,
+// LLP 1133.023 §11) each apply to the newest state, so neither is lost.
 test('two edits waiting on the first load both land', async () => {
   const { call } = await shelf();
   await Promise.all([

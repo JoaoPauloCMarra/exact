@@ -1,4 +1,4 @@
-// Operators, printing and rounding: each expected value is what the same TypeScript evaluates to under Bun, except where a comment names a known difference.
+// LLP 1116.016 D3. Operators, printing and rounding: each expected value is what the same TypeScript evaluates to under Bun, except where a comment names LLP 1116.016 D1's row.
 component App
   derive c0 = 7 % -3
   derive c1 = -7 % 3
@@ -403,11 +403,11 @@ test "(123.456).toFixed(10)"
   expect state c103 == "123.4560000000"
 
 test "(1 / 0).toFixed(2)"
-  // Known difference: a formatting function prints "" for a non-finite number; TypeScript's is "Infinity".
+  // D1 row: a formatting function prints "" for a non-finite number (LLP 1054.000.003 D7); TypeScript's is "Infinity".
   expect state c104 == ""
 
 test "(0 / 0).toFixed(2)"
-  // Known difference: a formatting function prints "" for a non-finite number; TypeScript's is "NaN".
+  // D1 row: a formatting function prints "" for a non-finite number (LLP 1054.000.003 D7); TypeScript's is "NaN".
   expect state c105 == ""
 
 test "(1.23e-10).toFixed(2)"

@@ -13,7 +13,7 @@ impl Parser {
         self.component_body("component")
     }
 
-    /// A members file's `members Name` block: a
+    /// A members file's `members Name` block (LLP 1091.002 D2): a
     /// component's body holding members only.
     pub(super) fn members_block(&mut self) -> R<Component> {
         self.component_body("members")
@@ -73,7 +73,7 @@ impl Parser {
                             format!(
                                 "a `members` block holds `state`, `derive`, `resource`, \
                                  `mutation`, `action`, `task` and `sequence`; write `{w}` in \
-                                 the component's own body"
+                                 the component's own body (LLP 1091.002 D3)"
                             ),
                         );
                     }
@@ -115,7 +115,7 @@ impl Parser {
                                 c.injects = list;
                             }
                         }
-                        // One binding per line; a
+                        // @ref LLP 1035.005.000 D9 — one binding per line; a
                         // bare name provides the in-scope value of that name.
                         "provide" => {
                             self.next();
@@ -143,7 +143,7 @@ impl Parser {
                             self.newline()?;
                             c.slot = true;
                         }
-                        // The loader splices the
+                        // @ref LLP 1091.002 D1 — the loader splices the
                         // file's members in where this line stands.
                         "members" => {
                             let span = self.next().span;
@@ -165,7 +165,7 @@ impl Parser {
                             self.next();
                             self.newline()?;
                             c.view = self.block(|p| p.node())?;
-                            // `part=` is the anatomy's, never a node's.
+                            // `part=` is the anatomy's, never a node's (LLP 1139 D2).
                             c.anatomy.marks = crate::anatomy::take_marks(&mut c.view);
                         }
                         "state" | "derive" | "resource" | "mutation" | "action" | "task"
@@ -184,14 +184,14 @@ impl Parser {
                                 self.skip_member(start);
                             }
                         }
-                        // Accepted assertion text
+                        // @ref LLP 1035.005.000 D8 — accepted assertion text
                         // that compiled to nothing promised more than a comment.
                         "contract" => {
                             return self.err(
                                 "syntax-contract-block",
                                 "a component's `contract` section is not part of Contract: \
                                  write the assertions as `test` blocks in `app.test.contract` \
-                                ",
+                                 (LLP 1017 P7)",
                             )
                         }
                         "timer" | "interval" => {
@@ -254,7 +254,7 @@ impl Parser {
             "state" | "derive" => {
                 let t = self.next();
                 let name = self.named_ident(t.span)?;
-                // `state x: T = …` declares the type.
+                // @ref LLP 1116.015 D2 — `state x: T = …` declares the type.
                 let declared = if w == "state" && self.eat_punct(":") {
                     Some(self.type_expr()?)
                 } else {

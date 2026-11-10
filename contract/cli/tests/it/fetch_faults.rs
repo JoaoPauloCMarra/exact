@@ -1,5 +1,5 @@
-//! A driver fault fails a fetch by its URL's prefix, where a host would hand
-//! the request to its transport, as a refused connection does.
+//! LLP 1103: a driver fault fails a fetch by its URL's prefix, where a host
+//! would hand the request to its transport, as a refused connection does.
 
 use exact_kernel::Kernel;
 use exact_runner::failure::FailureCode;
@@ -132,7 +132,10 @@ fn a_stream_is_not_matched() {
         request,
         forced: false,
     };
-    assert!(r.fault_dispatch(&out).is_none(), "streams are deferred");
+    assert!(
+        r.fault_dispatch(&out).is_none(),
+        "streams are deferred (D5)"
+    );
     let plain = exact_runner::RequestOut {
         request: Request::get("https://api.test/recipes/2"),
         ..out
@@ -216,7 +219,7 @@ impl DataSource for Wide {
 
 #[test]
 fn state_says_why_a_resource_failed_until_it_answers() {
-    // A shape refusal is said in state, not only in the journal.
+    // App farm round 1: a shape refusal was only in the journal.
     let mut r = Runner::boot(
         contract::compile(APP).unwrap(),
         Wide,
@@ -291,9 +294,9 @@ const WHY: &str = "shape Line\n  text: string\ncomponent App\n  resource a = thr
 
 #[test]
 fn failure_names_each_class_and_says_why() {
-    // `failure(x)` is `none` until `x` fails, then its code,
+    // LLP 1109 D3: `failure(x)` is `none` until `x` fails, then its code,
     // the message `state.failed` shows and the reason its error named
-    // (empty unless it named one).
+    // (empty unless it named one: the author's ruling of 2026-10-12).
     let mut r = Runner::boot(
         contract::compile(WHY).unwrap(),
         Through,

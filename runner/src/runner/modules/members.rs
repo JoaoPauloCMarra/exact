@@ -1,4 +1,4 @@
-//! Members: an option another package declares on
+//! Members (LLP 1133.014 D10 item 1): an option another package declares on
 //! a ceremony's name, as `@exact/sign-in` adds FedCM's `identity` to
 //! `@exact/passkeys`' `get`. Its row in the plan names its owner
 //! (`memberOf`, `passkeys.get`) and its option (`member`); the owner's
@@ -7,7 +7,7 @@
 //! - **Admission.** An option that is neither the owner's (`takes`), a
 //!   platform's words, nor a bound member's fails `NotSupportedError`
 //!   naming it. An identity member (one with `providers`) is held to
-//!   FedCM's rules: one provider in `"active"` mode
+//!   FedCM's rules as D1 and D3 keep them: one provider in `"active"` mode
 //!   and none beside `publicKey`; `mediation` `"silent"` and
 //!   `"conditional"` refused; each `configURL` a provider the member names;
 //!   each `clientId` (and on Apple Google's `apple.clientId`) granted by the
@@ -17,7 +17,7 @@
 //!   target cannot offer passively, and fails `NetworkError` with none left.
 //! - **The ticket.** The owner's ticket (`credential`) names the member
 //!   under its option: the mode, and each provider's `configURL`,
-//!   `clientId`, the audience this target's token carries, the nonce,
+//!   `clientId`, the audience this target's token carries (D8), the nonce,
 //!   the fields and the token's form (`relay` on the web): what
 //!   `packages/sign-in/test/idp.mjs` signs over.
 //! - **Answers.** A typed answer of the member's `answer` type must name a
@@ -32,10 +32,10 @@ use super::ceremony::{at, target};
 use exact_plan::ModulesRow;
 use serde_json::{json, Value as Json};
 
-/// The words a platform adds under its own key.
+/// The words a platform adds under its own key (LLP 1133.002 D13).
 const PLATFORMS: [&str; 5] = ["apple", "android", "web", "windows", "linux"];
 
-/// FedCM's default disclosure.
+/// FedCM's default disclosure (D4).
 const FIELDS: [&str; 3] = ["name", "email", "picture"];
 
 /// An identity request's refusal: the error, and why.
@@ -95,7 +95,7 @@ impl<D: DataSource> Runner<D> {
         let sub = self.substitute(row);
         let takes = sub["takes"].as_array()?;
         if args["mediation"] == "silent" {
-            let why = "mediation \"silent\": no target can promise no UI";
+            let why = "mediation \"silent\": no target can promise no UI (LLP 1133.014 D1)";
             return Some(json!({ "error": "NotSupportedError", "message": why }));
         }
         let members = self.members_of(row);
@@ -227,7 +227,7 @@ impl<D: DataSource> Runner<D> {
                 }
             }
             let can = &status["providers"][name];
-            // Beside a passkey, a provider counts only where one sheet holds both.
+            // Beside a passkey, a provider counts only where one sheet holds both (D1).
             let shares = !with_key || can["withPublicKey"] == true;
             match (mode, can[mode] == true && shares) {
                 (_, true) => kept += 1,
@@ -237,7 +237,7 @@ impl<D: DataSource> Runner<D> {
                         target()
                     )))
                 }
-                // A passive request leaves out what this target cannot offer.
+                // A passive request leaves out what this target cannot offer (D3).
                 _ => {}
             }
         }
@@ -273,7 +273,7 @@ impl<D: DataSource> Runner<D> {
                 let status = self.member_status(&m, &sub);
                 let owner = self.substitute(row);
                 let with_key = owner["ceremony"].is_object() && self.owns_ceremony(&owner, args);
-                // A passive request leaves out what this target cannot offer.
+                // A passive request leaves out what this target cannot offer (D3).
                 let offered = |p: &&Json| {
                     let config = p["configURL"].as_str().unwrap_or_default();
                     let name = sub["providers"][config]["name"].as_str().unwrap_or_default();

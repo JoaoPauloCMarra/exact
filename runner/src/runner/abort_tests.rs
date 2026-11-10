@@ -144,7 +144,7 @@ fn a_request_a_refused_commit_retires_again_is_recorded_once() {
     assert_eq!(r.retired_fetches, [(1, held.ticket)]);
 }
 
-/// [`Held`], keeping each let-go POST as module work and
+/// [`Held`], keeping each let-go POST as module work (LLP 1146 D2) and
 /// hearing what each kept one's reply was.
 #[derive(Default)]
 struct Kept {

@@ -1,14 +1,14 @@
-//! The end of every commit resolves `rem` and `em`: a
+//! The end of every commit resolves `rem` and `em` (LLP 1069.000 D3): a
 //! root font size the host set since the last commit reaches the nodes that
 //! inherit it, and every row written in `rem`/`em` is given the pixels it now
 //! means — parents before children, so an `em` font size builds on its
-//! parent's resolved one, as CSS computes it. A hairline row is resolved with
-//! them, against the display's scale as the host last set it. Hosts that snap
-//! borders resolve their used widths against that scale before layout too,
-//! without changing the authored rows. A `rem` inside a calculation or a grid
-//! track is no row of its own: it resolves at layout against the environment's
-//! root font size, which a change here writes, restyling the nodes that hold
-//! one.
+//! parent's resolved one, as CSS computes it. A hairline row (LLP 1115.000
+//! D10.3) is resolved with them, against the display's scale as the host
+//! last set it. Hosts that snap borders resolve their used widths against
+//! that scale before layout too, without changing the authored rows. A
+//! `rem` inside a calculation or a grid track is no row of its own: it
+//! resolves at layout against the environment's root font size, which a
+//! change here writes, restyling the nodes that hold one.
 use super::*;
 use crate::generated::StyleProps;
 use crate::style::env::root_font_readers;
@@ -101,7 +101,7 @@ pub(crate) fn resolve(
             }
         }
     }
-    // Bold Text: every text is measured and drawn again
+    // Bold Text (LLP 1115.000 D12.3): every text is measured and drawn again
     // at the weight it now means.
     if let Some(on) = arena
         .bold_text_next

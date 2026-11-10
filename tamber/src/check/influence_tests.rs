@@ -1,5 +1,6 @@
 //! The dial influence found from each dial's readers is the influence a
-//! refold of every token finds: on the corpus, and on randomized designs.
+//! refold of every token finds (theme2's condition on the checker's work in
+//! dial counts): on the corpus, and on randomized designs.
 
 use crate::{Role, Vocab};
 use std::cell::Cell;

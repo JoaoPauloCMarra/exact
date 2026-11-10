@@ -1,4 +1,4 @@
-// The author's pressed paint, on both platforms: while the
+// The author's pressed paint (LLP 1061 D7), on both platforms: while the
 // press `pressed` tracks holds a node (the bit `-exact-press-scale` and the
 // platform's dim use), it shows its `-exact-press-opacity` as a fraction of
 // its own opacity, its active `background-color` in place of its
@@ -14,7 +14,7 @@
 // values kept beside them (`pressPainted`, which an engine write passes
 // through), and the change cross-fades.
 //
-// A node's `:active` lowers to these rows, its opacity to
+// A node's `:active` (LLP 1121 D8) lowers to these rows, its opacity to
 // `press_opacity_to`: an absolute target the press eases to from what shows
 // (a hover look's included), not a share. Its `:hover` and `:focus-visible`
 // looks stand in under the press while the pointer hovers it (the Mac) or its
@@ -70,20 +70,20 @@ struct WeakNodeView { weak var view: NodeView? }
 
 extension NodeView {
     /// Whether the text colour it shows is its own: written (a moving one
-    /// included, `style.rs`), or its own press's, not one an
-    /// ancestor's press lends it. A platform field takes no other.
+    /// included, `style.rs`), or its own press's (LLP 1061 D7), not one an
+    /// ancestor's press lends it. A platform field takes no other (LLP 1115 D4).
     var showsOwnTextColor: Bool {
         wrote("text_color") || (pressPaint.down && style["press_color"] != nil)
     }
     package var pressIsDown: Bool { holds("active") || pressed && !pressPaint.outside }
-    /// The rows of the pressed paint.
+    /// The rows of the pressed paint (LLP 1061 D7).
     static let pressPaintRows = ["press_opacity", "press_opacity_to", "press_background_color", "press_color"]
     /// Whether the author wrote this node's pressed look: a press scale or
     /// any of the paint (any value, 1 included). It replaces the platform's
-    /// unsaid press.
+    /// unsaid press (LLP 1115.000 D6).
     var authorsPress: Bool { style["press_scale"] != nil || Self.pressPaintRows.contains { style[$0] != nil } }
 
-    /// State look `state` (`hover`, `focus_visible`) style `s` carries.
+    /// State look `state` (`hover`, `focus_visible`) style `s` carries (LLP 1121 D8).
     static func look(_ state: String, in s: NodeStyle) -> NodeStyle? {
         guard case .object(let looks)? = s["looks"], case .object(let look)? = looks[state] else { return nil }
         return look
@@ -242,7 +242,7 @@ extension NodeView {
     /// text colour this one lent, where its own press writes none. Its own
     /// press `released` while the press that lent it colour still shows
     /// (held down, or its release waiting): that press colours it, and what
-    /// it coloured, again. (Not when the colours
+    /// it coloured, again (LLP 1061 D7, stage 9 G4). (Not when the colours
     /// are only reworked under a new style, nor as the view goes.)
     private func endInked(_ views: [NodeView], released: Bool = false) {
         let lender = released ? liveLender() : nil

@@ -1,4 +1,4 @@
-//! On Linux, colour and shadow transitions sampled by the engine and
+//! LLP 1062 on Linux: colour and shadow transitions sampled by the engine and
 //! painted over their rows; an appearance change (`setScheme`) re-targets a
 //! `light-dark()` colour and transitions it, as Chrome's computed value does.
 
@@ -84,7 +84,7 @@ fn a_colour_transition_paints_premultiplied_and_hands_its_row_back() {
         Some([255, 0, 0, 128])
     );
     assert_eq!(pixel(&mut p, 50, 30), [255, 127, 127, 255]);
-    // The outer two pixels are the focused button's ring;
+    // LLP 1104: the outer two pixels are the focused button's ring;
     // sample the inner half of this four-pixel border for its transition.
     assert_eq!(
         pixel(&mut p, 3, 20),
@@ -183,7 +183,8 @@ fn a_views_appearance_resolves_its_rows_and_rejoins_the_session_with_motion() {
 
 /// A `currentcolor` border paints the animating `color` frame by frame —
 /// never its own faster `border-color` transition, as its computed value
-/// stays `currentcolor` — and an inline run that inherits it follows.
+/// stays `currentcolor` — and an inline run that inherits it follows (LLP
+/// 1062 D5).
 #[test]
 fn currentcolor_borders_and_inline_runs_follow_an_animating_color() {
     pin_font();
@@ -234,7 +235,7 @@ component App
             .color(Property::Color),
         None
     );
-    // `box-shadow` keyframes, geometry and colour.
+    // `box-shadow` keyframes, geometry and colour (LLP 1062 D9).
     let glow = p.host().presented(view(&p, "glow")).colors;
     assert_eq!(
         glow.value(Property::BoxShadow),

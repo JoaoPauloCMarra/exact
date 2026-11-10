@@ -1,5 +1,5 @@
 // The web JS target's half of a differential run (`difftest --js`): each
-// case's program compiled by `exact-web-js` (host/web-js), the
+// case's program compiled by `exact-web-js` (host/web-js, LLP 1071), the
 // module bundled with its runtime and run headless under Bun, in a fresh VM
 // context per case over the render DOM (host/web-js/dom.js) given event
 // listeners, its data sources answered synchronously from the runner's
@@ -134,7 +134,7 @@ async function build(compiler, dir, file) {
 // ---------------------------------------------------------------- one case
 async function drive(code, c, hostSources) {
   const document = createDocument();
-  // The page's storage: the device's store at launch, which
+  // The page's storage: the device's store at launch (LLP 1116 D5), which
   // persist.js reads as a slot is made and writes after each commit.
   const kept = new Map(Object.entries(c.stored ?? {}));
   const localStorage = {
@@ -158,7 +158,7 @@ async function drive(code, c, hostSources) {
   });
   ctx.globalThis = ctx; ctx.self = ctx; ctx.window = ctx;
   // The JS target's `sin` and `cos` are the engine's `Math.sin` and
-  // `Math.cos`, held to the runner's libm by value, not by bits.
+  // `Math.cos`, held to the runner's libm by value, not by bits (LLP 1003 §7).
   // Here they answer the runner's bits for each input the harness computed
   // (`c.trig`, by `sin:`/`cos:` and the input's bits); an input it has not
   // computed yet is asked for (`asked`) and the case is driven again.
@@ -194,7 +194,7 @@ async function drive(code, c, hostSources) {
   let commands = [];
   const record = name => (...args) => { commands.push(`command ${name}${args.map(a => ' ' + untyped(a)).join('')}`); };
   for (const k of Object.keys(Hosts)) Hosts[k] = record(k);
-  // `setMode` is the runtime's own, as the runner's: no host is
+  // `setMode` is the runtime's own, as the runner's (LLP 1121 D5): no host is
   // told, and the window's mode selects presentation, which no line shows.
   Hosts.setMode = () => {};
   // The voice table's commands are the runtime's own (rt.js `Sounds.own`): they reach `Sounds.apply`
@@ -261,7 +261,7 @@ async function drive(code, c, hostSources) {
         out.push(`${['slot', 'derive', 'resource'][g]} ${name} ${typed(v, types[g][i])}`);
       });
     });
-    // Each queue's waiting sends, in declaration order, as observe.rs writes them.
+    // Each queue's waiting sends (LLP 1092 D12), in declaration order, as observe.rs writes them.
     for (const m of Mutations) if (m.queue) out.push(`queued ${m.name} ${m.wait?.length ?? 0}`);
     out.push(...commands); commands = [];
     walk(root, e => {

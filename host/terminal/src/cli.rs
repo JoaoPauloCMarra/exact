@@ -1,8 +1,8 @@
 //! The command line every terminal app shares:
 //! `<app> [entry.contract | app.plan] [--size COLSxROWS] [--inline | --fullscreen] [op …]`
 //!
-//! With no operations and a terminal on stdin and stdout, the app runs in it.
-//! Otherwise it runs headless at `--size` (80×24 by
+//! With no operations and a terminal on stdin and stdout, the app runs in it
+//! (LLP 1101 D10). Otherwise it runs headless at `--size` (80×24 by
 //! default) and performs the operations in order, the agent's verbs:
 //! `tap <testId>`, `type <testId> <text>`, `key <Name>`, `paste <text>`,
 //! `wheel <testId> <rows>`, `resize <COLSxROWS>`, `wait <ms>`,
@@ -16,7 +16,7 @@
 //! node's every row with its value, token and source, as `{"node":…}`).
 //!
 //! Headless, frames go into a terminal emulator, and those verbs read its
-//! screen: what a person would see. `tap`, `type` and
+//! screen: what a person would see (LLP 1101.002 §0 P1). `tap`, `type` and
 //! `wheel` refuse a node that is not on it.
 
 use crate::host::{Host, Key, Mode};
@@ -149,7 +149,7 @@ fn tree<D: DataSource>(host: &Host<D>) -> String {
 }
 
 /// Every displayed node's box, as one JSON line in the agent's shape (the
-/// `layout` verb, the terminal carrier's own, for
+/// `layout` verb, the terminal carrier's own: LLP 1121 stage 11 C, for
 /// scripts/scale-check.mjs): the viewport and each node's frame in the
 /// kernel's px, the cell (`COLUMN`×`ROW` px), each node's cells as the
 /// painter rounds them, its `testId`, and its corners' resolved radii in px
@@ -380,7 +380,7 @@ fn run_plan<D: DataSource>(
     }
     // Headless: the frames go into a terminal emulator, which the verbs
     // read. Keys stay armed: each verb is one read, against the screen as
-    // the last verb left it.
+    // the last verb left it (LLP 1101.002 §0 P1).
     let mut vt = crate::vt::Vt::new(&mut host);
     // Announcements land at the next wait.
     let woken = Arc::new(AtomicBool::new(true));

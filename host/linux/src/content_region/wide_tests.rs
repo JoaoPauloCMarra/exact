@@ -1,4 +1,4 @@
-//! A retained region's paint holds no wide colour id: it
+//! A retained region's paint holds no wide colour id (LLP 1121 stage 4): it
 //! is settled at capture, so it paints the same after the table has swept
 //! the colours it was captured from, and still flips scheme.
 use super::*;

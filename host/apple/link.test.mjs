@@ -22,7 +22,7 @@ test('package frameworks retain category-only dependencies and weak-link APIs ne
   assert.deepEqual(systemFrameworks(packages, 'macos', '14.0'), ['-Xlinker', '-weak_framework', '-Xlinker', 'FoundationModels']);
 });
 
-test('production links what the plan uses, the manifest names and the grants open; development all but the photo picker and sign-in sheet, which it links as production would', () => {
+test('production links what the plan uses, the manifest names and the grants open; development all but the photo picker and sign-in sheet, which it links as production would (LLP 1047.001.000 E, F)', () => {
   const graph = { uses: ['markdown', 'picker'] };
   assert.deepEqual(appleComposition(graph, true), { link: 'markdown,picker', products: ['ExactMarkdown'] });
   assert.deepEqual(appleComposition({ uses: [] }, true), { link: 'none', products: [] });
@@ -42,7 +42,7 @@ test('the load commands are read from the file, each slice of a universal one; a
 });
 
 
-test('ordinary app executables refuse WidgetKit, ActivityKit and SwiftUI, including versioned Mac frameworks', () => {
+test('ordinary app executables refuse WidgetKit, ActivityKit and SwiftUI, including versioned Mac frameworks (LLP 1126.001 WP16)', () => {
   const dir = mkdtempSync(join(tmpdir(), 'exact-activity-links-'));
   try {
     for (const framework of ['WidgetKit', 'ActivityKit', 'SwiftUI']) for (const version of ['', 'Versions/A/']) {
@@ -98,7 +98,7 @@ test('activity refusals allow native APNs without activities and still scan ever
 });
 
 // The async iOS step supplies its just-built bundle. Glue has no assembled iOS fixture yet.
-test.skipIf(!process.env.EXACT_ACTIVITY_APP)('the assembled app and extension refuse push-to-start symbols, remote registration and its background mode', async () => {
+test.skipIf(!process.env.EXACT_ACTIVITY_APP)('the assembled app and extension refuse push-to-start symbols, remote registration and its background mode (LLP 1126.001 WP9)', async () => {
   const { cpSync, readFileSync, readdirSync } = await import('node:fs');
   const { spawnSync } = await import('node:child_process');
   const { resolve } = await import('node:path');

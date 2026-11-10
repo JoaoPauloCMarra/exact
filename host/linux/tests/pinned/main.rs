@@ -13,7 +13,7 @@ mod text;
 mod tint;
 mod visual;
 
-/// The pinned font: the fixture directory and the family name
+/// The pinned font (LLP 1015 §3): the fixture directory and the family name
 /// the driver sets, so every number in these tests is the same on a Mac and
 /// on a builder. Set once, before the first engine is made; the environment
 /// is process-wide and every test in this binary wants the same values.

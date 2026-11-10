@@ -1,4 +1,4 @@
-"""Python reducer for the GPUI measurements. Run from the repository root; inputs and outputs are retained under target/s0."""
+"""Stage 0 Python reducer. Run from the repository root; inputs and outputs are retained under target/s0."""
 from pathlib import Path
 import xml.etree.ElementTree as E, json,datetime,subprocess,collections
 p=Path('target/s0/cpu-profiler');root=E.parse(p/'cpu.xml').getroot();ids={e.get('id'):e for e in root.iter() if e.get('id')}

@@ -1,4 +1,4 @@
-// What runs at an alarm's time and at a boot, with no session: the receivers and the ringing service
+// What runs at an alarm's time and at a boot, with no session (LLP 1133.030 D9): the receivers and the ringing service
 // the package's manifest fragment declares, `directBootAware`, reading only the device-protected records.
 package exact.alarms
 
@@ -75,7 +75,7 @@ internal object AlarmRing {
 
     /** The system alarm at `r.at`, a fresh anchor, the record, and a countdown's notification. */
     private fun arm(c: Context, r: AlarmRecord) {
-        // Revoked since: the system holds no alarm for the app, and the record goes with it.
+        // Revoked since (D7): the system holds no alarm for the app, and the record goes with it.
         if (Build.VERSION.SDK_INT >= 31 && !alarms(c).canScheduleExactAlarms()) return AlarmRecords.remove(c, r.tag)
         val at = r.at!!.toLong()
         r.anchorWall = System.currentTimeMillis()
@@ -86,7 +86,7 @@ internal object AlarmRing {
         if (r.state == "countdown") countdown(c, r)
     }
 
-    /** The ongoing notification while a countdown runs: its title and a chronometer counting down to the end. */
+    /** The ongoing notification while a countdown runs (D3): its title and a chronometer counting down to the end. */
     private fun countdown(c: Context, r: AlarmRecord) {
         channels(c)
         val n = Notification.Builder(c, COUNTDOWN).setSmallIcon(android.R.drawable.ic_lock_idle_alarm).setContentTitle(r.title)
@@ -109,7 +109,7 @@ internal object AlarmRing {
         AlarmRecords.remove(c, tag)
     }
 
-    /** `setAlarmClock` has no pause: the alarm is cancelled and `remaining` kept. */
+    /** `setAlarmClock` has no pause: the alarm is cancelled and `remaining` kept (D9). */
     fun pause(c: Context, r: AlarmRecord) {
         end(c, r)
         r.remaining = maxOf(0.0, r.at!! - corrected(c, r))
@@ -138,14 +138,14 @@ internal object AlarmRing {
         arm(c, r)
     }
 
-    /** Revocation, or a denial: every alarm the system holds ends; a paused countdown holds none and stays. */
+    /** Revocation, or a denial: every alarm the system holds ends; a paused countdown holds none and stays (D7). */
     fun dropHeld(c: Context) {
         for (r in AlarmRecords.all(c)) if (r.state != "paused") cancel(c, r.tag)
     }
 
     /**
      * Now on a countdown's own clock: the wall clock at the anchor plus the real time since, while the boot is the
-     * anchor's. A wall clock set since then moves a countdown's end by nothing; after a boot there is no anchor
+     * anchor's. A wall clock set since then moves a countdown's end by nothing (D9); after a boot there is no anchor
      * and the wall clock is all there is.
      */
     fun corrected(c: Context, r: AlarmRecord): Double {
@@ -156,7 +156,7 @@ internal object AlarmRing {
 
     /**
      * The wall clock moved (`TIME_SET`): each countdown's end moves by the change, so it still ends after the same real
-     * time; an `at` alarm keeps its instant.
+     * time; an `at` alarm keeps its instant (D9).
      */
     fun timeSet(c: Context) {
         for (r in AlarmRecords.all(c)) {
@@ -172,7 +172,7 @@ internal object AlarmRing {
 
     /**
      * A boot (or the package replaced): the system dropped every alarm, so each is set again from its record with a
-     * fresh anchor; one that fell due while the phone was off rings at once.
+     * fresh anchor; one that fell due while the phone was off rings at once (D9).
      */
     fun restore(c: Context) {
         val now = System.currentTimeMillis()
@@ -195,7 +195,7 @@ internal object AlarmRing {
             arm(c, r)
             return
         }
-        // No ring that cannot be stopped: with notifications off or the channel blocked there is no Stop.
+        // No ring that cannot be stopped (D7): with notifications off or the channel blocked there is no Stop.
         if (!notices(c).areNotificationsEnabled() || channelBlocked(c)) {
             cancel(c, tag)
             AlarmsModule.changed()
@@ -235,7 +235,7 @@ class AlarmReceiver : BroadcastReceiver() {
     }
 }
 
-/** A boot, the package replaced, the wall clock or the zone changed, the exact-alarm switch changed. */
+/** A boot, the package replaced, the wall clock or the zone changed, the exact-alarm switch changed (D9). */
 class AlarmSystemReceiver : BroadcastReceiver() {
     override fun onReceive(c: Context, intent: Intent) {
         when (intent.action) {
@@ -358,7 +358,7 @@ class AlarmService : Service() {
         }
     }
 
-    /** `systemExempted` from Android 14; below it the service starts with no type, as `setAlarmClock` allows. */
+    /** `systemExempted` from Android 14; below it the service starts with no type, as `setAlarmClock` allows (D9). */
     private fun foreground(code: Int, n: Notification) {
         if (Build.VERSION.SDK_INT >= 34) startForeground(code, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED)
         else startForeground(code, n)

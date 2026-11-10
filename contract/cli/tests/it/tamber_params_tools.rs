@@ -1,5 +1,6 @@
-//! What the tools say of a param: by its full name, at its declaration, and
-//! folded with the design wherever the design is read.
+//! @ref LLP 1121 D15 (stage 7 A, review round 2): what the tools say of a
+//! param: by its full name, at its declaration, and folded with the design
+//! wherever the design is read.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -397,11 +398,12 @@ fn linked(root: &std::path::Path, dir: &str, manifest: &str) -> std::path::PathB
     app_dir.join("app.contract")
 }
 
-/// A package outside the app with no `name`: its place from the app would spell
-/// this machine's directories in every identity, so the build refuses it and
-/// asks for a name, saying the package as its `use` names it, never its path. A
-/// directory above a linked package's root is none of its: an outer
-/// `package.json` with a name does not name it.
+/// A package outside the app with no `name` (theme2, the path fix): its
+/// place from the app would spell this machine's directories in every
+/// identity, so the build refuses it and asks for a name, saying the
+/// package as its `use` names it, never its path. A directory above a
+/// linked package's root is none of its: an outer `package.json` with a
+/// name does not name it.
 #[cfg(unix)]
 #[test]
 fn an_unnamed_package_outside_the_app_is_refused_even_inside_a_named_directory() {

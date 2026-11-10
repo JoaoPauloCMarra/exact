@@ -1,4 +1,4 @@
-//! Web admission of the fixed photo pair.
+//! Web admission of the fixed photo pair. @ref LLP 1041 §8.5 / LLP 1002 D4.
 //!
 //! Frozen wire v2 is EXACTLY 120 LE bytes: version/op u32 at 0/4;
 //! runtime/handle/target/clip/geometry-sequence u64 at 8/16/24/32/40;
@@ -7,7 +7,7 @@
 //! Ops 10 geometry=[bw,bh,pw,ph,0,0], 11 begin=[x,y,s,0,0,0],
 //! 12 move=[x,y,s,0,0,0], 13 action=[x,y,s,0,0,0], 14 invalidate=[0;6].
 //! Op 13's velocities are the engine's own, measured over every value the
-//! pair was given; the reply carries them as `velocity`.
+//! pair was given (LLP 1057.001 §3); the reply carries them as `velocity`.
 //! Ops 10/11/14 require zero token fields. Every unused value must equal zero
 //! (+0/-0 accepted; NaN/nonzero refused). Single-property v1 ends remain ends.
 //! Stale identity/sequence/tokens refuse before incoming values/time; malformed
@@ -391,7 +391,7 @@ impl<D: DataSource> Host<D> {
             .action_fired = true;
         self.now_ms = input.now_ms;
         // The release velocity is the engine's, over every value the pair was
-        // given; finite samples give a finite slope.
+        // given (LLP 1057.001 §3); finite samples give a finite slope.
         let now_s = input.now_ms / 1000.0;
         let [translate, scale] = [active.held.translate(), active.held.scale()].map(|s| {
             self.springs
@@ -555,7 +555,7 @@ impl<D: DataSource> Host<D> {
             for (target, view) in valid {
                 if target != owner && self.transform_drags.reported_targets.insert(target) {
                     self.log(&format!(
-                        "transformDragFor: target view #{view} passed over for owner view #{owner_view}; one owner (first valid, never stolen)"
+                        "transformDragFor: target view #{view} passed over for owner view #{owner_view}; one owner (first valid, never stolen; LLP 1071)"
                     ));
                 }
             }

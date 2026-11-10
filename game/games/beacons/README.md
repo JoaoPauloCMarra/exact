@@ -28,4 +28,5 @@ Save and FreshGame modes, and `bun game/prove.mjs beacons --repin` regenerates t
 tick/save pins after every mode and host agrees. The proof writes its transcript,
 snapshots, saves, cleanup receipt and `beacons.png` under `artifacts/`.
 
-No headed feel or frame-pacing measurements have been made.
+Evidence and limitations: [builder diary](../../diaries/001-beacons-exact-r5.md).
+No headed feel or frame-pacing measurements were made by this builder.

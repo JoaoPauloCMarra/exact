@@ -36,14 +36,14 @@ Build: `bun host/apple/build.mjs shelf-apple --run`.
    minute while macOS compiles the recognizer for this Mac's Neural Engine;
    later reads take under a second.
 
-## Android phone (not built)
+## Android phone (stage 4, not built)
 
-The Kotlin implementation over ML Kit is not built. When it lands: as
-the iPhone steps on a Pixel, plus a Devanagari, Chinese, Japanese or
-Korean page, which needs that script's model (`script` on
-`createTextDetector`).
+The Kotlin implementation over ML Kit is not built (LLP 1133.027 §12, stage
+4's as-built note). When it lands: as the iPhone steps on a Pixel, plus a
+Devanagari, Chinese, Japanese or Korean page, which needs that script's
+model (`script` on `createTextDetector`).
 
 ## The web
 
-No browser reads text: Shelf shows no Add Quote from Photo in Chrome,
+No browser reads text (D18): Shelf shows no Add Quote from Photo in Chrome,
 Safari or Firefox.

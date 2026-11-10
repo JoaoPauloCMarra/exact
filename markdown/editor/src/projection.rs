@@ -37,7 +37,7 @@ pub enum Deco {
 #[derive(Debug, Default)]
 pub(crate) struct Projection {
     pub runs: Vec<Run>,
-    /// The inline atoms' source ranges, sorted: each drawn
+    /// The inline atoms' source ranges, sorted (LLP 1045.000 D5): each drawn
     /// as one box, its source hidden. Never part of a cluster: a hidden
     /// cluster beside one keeps its own caret positions.
     pub atoms: Vec<(u32, u32)>,
@@ -260,7 +260,7 @@ impl Projection {
 
     /// Where a caret at `p` sits: before inline openers and closers, so it
     /// takes the preceding style; after line prefixes and link closers; at
-    /// an atom's end when it is inside the atom.
+    /// an atom's end when it is inside the atom (LLP 1045.000 D5).
     pub fn canonical(&self, p: u32) -> u32 {
         if let Some(a) = self.inside_atom(p) {
             return a.1;

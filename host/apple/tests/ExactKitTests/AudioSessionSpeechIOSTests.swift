@@ -3,7 +3,7 @@ import AVFoundation
 import XCTest
 @testable import ExactKit
 
-/// Speech claims on the audio-session owner. The session
+/// LLP 1133.012 D4: speech claims on the audio-session owner. The session
 /// takes the strongest spoken type held, changes only while no other I/O
 /// runs, and is given up when the last speech claim goes.
 final class AudioSessionSpeechIOSTests: XCTestCase {

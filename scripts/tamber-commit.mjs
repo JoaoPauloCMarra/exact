@@ -1,4 +1,4 @@
-// The design server's `commit`:
+// The design server's `commit` (LLP 1122 D9, LLP 1121 stage 3 commit 5):
 // the files this session wrote, committed to git with a message naming each
 // edit and its author, through a temporary index, never pushed.
 //
@@ -53,7 +53,7 @@ export function designSession(dir) {
     // refuses it.
     const named = [...new Set(paths)].filter(path => typeof path === 'string' && !path.includes('\0'));
     // A file the session wrote whose text is HEAD's again (its edits committed by hand, or undone), with no write of
-    // it in flight, is written afresh: a new baseline, its old refusals gone. One whose
+    // it in flight, is written afresh: a new baseline, its old refusals gone (the third hands-on pass's #3). One whose
     // edits are still pending (it differs from HEAD) keeps its record and any refusal.
     const again = named.filter(path => files.has(path) && !pending.has(path) && !inflight.has(path));
     const atHeadAgain = again.length ? read(again) : [];

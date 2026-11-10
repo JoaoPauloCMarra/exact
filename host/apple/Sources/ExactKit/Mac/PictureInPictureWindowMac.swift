@@ -1,4 +1,4 @@
-// Exact's own floating window for an image's pictures, as
+// @ref LLP 1042 §9.1. Exact's own floating window for an image's pictures, as
 // `requestPictureInPicture(id, presentation=…)` asks for it in place of AVKit's
 // panel. Both kinds are non-activating panels at the floating level, on every
 // Space and over full-screen apps, locked to the picture's aspect and

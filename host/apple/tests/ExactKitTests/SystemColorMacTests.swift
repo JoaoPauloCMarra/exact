@@ -11,7 +11,7 @@ extension NSColor {
     @objc class func exactTestUndocumentedColor() -> NSColor { .systemRed }
 }
 
-/// On AppKit, a system colour change (the accent) makes every
+/// LLP 1095 D5 on AppKit: a system colour change (the accent) makes every
 /// resolution again, and what was resolved into a symbol with it.
 final class SystemColorMacTests: XCTestCase {
     func testAColourNamedMethodReturningNoObjectIsTheFallback() {

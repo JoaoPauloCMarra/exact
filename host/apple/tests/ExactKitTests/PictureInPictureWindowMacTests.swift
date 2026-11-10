@@ -1,4 +1,4 @@
-// Exact's own picture-in-picture window: a floating,
+// @ref LLP 1042 §9.1 — Exact's own picture-in-picture window: a floating,
 // non-activating panel on every Space, locked to the picture's aspect; the
 // browser's kind at the bottom right with its controls shown on hover, placed
 // as Chromium places it and following the next image that asks, the titled

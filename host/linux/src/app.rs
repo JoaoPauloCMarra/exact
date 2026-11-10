@@ -2,12 +2,14 @@
 //! run — the agent API over stdio, a headless frame (a smoke run or a
 //! screenshot), or the display.
 //!
-//! - `EXACT_AGENT=1` — the agent API on stdio; no display.
+//! @ref LLP 1015 §5–§6
+//!
+//! - `EXACT_AGENT=1` — the agent API (LLP 1012) on stdio; no display.
 //! - `EXACT_SMOKE=1` — boot, paint one frame, print the phases, exit.
 //! - `EXACT_SHOT=<png>` — boot, paint one frame, write it, exit.
 //! - `EXACT_PLAN=<file>` — boot that plan instead of the baked one.
 //! - `EXACT_DEV_PLAN=<file>` — restart from it whenever it changes, state
-//!   carried (the dev loop; display mode).
+//!   carried (the dev loop, LLP 1007 §6; display mode).
 //! - Either, as an `http(s)://` URL — the app URL: the envelope resolved
 //!   and the plan plus selected Rust pair fetched, verified, and booted
 //!   (`fetch.rs`). `EXACT_DEV_PLAN` URLs continue polling after first pixel;
@@ -16,9 +18,9 @@
 //! - `EXACT_SIZE=WxH` — the headless viewport, points (420×860 otherwise).
 //! - `EXACT_SCALE=n` — device pixels per point (1 otherwise): what the frame is
 //!   drawn at and what the kernel is told the display's scale is, so a
-//!   hairline is one of those pixels.
+//!   hairline is one of those pixels (LLP 1115.000 D10.3).
 //! - `EXACT_PAINTER=auto|gpu|ink|cpu` — overrides the app's baked painter choice.
-//!   Windows defaults to ink for apps, CPU for declared games; Linux uses auto.
+//!   Windows defaults to ink for apps, CPU for declared games; Linux uses auto (LLP 1149 D12).
 //! - `EXACT_CACHE=<dir>` — where the GPU's pipeline cache lives (`~/.cache/exact`).
 //! - `EXACT_DRM=<card>` — the KMS device (`/dev/dri/card0` otherwise).
 //! - `EXACT_VNC=1|<addr:port>` — serve the screen over VNC, the client's
@@ -33,7 +35,7 @@
 //!   under `EXACT_AGENT=1` a fresh temporary one (`update.rs`).
 //!
 //! With neither `EXACT_PLAN` nor `EXACT_DEV_PLAN`, the boot is the update
-//! store's selection: the selected entry's plan, else the
+//! store's selection (LLP 1026 D9): the selected entry's plan, else the
 //! baked one; an entry refused at boot boots the baked plan in the same run.
 
 use crate::delivery::Store;
@@ -44,7 +46,7 @@ use exact_runner::DataSource;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-/// The first non-flag path or scheme argument.
+/// The first non-flag path or scheme argument. @ref LLP 1038 D8
 pub fn launch_location(args: impl IntoIterator<Item = String>) -> String {
     args.into_iter()
         .find(|arg| !arg.starts_with('-'))
@@ -116,7 +118,7 @@ pub struct Config {
     pub card: String,
     /// Serve the screen over VNC at this address (`1` is `0.0.0.0:5900`).
     pub vnc: Option<String>,
-    /// The archive's `compat.json` as the binary carries it:
+    /// The archive's `compat.json` (LLP 1030 D3a) as the binary carries it:
     /// what the `delivery` resource and `state.delivery` answer from.
     pub compat: String,
     /// Whether the environment named the plan (a URL, `EXACT_PLAN`): the
@@ -131,10 +133,11 @@ pub struct Config {
     /// The update store, opened before the boot it selects (`run`); the
     /// presenter takes it at boot.
     pub updates: Option<Box<dyn Store>>,
-    /// The app's hatches: only their type, until
+    /// The app's hatches (LLP 1075.003.000.001 §5): only their type, until
     /// the presenter makes the value after first pixel.
     pub hatches: Option<crate::hatches::Install>,
-    /// The packages the app's build composed, bound at boot.
+    /// The packages the app's build composed (LLP 1133.022 D10 item 5),
+    /// bound at boot.
     pub packages: Vec<crate::package::Entry>,
     /// Where the display's live clock reads zero, when one will own time:
     /// a fresh boot starts the runner's clock at its reading then, so a
@@ -223,7 +226,7 @@ impl Config {
     }
 
     /// Read the environment; `baked` is the plan compiled into the binary
-    /// and `compat` its `compat.json`.
+    /// and `compat` its `compat.json` (LLP 1030 D3a).
     pub fn from_env(baked: &[u8], compat: &str) -> Config {
         Self::from_env_lent(baked, None, compat)
     }
@@ -236,7 +239,7 @@ impl Config {
     }
 
     fn from_env_lent(baked: &[u8], lent: Option<&'static [u8]>, compat: &str) -> Config {
-        // Drop development overrides before reading plans, storage or launch mode.
+        // Drop development overrides before reading plans, storage or launch mode (LLP 1069.007 D2).
         prepare_environment(compat);
         let env = |k: &str| std::env::var(k).ok().filter(|v| !v.is_empty());
         let exact_plan = env("EXACT_PLAN");
@@ -313,7 +316,7 @@ impl Config {
         Config {
             content_region: None,
             // An argument, else `EXACT_LAUNCH_URL`: the Android reader's launching intent's data has no
-            // command line to arrive by.
+            // command line to arrive by (LLP 1133.023 D15 item 3).
             launch: launch_location(std::env::args().skip(1).chain(env("EXACT_LAUNCH_URL"))),
             plan,
             fallback_plan,
@@ -355,7 +358,7 @@ impl Config {
     }
 
     /// Attach an app-supplied delivery adapter and pin its selection unless
-    /// a dev locator explicitly selected the plan.
+    /// a dev locator explicitly selected the plan (LLP 1030 D4).
     pub fn use_updates(&mut self, mut updates: Box<dyn Store>, baked: &[u8]) {
         if !self.explicit {
             if let Some(prepared) = updates.prepare_selected() {
@@ -382,7 +385,7 @@ impl Config {
 /// app URL or is an update entry's. Transport, length, and hash refusals
 /// already take this path in `Config::from_env`; decode and runner refusals
 /// belong to the same gate — for an entry, the refusal stands in the store's
-/// record and entry zero boots. The presenter takes the
+/// record and entry zero boots (LLP 1026 D11). The presenter takes the
 /// update store here, so its facts are in the first frame.
 pub fn boot_presenter<D: DataSource + Default>(
     config: &mut Config,
@@ -396,7 +399,7 @@ pub fn boot_presenter<D: DataSource + Default>(
 thread_local! {
     /// Whether the agent drives the presenter this thread boots: the presenter
     /// is the agent's from its first commit, so a request its boot makes (a
-    /// sign-in, a share) is held as a later one is.
+    /// sign-in, a share) is held as a later one is (LLP 1146 D4).
     pub(crate) static AGENT_BOOT: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 }
 
@@ -419,7 +422,7 @@ pub(crate) fn boot_phase(name: &'static core::ffi::CStr) {
 }
 
 /// Load fonts and lay out while the carrier's device opens. Readiness is bounded
-/// by the boot budget; a late device takes over after first pixel.
+/// by the boot budget; a late device takes over after first pixel. @ref LLP 1149 D6.3.
 #[cfg(windows)]
 pub fn boot_presenter_with_device<D: DataSource + Default>(
     config: &mut Config,
@@ -505,7 +508,7 @@ pub(crate) fn boot_presenter_with_painter<D: DataSource + Default>(
             crate::zone::local_offset_minutes(),
         )
     });
-    // The driver's cold share: its location and tokens.
+    // @ref LLP 1133.024 D9 — the driver's cold share: its location and tokens.
     let cold_share = crate::picker::cold_share(place.seed);
     if let Some((location, _)) = &cold_share {
         config.launch = location.clone();
@@ -536,12 +539,12 @@ pub(crate) fn boot_presenter_with_painter<D: DataSource + Default>(
         if let Some(e) = booted.0.set_place(&place) {
             eprintln!("exact: {e}");
         }
-        // The date at the clock's zero, the boot's (above); under the agent,
-        // the drive's epoch.
+        // @ref LLP 1027.000.000 — the date at the clock's zero, the boot's
+        // (above); under the agent, the drive's epoch (D3).
         if let Some(e) = booted.0.set_time(epoch_at_zero, utc_offset) {
             eprintln!("exact: {e}");
         }
-        // This host has no share sheet and no
+        // @ref LLP 1069.000 D2, D6 — this host has no share sheet and no
         // document picker; under the agent the drive's substitute answers
         // each, files and pictures in a share too, as on every host.
         if std::env::var("EXACT_AGENT").as_deref() == Ok("1") {
@@ -679,12 +682,12 @@ pub fn run_empty(baked: &[u8], compat: &str) -> i32 {
 }
 
 /// Run the app: the process's exit code. `compat` is the binary's
-/// `compat.json`, which the `delivery` resource answers from.
+/// `compat.json` (LLP 1030 D3a), which the `delivery` resource answers from.
 pub fn run<D: DataSource + Default>(baked: &[u8], compat: &str) -> i32 {
     run_composed::<D>(baked, compat, Composed::default())
 }
 
-/// [`run`] with the app's hatches: `H` is the one
+/// [`run`] with the app's hatches (LLP 1075.003.000.001 §5): `H` is the one
 /// type its `modules/linux` names, and `words` the hatch words `app.json`
 /// gives this platform. Nothing of `H` is made before the first frame is
 /// presented.
@@ -735,8 +738,8 @@ pub fn run_with_content_region<D: DataSource + Default>(
 
 static ROW_REUSE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-/// Whether the runners this process boots rebind list rows to new items:
-/// `EXACT_ROW_REUSE` (`1` on, `0` off), else `default`. This
+/// Whether the runners this process boots rebind list rows to new items
+/// (LLP 1078): `EXACT_ROW_REUSE` (`1` on, `0` off), else `default`. This
 /// host resets what it keeps by view for every renewed one.
 pub(crate) fn row_reuse_from_env(default: bool) {
     let on = std::env::var("EXACT_ROW_REUSE").map_or(default, |v| v != "0");
@@ -799,6 +802,7 @@ fn development_variable(name: &str) -> bool {
 }
 
 /// A production bake takes executable content only from its bake or signed updates.
+/// @ref LLP 1069.007 D2; LLP 1075.003.000.001 §2.6
 fn ignore_development_variables() {
     let named: Vec<_> = std::env::vars_os()
         .filter_map(|(k, _)| k.to_str().map(str::to_owned))
@@ -807,7 +811,10 @@ fn ignore_development_variables() {
     if named.is_empty() {
         return;
     }
-    eprintln!("exact: a production build ignores {}", named.join(", "));
+    eprintln!(
+        "exact: a production build ignores {} (LLP 1069.007 D2)",
+        named.join(", ")
+    );
     for k in named {
         std::env::remove_var(k);
     }
@@ -823,19 +830,19 @@ pub fn print_baked_receipt(compat: &str) -> bool {
     }
 }
 
-/// Say that this process paints the neutral look, before
+/// Say that this process paints the neutral look (LLP 1115.000 D17), before
 /// it boots a plan. Where Exact paints the controls and there is no platform
 /// toolkit under it (the Linux desktop, a headless run, Windows) the look is
 /// the web's neutral one: the role table's neutral column, and the look's
 /// rows of the schema's `metrics`, which the kernel sizes an unsaid control
 /// by and the painter draws it from. Android's reader does not call this: it
-/// has a platform, and paints Material.
+/// has a platform, and paints Material (LLP 1115.001).
 pub fn show_neutral_look() {
     exact_kernel::style::roles::set_column(exact_kernel::style::roles::Column::Neutral);
 }
 
-/// Say that this process paints Android's Material look, before it boots a
-/// plan: the schema's metrics are read in their
+/// Say that this process paints Android's Material look (LLP 1115.001.001
+/// D2.4), before it boots a plan: the schema's metrics are read in their
 /// Material column, which is the web's first look's wherever a row has no
 /// Material value. Android's reader says it, and the Material oracle's
 /// specimen door.
@@ -878,7 +885,7 @@ fn headless<D: DataSource + Default>(config: &mut Config, started: Instant) -> i
     // it is what a smoke, a screenshot, and an agent's first `layout` want.
     p.wait_images(Duration::from_millis(500));
     // First pixel, headless: the boot is whole — laid out, its pictures in
-    // — before anything reads it. The check follows when a
+    // — before anything reads it (LLP 1026 D11). The check follows when a
     // drive named an origin; a headless run has no user to wait for.
     let _ = p.frame();
     p.first_pixel();
@@ -1122,7 +1129,7 @@ mod tests {
     #[test]
     fn launch_arguments_share_url_interpretation_with_other_hosts() {
         for (args, expected) in [
-            // The fragment rides on the launch location.
+            // The fragment rides on the launch location (LLP 1153 D5).
             (
                 vec!["--agent", "s2b://post/42?q=a b#moves", "/later"],
                 "/post/42?q=a%20b#moves",

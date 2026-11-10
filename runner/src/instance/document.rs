@@ -1,4 +1,4 @@
-//! The instance tree as a document's nodes, with no kernel.
+//! The instance tree as a document's nodes, with no kernel (LLP 1048.004).
 //!
 //! A render whose runner mirrors no kernel (a detached one, whose updates
 //! build no style or prop ops, [`Update::discard`]) writes its document from
@@ -226,7 +226,7 @@ impl Tree {
         let _batch = exact_kernel::style::wide::Batch::open();
         build.children(&self.children, None, 0)?;
         // Its styles' wide colours, kept while the tree lives: it is no
-        // kernel's.
+        // kernel's (LLP 1121 stage 4).
         let nodes = &build.doc.nodes;
         build.doc.kept = exact_kernel::style::wide::Keep::of(|m| {
             for node in nodes {
@@ -482,8 +482,8 @@ impl Build<'_> {
         }
         if !plan.axes.is_empty() || !plan.theme.is_empty() && patch.mask.has(StyleId::ColorScheme) {
             // A token's slice is the tuple around the node and a mode
-            // boundary's implied rows, which the instance tree keeps;
-            // the fold doesn't.
+            // boundary's implied rows, which the instance tree keeps
+            // (LLP 1121 D7); the fold doesn't.
             return Err(DocTreeError::Unsupported(
                 "a design's modes or a themed scheme boundary",
             ));

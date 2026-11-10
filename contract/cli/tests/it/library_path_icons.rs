@@ -1,10 +1,10 @@
-//! `@exact/cards`' and `@exact/actions`' nonzero one-colour path icons are
-//! icon tokens. Each SVG in the package's `assets/` holds the path
-//! function's `d` it replaced, byte for byte (the strings below are the
-//! functions' as written in `common.contract`), so a later move starts from
-//! the same source; the moved functions are gone, so nothing draws both
-//! ways; and library-gate's plan keeps every one in its `icons` table, its
-//! path the same `d`.
+//! theme2's path-icons ruling (2026-10-23, terms 2 and 3): `@exact/cards`'
+//! and `@exact/actions`' nonzero one-colour path icons are icon tokens. Each
+//! SVG in the package's `assets/` holds the path function's `d` it replaced,
+//! byte for byte (the strings below are main's `common.contract` before the
+//! move, at 0277d04737), so a later move starts from the same source; the
+//! moved functions are gone, so nothing draws both ways; and library-gate's
+//! plan keeps every one in its `icons` table, its path the same `d`.
 
 use std::path::{Path, PathBuf};
 
@@ -157,8 +157,8 @@ fn library_gate_keeps_every_moved_icon_its_path_the_same_d() {
     }
 }
 
-/// A kept icon's path, read through `exact_runner::icon_of` (the one reader
-/// of an `icons` row, which strips an even-odd icon's marker).
+/// A kept icon's path, read through `exact_runner::icon_of` (stage 14 C2:
+/// the one reader of an `icons` row, which strips an even-odd icon's marker).
 fn icon_path<'a>(plan: &'a exact_plan::Plan, row: &exact_plan::IconsRow) -> &'a str {
     exact_runner::icon_of(plan, row).map_or("", |icon| icon.path)
 }

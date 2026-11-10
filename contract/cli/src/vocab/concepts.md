@@ -1,5 +1,5 @@
 <!--
-`contract vocab <name>` answers each concept below with its whole idiom:
+`contract vocab <name>` answers each concept below with its whole idiom (LLP 1116.004 D5.1):
 what a builder looked up a recipe or the grammar for, answered in one lookup. A section is
 `## <name>: <what it does>`, then `names: …`, the other names it answers to, then the answer:
 a sentence or two, the minimal complete code, and the recipe for depth. A name that is also a
@@ -139,7 +139,7 @@ component App
 
 - Each option is one short `text` (or a symbol `image` with an `aria-label`); leave its
   look unsaid. A radio that paints itself (its own `background-color`, `border` or
-  `border-radius`) makes the group your drawn control on every host, keys
+  `border-radius`, LLP 1104 D2) makes the group your drawn control on every host, keys
   and all; `appearance="none"` on the `radiogroup` says so whatever the radios write. Six or more options, or long labels: a `select` (`contract vocab select`). A setting on or off: `input
   type="checkbox" switch`.
 - An item checked off (a to-do, a shopping list) is a plain `input type="checkbox"`: on iOS
@@ -937,7 +937,7 @@ component App
 - At the click, as Electron's `Menu.popup({x, y})`: the button's `press` action takes
   `e: MouseEvent`, keeps `e.clientX`, `e.clientY` (both 0 from a key; then leave the insets
   `auto`), and calls `showPopover("menu", source="button")`; the popover writes them as `left`
-  and `top` with `margin=0` and no `position-area`. iOS keeps the menu on its invoker.
+  and `top` with `margin=0` and no `position-area`. iOS keeps the menu on its invoker (LLP 1021 D2).
 
 A test opens one with `tap "sort"`, a long-press one with `tap "row-1" contextmenu`, then
 taps the item. A row whose `popovertarget` names another menu is its submenu.
@@ -1037,7 +1037,7 @@ stays a shortcut). `dock` beside one of them, or alone, also files the button
 in the app's Dock menu (`-exact-menu="file dock"`). `status` alone presents the
 button as the app's status item: a menu bar item on macOS, a notification-area
 icon on Windows; it takes the button's place, its `popovertarget` menu is the
-item's menu, and with another id it fails `lower-menu-status`.
+item's menu, and with another id it fails `lower-menu-status` (LLP 1133.025).
 It adds an item even without a chord and overrides
 `aria-keyshortcuts` chord filing. The item's label is the button's accessible
 label or text; `disabled` disables it. An item in the app menu or Help is the
@@ -1056,7 +1056,7 @@ The whitespace-separated list must be literal; unknown ids and nested use fail
 with `lower-menu-remove`, naming the set. Empty removes nothing; duplicates
 are harmless. The view’s root is a node, not a conditional. Root replacement and
 window switching restore the appropriate menu. App buttons and other standard
-items remain. Other hosts ignore removal.
+items remain. Other hosts ignore removal (LLP 1021 §5.3).
 A root `-exact-menu-keys="close-window=none"` keeps File ▸ Close Window with no
 chord, so ⌘W reaches the page; declare `-exact-menu-remove="close-all"` with it,
 or AppKit's Close All ⌥⌘W shows as a row of its own. `close-window=Meta+Shift+W`
@@ -1064,7 +1064,8 @@ gives it ⇧⌘W. `close-window` is the one id; the chord is one `aria-keyshortc
 chord with `Meta` that is not the host's or the system's own (⌘Q, ⌘W, ⌘H, ⌘M,
 ⌘-comma and the like). Another id, an id named twice, a chord without `Meta`, a
 standard chord and nested use fail with `lower-menu-keys`. An app command with
-the chord still takes it; without the declaration Close Window has ⌘W.
+the chord still takes it; without the declaration Close Window has ⌘W (LLP 1021
+§5.3.3).
 
 ```contract
 component App
@@ -1295,7 +1296,7 @@ component App
 - A picture is iOS's and the Mac's; the web refuses one by name, so offer it where
   `exactPage().canSharePictures` holds. An `app:/` file needs the `fs.read` grant
   (`contract vocab files-and-grants`).
-- More: docs/contract-grammar.md (host commands).
+- More: docs/contract-grammar.md (host commands), LLP 1125 D12.
 
 ## use: an app in several `.contract` files
 names: import, imports, export, exports, require, include, multiple files, several files, split

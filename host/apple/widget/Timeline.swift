@@ -53,7 +53,7 @@ private func snapshotFamily(_ family: WidgetFamily) -> SnapshotEnvironment.Famil
     }
 }
 
-// The driver owns the archived layout and applies margins once.
+// LLP 1126.000 WP5: the driver owns the archived layout and applies margins once.
 private func widgetSnapshotView(_ entry: ExactWidgetEntry, displaySize: CGSize, contentSize: CGSize,
                                 facts: SessionFacts, family: WidgetFamily) throws -> some View {
     let session = try HeadlessSession(plan: entry.plan, entry: entry.kind, props: entry.props,

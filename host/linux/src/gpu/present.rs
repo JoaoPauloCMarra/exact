@@ -16,7 +16,10 @@
 //! target directly; otherwise vello's own texture is blitted into it on the
 //! host thread (no pipelining). The presenter still gets a frame, a 1×1
 //! placeholder: nothing reads these pixels back (no VNC, no screenshot, no
-//! CPU damage reuse), so presenting takes no per-frame CPU readback.
+//! CPU damage reuse).
+//!
+//! @ref LLP 1076 §3.4 (reuse Exact's Rust painter; present without a
+//! per-frame CPU readback)
 
 use super::*;
 use raw_window_handle::{

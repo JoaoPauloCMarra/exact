@@ -1,6 +1,6 @@
 # Delivery baking: the compatibility id and the embedded receipt, checked
-# against publisher receipts. App build scripts depend on
-# it; the compiler does not.
+# against publisher receipts (LLP 1030 D3a, D8). App build scripts depend on
+# it; the compiler does not. @ref LLP 1030 D3a
 [package]
 name = "exact-bake"
 version.workspace = true
@@ -27,7 +27,7 @@ exact-runner = { path = "../runner" }
 exact-svg-file = { path = "../host/svg-file" }
 serde_json = "1.0"
 sha2 = "0.10"
-# The shaders' interface digests for the compatibility id.
+# The shaders' interface digests for the compatibility id (LLP 1030 D8).
 exact-gpu-reflect = { path = "../gpu/reflect" }
 # The build validates publisher receipt signatures using the client parser.
 exact-update = { path = "../update" }

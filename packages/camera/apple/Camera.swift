@@ -1,27 +1,27 @@
-// @exact/camera on Apple: the viewfinder
+// @exact/camera on Apple (LLP 1133.008 D1-D5, D8, §9): the viewfinder
 // `exact-camera` (Viewfinder.swift) over a video track of
 // @exact/media-capture's, and `takePhoto` through the capture's photo output,
 // written to the app's files.
 //
 // - A viewfinder is a consumer of its track while it is displayed and its
-//   `srcObject` names the track. The runner says when either changes and
+//   `srcObject` names the track (D3). The runner says when either changes and
 //   by whose commit (`displayed`, `bound`); the viewfinder joins the track
 //   with that origin, so a lease is taken only for the person's input or the
-//   app's own code, and a viewfinder a tool showed shows nothing.
-// - The photo output is the process's, one per capture: an
+//   app's own code (§14), and a viewfinder a tool showed shows nothing.
+// - The photo output is the process's, one per capture (D3): an
 //   `AVCapturePhotoOutput` attached to the capture's session at the first
 //   photo, which takes every session's photos in turn. A photo in flight holds
 //   its track's lease until it is written.
-// - Unsaid settings are the platform's: `AVCapturePhotoSettings()`'s
+// - Unsaid settings are the platform's (D2): `AVCapturePhotoSettings()`'s
 //   JPEG, flash off, `balanced`; the output's ceiling the largest size it
 //   delivers without deferred processing; the capture turned by the rotation
 //   coordinator and a front camera's photo not mirrored.
 // - Under the agent no capture exists: the viewfinder draws the agent's
-//   picture and `takePhoto` copies its file unchanged. The picture is
+//   picture and `takePhoto` copies its file unchanged (§9). The picture is
 //   the package's test card, read from this checkout (a drive runs on this
 //   Mac or its simulators), or the app asset `prefer extension
 //   camera.picture={"path":…}` names.
-// - Tier 3: the photo output when it is added (`photoOutputHatch`, on
+// - Tier 3 (D5): the photo output when it is added (`photoOutputHatch`, on
 //   the session's queue), each capture's settings before it is taken
 //   (`photoSettingsHatch`, main, may return a replacement), each photo
 //   (`photoHatch`, the platform's queue) and each viewfinder's view
@@ -93,7 +93,7 @@ public final class CameraModule: ExactPackage {
         }
     }
 
-    /// Under the agent: the picture `prefer extension camera.picture` names.
+    /// Under the agent: the picture `prefer extension camera.picture` names (D8 item 9).
     public func preferred(_ values: [String: Any]) {
         let named = (values["picture"] as? [String: Any])?["path"] as? String
         let next = named?.isEmpty == false ? named : nil
@@ -111,7 +111,7 @@ public final class CameraModule: ExactPackage {
         done()
     }
 
-    // MARK: viewfinders
+    // MARK: viewfinders (D3, D8 items 1 and 2)
 
     public func view(_ tag: String, id: String, props: [String: String], events: ExactPackageEvents) throws -> ExactPackageView {
         guard tag == "exact-camera" else { throw ExactPackageRefusal("no view \(tag)") }
@@ -160,13 +160,13 @@ public final class CameraModule: ExactPackage {
         views[id] = nil
     }
 
-    /// Viewfinder `id` consumes its track while it is made, displayed and bound to a video track.
+    /// Viewfinder `id` consumes its track while it is made, displayed and bound to a video track (D3).
     private func reconcile(_ id: String) {
         guard let v = views[id] else { return }
         let src = v.src ?? ""
         let want = v.view != nil && v.shown && !src.isEmpty && v.reports >= v.changes && context.tracks.lookup(src)?.kind == "video"
         if let sub = v.sub, !want || sub.track != src { sub.leave(); v.sub = nil; v.view?.blank() }
-        // Shown again by the person or the app, a viewfinder that took no lease takes one.
+        // Shown again by the person or the app, a viewfinder that took no lease takes one (§14).
         if want, let sub = v.sub, !sub.live, v.madeBy == "app", sub.origin != "app" { sub.leave(); v.sub = nil }
         guard want, v.sub == nil else { return }
         let sub = Sub(track: src, origin: v.madeBy)
@@ -177,7 +177,7 @@ public final class CameraModule: ExactPackage {
             if self.context.agent {
                 let picture = self.agentPicture()
                 v.view?.show(picture: picture, mirrored: facing == "user")
-                // The track's frame is the picture drawn, unmirrored, as a sensor's is.
+                // The track's frame is the picture drawn, unmirrored, as a sensor's is (LLP 1133.027 D17 item 2).
                 self.context.tracks.lookup(sub.track)?.picture = picture
             } else if let source { v.view?.show(source: source) }
         }
@@ -195,13 +195,13 @@ public final class CameraModule: ExactPackage {
         }
     }
 
-    // MARK: photos
+    // MARK: photos (D1, D2)
 
     private func takePhoto(_ args: [String: Any], _ reply: @escaping ([String: Any]) -> Void) {
         guard let id = args["track"] as? String, let entry = context.tracks.lookup(id) else { return reply(["error": "NotFoundError"]) }
         guard entry.kind == "video" else { return reply(["error": "NotSupportedError"]) }
         let s = entry.state?() ?? [:]
-        // A track that is not shown takes no photo: ended, disabled, or muted (`idle` among them).
+        // A track that is not shown takes no photo (D1): ended, disabled, or muted (`idle` among them).
         guard s["readyState"] as? String == "live", s["enabled"] as? Bool == true, s["muted"] as? Bool == false else {
             say("takePhoto \(id): InvalidStateError (state=\(s["readyState"] ?? "unknown"), enabled=\(s["enabled"] ?? false), muted=\(s["muteReason"] ?? "none"))")
             return reply(["error": "InvalidStateError"])
@@ -209,7 +209,7 @@ public final class CameraModule: ExactPackage {
         let origin = context.origin
         let took = { [self] (path: String, data: Data) in
             say("took \(path) (\(data.count) bytes\(context.agent ? ", the agent's picture" : ""), sha256 \(Self.sha256(data)))")
-            // Under the agent, each photo for `state.extensions`.
+            // Under the agent, each photo for `state.extensions` (§9, Disclosure).
             photos.append(["path": path, "sha256": Self.sha256(data), "track": id, "origin": origin])
             context.state(["photos": photos])
         }
@@ -227,7 +227,7 @@ public final class CameraModule: ExactPackage {
             return reply(Self.photo(path: path, data: data))
         }
         guard let source = entry.video?() else { return reply(["error": "InvalidStateError"]) }
-        // A photo in flight is a consumer: its lease holds until the file is written.
+        // A photo in flight is a consumer: its lease holds until the file is written (D3).
         let holder = Sub(track: id, origin: "app")
         holder.subscription = try? context.tracks.subscribe(id, holder, start: false, origin: "app")
         let output = source.shared("camera.photo") { PhotoOutput(source) }
@@ -264,7 +264,7 @@ public final class CameraModule: ExactPackage {
         return ["path": path, "type": isHEIF(data) ? "image/heic" : "image/jpeg", "size": data.count, "width": width, "height": height]
     }
 
-    /// The journal names each photo's SHA-256, which a drive compares with the agent's picture.
+    /// The journal names each photo's SHA-256, which a drive compares with the agent's picture (§9).
     static func sha256(_ data: Data) -> String { SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() }
 
     private static func isHEIF(_ data: Data) -> Bool { data.count > 12 && String(decoding: data[4..<12], as: UTF8.self).hasPrefix("ftyphei") }
@@ -285,7 +285,7 @@ public final class CameraModule: ExactPackage {
         return source.shared("camera.photo") { PhotoOutput(source) }.capabilities(source.device)
     }
 
-    // MARK: the agent's picture
+    // MARK: the agent's picture (§9)
 
     /// The package's test card in this checkout, beside this file's own directory.
     private static let card = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("fixture/card.jpg")
@@ -309,7 +309,7 @@ public final class CameraModule: ExactPackage {
     }
 }
 
-/// A capture's photo output, the process's: photos in the order they are asked.
+/// A capture's photo output, the process's (D3): photos in the order they are asked.
 final class PhotoOutput: NSObject {
     let output = AVCapturePhotoOutput()
     private var inFlight: [Int64: PhotoDelegate] = [:]
@@ -320,7 +320,7 @@ final class PhotoOutput: NSObject {
         source.configure { session in
             guard session.canAddOutput(output) else { return }
             session.addOutput(output)
-            // The ceiling: the largest size delivered without deferred processing.
+            // The ceiling: the largest size delivered without deferred processing (D2).
             if #available(iOS 16.0, macOS 13.0, *), let largest = device.activeFormat.supportedMaxPhotoDimensions.max(by: { $0.width * $0.height < $1.width * $1.height }) {
                 output.maxPhotoDimensions = largest
             }
@@ -351,7 +351,7 @@ final class PhotoOutput: NSObject {
         } else {
             settings = AVCapturePhotoSettings()
         }
-        // A written word beats the web's: `apple.flashMode` over `fillLightMode`.
+        // A written word beats the web's (D4): `apple.flashMode` over `fillLightMode`.
         let flash = (apple["flashMode"] as? String) ?? (args["fillLightMode"] as? String).map { $0 == "flash" ? "on" : $0 }
         if let flash, let mode = ["auto": AVCaptureDevice.FlashMode.auto, "on": .on, "off": .off][flash], output.supportedFlashModes.contains(mode) {
             settings.flashMode = mode
@@ -385,7 +385,7 @@ final class PhotoOutput: NSObject {
         }
         inFlight[settings.uniqueID] = delegate
         let output = output
-        // The capture turned upright as the person holds the device, and a front camera's photo not mirrored.
+        // The capture turned upright as the person holds the device, and a front camera's photo not mirrored (D2).
         var angle: CGFloat?
         if #available(iOS 17.0, macOS 14.0, *) { angle = AVCaptureDevice.RotationCoordinator(device: source.device, previewLayer: nil).videoRotationAngleForHorizonLevelCapture }
         source.run { _ in

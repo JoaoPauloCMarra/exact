@@ -1,5 +1,5 @@
 //! The Canvas gallery on Apple: its TypeScript data module draws every
-//! canvas, replayed into Core Graphics.
+//! canvas (LLP 1056), replayed into Core Graphics.
 
 include!(concat!(env!("OUT_DIR"), "/module.rs"));
 include!(concat!(env!("OUT_DIR"), "/baked.rs"));

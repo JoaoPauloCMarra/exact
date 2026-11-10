@@ -1,4 +1,4 @@
-// The web's media session, in Chrome, Firefox and
+// The web's media session (LLP 1098 D3–D6, §5), in Chrome, Firefox and
 // WebKit: media-glue.js over real `audio` and `video` elements whose props and
 // handlers the test hands it as the hosts do (`exactMedia`), with
 // `navigator.mediaSession`'s calls recorded. The owner rule, what is

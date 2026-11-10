@@ -1,4 +1,4 @@
-// The GPU capture on a phone: a shadow tree of
+// The GPU capture (LLP 1014 D3 on a phone; LLP 1008 §9): a shadow tree of
 // plain CALayers mirrors the overlay's layer tree — geometry, opacity,
 // clipping, and the same `contents` objects, the views' backing stores,
 // shared rather than copied — and Core Animation renders that tree on the
@@ -209,7 +209,7 @@ package final class Shadow {
         // picture not). Through nil, the set is a real one.
         if redrew { shadow.contents = nil }
         // A layer Core Animation is animating (an SVG draw-in, a pulse, a
-        // colour) is captured as it shows, not as its model.
+        // colour: LLP 1055.000) is captured as it shows, not as its model.
         let shown = layer.animationKeys()?.isEmpty == false ? (layer.presentation() ?? layer) : layer
         copy(shown, to: shadow)
         if let node = layer.delegate as? NodeView { node.setPaintPosition(node.paintZPosition) }

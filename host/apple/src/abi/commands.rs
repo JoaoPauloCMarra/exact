@@ -1,17 +1,19 @@
 //! The session's command-side calls on the bridge: a command that shows
-//! system UI about to run (`share`, `saveFile`), an auth session's arm
-//! and report, a host line into the runner's journal, a select's
-//! options for the menu the presenter builds, a radio's group (x2apps
-//! survey #2), a grouped list's sections, and whether a followed link
-//! names one of the app's routes, where the host's own Back goes, and a
-//! package's call of the app's handler.
+//! system UI about to run (`share`, LLP 1069.003; `saveFile`, LLP 1069.010),
+//! an auth session's arm and report (LLP 1069.006), a host line into the
+//! runner's journal, a select's options for the menu the presenter
+//! builds (LLP 1069.001 D5), a radio's group (x2apps survey #2), a
+//! grouped list's sections (LLP 1084), and
+//! whether a followed link names one of the app's routes (LLP 1038 §7),
+//! where the host's own Back goes (LLP 1115 D5), and a package's call of
+//! the app's handler (LLP 1133.016 D15 item 1).
 use super::Bridge;
 use exact_runner::auth::{self, Arm, Browser};
 use exact_runner::DataSource;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Whether a runner booted now counts its plan sites' work for `perf` from
-/// boot: until a release build says it counts from the first
+/// boot (LLP 1079 D1): until a release build says it counts from the first
 /// ask instead, and again once something has asked.
 static WORK_FROM_BOOT: AtomicBool = AtomicBool::new(true);
 
@@ -31,7 +33,7 @@ pub fn measure_at_boot<D: DataSource>(runner: &mut exact_runner::Runner<D>, comp
     }
 }
 
-/// The alert shape, the kernel's rule
+/// The alert shape (LLP 1115 D6), the kernel's rule
 /// (`exact_kernel::confirmation`), for the presenter's Swift
 /// (`ConfirmationShape.isAlert`): lowering, this host and the Linux one read one rule.
 pub fn confirmation_is_alert(texts: u32, actions: u32, cancels: u32) -> bool {
@@ -69,7 +71,7 @@ impl<D: DataSource> Bridge<D> {
     }
 
     /// `exact_route_matches`: whether the location in the input buffer names
-    /// a pattern the plan's route table declares — a link to
+    /// a pattern the plan's route table declares (LLP 1038 §7) — a link to
     /// it is followed in the app, as the web's same-document link is; any
     /// other path (a file beside a document) is the containing app's.
     pub fn route_matches(&self, len: usize) -> u32 {
@@ -109,7 +111,7 @@ impl<D: DataSource> Bridge<D> {
     /// `exact_location_beneath`: the location of the visit beneath visit
     /// `id` on its stack, UTF-8 in the output buffer, empty when there is
     /// none — where the host's own Back goes for a route with no authored
-    /// Back control. Not a batch: nothing changes.
+    /// Back control (LLP 1115 D5). Not a batch: nothing changes.
     pub fn location_beneath(&mut self, id: u64) -> u32 {
         let location = self
             .host
@@ -121,7 +123,7 @@ impl<D: DataSource> Bridge<D> {
     }
 
     /// Where the platform's Back goes from the selected visit, UTF-8;
-    /// empty at the stack's root.
+    /// empty at the stack's root. @ref LLP 1115.000 D5.5
     pub fn location_behind(&mut self) -> u32 {
         self.output = self
             .host
@@ -133,6 +135,7 @@ impl<D: DataSource> Bridge<D> {
     }
 
     /// Where the platform's Forward goes, UTF-8; empty with nothing ahead.
+    /// @ref LLP 1115.000 D5.5
     pub fn location_ahead(&mut self) -> u32 {
         self.output = self
             .host
@@ -155,7 +158,7 @@ impl<D: DataSource> Bridge<D> {
     }
 
     /// `exact_scrolled`: a scroller the presenter shows, or the page, now
-    /// stands at `(left, top)` CSS px, for `frame`.
+    /// stands at `(left, top)` CSS px, for `frame` (LLP 1051.000 D1).
     pub fn scrolled(&mut self, page: bool, view: u32, left: f64, top: f64) {
         if let Some(h) = self.host.as_mut() {
             h.runner_mut().scrolled((!page).then_some(view), left, top);
@@ -186,8 +189,8 @@ impl<D: DataSource> Bridge<D> {
         }
     }
 
-    /// A host this bridge boots: inline geometry, Canvas 2D text measurement,
-    /// and where its draws run.
+    /// A host this bridge boots: inline geometry, Canvas 2D text measurement
+    /// (LLP 1056 D8), and where its draws run (LLP 1072 §8.5).
     pub(super) fn presenter_hooks(&self, host: &mut crate::host::Host<D>, hooks: &super::Hooks) {
         host.runner_mut()
             .set_inline_geometry(self.inline_geometry.clone());
@@ -203,7 +206,7 @@ impl<D: DataSource> Bridge<D> {
     }
 
     /// Canvas draws in a turn of their own from now on, or in every turn
-    /// (`exact_canvas_defer`).
+    /// (`exact_canvas_defer`, LLP 1072 §8.5).
     pub fn canvas_defer(&mut self, deferred: bool) {
         self.canvas_deferred = deferred;
         if let Some(h) = self.host.as_mut() {
@@ -211,7 +214,7 @@ impl<D: DataSource> Bridge<D> {
         }
     }
 
-    /// The deferred canvas draws (`exact_canvas_draw`).
+    /// The deferred canvas draws (`exact_canvas_draw`, LLP 1072 §8.5).
     pub fn canvas_draw(&mut self) -> u32 {
         let out = self
             .host
@@ -240,7 +243,7 @@ impl<D: DataSource> Bridge<D> {
         self.emit(out)
     }
 
-    /// An `exact-auth:` request: refused now (the
+    /// An `exact-auth:` request (LLP 1069.006 D3): refused now (the
     /// executor wakes to deliver it), or handed to the session to open an
     /// `ASWebAuthenticationSession` — which, under the agent, holds it
     /// instead (`exact_auth` `hold`).
@@ -258,7 +261,7 @@ impl<D: DataSource> Bridge<D> {
     }
 
     /// Sessions whose tickets the runner let go: the session cancels each
-    /// and drops its late completion.
+    /// and drops its late completion (D3).
     pub(super) fn auth_forgotten(
         h: &mut crate::host::Host<D>,
         presenter: &mut crate::batch::Batch,
@@ -298,8 +301,8 @@ impl<D: DataSource> Bridge<D> {
         0
     }
 
-    /// How a presence check the host made ended (`exact_presence`):
-    /// the value goes to the waiting call alone.
+    /// How a presence check the host made ended (`exact_presence`, LLP
+    /// 1133.010 D13): the value goes to the waiting call alone.
     pub fn presence(&mut self, len: usize) -> u32 {
         if let Some(h) = self.host.as_mut() {
             h.runner_mut()
@@ -311,12 +314,15 @@ impl<D: DataSource> Bridge<D> {
         0
     }
 
-    /// A button's face (`exact_press_face`), custom or native, as JSON in the output buffer:
-    /// `{"button","title","symbol","raster","leading","label","fits","style", "ios","iosBefore26","macos","known"}` — `button`
-    /// false (and the rest empty) for a node that is not a button, the symbol as the platform names it (an svg-only icon's "", its
-    /// `symbolPath` and `symbolViewBox` beside it, and `symbolIcon`, its token's name, for the agent), the style's row of the
-    /// `buttonStyles` table (`bordered` for a name not in it); with no `buttonStyle` written, `"style":null` and no platform column
-    /// (`button::face_json`). Not a batch: nothing changes.
+    /// A button's face (`exact_press_face`, LLP 1069.011.000 D1; LLP 1069.011
+    /// D2, D5), custom or native, as JSON in the output buffer:
+    /// `{"button","title","symbol","raster","leading","label","fits","style",
+    /// "ios","iosBefore26","macos","known"}` — `button` false (and the rest
+    /// empty) for a node that is not a button, the symbol as the platform
+    /// names it (an svg-only icon's "", its `symbolPath` and `symbolViewBox`
+    /// beside it, and `symbolIcon`, its token's name, for the agent), the style's row of the `buttonStyles` table (`bordered` for a
+    /// name not in it); with no `buttonStyle` written, `"style":null` and no
+    /// platform column (`button::face_json`). Not a batch: nothing changes.
     pub fn press_face(&mut self, view: u32) -> u32 {
         let json = self.host.as_ref().map_or_else(
             || "{\"button\":false}".into(),
@@ -399,13 +405,13 @@ impl<D: DataSource> Bridge<D> {
         self.output.len() as u32
     }
 
-    /// A navigation root's tabs (`exact_root_tabs`; `Kernel::root_tabs`),
-    /// as JSON in the output buffer: `{"tablist":view,
+    /// A navigation root's tabs (`exact_root_tabs`; `Kernel::root_tabs`, LLP
+    /// 1115.001 D11), as JSON in the output buffer: `{"tablist":view,
     /// "tabs":[view...],"panels":[view...],"unsaid":bool,"covered":bool}`, the tabs that
     /// name a panel and those panels in tab order, or `null` for a root with
     /// one stack. `unsaid`: the app left the bar's placement unsaid, by the
-    /// web's rule for its own sidebar (`host/web/navigation.js` `unsaidBar`):
-    /// the tablist is a direct child of the root, not
+    /// web's rule for its own sidebar (`host/web/navigation.js` `unsaidBar`,
+    /// LLP 1116.004 D1.1): the tablist is a direct child of the root, not
     /// vertical, in flow in the root's flex column, and itself a row. It is
     /// read here because the layout rows it asks of never cross to the
     /// presenter (`style::presenter_ignores`). `covered`: the tablist is
@@ -443,7 +449,7 @@ impl<D: DataSource> Bridge<D> {
     }
 
     /// Whether the stack whose root route is `view` splits (`exact_stack_split`;
-    /// `Runner::stack_split`), as JSON in the output buffer:
+    /// `Runner::stack_split`, LLP 1115.002 D4), as JSON in the output buffer:
     /// `{"list":view|null,"width":number|null,"rows":[[route,row]...],
     /// "locations":[[route,url]...],"pressWrites":bool|null}`, the list whose
     /// row pushes, the list column's width where `navigationSplit` names one,
@@ -490,8 +496,8 @@ impl<D: DataSource> Bridge<D> {
         self.output.len() as u32
     }
 
-    /// A grouped list's sections and rows (`exact_grouped_list`),
-    /// as JSON in the output buffer: `{"style","sections":[{"view",
+    /// A grouped list's sections and rows (`exact_grouped_list`, LLP 1084
+    /// D4), as JSON in the output buffer: `{"style","sections":[{"view",
     /// "header","footer","headerLook","footerLook","card","spaceAbove","rows":[{"view","custom","symbol",("symbolPath","symbolViewBox": an
     /// svg-only icon's, `icon_path::push_json`),"title",
     /// "secondary","subtitle","accessory","target","pressable","action",
@@ -509,7 +515,7 @@ impl<D: DataSource> Bridge<D> {
             Some(t) => quote(t, json),
             None => json.push_str("null"),
         };
-        // How a text is set where its author said so: its
+        // How a text is set where its author said so (LLP 1116.003 D7): its
         // colour as a style row crosses, its font as its computed rows.
         let look = |key: &str, l: &exact_kernel::TextLook, json: &mut String| {
             json.push_str(key);
@@ -577,7 +583,7 @@ impl<D: DataSource> Bridge<D> {
                             r.view, r.custom
                         ));
                         opt(&r.symbol, &mut json);
-                        // An svg-only icon's path.
+                        // An svg-only icon's path (LLP 1121 D10, stage 9 A2).
                         crate::icon_path::push_json(r.icon.as_deref(), &mut json);
                         json.push_str(",\"title\":");
                         opt(&r.title, &mut json);

@@ -1,11 +1,12 @@
-//! The build channel's polled stream: this host holds no SSE dev stream, so the
-//! URL poller's channel worker asks `/__dev/hello` for a nonce, registers with
-//! it (`POST /__dev/report`), and on each tick sends what the presenter queued
-//! and takes the frames queued for it (`GET /__dev/commands`). A 404 hello is a
-//! dev loop with no design server: the channel is quiet a while, then asks
-//! again. A 403 report or a 404 poll is an expired nonce (5 s unpolled, or a
-//! restarted loop): hello again and register again, under the same id, so the
-//! loop replays this build's pins.
+//! The build channel's polled stream (LLP 1122 D4, LLP 1121 stage 4 commit
+//! 5): this host holds no SSE dev stream, so the URL poller's channel worker asks
+//! `/__dev/hello` for a nonce, registers with it (`POST /__dev/report`), and
+//! on each tick sends what the presenter queued and takes the frames queued
+//! for it (`GET /__dev/commands`). A 404 hello is a dev loop with no design
+//! server: the channel is quiet a while, then asks again. A 403 report or a
+//! 404 poll is an expired nonce (5 s unpolled, or a restarted loop): hello
+//! again and register again, under the same id, so the loop replays this
+//! build's pins.
 //!
 //! The poll is acknowledged: each answer is `{seq, frames}`, and the next
 //! poll's `ack` names the last `seq` taken whole. An answer lost on the way
@@ -464,7 +465,7 @@ pub(crate) struct HoldTarget {
 pub(crate) enum Frame {
     /// `pin` `{revision, pin}`: `None` hands every fact back.
     Pin { revision: u64, pin: Option<Pin> },
-    /// `hold` `{revision, hold}`: `None` lets it go.
+    /// `hold` `{revision, hold}` (LLP 1122 D8): `None` lets it go.
     Hold {
         revision: u64,
         hold: Option<HoldTarget>,

@@ -8,7 +8,9 @@
 //! Same loop as the DRM display (`display.rs`): paint when something changed
 //! and the display can take a frame, timers then frame tasks once per
 //! frame, input as it arrives. The app crate owns JNI and hands this module
-//! an `ANativeWindow` it has acquired. Android reuses Exact's Rust painter.
+//! an `ANativeWindow` it has acquired.
+//!
+//! @ref LLP 1076 §3.4 (reuse Exact's Rust painter on Android)
 
 #![allow(unsafe_code)]
 
@@ -162,7 +164,7 @@ fn release_pages_of(at: *const c_void) -> usize {
     released
 }
 
-/// The libraries this app loads besides its own (the GPU module),
+/// The libraries this app loads besides its own (the GPU module, LLP 1009),
 /// each by an address inside it: their read-only pages go too.
 static MODULES: std::sync::Mutex<Vec<usize>> = std::sync::Mutex::new(Vec::new());
 
@@ -448,7 +450,7 @@ fn run<D: DataSource + Default>(
     if let Some(e) = error {
         log(&format!("exact: {e}"));
     }
-    // The device's clock owns time
+    // The device's clock owns time (the timers RFC, D1)
     p.set_live_clock(Some(crate::presenter::wall_since(started)));
     if insets.iter().any(|i| *i != 0.0) {
         if let Some(e) = p.set_safe_area(insets.map(|i| i / scale)) {

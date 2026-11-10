@@ -1,4 +1,4 @@
-//! Sampled sensors as a canvas's input: every sample reaches
+//! Sampled sensors as a canvas's input (LLP 1133.013 D6): every sample reaches
 //! the tick its stamp falls in, the latest holds through a gap and is gone
 //! after an end, a tilt stick steers by gravity against its neutral, and the
 //! samples and what they leave save, restore and replay.
@@ -93,7 +93,7 @@ fn stick(sim: &Sim<Tilted>) -> Vec2 {
     *sim.world().resource::<Seen>().sticks.last().unwrap()
 }
 
-/// The map, in f64 from the formula, against the engine's f32.
+/// D6's map, in f64 from the formula, against the engine's f32.
 #[test]
 fn the_tilt_map_reads_roll_and_pitch_from_the_neutral() {
     let tilt = Tilt {

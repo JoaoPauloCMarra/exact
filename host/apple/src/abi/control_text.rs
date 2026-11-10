@@ -39,7 +39,7 @@ impl<D: DataSource> Bridge<D> {
         };
         self.emit(out)
     }
-    /// The text engine rounds line boxes to another scale now:
+    /// The text engine rounds line boxes to another scale now (LLP 1008 §3):
     /// every paragraph is measured again and the tree laid out.
     pub fn text_scale_changed(&mut self) -> u32 {
         if let Some(revision) = &self.measure_revision {
@@ -52,7 +52,7 @@ impl<D: DataSource> Bridge<D> {
         self.emit(out)
     }
     /// The window's size, which every viewport unit resolves against
-    /// everywhere; a nonpositive size clears it.
+    /// everywhere; a nonpositive size clears it (LLP 1075.003 §9.11).
     pub fn screen(&mut self, width: f32, height: f32) -> u32 {
         let screen = (width > 0.0 && height > 0.0).then_some((width, height));
         let out = self
@@ -117,7 +117,7 @@ impl<D: DataSource> Bridge<D> {
             .map_or_else(not_booted, |h| h.set_insets(top, right, bottom, left));
         self.emit(out)
     }
-    /// The layout regions' insets changed: twenty values,
+    /// The layout regions' insets changed (LLP 1123 D10): twenty values,
     /// or none, when every region is the safe area.
     pub fn regions(&mut self, insets: &[f32]) -> u32 {
         let out = self.host.as_mut().map_or_else(not_booted, |h| {

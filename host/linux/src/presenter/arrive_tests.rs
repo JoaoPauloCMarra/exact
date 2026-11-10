@@ -1,4 +1,5 @@
-//! The focus follows the route on the painted hosts: the cases the web's rule is held by in Chrome
+//! The focus follows the route on the painted hosts (LLP 1115.000 D4.2,
+//! ruling 5): the cases the web's rule is held by in Chrome
 //! (`host/web/tests/route-focus.test.mjs`), over this presenter. A pointer's
 //! push and a key's, Back to the pressed control, a route with no heading,
 //! a focus the commit set, a route with no press, a press too old to explain

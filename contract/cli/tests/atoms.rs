@@ -1,4 +1,4 @@
-//! Inline atoms in Contract: the `atom` declaration,
+//! Inline atoms in Contract (LLP 1045.000 D3, D7): the `atom` declaration,
 //! a Markdown node's `atoms` and `atomFaces`, and the `atompress` event.
 use exact_kernel::{Kernel, PropId, StyleId};
 use exact_runner::{DataError, DataSource, Event, Runner, Value};
@@ -93,9 +93,9 @@ fn a_markdown_field_carries_its_kinds_paint_and_faces() {
     assert_eq!(prop(&runner, "reader", PropId::AtomFaces), None);
 }
 
-/// A face's colours are read as a bound colour row's: a
+/// A face's colours are read as a bound colour row's (LLP 1045.000 D2): a
 /// theme entry's name as its colour, a platform colour only as one of the
-/// plan's literals, and anything else that is no colour
+/// plan's literals (LLP 1095 D3, D4), and anything else that is no colour
 /// as nothing, so its kind's paint stands, with a journal line. A host gets
 /// the wire's text.
 #[test]
@@ -162,8 +162,9 @@ fn designed(name: &str, contract: &str) -> Runner<NoData> {
     .unwrap()
 }
 
-/// A face's colour that names a token, here from state, is read again when the
-/// app's mode or the token changes, as a bound `color` is: the pill recolours.
+/// A face's colour that names a token, here from state, is read again when
+/// the app's mode or the token changes, as a bound `color` is (LLP 1045.000
+/// D2): the pill recolours.
 #[test]
 fn a_faces_token_colour_follows_set_mode_and_set_token() {
     let mut r = designed(
@@ -196,11 +197,11 @@ fn a_faces_token_colour_follows_set_mode_and_set_token() {
 }
 
 /// A colour in a standard space the platforms ship, or in a wide one, is
-/// read as a bound `color` reads it, and the wire's text
+/// read as a bound `color` reads it (LLP 1100 D1, D2), and the wire's text
 /// names it, as Apple draws it. One in a profile the app declares is
 /// refused, with one journal line, though a bound `color` given the same
 /// text from state takes it: a host draws a face from its text alone,
-/// which names no ICC file.
+/// which names no ICC file (LLP 1045.000 D2).
 #[test]
 fn a_faces_profile_colour_is_a_standard_spaces_only() {
     let runner = boot(
@@ -294,7 +295,7 @@ fn a_malformed_atom_press_is_refused_before_it_runs() {
     }
 }
 
-/// An atom's own style and its states': what moves
+/// An atom's own style and its states' (LLP 1045.000 D3, D4): what moves
 /// the text in its kind's row, the paint by state as kernel rows, which the
 /// decorations table reads as it reads a kind's colours.
 #[test]

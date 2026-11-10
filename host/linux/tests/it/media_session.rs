@@ -1,4 +1,4 @@
-//! On Linux the media session is a record here, read from
+//! LLP 1098 D9, §5 on Linux: the media session is a record here, read from
 //! node props and the runner's handlers; the owner is the latest mount,
 //! recorded as commits land (not when the agent asks), and a slot reused by
 //! a remount is a new claimant; `tap … mediasession` dispatches the action,
@@ -185,7 +185,7 @@ fn of_two_mounted_in_one_commit_the_later_in_the_tree_owns() {
     assert_eq!(session(&mut p)["owner"], json!(id(&p, "audio")));
 }
 
-/// A skip interval of 0 is "the platform gave none" (as built):
+/// A skip interval of 0 is "the platform gave none" (LLP 1098, as built):
 /// the web glue and Apple's `perform` send the element's offset (15, or 10
 /// when none was applied). `seekto` 0 stays the start.
 #[test]

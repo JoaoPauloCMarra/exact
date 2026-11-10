@@ -1,5 +1,5 @@
 //! Material 3's small top app bar and its navigation bar, measured and
-//! painted. Painted, not built of framework
+//! painted (LLP 1115.001 D11, D1.3). Painted, not built of framework
 //! widgets: each bar is a view of the reader's, and what is in it is drawn
 //! here from the reference's own metrics, the Compose Material 3 library's
 //! (1.4: `TopAppBar` with `TopAppBarSmallTokens`, `NavigationBar` and
@@ -92,7 +92,7 @@ fn nav() -> Nav {
 
 /// A Material role the shell told, else Material's baseline (Compose's
 /// `lightColorScheme()` and `darkColorScheme()`), where the twelve roles
-/// `palette.rs` maps have none of their own for it.
+/// LLP 1115.001 D4 maps have none of their own for it.
 fn told(role: Material, dark: bool, light: u32, night: u32) -> [u8; 4] {
     material(role, dark).unwrap_or_else(|| {
         let [_, r, g, b] = if dark { night } else { light }.to_be_bytes();
@@ -181,7 +181,7 @@ pub struct Inputs {
 /// What a touch in a bar is on.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum What {
-    /// The Up arrow: Back, in its order.
+    /// The Up arrow: Back, in its order (D6).
     Up,
     /// A header's button, by its authored node.
     Item(ViewId),
@@ -280,7 +280,7 @@ impl Layout {
                     backend.text(engine, paragraph, &paint, *at, ts);
                 }
                 Item::Fill(..) => {}
-                // Material's shapes: the Up arrow is its `back`.
+                // Material's shapes (D14): the Up arrow is its `back`.
                 Item::Symbol(role, rect, color) => symbol(
                     backend,
                     role,

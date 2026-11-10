@@ -1,4 +1,4 @@
-//! The kernel's half of `layout agree`: every live
+//! @ref LLP 1080.001 D2 — the kernel's half of `layout agree`: every live
 //! node's parent-relative frame in preorder, its own `display: none` and
 //! a transform row away from its initial value as bits, and a cap that says the list is incomplete.
 use exact_kernel::*;

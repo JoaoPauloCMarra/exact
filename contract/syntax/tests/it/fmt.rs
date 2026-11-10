@@ -285,7 +285,7 @@ fn positionals_after_named_attributes_stay_on_the_elements_head() {
 fn send_as_a_name_and_the_send_statement_both_round_trip() {
     // `send` spaces like any other name: `who` beside it gets the same
     // treatment. A named argument's `=` stays against its name, in a call as
-    // at a use (`Shape(field=value)`).
+    // at a use (LLP 1035.005.000 D3: `Shape(field=value)`).
     let src = "component A\n  props\n    send: action\n  mutation session as shape Session\n  action go\n    send()\n    send session = login(who=1, send=2)\n  view\n    Row(who=go, send=go)\n";
     assert_eq!(preserved(src), src);
     let spaced = src.replace("login(who=1, send=2)", "login(who = 1, send = 2)");
@@ -294,7 +294,7 @@ fn send_as_a_name_and_the_send_statement_both_round_trip() {
 
 #[test]
 fn a_provide_section_spaces_like_bindings() {
-    // A bare name stays bare; a binding spaces like a state's.
+    // LLP 1035.005.000 D9: a bare name stays bare; a binding spaces like a state's.
     let src = "component A\n  state a = 1\n  provide\n    // the value itself\n    a\n    b   =   a+1\n  view\n    text \"x\"\n";
     let expected = src.replace("b   =   a+1", "b = a + 1");
     assert_eq!(preserved(src), expected);
@@ -303,7 +303,7 @@ fn a_provide_section_spaces_like_bindings() {
 #[test]
 fn an_elements_tag_keeps_its_space_before_a_parenthesized_positional() {
     // `text (on ? "yes" : "no")` is a tag and its expression, not a call `text(…)`;
-    // a call inside a positional stays tight (authoring bench).
+    // a call inside a positional stays tight (authoring bench, LLP 1087).
     let src = "component A\n  state on = false\n  view\n    column\n      text (on ? \"yes\" : \"no\") testId=\"a\"\n      text max(1, 2).toString()\n";
     let after = preserved(src);
     assert!(
@@ -316,7 +316,7 @@ fn an_elements_tag_keeps_its_space_before_a_parenthesized_positional() {
     );
 }
 
-/// A negative literal and an exponent keep their spelling,
+/// LLP 1116.010 D3: a negative literal and an exponent keep their spelling,
 /// and the spaced negation (`- 1`) the printer closes up is the same literal.
 #[test]
 fn a_negative_literal_and_an_exponent_keep_their_spelling() {

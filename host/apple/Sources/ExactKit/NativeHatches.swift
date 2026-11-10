@@ -1,4 +1,4 @@
-// The host's side of the module hatches: the app's
+// The host's side of the module hatches (@ref LLP 1075.003 §3.2): the app's
 // one module receives Exact's own UIKit objects at defined moments — a
 // navigation controller when Exact builds it, a route when its controller
 // is built, changed and ended — and acts back by clicking an authored
@@ -6,8 +6,8 @@
 // `host/apple/modules/ExactNativeModule.swift`; NativeModule.swift reads the
 // table. Every call is on the main thread and named in the journal, so
 // `logs` shows what app code ran. macOS projects no routes, so its route
-// and tab hatches never run there; `element` runs on both
-// (ElementHatches.swift).
+// and tab hatches never run there (§3.11); `element` runs on both (LLP
+// 1075.003.000, ElementHatches.swift).
 //
 // The host's table, handed to the module once (`module_connect`):
 //
@@ -18,15 +18,16 @@
 //   32  delegate(host, controller, object)  the app's delegate for a
 //        controller whose own slot Exact keeps (nil clears it)
 //   40  toolbar_item(host, toolbar, item)    an item the app adds after
-//        Exact's to the window toolbar (macOS)
+//        Exact's to the window toolbar (macOS, LLP 1075.003.000 §3.7)
 //   56  input(host, node, text, len) → 0 queued: an authored text field's
-//        whole value, as a person's typing would leave it; queued like `act`
-//   80  owns(…), 88 parts(…): regions and parts (HatchRegions.swift)
+//        whole value, as a person's typing would leave it (LLP
+//        1075.003.000.001 §2.5); queued like `act`
+//   80  owns(…), 88 parts(…): regions and parts (§3.4, §3.5, HatchRegions.swift)
 //   64  frames(host, token, on), 72 after(host, token, ms): the frame
-//        clock (HatchClock.swift)
+//        clock (LLP 1075.003.000.001 §2.4, HatchClock.swift)
 //   48  diagnostics → { u32 size 16; 8 record(…) }, or nil in a production
-//        bake: what hatch code says of itself (HatchDiagnostics.swift).
-//        `record` may be called on any thread.
+//        bake: what hatch code says of itself (LLP 1075.003.000.001 §3.2,
+//        HatchDiagnostics.swift). `record` may be called on any thread.
 //   96  tamber(host, view, request, len, out, cap) → length (ExactTamber.swift)
 //  104  stack(host, controller) → navigation controller: the one of a tab
 //        Exact holds without one (HeldStackIOS.swift), built when
@@ -36,16 +37,16 @@
 //        the path monitor starts only then (PageFacts)
 //  120  audio_claim(host, mode, len, options, background, event, ctx) → claim
 //  128  audio_release(host, claim): a package capture's claim on the audio
-//        session (AudioSession.swift)
+//        session (LLP 1133.009 D7, AudioSession.swift)
 //  136  picture(host, kind, source, len): a package picture changed (0) or
-//        was revoked (1) (PackagePictures.swift)
+//        was revoked (1) (LLP 1133.019 D11 item 1, PackagePictures.swift)
 //  144  surface_has(host, name, len) → 1 when the session places a canvas
 //        of that surface, else 0
 //  152  surface_sensor(host, surface, len, sensor, len, values, count,
 //        dropped, at, ended): a package's sample for that surface's canvas
-//        input, or its end (CanvasesHost's `SensorRings`)
+//        input, or its end (LLP 1133.013 D6, CanvasesHost's `SensorRings`)
 //  160  invoke(host, body, len, reply, ctx): a package's call of the app's
-//        handler, answered once through
+//        handler (LLP 1133.016 D15 item 1), answered once through
 //        `reply(ctx, answer, len)` with the runner's JSON
 //  168  arrangement(host, node, controller): arrange authored siblings, or restore their layout
 //  176  service(host, module, moduleLen, json, len, ctx, reply): a module's
@@ -66,7 +67,7 @@ import AppKit
 import UIKit
 #endif
 
-/// What a native container covers of a box: bars over
+/// What a native container covers of a box (LLP 1075.003 §3.5): bars over
 /// its edges, added to its padding, or the whole box, which a native bar
 /// replaces (`display: none`).
 enum HostCover: Equatable {
@@ -74,7 +75,8 @@ enum HostCover: Equatable {
     case edges(Edges)
     case whole
     /// A scroller UIKit insets (a route's collapsing or bottom-edge
-    /// scroller): the kernel lays its content out between these insets.
+    /// scroller): the kernel lays its content out between these insets
+    /// (LLP 1116.000 D1.2).
     case inset(top: CGFloat, bottom: CGFloat)
     /// Space occupied by native scrollers, measured after tiling.
     case gutter(right: CGFloat, bottom: CGFloat)
@@ -175,7 +177,7 @@ let hatchOnLine: HatchOnLineFn = { host in
     return PageFacts.onLine ? 1 : 0
 }
 
-/// A package's capture claims the audio session: its
+/// A package's capture claims the audio session (LLP 1133.009 D7): its
 /// mode's name, `AVAudioSession.CategoryOptions` by bit (ExactExtensions.swift
 /// `AudioClaims.options`), whether it may run in the background, and where
 /// the owner's events go. 0 when the session would not activate. The Mac has
@@ -186,7 +188,7 @@ typealias HatchAudioReleaseFn = @convention(c) (UnsafeMutableRawPointer?, UInt64
 nonisolated(unsafe) private var macClaims: UInt64 = 0
 private let hatchAudioClaim: HatchAudioClaimFn = { host, mode, length, options, background, event, context in
     let word = hatchText(mode, length)
-    // `speech-<type>` is a queue's speech claim, not a capture's.
+    // `speech-<type>` is a queue's speech claim (LLP 1133.012 D4), not a capture's.
     if word.hasPrefix("speech-") {
         let type = String(word.dropFirst("speech-".count))
         hatchSession(host)?.log("audio session: claimed for speech (\(type))")
@@ -201,7 +203,7 @@ private let hatchAudioClaim: HatchAudioClaimFn = { host, mode, length, options, 
         return macClaims
         #endif
     }
-    // A call's claim, and the system's activation of the calls' session.
+    // A call's claim, and the system's activation of the calls' session (LLP 1133.033 D10).
     if word.hasPrefix("call-") {
         #if os(iOS) || os(tvOS)
         switch word {
@@ -257,7 +259,7 @@ private let hatchAudioRelease: HatchAudioReleaseFn = { host, id in
     #endif
 }
 
-/// A package feeds a canvas: whether the session places
+/// A package feeds a canvas (LLP 1133.013 D6): whether the session places
 /// one of the surface, and each sample written into its input, which the
 /// canvases drain once a display frame. Main thread.
 typealias HatchSurfaceHasFn = @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<UInt8>?, UInt32) -> UInt32
@@ -316,9 +318,9 @@ private let hatchRecord: HatchRecordFn = { host, kind, node, scope, scopeLength,
 
 private typealias HatchTamberFn = @convention(c) (UnsafeMutableRawPointer?, UnsafeMutableRawPointer?, UnsafePointer<UInt8>?, UInt32, UnsafeMutablePointer<UInt8>?, UInt32) -> UInt32
 
-/// `tamber(host, view, request, len, out, cap) → len`: a
-/// native module's `ExactTamber`. `request` is `{"names": [..]}`, and
-/// optionally `"lengths"`, `"numbers"` and `"fonts"` lists; the
+/// `tamber(host, view, request, len, out, cap) → len` (LLP 1121 D12): a
+/// native module's `ExactTamber`. `request` is `{"names": [..]}`, and since
+/// stage 6 G optionally `"lengths"`, `"numbers"` and `"fonts"` lists; the
 /// answer, `{"inputs", "colors": {name: [[r, g, b, a] × 8] | null}}`, with
 /// `"lengths"` and `"numbers"` maps of numbers and a `"fonts"` map of
 /// `{size, name, weight, italic, system, design}` (the face's PostScript
@@ -437,7 +439,7 @@ private let hatchHostTable: UnsafeRawPointer = {
 }()
 
 /// A route or element hatch's moment; `configuring` is a hatched frame's
-/// before its web view is made.
+/// before its web view is made (LLP 1020.002 §9).
 enum RouteHatchEvent: UInt32 {
     case built = 0, changed = 1, ended = 2, configuring = 3
     var name: String { switch self { case .built: "built"; case .changed: "changed"; case .ended: "ended"; case .configuring: "configuring" } }
@@ -464,8 +466,8 @@ extension NativeViews {
         }
     }
 
-    /// One hatch call: under the crash breadcrumb, production included,
-    /// and timed by the session's store in a development build.
+    /// One hatch call: under the crash breadcrumb, production included (§4.4),
+    /// and timed by the session's store in a development build (§3.1).
     func timedHatch<T>(_ scope: String, _ moment: String, site: Int? = nil, counts: Bool = true, _ body: () -> T) -> T {
         if let crumbSlot { HatchBreadcrumb.shared?.push(crumbSlot, name: scope, moment: moment, incarnation: hatchIncarnation) }
         defer { if let crumbSlot { HatchBreadcrumb.shared?.pop(crumbSlot) } }
@@ -505,13 +507,13 @@ extension NativeViews {
     }
 
     /// `element` (built, changed), `elementEnded` or, for a frame before its
-    /// web view is made, `elementConfiguration` for a hatched node: its
-    /// view, its kind's platform object
+    /// web view is made, `elementConfiguration` for a hatched node (LLP
+    /// 1075.003.000, LLP 1020.002 §9): its view, its kind's platform object
     /// (the `WKWebViewConfiguration` for `configuring`), and
     /// `{"hatch", "node", "id", "kind", "data"}`. `quiet` leaves the call out
     /// of the journal (a list row's after the first; `state` counts them).
-    /// True when the hatch set `reusable`.
-    /// A node's plan site, by which its hatch's calls are timed: asked
+    /// True when the hatch set `reusable` (LLP 1075.003.000.000 §8).
+    /// A node's plan site, by which its hatch's calls are timed (§3.1): asked
     /// of the runner once a node, and only where calls are timed at all. A
     /// node's last call finds what its first kept, the runner's node being
     /// gone by then.
@@ -547,7 +549,8 @@ extension NativeViews {
         return flags & 1 != 0
     }
 
-    /// `toolbar` for the window toolbar Exact installed (macOS).
+    /// `toolbar` for the window toolbar Exact installed (macOS, LLP
+    /// 1075.003.000 §3.7).
     func toolbarHatch(_ toolbar: AnyObject, window: AnyObject) {
         guard hatchesConnected, let instance, let call = toolbarCall else { return }
         session?.log("hatch toolbar: built")
@@ -556,7 +559,7 @@ extension NativeViews {
 
     /// After the session's module is made: hand it the host's callbacks
     /// when its table has hatches, then let the presenter replay the objects
-    /// it built before (a cold launch's).
+    /// it built before (a cold launch's, LLP 1075.003 Q3 (c)).
     /// The module's side of the hatch table, given before any hatch is
     /// called: its frame clock and diagnostics work from here.
     func openHatches(_ connect: HatchConnectFn, _ module: UnsafeMutableRawPointer) {

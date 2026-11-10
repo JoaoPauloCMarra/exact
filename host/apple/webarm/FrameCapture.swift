@@ -1,4 +1,4 @@
-// A picture of a frame's guest into an `app:/` file:
+// A picture of a frame's guest into an `app:/` file (@ref LLP 1020.002 D7):
 // WebDriver BiDi's `browsingContext.captureScreenshot`, answered by the
 // frame's `capture` record instead of a base64 string.
 import Foundation
@@ -17,7 +17,7 @@ extension WebArm {
     /// path the command named, which the record carries back; `file` the
     /// file it names, empty when it names none; `clip` `[x, y, width,
     /// height]` in the guest's CSS pixels relative to its viewport, or none
-    /// for the whole viewport. `done`, automation's, takes the answer
+    /// for the whole viewport. `done`, automation's (D9), takes the answer
     /// in place of the frame's record.
     func capture(_ op: [String: Any], done: ((Int, Int, String, String) -> Void)? = nil) {
         let path = op["path"] as? String ?? ""

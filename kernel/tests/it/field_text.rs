@@ -1,6 +1,6 @@
 //! A text control's own text, measured by the host's control where that
-//! control sets it with a text engine of its own (on Android a field is the
-//! platform's `EditText`): the measurer's
+//! control sets it with a text engine of its own (LLP 1115.001 D8: on
+//! Android a field is the platform's `EditText`): the measurer's
 //! `field_text` answers for a text control and only for one, and a host
 //! that paints its fields answers nothing and is measured as before.
 use exact_kernel::*;

@@ -1,4 +1,4 @@
-//! Live HTML time presentations and their English fallback.
+//! Live HTML time presentations and their English fallback. @ref LLP 1126 D6
 use crate::{AxisOffer, PropId, TextMeasureRequest, TextMeasurer, TextMetrics, TextRun};
 use exact_num::date::{civil, MONTHS, WEEKDAYS};
 

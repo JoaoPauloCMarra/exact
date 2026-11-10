@@ -115,7 +115,7 @@ fn a_body_to_a_file_is_an_http_reply_written_by_the_host() {
     assert_eq!(written.body_written(), Some(17));
 }
 
-/// What may change its server runs to its end once its
+/// LLP 1146 D2: what may change its server runs to its end once its
 /// answer is let go; what cannot (a safe method), or what is Exact's own
 /// work, a stream or a held request, does not.
 #[test]

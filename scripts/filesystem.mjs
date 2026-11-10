@@ -1,4 +1,4 @@
-// Tooling-only bridge to directory-owned operations.
+// Tooling-only bridge to directory-owned operations. @ref LLP 1030.002.
 // The host deployment target and rustc wrapper every cargo call shares (`withHostDeployment`).
 // And the one removal the tooling does itself: a private directory its own run made (`removePrivateTree`);
 // and the checkout's node_modules, installed from its lock when it has none or one did not finish (`installedModules`).
@@ -421,7 +421,7 @@ export function installedModules(modules = resolve(root, 'node_modules'), lock =
       rmSync(marker, { force: true });
     } finally { drop(lock, mine); }
   }
-  // What is installed is what `bun.lock` says: installed again from it when not, and
+  // What is installed is what `bun.lock` says (LLP 1133.001 D9): installed again from it when not, and
   // refused by name when that does not mend it.
   if (!lockMismatches(dirname(modules)).length) return;
   console.error(`${resolve(root)}: node_modules differs from bun.lock (${lockMismatches(dirname(modules)).join('; ')}); bun install --frozen-lockfile there`);

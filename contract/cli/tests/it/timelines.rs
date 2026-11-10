@@ -1,8 +1,8 @@
-//! Drag timelines in Contract: `-exact-drag-timeline`, `animation-timeline`,
-//! `animation-range` and `timeline-scope` reach the kernel's rows, the
-//! siblings' name resolves through the scope, and a timeline drives paint rows
-//! only: a bound animation whose keyframes animate layout or geometry is
-//! refused when the app compiles.
+//! Drag timelines in Contract (LLP 1057.003 D1, D4): `-exact-drag-timeline`,
+//! `animation-timeline`, `animation-range` and `timeline-scope` reach the
+//! kernel's rows, the siblings' name resolves through the scope, and a
+//! timeline drives paint rows only (Q1): a bound animation whose keyframes
+//! animate layout or geometry is refused when the app compiles.
 
 use exact_kernel::timeline::{
     AnimationRange, AnimationTimeline, Axis, DragTimeline, TimelineScope,
@@ -87,7 +87,7 @@ fn the_rows_reach_the_kernel_and_a_computed_animation_keeps_its_binding() {
 }
 
 /// Keyframes refuse `height` already (`lower-keyframe-property`), and an SVG
-/// element takes no timeline yet, so what reaches this rule is a box
+/// element takes no timeline in phase 1, so what reaches this rule is a box
 /// binding geometry keyframes.
 #[test]
 fn a_timeline_drives_paint_rows_only() {
@@ -104,7 +104,7 @@ fn a_timeline_drives_paint_rows_only() {
                 contract::compile(&app(keyframes, &format!("{animation} {bound}"))).unwrap_err();
             assert_eq!(error.id, "lower-timeline-row", "{keyframes}: {error}");
             assert!(error.message.contains("paint rows only"), "{error}");
-            assert!(error.message.contains("never layout"), "{error}");
+            assert!(error.message.contains("LLP 1057.003"), "{error}");
         }
         // Unbound, or bound to the clock, the same keyframes play as ever.
         contract::compile(&app(keyframes, "animation=\"k 1s both\"")).unwrap();

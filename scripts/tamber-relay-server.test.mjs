@@ -1,4 +1,4 @@
-// The hosted relay on loopback: the ClientHello's
+// The hosted relay (LLP 1121 §5 stage 10c R3) on loopback: the ClientHello's
 // name read and nothing past it, the control endpoint on the relay's only
 // certificate, sessions by run, accounts as hashes (a label never given out
 // again, revocation cutting every stream), TXT records for the connector's
@@ -114,7 +114,7 @@ test('the accounts: a label never given out again, nor one account\'s names anot
     expect(() => loadAccounts(path, DOMAIN)).toThrow('old is revoked: a label is never given out again');
     write({ accounts: { a: { token_sha256: t } }, revoked: ['old'] });
     expect(() => loadAccounts(path, DOMAIN)).toThrow('b was an account and is neither one nor revoked');
-    // Taken off the revoked list and given out again, under another token: labels.seen remembers.
+    // Taken off the revoked list and given out again, under another token (round 1): labels.seen remembers.
     write({ accounts: { a: { token_sha256: t }, b: { token_sha256: t }, old: { token_sha256: hash('new owner') } }, revoked: [] });
     expect(() => loadAccounts(path, DOMAIN)).toThrow('old is revoked: a label is never given out again');
     // One account's names another's, or under or over them; or under the relay's own domain: refused.
@@ -311,7 +311,7 @@ test('accounts add prints a token once and keeps its hash; revoke is for good; -
   expect(CONFIG_HELP.length).toBe(14);
 });
 
-test('the relay gate\'s lines on loopback (scripts/tamber-relay-gate.mjs): every one met', async () => {
+test('R4\'s lines on loopback (scripts/tamber-relay-gate.mjs): every one met', async () => {
   const { gate } = await import('./tamber-relay-gate.mjs');
   const said = [];
   const results = await gate({ say: l => said.push(l) });
@@ -319,7 +319,7 @@ test('the relay gate\'s lines on loopback (scripts/tamber-relay-gate.mjs): every
   expect(results.length).toBe(7);
 }, 120_000);
 
-test('the gate against a deployed relay reads it from the environment: the tokens from their files, two labels', async () => {
+test('the gate against a deployed relay (R4) reads it from the environment: the tokens from their files, two labels', async () => {
   const { deployedRelay } = await import('./tamber-relay-gate.mjs');
   expect(deployedRelay({})).toBe(null);
   const home = mkdtempSync(join(tmpdir(), 'exact-gate-home-'));
@@ -367,7 +367,7 @@ test('the gate\'s deployed mode, against a relay of its own with certificates fr
   } finally { await relay?.close(); rmSync(dir, { recursive: true, force: true }); }
 }, 120_000);
 
-test('a hostile hello, cut and flipped anywhere, is never read past its record and never throws', async () => {
+test('round 1: a hostile hello, cut and flipped anywhere, is never read past its record and never throws', async () => {
   const named = await helloTo('s1-tool.acct.relay.test');
   let seed = 7;
   const rand = n => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed % n; };
@@ -381,7 +381,7 @@ test('a hostile hello, cut and flipped anywhere, is never read past its record a
   }
 });
 
-test('revocation cuts the clients waiting for a connection and the account\'s TXT requests too; a parent moved to another account drops the session on it', async () => {
+test('round 1: revocation cuts the clients waiting for a connection and the account\'s TXT requests too; a parent moved to another account drops the session on it', async () => {
   const { relay, port, path } = await startRelay({ limits: { waitMs: 60_000 } });
   // A session with no idle connection: a client waits.
   const c = await greet(port, hello('acct', TOKENS.acct, [`run: ${RUN}`]));
@@ -409,7 +409,7 @@ test('revocation cuts the clients waiting for a connection and the account\'s TX
   expect([...relay.sessions.values()].map(s => s.tool)).toEqual([]);
 });
 
-test('a session\'s idle connections and its carried and waiting clients are capped; a refused peer that holds its end open is cut', async () => {
+test('round 1: a session\'s idle connections and its carried and waiting clients are capped; a refused peer that holds its end open is cut', async () => {
   const { relay, port } = await startRelay({ limits: { idlePerSession: 2, streamsPerSession: 1, waitMs: 60_000 } });
   const a = await greet(port, hello('acct', TOKENS.acct, [`run: ${RUN}`]));
   await greet(port, hello('acct', TOKENS.acct, [`run: ${RUN}`]));
@@ -425,19 +425,19 @@ test('a session\'s idle connections and its carried and waiting clients are capp
   await until(() => held.conn.destroyed, 3000);
 });
 
-test('a run whose session lapsed (or whose relay restarted) asks for its names again and gets them back; another account, or another run, can\'t take them', async () => {
+test('round 1: a run whose session lapsed (or whose relay restarted) asks for its names again and gets them back; another account, or another run, can\'t take them', async () => {
   const { relay, port } = await startRelay({ limits: { graceMs: 50 } });
   const a = await greet(port, hello('acct', TOKENS.acct, [`run: ${RUN}`]));
   const [, tool, canvas] = a.line.split(' ');
   a.conn.destroy();
   await until(() => relay.sessions.size === 0);
   expect((await greet(port, hello('other', TOKENS.other, [`run: ${RUN}`, `names: ${tool} ${canvas}`]))).line).toBe('REFUSED names not of your account');
-  // Another run of the same account can't claim them either: a run's names are of its own run id.
+  // Another run of the same account can't claim them either (round 2): a run's names are of its own run id.
   expect((await greet(port, hello('acct', TOKENS.acct, [`run: ${'e'.repeat(32)}`, `names: ${tool} ${canvas}`]))).line).toBe('REFUSED names not of your account');
   expect((await greet(port, hello('acct', TOKENS.acct, [`run: ${RUN}`, `names: ${tool} ${canvas}`]))).line).toBe(`READY ${tool} ${canvas}`);
 });
 
-test('the accounts file replaced by a rename, again and again, is read each time', async () => {
+test('round 1: the accounts file replaced by a rename, again and again, is read each time', async () => {
   const { relay, path } = await startRelay();
   const { renameSync } = await import('node:fs');
   const replace = file => { writeFileSync(`${path}.tmp`, JSON.stringify(file)); renameSync(`${path}.tmp`, path); };
@@ -452,7 +452,7 @@ test('the accounts file replaced by a rename, again and again, is read each time
   await until(() => relay.revoked.has('other'), 5000);
 });
 
-test('connections not yet a session\'s or authenticated are capped per address and in all; a cut account\'s TXT request in flight is stopped', async () => {
+test('round 2: connections not yet a session\'s or authenticated are capped per address and in all; a cut account\'s TXT request in flight is stopped', async () => {
   const { port, txt } = await startRelay({ limits: { pendingPerIp: 3 } });
   const silent = () => new Promise(ok => { const s = connectTCP({ host: '127.0.0.1', port }, () => setTimeout(() => ok(s), 50)); s.gone = false; s.on('close', () => { s.gone = true; }); s.on('error', () => {}); closing.push(() => s.destroy()); });
   const held = [await silent(), await silent(), await silent()];
@@ -479,7 +479,7 @@ test('connections not yet a session\'s or authenticated are capped per address a
   expect(txt.size).toBe(0);
 });
 
-test('a log shows an address\'s network only: an IPv4\'s /24, an IPv6\'s /64 (compressed or not, mapped or not)', () => {
+test('round 2: a log shows an address\'s network only: an IPv4\'s /24, an IPv6\'s /64 (compressed or not, mapped or not)', () => {
   expect(masked('203.0.113.9')).toBe('203.0.113.x');
   expect(masked('::ffff:203.0.113.9')).toBe('203.0.113.x');
   expect(masked('2001:db8::1234')).toBe('2001:db8:0:0::/64');
@@ -488,7 +488,7 @@ test('a log shows an address\'s network only: an IPv4\'s /24, an IPv6\'s /64 (co
   expect(masked('nonsense')).toBe('unknown');
 });
 
-test('the relay\'s certificate names its domain alone', async () => {
+test('round 2: the relay\'s certificate names its domain alone', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'exact-relay-cert2-'));
   closing.push(() => rmSync(dir, { recursive: true, force: true }));
   const accounts = join(dir, 'accounts.json');
@@ -496,7 +496,7 @@ test('the relay\'s certificate names its domain alone', async () => {
   expect(() => relayServer({ domain: DOMAIN, tls: selfSignedCertificate([DOMAIN, 'also.example.com']), accounts })).toThrow(`tls.cert does not name ${DOMAIN} alone`);
 });
 
-test('the parser touches no byte past the first record (instrumented), and the relay hands it no more than that record', async () => {
+test('round 3: the parser touches no byte past the first record (instrumented), and the relay hands it no more than that record', async () => {
   const named = await helloTo('s1-tool.acct.relay.test');
   const end = 5 + named.readUInt16BE(3);
   const whole = Buffer.concat([named, Buffer.from('later records, never read')]);
@@ -506,7 +506,7 @@ test('the parser touches no byte past the first record (instrumented), and the r
   expect(furthest).toBe(end - 1);
 });
 
-test('a label ends in a letter or digit, and its sessions\' names must fit under the domain', () => {
+test('round 3: a label ends in a letter or digit, and its sessions\' names must fit under the domain', () => {
   const dir = mkdtempSync(join(tmpdir(), 'exact-relay-label-'));
   try {
     const path = join(dir, 'accounts.json');
@@ -517,7 +517,7 @@ test('a label ends in a letter or digit, and its sessions\' names must fit under
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('a restarted server (a new run) takes its own names back from its lapsed session at once; a live one keeps them', async () => {
+test('round 3 (Grok): a restarted server (a new run) takes its own names back from its lapsed session at once; a live one keeps them', async () => {
   const { port } = await startRelay({ limits: { graceMs: 60_000 } });
   const byo = 'names: tool.tamber.example.com canvas.tamber.example.com';
   const first = await greet(port, hello('other', TOKENS.other, [`run: ${RUN}`, byo]));
@@ -530,7 +530,7 @@ test('a restarted server (a new run) takes its own names back from its lapsed se
   expect((await greet(port, hello('other', TOKENS.other, [`run: ${'c'.repeat(32)}`, byo]))).line).toBe('READY tool.tamber.example.com canvas.tamber.example.com');
 });
 
-test('an account\'s TXT requests under way at once are capped; an authenticated refusal never silences its address; limits count an IPv6 /64 as one', async () => {
+test('round 3 (Grok): an account\'s TXT requests under way at once are capped; an authenticated refusal never silences its address; limits count an IPv6 /64 as one', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'exact-relay-inflight-'));
   closing.push(() => rmSync(dir, { recursive: true, force: true }));
   const accounts = join(dir, 'accounts.json');
@@ -553,7 +553,7 @@ test('an account\'s TXT requests under way at once are capped; an authenticated 
   expect(keyOf('::ffff:203.0.113.9')).toBe('203.0.113.9');
 });
 
-test('a client waiting on a lapsed session, or the account\'s session cap, never keeps a restarted server from its names', async () => {
+test('round 3 re-check (Astra): a client waiting on a lapsed session, or the account\'s session cap, never keeps a restarted server from its names', async () => {
   const { port } = await startRelay({ limits: { graceMs: 60_000, sessionsPerAccount: 1, waitMs: 30_000 } });
   const byo = 'names: tool.tamber.example.com canvas.tamber.example.com';
   const first = await greet(port, hello('other', TOKENS.other, [`run: ${RUN}`, byo]));

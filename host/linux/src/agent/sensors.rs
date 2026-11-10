@@ -1,6 +1,7 @@
-//! A clock advance across which a canvas has a sensor input: the worlds advance a display frame at
-//! a time, each frame's samples handed to their surfaces before the frame, as a live frame does.
-//! One jump would queue a whole span at once, past the world's 1,024-event bound.
+//! A clock advance across which a canvas has a sensor input (LLP 1133.013
+//! D6): the worlds advance a display frame at a time, each frame's samples
+//! handed to their surfaces before the frame, as a live frame does. One jump
+//! would queue a whole span at once, past the world's 1,024-event bound.
 
 use super::{clock_hatched, Presenter};
 use exact_runner::DataSource;

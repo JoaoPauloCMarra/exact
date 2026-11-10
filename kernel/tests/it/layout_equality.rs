@@ -126,7 +126,7 @@ fn random_style(rng: &mut Rng, node_type: NodeType) -> Box<StyleProps> {
         s.mask.set(StyleId::Left);
         s.top = Dimension::Points(rng.below(30) as f32);
         s.mask.set(StyleId::Top);
-        // An axis without an inset sits at its static position,
+        // LLP 1074 T1: an axis without an inset sits at its static position,
         // and an end inset measures from the containing block's far edge.
         match rng.side(6) {
             0 => s.left = Dimension::Auto,
@@ -179,7 +179,7 @@ fn random_style(rng: &mut Rng, node_type: NodeType) -> Box<StyleProps> {
         s.overflow_y = *rng.pick(&[Overflow::Hidden, Overflow::Scroll]);
         s.mask.set(StyleId::OverflowY);
     }
-    // Multi-column containers and the rows that break their flow,
+    // LLP 1093: multi-column containers and the rows that break their flow,
     // drawn from the side stream so the named seeds' trees stay as they were.
     if node_type != NodeType::Text && rng.side(5) == 0 {
         if rng.side(3) != 1 {
@@ -650,7 +650,7 @@ fn incremental_relayout_is_result_equal_to_full_relayout() {
     each_seed([1, 2, 3, 5, 8, 13, 21, 34], |seed| run(seed, 40));
 }
 
-/// A tree under a multi-column root, its cut's resume point
+/// LLP 1093 D5: a tree under a multi-column root, its cut's resume point
 /// and used height moving as the content does, equals a fresh replay and a
 /// rehydration bit for bit.
 #[test]
@@ -706,7 +706,7 @@ fn long_run_single_seed() {
 // Seeds that once differed from a fresh layout, each through an input Taffy's
 // layout cache key left out (vendor/taffy/EXACT-PATCHES.md, patch 11).
 
-/// A parent turns from block to flex, and its block child's final
+/// Round 13: a parent turns from block to flex, and its block child's final
 /// layout, with its first child's 4.5-point margin collapsed through it, was
 /// reused as a flex item's (`vertical_margins_are_collapsible`, `sizing_mode`).
 #[test]
@@ -714,7 +714,7 @@ fn seed_2423214_block_child_of_a_new_flex_parent() {
     run(2423214, 14);
 }
 
-/// An item's own percentage height, resolved against a 144-point
+/// Round 7: an item's own percentage height, resolved against a 144-point
 /// parent under `InherentSize`, answered a `ContentSize` probe with no parent
 /// height (`sizing_mode`, the parent's height).
 #[test]
@@ -722,7 +722,7 @@ fn pane_seed_405_percentage_height_probe() {
     run_panes(405, 40);
 }
 
-/// A measurement whose `height: 86%` resolved against a 62-point
+/// Round 13: a measurement whose `height: 86%` resolved against a 62-point
 /// parent answered the same probe once the parent's height was auto (the
 /// parent's height: the measurement key compared only its width).
 #[test]
@@ -730,7 +730,7 @@ fn pane_seed_503_percentage_height_after_the_parent_loses_its_height() {
     run_panes(503, 40);
 }
 
-/// A block parent's `InherentSize` width probe, which applies the
+/// Round 27: a block parent's `InherentSize` width probe, which applies the
 /// child's own size styles, answered a flex base-size probe, which ignores
 /// them: 58 points for 110 (`sizing_mode`, `vertical_margins_are_collapsible`).
 #[test]
@@ -954,7 +954,7 @@ fn reader_resize_replacement_and_recreation_equal_replay_and_rehydration() {
     }
 }
 
-// Exclusions are pure derived geometry.
+// @ref LLP 1043.000 §3 D3/D4 — exclusions are pure derived geometry.
 #[test]
 fn moving_exclusions_equal_fresh_replay_and_rehydration() {
     use exact_kernel::{FlowShape, ShapeOutside, WrapFlow};
@@ -1243,7 +1243,7 @@ fn default_block_alignment_preserves_nested_collapsed_margins() {
     assert_eq!(k.node(4).unwrap().frame.y, 211.);
 }
 
-/// Hiding a static box between an absolute box and its
+/// LLP 1074 T1: hiding a static box between an absolute box and its
 /// containing block hides the absolute box too; the containing block must not
 /// lay it out from the static position its parent kept while visible.
 #[test]

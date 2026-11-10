@@ -35,7 +35,7 @@ pub(super) fn roster_spelling(f: exact_plan::Stdlib, spec: &str) -> &str {
         (Stdlib::Length | Stdlib::IsEmpty, "any") => "string | list",
         (Stdlib::ToString, "any") => "number | string | bool",
         (Stdlib::First | Stdlib::At, "any") => "list",
-        // The ISO 4217 codes `"currency"` takes, too many to spell here.
+        // The ISO 4217 codes `"currency"` takes (LLP 1116 D8), too many to spell here.
         (Stdlib::FormatNumber, code) if code.starts_with("\"USD\"") => "\"USD\" | \"EUR\" | …",
         _ => spec,
     }
@@ -181,7 +181,7 @@ pub(super) fn call_arity<P: std::fmt::Display>(
     params: impl IntoIterator<Item = P>,
 ) -> String {
     let params: Vec<_> = params.into_iter().map(|p| p.to_string()).collect();
-    // A trailing optional parameter is spelled `number?`.
+    // A trailing optional parameter is spelled `number?` (LLP 1088 D2).
     let required = params.iter().filter(|p| !p.ends_with('?')).count();
     let count = if required == params.len() {
         params.len().to_string()
@@ -189,7 +189,7 @@ pub(super) fn call_arity<P: std::fmt::Display>(
         format!("{required} to {}", params.len())
     };
     if contract_syntax::idioms::is_method(name) && !params.is_empty() {
-        // `x.slice(…)` counts what is in its parentheses.
+        // `x.slice(…)` counts what is in its parentheses (LLP 1116.015 D2).
         let rest = &params[1..];
         let required = required.saturating_sub(1);
         let count = if required == rest.len() {
@@ -374,8 +374,8 @@ fn visit_shape(
 /// The lexical scope at each expanded region arm, by tag and arm, whose
 /// subject types now, and whether every region's subject typed. A region
 /// over a list a later write completes (`state items = []`) is skipped,
-/// with all it holds: the view check refuses a list that never types,
-/// without a fixed point.
+/// with all it holds: the view check refuses a list that never types
+/// (@ref LLP 1088 D6's two repros, without its fixed point).
 fn owner_scopes(
     c: &Component,
     ct: &ComponentTypes,
@@ -394,7 +394,7 @@ fn owner_scopes(
 /// Infer each lifted child state's initializer where its instance is
 /// created: in its use site's scope, after derives and resources have
 /// types, so it may read them, a row's item, a `match` binding, and every
-/// earlier state.
+/// earlier state (LLP 1017 P4c).
 pub(super) fn infer_owned_state_initializers(
     c: &Component,
     ct: &mut ComponentTypes,
@@ -551,7 +551,7 @@ fn collect_owner_scopes(
     complete
 }
 
-/// The three pickers' positional arguments: an element
+/// The three pickers' positional arguments (LLP 1069.010 D2): an element
 /// id, then `multiple` (a bool) for `showOpenFilePicker` or
 /// `suggestedName` (a string) for `showSaveFilePicker`.
 fn picker_args(
@@ -604,10 +604,10 @@ fn picker_args(
     Ok(())
 }
 
-/// `saveFile(id, from, suggestedName)`: three strings,
+/// `saveFile(id, from, suggestedName)` (LLP 1069.010 D3): three strings,
 /// positional. Whether `from` is granted is the host's to refuse. Or the
 /// file's text itself, `saveFile(id, text=…, suggestedName=…)`, so
-/// exporting what is on screen is one press: the names
+/// exporting what is on screen is one press (x2apps notes #4): the names
 /// are `share`'s `text` and `showSaveFilePicker`'s `suggestedName`.
 fn save_file_args(
     args: &[Expr],
@@ -654,7 +654,7 @@ fn save_file_args(
     Ok(())
 }
 
-/// `share(title=, text=, url=, files=)`:
+/// `share(title=, text=, url=, files=)` (LLP 1069.003 D1; LLP 1125 D12):
 /// the Web Share API's member names, named only, at least one of `text`,
 /// `url` and `files`; each a string but `files`, a list of strings. A
 /// literal file is an `app:/` path or an element's `"#id"`. Whether `url`
@@ -711,7 +711,7 @@ fn share_args(args: &[Expr], scope: &Scope, shapes: &Shapes, span: Span) -> Resu
 }
 
 /// `files=`: a list of strings; a literal list shares something, and each
-/// literal entry is an `app:/` path or an `"#id"`.
+/// literal entry is an `app:/` path or an `"#id"` (LLP 1125 D12).
 fn share_files(value: &Expr, t: &Ty) -> Result<(), TypeError> {
     if Ty::List(Box::new(Ty::String)).unify(t).is_none() {
         return err(
@@ -742,13 +742,13 @@ fn share_files(value: &Expr, t: &Ty) -> Result<(), TypeError> {
     Ok(())
 }
 
-/// `scrollIntoView("list-id", key, block=, inline=, behavior=, row=)`: a
-/// virtualized list's `id` as a literal, a row key, and the
+/// `scrollIntoView("list-id", key, block=, inline=, behavior=, row=)` (LLP
+/// 1070.000 §1): a virtualized list's `id` as a literal, a row key, and the
 /// web's `ScrollIntoViewOptions` by name with literal values; `row=` names an
 /// inner list's outer row. Whether the list exists is the runner's to find.
 /// With one positional argument, `scrollIntoView("element-id", block=,
 /// inline=, behavior=)` is `Element.scrollIntoView()` on any element by its
-/// HTML `id`, as `focus("id")` names one: its scroll
+/// HTML `id`, as `focus("id")` names one (minesweeper F3): its scroll
 /// containers, innermost first, then the page; the host finds it.
 fn into_view_args(
     args: &[Expr],
@@ -872,15 +872,15 @@ pub(super) fn check_command(
     span: Span,
 ) -> Result<(), TypeError> {
     if !HOST_COMMANDS.contains(&name) {
-        // A name some component declares as an action is told where it is:
-        // this component's own and its action props and
+        // A name some component declares as an action is told where it is
+        // (LLP 1089 D10): this component's own and its action props and
         // injects are calls, which never reach here.
         let message = match shapes.actions.get(name) {
             Some(owner) if owner != component => format!(
                 "`{name}` is an action of `{owner}`, not in `{component}`'s scope; pass it as an `action` prop or `provide` it"
             ),
             None if matches!(name, "showNotification" | "closeNotification" | "setAppBadge" | "clearAppBadge") => format!(
-                "`{name}` is `@exact/notifications`': `exact add notifications`, then `use {name} from \"@exact/notifications\"` (`closeNotification` takes `tag=`)"
+                "`{name}` is `@exact/notifications`' (LLP 1133.004): `exact add notifications`, then `use {name} from \"@exact/notifications\"` (`closeNotification` takes `tag=`)"
             ),
             _ => format!(
                 "`{name}` is not a host command; the hosts answer {}",
@@ -912,7 +912,7 @@ pub(super) fn check_command(
             span,
         );
     }
-    // one opacity, 0 (unseen) to 1 (opaque).
+    // @ref LLP 1069.010 — one opacity, 0 (unseen) to 1 (opaque).
     if name == "setWindowOpacity" {
         let fits = match args {
             [Expr::Number(n, _)] => (0.0..=1.0).contains(n),
@@ -932,7 +932,7 @@ pub(super) fn check_command(
     if name == "close" && args.len() > 1 {
         return err(
             "type-close",
-            "`close()` closes the window this session shows, without asking its `beforeunload` again; `close(id)` closes the dialog with that `id`; nothing else",
+            "`close()` closes the window this session shows, without asking its `beforeunload` again; `close(id)` closes the dialog with that `id` (LLP 1101.001 P5); nothing else",
             span,
         );
     }
@@ -1008,7 +1008,7 @@ pub(super) fn check_command(
     if name == "setRootFontSize" {
         return root_font_size_args(args, scope, shapes, span);
     }
-    // one factor, CSS px per device-independent
+    // @ref LLP 1021 §5.3.1 — one factor, CSS px per device-independent
     // pixel: 1 is Actual Size.
     if name == "setPageZoom" {
         let fits = match args {
@@ -1025,7 +1025,7 @@ pub(super) fn check_command(
             span,
         );
     }
-    // an axis and its value; lowering checks literal
+    // @ref LLP 1121 D5 — an axis and its value; lowering checks literal
     // ones against the design's axes.
     if name == "setMode" {
         let [axis, value] = args else {
@@ -1085,9 +1085,9 @@ pub(super) fn check_command(
 }
 
 /// `setRootFontSize(px)`, a number of CSS pixels, `setRootFontSize("125%")`,
-/// a percentage of the host's size that follows it, or
-/// `setRootFontSize("medium")`, CSS's keyword for the host's own size.
-/// A size the source spells as zero or less, or a string that
+/// a percentage of the host's size that follows it (LLP 1121 D6), or
+/// `setRootFontSize("medium")`, CSS's keyword for the host's own size (LLP
+/// 1069.000 D3). A size the source spells as zero or less, or a string that
 /// is neither, is refused here; a computed one, when it runs.
 fn root_font_size_args(
     args: &[Expr],
@@ -1126,7 +1126,8 @@ pub(super) fn check_view(nodes: &[Node], scope: &Scope, shapes: &Shapes, sink: &
                 ..
             } => {
                 for p in positional {
-                    // `scroll document` and `input switch` are words, not names.
+                    // `scroll document` and `input switch` are words, not names
+                    // (LLP 1048.003 D4, LLP 1069.001 D1).
                     if !contract_syntax::is_scroll_document(tag, p)
                         && !contract_syntax::is_input_switch(tag, p)
                         && !contract_syntax::is_input_multiple(tag, p)
@@ -1315,7 +1316,7 @@ fn check_attr(a: &Attr, scope: &Scope, shapes: &Shapes) -> Result<(), TypeError>
     if shapes.style_attr.is_some_and(|style| style(&a.name)) {
         return style_value(&a.value, scope, shapes).map(|_| ());
     }
-    // `glassGroup` alone may put the literal
+    // @ref LLP 1053.000.000.000 D1 — `glassGroup` alone may put the literal
     // `"auto"` beside numbers in a choice; lowering rewrites it to `-1`.
     if a.name == "glassGroup" {
         return glass_group_value(&a.value, scope, shapes).map(|_| ());

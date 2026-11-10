@@ -10,7 +10,7 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * A view's design tokens, by name: `ExactTamber(view).color("surface.card")` is the colour
+ * A view's design tokens, by name (LLP 1121 D12, stage 5): `ExactTamber(view).color("surface.card")` is the colour
  * exact2 paints that token in at [view]'s place, as an Android `Color` int, and [observe] says when it may have moved.
  *
  * The place is the native module element whose view is [view] or holds it ([Natives.place]): its node, under the
@@ -30,7 +30,7 @@ class ExactTamber(private val view: View) {
     private var id = -1
     private val names = LinkedHashSet<String>()
     private var colors: Map<String, Int?> = emptyMap()
-    /** The lengths and numbers asked, and their answers. */
+    /** The lengths and numbers asked (stage 6 G), and their answers. */
     private val lengthNames = LinkedHashSet<String>()
     private val numberNames = LinkedHashSet<String>()
     private var lengths: Map<String, Float?> = emptyMap()
@@ -52,7 +52,7 @@ class ExactTamber(private val view: View) {
     }
 
     /** Length token [name] at this view's place, in points (dp: a `rem` by the person's text size, a text style at
-     * it); [fallback] for a name the design lacks. A value: read it again in [observe]. */
+     * it); [fallback] for a name the design lacks (stage 6 G). A value: read it again in [observe]. */
     @JvmOverloads
     fun length(name: String, fallback: Float = 0f): Float {
         val at = place()
@@ -64,7 +64,7 @@ class ExactTamber(private val view: View) {
         synchronized(lock) { return lengths[name] ?: fallback }
     }
 
-    /** Number token [name] at this view's place; [fallback] for a name the design lacks. */
+    /** Number token [name] at this view's place; [fallback] for a name the design lacks (stage 6 G). */
     @JvmOverloads
     fun number(name: String, fallback: Double = 0.0): Double {
         val at = place()

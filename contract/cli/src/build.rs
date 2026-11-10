@@ -1,4 +1,4 @@
-//! The build CLI's human and structured diagnostics.
+//! The build CLI's human and structured diagnostics. @ref LLP 1035.005 D2.
 
 use std::{io::Write, path::Path, process::ExitCode};
 
@@ -10,7 +10,7 @@ struct Options<'a> {
     json: bool,
     errors_only: bool,
     map: bool,
-    /// A widget entry's kind: its plan instead of the app's,
+    /// A widget entry's kind (LLP 1126 D2): its plan instead of the app's,
     /// compiled as the bake compiles it from `app.json` beside the input.
     entry: Option<&'a str>,
 }
@@ -115,7 +115,7 @@ fn report(error: &contract::CompileError, json: bool, code: u8) -> ExitCode {
     report_all(std::slice::from_ref(error), &[], json, code)
 }
 
-/// Every diagnostic, the refusals and then the warnings: one
+/// Every diagnostic, the refusals and then the warnings (LLP 1116 D6): one
 /// JSON array, or each on its own lines.
 fn report_all(
     errors: &[contract::CompileError],
@@ -175,7 +175,7 @@ pub(super) fn run(args: &[String]) -> ExitCode {
     let want_map = map;
     // A game's surface arguments are checked apart: against a declaration
     // older than the game's Rust they are warnings, never hiding the
-    // compile's own refusals.
+    // compile's own refusals (the platformer's diary, R4).
     let surfaces = contract::surface_findings(Path::new(input));
     let mut refused = match &surfaces {
         Ok(s) if s.newer.is_none() => s.findings.clone(),
@@ -194,7 +194,7 @@ pub(super) fn run(args: &[String]) -> ExitCode {
             eprintln!("warning: {finding}");
         }
     }
-    // Warnings never fail the build; they follow its refusals.
+    // Warnings never fail the build; they follow its refusals (LLP 1116 D6).
     let (compiled, mut warnings) = contract::compile_path_all_warned(Path::new(input), true);
     if let Ok(s) = &surfaces {
         if s.newer.is_some() && !json && !errors_only {

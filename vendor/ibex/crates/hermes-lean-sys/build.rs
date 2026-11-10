@@ -77,7 +77,8 @@ fn main() {
     let links_en_icu_data = std::env::var_os("CARGO_FEATURE_ICU_EN_DATA").is_some();
     let links_full_icu_data = std::env::var_os("CARGO_FEATURE_ICU_FULL_DATA").is_some();
 
-    // A process links exactly one VM archive identity.
+    // @ref LLP 0057.000#l1--the-bindings-door — R-e permits exactly one
+    // linked archive identity in a process.
     if links_full_runtime && links_lean_runtime {
         panic!("hermes-lean-sys features `link` and `link-lean` are mutually exclusive; select exactly one VM archive");
     }
@@ -111,7 +112,7 @@ fn main() {
         .unwrap_or_else(|error| panic!("cannot inspect selected Hermes compiler: {error}"));
     metadata("include_dir", &install.include_dir.display().to_string());
     metadata("hermesc_path", &install.hermesc.display().to_string());
-    // Consumers use the compiler from
+    // @ref LLP 0068.002#2-patch-disposition — consumers use the compiler from
     // this resolution, including the authenticated host half of a cross build.
     println!(
         "cargo:rustc-env=HERMES_LEAN_HERMESC_PATH={}",
@@ -230,9 +231,9 @@ fn main() {
         emit_link_lines(&target_os, &target_vendor, &prepared);
     }
     if links_icu && target_os == "linux" {
-        // The ICU-data identity is separate from the VM identity so the link
-        // metadata names the exact selected data archive while the common ICU
-        // code remains receipt-bound.
+        // @ref LLP 0057.000#l1--the-bindings-door — the ICU-data identity is
+        // separate from the VM identity so R-e names the exact selected data
+        // archive while the common ICU code remains receipt-bound.
         let (archive, digest, library) = if links_full_icu_data {
             (
                 install
@@ -277,16 +278,17 @@ fn main() {
         emit_linux_icu_link_lines(&install.lib_root, library);
     }
     if links_icu && target_os == "windows" {
-        // Windows Intl uses the OS ICU: there is no bundled ICU and no data
-        // archive, so there is no LINKED_ICU_DATA_* identity to claim. `icu`
-        // links the SDK's frozen `icuuc`/`icuin` import libraries, the same ones
-        // the Hermes VM imports (above), so Ibex's Intl shims also link without
-        // a VM in the graph. Nothing links `icu.lib`: the `unumf_*` entry points
-        // only `icu.dll` exports are bound at run time by `ibex2` from
-        // System32's `icu.dll` by full path, so this crate adds no `icu.dll`
-        // import and an embedder needs no linker flag. (An embedder that also links `windows-sys`'s catch-all
-        // import library may see the same names bound to `icu.dll` directly,
-        // which is equivalent.)
+        // @ref LLP 0057.000#511-windows-intl-uses-the-os-icu — Windows has no
+        // bundled ICU and no data archive, so there is no LINKED_ICU_DATA_*
+        // identity to claim. `icu` links the SDK's frozen `icuuc`/`icuin`
+        // import libraries, the same ones the Hermes VM imports (above), so
+        // Ibex's Intl shims also link without a VM in the graph. Nothing links
+        // `icu.lib`: the `unumf_*` entry points only `icu.dll` exports are
+        // bound at run time by `ibex2` from System32's `icu.dll` by full path,
+        // so this crate adds no `icu.dll` import and an embedder needs no
+        // linker flag. (An embedder that also links `windows-sys`'s catch-all
+        // import library may see the same names bound to `icu.dll` directly;
+        // LLP 0057.000 §5.1.1 records that equivalent case.)
         // Unused import libraries add no import. `icu-full-data` selects
         // nothing more.
         println!("cargo:rustc-env=HERMES_LEAN_LINKED_OS_ICU={WINDOWS_OS_ICU_DLL}");

@@ -1,4 +1,4 @@
-//! Pencil's `.pen`: its variables and themes read
+//! Pencil's `.pen` (LLP 1121 stage 13 B): its variables and themes read
 //! into the DTCG importer's layers. Every value is mapped or reported,
 //! counted; the transaction lands; and in every context the design selects
 //! what Pencil's own rule selects ("the last entry whose theme is

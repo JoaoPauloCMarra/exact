@@ -1,8 +1,9 @@
 # The bake-off
 
-Agents build the same iPhone app specs with Exact and with SwiftUI or UIKit, a blind grader compares
-each pair, a scroll probe measures how each app's lists feel, and what Exact lost becomes the next
-round's changes.
+The loop of LLP 1116: agents build the same iPhone app specs with Exact and with SwiftUI or UIKit, a blind grader
+compares each pair, a scroll probe measures how each app's lists feel, and what Exact lost becomes the next round's
+changes. Rounds 1 to 20 ran from `~/bakeoff`, which is gone; this directory rebuilds it, so its numbers start a new
+series and are not comparable with round 20's.
 
 | Piece | What it is |
 |---|---|

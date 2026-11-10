@@ -1,4 +1,4 @@
-//! The directory watch: a descriptor `poll` finds readable when an entry
+//! D4's directory watch: a descriptor `poll` finds readable when an entry
 //! of the socket's directory is created, removed or renamed (`kqueue` on
 //! Apple, `inotify` on Linux), so a listener learns at once that its path
 //! vanished or now names another listener's socket.

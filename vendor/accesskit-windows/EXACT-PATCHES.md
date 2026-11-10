@@ -11,7 +11,7 @@
 - Packaging omissions: `.cargo_vcs_info.json`, `CHANGELOG.md`, `Cargo.lock`
   and `Cargo.toml.orig`. The provenance above preserves the source pin.
 
-A text field needs RichEdit's native fragment under the field's
+LLP 1115.004 D7 requires RichEdit's native fragment under the field's
 AccessKit node. Private node navigation and context ownership require a
 patch inside the adapter. The candidate remains disabled and unqualified;
 Shelf's UIA discovery result is recorded in `host/ink/MEASUREMENTS.md`.

@@ -1,4 +1,4 @@
-// An importer's proposal as the wire holds it:
+// An importer's proposal as the wire holds it (LLP 1121 D14, stage 10b):
 // its operations, each role override offered on its own, and a re-import's
 // dial changes and marked pins, each naming the operations it is. And
 // `bun exact.mjs tamber import`, which plans one on this machine and holds it.
@@ -23,10 +23,10 @@ export function importReview(imported) {
   return { ops, review: { importer: imported.importer, counted: imported.counted, unmapped: imported.unmapped, offers, tokens: imported.ops.length, ...(imported.notes?.length ? { notes: imported.notes } : {}), ...marked(ops, imported.dials, imported.pins) } };
 }
 
-/** A re-import's dial changes and marked pins, when it has any,
+/** A re-import's dial changes and marked pins (stage 10b), when it has any,
  * each naming the operations it is (`items`), as an offer does. */
 export function marked(ops, dials = [], pins = []) {
-  // Each operation's place by what it sets, found once (not a scan per pin).
+  // Each operation's place by what it sets, found once (round 3 of the checker sweep: a scan a pin).
   const places = new Map();
   ops.forEach((op, i) => {
     const key = op.op === 'set-dial' ? JSON.stringify(['dial', op.name]) : op.op === 'set-token' ? JSON.stringify(['token', op.name, op.when ?? []]) : null;
@@ -39,7 +39,7 @@ export function marked(ops, dials = [], pins = []) {
 }
 
 /** `bun exact.mjs tamber import <kind> <source> <server url> [--app <dir>]
- * [--prefix <p>]`: another system's theme as held proposals
+ * [--prefix <p>]`: another system's theme (LLP 1121 D14) as held proposals
  * on the design server: its transaction as one, each role override it
  * offers as its own, for a person to accept or decline. Prints the count
  * and the unmapped report. The server plans and holds it (`import`, as the
@@ -72,7 +72,7 @@ export async function importTheme(argv) {
   let sources;
   try { sources = sourcesOf(resolve(source)); } catch (e) { console.error(`tamber import: ${e.message}`); return 1; }
   if (kind !== 'astryx') {
-    // The server plans on its own app: one `--app` names elsewhere is refused.
+    // The server plans on its own app: one `--app` names elsewhere is refused (Grok's round 1).
     const hello = await post({ method: 'hello' });
     const served = hello.ok?.app && realpathSync(resolve(hello.ok.app));
     if (served !== realpathSync(app)) { console.error(`tamber import: ${origin} serves ${served ?? 'an app it does not name'}, not ${app}`); return 1; }

@@ -1,4 +1,5 @@
-//! The presenter's half of the hatches: when each moment runs, and what a hatch's asks become.
+//! The presenter's half of the hatches (@ref LLP 1075.003.000.001 §2.1–§2.5,
+//! §4.1): when each moment runs, and what a hatch's asks become.
 //!
 //! Hatch code runs on the loop's thread, between turns, never inside a
 //! commit or the painter's walk. The hatches connect as first pixel is
@@ -55,7 +56,7 @@ impl<D: DataSource> Presenter<D> {
             }
             return;
         }
-        // `EXACT_HATCHES=off`, a development build's switch: a
+        // `EXACT_HATCHES=off` (§2.6), a development build's switch: a
         // production one has dropped the name (`app.rs`).
         let production = exact_runner::delivery::production(&self.compat);
         if !production && std::env::var("EXACT_HATCHES").as_deref() == Ok("off") {
@@ -127,7 +128,7 @@ impl<D: DataSource> Presenter<D> {
             prefers_reduced_motion: preferences.reduced_motion,
             prefers_reduced_transparency: preferences.reduced_transparency,
             // The Linux and Windows entries' one session owns the process
-            // and its window.
+            // and its window (§2.1.1).
             process_owner: true,
             is_new: false,
             is_live: true,
@@ -249,7 +250,7 @@ impl<D: DataSource> Presenter<D> {
         frame: Rect,
     ) {
         // A word the plan does not give this platform, or the module was not
-        // built to handle: shown, never called, journaled once, listed.
+        // built to handle (§4.3): shown, never called, journaled once, listed.
         if !self.host.plan_gives_hatch(&word, HATCH_PLATFORM) {
             if self.hatches.first_unhandled(&word, "plan") {
                 self.host.log(format!("hatch element {word}: the plan does not give it to this platform; its nodes are shown and never called"));
@@ -295,9 +296,9 @@ impl<D: DataSource> Presenter<D> {
         };
         self.hatches.nodes.insert(id, told);
         self.hatch_element(&element, site, list.is_some(), "built");
-        // What a hatched node gives up here, once a word.
+        // What a hatched node gives up here (LLP 1075.003.000 §3.5), once a word.
         if self.hatches.first_said(&word) {
-            self.host.log(format!("hatch element {word}: nothing beyond the call on this host; a node with an overlay is painted each frame, outside its row's kept picture"));
+            self.host.log(format!("hatch element {word}: nothing beyond the call on this host; a node with an overlay is painted each frame, outside its row's kept picture (LLP 1075.003.000)"));
         }
         if let Some(name) = list.filter(|_| self.hatches.first_warned(&word)) {
             self.host.log(format!("hatch element {word} is in a row of {name}: each row's mount calls its hatch on the host loop's thread"));
@@ -424,7 +425,7 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    // Acts.
+    // Acts (§2.5).
 
     /// Run the acts queued now, at most 64, in order. What they queue (a
     /// `changed` that clicks again) waits for a later drain. How many ran.
@@ -546,7 +547,7 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    // The frame clock.
+    // The frame clock (§2.4).
 
     /// The loop's next deadline: a runner timer, hatch or scroll completion.
     pub fn timer_due_ms(&self) -> Option<f64> {
@@ -649,7 +650,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// Under the agent, at the instant the clock stands at, its commits in
-    /// the tree: the moments they caused, each due tick in
+    /// the tree (§2.4 steps 1–3): the moments they caused, each due tick in
     /// registration order, each due `after` in due order, then the acts
     /// those asked, snapshot after snapshot with the moments their commits
     /// cause and any `after` now due, until nothing is queued. The limit's
@@ -701,7 +702,7 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    // Observed input.
+    // Observed input (§2.2.2).
 
     /// The observed nodes from `hit` up, innermost first.
     fn hatch_chain(&self, hit: Option<ViewId>) -> Vec<u32> {
@@ -861,7 +862,7 @@ impl<D: DataSource> Presenter<D> {
         self.hatch_requests();
     }
 
-    // A reload, and the session's end.
+    // A reload, and the session's end (§4.3).
 
     /// Every hatched node, then the window, then the app, ends.
     fn hatch_close(&mut self) {
@@ -913,7 +914,7 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    // Reads, which change nothing.
+    // Reads, which change nothing (§3.3).
 
     /// `state.hatches`, for an app that has hatches.
     pub fn hatch_state(&self) -> Option<serde_json::Value> {
@@ -955,7 +956,7 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    /// Whether a hatch asked for Save Trace, a second since the last.
+    /// Whether a hatch asked for Save Trace, a second since the last (§3.2).
     pub fn hatch_trace_asked(&self) -> bool {
         (self.hatches.shared()).is_some_and(|shared| shared.store().take_trace())
     }

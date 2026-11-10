@@ -1,14 +1,14 @@
-//! The neutral look, where this painter is the whole of a control: on a host
-//! with no platform toolkit under it (the Linux desktop, Windows) what the
-//! author left unsaid is drawn as the web draws it under its neutral look
-//! (`host/web/neutral.css`), from the same colour
+//! The neutral look, where this painter is the whole of a control (LLP
+//! 1115.000 D17): on a host with no platform toolkit under it (the Linux
+//! desktop, Windows) what the author left unsaid is drawn as the web draws
+//! it under its neutral look (`host/web/neutral.css`), from the same colour
 //! column and the same metrics. Both are the schema's: the role table's
 //! neutral column and the look's rows of `metrics`, which a test holds the
 //! page's sheet to.
 //!
 //! The process says so once, before it boots a plan
 //! (`app::show_neutral_look`). Android's reader does not: it has a platform
-//! and paints Material, and until its controls are Material's
+//! and paints Material (LLP 1115.001), and until its controls are Material's
 //! too they are the ones this painter drew before the neutral look, which is
 //! every `else` beside a [`neutral`] here.
 use super::rgba;
@@ -32,7 +32,7 @@ pub(crate) fn material() -> bool {
     metrics::column() == metrics::Column::Material
 }
 
-/// The symbol shapes this process draws: Windows' and
+/// The symbol shapes this process draws (LLP 1115.001 D14): Windows' and
 /// Android's own where they draw a role differently, else the table's,
 /// which the Linux desktop shares with the web. Android's swapchain host,
 /// which shows no Material look, still draws Android's symbols.
@@ -122,9 +122,10 @@ pub(crate) fn accents(authored: Option<[u8; 4]>, dark: bool) -> ([u8; 4], [u8; 4
     (accent, ink)
 }
 
-/// The page's own colour under a scheme: the `-exact-background` role, the
-/// platform's surface where a host reported one and the role's pair elsewhere.
-/// What an unset background shows, never white under a dark scheme.
+/// The page's own colour under a scheme: the `-exact-background` role (LLP
+/// 1115.000 D3.6), the platform's surface where a host reported one and the
+/// role's pair elsewhere. What an unset background shows (LLP 1115 D2),
+/// never white under a dark scheme.
 pub fn page_color(dark: bool) -> [u8; 4] {
     static PAGE: std::sync::LazyLock<Option<u8>> =
         std::sync::LazyLock::new(|| exact_kernel::style::roles::role("-exact-background"));

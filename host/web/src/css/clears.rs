@@ -22,7 +22,7 @@ pub(super) fn push(out: &mut String, id: StyleId, press: bool) -> bool {
         // The absent part uses the shell's platform placeholder fallback.
         PlaceholderColor => out.push_str("--exact-placeholder-color:initial;"),
         // No pressed paint is no declaration: the glue and the shell's
-        // dim read one's presence.
+        // dim read one's presence (LLP 1061 D7).
         PressOpacity | PressOpacityTo | PressBackgroundColor | PressColor => {}
         _ => {
             property(out, id);

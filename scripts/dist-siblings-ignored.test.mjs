@@ -13,7 +13,7 @@ import { newerThan } from './agent-launch.mjs';
 const ROOT = resolve(new URL('..', import.meta.url).pathname);
 const SIBLINGS = ['.gen/0123456789abcdef0123456789abcdef/app.js', '.leases/0123456789abcdef0123456789abcdef/1-1', '.gen.reaped', '.lock', '.previous/app.js', '.stage-abc123/app.js'];
 // Every web dist that sits in this checkout (an outside app's is its own target/web-dist).
-const DISTS = ['host/web/dist', 'game/games/garden/dist', 'game/games/beacons/dist', 'apps/caltrain/target/web-dist'];
+const DISTS = ['host/web/dist', 'game/games/forest/dist', 'game/games/garden/dist', 'game/games/rivals/dist', 'game/games/beacons/dist', 'apps/caltrain/target/web-dist'];
 
 test('beside every in-tree web dist, the swap\'s siblings are git-ignored', () => {
   const paths = DISTS.flatMap((d) => SIBLINGS.map((s) => d + s));

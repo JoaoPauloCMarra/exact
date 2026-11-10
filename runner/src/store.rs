@@ -1,6 +1,6 @@
 //! The store: durable client state as the runner holds it.
 //!
-//! A snapshot comes in and writes go out; the grant is the load list.
+//! @ref LLP 1018 D1 (snapshot in, writes out) / D3 (the grant is the load list)
 //!
 //! The host reads the app's kept secrets into a snapshot before boot and
 //! persists the writes after each commit; the runner never reaches a
@@ -15,7 +15,7 @@ use crate::runner::DataError;
 
 mod presence;
 
-/// Durable client state as the runner holds it: the host's
+/// Durable client state as the runner holds it (LLP 1018 D1): the host's
 /// snapshot of the app's kept secrets, read before boot, and the writes
 /// since, which the host persists after each commit. The runner never
 /// reaches a platform — a read is a map lookup; a write is a map update and
@@ -31,45 +31,45 @@ pub struct Store {
     /// A child executor may see only the intersection with its own grants.
     restricted: bool,
     values: exact_kernel::SortedMap<String, Vec<u8>>,
-    /// The granted names whose line carries a presence policy,
-    /// in declaration order: each one's occupancy is a runner-owned
+    /// The granted names whose line carries a presence policy (LLP 1133.010
+    /// D4), in declaration order: each one's occupancy is a runner-owned
     /// entry of `values` (`exact.presence.<name>`), and its bytes are never
-    /// there while it is locked or pending.
+    /// there while it is locked or pending (D5).
     presence: Vec<(String, exact_grants::Presence)>,
-    /// The snapshot it opened with held a granted secret: a launch's fact,
-    /// unchanged by later writes.
+    /// The snapshot it opened with held a granted secret (LLP 1027 D4,
+    /// 2026-10-10): a launch's fact, unchanged by later writes.
     opened_with_secrets: bool,
     /// It opened with a presence name locked or pending: the launch shows no
-    /// kept answer.
+    /// kept answer (LLP 1133.010 D5).
     opened_locked: bool,
     /// A read of a locked name's value this answer made, which a Rust
-    /// source's answer fails for (`InvalidAccessError`).
+    /// source's answer fails for (`InvalidAccessError`, D5).
     locked_read: std::cell::RefCell<Option<String>>,
     writes: Vec<StoreWrite>,
     /// Monotonic within a transaction; restored with a refused transaction.
     revision: u64,
     /// Device-state observations: secrets and external storage both make
-    /// resources device-dependent at bake.
+    /// resources device-dependent at bake (LLP 1018 D4 / LLP 1027 D4).
     reads: std::cell::Cell<usize>,
-    /// Of those, draws of secure randomness.
+    /// Of those, draws of secure randomness (LLP 1069.005 D2).
     entropy: std::cell::Cell<usize>,
-    /// Device topics the answer being made watches (`native.watch`): taken
-    /// by the runner after each answer.
+    /// Device topics the answer being made watches (`native.watch`, LLP
+    /// 1016.002): taken by the runner after each answer.
     topics: std::cell::RefCell<Vec<String>>,
     /// Socket operations the mutation being answered, or the mapper of the
     /// frame being parsed, staged, by the index of the resource that owns
-    /// each socket: taken by the runner after each such
+    /// each socket (LLP 1016.000 D7): taken by the runner after each such
     /// turn, which publishes them only if its commit stands.
     sockets: Vec<(usize, crate::SocketOp)>,
-    /// Socket operations a turn of an answer sent, by the same index:
-    /// taken by the runner after the turn, and
+    /// Socket operations a turn of an answer sent, by the same index (the
+    /// amendment of 2026-10-18): taken by the runner after the turn, and
     /// sent once its commit stands, whatever becomes of the answer.
     answer_sockets: Vec<(usize, crate::SocketOp)>,
     /// Each open socket's buffered bytes at the start of the turn, by its
     /// resource's index: what its handle's `bufferedAmount` starts from.
     socket_buffered: Vec<(usize, u64)>,
     /// The runner's clock as the call being made started, ms: when a timer
-    /// a TypeScript answer arms now is due. The runner
+    /// a TypeScript answer arms now is due (LLP 1027.000 D1). The runner
     /// sets it before each call into its data source.
     clock_ms: f64,
     /// Each entry's value before its first write since the open checkpoint:
@@ -83,8 +83,8 @@ pub struct Store {
 // A module mirror must remain importless. Its host already enforced the whole
 // grant set; scopes there read only secret names. Ordinary stores retain the
 // strict reader, including for nested child scopes.
-// The strict reader reads through the archive's grant grammar,
-// so a store names none when the archive links no I/O.
+// The strict reader reads through the archive's grant grammar (LLP
+// 1047.001), so a store names none when the archive links no I/O.
 #[derive(Debug, Clone, Copy, Default)]
 enum ScopeReader {
     #[default]
@@ -162,10 +162,10 @@ pub enum StoreError {
     /// why ([`crate::grants::refusal`]).
     Unparsed(String, String),
     /// The name is locked behind the person's presence: its value is read
-    /// with `store.unlock`.
+    /// with `store.unlock` (LLP 1133.010 D5).
     Locked(String),
     /// The name would be kept locked, and this device keeps no locked
-    /// secret now.
+    /// secret now (D5, D15).
     NotSupported(String),
 }
 
@@ -186,7 +186,7 @@ pub(crate) struct StoreCheckpoint {
     pub(crate) writes: usize,
 }
 
-/// What a host's store snapshot changed: anything at all,
+/// What a host's store snapshot changed (LLP 1126.001 WP12): anything at all,
 /// and whether a name a resource reads did. Only the second re-asks readers.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct StoreChange {
@@ -200,7 +200,7 @@ impl Store {
     /// set parses), filled from `snapshot`; an entry the grant does not name
     /// is dropped. A value is bytes: a secret's text, or the runner's own.
     pub fn new(grants: &str, snapshot: impl IntoIterator<Item = (String, Vec<u8>)>) -> Store {
-        // One body for every caller's snapshot type.
+        // One body for every caller's snapshot type (LLP 1047 §6).
         Store::from_snapshot(
             grants,
             snapshot.into_iter().collect(),
@@ -208,7 +208,8 @@ impl Store {
         )
     }
 
-    /// [`Store::new`] reading I/O grants through what the archive links.
+    /// [`Store::new`] reading I/O grants through what the archive links
+    /// (LLP 1047.001).
     pub fn new_linked(
         grants: &str,
         snapshot: impl IntoIterator<Item = (String, Vec<u8>)>,
@@ -244,7 +245,7 @@ impl Store {
         )
     }
 
-    /// Local mirror inside an importless logic module: the host
+    /// Local mirror inside an importless logic module (LLP 1029): the host
     /// validates the complete declaration before loading the snapshot and
     /// atomically validates every returned write. This grants no host access.
     /// Host runners must use `new`, which validates the declaration itself.
@@ -364,17 +365,17 @@ impl Store {
         !Self::is_kept(name) && self.granted.iter().any(|g| g == name)
     }
 
-    /// The runner's own names: a kept answer for a
+    /// The runner's own names (LLP 1027 D4): a kept answer for a
     /// store-reading resource lives beside the app's secrets under this
     /// prefix, persisted by the host like any write, never granted to the
     /// app — `get` sees nothing there, `set` refuses — and never counted as
     /// a read or a revision.
     pub const KEPT: &'static str = "exact.kept.";
     /// The most the kept answers hold together: the runner keeps no more,
-    /// and a host's snapshot need read no more.
+    /// and a host's snapshot need read no more (LLP 1027 D4, 2026-10-16).
     pub const KEPT_TOTAL_BYTES: usize = crate::runner::kept::KEPT_TOTAL_BYTES;
 
-    /// The runner's persisted states: `state … persist`'s
+    /// The runner's persisted states (LLP 1116 D5): `state … persist`'s
     /// value lives under this prefix and the state's name, as JSON text,
     /// owned by the runner as a kept answer is. A host keeps these in the
     /// platform's preference store, never its secret store.
@@ -438,7 +439,7 @@ impl Store {
 
     /// Whether the snapshot this store opened with held a granted secret:
     /// then an empty-store answer the bake computed does not describe this
-    /// device. Uncounted, the runner's question.
+    /// device (LLP 1027 D4, 2026-10-10). Uncounted, the runner's question.
     pub(crate) fn opened_with_secrets(&self) -> bool {
         self.opened_with_secrets
     }
@@ -486,7 +487,7 @@ impl Store {
     ///
     /// A presence name in its locked state (locked, pending, or absent under
     /// a mandatory line) keeps nothing here: the write carries the value to
-    /// the host's backend, which keeps it locked.
+    /// the host's backend, which keeps it locked (LLP 1133.010 D5).
     pub fn set(&mut self, name: &str, value: &str) -> Result<(), StoreError> {
         if !self.is_granted(name) {
             return Err(self.refused(name));
@@ -600,7 +601,8 @@ impl Store {
     /// The open checkpoint can restore it if settlement refuses the change.
     ///
     /// Presence occupancy is the backend's, never a snapshot's: the entries
-    /// stay, and a locked or pending name's bytes in the snapshot are dropped.
+    /// stay, and a locked or pending name's bytes in the snapshot are dropped
+    /// (LLP 1133.010 D4).
     pub(crate) fn refresh_snapshot(&mut self, snapshot: Vec<(String, Vec<u8>)>) -> StoreChange {
         let mut next: exact_kernel::SortedMap<_, _> = snapshot
             .into_iter()
@@ -674,7 +676,7 @@ impl Store {
         self.reads.set(self.reads.get() + 1);
     }
 
-    /// The answer being made drew secure randomness: a
+    /// The answer being made drew secure randomness (LLP 1069.005 D2): a
     /// device read like any other, and one bake compiles no value for, since
     /// that value would be one draw shared by every install.
     pub fn observe_entropy(&self) {
@@ -688,7 +690,7 @@ impl Store {
     }
 
     /// The answer being made watches `topic`: the device announces when it
-    /// changes, and the resource is asked again. A watched
+    /// changes, and the resource is asked again (LLP 1016.002). A watched
     /// answer is the device's, so it counts as a read too.
     pub fn observe_topic(&self, topic: &str) {
         self.observe_external_read();
@@ -699,13 +701,13 @@ impl Store {
     }
 
     /// Stage `op` on the socket of resource `resource` for the mutation
-    /// being answered or the frame being parsed.
+    /// being answered or the frame being parsed (LLP 1016.000 D7).
     pub fn stage_socket(&mut self, resource: usize, op: crate::SocketOp) {
         self.sockets.push((resource, op));
     }
 
     /// Stage `op` on the socket of resource `resource` for the turn of an
-    /// answer being run.
+    /// answer being run (LLP 1016.000 D7, the amendment of 2026-10-18).
     pub fn stage_answer_socket(&mut self, resource: usize, op: crate::SocketOp) {
         self.answer_sockets.push((resource, op));
     }
@@ -882,7 +884,7 @@ mod tests {
 
     #[test]
     fn grants_that_do_not_parse_name_no_secret_and_every_refusal_says_why() {
-        // A set with one camelCase name
+        // Crew's set (the port report of 2026-09-24, F1): one camelCase name
         // among good lines. A native host holds nothing; neither does this.
         let kept = format!("{}answer", Store::KEPT);
         let mut store = Store::new(

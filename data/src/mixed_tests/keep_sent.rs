@@ -1,4 +1,4 @@
-//! `Mixed::keep_sent` with a JavaScript child in an ordered set.
+//! `Mixed::keep_sent` with a JavaScript child in an ordered set (LLP 1146 D2).
 
 use super::{Proxy, Source};
 use crate::Mixed;
@@ -44,8 +44,8 @@ fn an_ordered_child_keeps_sent_replies_without_restoring_refused_turns() {
     );
 }
 
-/// Module work lands in the JavaScript child under its own grants,
-/// as its answers run: it keeps its own secret and the shared one, never
+/// Module work lands in the JavaScript child under its own grants (LLP 1146
+/// D2), as its answers run: it keeps its own secret and the shared one, never
 /// the Rust child's.
 #[test]
 fn module_work_lands_under_the_javascript_child_s_grants() {

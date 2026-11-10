@@ -1,4 +1,4 @@
-//! Component params in the design. A param is a
+//! Component params in the design (LLP 1121 D15, stage 7 B). A param is a
 //! token its Contract component owns, named below the IR by its dotted token
 //! name and above it by its full name (`post.contract#PostButton.radius`) or
 //! short one (`PostButton.radius`). The app's value of one is a line of the
@@ -44,11 +44,11 @@ pub struct Params {
     pub list: Vec<Param>,
     /// Every component's identity (`post.contract#PostButton`).
     pub components: Vec<String>,
-    /// Tokens folded beside the design's own: its packages',
+    /// Tokens folded beside the design's own: its packages' (LLP 1121 D11),
     /// numbered as the compiler numbers them. One the design defines is the
     /// design's, whole.
     pub joined: Vec<Token>,
-    /// Icons folded beside the design's own: its packages',
+    /// Icons folded beside the design's own: its packages' (stage 13),
     /// numbered as the compiler numbers them. One the design defines is the
     /// design's, whole.
     pub joined_icons: Vec<Token>,

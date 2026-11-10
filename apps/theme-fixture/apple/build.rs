@@ -33,7 +33,7 @@ fn main() {
     } else {
         "exact_apple_update"
     };
-    // What the archive links, as its compatibility inputs name it.
+    // What the archive links, as its compatibility inputs name it (LLP 1047.001 D2).
     let linked = exact_bake::apple_link(&compat, host);
     std::fs::write(out_dir.join("compat.json"), compat.to_json()).unwrap();
     std::fs::write(

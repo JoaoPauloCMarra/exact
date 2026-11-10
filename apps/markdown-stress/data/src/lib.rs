@@ -59,7 +59,7 @@ struct DocumentArgs {
     key: (Profile, usize, usize),
     page: usize,
     eager: bool,
-    /// Supply the whole source for one `markup` node.
+    /// Supply the whole source for one `markup` node (LLP 1045 D4).
     single: bool,
 }
 

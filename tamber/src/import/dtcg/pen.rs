@@ -1,4 +1,5 @@
-//! Pencil's `.pen` files: a design kept as JSON beside the code, its `variables` and
+//! Pencil's `.pen` files (LLP 1121 stage 13 B; rt1's plan, theme2's 14:43
+//! approval): a design kept as JSON beside the code, its `variables` and
 //! `themes` read into the DTCG importer's own layers, so the tuples,
 //! aliases, kinds and the review are that importer's.
 //!
@@ -774,7 +775,7 @@ pub fn import_within(
     crate::budget::spend(text.len() as u64).map_err(refuse)?;
     let doc: Doc = serde_json::from_str(text).map_err(|e| refuse(format!("{file}: {e}")))?;
     // Its themes are axes: past this importer's own count, refused with the
-    // design's id for too many axes (`tamber-axes`).
+    // design's id for too many axes (`tamber-axes`, theme2's 19:26).
     let themes = doc.themes.as_ref().map_or(0, |t| t.0.len());
     if themes > AXES {
         let why = format!("{file}: {themes} axes in `themes`: at most {AXES}");

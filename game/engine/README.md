@@ -99,7 +99,8 @@ per row, so iterating a query costs no more than the join itself. A single-row g
 pushes and pops one record on its column; position reads copy the row out and only
 check for an exclusive lease. A leaked guard or query (`mem::forget`) keeps its rows
 refused; after the next spawn, despawn, insert or remove, a leaked query holds every
-row of its components, because its matched rows can no longer be known.
+row of its components, because its matched rows can no longer be known. The design and its
+measurements are in [LLP 1046.003 §Row leases](../../llp/1046.003-game-engine-as-built.explainer.md#row-leases-2026-09-23).
 
 ## Arguments and restart
 
@@ -486,11 +487,11 @@ follow the offsets. Keep any pose gameplay needs in simulation state.
 **The authoring rule: save the cause, derive the appearance.** Anything later
 gameplay reads stays simulation state; only its look is presentation. Examples:
 
-- A shooter's aim recoil: the shot (its tick and spread, drawn from the world RNG
+- Rivals' aim recoil: the shot (its tick and spread, drawn from the world RNG
   because it changes where the bullet goes) is simulation; the gun kick is an
   `Offset` derived in `present` from ticks since `last_shot_tick`, with any jitter
   from `p.rng(salt)`.
-- A garden game's mutation: the roll and the weight it sets are simulation (they change
+- Garden's mutation: the roll and the weight it sets are simulation (they change
   sale price and growth); the shimmer of a mutated fruit is a `NodeMaterials` or
   `Tint` derived from that saved mutation.
 - Tracers and explosions that gameplay never queries may be emitters; entities a
@@ -519,7 +520,7 @@ World saves (EXGAME v6) are columnar: the entity table and each component
 storage store their rows' shape (tags, field and variant names, sequence lengths)
 once and their scalars as run-length or dictionary-coded columns, so repeated
 values cost nothing per entity and no name or entity key is repeated per row.
-The garden game's scale world saves in about 9 bytes per entity, against 247 in v3.
+Grow a Garden's scale world saves in about 9 bytes per entity, against 247 in v3.
 Resources save as their values. The encoding is byte-identical on every host.
 
 Loads allow at most 16 Mi entity slots, 64 MiB per string, and 2 GiB of input and

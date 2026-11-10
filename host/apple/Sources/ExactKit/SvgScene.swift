@@ -1,4 +1,4 @@
-// An `svg`'s scene as Core Animation layers, and CSS
+// @ref LLP 1055 D4, D7 — an `svg`'s scene as Core Animation layers, and CSS
 // animations as `CAKeyframeAnimation`s. The Rust host sends the whole scene
 // (host/apple/src/svg.rs): paths already flattened, paint resolved, dashes
 // already scaled by `pathLength`, animations already lowered to key times,
@@ -25,7 +25,7 @@ private func num(_ v: Any?) -> Double { (v as? NSNumber)?.doubleValue ?? 0 }
 private func nums(_ v: Any?) -> [Double] { (v as? [Any])?.map(num) ?? [] }
 
 /// A colour the host sent: `[r,g,b,a]` (0–255), a `light-dark()` pair, or a
-/// colour in its own space, `{"cs": [{"s", "v"}…]}`.
+/// colour in its own space, `{"cs": [{"s", "v"}…]}` (LLP 1100 D2).
 private func color(_ v: Any?, dark: Bool, tint: PlatformColor? = nil) -> CGColor? {
     // Restore the typed color, including the ICC handle kept by the payload
     // adapter, and use the same conversion/intent as every other paint path.
@@ -80,8 +80,8 @@ private func circle(_ r: Double) -> CGPath {
     return p
 }
 
-/// CSS animations lowered to Core Animation (a box's transform
-/// key paths and background colour). A spec's start is
+/// CSS animations lowered to Core Animation (LLP 1055 D7; a box's transform
+/// key paths and background colour, LLP 1055.001). A spec's start is
 /// on the runtime clock (ms / 1000 since `ExactEnv.t0`); a held one (authored
 /// `paused`, or any under an agent-owned clock) is `speed = 0` at its local
 /// time, so a screenshot and a `clock` seek are deterministic.
@@ -135,8 +135,8 @@ enum CssAnimations {
     static func lowered(_ spec: [String: Any]) -> (values: [Any], keyTimes: [NSNumber], timing: [CAMediaTimingFunction]?) {
         let key = spec["k"] as? String ?? ""
         let colors = key == "fillColor" || key == "strokeColor" || key == "backgroundColor"
-        // A colour track's values are [r,g,b,a] bytes.
-        // A `path` track's values are paths, as a scene's `p`.
+        // A colour track's values are [r,g,b,a] bytes (LLP 1055.000 D6).
+        // A `path` track's values are paths, as a scene's `p` (LLP 1115.003 D4).
         let values: [Any] = colors
             ? (spec["v"] as? [Any] ?? []).compactMap { color($0, dark: false) }
             : key == "path" ? (spec["v"] as? [Any] ?? []).map { path($0) as Any }
@@ -204,8 +204,8 @@ private func affine(_ v: Any?) -> CGAffineTransform? {
 
 /// One `svg` view's scene: a content-box layer whose sublayer transform is
 /// the view box, a `CAShapeLayer` per shape, a `CALayer` per `g` and nested
-/// `svg`, and a pair of layers around an element with a transform: the
-/// outer takes the individual properties, the inner the
+/// `svg`, and a pair of layers around an element with a transform (LLP
+/// 1055.000 D5): the outer takes the individual properties, the inner the
 /// `transform` list, both about the transform origin. Every container's
 /// anchor is its bounds' origin, so a sublayer transform applies from there.
 final class SvgScene {
@@ -224,12 +224,12 @@ final class SvgScene {
     private var specs: [Int: [CssAnimation]] = [:]
     /// The view's pixels per point, for gradients drawn as pixels.
     var scale: CGFloat = 2
-    /// The presenter's fonts, for SVG text.
+    /// The presenter's fonts, for SVG text (LLP 1055.000 D11).
     var fonts: SvgText.Fonts?
     /// The view's tint, which a paint naming it resolves by (`AccentColor`
-    /// under an authored `accent-color`); nil on macOS.
+    /// under an authored `accent-color`, LLP 1116.001 D2); nil on macOS.
     var tint: PlatformColor?
-    /// For hit testing: each element layer's node and
+    /// For hit testing (LLP 1055.000 D17): each element layer's node and
     /// parent element, whether it takes presses, whether hits pass it by.
     private var node: [ObjectIdentifier: (uid: Int, node: UInt32)] = [:]
     private var parentOf: [Int: Int] = [:]
@@ -245,7 +245,7 @@ final class SvgScene {
 
     /// Drawn by a `CARenderer` (a live filter picture's sub-scene): the
     /// instant its next render draws at, which its held animations are placed
-    /// from, so each draws exactly where it is held.
+    /// from, so each draws exactly where it is held (LLP 1003.001 D4).
     var offscreen: CFTimeInterval?
 
     init() { root.masksToBounds = false; root.anchorPoint = .zero }
@@ -362,8 +362,8 @@ final class SvgScene {
 
     /// The node a press at `point` (the host view's coordinates) goes to:
     /// the topmost element painted there (its fill, or its stroke's
-    /// outline), then up to the nearest one with a press handler.
-    /// `nil` when none takes it.
+    /// outline), then up to the nearest one with a press handler
+    /// (LLP 1055.000 D17). `nil` when none takes it.
     func target(at point: CGPoint) -> UInt32? {
         guard let host = root.superlayer, !pressable.isEmpty else { return nil }
         var hit = self.hit(root, root.convert(point, from: host))
@@ -459,7 +459,7 @@ final class SvgScene {
         pair.inner.setAffineTransform(affine(tf["m"]) ?? .identity)
         if layer.superlayer !== pair.inner { layer.removeFromSuperlayer(); pair.inner.addSublayer(layer) }
         // The individual properties' lowered animations play on the outer
-        // layer (as a box's on iOS): each key path replaces
+        // layer (LLP 1055.001, as a box's on iOS): each key path replaces
         // one component of its transform and keeps the others.
         let list = CssAnimation.list(tf["a"])
         wrapSpecs[id] = list.isEmpty ? nil : list
@@ -487,7 +487,7 @@ final class SvgScene {
             }
             layer.opacity = Float(num(e["o"]))
             if let text {
-                // Text: a layer of glyph outlines per run.
+                // @ref LLP 1055.000 D11 — text: a layer of glyph outlines per run.
                 SvgText.build(layer, chunks: text, dark: dark, fonts: fonts ?? SvgScene.systemFonts) { [tint] in color($0, dark: $1, tint: tint) }
             } else if group {
                 let vp = nums(e["vp"])
@@ -502,7 +502,7 @@ final class SvgScene {
                     layer.sublayerTransform = CATransform3DMakeAffineTransform(view ?? .identity)
                 }
                 attach(e["c"] as? [Any] ?? [], to: layer, dark: dark, clock: clock, alive: &alive, owner: id)
-                // A filtered element's picture is an island.
+                // @ref LLP 1055.000 D14 — a filtered element's picture is an island.
                 if let fl = e["fl"] as? [String: Any], let drop = SvgScene.dropShadow(fl) {
                     // A lone drop shadow is Core Animation's own shadow on
                     // the element, clipped to the filter region: no pixels
@@ -562,7 +562,7 @@ final class SvgScene {
                 // space, and the layer undoes its parents' transforms.
                 shape.setAffineTransform(affine(e["inv"]) ?? .identity)
             }
-            // A clip is the layer's mask; a mask
+            // @ref LLP 1055.000 D10 — a clip is the layer's mask; a mask
             // is an island inside it.
             layer.mask = SvgPaint.clip(e["cl"]) { path($0) }
             if let mk = e["mk"] as? [String: Any] {
@@ -603,7 +603,8 @@ final class SvgScene {
 final class SvgHost {
     private var scenes: [UInt32: SvgScene] = [:]
     /// Each view's last scene: a `light-dark()` paint is resolved when a
-    /// scene is applied, so an appearance change applies it again.
+    /// scene is applied, so an appearance change applies it again
+    /// (minesweeper F11, paint F10).
     private var payloads: [UInt32: [String: Any]] = [:]
     /// The session's fonts, for SVG text: set by the presenter.
     var fonts: SvgText.Fonts?
@@ -612,7 +613,7 @@ final class SvgHost {
     private var hiddenBoxes: Set<UInt32> = []
     private var seeked: Double?
 
-    /// A scene's root layer's name, by which its node re-asks its range.
+    /// A scene's root layer's name, by which its node re-asks its range (LLP 1100 D8).
     static let rootName = "exact-svg"
 
     func scene(_ id: UInt32, _ payload: [String: Any], layer: CALayer?, dark: Bool, clock: Double?, limit: String? = nil, tint: PlatformColor? = nil) {
@@ -675,7 +676,7 @@ final class SvgHost {
     }
 
     /// The SVG element a press at `point` (in `id`'s view) goes to, if any
-    /// takes it.
+    /// takes it (LLP 1055.000 D17).
     func target(_ id: UInt32, at point: CGPoint) -> UInt32? { scenes[id]?.target(at: point) }
 
     /// Whether `id`'s view holds CSS animations, which are its layer's.

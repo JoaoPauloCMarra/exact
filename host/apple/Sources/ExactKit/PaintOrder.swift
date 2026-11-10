@@ -1,4 +1,4 @@
-// Tree order stays in subviews; Core Animation gets only
+// LLP 1083.000 D4: tree order stays in subviews; Core Animation gets only
 // the dense sibling rank. Every layer standing for a node takes this value.
 #if os(macOS)
 import AppKit
@@ -54,7 +54,7 @@ extension NodeView {
     var paintRank: Int64 {
         if paintLifted { return 4_294_967_294 }
         // A ghost keeps its rank, but one at rank 0 paints at ½ (the encoded 1), as the web's absolute ghost does.
-        // So does a ghost's parent at rank 0 while the ghost lives, since the parent stacks.
+        // So does a ghost's parent at rank 0 while the ghost lives, since the parent stacks (LLP 1083.000 D4).
         return (paintGhost || paintGhosts > 0) && rank == 0 ? 1 : rank
     }
 
@@ -142,7 +142,7 @@ extension NodeView {
         // positioned route holders it stands for: among equals its subview
         // place — the routes' place in the tree (`placeOwner`) — orders it,
         // as CSS paints positioned siblings in tree order.
-        // A control bar over its scroller goes half a step above the scroller's place: over it and
+        // A control bar over its scroller (LLP 1131 D3) goes half a step above the scroller's place: over it and
         // its equals, under the next rank.
         #if os(macOS)
         let place = { (child: PaintView) in position(child.siblingPaintRank)! }
@@ -210,7 +210,7 @@ extension NodeView {
 extension PaintView {
     fileprivate var paintForeground: Bool { paintPlane != nil }
     private var paintPlane: Int64? { objc_getAssociatedObject(self, &paintForegroundKey) as? Int64 }
-    /// A flight's clip ranks as the view it holds.
+    /// A flight's clip ranks as the view it holds (LLP 1013.000 D4.4).
     fileprivate var siblingPaintRank: Int64 { paintPlane ?? (self as? NodeView)?.paintRank ?? (self as? FlightClip)?.subviews.lazy.compactMap { ($0 as? NodeView)?.paintRank }.first ?? 0 }
 
     /// A native view among authored siblings. A top-layer popover or a
@@ -218,11 +218,11 @@ extension PaintView {
     /// navigation container takes rank ½ (positioned or stacking, `z-index`
     /// auto or 0), the rank of the positioned route holders it stands for:
     /// over in-flow siblings, under an authored overlay with a positive
-    /// `z-index` (a messaging app's call screen and menus hid under it), and
+    /// `z-index` (Signal Clone's call screen and menus hid under it), and
     /// among equals where its subview place puts it — the routes' place in
     /// the root's children — so a later positioned sibling, a root sheet
     /// with no `z-index`, paints and takes touches over it, as on the web
-    /// (the kernel's `paint_order::rank`).
+    /// (chat2 diary; LLP 1083.000 D4, the kernel's `paint_order::rank`).
     func setPaintForeground(_ on: Bool = true, aboveAuthored: Bool = true) {
         #if os(macOS)
         if on { wantsLayer = true }

@@ -1,5 +1,5 @@
-//! The neutral look on a host that paints its own controls,
-//! a binary of its own: the look is the process's, said once before a
+//! The neutral look on a host that paints its own controls (LLP 1115.000
+//! D17), a binary of its own: the look is the process's, said once before a
 //! plan boots, and every other test of this host holds the look of a process
 //! that said none, which is Android's reader's. One test, so nothing here
 //! reads a colour or a metric while the switch is moving.
@@ -338,7 +338,7 @@ fn a_host_with_no_toolkit_under_it_draws_the_webs_neutral_look() {
         p.pointer_cancel(0.0).unwrap();
     }
 
-    // A list's rows, as the page's sheet draws them: one
+    // A list's rows (LLP 1115.000 D16), as the page's sheet draws them: one
     // line in the separator's role inside each row's bottom edge but the
     // last's, taking no room; none where the row's author wrote that edge;
     // none in a list whose author opted out.

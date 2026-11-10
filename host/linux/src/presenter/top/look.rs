@@ -1,5 +1,6 @@
 //! Platform dialogs and menus, measured and painted. Windows uses WinUI
-//! metrics; Android uses Material 3: the two surfaces the top layer shows on Android.
+//! metrics; Android uses Material 3 (LLP
+//! 1115.001 D10, D1.3): the two surfaces the top layer shows on Android.
 //! Painted, not built of framework widgets: the window is the platform's
 //! (`Dialog`, `PopupWindow`), and what is in it is drawn here from the
 //! reference's own metrics, the Compose Material 3 library's (1.4:
@@ -8,7 +9,7 @@
 //!
 //! Lengths are dp, which are this host's points. Type is sp, a point times
 //! the person's font scale, taken linearly: Android's own scaling is
-//! non-linear above 100%, and comes with the reported type ramp.
+//! non-linear above 100%, and comes with the reported type ramp (D4, S2).
 //! The face is the page's default family.
 use super::shape::{Plan, Row};
 use crate::paint::{rgba, Backend, Ink, Rect4, Shape, SvgPaint};
@@ -21,8 +22,8 @@ use tiny_skia::Transform;
 mod menu;
 mod windows;
 
-/// A Material colour role, read through the role of Exact's that
-/// `presenter/palette.rs`'s table gives it: the device's
+/// A Material colour role, read through the role of Exact's that LLP
+/// 1115.001 D4's table gives it (`presenter/palette.rs`): the device's
 /// colour where its shell reports a palette, the table's pair elsewhere.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(in crate::presenter) enum Role {
@@ -359,7 +360,7 @@ pub(in crate::presenter) fn symbol(
     color: [u8; 4],
     set: SymbolSet,
 ) {
-    // A role, an icon token's form, or `sf/` a role's Apple name.
+    // A role, an icon token's form, or `sf/` a role's Apple name (LLP 1121 D10).
     let Some(path) = exact_kernel::symbol_path_in(role, set) else {
         return;
     };

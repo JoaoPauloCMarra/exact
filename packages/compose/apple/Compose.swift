@@ -1,4 +1,4 @@
-// @exact/compose on iOS and macOS: the system's
+// @exact/compose on iOS and macOS (LLP 1133.024 D14–D16): the system's
 // composers, prefilled for the person to send.
 //
 // - iOS: `MFMailComposeViewController` when `canSendMail()`, its result the
@@ -14,7 +14,7 @@
 //   which takes no subject. Both answer `opened`, the window being Mail's or
 //   Messages's, or `failed`.
 // - A hand-off by URL leaves the app, so the embedder decides first
-//   (`context.leave`).
+//   (`context.leave`, D22 item 7).
 // - A field the fact says this host cannot carry refuses with
 //   `NotSupportedError` rather than being dropped.
 // - Under the agent nothing opens: the `compose` ticket's tap is the answer.
@@ -43,7 +43,7 @@ public final class ComposeModule: NSObject, ExactPackage {
 
     private func say(_ line: String) { context.log("compose: \(line)") }
 
-    /// What this host can do now: read again at each foreground, since a Mail account added in Settings changes it.
+    /// What this host can do now (D14): read again at each foreground, since a Mail account added in Settings changes it.
     var status: [String: Any] {
         // Under the agent the fact is the platform's shape, never this simulator's accounts: the drive sets it
         // (`--prefer compose.<field>=…`).

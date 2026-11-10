@@ -8,12 +8,12 @@ import XCTest
 import ExactCore
 @testable import ExactKit
 
-/// A native control's face draws an svg-only icon (no `sf`, a template
-/// path) as a template image the control tints as it tints an SF Symbol,
-/// from the path its image node carries (A1's `symbolPath`) or its face's
-/// JSON (`symbolPath` beside a "" `symbol`). An `sf` icon draws its symbol
-/// as before. UIKit's mounted faces are FaceSymbolIOSTests'; here the
-/// token, and AppKit's.
+/// Stage 9 A2 (LLP 1121 D10): a native control's face draws an svg-only
+/// icon (no `sf`, a template path) as a template image the control tints as
+/// it tints an SF Symbol, from the path its image node carries (A1's
+/// `symbolPath`) or its face's JSON (`symbolPath` beside a "" `symbol`). An
+/// `sf` icon draws its symbol as before. UIKit's mounted faces are
+/// FaceSymbolIOSTests'; here the token, and AppKit's.
 ///   bun host/apple/build.mjs --test   (and --test --ios)
 final class FaceSymbolTests: XCTestCase {
     static let square = "M 2 2 L 22 2 L 22 22 L 2 22 Z"
@@ -49,7 +49,7 @@ final class FaceSymbolTests: XCTestCase {
         XCTAssertEqual(json(["button": true, "symbol": "", "symbolPath": Self.square, "symbolIcon": "icon.reply"]).symbolIcon, "icon.reply")
     }
 
-    /// An even-odd icon's token says its rule and draws it; a
+    /// Stage 14 C2: an even-odd icon's token says its rule and draws it; a
     /// nonzero icon's token is as it was, so its equality and caches hold.
     func testAnEvenOddFacesTokenCarriesItsRule() throws {
         XCTAssertEqual(FaceSymbol.token(path: Self.square, viewBox: "0 0 24 24", rule: nil), Self.token, "nonzero: today's token")
@@ -123,7 +123,7 @@ final class FaceSymbolTests: XCTestCase {
         XCTAssertNotNil(add.image, "an SF Symbol as before")
     }
 
-    /// Mounted, a toolbar button's even-odd icon (its image
+    /// Stage 14 C2, mounted: a toolbar button's even-odd icon (its image
     /// node's `symbolFillRule`) is installed with its hole clear and its band
     /// inked; the rule cleared through the batch, the item's image is filled
     /// again. (AppKit draws the item through SwiftUI, which no in-process

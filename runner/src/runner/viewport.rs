@@ -1,4 +1,5 @@
 //! Host-owned viewport answers; never baked or carried device data.
+//! @ref LLP 1039 D1–D3; LLP 1061 D4; LLP 1078 D2
 use super::{DataError, DataSource, Runner, RunnerError};
 use crate::viewport::{Fold, Preferences, Viewport, SOURCE};
 use exact_kernel::CommitReceipt;
@@ -31,7 +32,7 @@ impl<D: DataSource> Runner<D> {
         self.replace_viewport(viewport, "viewport")
     }
 
-    /// The user's display preferences changed: re-answer
+    /// The user's display preferences changed (LLP 1061 D4): re-answer
     /// every viewport resource in one commit; the same preferences again, or
     /// no reader, commit nothing.
     pub fn set_preferences(
@@ -42,7 +43,7 @@ impl<D: DataSource> Runner<D> {
             preferences,
             ..self.viewport
         };
-        // Bold Text is the kernel's, no resource's: a
+        // Bold Text is the kernel's, no resource's (LLP 1115.000 D12.3): a
         // change commits, whether or not a resource reads the rest.
         let bold = self.kernel.set_bold_text(preferences.bold_text);
         let result = self.replace_viewport(viewport, "preferences");
@@ -60,8 +61,8 @@ impl<D: DataSource> Runner<D> {
         result.map(Some)
     }
 
-    /// The device's posture or the segments a fold makes changed:
-    /// re-answer every viewport resource in one commit; the same fold
+    /// The device's posture or the segments a fold makes changed (LLP 1078
+    /// D2): re-answer every viewport resource in one commit; the same fold
     /// again, or no reader, commit nothing. A grid without a column or a
     /// row is refused before anything changes.
     pub fn set_fold(&mut self, fold: Fold) -> Result<Option<CommitReceipt>, RunnerError> {

@@ -1,6 +1,6 @@
-//! `input type="checkbox"` (and `switch`) is the kernel's `Control`, controlled
-//! like HTML, its `input`/`change` carrying a bool; a text field's `input` is
-//! per keystroke and `change` is commit.
+//! LLP 1069.001 slice 1: `input type="checkbox"` (and `switch`) is the
+//! kernel's `Control`, controlled like HTML, its `input`/`change` carrying a
+//! bool; a text field's `input` is per keystroke and `change` is commit.
 
 use exact_kernel::{Kernel, NodeType, PropId};
 use exact_runner::{ControlValue, DataError, DataSource, Event, Runner, RunnerError, Value};
@@ -77,11 +77,11 @@ fn a_checkbox_is_a_control_with_a_role() {
     assert_eq!(checked(&r, "muted"), (Some(false), Some(false)));
 }
 
-/// A checkbox, a radio and a range have no margin of their own on any host
-/// (Chrome's UA sheet gives them `3px 3px 3px 4px`, `3px 3px 0 5px` and `2px`,
-/// which lowering wrote into every plan). The rows are unset, so the space
-/// beside a label is the author's `gap`, and a margin the author writes is the
-/// control's.
+/// LLP 1115.000 D10.1: a checkbox, a radio and a range have no margin of
+/// their own on any host (Chrome's UA sheet gives them `3px 3px 3px 4px`,
+/// `3px 3px 0 5px` and `2px`, which lowering wrote into every plan). The
+/// rows are unset, so the space beside a label is the author's `gap`, and a
+/// margin the author writes is the control's.
 #[test]
 fn a_checkbox_a_radio_and_a_range_have_no_margin_of_their_own() {
     use exact_kernel::{Dimension, StyleId};
@@ -245,7 +245,7 @@ fn a_radio_is_a_control_of_its_name_whose_change_carries_its_value() {
     assert_eq!(node.node_type, NodeType::Control);
     assert_eq!(node.props.str(PropId::AccessibilityRole), Some("radio"));
     assert_eq!(node.props.str(PropId::Name), Some("color"));
-    // No margin of its own (Chrome's is `3px 3px 0 5px`).
+    // No margin of its own (LLP 1115.000 D10.1; Chrome's is `3px 3px 0 5px`).
     assert!(!node.style.mask.has(exact_kernel::StyleId::MarginLeft));
     assert_eq!(node.style.margin_left, exact_kernel::Dimension::Points(0.0));
     let green = view_of(&r, "green");
@@ -461,7 +461,7 @@ fn a_select_carries_the_chosen_value_and_refuses_what_no_option_has() {
         RunnerError::InvalidEvent { event: "change" }
     ));
     // An action that writes nothing leaves `value` where it was: the host
-    // shows the committed option again.
+    // shows the committed option again (D4).
     let fixed = view_in(&r, "fixed");
     r.dispatch(fixed, Event::Input("system".into())).unwrap();
     assert_eq!(
@@ -489,7 +489,7 @@ fn option_and_select_keep_htmls_content_model() {
 
 #[test]
 fn autocomplete_names_a_field_to_autofill() {
-    // HTML's attribute, kept as written; each host reads its last field token.
+    // LLP 1102 §3.6: HTML's attribute, kept as written; each host reads its last field token.
     let r = boot(
         r#"component App
   state kind = "one-time-code"
@@ -518,7 +518,7 @@ fn autocomplete_names_a_field_to_autofill() {
 
 #[test]
 fn a_number_fields_bounds_take_numbers_as_a_ranges_do() {
-    // `min`, `max` and `step` as numbers; the field's value stays its text.
+    // LLP 1102 §3.12: `min`, `max` and `step` as numbers; the field's value stays its text.
     let mut r = boot(
         r#"component App
   state n = "3"
@@ -545,9 +545,9 @@ fn a_number_fields_bounds_take_numbers_as_a_ranges_do() {
     }
 }
 
-/// A negative literal is a number as a positive one is, in a field's bounds (the
-/// decimal pad's ± key comes of a negative `min`) and in a style (`margin-top=-8`
-/// is -8 px), and a text field's bounds take numbers.
+/// LLP 1116.010 D3: a negative literal is a number as a positive one is, in
+/// a field's bounds (the decimal pad's ± key comes of a negative `min`) and in a
+/// style (`margin-top=-8` is -8 px), and a text field's bounds take numbers.
 #[test]
 fn a_negative_literal_is_a_number_as_a_positive_one_is() {
     let r = boot(
@@ -639,7 +639,7 @@ fn a_range_carries_a_number_clamped_and_snapped_as_html_does() {
     assert_eq!(node.props.str(PropId::Min), Some("0"));
     assert_eq!(node.props.str(PropId::Step), Some("5"));
     assert_eq!(node.props.str(PropId::Value), Some("40"));
-    // No margin of its own (Chrome's is `2px`).
+    // No margin of its own (LLP 1115.000 D10.1; Chrome's is `2px`).
     assert!(!node.style.mask.has(exact_kernel::StyleId::MarginTop));
     assert_eq!(node.style.margin_top, exact_kernel::Dimension::Points(0.0));
     // `input` moves, `change` commits; each payload a number on the step.
@@ -730,7 +730,7 @@ fn a_date_carries_htmls_value_format_within_min_and_max() {
 
 /// `spellcheck` and `autocorrect` are HTML's enumerated attributes whose IDL
 /// attributes are bools: a bool is written as their words, a string as
-/// itself, so `spellcheck=false` is not refused as no string.
+/// itself (shop diary F7: `spellcheck=false` was refused as no string).
 #[test]
 fn spellcheck_and_autocorrect_take_a_bool_as_their_words() {
     let mut r = boot(
@@ -894,9 +894,10 @@ fn input_change_and_select_hand_on_the_targets_input_event() {
     );
 }
 
-/// `progress` with no `value` is HTML's indeterminate progress, the kernel's
-/// `Control` of type `progress` with ARIA's role and busy state; a measured
-/// leaf of 20 × 20 (UIKit's medium activity indicator) until CSS sizes it.
+/// LLP 1069.001, amended 2026-10-07: `progress` with no `value` is HTML's
+/// indeterminate progress, the kernel's `Control` of type `progress` with
+/// ARIA's role and busy state; a measured leaf of 20 × 20 (UIKit's medium
+/// activity indicator) until CSS sizes it.
 #[test]
 fn an_indeterminate_progress_is_a_busy_control_of_twenty_points() {
     let mut r = boot(
@@ -927,9 +928,9 @@ fn an_indeterminate_progress_is_a_busy_control_of_twenty_points() {
     assert_eq!(size(&r, "row"), (20.0, 20.0), "a flex item keeps its size");
 }
 
-/// `progress value=… max=…` is HTML's determinate bar: the
+/// LLP 1116 D8: `progress value=… max=…` is HTML's determinate bar: the
 /// same `Control`, its `value` and `max` HTML's strings (a bound number
-/// follows its state), not busy. It is as wide as what
+/// follows its state), not busy. LLP 1115.000 D10.2: it is as wide as what
 /// holds it and `1em` tall, `width` and `height` winning, and `10em` wide
 /// where the author says `auto`.
 #[test]
@@ -974,10 +975,11 @@ fn a_progress_with_a_value_is_the_determinate_bar() {
     assert_eq!(size(&r, "auto"), (200.0, 20.0), "`10em` by `1em`");
 }
 
-/// A range and a determinate `progress` are full width by a row lowering
-/// implies, `width: 100%`, which is not the author's: the mask has it and the
-/// written bit does not. A `width` the author writes replaces it, written; an
-/// indeterminate `progress` and every other control keep their own size.
+/// LLP 1115.000 D10.2: a range and a determinate `progress` are full width
+/// by a row lowering implies, `width: 100%`, which is not the author's (LLP
+/// 1115.000 D2): the mask has it and the written bit does not. A `width` the
+/// author writes replaces it, written; an indeterminate `progress` and every
+/// other control keep their own size.
 #[test]
 fn a_range_and_a_determinate_progress_are_full_width_by_an_implied_row() {
     use exact_kernel::{Dimension, StyleId};

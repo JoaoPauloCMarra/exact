@@ -3,10 +3,10 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// On UIKit, a native button goes where a button goes, read
-/// through its face — a swipe action drawn from its symbol and accent,
-/// a tab of a tab bar or a segment, a menu row whose symbol is its
-/// item's image, as a custom row's now is, and a confirmation's rows.
+/// LLP 1069.011.000 on UIKit: a native button goes where a button goes, read
+/// through its face (D1) — a swipe action drawn from its symbol and accent
+/// (D6), a tab of a tab bar or a segment (D4), a menu row whose symbol is its
+/// item's image, as a custom row's now is, and a confirmation's rows (D5).
 /// UIKit, so a simulator runs it: bun host/apple/build.mjs --test --ios
 final class NativeContextsIOSTests: XCTestCase {
     private var window: UIWindow!
@@ -48,8 +48,8 @@ final class NativeContextsIOSTests: XCTestCase {
     }
     /// A bare row (its second text on an `if` arm keeps it bare in place)
     /// whose second text is a line under its first is still title and
-    /// subtitle in UIKit's menu, which draws no box ("Date Added" over "Newest
-    /// first", not a two-line title). Two texts side by side
+    /// subtitle in UIKit's menu, which draws no box: euxy's sort menu showed
+    /// "Date Added Newest first" as a two-line title. Two texts side by side
     /// (`Inbox` and its count, `Save` and `⌘S`) stay one title.
     func testABareMenuRowsStackedSecondTextIsItsSubtitle() throws {
         var ops: [[String: Any]] = view(1, ["popover": "auto", "id": "menu"])
@@ -124,7 +124,7 @@ final class NativeContextsIOSTests: XCTestCase {
         let p = presenter(
             view(1, ["swipeContent": "body", "swipeTrailing": "delete mute pin flag archive"], style: ["overflow_x": "scroll", "overflow_y": "hidden"])
                 + view(2, w: 540, h: 80) + view(3, ["id": "body"], h: 80)
-                // An accent it only inherits: the value, and no word that its author wrote it.
+                // An accent it only inherits (LLP 1115.000 D2): the value, and no word that its author wrote it.
                 + native(11, ["id": "archive", "accessibilityLabel": "Archive"], style: ["accent_color": [88, 86, 214, 255]], x: 490, w: 50, h: 50)
                 + native(4, ["id": "delete", "destructive": "true"], style: ["accent_color": [0, 255, 0, 255]], x: 300, w: 50, h: 50)
                 + native(5, ["id": "mute", "accessibilityLabel": "Hide alerts"], style: ["accent_color": [88, 86, 214, 255], "written": ["accent_color"]], x: 360, w: 50, h: 50)
@@ -421,7 +421,7 @@ final class NativeContextsIOSTests: XCTestCase {
         return presenter(ops + [["op": "children", "id": 1, "ids": [2, 3, 4]], ["op": "roots", "ids": [1]]], faces: faces)
     }
 
-    /// A value chosen from a few is a radio group, and a
+    /// LLP 1116.004 D5.2: a value chosen from a few is a radio group, and a
     /// radio group of radios is UIKit's segmented control, as a tablist of
     /// tabs is: its selection the checked radio, a pick pressing that radio,
     /// the next sync showing what the app checked. A value is never a tab:
@@ -495,7 +495,7 @@ final class NativeContextsIOSTests: XCTestCase {
         p.segments.sync()
         XCTAssertEqual(segments.selectedSegmentIndex, 2)
         // The same choice with radios that paint the chosen one (a class on
-        // one arm): the plan makes the group the author's, so
+        // one arm, LLP 1104 D2): the plan makes the group the author's, so
         // it is never a segmented control, before a pick or after it, and its
         // radios keep the group's keys.
         let tint = try XCTUnwrap(node("tint"))
@@ -509,7 +509,8 @@ final class NativeContextsIOSTests: XCTestCase {
         XCTAssertTrue(node("tint-Week")?.ariaRadioGroup === tint)
     }
 
-    /// A real touch on a tab a segmented control draws aims at its segment,
+    /// LLP 1116.003 (r5 weather: "ExactSegmentedControl covers its middle"):
+    /// a real touch on a tab a segmented control draws aims at its segment,
     /// the control taking the touch, never at the hidden authored tab.
     func testARealTouchAimsAtTheSegmentItsControlDraws() throws {
         let session = ExactApp.shared.makeSession(label: "segment-aim")
@@ -710,11 +711,11 @@ final class NativeContextsIOSTests: XCTestCase {
         XCTAssertEqual(pressed, [])
     }
 
-    /// `position-area: center` on the sheet: anchored
+    /// `position-area: center` on the sheet (LLP 1021 "Placement"): anchored
     /// at the whole invoker, no arrow, allowed over it; UIKit centres the
     /// sheet across the invoker and picks its vertical position itself.
     /// Without a cancel, as a chooser with one is an unanchored sheet on a
-    /// compact screen (ConfirmationAlertIOSTests).
+    /// compact screen (LLP 1115 D6, ConfirmationAlertIOSTests).
     func testACentredSheetSitsOverItsInvoker() throws {
         let (p, controller, scene) = chooser({ Self.providers })
         defer { p.menus.reset(); window.isHidden = true }
@@ -783,7 +784,7 @@ final class NativeContextsIOSTests: XCTestCase {
         XCTAssertNil(controller.presentedViewController)
     }
 
-    /// HTML's `hr` arrives as a row like any other and, having
+    /// HTML's `hr` (LLP 1021 D1) arrives as a row like any other and, having
     /// no press, breaks the menu into inline sections; the cancel after it,
     /// a hide-only row, is no item (the menu closes itself).
     func testAnHrRowIsASectionBreak() throws {

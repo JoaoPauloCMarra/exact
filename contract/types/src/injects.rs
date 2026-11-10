@@ -5,7 +5,8 @@ use crate::checks::can_unify;
 use contract_syntax::{Binding, File, Node, Span};
 
 /// A slot's fill, checked where `children` stands with its caller's scope
-/// and providers (the slot's own section does not reach it).
+/// and providers (LLP 1035.005.000 D9: the slot's own section does not
+/// reach it).
 #[derive(Clone)]
 struct Fill<'a> {
     nodes: &'a [Node],

@@ -1,4 +1,4 @@
-//! Declared font tables and literal uses.
+//! Declared font tables and literal uses. @ref LLP 1019 D1.
 
 use super::*;
 use exact_plan::StackMemberKind;
@@ -161,7 +161,7 @@ impl Lowerer<'_> {
                     .map(|bytes| crate::font_axes::read(&bytes))
                     .unwrap_or_default();
                 // (Unread, it is recorded as no length any file has, so the
-                // write check never trusts its faces.)
+                // write check never trusts its faces: Grok's D1 round 3.)
                 if face.weight.is_none() {
                     let m = std::fs::metadata(&canonical).ok();
                     self.font_files.push((
@@ -224,7 +224,7 @@ impl Lowerer<'_> {
 
     /// `font-family`'s value with each family name replaced by its stack id,
     /// resolved now. A runtime expression stays a string for the host to
-    /// resolve.
+    /// resolve (LLP 1019 D2, 2026-10-11).
     pub(super) fn family_stacks(&mut self, value: &Expr) -> Result<Expr, LowerError> {
         if matches!(value, Expr::Str(s, _) if family_clear(s)) {
             return Ok(value.clone());
@@ -277,7 +277,8 @@ impl Lowerer<'_> {
     }
 
     /// A literal family's stack, declared as `font-family`'s are: `e`, a
-    /// string, becomes the stack's number (as type and family tokens do).
+    /// string, becomes the stack's number (stage 6 C's type and family
+    /// tokens).
     pub(super) fn replace_family(&mut self, e: &mut Expr) -> Result<(), LowerError> {
         self.replace_arms(e)
     }
@@ -365,7 +366,7 @@ pub(crate) fn font_use(
         return Ok(Vec::new());
     };
     let mut names = Vec::new();
-    // A family token's name is no family: the families of
+    // A family token's name is no family (stage 6 C): the families of
     // its stack, each tuple's, are what the node uses.
     let mut leaves = Vec::new();
     crate::theme::leaves(&family.value, &mut Vec::new(), &mut leaves);
@@ -410,7 +411,7 @@ pub(crate) fn font_use(
 }
 
 /// `font-family="inherit"` (or `unset`), as a reset writes it: a written
-/// clear, which names no family and passes a control's start.
+/// clear, which names no family and passes a control's start (LLP 1104 D4).
 fn family_clear(s: &str) -> bool {
     ["inherit", "unset"].contains(&s.trim().to_ascii_lowercase().as_str())
 }
@@ -599,8 +600,8 @@ fn family_names(value: &str, span: Span) -> Result<Vec<String>, LowerError> {
 
 /// Several pinned weights of one variable file become one face over their
 /// span, so the web declares one `@font-face` and fetches the file once.
-/// Every host draws a request inside a range at its own `wght`, so a
-/// weight between two of them is drawn as asked rather than at
+/// Every host draws a request inside a range at its own `wght` (LLP 1019
+/// D2), so a weight between two of them is drawn as asked rather than at
 /// the nearer one; the declared weights draw as before. A span another face
 /// of the same style overlaps stays apart, since matching would then choose
 /// between them.

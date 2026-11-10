@@ -1,5 +1,5 @@
 //! Concrete app composition selected at bake, never a Cargo feature on a host.
-//! Disabling replacement removes its reachable loader code.
+//! @ref LLP 1029.000 — disabling replacement removes its reachable loader code.
 
 /// Generate `AppData` and `app_data()` for a host's source type and constructor.
 /// `mode` is the validated `compat.inputs.rustMode` from the actual target bake.
@@ -125,7 +125,7 @@ fn launch_parts() -> Result<String, String> {
     ))
 }
 
-/// The Rust executor a web entry links: the compatibility
+/// The Rust executor a web entry links (LLP 1047 D3): the compatibility
 /// inputs' `rustMode`, or `off` when the manifest names no `rust.module`. A
 /// browser then has no Rust module to swap in (the dev loop builds one only
 /// for a declared module), so it links no executor.
@@ -139,12 +139,12 @@ pub fn web_rust_mode(inputs: &serde_json::Value) -> &str {
     }
 }
 
-/// The wide colour functions.
+/// The wide colour functions (LLP 1056 §8.2).
 const WIDE_COLORS: [&str; 5] = ["lab(", "lch(", "oklab(", "oklch(", "color("];
 
 /// Whether the app's Rust data crate (`../data` beside the web crate that
 /// builds this) names a wide colour function in its source: Canvas 2D's
-/// `lab()`, `lch()`, `oklab()`, `oklch()` or `color()`.
+/// `lab()`, `lch()`, `oklab()`, `oklch()` or `color()` (LLP 1056 §8.2).
 /// TypeScript draws parse colours in their own recorder, not the wasm.
 fn names_wide_colors() -> bool {
     let Some(dir) = std::env::var_os("CARGO_MANIFEST_DIR") else {
@@ -182,8 +182,8 @@ fn names_wide_colors() -> bool {
     scan(&data)
 }
 
-/// Whether the bake's grant ceiling (every source's grants)
-/// names `capability`: a device capability its sources may use,
+/// Whether the bake's grant ceiling (every source's grants, LLP 1027.001)
+/// names `capability`: a device capability its sources may use (LLP 1069),
 /// linked by that grant, since no plan row says so.
 fn grants(inputs: &serde_json::Value, capability: &str) -> bool {
     inputs["grantCeiling"].as_str().is_some_and(|ceiling| {
@@ -193,16 +193,16 @@ fn grants(inputs: &serde_json::Value, capability: &str) -> bool {
     })
 }
 
-/// The web entry's `EXACT_LINKED`: the capabilities `plan`
+/// The web entry's `EXACT_LINKED` (LLP 1047 D3): the capabilities `plan`
 /// uses, each registered from `exact-web-capabilities`, so the linker drops
-/// the rest. A development build links every capability: the dev loop
+/// the rest. A development build links every capability (D7): the dev loop
 /// restarts from new plans without rebuilding the wasm, so `host/web/dev.mjs`
 /// sets `EXACT_WEB_LINK=all`.
 ///
 /// Beside it, `EXACT_REPLACEMENT`: whether a running page can take a new data
 /// module. The dev loop's can, and so can a production client whose
-/// compatibility `inputs` name a Rust module replaced in the browser; every
-/// other build refuses `exact_boot_module` by name.
+/// compatibility `inputs` name a Rust module replaced in the browser (LLP
+/// 1029.000); every other build refuses `exact_boot_module` by name.
 pub fn web_linked(plan: &exact_plan::Plan, inputs: &serde_json::Value) -> String {
     use exact_runner::{Capability, Uses};
     println!("cargo:rerun-if-env-changed=EXACT_WEB_LINK");
@@ -218,12 +218,12 @@ pub fn web_linked(plan: &exact_plan::Plan, inputs: &serde_json::Value) -> String
                 .as_str()
                 .is_some_and(|module| !module.is_empty()));
     // Inspection is linked by policy, not by use: in production too, so the
-    // smoked artifact is the shipped one.
+    // smoked artifact is the shipped one (LLP 1047 §10, Q3).
     // A grouped list is its authored nodes on the web, and the browser does
-    // its own I/O and plays CSS's transitions; its file
+    // its own I/O and plays CSS's transitions (LLP 1047.001 D2); its file
     // input is the media picker, `auth` below is the sign-in sheet, and its
-    // numerals roll in the runtime's text, and its date and
-    // time controls are the browser's own.
+    // numerals roll in the runtime's text (LLP 1077 D15), and its date and
+    // time controls are the browser's own (LLP 1115.001.000 D2).
     let names: Vec<&str> = uses
         .iter()
         .filter(|c| {
@@ -252,8 +252,8 @@ pub fn web_linked(plan: &exact_plan::Plan, inputs: &serde_json::Value) -> String
         )
         .chain((all || grants(inputs, "auth.session")).then_some("auth"))
         .collect();
-    let mut entry = format!("/// What this artifact links beyond the core.\nconst EXACT_LINKED: ::exact_web::Linked = ::exact_web_capabilities::linked!({});\n", names.join(", "));
-    entry.push_str(&format!("/// Whether a running page can take a new data module.\nconst EXACT_REPLACEMENT: bool = {replacement};\n"));
+    let mut entry = format!("/// What this artifact links beyond the core (LLP 1047 D3).\nconst EXACT_LINKED: ::exact_web::Linked = ::exact_web_capabilities::linked!({});\n", names.join(", "));
+    entry.push_str(&format!("/// Whether a running page can take a new data module (LLP 1029.000).\nconst EXACT_REPLACEMENT: bool = {replacement};\n"));
     // A capability's export group, where it has one.
     for capability in uses.iter() {
         match capability {
@@ -292,7 +292,7 @@ pub fn web_linked(plan: &exact_plan::Plan, inputs: &serde_json::Value) -> String
     entry
 }
 
-/// The Apple entry's `EXACT_LINKED`, which the entry
+/// The Apple entry's `EXACT_LINKED` (LLP 1047.001 D2, D3), which the entry
 /// passes as `host!(…; linked = EXACT_LINKED)`, and the export groups of what
 /// it names. `host` is the crate whose `host!` the entry calls
 /// (`exact_apple`, or `exact_apple_update` above it). Which capabilities an
@@ -309,9 +309,7 @@ pub fn apple_linked(uses: exact_runner::Uses, host: &str) -> String {
     for capability in uses.iter() {
         set.push_str(&format!(".with({link}::Capability::{capability:?})"));
     }
-    let mut entry = format!(
-        "/// What this archive links beyond the core.\nconst EXACT_LINKED: {link}::Uses = {set};\n"
-    );
+    let mut entry = format!("/// What this archive links beyond the core (LLP 1047.001 D2).\nconst EXACT_LINKED: {link}::Uses = {set};\n");
     // A capability's export group, where it has one on Apple.
     for (capability, group) in [
         (Capability::GroupedLists, "grouped_list_exports"),
@@ -328,8 +326,8 @@ pub fn apple_linked(uses: exact_runner::Uses, host: &str) -> String {
 mod tests {
     use super::web_rust_mode;
 
-    /// The entry names its set and invokes the export groups of what it
-    /// names, through whichever host crate it calls.
+    /// LLP 1047.001 D3: the entry names its set and invokes the export
+    /// groups of what it names, through whichever host crate it calls.
     #[test]
     fn an_apple_entry_names_its_set_and_its_groups() {
         use exact_runner::{Capability, Uses};

@@ -1,5 +1,5 @@
-// UIKit moves the scrollport; row construction follows outside its layout pass:
-// a rescue of only what is visible, and a bounded lead.
+// UIKit moves the scrollport; row construction follows outside its layout pass.
+// @ref LLP 1044.000 §6 S5; LLP 1010 §6 — visible-only rescue, bounded lead.
 #if os(iOS) || os(tvOS)
 import UIKit
 
@@ -76,8 +76,8 @@ final class ScrollPump: NSObject, UIScrollViewDelegate {
     }
     /// Ports a frame at or past which a list outruns its slices.
     static let outrun = 1.0
-    /// Whether `id` travels a port or more each frame: every frame then
-    /// shows rows none before it showed, and a
+    /// Whether `id` travels a port or more each frame (LLP 1050.000 D2 as
+    /// built): every frame then shows rows none before it showed, and a
     /// slice, which lands a frame or more after it is posted and reaches
     /// three ports ahead at most, builds rows the list has passed by the
     /// time they could show. Such a list posts none: the rescue in its
@@ -132,7 +132,7 @@ final class ScrollPump: NSObject, UIScrollViewDelegate {
     }
     private func sample(_ node: NodeView, now: TimeInterval) {
         guard let scroll = node.scrollView else { return }
-        // Along the list's own axis: a row list travels on x.
+        // Along the list's own axis (LLP 1070 H3): a row list travels on x.
         let horizontal = presenter?.collections.entries[node.id]?.snapshot.horizontal == true
         let top = horizontal ? scroll.contentOffset.x : scroll.contentOffset.y
         let inset = scroll.adjustedContentInset
@@ -142,7 +142,7 @@ final class ScrollPump: NSObject, UIScrollViewDelegate {
         // An offset that moved with the port, the extent or the insets is
         // layout's, which keeps it in range, unless a finger or a fling
         // moves the list: no travel. A list opening at its end moved 350
-        // points as the bars' insets reached it, which the
+        // points as the bars' insets reached it (r25's photos), which the
         // runner took for the reader leaving the end (`leave_end_if_moved`),
         // and the tab bar's inset then left its last row under the bar.
         if t.layout != layout, !scroll.isTracking, !scroll.isDecelerating {
@@ -181,12 +181,12 @@ final class ScrollPump: NSObject, UIScrollViewDelegate {
         // The frame sampler measures a scroll's frames, UIKit's deceleration's included
         p.session?.sampler?.activity()
         armRest(after: Self.restDelay)
-        // A correction's move is not the reader's travel.
+        // A correction's move is not the reader's travel (LLP 1070.000 §2.5).
         // Nor is a smooth correction's frame (`OffsetDriver`).
         if let node, p.collections.owns(node.id), !p.collections.correcting, !p.collections.animating.contains(node.id) {
             sample(node, now: lastScroll)
-            // The reader moving the port cancels a request admitted before it:
-            // a finger down when it landed drags on from
+            // The reader moving the port cancels a request admitted before it
+            // (LLP 1070.000 §2.5): a finger down when it landed drags on from
             // there, and its sampled travel alone would be lost to each jump.
             if p.collections.entries[node.id]?.snapshot.seeking == true, let scroll = node.scrollView,
                scroll.isTracking || scroll.isDecelerating { p.collections.gestureBegan(node.id) }
@@ -233,7 +233,7 @@ final class ScrollPump: NSObject, UIScrollViewDelegate {
         start()
     }
     func requestText() { textPending = true; start() }
-    /// A collection owes a report: the next slice builds it.
+    /// A collection owes a report (LLP 1050.000): the next slice builds it.
     func requestFill() { scheduleAfterScroll(); start() }
     /// Build each owed collection's rows for this slice: as many as its
     /// measured per-row cost fits, at least one, and at least what the next

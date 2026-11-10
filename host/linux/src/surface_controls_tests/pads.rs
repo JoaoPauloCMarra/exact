@@ -1,4 +1,4 @@
-//! Gamepads through the presenter.
+//! Gamepads through the presenter (LLP 1127.003 D2, D9).
 use super::*;
 
 #[test]
@@ -25,7 +25,7 @@ fn controller_polling_needs_an_input_canvas_but_survives_editor_focus() {
     done(p, path);
 }
 
-/// The pads follow the focus. The canvas they leave hears
+/// LLP 1127.003 D9: the pads follow the focus. The canvas they leave hears
 /// each pad go; the one they reach hears each pad as it is, so a button held
 /// across the move is released by the canvas that now has it.
 #[test]
@@ -142,7 +142,7 @@ fn pad_states_keep_their_report_times_and_forgotten_pads_are_not_replayed() {
     done(p, path);
 }
 
-/// A pad's report times survive the route from the reader
+/// LLP 1127.003 D2: a pad's report times survive the route from the reader
 /// to the canvas, through the first report choosing which canvas has the
 /// pads, so a 150 ms press stays 150 ms and a 210 ms one 210 ms. The rows are
 /// those `game/render`'s `pad_rows_tap_and_hold_by_their_report_times` sends

@@ -1,4 +1,4 @@
-// The browser's "scroll to the fragment" (HTML: find a potential indicated element, scroll it into
+// @ref LLP 1153 D5 — the browser's "scroll to the fragment" (HTML: find a potential indicated element, scroll it into
 // view, move the sequential focus navigation starting point to it), made by the runtime once a route's data has
 // arrived: an Exact page's content comes after load, so the browser's own step finds nothing. The element is looked
 // for in the visit's own route, since a route retained beneath may hold the same `id`; it is held at the start while

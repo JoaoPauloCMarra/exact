@@ -1,4 +1,4 @@
-//! Asynchronous fetch: a transport starts one exchange
+//! Asynchronous fetch (LLP 0068.000 §2): a transport starts one exchange
 //! and reports it through a [`Sink`]; [`FetchTask`] is `fetch_stream`'s
 //! redirect loop as a state machine over it, so a native async caller holds no thread
 //! while an exchange is on the wire.
@@ -13,7 +13,8 @@
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::{Arc, Mutex};
 
-// Collection is bounded; deadlines belong to consumers.
+// @ref LLP 0068.000#3-ownership-callbacks-and-cancellation — callback and resource lifetime contract
+// @ref LLP 0068.000#4-limits-flow-and-deadlines — bounded collection; deadlines belong to consumers
 
 /// Contain an external callback panic without skipping retirement. Native FFI
 /// adapters apply the same boundary to arbitrary low-level sinks.
@@ -197,7 +198,7 @@ pub struct Collected {
     pub redirected: bool,
 }
 
-/// The caps every hop's headers are held to.
+/// The caps every hop's headers are held to (LLP 0068.000 §2).
 #[derive(Debug, Clone, Copy)]
 pub struct HeaderCaps {
     pub bytes: usize,
@@ -220,7 +221,7 @@ pub trait FetchEvents: Send + Sync {
     }
 }
 
-/// `fetch_stream`'s loop as a state machine.
+/// `fetch_stream`'s loop as a state machine (LLP 0068.000 §2).
 pub struct FetchTask {
     state: Mutex<TaskState>,
     transport: Arc<dyn AsyncTransport>,
@@ -277,7 +278,7 @@ impl FetchTask {
     }
 
     /// [`FetchTask::start`], with the host's `gate` checked beside the grant
-    /// at every hop (Exact patch).
+    /// at every hop (Exact patch, LLP 1133.036 D6).
     #[allow(clippy::too_many_arguments)]
     pub fn start_gated(
         transport: Arc<dyn AsyncTransport>,
@@ -661,7 +662,7 @@ pub trait ReservedWorker: Send {
 }
 
 /// Consumer-supplied execution mechanism, without a runtime or queue policy.
-/// A worker is reserved before a job is accepted.
+/// @ref LLP 0068.000#5-platform-adapters-and-compatibility — reserve before acceptance
 pub trait WorkerService: Send + Sync {
     fn reserve(&self) -> Result<Box<dyn ReservedWorker>, HostError>;
 }

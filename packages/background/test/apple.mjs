@@ -1,4 +1,4 @@
-// @exact/background's conformance suite on Apple:
+// @exact/background's conformance suite on Apple (LLP 1133.017 §14 stage 2):
 // the fixture app (`test/fixture`, as `web.mjs` makes it) built for macOS or
 // an iOS simulator and driven by the agent with the implementation bound
 // (`--bind background`), so `NWPathMonitor`, `NSBackgroundActivityScheduler`

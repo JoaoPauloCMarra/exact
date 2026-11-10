@@ -1,4 +1,4 @@
-// @fixture/vault on the Linux host, headless, and on the web: the package built with its library
+// @fixture/vault on the Linux host, headless, and on the web (LLP 1154 §6 M5): the package built with its library
 // (library.mjs) and the fixture app depending on it (fixture.mjs). On a Mac the Linux host is built for the Mac's
 // target and links the xcframework's macOS framework, as `bun exact.mjs linux` builds it.
 //

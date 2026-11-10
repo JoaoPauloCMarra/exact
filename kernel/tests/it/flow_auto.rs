@@ -1,4 +1,4 @@
-//! Auto-height paragraphs flow around exclusions where
+//! @ref LLP 1043.000 §8 — auto-height paragraphs flow around exclusions where
 //! the admission rule holds, measured around exactly what is published.
 use exact_kernel::*;
 use exact_textflow::{FlowOptions, Fragment, Options, Prepared};
@@ -198,7 +198,7 @@ fn removing_or_disabling_the_exclusion_restores_ordinary_height() {
 
 /// Two auto-height paragraphs whose margins collapse, the second flowing
 /// around a box it only reaches once the first has grown around the drop cap:
-/// the case whose measure-time offset is untrustworthy.
+/// the case whose measure-time offset stage 0 found untrustworthy.
 fn article(cap_x: f64) -> Vec<Op> {
     vec![
         create(1, NodeType::View),

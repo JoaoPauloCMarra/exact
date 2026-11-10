@@ -1,4 +1,4 @@
-//! `input type="file"` is a `Control` with `accept` and
+//! LLP 1069.002: `input type="file"` is a `Control` with `accept` and
 //! `multiple`; `showPicker` is a host command; `change` carries a
 //! `Picked[]` and `cancel` nothing; `accept` is bounded at bake.
 
@@ -152,7 +152,7 @@ fn the_bake_bounds_accept_and_refuses_capture() {
         refused(&view("accept=\"image/*\" capture=\"user\"")),
         "lower-picker-capture"
     );
-    // The refusal names the camera's route.
+    // The refusal names the camera's route, as rules/DEFERRED.md now says it.
     let capture = contract::compile(&view("accept=\"image/*\" capture=\"user\""))
         .unwrap_err()
         .message;

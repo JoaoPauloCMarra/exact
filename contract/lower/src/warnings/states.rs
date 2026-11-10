@@ -1,12 +1,12 @@
-//! `lower-state-dead`: a
+//! `lower-state-dead` (LLP 1121 D8, stage 8 A; theme2's ruling (a)): a
 //! node's own `:disabled` part where it writes no `disabled`, or its own
 //! `:checked` where it writes none of `checked`, `aria-checked`,
 //! `aria-selected` and `aria-pressed`, or its own `:active` where it has no
-//! `press`, which the host's press needs: the
+//! `press`, which the host's press needs (theme2's 07:06 question): the
 //! state never holds, so its rows never show. A pressable link (`link`,
 //! `button`) with an `href` and no `press` is linted too, as unreliable:
-//! only Apple presses it (and the web, by touch). A bound expression counts
-//! as written. A class's part is not
+//! only Apple presses it (and the web, by touch; theme2's 11:48 ruling, the
+//! hosts' disagreement being LLP 1061's). A bound expression counts as written. A class's part is not
 //! judged: a shared style's `:disabled` on a node that is never disabled is
 //! the ordinary case.
 
@@ -52,10 +52,10 @@ pub(super) fn dead(view: &[Node], out: &mut Vec<LowerError>) {
                         out.push(LowerError {
                             id: "lower-state-dead",
                             message: if link {
-                                "`:active` is unreliable here: a link with no `press` is pressed only on Apple (and the web by touch); give it `press`, or move the part".to_string()
+                                "`:active` is unreliable here: a link with no `press` is pressed only on Apple (and the web by touch); give it `press`, or move the part (LLP 1121 D8)".to_string()
                             } else {
                                 format!(
-                                    "`:{state}` never holds here: the node writes no {}, so its rows never show",
+                                    "`:{state}` never holds here: the node writes no {}, so its rows never show (LLP 1121 D8)",
                                     reads.iter().map(|r| format!("`{r}`")).collect::<Vec<_>>().join(" or ")
                                 )
                             },

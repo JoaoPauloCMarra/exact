@@ -74,7 +74,7 @@ fn the_clipboard_events_reach_the_nearest_handler() {
 /// A paste is Ctrl+V first. A `key` handler that `preventDefault()`s that
 /// chord keeps the clipboard event from landing; one that does not still
 /// hears the key and the paste. Copy stays the clipboard event alone
-/// (a driver's paste that skipped the key would hide a bug).
+/// (drums R15: the driver's paste skipped the key and hid that bug).
 #[test]
 fn a_paste_is_ctrl_v_and_a_prevented_chord_skips_the_clipboard() {
     let head = r#"component App
@@ -158,7 +158,7 @@ fn a_paste_is_ctrl_v_and_a_prevented_chord_skips_the_clipboard() {
     }
 }
 
-/// `tap <id> modifiers Shift+Meta` presses with the keys held,
+/// Gallery F20: `tap <id> modifiers Shift+Meta` presses with the keys held,
 /// which the action's `MouseEvent` reports; the keys are released after.
 #[test]
 fn a_tap_holds_its_modifiers_for_the_press() {
@@ -223,8 +223,8 @@ impl DataSource for Stalled {
 }
 
 /// A jump waits for no request with no timer due before it, and its reply
-/// names what it left in flight, as the web hosts' do;
-/// `clock settle` waits for it and says `requests` past its bound.
+/// names what it left in flight, as the web hosts' do (calendar F10, workout
+/// F6); `clock settle` waits for it and says `requests` past its bound.
 #[test]
 fn a_jump_names_the_requests_it_left_in_flight() {
     let plan = contract::compile(
@@ -295,7 +295,7 @@ fn a_mouse_contact_goes_down_holds_and_lifts() {
     .unwrap();
     assert!(again["error"].as_str().unwrap().contains("already down"));
     assert!(again["malformed"].is_null());
-    // A hold seeks the presenter clock and reports it, so the driver does not seek again.
+    // A hold seeks the presenter clock and reports it, so the driver does not seek again (platformer R7).
     let before = p.host().now();
     let held = handle(
         &mut p,
@@ -616,7 +616,7 @@ fn keyup_hears_a_release_and_both_carry_code_and_repeat() {
     );
 }
 
-/// A tap addressed by id presses what it names: a row with a
+/// A tap addressed by id presses what it names (LLP 1012 §1): a row with a
 /// press of its own is pressed beside the card at its center, never the card;
 /// a box without one never presses the Like inside it; a row its child
 /// covers is refused; `at` keeps a point's semantics (the Bluesky clone's
@@ -709,11 +709,11 @@ fn a_named_tap_presses_what_it_names_never_a_control_inside_it() {
     assert!(reply.contains("outside its"), "{reply}");
 }
 
-/// What `press_at` delivers without a `press` handler is a control too: a
-/// checkbox toggles, a text field takes the focus, an inline run's `href` is
-/// followed. A named row with its own press is pressed beside them; a box
-/// without one refuses; a disabled row presses nothing; a point presses what
-/// is there.
+/// What `press_at` delivers without a `press` handler is a control too (Astra
+/// and Grok, round 1): a checkbox toggles, a text field takes the focus, an
+/// inline run's `href` is followed. A named row with its own press is pressed
+/// beside them; a box without one refuses; a disabled row presses nothing;
+/// a point presses what is there.
 #[test]
 fn a_named_tap_never_toggles_focuses_or_follows_what_is_inside_it() {
     let plan = contract::compile(concat!(
@@ -933,7 +933,7 @@ fn into_alignment_is_malformed_before_any_delivery() {
     assert_eq!(state["slots"]["n"], 0, "{state}");
 }
 
-/// The driver's `post` is the page's `postMessage`: held per
+/// The driver's `post` (LLP 1139.004 D1) is the page's `postMessage`: held per
 /// surface until a canvas of it is live, at most POST_BOUND, refused by name past it.
 #[test]
 fn a_post_is_held_for_its_surface_and_refused_past_the_bound() {
@@ -983,7 +983,7 @@ fn a_post_is_held_for_its_surface_and_refused_past_the_bound() {
 }
 
 /// `item()` asks `/changes`, which the server holds until released, as a long
-/// poll does: marked held or not. Its reply asks `/detail`
+/// poll does: marked held (LLP 1016.000 D9) or not. Its reply asks `/detail`
 /// (unmarked), which the server answers 1.5 s on: the answer's work after
 /// its held reply.
 #[derive(Default)]
@@ -1099,7 +1099,7 @@ fn boot_polled(data: Polled) -> Presenter<Polled> {
 }
 
 /// A held ask is not waited on: a jump across timers goes on at once, and
-/// it, `clock data` and `clock settle` each name it.
+/// it, `clock data` and `clock settle` each name it (LLP 1016.000 D9).
 /// Released, the answer's next ask (unmarked, 1.5 s) is waited on before
 /// the next timer, and its value lands.
 #[test]
@@ -1163,7 +1163,7 @@ fn a_jump_does_not_wait_on_a_held_request_and_names_it() {
     assert_eq!(state["resources"]["item"], 6, "{state}");
 }
 
-/// The same ask unmarked is waited on before each due timer,
+/// The same ask unmarked is waited on before each due timer (calendar F10),
 /// to the call's bound.
 #[test]
 fn an_unmarked_long_hold_is_waited_on_before_a_timer() {

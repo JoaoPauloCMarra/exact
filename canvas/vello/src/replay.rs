@@ -1,4 +1,4 @@
-//! A canvas's lists replayed into a vello scene, with the
+//! A canvas's lists (LLP 1056 D3) replayed into a vello scene, with the
 //! reference replayer's semantics (`host/apple/Sources/ExactKit/
 //! Canvas2D*.swift`): paths arrive in canvas coordinates, so a fill or clip
 //! draws them under the base scale; a stroke takes them back to user space
@@ -17,7 +17,7 @@ use vello::Scene;
 
 /// What a replay reads beyond its lists: the host's text and images.
 pub trait Host {
-    /// A text line's outlines (the ABI's `text_path`): line space, y up,
+    /// A text line's outlines (LLP 1056 ABI `text_path`): line space, y up,
     /// at the run's left end on its alphabetic baseline.
     fn text(&mut self, font: &[f64], text: &[u32], rtl: bool) -> Option<BezPath>;
     /// An image handle's pixels, premultiplied, or none when not decoded.

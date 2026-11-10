@@ -1,5 +1,5 @@
-//! What the compiler refuses about values and names, and what bake's layout
-//! lint refuses that the compiler cannot see.
+//! LLP 1017 P1: what the compiler refuses about values and names, and what
+//! bake's layout lint refuses that the compiler cannot see.
 
 use contract::BakeError;
 use exact_plan::Value;
@@ -25,11 +25,11 @@ fn an_old_spelling_is_refused_with_the_css_name() {
     assert!(e.message.contains("`aria-label`"), "{e}");
 }
 
-/// A state part on an element (`:hover` then its rows) is linted as lowering
-/// folds it: a row its state takes passes, checked as the row it lowers to
-/// (`:active`'s colour as the press's, which inherits nothing); a row it
-/// takes none of, or a name that is no row, is refused (a chat app's emoji
-/// button).
+/// A state part on an element (LLP 1121 D8, `:hover` then its rows) is linted
+/// as lowering folds it: a row its state takes passes, checked as the row it
+/// lowers to (`:active`'s colour as the press's, which inherits nothing); a
+/// row it takes none of, or a name that is no row, is refused (Excord's
+/// emoji button, f8b012ef1e).
 #[test]
 fn an_elements_state_part_is_linted_as_lowering_folds_it() {
     let src = |state: &str, row: &str| {
@@ -54,7 +54,7 @@ fn an_elements_state_part_is_linted_as_lowering_folds_it() {
         );
         contract::compile(&src(state, row)).unwrap_or_else(|e| panic!("{state} {row}: {e}"));
     }
-    // A prop put in before the fold: a row that reads one is the fold's to judge, not the lint's.
+    // A prop put in before the fold: a row that reads one is the fold's to judge, not the lint's (Astra's re-check).
     let param = "component App\n  view\n    Dim(level=0.8)\ncomponent Dim\n  props\n    level: number\n  view\n    column opacity=0.6\n      :hover\n        opacity=level\n      text \"a\"\n";
     let found = contract_lower::lint(&contract_syntax::parse(param).unwrap());
     assert!(found.is_empty(), "{found:?}");
@@ -212,7 +212,8 @@ fn a_shorthand_read_from_a_name_is_left_to_lowering() {
     assert!(e.message.contains("subtraction"), "{e}");
 }
 
-/// What a React Native port writes first is refused with what to write.
+/// What a React Native port writes first is refused with what to write
+/// (the euxy port, 2026-10-17: 19 of 50 compiles refused).
 #[test]
 fn a_react_native_habit_is_refused_with_what_to_write() {
     for (line, id, needle) in [
@@ -397,8 +398,8 @@ fn an_inset_sized_button_has_area() {
 }
 
 /// The web's JS target bakes nothing; `contract::check` refuses there what
-/// every native bake would, before the page's module answers. Hidden
-/// controls and descendants have no pressable layout until shown.
+/// every native bake would, before the page's module answers (files diary
+/// F13). Hidden controls and descendants have no pressable layout until shown.
 #[test]
 fn check_refuses_without_data_what_no_answer_could_change() {
     let hidden = "component A\n  state n = 0\n  action go\n    n = 1\n  view\n    column\n      button \"Down\" press=go display=\"none\" aria-keyshortcuts=\"Shift+ArrowDown\" testId=\"down\"\n";
@@ -497,8 +498,8 @@ fn conditional_style_checks_preserve_computation_and_match_bindings() {
 
 #[test]
 fn a_platform_colour_is_a_plan_literal_never_data() {
-    // State may choose between the plan's literals; a string that came from
-    // an action's argument names no platform colour.
+    // LLP 1095 D3: state may choose between the plan's literals; a string
+    // that came from an action's argument names no platform colour.
     let source = r##"component App
   state on = false
   state named = "#000000"
@@ -696,7 +697,7 @@ fn number_only_style_choices_accept_valid_css_wide_keywords() {
 }
 
 /// The `style=` hint's suggestion is read back as a node's attributes and
-/// compiled: what it suggests must compile.
+/// compiled: what it suggests must compile (the euxy port, review round 2).
 #[test]
 fn the_style_hint_suggests_only_what_compiles() {
     let hint = |style: &str| {
@@ -902,15 +903,15 @@ fn refusals_name_what_the_author_wrote_and_suggest_one_repair() {
         // inherited row has.
         (app("", "view alt=\"x\""), "lower-attr-tag", "`alt` belongs to `image`, not `view`; another element's accessible name is `aria-label`"),
         (app("", "view background-color=\"inherit\""), "lower-attr-value", "`background-color=\"inherit\"`: `background-color` does not inherit, and exact2 inherits only the rows CSS inherits; write the value"),
-        (app("", "text \"a\" color=\"bleu\""), "lower-attr-value", "`color=\"bleu\"` is not a valid `color`: a color is a CSS colour: hex, `rgb()`, `hsl()`, `hwb()`, a named colour, `transparent`, or one in its own space: `color(display-p3 1 0 0)`, `oklch()`, `oklab()`, `lab()`, `lch()` — `light-dark(a, b)` of two, a role (`\"-exact-secondary-label\"`, `\"CanvasText\"`), or `-exact-platform-color(ios <name>Color, …, <fallback>)` written whole as a string literal"),
-        (app("", "text \"a\" color=`-exact-platform-color(ios ${draft}Color, #000)`"), "lower-platform-color-literal", "`color`: write `-exact-platform-color(…)` whole, as a string literal (a branch of `?:` or `match` may be one); it is never built from a template, a concatenation or data, so the platform colours a plan names are fixed when it compiles"),
-        // `14px` on a pixel row is CSS's; a negative font size is not.
+        (app("", "text \"a\" color=\"bleu\""), "lower-attr-value", "`color=\"bleu\"` is not a valid `color`: a color is a CSS colour: hex, `rgb()`, `hsl()`, `hwb()`, a named colour, `transparent`, or one in its own space: `color(display-p3 1 0 0)`, `oklch()`, `oklab()`, `lab()`, `lch()` (LLP 1100) — `light-dark(a, b)` of two, a role (`\"-exact-secondary-label\"`, `\"CanvasText\"`: LLP 1095, LLP 1081), or `-exact-platform-color(ios <name>Color, …, <fallback>)` written whole as a string literal"),
+        (app("", "text \"a\" color=`-exact-platform-color(ios ${draft}Color, #000)`"), "lower-platform-color-literal", "`color`: write `-exact-platform-color(…)` whole, as a string literal (a branch of `?:` or `match` may be one); it is never built from a template, a concatenation or data, so the platform colours a plan names are fixed when it compiles (LLP 1095 D3)"),
+        // `14px` on a pixel row is CSS's (LLP 1102 §3.10); a negative font size is not.
         (app("", "text \"a\" font-size=\"-2px\""), "lower-attr-value", "`font-size=\"-2px\"` is not a valid `font-size`: expected a nonnegative length"),
         // A `font-size`'s one `min()` holds a text style to a pixel cap.
         (app("", "image \"symbol:add\" font-size=\"min(1.25rem, 24px)\""), "lower-attr-value", "`font-size=\"min(1.25rem, 24px)\"` is not a valid `font-size`: a `font-size` is a number, a `px`, `rem` or `em` length, a text style (`-exact-title3`), or `min(<text style>, <px cap>)`, which grows with the reader's text size up to the cap (`min(-exact-title3, 24px)`)"),
         (app("", "text \"a\" width=10px"), "syntax-unquoted-length", "`width=10px` needs quotes: a value with a unit is a string, `width=\"10px\"` (a bare number is pixels)"),
         (app("", "text \"a\" className=\"x\""), "lower-unknown-attr", "`text` has no attribute `className`; `class` names a `style` declared in this file, as in `class=Card`"),
-        // A React Native port's `style=`: the word is `class=`, or the declarations are attributes.
+        // The euxy port's `style=`: the word is `class=`, or the declarations are attributes.
         (app("", "text \"a\" style=\"title\""), "lower-unknown-attr", "`text` has no attribute `style`; write `class=title`: a look nodes share is a `style Name` block in the file, named with `class=Name`, and a node's own look is its attributes"),
         (app("", "text \"a\" style=\"padding: 8px; color: red;\""), "lower-unknown-attr", "`text` has no attribute `style`; write the declarations as attributes, `padding=\"8px\" color=\"red\"`: a node's look is its attributes, and a look nodes share is a `style Name` block in the file, named with `class=Name`"),
         (
@@ -923,7 +924,7 @@ fn refusals_name_what_the_author_wrote_and_suggest_one_repair() {
             "syntax-expected-newline",
             "expected end of line, found `=`; `==` compares, and only a statement assigns",
         ),
-        // A React Native port's `after(0, …)`: 0 would be due in the commit that armed it.
+        // The euxy port's `after(0, …)`: 0 would be due in the commit that armed it.
         (
             app("  task t mount\n    after(0, tick)\n  action tick\n    draft = \"x\"\n", "text draft"),
             "lower-timer-interval",
@@ -934,7 +935,7 @@ fn refusals_name_what_the_author_wrote_and_suggest_one_repair() {
             "syntax-expected-expression",
             "expected an expression, found `{`; Contract has no `{…}`: a handler names an action (`press=add`, `press=add(item)`) and a value is written directly (`width=10`)",
         ),
-        // Common guesses: a tag, a count, a placeholder.
+        // The app farm's guesses (round 1): a tag, a count, a placeholder.
         (app("", "heading \"T\""), "lower-unknown-tag", "unknown tag `heading`; a heading is `h1` (to `h6` for the level)"),
         (app("", "grid"), "lower-unknown-tag", "unknown tag `grid`; a grid is `view display=\"grid\"` with `grid-template-columns`, or a `column` of `row`s"),
         (app("  state xs = [1]\n", "text count(xs).toString()"), "type-refused-idiom", "write `x.length`, of text or of a list"),
@@ -955,8 +956,8 @@ fn refusals_name_what_the_author_wrote_and_suggest_one_repair() {
     }
 }
 
-/// A prop written with a default is told props have none, and the `option`
-/// form the refusal names compiles.
+/// A prop written with a default (the euxy port's) is told props have none,
+/// and the `option` form the refusal names compiles.
 #[test]
 fn a_prop_default_is_refused_naming_the_option_form() {
     let app = |props: &str, read: &str, pass: &str| {
@@ -1017,7 +1018,7 @@ fn the_element_lint_finds_nothing_in_any_app() {
             continue;
         };
         let mut file = contract_syntax::parse(&src).unwrap();
-        // The app's design is the driver's to read, as `contract build` does.
+        // The app's design is the driver's to read (LLP 1121 D2), as `contract build` does.
         let design = path.with_file_name("app.tamber");
         file.design =
             std::fs::read_to_string(&design)

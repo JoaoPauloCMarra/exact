@@ -1,7 +1,7 @@
 //! The element resize event, ResizeObserver's: `resize=action` on an
 //! element hears its content box after layout, at first and whenever its
-//! size changes (routed by value; `resize="none"` stays CSS's property).
-//! The web's hosts observe with the browser's
+//! size changes (x2apps backlog: decided, routed by value; `resize="none"`
+//! stays CSS's property). The web's hosts observe with the browser's
 //! `ResizeObserver`; a native host lays out, asks [`Runner::resize_due`]
 //! what changed, notes and dispatches each, lays out again, and repeats as
 //! the browser's loop does (Resize Observer 1 §3.4.1): each round only nodes
@@ -155,7 +155,7 @@ impl<D: DataSource> Runner<D> {
         }
     }
 
-    /// A box that straddles columns, as the browser sizes it:
+    /// A box that straddles columns, as the browser sizes it (LLP 1093 D11):
     /// one column wide, and as tall as its fragments end to end — Chrome's
     /// stitched size, which `ResizeObserver` reports and the reader pages by
     /// — never its union frame, which is `frame()`'s. A multi-column `text`'s
@@ -182,7 +182,7 @@ impl<D: DataSource> Runner<D> {
 /// What the runner keeps: each observed node's last delivered rect.
 pub type Resized = Vec<(NodeKey, ResizeRect)>;
 
-/// ResizeObserver's `contentRect` of `node`: `x` and `y` the
+/// ResizeObserver's `contentRect` of `node` (b6 review B2): `x` and `y` the
 /// used padding's left and top — the border is outside the padding box the
 /// rect is placed in — and the size the border box less padding and border.
 /// `stitched` is a fragmented box's border box ([`Runner::stitched`]); an

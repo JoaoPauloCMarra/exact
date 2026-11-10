@@ -1,5 +1,5 @@
 // The build stamp (`buildinfo.mjs`): `bun test host/apple/buildinfo.test.mjs`;
-// an ignored test in `tests/it/development.rs` runs it too.
+// the async lane runs it (`tests/it/development.rs`).
 import { test, expect } from 'bun:test';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

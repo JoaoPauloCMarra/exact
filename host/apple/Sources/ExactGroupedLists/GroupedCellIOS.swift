@@ -47,7 +47,7 @@ final class GroupedCell: UICollectionViewListCell {
     /// An authored `min-height` for a cell UIKit's configuration sizes.
     var minimumHeight: CGFloat?
     /// Its standard row's svg-only icon path token, drawn again at a new
-    /// Dynamic Type size; nil for an SF Symbol or none.
+    /// Dynamic Type size (stage 9 A2); nil for an SF Symbol or none.
     var pathSymbol: String? {
         didSet {
             guard pathSymbol != nil, !watchesSize else { return }
@@ -88,7 +88,7 @@ final class GroupedCell: UICollectionViewListCell {
     }
     #if os(iOS)
     /// A touch its row leaves to no control goes to the row's one field: the
-    /// cell is the field.
+    /// cell is the field (LLP 1116.005 D2).
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         NodeView.cellField(in: self, hit: super.hitTest(point, with: event))
     }

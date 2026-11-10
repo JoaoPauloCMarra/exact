@@ -5,7 +5,7 @@ import AppKit
 #endif
 @testable import ExactKit
 
-// The owner thread's contract.
+// @ref LLP 1072 T1/T5 — the owner thread's contract.
 final class OwnerTests: XCTestCase {
     func testDocumentOwnerIsTheRuntimeThatResolvesStorage() {
         let session = ExactApp.shared.makeSession(label: "document-owner")

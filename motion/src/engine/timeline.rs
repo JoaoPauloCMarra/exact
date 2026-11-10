@@ -1,4 +1,4 @@
-//! Drag timelines in the engine.
+//! Drag timelines in the engine (LLP 1057.003 D2, D4).
 //!
 //! A source node's presented `translate` drives a timeline on one axis; a
 //! consumer's `animation`s are bound to what its timeline name resolved to,
@@ -23,7 +23,7 @@
 use super::Engine;
 use crate::property::Property;
 
-/// What a consumer's timeline name resolved to.
+/// What a consumer's timeline name resolved to (LLP 1057.003 D4).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NamedTimeline {
     /// The drag timeline this node's presented translate drives.
@@ -106,7 +106,7 @@ impl Engine {
                 // Back on the clock from where the timeline left it; from
                 // an inactive one, from its start.
                 // With the first-frame rule on, that resume waits for the
-                // frame; a clock's join below decides for
+                // frame (LLP 1003.001 D3); a clock's join below decides for
                 // its own.
                 let now = self.sample_time();
                 let pending = self.start_on_frame.then_some(now);
@@ -121,7 +121,7 @@ impl Engine {
                 if pending.is_some() {
                     self.schedule_animations(node);
                 }
-                // Onto a clock timeline: in its phase.
+                // Onto a clock timeline: in its phase (LLP 1055.002).
                 self.join_clock_node(node);
             }
             (None, None) => {}

@@ -1,7 +1,7 @@
-//! The `value`s the presenter keeps a typed text or choice against: one a
-//! commit changes, removes or renews is replaced, even if a later commit writes
-//! the old value back, as the web build's write of `value` replaces the
-//! element's own.
+//! The `value`s the presenter keeps a typed text or choice against (LLP
+//! 1069.001 D4): one a commit changes, removes or renews is replaced, even
+//! if a later commit writes the old value back, as the web build's write of
+//! `value` replaces the element's own.
 use exact_kernel::{CommitReceipt, Kernel, NodeKey, NodeRef, NodeType, ViewId};
 use std::collections::{BTreeMap, BTreeSet};
 

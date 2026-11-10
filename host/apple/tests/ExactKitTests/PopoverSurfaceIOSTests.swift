@@ -3,12 +3,13 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// A popover's default surface on UIKit: a popover the compiler marked
-/// (`defaultSurface`, its author having written no surface) draws UIKit's
-/// popover glass under its children, its corner the host's
-/// `defaultSurfaceRadius` (iOS's metric, 30); one its author surfaced, and a
-/// menu, draw none. Hosted: glass draws in a scene's window. Keeps a popover a
-/// popover on an iPhone.
+/// A popover's default surface on UIKit (LLP 1021; theme2 2026-10-21
+/// 19:55): a popover the compiler marked (`defaultSurface`, its author having
+/// written no surface) draws UIKit's popover glass under its children, its
+/// corner the host's `defaultSurfaceRadius` (iOS's metric, 30); one its
+/// author surfaced, and a menu, draw none. Hosted: glass draws in a scene's
+/// window.
+/// Keeps a popover a popover on an iPhone.
 final class Adapt: NSObject, UIPopoverPresentationControllerDelegate {
     static let none = Adapt()
     func adaptivePresentationStyle(for controller: UIPresentationController, traitCollection: UITraitCollection) -> UIModalPresentationStyle { .none }

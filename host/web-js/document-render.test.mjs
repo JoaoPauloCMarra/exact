@@ -151,7 +151,7 @@ test('blank text rows clear a shorthand start through adoption', async () => {
   });
 }, 60000);
 
-// The HTML parser puts a table's own rows in a `tbody`, and the plan has it, so
+// @ref LLP 1153 D7.2 — the HTML parser puts a table's own rows in a `tbody`, and the plan has it, so
 // the parsed page is the one construction walks; a cell holding one text stays a `table-cell`.
 test('a table rendered ahead adopts without a rebuild, its cells still cells', async () => {
   const source = `routes nav
@@ -206,7 +206,7 @@ component Moves
 }, 180000);
 
 // A page built ahead serves every query its path is opened at; opened at one it was not built at, its list's rows are
-// not the list's items, so the runtime builds afresh rather than keep the rows past its items.
+// not the list's items, so the runtime builds afresh rather than keep the rows past its items (LLP 1048.000 D6).
 test('a page built ahead and opened at another query shows its own rows, not the built ones', async () => {
   const source = `routes nav
   home "/" render=build
@@ -369,7 +369,7 @@ globalThis.__render = () => {
     C.prototype.renderCount = (C.prototype.renderCount ?? 0) + 1;
     return C.renderCount + ':' + C.prototype.renderCount;
   });
-  return { root: '', title: [language, zone, explicit, inherited.timeZone, inherited.hour, typeof Intl.DateTimeFormat.supportedLocalesOf].join('/'), description: caught.join(',') + '/' + counts.join(','), time: 0, answers: '[]', pending: [] };
+  return { root: '', title: [language, zone, explicit, inherited.timeZone, inherited.hour, typeof Intl.DateTimeFormat.supportedLocalesOf].join('/'), description: caught.join(',') + '/' + counts.join(','), time: 0, answers: '[]', pending: [], open: [] };
 };`);
     const bundle = await Bun.build({ entrypoints: [entry], target: 'browser', format: 'iife' });
     expect(bundle.success).toBe(true);
@@ -637,7 +637,7 @@ test('JavaScript-rendered pages exclude the other retained tabs’ heads', async
   });
 }, 30000);
 
-// The page marks a route's bar (`data-exact-bar`) as the glue will, so its item's symbol is the
+// LLP 1115.000 D4.15: the page marks a route's bar (`data-exact-bar`) as the glue will, so its item's symbol is the
 // bar's size, 22/17 of the 16 px body in its 1.2em box, over the 13 px written on it, before the page adopts and after:
 // no jump. A header whose heading sits in a menu's button (`popovertarget`) is no bar, before or after, and its symbol
 // keeps the 13 px in a native face's 1.5em box.
@@ -693,8 +693,8 @@ component Bars
 }, 180000);
 
 // A page rendered ahead of time, by either renderer, works before its runtime runs as it will after: a wheel over the
-// content scrolls the route its URL selects, every other tab hidden and inert as the projection leaves it,
-// while the document and the tab bar keep their place and the page cannot bounce. It adopts
+// content scrolls the route its URL selects, every other tab hidden and inert as the projection leaves it (LLP 1038
+// D6), while the document and the tab bar keep their place and the page cannot bounce (LLP 1115.000 D4.12). It adopts
 // without moving.
 test('pages rendered ahead of time scroll the selected route before they adopt, and adopt without moving', async () => {
   if (webCompiler().cmd === 'cargo') throw new Error('build the compiler first: cargo build -p exact-web-js');
@@ -855,7 +855,7 @@ component Page
   }
 }, 180000);
 
-// A rendered page paints without the runtime, so it fetches the runtime at low priority; the shell,
+// LLP 1153.001 D8: a rendered page paints without the runtime, so it fetches the runtime at low priority; the shell,
 // which cannot paint until the runtime runs, keeps the default.
 test('both document renderers preload the runtime at low priority, and the shell at the default', async () => {
   for (const how of ['js', 'rust']) {
@@ -867,7 +867,7 @@ test('both document renderers preload the runtime at low priority, and the shell
   }
 }, 180000);
 
-// An undeclared route waits for the reader when its render left the runtime nothing to do, and runs it
+// LLP 1048.007 D1: an undeclared route waits for the reader when its render left the runtime nothing to do, and runs it
 // at once when something is due; a page laid out by the viewport carries its comparisons, which wake it elsewhere.
 test('both document renderers infer an undeclared route\'s activation from its render', async () => {
   const activation = page => [/data-activate="([a-z]+)"/.exec(page)?.[1], page.match(/<link rel="modulepreload"[^>]*>/g) ?? [], /data-wake="([^"]*)"/.exec(page)?.[1]?.replace(/&(quot|gt|lt|amp);/g, (_, e) => ({ quot: '"', gt: '>', lt: '<', amp: '&' })[e])];
@@ -919,7 +919,7 @@ component App
       expect([how, activation(html(''))]).toEqual([how, ['interaction', [], wake]]);
       expect([how, activation(html('clock'))]).toEqual([how, ['eager', [low], undefined]]);
       expect([how, activation(html('wide'))]).toEqual([how, ['interaction', [], wake]]);
-      // An intersect handler waits for its element to show, or for a scroll (`visible`).
+      // An intersect handler waits for its element to show, or for a scroll (LLP 1048.001 D4's `visible`).
       expect([how, activation(html('seen'))]).toEqual([how, ['interaction', [], wake]]);
       // `EmptyState` reads `accessibilityTextSize`, which every browser holds false, as the render does.
       expect([how, activation(html('empty'))]).toEqual([how, ['interaction', [], wake]]);
@@ -935,7 +935,7 @@ component App
           await page.goto(new URL('/wide', server.url).href);
           await decided(page);
           expect([how, width, await page.evaluate(() => !!globalThis.exact?.ready)]).toEqual([how, width, woken]);
-          // Woken, the runtime lays the page out for the reader's viewport, not the render's.
+          // Woken, the runtime lays the page out for the reader's viewport, not the render's (D2).
           if (woken) await page.waitForFunction(() => globalThis.exact?.ready && document.querySelector('main')?.textContent === 'wide', null, { timeout: 5000 }).catch(() => {});
           expect([how, width, await page.evaluate(() => document.querySelector('main')?.textContent)]).toEqual([how, width, woken ? 'wide' : 'narrow']);
         }
@@ -960,7 +960,7 @@ const decided = page => page.evaluate(() => new Promise(done => {
     .observe({ type: 'paint', buffered: true });
 }));
 
-// Only the shown route's `scroll document` is the page's scroller. A hidden route's is
+// LLP 1048.003 D4: only the shown route's `scroll document` is the page's scroller. A hidden route's is
 // `data-exact-offpage`, scrolling inside its bound, so its content leaves the page's height; each route keeps its own
 // place in the page's scroll, so a route opened anew starts at its top and one shown again where the reader left it.
 test('both document renderers make only the shown route\'s page scroller the page\'s, and each route keeps its place', async () => {
@@ -1016,7 +1016,7 @@ component Pages
   }, {}, {}, how);
 }, 240000);
 
-// A route's page under `scroll document` is at least the viewport tall and as tall as its content, so a
+// LLP 1048.003 D4: a route's page under `scroll document` is at least the viewport tall and as tall as its content, so a
 // background on its frame reaches its end, before startup and after (a short page and a long one).
 test('both document renderers lay out a page scroller\'s frame the viewport tall or its content\'s, whichever is more', async () => {
   for (const how of ['rust', 'js']) await renderedPages(`routes nav
@@ -1059,7 +1059,7 @@ component Pages
   }, {}, {}, how);
 }, 240000);
 
-// A rendered page carries only the rules its document can match, and the runtime puts the whole sheet
+// LLP 1048.007 D4: a rendered page carries only the rules its document can match, and the runtime puts the whole sheet
 // back before its first render, so what it then shows is styled as on the shell.
 test('both document renderers give a page its own rules, and the runtime restores the whole sheet', async () => {
   for (const how of ['js', 'rust']) await renderedPages(`routes nav
@@ -1099,7 +1099,7 @@ component Page
   }, {}, {}, how);
 }, 240000);
 
-// An image a `for` repeats loads as its row comes into view, as a platform list's cells load theirs.
+// LLP 1048.007 D5: an image a `for` repeats loads as its row comes into view, as a platform list's cells load theirs.
 // The page's own first image, likely its largest paint, is preloaded ahead of the document at high priority.
 test('both document renderers lazy-load the images a for repeats, and load a lone one at once, first', async () => {
   for (const how of ['js', 'rust']) await renderedPages(`routes nav
@@ -1151,7 +1151,7 @@ component Pages
   }, {}, {}, how);
 }, 180000);
 
-// A render's realm made ahead, while the server was idle, renders the page a fresh one does.
+// A render's realm made ahead, while the server was idle, renders the page a fresh one does (LLP 1048.000 D10).
 test('a realm made ahead renders the page a fresh one does', async () => {
   await renderedPages(`routes nav
   home "/" render=request
@@ -1169,14 +1169,14 @@ component App
     fresh.ahead = false;
     const page = async (r, at) => (await r(at)).html.replace(/"time":[\d.]+/, '"time":0');
     await page(ahead, '/');
-    // Leave the realm made ahead idle 1.5 s, as it may wait between requests, so that a timer its
+    // Leave the realm made ahead idle 1.5 s, as it may wait between requests (LLP 1048.007 D7), so that a timer its
     // bundle's loading set for up to that long has fired before it renders
     await new Promise(r => setTimeout(r, 1500));
     for (const at of ['/items/b', '/']) expect([at, await page(ahead, at)]).toEqual([at, await page(fresh, at)]);
   });
 }, 60000);
 
-// A request route's page made only of answers any reader may still be given, by TypeScript sources
+// LLP 1048.007 D8: a request route's page made only of answers any reader may still be given, by TypeScript sources
 // that drew nothing at random, is given again until the first answer goes stale; any other is made for each request.
 test('serve gives a page again while every answer it was made of is fresh', async () => {
   const api = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: req => {
@@ -1224,7 +1224,7 @@ export const answer: Answer = async (_source, [name]): Promise<Result<'note'>> =
   } finally { api.stop(true); }
 }, 60000);
 
-// A request route's page that waits for the reader names its answers past 1 KB rather than holding
+// LLP 1048.007 D10: a request route's page that waits for the reader names its answers past 1 KB rather than holding
 // them; the capture script fetches them with the runtime, and the page adopts. Answers no longer kept build it afresh.
 test('a waiting page names its answers past 1 KB, adopts once they come, and builds afresh without them', async () => {
   const api = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => Response.json(
@@ -1284,7 +1284,7 @@ export const answer: Answer = async (): Promise<Result<'items'>> => (await fetch
   } finally { api.stop(true); }
 }, 120000);
 
-// A page's head status is its HTTP status under Bun, as under the render host: a found route whose
+// A page's head status is its HTTP status under Bun, as under the render host (LLP 1048.000 D11): a found route whose
 // data names no item says 404 itself.
 test('a JavaScript-rendered page answers with its head status', async () => {
   await renderedPages(`routes nav
@@ -1308,7 +1308,7 @@ component App
   });
 }, 60000);
 
-// Under Bun, a page laid out by the viewport is rendered at the reader's, as its request tells it, and asks for
+// LLP 1048.006 under Bun: a page laid out by the viewport is rendered at the reader's, as its request tells it, and asks for
 // the hints that tell it; a desktop browser's first visit gets the desktop layout, not the phone's it would shift from.
 test('serve lays a page out for the viewport its request tells', async () => {
   await renderedPages(`shape Viewport

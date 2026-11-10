@@ -3,9 +3,9 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// `navigationDetent`'s words as UIKit detents, `fit-content` resolving to
-/// the route's content height within the sheet's maximum, and a sheet
-/// presented over the native fixture following its rows.
+/// LLP 1075.003 §9.11: `navigationDetent`'s words as UIKit detents,
+/// `fit-content` resolving to the route's content height within the sheet's
+/// maximum, and a sheet presented over the native fixture following its rows.
 final class ModalDetentIOSTests: XCTestCase {
     private var window: UIWindow?
     private var host: UIViewController?
@@ -34,7 +34,7 @@ final class ModalDetentIOSTests: XCTestCase {
         XCTAssertTrue(ModalHost.detents(nil) { nil }.isEmpty)
     }
 
-    /// A percentage is that share of UIKit's maximum
+    /// LLP 1075.003 §9.13: a percentage is that share of UIKit's maximum
     /// detent value, as RN's `sheetAllowedDetents: [0.45]` is.
     func testAPercentageIsAShareOfTheMaximum() {
         let large = UISheetPresentationController.Detent.Identifier.large.rawValue
@@ -43,8 +43,8 @@ final class ModalDetentIOSTests: XCTestCase {
         XCTAssertEqual(detents[0].resolvedValue(in: Context(700)), 315)
         XCTAssertEqual(detents[0].resolvedValue(in: Context(600)), 270, "read at each resolution, as the maximum changes")
         XCTAssertEqual(detents[1].resolvedValue(in: Context(700)), 490)
-        // All of the maximum is `large` itself: one rest, not
-        // two at one height, and the status bar's covering sheet.
+        // All of the maximum is `large` itself (Grok's review): one rest, not
+        // two at one height, and the status bar's covering sheet (LLP 1105 D2).
         XCTAssertEqual(ModalHost.detents("100%") { nil }.map(\.identifier.rawValue), [large])
         var refused: [Substring] = []
         XCTAssertEqual(ModalHost.detents("45% 100% large", refused: { word, _ in refused.append(word) }) { nil }.map(\.identifier.rawValue), ["authored-0", large])
@@ -80,7 +80,7 @@ final class ModalDetentIOSTests: XCTestCase {
             "navigationDetent \"-12\" on route \"3\": \"-12\" is not large, medium, fit-content, a positive point height or a percentage above 0% and at most 100%; the sheet uses the platform's large detent")
     }
 
-    /// UIKit takes detents shortest to tallest. "300 45%"
+    /// LLP 1075.003 §9.13: UIKit takes detents shortest to tallest. "300 45%"
     /// is in order on an 800-point maximum (300, 360) and not on a 600 one
     /// (300, 270), so what a bound value keeps is one kind, ascending, with
     /// `large` last, which is in order on any screen; the rest is journaled.
@@ -192,7 +192,7 @@ final class ModalDetentIOSTests: XCTestCase {
         try body()
     }
 
-    /// A sheet that declares no Back control still swipes down,
+    /// LLP 1115 D5: a sheet that declares no Back control still swipes down,
     /// and its dismissal goes back by the root's `navigate`, once.
     func testASheetWithNoBackControlStillSwipesDownAndGoesBackByNavigate() throws {
         try sheetSwipesDown(navigate: true)
@@ -334,7 +334,7 @@ final class ModalDetentIOSTests: XCTestCase {
         XCTAssertTrue(session.agent(#"{"op":"logs","since":0}"#).contains(#"navigationInitialDetent \"medum\""#), "journaled when the sheet is made")
     }
 
-    /// Mounted, its route in its block, the sheet still
+    /// Mounted, its route in its block (LLP 1123 D2), the sheet still
     /// follows its rows: its content is measured at the block's width,
     /// whatever height the block has.
     func testAMountedFitContentSheetFollowsItsRows() throws {

@@ -1,4 +1,4 @@
-// Clock in's follower on the JS target: runner/src/transport/clock.rs's `Follow`, line for line, its
+// Clock in's follower on the JS target (LLP 1125 D9): runner/src/transport/clock.rs's `Follow`, line for line, its
 // arithmetic in the same order so the tempo is the same double; read it beside it. transport.js holds one while the
 // playing sequence follows an input's MIDI clock, and does what it hears.
 // - Tempo: a window of the last WINDOW tick stamps, `(n − 1)` ticks over its span, taken only on a packet-leading tick

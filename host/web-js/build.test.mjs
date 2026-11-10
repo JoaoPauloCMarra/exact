@@ -97,7 +97,7 @@ test('production lazy host modules ignore agent storage and entropy parameters',
       });
       expect(result.status, result.stdout + result.stderr).toBe(0);
     };
-    // A release over a bake's plan, and one with no bake (an app that names no native platform).
+    // A release over a bake's plan, and one with no bake (an app that names no native platform, LLP 1153 D3.6).
     const dev = resolve(dir, 'dev'), prod = resolve(dir, 'prod'), webOnly = resolve(dir, 'web-only');
     build(dev);
     build(prod, ['--production', '--plan', resolve(dev, 'app.plan')]);
@@ -179,7 +179,7 @@ test('web-build --out refuses a directory it would destroy', () => {
   }
 }, 30000);
 
-// `web-build --out` writes a site any static host serves (its pages, the shell, the route table and
+// LLP 1153 D3: `web-build --out` writes a site any static host serves (its pages, the shell, the route table and
 // 404.html, none of the build's intermediates but the server bundle), ends saying how a host serves it, and serve.mjs
 // serves it so; `serve` (serve.mjs as the verb runs it) renders a `render=request` route's page for each request and
 // keeps a `cached` one's.
@@ -223,7 +223,8 @@ test('web-build --out writes a site that serve.mjs serves by the hosting rule, r
     }
     expect(readFileSync(resolve(out, '.exact/install.json'), 'utf8')).toContain('"mode": "Release build"');
     expect(readFileSync(resolve(out, 'index.html'), 'utf8')).toContain('<link rel="manifest" href="./manifest.json">');
-    expect(readdirSync(app).filter((name) => name.startsWith('dist'))).toEqual(['dist']);
+    // Expect only the site and the persistent lock its swap takes beside it (build-lock.mjs)
+    expect(readdirSync(app).filter((name) => name.startsWith('dist'))).toEqual(['dist', 'dist.lock']);
     // As a static host serves it: a request or cached route gets the shell, which has none of the data.
     const { serveBuildTree } = await import('../web/serve.mjs');
     server = createServer((req, res) => serveBuildTree(out, req, res));
@@ -247,7 +248,7 @@ test('web-build --out writes a site that serve.mjs serves by the hosting rule, r
     const after = await generation(), kept = await fetch(url(`/.exact/gen/${before}/app.js`));
     expect([before === after, kept.status, Buffer.from(await kept.arrayBuffer()).equals(script)]).toEqual([false, 200, true]);
     expect(readFileSync(resolve(out, 'app.js')).equals(script)).toBe(false);
-    expect(readdirSync(app).filter((name) => name.startsWith('dist')).sort()).toEqual(['dist', 'dist.gen']);
+    expect(readdirSync(app).filter((name) => name.startsWith('dist')).sort()).toEqual(['dist', 'dist.gen', 'dist.lock']);
     // As `serve` serves it: each route's page rendered with its data, the live one per request, the cached one once.
     serve = await serving(root, out);
     const { get, renders, heard } = serve;
@@ -259,7 +260,7 @@ test('web-build --out writes a site that serve.mjs serves by the hosting rule, r
     // Each render is said before its page is sent: once the second live one is said, the cached page was rendered once.
     await heard(() => renders('/live') === 2);
     expect(renders('/feed')).toBe(1);
-    // A site's server compresses what it sends: a page made for the request as it goes, a file by its
+    // A site's server compresses what it sends (LLP 1048.007 D6): a page made for the request as it goes, a file by its
     // variant, which a reader revalidates by its ETag.
     const raw = (path) => new Promise((ok, no) => httpGet({ host: '127.0.0.1', port: serve.port, path, headers: { accept: 'text/html', 'accept-encoding': 'br, gzip' } },
       (r) => { const chunks = []; r.on('data', (c) => chunks.push(c)); r.on('end', () => ok({ headers: r.headers, body: Buffer.concat(chunks) })); }).on('error', no));
@@ -289,7 +290,7 @@ test('web-build --out writes a site that serve.mjs serves by the hosting rule, r
     const next = await get('/live'), old = await fetch(`http://127.0.0.1:${serve.port}/.exact/gen/${id}/app.js`);
     expect([generationIn(next.body) === id, next.body.includes('Changed again.'), old.status, Buffer.from(await old.arrayBuffer()).equals(runtime)]).toEqual([false, true, 200, true]);
     // A source changed since the build: serve builds the site again before it answers a navigation, and answers a
-    // build that fails with its output.
+    // build that fails with its output (LLP 1153.001 D3).
     writeFileSync(resolve(app, 'app.contract'), source.replace('text note.text\n', 'text note.text\n      text "Edited."\n'));
     await new Promise(ok => setTimeout(ok, 350));
     expect((await get('/live')).body).toContain('Edited.');
@@ -304,7 +305,7 @@ test('web-build --out writes a site that serve.mjs serves by the hosting rule, r
   }
 }, 90000);
 
-// A home route rendered on a server is rendered by `serve`, though every build writes an index.html
+// LLP 1153 D3.4: a home route rendered on a server is rendered by `serve`, though every build writes an index.html
 // (the shell, which a static host serves), and so is a notfound route declared so, with 404.
 test.each(['request', 'cached'])('serve renders home "/" render=%s and a notfound route rendered so', async (policy) => {
   if (webCompiler().cmd === 'cargo') throw new Error('build the compiler first: cargo build -p exact-web-js');
@@ -322,8 +323,30 @@ test.each(['request', 'cached'])('serve renders home "/" render=%s and a notfoun
     const home = await serve.get('/'), missing = await serve.get('/no/such/route'), item = await serve.get('/item/7');
     expect([home.status, home.body.includes('The note, rendered.'), generationIn(home.body) !== undefined]).toEqual([200, true, true]);
     expect(home.cache).toBe(policy === 'cached' ? 'public, max-age=0, s-maxage=60' : 'no-store');
+    expect([home.retryAfter, missing.retryAfter]).toEqual([null, null]);
     expect([missing.status, missing.body.includes('The note, rendered.'), missing.body.includes('/no/such/route')]).toEqual([404, true, true]);
     expect([item.status, item.body.includes('The note, rendered.')]).toEqual([200, false]);
+  } finally {
+    await serve?.stop();
+    rmSync(dir, { recursive: true, force: true });
+  }
+}, 60000);
+
+test('serve preserves the retry delay for unfinished pages, request and cached, GET and HEAD', async () => {
+  const root = resolve(import.meta.dir, '../..');
+  const dir = mkdtempSync(resolve(tmpdir(), 'exact-site-retry-')), app = resolve(dir, 'site'), out = resolve(app, 'dist');
+  let serve;
+  try {
+    site(app, 'shape Note\n  text: string\n\nroutes nav\n  home "/" render=request\n  feed "/feed" render=cached\n\ncomponent App\n  resource note = note("waiting") as shape Note\n  view\n    text note.text\n');
+    writeFileSync(resolve(app, 'app.ts'), "export const grants = '';\nexport const answer = () => new Promise<never>(() => {});\n");
+    const built = spawnSync(process.execPath, ['host/web/build.mjs', app, '--out', out], { cwd: root, env: { ...process.env, EXACT_APP_DIR: app }, encoding: 'utf8' });
+    expect(built.status, built.stdout + built.stderr).toBe(0);
+    serve = await serving(root, out);
+    // Each unfinished page waits out the render deadline, so each policy and each method is asked once
+    const page = await serve.get('/');
+    expect([page.status, page.cache, page.retryAfter]).toEqual([503, 'no-store', '1']);
+    const head = await fetch(`http://127.0.0.1:${serve.port}/feed`, { method: 'HEAD', headers: { accept: 'text/html', 'accept-encoding': 'gzip' } });
+    expect([head.status, head.headers.get('retry-after'), head.headers.get('content-encoding'), await head.text()]).toEqual([503, '1', 'gzip', '']);
   } finally {
     await serve?.stop();
     rmSync(dir, { recursive: true, force: true });
@@ -348,7 +371,7 @@ async function serving(root, out, { fromEnv = false } = {}) {
   await new Promise(ok => probe.listen(0, '127.0.0.1', ok));
   const port = probe.address().port;
   await new Promise(ok => probe.close(ok));
-  // `fromEnv`: the port as a host gives `npm start` one, in `PORT`.
+  // `fromEnv`: the port as a host gives `npm start` one, in `PORT` (LLP 1153.001 D3).
   const child = spawnOwned(process.execPath, ['host/web/serve.mjs', out, ...(fromEnv ? [] : ['--port', String(port)]), '--loopback'],
     { cwd: root, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, PORT: fromEnv ? String(port) : '' } });
   let said = '';
@@ -363,7 +386,7 @@ async function serving(root, out, { fromEnv = false } = {}) {
   await heard((text) => text.includes(`http://127.0.0.1:${port}/`));
   const get = async (path) => {
     const r = await fetch(`http://127.0.0.1:${port}${path}`, { headers: { accept: 'text/html' } });
-    return { status: r.status, cache: r.headers.get('cache-control'), body: await r.text() };
+    return { status: r.status, cache: r.headers.get('cache-control'), retryAfter: r.headers.get('retry-after'), body: await r.text() };
   };
   const renders = (path) => (said.match(new RegExp(`render ${path} 200 `, 'g')) ?? []).length;
   return { port, get, renders, heard, stop: () => child.stop(5_000) };

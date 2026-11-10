@@ -1,4 +1,4 @@
-//! The hatches through a booted plan:
+//! The hatches through a booted plan (LLP 1075.003.000.001 §8 stage 4, §9):
 //! the overlay protocol, observed input, the frame clock at the virtual
 //! display's instants, the act queue, the scopes, and when each moment runs.
 use super::super::*;
@@ -1126,7 +1126,7 @@ fn the_scopes_are_told_a_change_once_end_in_order_and_are_built_again_after_a_re
     let scopes = state(&mut p)["hatches"]["scopes"].clone();
     assert_eq!(scopes["app"]["calls"], json!({"built": 1, "changed": 1}));
     assert_eq!(scopes["window"]["calls"], json!({"built": 1, "changed": 1}));
-    // A reload: every node, then the window, then the app, ends; the
+    // A reload (§4.3): every node, then the window, then the app, ends; the
     // old incarnation's registrations are dropped; all are built again.
     let plan = contract::compile(WORDS).unwrap().encode();
     assert!(p.reload(&plan, ()).unwrap().is_none());

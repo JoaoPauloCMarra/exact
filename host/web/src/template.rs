@@ -12,7 +12,7 @@ use exact_kernel::{Kernel, SortedMap, ViewId};
 use exact_plan::Plan;
 
 pub use super::element::attribute_rows;
-// A node's state looks as page rules, for the JS target's sheet.
+// A node's state looks as page rules (LLP 1121 D8), for the JS target's sheet.
 use super::mode::looks;
 pub use super::mode::looks::rules as look_rules;
 
@@ -27,7 +27,7 @@ pub struct Parts {
     pub css: String,
     /// Rows this host does not lower, with the reason.
     pub skipped: Vec<(String, &'static str)>,
-    /// Its host-known state looks' declarations, for
+    /// Its host-known state looks' declarations (LLP 1121 D8), for
     /// [`look_rules`].
     pub looks: Vec<(u8, String)>,
 }
@@ -45,7 +45,7 @@ pub fn parts(kernel: &Kernel, plan: &Plan, id: ViewId) -> Option<Parts> {
 /// [`parts`], for a node a build knows has nothing the template leaves out
 /// that would keep its text its own box (no bound row or prop but its
 /// text, no handler, not a repeated row): such a text may fold into its
-/// box's content as the live host folds it; `child_may_fold`
+/// box's content as the live host folds it (LLP 1007.001); `child_may_fold`
 /// says the same of the node's only child.
 pub fn parts_with(
     kernel: &Kernel,
@@ -57,7 +57,7 @@ pub fn parts_with(
     let node = kernel.node(id)?;
     let tag = tag_for(&node, in_button(kernel, &node));
     let mut props = props_for(&node);
-    // A decoration's and an atom kind's paint rows as CSS text by name.
+    // A decoration's and an atom kind's paint rows as CSS text by name (LLP 1114.007, 1045.000 D3).
     for name in ["data-decoration-styles", "data-atom-styles"] {
         if let Some(raw) = props.get(name) {
             let css = crate::css::decoration_styles(raw, &font_names(plan));

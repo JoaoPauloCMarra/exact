@@ -1,5 +1,6 @@
-// tamber/1.17 `inspect` `select` by the page's own tree, on both web pages, over apps/select-walk-fixture: each new
-// copy owning an ancestor is a step, a slot's host among them; at step `up`, that copy's outermost node, past the last the root; the page says `moved: {up, stepped}`. Cases:
+// tamber/1.17 `inspect` `select` by the page's own tree (the third hands-on pass's #4; theme2's rulings of the 25th),
+// on both web pages, over apps/select-walk-fixture: each new copy owning an ancestor is a step, a slot's host among
+// them; at step `up`, that copy's outermost node, past the last the root; the page says `moved: {up, stepped}`. Cases:
 // (a) a fill authored in the caller lands on the slot's host; the clone's like row (a leaf in a row that only renders
 // it, in the host's slot) lands on the host; (b) a host one component deeper; (c) a host wrapped by another, then the
 // wrapper; (d) past the last copy, the root, said in `moved`; and a rebuild, whose new plan's copies the page is sent.
@@ -80,7 +81,7 @@ test('tamber/1.17 on both web pages: select walks the page\'s own tree by copies
       await lands('wrapped', 1, 'card');        // (c) the nearer host, then its wrapper
       await lands('wrapped', 2, 'outer');
       await lands('glyph', 9, 'root', 3);       // (d) Card, Post, App: the root, three of nine
-      // One rule: a selection's chain is the page's own walk, so each entry is where
+      // One rule (stage 15 D3, theme2's condition 1): a selection's chain is the page's own walk, so each entry is where
       // a move up of its index plus one lands, here on the page: its component, and a slot's host by its own call.
       const walks = async (id, edge = false) => {
         const chain = (await pick(id, edge)).source.chain;

@@ -4,8 +4,8 @@
 // arrays' `toReversed`/`toSorted`/`with`). Hermes only: a browser realm has
 // its own. `AbortController` is Ibex's (vendor/ibex/crates/ibex2/src/bindings/abort.js),
 // evaluated before this file. The list of what every executor has is in
-// docs/reference.md ("What a data module can use").
-// What the module can use
+// docs/reference.md ("What a data module can use"; pomodoro F4, calc F2).
+// @ref LLP 1027 D10 — what the module can use
 (function (global) {
   'use strict';
   var toString = Object.prototype.toString, defineProperty = Object.defineProperty, keysOf = Object.keys;

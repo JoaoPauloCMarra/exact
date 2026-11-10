@@ -1,4 +1,4 @@
-//! Timer admission and virtual execution times.
+//! Timer admission and virtual execution times (LLP 1147).
 use super::*;
 
 /// Wait kinds a host implements or currently admits.

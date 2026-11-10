@@ -1,4 +1,4 @@
-// Native DOM edits, controlled source and shared undo.
+// @ref LLP 1045 D1/D5/D6 — native DOM edits, controlled source and shared undo.
 import { afterAll, test, expect } from 'bun:test';
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -276,7 +276,7 @@ const heard = page => page.evaluate(() => events.splice(0));
 const only = (list, type) => list.filter(e => e.type === type).map(({ value, start, end, direction, inputType, data, cancelable, composing }) => [value, start, end, direction, inputType, data, cancelable, composing]);
 
 for (const engine of engines) for (const runtime of [false, true]) {
-  // The app's base direction for each line, as HTML's `dir`.
+  // @ref LLP 1045 D11 — the app's base direction for each line, as HTML's `dir`.
   engineTest[engine](`${engine}${runtime ? ' (JS runtime)' : ''}: each line takes its paragraphDirs word, in place`, async () => {
     await editor(engine, 'One\nاثنان ثلاثة\n- [ ] أربعة\n', async (page, field) => {
       // The app's words: the runtime writes the textarea it replaced and forwards them; the glue syncs the editor.
@@ -491,7 +491,7 @@ for (const engine of engines) for (const runtime of [false, true]) {
       await command('setRangeText', 'editor', 'x', 3, 1);
       expect(await page.evaluate(() => logs.splice(0))).toEqual(['setRangeText "editor" refused: start exceeds end']);
       expect((await state())[0]).toBe('hello!');
-      // A caret the app puts in hidden syntax is drawn, and reads back, at its visible edge.
+      // A caret the app puts in hidden syntax is drawn, and reads back, at its visible edge (LLP 1045 D6).
       await command('setRangeText', 'editor', 'a **b** c', 0, 99, 'end');
       await command('setSelectionRange', 'editor', 3, 3);
       expect([2, 4]).toContain((await state())[1]);

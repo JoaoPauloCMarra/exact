@@ -1,13 +1,13 @@
 //! Liveness: an answer waiting on another's work, or on the background's,
-//! is asked again after each delivery;
-//! a call let go mid-turn runs its steps to the end.
+//! is asked again after each delivery (LLP 1027.003.000 §13; LLP 1097 D2);
+//! a call let go mid-turn runs its steps to the end (ledger F12).
 use super::{secrets, Key, Module, TIMER, WAITING, YIELDED};
 use exact_runner::{Dispatch, InFlight, Outcome, Request};
 use std::collections::HashMap;
 
 impl Module {
     /// A waiting answer's work: nothing to run, only an answer to ask again
-    /// (`Dispatch::Again`). A host
+    /// (`Dispatch::Again`, LLP 1041 §8.4 amended 2026-10-09). A host
     /// settles it in its ordered place without executor work.
     pub(crate) fn ask_again() -> Dispatch {
         Dispatch::Again
@@ -24,7 +24,7 @@ impl Module {
 
     /// Whether anything in the module may yet settle a waiting answer: a
     /// fetch, a storage step, a stream, a yield. The module's storage queued or in flight counts, an answer's or the
-    /// background's (an answer may await background work).
+    /// background's (LLP 1097 D2: an answer may await background work).
     pub(crate) fn outstanding(&self) -> bool {
         !self.streams.is_empty()
             || self.host.module_outstanding > 0
@@ -84,7 +84,7 @@ impl Module {
     /// goes on behind them. A browser runs that turn to its end, and so does
     /// this, now, its answer discarded: otherwise the next answer chained
     /// behind it waits on steps nobody delivers and is refused as pending on
-    /// nothing (a pre-mutation refresh the runner discarded, say).
+    /// nothing (ledger F12: a pre-mutation refresh the runner discarded).
     pub(crate) fn forget_calls(&mut self, calls: Vec<u64>) {
         let Some(engine) = self.engine.as_mut() else {
             return;
@@ -93,13 +93,13 @@ impl Module {
         for call in &calls {
             self.host.secrets.cancel_wait(*call);
             // Its waiter, if one is still running, now gives up without
-            // taking any compression's right.
+            // taking any compression's right (LLP 1069.002 A1.5).
             if let Some(retired) = self.retired.remove(call) {
                 retired.store(true, std::sync::atomic::Ordering::Release);
             }
         }
         // No answer's turn: a live answer's step that would run here waits
-        // for its own.
+        // for its own (LLP 1146 D2).
         let _ = engine.call("__exact_turn", ["", "", ""]);
         for call in calls {
             if let Ok(said) = engine.call("__exact_forget", [&call.to_string(), "", ""]) {
@@ -145,8 +145,8 @@ impl Module {
     }
 
     /// Drop targeted calls the runner no longer has in flight. Storage a
-    /// call already issued still runs ([`Module::forget_calls`]). No answer
-    /// waits on another to begin, so a call that had not started
+    /// call already issued still runs ([`Module::forget_calls`]). LLP 1097
+    /// deletes the answer-to-answer deferral, so a call that had not started
     /// is not replayed later in a cloned store.
     pub(crate) fn forget_in_flight(&mut self, in_flight: &[InFlight<'_>]) {
         let keep: HashMap<Key, Option<u64>> = in_flight
@@ -196,7 +196,7 @@ impl Module {
         {
             if let Outcome::Failed { message, .. } = session.continuation()() {
                 // A compression so failed is settled and what was queued
-                // behind it issued: a progress, and the
+                // behind it issued (LLP 1069.002 A1.5): a progress, and the
                 // chain's other storage is delivered on.
                 if engine
                     .call("__exact_let_go", ["failed", &message, ""])

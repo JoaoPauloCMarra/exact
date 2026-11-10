@@ -1,6 +1,5 @@
 // Engine-independent JSI adapter; no Hermes ownership, loader or event loop.
-// Authority is captured at install, and every host call crosses one Rust
-// boundary.
+// @ref LLP 0067#3-the-check — captured authority, one Rust boundary
 #include "../../include/ibex2_jsi.h"
 #if __has_include(<hermes/BCGen/HBC/BytecodeFileFormat.h>)
 #include <hermes/BCGen/HBC/BytecodeFileFormat.h>
@@ -132,8 +131,8 @@ Ibex2AbiValue to_abi(jsi::Runtime &rt, const jsi::Value &value,
 
 // A byte result IS the JavaScript ArrayBuffer's storage — no copy, no second
 // allocation. Rust allocated it, ownership transfers here, and the engine frees
-// it back through the boundary when the ArrayBuffer is collected, so bytes
-// cross outbound without a copy.
+// it back through the boundary when the ArrayBuffer is collected. That is the
+// outbound half of LLP 0059.000 §1.2.
 //
 // The destructor is the whole mechanism: Hermes holds this shared_ptr for as
 // long as the ArrayBuffer is reachable, so the Rust allocation outlives every
@@ -178,7 +177,7 @@ private:
 // Convert a result. For bytes this TAKES OWNERSHIP and clears `value`, so the
 // caller's release becomes a no-op — the RustBytes destructor releases instead,
 // when the engine is done with the buffer. Strings still copy: Hermes owns its
-// own string representation and there is no way to hand it one.
+// own string representation and there is no way to hand it one (§1.2).
 jsi::Value from_abi(jsi::Runtime &rt, Ibex2AbiValue &value) {
   switch (value.tag) {
   case IBEX2_TAG_NULL:
@@ -239,7 +238,7 @@ static jsi::Value call_host(jsi::Runtime& rt, const void* state, uint32_t op,
   auto result = call_host_result(rt, state, op, args, count);
   if (result.status != 0) {
     // The Rust error taxonomy becomes a JS throw here, so failures are
-    // identical on every platform.
+    // identical on every platform (LLP 0057 §3).
     throw jsi::JSError(rt, result.value.isString()
                                ? result.value.getString(rt).utf8(rt)
                                : std::string("host call failed"));
@@ -627,7 +626,8 @@ void validate_groups_impl(Groups groups) {
   if (has(groups, GROUP_INTL))
     throw std::invalid_argument("Ibex2 INTL bindings are unavailable in this build");
 #elif defined(_WIN32)
-  // The same probe as Groups::validate: the OS must export the ICU the shims call.
+  // @ref LLP 0057.000#511-windows-intl-uses-the-os-icu — the same probe as
+  // Groups::validate: the OS must export the ICU the shims call.
   if (has(groups, GROUP_INTL) && ibex2_intl_os_icu_available() == 0)
     throw std::invalid_argument(
         "Ibex2 INTL bindings are unavailable: this Windows lacks the OS ICU "
@@ -1250,8 +1250,8 @@ constexpr size_t kMaxReachabilityObjects = size_t{1} << 20;
 // WeakMap/Map/Set entries, behind a Proxy whose traps conceal them, or in an
 // object reachable only from somewhere other than the global object. Those
 // stay the trusted bootstrap's obligation.
-// The harden guard uses this to prove the bootstrap handoff left no path to
-// the fetch primitives, and applies the same proof to the abort hooks.
+// @ref LLP 0068#opt-in-fetch-primitives-protocol — L1e: the harden guard proves the bootstrap handoff did not leave a path to the primitives
+// @ref LLP 0068#opt-in-abort-hooks-protocol — I4 applies the same reachability proof to the abort hooks
 void require_unreachable(
     jsi::Runtime& rt, const Reachability& walk,
     const std::vector<std::pair<std::string, jsi::Value>>& identities,
@@ -1805,7 +1805,7 @@ void Adapter::install_with(Groups groups, const Ibex2Bindings* bindings,
       remove_global(rt, rt.global(), "__ibex2_fire_trusted_event");
     }
 
-    // Vanilla Hermes has delayed tracker callbacks, not the patched checkpoint hook.
+    // @ref LLP 0057.000#l3--events-abort-and-the-second-direction — vanilla Hermes has delayed tracker callbacks, not the patched checkpoint hook
     // Stock Hermes exposes its JavaScript Promise rejection tracker through
     // HermesInternal. The upstream tracker uses setTimeout (100 ms for the
     // standard programmer-error classes, two seconds otherwise), so EVENTS
@@ -2159,7 +2159,7 @@ jsi::Object Adapter::storage(const void* grants, const jsi::Function& factory) {
       {"mkdir",114}, {"rm",115}, {"stat",116}, {"rename",117}, {"copyFile",118},
       {"realpath",119}, {"atomicWriteFile",120}, {"compressImage",121},
       {"transformImage",121},
-      // Exact patch 24.
+      // Exact patch 24 (exact2 LLP 1133.007 D6a).
       {"lstat",122}, {"readlink",123}, {"access",124}, {"chmod",125},
       {"symlink",126}, {"digest",127}, {"flock",128}, {"unlock",129}};
   jsi::Object fs(rt);
@@ -2221,7 +2221,7 @@ void Adapter::settle(uint64_t id, Ibex2AbiValue& value, bool is_error) {
   if (is_error) {
     // The realm's Error -- its lookup and its construction, each JavaScript
     // the embedder may have replaced -- may detach the adapter: no further
-    // JavaScript once it has.
+    // JavaScript once it has (LLP 0071 D5).
     auto make = rt.global().getPropertyAsFunction(rt, "Error");
     if (!state_->alive || !runtime_) return;
     auto error = make.callAsConstructor(rt, payload);
@@ -2418,7 +2418,7 @@ void Adapter::report_error(const char* message) {
 
 namespace {
 // Holds the drive flag and a reference to the runtime state, releasing both
-// on every way out, a throw included.
+// on every way out, a throw included (LLP 0071 D5).
 struct DriveHold {
   const void* held;
   explicit DriveHold(const void* queue) : held(ibex2_adapter_begin_drive(queue)) {}
@@ -2431,8 +2431,7 @@ struct DriveHold {
 
 bool Adapter::deliver_one() {
   if (!state_->alive) return false;
-  // One host task at a time: a delivery reached from inside another, a
-  // cycle, or an owning pump is refused before it takes anything.
+  // @ref LLP 0071#d5--the-cycle-is-the-adapters-and-does-not-nest — one host task at a time: a delivery reached from inside another, a cycle, or an owning pump is refused before it takes anything
   DriveHold drive(state_->queue);
   if (!drive.taken())
     throw std::logic_error(
@@ -2442,7 +2441,7 @@ bool Adapter::deliver_one() {
 }
 
 // A microtask checkpoint that reports what it cannot finish, as the owning
-// pump's does: a job that throws out of the queue -- on
+// pump's does (LLP 0058.000.000 §8): a job that throws out of the queue -- on
 // the ordinary paths only an engine-raised error can, though a raw
 // HermesInternal.enqueueJob job can too -- is reported and the drain resumes behind it,
 // the engine having retired the job before running it. Returns false when the
@@ -2473,8 +2472,7 @@ bool Adapter::checkpoint() {
 
 Adapter::Cycle Adapter::cycle() {
   if (!state_->alive) return Cycle::Idle;
-  // A drive requested while one runs records nothing and returns, as the
-  // owning pump does.
+  // @ref LLP 0058.000.000#8-tasks-microtasks-timers-and-callbacks — a drive requested while one runs records nothing and returns, as the owning pump does
   DriveHold drive(state_->queue);
   if (!drive.taken()) return Cycle::Nested;
   const void* queue = state_->queue;
@@ -2495,8 +2493,8 @@ bool Adapter::deliver_next() {
     ibex2_host_release(&value);
     throw jsi::JSError(*runtime_, "Ibex2 adapter received an unknown task kind");
   }
-  // Borrowed-adapter task failures are reported like owning-pump failures.
-  // A due timer is delivered like an event, inside the same containment.
+  // @ref LLP 0058.000.000#8-tasks-microtasks-timers-and-callbacks — borrowed-adapter task failures are reported like owning-pump failures
+  // @ref LLP 0071#d1--a-borrowed-adapter-delivers-timer-tasks — a due timer is delivered like an event, inside the same containment
   try {
     if (kind == 3)
       deliver_event(id, value);

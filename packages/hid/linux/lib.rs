@@ -1,15 +1,15 @@
-//! @exact/hid on the Linux host: `hidraw`. The devices come from sysfs
+//! @exact/hid on the Linux host (LLP 1133.037 D10–D12, D21): `hidraw`. The devices come from sysfs
 //! (`/sys/class/hidraw/*/device`: the bus, vendor and product in `uevent`, the top-level collections parsed from
-//! `report_descriptor`); a node is opened once per process and leased to each connection; a thread per open
-//! reads its input reports into a log each reader takes a batch from.
+//! `report_descriptor`); a node is opened once per process and leased to each connection (D5); a thread per open
+//! reads its input reports into a log each reader takes a batch from (D12).
 //!
-//! - Not offered: a device holding a game controller's collection (`@exact/gamepad` owns pads) and one
+//! - Not offered (D6, D11): a device holding a game controller's collection (`@exact/gamepad` owns pads) and one
 //!   whose every collection is on WebHID's blocklist. A node is the whole interface, so a keyboard's own reports on
 //!   a node that also holds an allowed collection are dropped before any batch, and a send of one refused: a
 //!   report is placed in its collection by its report id.
 //! - Output reports are `write(2)`, feature reports `HIDIOCSFEATURE` and `HIDIOCGFEATURE` (the kernel's
 //!   hidraw.rst).
-//! - The painted presenter draws no chooser: `requestDevice` fails `NotSupportedError`.
+//! - The painted presenter draws no chooser (D2): `requestDevice` fails `NotSupportedError`.
 //!
 //! The package names only `exact_linux` and `std`, so the ioctls are declared here.
 
@@ -113,7 +113,7 @@ fn devices() -> Vec<Device> {
         let ids: Vec<u64> = field("HID_ID=").split(':').filter_map(|v| u64::from_str_radix(v, 16).ok()).collect();
         let descriptor = std::fs::read(dev.join("report_descriptor")).unwrap_or_default();
         let cs = collections(&descriptor);
-        // Not offered: a pad's device, or one whose every collection is blocked.
+        // Not offered (D11): a pad's device, or one whose every collection is blocked.
         if cs.iter().any(pad) || cs.iter().all(blocked) {
             continue;
         }

@@ -1,8 +1,9 @@
-//! Pictures of a package's `img` scheme through the shell: what the image sync asks for
-//! (`image/package.rs`) is admitted by the runner, then asked of the reader's extension as a module
-//! request (`{"extension", "picture", "width", "height", "fit", "owned", "agent"}`), which answers
-//! with its pixels ([`Presenter::picture_answered`]) or why it has none. A refusal empties the box,
-//! as an unresolved image.
+//! Pictures of a package's `img` scheme through the shell (LLP 1133.019 D2,
+//! D11 item 1): what the image sync asks for (`image/package.rs`) is
+//! admitted by the runner, then asked of the reader's extension as a module
+//! request (`{"extension", "picture", "width", "height", "fit", "owned",
+//! "agent"}`), which answers with its pixels ([`Presenter::picture_answered`])
+//! or why it has none. A refusal empties the box, as an unresolved image.
 use super::*;
 
 /// The one host whose shell serves package pictures through this door: the

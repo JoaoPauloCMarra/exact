@@ -1,4 +1,4 @@
-// Development observations. None of these identifiers decide
+// Development observations (LLP 1142 D9). None of these identifiers decide
 // whether a value or a ticket can be reused.
 import { equal } from './shape.js';
 
@@ -20,7 +20,7 @@ export function resourceInspection(enabled, now) {
       };
       r.resourcesMeasuredFrom = since;
     },
-    // `asks`: how often its source was asked, which `perf` reports; kept off `inspection`, which a refused commit puts back.
+    // `asks`: how often its source was asked, which `perf` reports (LLP 1146 D3); kept off `inspection`, which a refused commit puts back.
     begin(r) { if (r.inspection) { r.inspection.request = ++serial; r.asks = (r.asks ?? 0) + 1; } },
     placeholder(r) { if (r.inspection) r.inspection.placeholder = true; },
     take(r, generation = r.inspection?.request) {

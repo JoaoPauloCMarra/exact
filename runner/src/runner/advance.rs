@@ -1,17 +1,17 @@
 //! Moving the clock: every timer, `then`, queue `next` and drop deadline due
 //! by a time runs, each its own commit, on a seek clock at its own due time
 //! and on a live clock as the host's clock reads when it runs (the timers
-//! RFC).
+//! RFC, D1–D4).
 
 use super::*;
 
 mod data_timers;
 
 /// How the runner's clock moves: whether the host presents frames, and the
-/// host's live clock when one owns it (none is a seek clock).
+/// host's live clock when one owns it (D1; none is a seek clock).
 #[derive(Default)]
 pub(super) struct Clock {
-    /// The host presents frames: frame tasks fire only at `frame`
+    /// The host presents frames: frame tasks fire only at `frame` (LLP 1073 D4)
     pub(super) presenting: bool,
     pub(super) native_timers: bool,
     pub(super) waits: WaitKinds,
@@ -21,7 +21,7 @@ pub(super) struct Clock {
     frame_turn: Option<(f64, std::collections::VecDeque<usize>)>,
     pub(super) sample: Option<Box<dyn FnMut() -> f64>>,
     /// The scheduling instant of the callback running, which the `then`s and
-    /// queue `next`s it arms inherit
+    /// queue `next`s it arms inherit (D2)
     instant: Option<f64>,
     pub(super) trace: Option<Vec<super::trace::Ran>>,
     pub(super) untraced_change: bool,
@@ -49,7 +49,7 @@ impl<D: DataSource> Runner<D> {
 
     /// An input at the host's time `now_ms`: the clock moves there first,
     /// firing every timer due by then, so the action's `performanceNow()` — and a sound
-    /// it schedules — is the event's time, as on the JS
+    /// it schedules (LLP 1096 D3) — is the event's time, as on the JS
     /// target, not the last timer's. The commits in order, the event's last,
     /// at `now_ms`; a timer's refusal rides along and the event still runs.
     pub fn dispatch_at(&mut self, view: ViewId, event: Event, now_ms: f64) -> Advanced {
@@ -70,22 +70,22 @@ impl<D: DataSource> Runner<D> {
     /// far are returned with their times, the clock stays at the refusing
     /// timer's due time, and the refusal rides along. Frame tasks fire their
     /// virtual frames here unless the host presents frames
-    /// ([`Runner::present_frames`]). That is a seek clock; a
+    /// ([`Runner::present_frames`]; LLP 1073 D3). That is a seek clock; a
     /// live one is [`Runner::set_live_clock`]'s.
     pub fn advance_timed(&mut self, now_ms: f64) -> Advanced {
         self.advance_within(self.seek_cutoff(now_ms), false, true)
     }
 
     /// Give the runner the host's live clock, or `None` (the default) for a
-    /// seek clock: the agent's, a test's, a replay's (the timers RFC). On
+    /// seek clock: the agent's, a test's, a replay's (the timers RFC, D1). On
     /// a live clock every commit observes `sample()`, the clock as it starts,
     /// never earlier than the last, and ends with another sample. An advance
     /// runs what is due by its cutoff in the order it was scheduled, a `then`
-    /// or queue `next` a callback arms taking the callback's place; a
+    /// or queue `next` a callback arms taking the callback's place (D2); a
     /// repeating timer that missed beats fires once, and its next beat is the
     /// first of its phase after its callback completes, while one its
     /// callback cancelled stays cancelled and one it rekeyed starts from that
-    /// completion. Virtual frames restart from the completion too.
+    /// completion (D3). Virtual frames restart from the completion too.
     pub fn set_live_clock(&mut self, sample: Option<Box<dyn FnMut() -> f64>>) {
         if sample.is_none() && self.clock_live() {
             self.sample();
@@ -114,7 +114,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// When a `then` or queue `next` armed now is due: with its parent
-    /// callback's place, or the arrival of the commit that armed it.
+    /// callback's place, or the arrival of the commit that armed it (D2).
     pub(super) fn armed_at(&self) -> f64 {
         self.clock.instant.unwrap_or(self.clock.started)
     }
@@ -131,7 +131,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Run an input or a reply that arrives now: what its commits arm takes
-    /// its arrival's place, and its handler's arguments observe it.
+    /// its arrival's place (D2), and its handler's arguments observe it.
     pub(super) fn arrived<T>(&mut self, run: impl FnOnce(&mut Self) -> T) -> T {
         self.start_commit();
         let arrived = std::mem::replace(&mut self.clock.arrived, true);
@@ -140,7 +140,7 @@ impl<D: DataSource> Runner<D> {
         result
     }
 
-    /// Whether the host presents frames: while it does, frame
+    /// Whether the host presents frames (LLP 1073 D4): while it does, frame
     /// tasks fire only at [`Runner::frame`]; while it doesn't (the default:
     /// tests, and the agent's seekable clock), every advance fires their
     /// virtual frames. A host turns it on when its display drives the clock
@@ -149,7 +149,7 @@ impl<D: DataSource> Runner<D> {
         self.clock.presenting = on;
     }
 
-    /// A presented frame at `now_ms`: timers due by then
+    /// A presented frame at `now_ms` (LLP 1073 D2, D4): timers due by then
     /// fire as [`Runner::advance_timed`] fires them, then every frame task
     /// once, at `now_ms`, in plan order; a frame missed is never caught up.
     /// Each task's virtual frames restart from `now_ms` (`super::virtual_frame`).
@@ -166,7 +166,7 @@ impl<D: DataSource> Runner<D> {
         let mut a = self.advance_timed(cutoff);
         self.clock.presenting = presenting;
         // A refused `next` is journaled and the frame goes on: its frame
-        // tasks fire, and the `next` waits for a later wake.
+        // tasks fire, and the `next` waits for a later wake (LLP 1092 D3).
         let next_refused = std::mem::take(&mut self.queues.stopped_on_next);
         if (a.error.is_some() && !next_refused) || !self.wants_frames() {
             return a;
@@ -295,17 +295,18 @@ impl<D: DataSource> Runner<D> {
     /// [`Runner::advance_timed`], stopping after the first timer whose
     /// commit hands the host a request: the clock stays at that timer's due
     /// time, for the host to land the reply before advancing again. The
-    /// runner keeps one request per target, so the next tick's
-    /// send would drop it. An agent's clock jump advances this way;
-    /// on the wall clock, replies land between ticks by themselves.
+    /// runner keeps one request per target (LLP 1016 D5), so the next tick's
+    /// send would drop it. An agent's clock jump advances this way (LLP
+    /// 1012); on the wall clock, replies land between ticks by themselves.
     pub fn advance_until_request(&mut self, now_ms: f64) -> Advanced {
         self.advance_within(self.seek_cutoff(now_ms), true, true)
     }
 
     /// The `then` of every answer already landed, each its own commit, with
-    /// the clock where it is and no timer fired: how an agent's input ends,
-    /// so the next operation sees what the input settled —
+    /// the clock where it is and no timer fired: how an agent's input ends
+    /// (LLP 1012 §2), so the next operation sees what the input settled —
     /// a wall-clock host runs them at once by itself (`timer_due_ms`).
+    /// trivia F3, kanban F19.
     pub fn land_then(&mut self) -> Advanced {
         self.advance_within(self.now_ms, false, false)
     }
@@ -314,7 +315,8 @@ impl<D: DataSource> Runner<D> {
     /// `then`, a queue's `next` or a transport or MIDI answer; otherwise
     /// nothing, so no timer due before it is overtaken. A host that runs
     /// timer advances without waiting for them runs this while it waits, so
-    /// an answer and what its `then` does show in one frame.
+    /// an answer and what its `then` does show in one frame (LLP 1016.001
+    /// D3, LLP 1072.000 §4 B).
     pub fn land_then_first(&mut self) -> Advanced {
         let then = self
             .then_due
@@ -343,7 +345,7 @@ impl<D: DataSource> Runner<D> {
         }
     }
 
-    /// [`Self::advance_steps`] with the wakes: a wake's
+    /// [`Self::advance_steps`] with the wakes (LLP 1133.017 D6): a wake's
     /// deadline within the advance expires it there, after the work due
     /// before it, and what the wakes can deliver is delivered after. No
     /// timer fires while a wake runs unseen.
@@ -394,7 +396,7 @@ impl<D: DataSource> Runner<D> {
     fn advance_steps(&mut self, now_ms: f64, until_request: bool, timers: bool) -> Advanced {
         let live = self.clock.sample.is_some();
         // A host that presents frames fires frame tasks at `frame`; else
-        // their virtual frames are timers.
+        // their virtual frames are timers (LLP 1073 D3).
         let frames = !self.clock.presenting;
         let mut receipts = Vec::new();
         if !now_ms.is_finite() {
@@ -406,7 +408,7 @@ impl<D: DataSource> Runner<D> {
             };
         }
         // A live clock's cutoff may be behind what its last callback
-        // observed: the work due by the cutoff still runs.
+        // observed: the work due by the cutoff still runs (D2).
         if now_ms < self.now_ms && !live {
             return Advanced {
                 receipts,
@@ -427,7 +429,7 @@ impl<D: DataSource> Runner<D> {
         let mut stopped_on_request = false;
         self.queues.stopped_on_next = false;
         let before = self.trace_configuration();
-        // A module's value ticket that timed out by now.
+        // A module's value ticket that timed out by now (LLP 1133.002 §6).
         self.module_deadlines(now_ms);
         // A listed entry now due, and an app's list another session changed.
         self.listed_due(now_ms);
@@ -459,9 +461,9 @@ impl<D: DataSource> Runner<D> {
                         })
                         .then(ia.cmp(ib))
                 });
-            // A sequence's end is a timer after every task: its
+            // A sequence's end is a timer after every task (LLP 1125 D2): its
             // index is the last; its own wake (a fill, the count-in's end)
-            // comes after everything due at the same time.
+            // comes after everything due at the same time (D3).
             let wake = Some(self.seek_cutoff(self.transport.wake_due()))
                 .filter(|at| timers && *at <= now_ms);
             let before_wake = |at: f64| wake.is_none_or(|w| at <= w);
@@ -501,8 +503,8 @@ impl<D: DataSource> Runner<D> {
             };
             // An answer's `then` goes before a timer due at the same time: the
             // answer landed first. A queue's `next` goes after the `then`s and
-            // before the timers. `exactTransport`'s answer is a
-            // `then` after every mutation's.
+            // before the timers (LLP 1092 D3). `exactTransport`'s answer is a
+            // `then` after every mutation's (LLP 1125 D3).
             let then = self
                 .then_due
                 .iter()
@@ -519,7 +521,7 @@ impl<D: DataSource> Runner<D> {
                 .filter(|(_, at)| then_at.is_none_or(|then| *at < then));
             let answer = answer.filter(|at| ready(*at) && next.is_none());
             let then = then.filter(|(_, at)| ready(*at) && next.is_none() && answer.is_none());
-            // The host's process work on the agent's clock,
+            // The host's process work on the agent's clock (LLP 1133.007 §7),
             // before what the runner itself has due then: it runs, and a jump
             // stops for what it owes to land. Work that stays due once run is
             // not run again in this advance.
@@ -555,7 +557,7 @@ impl<D: DataSource> Runner<D> {
                 }
                 self.now_ms = self.now_ms.max(at);
                 let ticket = self.next_ticket;
-                // The transport's first at one time, then `exactMIDI`'s.
+                // The transport's first at one time, then `exactMIDI`'s (LLP 1125 D6).
                 let answered = if self.transport.answer_due <= at {
                     self.transport.answer_due = f64::INFINITY;
                     let readers = self.transport.readers.clone();
@@ -641,8 +643,9 @@ impl<D: DataSource> Runner<D> {
                 let action = self.plan.mutations[m].then.expect("armed only with a then");
                 let was_poisoned = self.poisoned;
                 let ticket = self.next_ticket;
-                // A `then` runs under its answer's origin,
-                // invocation and causes.
+                // A `then` runs under its answer's origin (LLP 1133.002 D12),
+                // invocation (LLP 1133.023 D7) and causes (LLP 1133.035 D16
+                // item 6).
                 let (origin, id, causes) = self.then_origin(m);
                 let result = self.as_invocation_caused(origin, id, causes, |r| {
                     r.scheduled(at, |r| r.traced_action("then", action, Vec::new(), &[]))
@@ -675,7 +678,7 @@ impl<D: DataSource> Runner<D> {
                 }
                 continue;
             }
-            // A drop's hold ends at its deadline, before a
+            // A drop's hold ends at its deadline (LLP 1094 D8), before a
             // timer due at the same time: the drop came first.
             if let Some(at) = self
                 .reorder_deadline()
@@ -898,8 +901,8 @@ impl<D: DataSource> Runner<D> {
             }
             stopped_on_request = until_request && self.next_ticket != ticket;
         }
-        // A polled module source whose period passed: asked once, at the
-        // clock the advance landed on.
+        // A polled module source whose period passed (LLP 1133.009 D10 item
+        // 7): asked once, at the clock the advance landed on.
         if !stopped_on_request {
             match self.poll() {
                 Ok(polled) => receipts.extend(polled.into_iter().map(|receipt| Timed {
@@ -944,7 +947,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Run a callback scheduled at `at`; on a live clock what it arms takes
-    /// its place.
+    /// its place (D2).
     pub(super) fn scheduled<T>(&mut self, at: f64, run: impl FnOnce(&mut Self) -> T) -> T {
         self.clock.instant = self.clock.sample.is_some().then_some(at);
         let result = run(self);

@@ -1,15 +1,15 @@
-// @exact/device on the web: the page's own
+// @exact/device on the web (LLP 1133.031 D1, D2, D3): the page's own
 // `navigator.getBattery()` and `navigator.connection`, in the interface's
 // shapes. The page runtime (host/web-js/modules.js) calls it outside the
 // agent; under the agent the runner's substitute answers.
 //
 // - Both exist only in Chromium. Where one is missing its source fails
-//   `NotSupportedError`, so `failed(…)` is the feature test.
-// - `level` is rounded to hundredths, as on every target.
+//   `NotSupportedError`, so `failed(…)` is the feature test (D14).
+// - `level` is rounded to hundredths, as on every target (D1).
 // - Each source subscribes to its object's change events at its first read
-//   and announces its topic only when an answered field changes; the
+//   and announces its topic only when an answered field changes (D5); the
 //   last reader's release unsubscribes.
-// - `powerState` has no web API: `NotSupportedError`.
+// - `powerState` has no web API (D3): `NotSupportedError`.
 
 const round = (level) => Math.round(level * 100) / 100;
 const battery = (b) => ({ charging: !!b.charging, level: round(b.level) });
@@ -44,7 +44,7 @@ export function implementation({ changed }) {
       try {
         manager = await nav.getBattery();
       } catch (e) {
-        // A Permissions Policy that does not allow `battery`.
+        // A Permissions Policy that does not allow `battery` (D1).
         return { error: e?.name === 'NotAllowedError' ? 'NotAllowedError' : 'NotSupportedError', message: e?.message };
       }
       const entry = watch('getBattery', manager, ['levelchange', 'chargingchange'], battery);

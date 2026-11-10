@@ -1,8 +1,8 @@
-//! The design server's one walk of the app's Contract sources: every snapshot
-//! lists the app's own `.contract` files from it, and every request's params,
-//! synthetic tokens and retention are keyed by it. Walking parses the app (~200
-//! ms on the Bluesky clone), so a walk is kept while what it read reads the
-//! same:
+//! The design server's one walk of the app's Contract sources (LLP 1121
+//! D15, stage 8 D): every snapshot lists the app's own `.contract` files
+//! from it, and every request's params, synthetic tokens and retention are
+//! keyed by it. Walking parses the app (~200 ms on the Bluesky clone), so a
+//! walk is kept while what it read reads the same:
 //!
 //! - each source and each path that resolved its imports (package
 //!   manifests, the paths tried), the design files, the root and `app.json`
@@ -68,7 +68,7 @@ fn said(line: &str) {
 }
 
 /// Whether what a design-only change kept is checked against a cold walk
-/// and load (`EXACT_TAMBER_WALK_VERIFY`, a test's).
+/// and load (`EXACT_TAMBER_WALK_VERIFY`, a test's: theme2's condition (c)).
 fn verifying() -> bool {
     std::env::var_os("EXACT_TAMBER_WALK_VERIFY").is_some()
 }
@@ -409,9 +409,10 @@ impl Server {
         std::cell::Ref::map(self.graph.borrow(), |w| w.as_ref().expect("walked above"))
     }
 
-    /// The key of the app's Contract sources ([`Walk::key`]), and whether code
-    /// beside the app can name a token outside its views (app.ts, a data crate,
-    /// app.json's modules or hatches), which none of the sources say.
+    /// The key of the app's Contract sources ([`Walk::key`]), and whether
+    /// code beside the app can name a token outside its views (D7's
+    /// retention: app.ts, a data crate, app.json's modules or hatches),
+    /// which none of the sources say.
     pub(super) fn sources_key(&self) -> String {
         let root = self.dir.join("app.contract");
         format!(
@@ -421,11 +422,11 @@ impl Server {
         )
     }
 
-    /// The app's components' params, loaded again only when its sources' key
-    /// moves, a package's design file (whole in them), or what the load reads
-    /// from the app's design ([`contract::GraphBase::design_facts`]: a native
-    /// component's params, a motion token), never for a value no param reads (a
-    /// reload there would slow every value edit).
+    /// The app's components' params (D15), loaded again only when its
+    /// sources' key moves, a package's design file (whole in them), or what
+    /// the load reads from the app's design ([`contract::GraphBase::design_facts`]:
+    /// a native component's params, a motion token), never for a value no
+    /// param reads (the third hands-on pass's latency).
     pub(super) fn app_params(&self) -> std::rc::Rc<contract::tamber_params::AppParams> {
         let key = format!(
             "{}{}",
@@ -455,7 +456,7 @@ impl Server {
         params.1.clone()
     }
 
-    /// The exported library components' slot chains, from
+    /// The exported library components' slot chains (LLP 1139 D4), from
     /// the params' IR `library` block, built again only when the params
     /// are (each chain's tokens read at check time, closed over references
     /// by the checker itself, so no design fold here).
@@ -508,21 +509,21 @@ impl Server {
 }
 
 /// What of the designs (`texts`: the app's and each package's) the plan's
-/// retention and synthetic tokens can depend on, parsed, never compiled: each
-/// token's and icon's name, written kind, and the names its value and `when`
-/// values reference (whole aliases and words naming a token, an icon or a dial
-/// of any of them), with its `when` conditions; the `params` entries, name to
-/// value; each component's params with their defaults; the axes, dials and
-/// `exports`. A value that names nothing (a hex, a length) is left out, so
-/// editing it keeps the server's cached retention. A design that does not parse
-/// is keyed whole.
+/// retention and synthetic tokens can depend on, parsed, never compiled
+/// (stage 12 B1, theme2's sign-off): each token's and icon's name, written
+/// kind, and the names its value and `when` values reference (whole aliases
+/// and words naming a token, an icon or a dial of any of them), with its
+/// `when` conditions; the `params` entries, name to value; each component's
+/// params with their defaults; the axes, dials and `exports`. A value that
+/// names nothing (a hex, a length) is left out, so editing it keeps the
+/// server's cached retention. A design that does not parse is keyed whole.
 pub(super) fn retention_key(texts: &[&str]) -> String {
     let parsed: Vec<Option<exact_tamber::Design>> =
         texts.iter().map(|t| exact_tamber::parse(t).ok()).collect();
     // A name as the checker resolves one: a role's spelling in any case and
-    // with or without `-exact-` (`CANVAS` is `Canvas`), so a reference is found
-    // by its folded form (so a role alias moved by case alone moves the key)
-    // and keyed as written (`Foo` and `foo` are two).
+    // with or without `-exact-` (`CANVAS` is `Canvas`), so a reference is
+    // found by its folded form (re-check: a role alias moved by case alone
+    // kept the key) and keyed as written (re-check 2: `Foo` and `foo`).
     let fold = |name: &str| {
         let lower = name.to_ascii_lowercase();
         lower
@@ -542,7 +543,7 @@ pub(super) fn retention_key(texts: &[&str]) -> String {
         .collect();
     let refs = |text: &str| -> String {
         // Found folded, keyed as written: `Foo` and `foo` are two tokens, so
-        // a reference moved between them changes the key.
+        // a reference moved between them changes the key (re-check 2).
         let words = text
             .split(|c: char| !(c.is_ascii_alphanumeric() || "-_.".contains(c)))
             .filter(|w| names.contains(&fold(w)));
@@ -579,15 +580,16 @@ pub(super) fn retention_key(texts: &[&str]) -> String {
             "other"
         }
     };
-    // A value as the key holds it, since a reference scan alone misses
-    // generated `param.…` names and a design's header: a literal (one that
-    // names nothing: a hex, a length, `light-dark(#fff, #000)`) by its rough
-    // kind only, so editing it keeps the cache; anything else verbatim, so
-    // every name it could reach keys, however it is spelled.
-    // A literal names nothing: no word in it is a name of the designs (a token,
-    // an icon, a dial, as folded) and none is dotted (a package's token, or a
-    // component's generated `param.…` name, which the designs don't declare).
-    // `light-dark(#fff, #000)` and `rgba(…)` are literals.
+    // A value as the key holds it (theme2's pre-approved fallback, after the
+    // fourth re-check found generated `param.…` names and a header the
+    // reference scan missed): a literal (one that names nothing: a hex, a
+    // length, `light-dark(#fff, #000)`) by its rough kind only, so editing
+    // it keeps the cache; anything else verbatim, so every name it could
+    // reach keys, however it is spelled.
+    // A literal names nothing: no word in it is a name of the designs (a
+    // token, an icon, a dial, as folded) and none is dotted (a package's
+    // token, or a component's generated `param.…` name, which the designs
+    // don't declare). `light-dark(#fff, #000)` and `rgba(…)` are literals.
     let literal = |text: &str| {
         refs(text).is_empty()
             && !text
@@ -607,10 +609,11 @@ pub(super) fn retention_key(texts: &[&str]) -> String {
             key.push_str(&format!("whole {}\n", digest(text.as_bytes())));
             continue;
         };
-        // Its name: a package design's header decides whether its tokens join.
+        // Its name: a package design's header decides whether its tokens
+        // join (fourth re-check).
         key.push_str(&format!("design {}\n", d.name));
         // Each row says its section: a name moved from `icons` to `theme`
-        // changes what the views may read.
+        // changes what the views may read (re-check).
         let sections = d
             .tokens
             .iter()
@@ -623,7 +626,7 @@ pub(super) fn retention_key(texts: &[&str]) -> String {
                 key.push_str(&format!(" when {:?} {}", w.conds, value(&w.value.value)));
             }
             // Its metadata, verbatim and quoted (`pair=` another token; a
-            // quoted value can't spell another row).
+            // quoted value can't spell another row: fifth re-check).
             for (k, v) in &t.meta {
                 key.push_str(&format!(" {k:?}={v:?}"));
             }
@@ -663,10 +666,11 @@ pub(super) fn retention_key(texts: &[&str]) -> String {
 mod tests {
     use super::retention_key;
 
-    /// A value that names anything keys as written (a component's generated
+    /// The key's fourth re-check (Astra), answered by theme2's verbatim key:
+    /// a value that names anything keys as written (a component's generated
     /// `param.…` name the scan can't know included); a pure literal's edit
-    /// keeps the key; a design's header keys (a package's repaired header joins
-    /// its tokens).
+    /// keeps the key; a design's header keys (a package's repaired header
+    /// joins its tokens).
     #[test]
     fn a_non_literal_value_keys_verbatim_a_literal_does_not_and_the_header_keys() {
         let design = |pick: &str, ink: &str, name: &str| {
@@ -702,8 +706,8 @@ mod tests {
     }
 
     /// A literal colour expression keeps the key; a dotted name the designs
-    /// don't declare keys; and a metadata value can't spell another row, being
-    /// quoted.
+    /// don't declare keys; and (fifth re-check) a metadata value can't spell
+    /// another row, being quoted.
     #[test]
     fn literals_dotted_names_and_metadata() {
         let design =

@@ -1,4 +1,4 @@
-//! The page's live clock while it owns time: told to
+//! The page's live clock while it owns time (the timers RFC, D1): told to
 //! the running host and kept for every boot, a dev restart's included; and
 //! what the agent's clock waits on or hands the worlds between its frames.
 
@@ -61,8 +61,8 @@ impl<D: DataSource> Bridge<D> {
         u32::from(self.host.as_ref().is_some_and(|h| h.runner().has_pending()))
     }
 
-    /// Whether the substitute feeds a canvas a sensor's samples:
-    /// the agent's clock then steps the worlds a frame at a time.
+    /// Whether the substitute feeds a canvas a sensor's samples (LLP
+    /// 1133.013 D6): the agent's clock then steps the worlds a frame at a time.
     pub fn sensor_inputs(&self) -> u32 {
         u32::from((self.host.as_ref()).is_some_and(|h| h.runner().surface_sensor_inputs()))
     }
@@ -109,9 +109,10 @@ impl<D: DataSource> Bridge<D> {
 }
 
 /// `exact_live_clock(on)`, in the artifact `host!` makes: nonzero, the
-/// page's clock owns time; zero, the agent's seekable one does. The page's
-/// clock is the `exact_clock.now` import, which this crate, forbidding
-/// `unsafe`, cannot declare; the artifact does, as it declares its exports.
+/// page's clock owns time; zero, the agent's seekable one does (the timers
+/// RFC, D1). The page's clock is the `exact_clock.now` import, which this
+/// crate, forbidding `unsafe`, cannot declare; the artifact does, as it
+/// declares its exports.
 #[macro_export]
 #[doc(hidden)]
 macro_rules! live_clock_export {

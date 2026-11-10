@@ -1,6 +1,7 @@
 # A brand: Light, Dim and Black
 
-An app's own colours are its design, `app.tamber` beside `app.contract`. Rows name its tokens as they name roles; a mode the person picks (Dim or
+An app's own colours are its design, `app.tamber` beside `app.contract` (LLP
+1121). Rows name its tokens as they name roles; a mode the person picks (Dim or
 Black for dark) is an app axis, set by `setMode` and held by a pin.
 
 ```tamber
@@ -63,7 +64,7 @@ What to know:
 - **Edit it while it runs** (development only): the dev loop serves
   `/__tamber`; `bun exact.mjs tamber op <url> '{"method":"describe"}'` reads,
   and `history` and `revert` read and undo token edits. `bun exact.mjs tamber
-  tool .` opens the design tool on it at `http://127.0.0.1:7740`,
+  tool .` opens the design tool on it (LLP 1122) at `http://127.0.0.1:7740`,
   one per machine: to switch, ctrl-c it and run `tamber tool <other app>`
   (`--via <its URL>` when its dev loop runs).
   Reference: `docs/tamber-protocol.md`.

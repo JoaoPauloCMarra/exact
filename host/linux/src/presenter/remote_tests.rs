@@ -1,4 +1,4 @@
-//! A TV remote's D-pad: on a device with no
+//! A TV remote's D-pad (LLP 1115.001.003 D3, D4): on a device with no
 //! pointer, the arrows move the focus by Android's `FocusFinder` rules and
 //! Select presses it; a phone's arrows do not.
 use super::*;
@@ -261,7 +261,7 @@ fn a_held_arrow_keeps_moving_the_focus() {
 }
 
 /// With nothing focused the root's `key` hears a remote's arrow first, as
-/// it hears any key ("Keys with nothing focused"); a root that
+/// it hears any key (LLP 1005, "Keys with nothing focused"); a root that
 /// prevents it keeps the arrow from taking the first stop. (A root with a
 /// `key` handler is focusable; `tabindex=-1` keeps it out of the stops.)
 #[test]

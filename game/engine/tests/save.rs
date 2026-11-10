@@ -135,8 +135,8 @@ fn published_values_and_skipped_fields_are_not_saved() {
 }
 #[test]
 fn engine_scene_components_first_spawned_mid_game_restore_unregistered() {
-    // A restore must not refuse `unregistered component Parent` when the game
-    // never registered the engine's own component itself.
+    // Grow a Garden's restore refused `unregistered component Parent` until the
+    // game registered the engine's own component (garden diary, friction 3).
     let mut w = World::new(60, 3);
     let root = w.spawn(Transform::at(1.0, 0.0, 0.0));
     let fruit = w.spawn((

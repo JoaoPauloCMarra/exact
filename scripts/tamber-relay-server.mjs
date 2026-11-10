@@ -1,6 +1,8 @@
-// The hosted relay: a design server behind a NAT dials out to it (the
-// connector, scripts/tamber-relay.mjs), and it hands each client's TCP
-// stream down unopened. One port, the ClientHello's name deciding:
+// The hosted relay (LLP 1121 §5 stage 10c R3; rt1's plan,
+// ~/x2theme/rt1-s10c-r3-plan.md, theme2's 14:34 approval): a design server
+// behind a NAT dials out to it (the connector, scripts/tamber-relay.mjs), and
+// it hands each client's TCP stream down unopened. One port, the ClientHello's
+// name deciding:
 //
 // - **The relay's own name** (`domain`): TLS ends here, on the relay's only
 //   certificate. This is the control endpoint, where connectors greet
@@ -188,7 +190,7 @@ export function relayServer(config, { log = line => console.log(line), now = () 
   if (!NAME.test(domain)) throw new Error('domain: the relay\'s own name (lowercase, dotted)');
   const limits = { ...LIMITS, ...(config.limits ?? {}) };
   for (const [k, v] of Object.entries(limits)) if (!(k in LIMITS) || !Number.isSafeInteger(v) || v <= 0) throw new Error(`limits.${k}: a whole number above 0 (one of ${Object.keys(LIMITS).join(', ')})`);
-  // Its own certificate, for its own name, valid now and its key's: else no start.
+  // Its own certificate, for its own name, valid now and its key's: else no start (theme2's 14:34 (5)).
   const own = new X509Certificate(config.tls?.cert ?? '');
   const sans = (own.subjectAltName ?? '').split(', ').filter(Boolean);
   if (!own.checkHost(domain, { partialWildcards: false }) || sans.length !== 1 || sans[0] !== `DNS:${domain}`) throw new Error(`tls.cert does not name ${domain} alone (the relay's own name, nothing more)`);

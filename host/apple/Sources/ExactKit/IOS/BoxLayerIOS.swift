@@ -68,7 +68,7 @@ extension NodeView {
     /// rounded the bitmap’s pixel dimensions. The clip carries a radius only
     /// when it is the whole content and border box, or no corner is rounded.
     ///
-    /// A `-exact-tint-color` draws: a mask layer would say it, but a
+    /// A `-exact-tint-color` draws (LLP 1011 §4): a mask layer would say it, but a
     /// canvas's capture (`render(in:)`) drops masks and would show the tint's
     /// whole rectangle, so the template is `draw(_:)`'s, from the same pixels.
     func applyImageLayer() {
@@ -76,7 +76,7 @@ extension NodeView {
             imageLayer?.removeFromSuperlayer(); imageLayer = nil; return
         }
         if let look = flightLook {
-            // Flying: the whole image where the flight
+            // Flying (LLP 1013.000 D4): the whole image where the flight
             // puts it; the view's own bounds and radius clip it.
             CATransaction.begin(); CATransaction.setDisableActions(true)
             defer { CATransaction.commit() }
@@ -102,7 +102,7 @@ extension NodeView {
         let radius = radii.max() ?? 0
         let oneRadius = cornerSizes(in: bounds).allSatisfy { abs($0.width - $0.height) < 0.01 } && radii.allSatisfy { $0 == 0 || abs($0 - radius) < 0.01 }
             && radius <= min(bounds.width, bounds.height) / 2 + 0.01
-        // A shape the layer's radius cannot say draws.
+        // A shape the layer's radius cannot say draws (LLP 1077 D1).
         let shape = CornerShape(style["corner_shape"])
         // The content box is the whole box: no border or padding. Laid out,
         // not drawn: the drawn bounds are on the pixel grid, and an image
@@ -153,7 +153,7 @@ extension NodeView {
         if !l.masksToBounds { l.masksToBounds = true }
     }
 
-    /// A `background-image` gradient as a sublayer under
+    /// A `background-image` gradient (LLP 1066) as a sublayer under
     /// everything else the layer holds — over the box's fill, under its
     /// border and children — clipped to its corners. A view that paints through
     /// `draw(_:)` paints the gradient there instead, in the same place —
@@ -191,7 +191,7 @@ extension NodeView {
         if fixed { presenter?.fixedGradients.add(self) } else { presenter?.fixedGradients.remove(self) }
     }
 
-    /// `background-attachment: fixed` on iOS is always the
+    /// `background-attachment: fixed` (LLP 1066 D7) on iOS is always the
     /// gradient layer: anything above the node scrolling re-aims it
     /// (`reaimFixedGradient`), a few points set on a layer, where a drawn
     /// gradient would repaint the box every frame. Over a box painted by
@@ -257,7 +257,7 @@ extension NodeView {
         let oneRadius = cornerSizes(in: bounds).allSatisfy { abs($0.width - $0.height) < 0.01 } && radii.allSatisfy { $0 == 0 || abs($0 - radius) < 0.01 }
             && radius <= min(bounds.width, bounds.height) / 2 + 0.01
         let gradient = style["background_image"] != nil
-        // A `corner-shape` the layer cannot say draws; Apple's
+        // A `corner-shape` the layer cannot say draws (LLP 1077 D1); Apple's
         // continuous curve over one radius is the layer's `cornerCurve`.
         let shape = CornerShape(style["corner_shape"])
         let continuous = shape?.isAppleContinuous == true && oneRadius
@@ -309,7 +309,7 @@ extension NodeView {
         applyCornerFill(shapedRadii ? bg : nil)
         let layerFill = shapedRadii ? nil : bg
         if layer.backgroundColor != layerFill { layer.backgroundColor = layerFill }
-        // A flight interpolates the radius itself.
+        // A flight interpolates the radius itself (LLP 1013.000 D4).
         if flightLook == nil, layer.cornerRadius != cornerRadius { layer.cornerRadius = cornerRadius }
         if let v = vibrancyView, !isParagraph {
             v.layer.cornerRadius = cornerRadius

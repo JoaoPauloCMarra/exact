@@ -1,5 +1,5 @@
 //! Geometry shared by AppKit, UIKit and Linux, using the same transformed
-//! boxes and reported scroll offsets as `frame()`.
+//! boxes and reported scroll offsets as `frame()` (LLP 1051.000).
 use super::*;
 
 type Rect = [f64; 4]; // left, top, right, bottom
@@ -283,7 +283,7 @@ fn expand(r: Rect, text: &str) -> Rect {
         _ => [(0.0, false); 4],
     };
     // Chrome's rootMargin resolves vertical percentages against height,
-    // horizontal ones against width (as Chrome does, though the spec differs).
+    // horizontal ones against width (LLP 1001's recorded spec deviation).
     let basis = [r[3] - r[1], r[2] - r[0], r[3] - r[1], r[2] - r[0]];
     let sides = std::array::from_fn::<_, 4, _>(|i| {
         let (value, percentage) = sides[i];

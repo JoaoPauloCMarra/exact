@@ -1,4 +1,4 @@
-//! A table laid out as one grid. Its cells are placed where
+//! A table laid out as one grid (LLP 1153 D7.3). Its cells are placed where
 //! HTML's table-forming algorithm puts them (HTML §4.9.12.1), so `colspan`
 //! and `rowspan` land as the browser lands them, and the table's engine node
 //! holds its captions, row groups, rows and cells as the grid's items: a

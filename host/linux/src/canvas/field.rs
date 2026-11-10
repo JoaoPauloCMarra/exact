@@ -1,4 +1,4 @@
-//! Text fields the reader hosts: each `input` and
+//! Text fields the reader hosts (LLP 1115.001 D8): each `input` and
 //! `textarea` is Android's own `EditText`, in the reader
 //! (`host/android/canvas`, `Fields.kt`). What the presenter and the reader
 //! say to each other about them is `presenter/hosted.rs`; this is the
@@ -11,8 +11,8 @@
 //! measurer, which calls up into the reader from the thread layout runs on
 //! (`Fields.measure`, a static method) and has the answer before it
 //! returns: an `EditText` of the reader's own, never attached, set as the
-//! field is and measured. Nothing of this takes the channel of requests,
-//! whose queue is taken after the frame. Each distinct question is
+//! field is and measured. Nothing of this takes the channel of requests
+//! (D5), whose queue is taken after the frame. Each distinct question is
 //! asked once ([`MEMO`]).
 // FFI to the JNI: the reader's static method, called from Rust.
 #![allow(unsafe_code)]
@@ -108,8 +108,8 @@ const MEASURE: (&std::ffi::CStr, &std::ffi::CStr) = (
 /// The reader boots the host (`Native.start`, `Native.startAsync`): its
 /// field measurer is found by the class loader of the call, and from now on
 /// this process's text fields are the reader's to host and to measure, at
-/// `scale` pixels a point. A reader with no such method
-/// hosts none, and its fields are painted as desktop Linux's are.
+/// `scale` pixels a point. A reader with no such method (one built before
+/// D8) hosts none, and its fields are painted as desktop Linux's are.
 ///
 /// # Safety
 /// `env` is the JNI call's.

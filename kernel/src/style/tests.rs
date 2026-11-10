@@ -254,7 +254,7 @@ fn a_colour_parses_as_css_writes_it() {
         Color::parse("hsl(326, 55%, 52%)"),
         Some(Color::rgba(0xc8, 0x41, 0x8e, 255))
     );
-    // A wide form keeps its space; it resolves to its sRGB clip.
+    // A wide form keeps its space (LLP 1100 D2); it resolves to its sRGB clip.
     assert_eq!(Color::parse("oklch(0.7 0.1 200 / 0.5)"), None);
     assert_eq!(
         ColorValue::parse_light_dark("oklch(0.7 0.1 200 / 0.5)")
@@ -308,7 +308,7 @@ fn a_modern_colour_keeps_its_space_and_its_text() {
 
 #[test]
 fn a_colour_row_holds_a_light_dark_pair_and_the_host_resolves_it() {
-    // CSS's spelling, and only it.
+    // CSS's spelling, and only it (LLP 1034 D1).
     let pair = ColorValue::parse_light_dark("light-dark(#ffffff, #000000)").unwrap();
     assert_eq!(
         pair,
@@ -562,7 +562,7 @@ fn calc_lengths_parse_one_percent_and_one_pixel_term_and_resolve_by_basis() {
     ));
 }
 
-/// The viewport segment variables parse by CSS-ENV-1's
+/// LLP 1078 D3, D10: the viewport segment variables parse by CSS-ENV-1's
 /// grammar, refuse by name, resolve against the grid, and travel the wire.
 #[test]
 fn segment_lengths_parse_resolve_and_refuse_by_name() {
@@ -593,7 +593,7 @@ fn segment_lengths_parse_resolve_and_refuse_by_name() {
         assert_eq!(SegmentVar::from_name(name), Some(*var));
         assert_eq!(SegmentVar::from_index(*var as u8), Some(*var));
     }
-    // Refused by name, never silently zero.
+    // Refused by name (D10), never silently zero.
     for (bad, why) in [
         ("env(viewport-segment-width 0)", EnvRefusal::IndexCount),
         ("env(viewport-segment-width)", EnvRefusal::IndexCount),
@@ -788,14 +788,14 @@ fn overflow_auto_has_scroll_sizing_and_zero_automatic_minimum() {
 
 #[test]
 fn a_bare_node_s_colour_is_the_platform_s_text_colour_and_its_tint_the_accent() {
-    // CSS's initial `color` is `CanvasText`, a system
+    // LLP 1095 stage 2: CSS's initial `color` is `CanvasText`, a system
     // colour; a host with it shows the platform's, never a snapshot.
     let s = StyleProps::default();
     let canvas_text = roles::role("CanvasText").unwrap();
     assert_eq!(s.text_color, ColorValue::Role(canvas_text));
     assert_eq!(roles::role_of(canvas_text).unwrap().ios, "labelColor");
     // The tint is the platform's own for a symbol nobody tinted, which the
-    // host keeps dynamic: the view's tint on iOS, as
+    // host keeps dynamic (LLP 1115.000 D3.9): the view's tint on iOS, as
     // UIKit draws a template image, and the secondary label colour on the
     // Mac, as AppKit draws one. It was `AccentColor` on both.
     let symbol = roles::role("-exact-symbol").unwrap();
@@ -817,6 +817,7 @@ fn a_bare_node_s_colour_is_the_platform_s_text_colour_and_its_tint_the_accent() 
     assert!(s.text_color.is_scheme_aware());
 }
 
+/// LLP 1100 D3.
 #[test]
 fn a_profiles_colour_is_the_platforms_to_draw() {
     use super::profiled::{declarations, profiled, Source};

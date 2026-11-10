@@ -102,7 +102,7 @@ impl Parser {
         }
     }
 
-    /// `test "name"` with a block of steps: the agent API's
+    /// `test "name"` with a block of steps (LLP 1017 P7): the agent API's
     /// operations by their names, and `expect` lines over their replies.
     pub(super) fn test_decl(&mut self) -> R<TestDecl> {
         let span = self.expect_word("test")?;
@@ -154,7 +154,7 @@ impl Parser {
         })
     }
 
-    /// `perf` and its indented steps. The counts repeat only on
+    /// `perf` and its indented steps (LLP 1146 D3). The counts repeat only on
     /// the agent's clock, so a step that waits on the wall clock is refused.
     fn perf_block(&mut self, span: Span) -> R<Step> {
         self.newline()?;
@@ -320,7 +320,7 @@ impl Parser {
         }
     }
 
-    /// `request METHOD "/path" [json] [as persona]`: a
+    /// `request METHOD "/path" [json] [as persona]` (LLP 1116.006 D8): a
     /// write through the app's server as another person, by the driver.
     fn request_step(&mut self, span: Span) -> R<Step> {
         const METHODS: [&str; 5] = ["GET", "POST", "PUT", "PATCH", "DELETE"];
@@ -371,7 +371,7 @@ impl Parser {
         } else {
             None
         };
-        // `expect 409`, the status a refusal answers.
+        // LLP 1116.010 D3: `expect 409`, the status a refusal answers.
         let status = if self.at_ident("expect") {
             self.next();
             match self.peek_kind().clone() {
@@ -403,7 +403,7 @@ impl Parser {
     }
 
     /// A state's name, then fields and list indexes at any depth, joined by
-    /// `.` (`gateway.state`, `rows.0`).
+    /// `.` (`gateway.state`, `rows.0`: feed F10, drums R7).
     fn state_path(&mut self) -> R<String> {
         let (mut name, _) = self.ident()?;
         while self.eat_punct(".") {
@@ -430,8 +430,9 @@ impl Parser {
         Ok(name)
     }
 
-    /// `clock until state <path> == <literal> within <ms>`, after `until`:
-    /// the driver's own words, the literal as JSON text.
+    /// `clock until state <path> == <literal> within <ms>` (rules/DEFERRED.md,
+    /// "Agent API", 2026-10-26), after `until`: the driver's own words, the
+    /// literal as JSON text.
     fn clock_until(&mut self) -> R<String> {
         if !self.at_ident("state") {
             return self.err(
@@ -555,7 +556,7 @@ impl Parser {
                 let target = self.str_lit("a testId")?;
                 if self.at_ident("drag") {
                     self.next();
-                    // `drag to "B" [at x y]` or `drag dx dy`.
+                    // `drag to "B" [at x y]` (LLP 1094 D12) or `drag dx dy`.
                     let (dx, dy, to) = if self.at_ident("to") {
                         self.next();
                         let to = self.str_lit("the testId the drag ends on")?;
@@ -575,7 +576,7 @@ impl Parser {
                     };
                     let (mut press, mut over, mut hold) = (None, None, None);
                     let (mut from, mut mouse) = (None, false);
-                    // Quoted reads or `clock`, last, while the finger is down.
+                    // Quoted reads or `clock`, last, while the finger is down (drums R8).
                     let mut during = Vec::new();
                     while let TokenKind::Ident(w) = self.peek_kind().clone() {
                         let twice = match w.as_str() {
@@ -717,7 +718,7 @@ impl Parser {
                 if self.at_ident("key") {
                     self.next();
                     let key = self.str_lit("the key's name")?;
-                    // `down` / `up` / `for <ms>`: one of them, on the virtual clock.
+                    // `down` / `up` / `for <ms>`: one of them, on the virtual clock (platformer R7).
                     let (mut phase, mut duration) = (None, None);
                     if self.at_ident("down") || self.at_ident("up") {
                         phase = Some(if self.at_ident("down") { "down" } else { "up" }.to_string());
@@ -767,7 +768,7 @@ impl Parser {
                     }
                 }
             }
-            // `pick "id" "path"…` or `pick "id" cancel`.
+            // `pick "id" "path"…` or `pick "id" cancel` (files F11).
             "pick" => {
                 let target = self.str_lit("the picker's node id, or its capability")?;
                 let mut paths = Vec::new();
@@ -786,7 +787,7 @@ impl Parser {
                     span,
                 }
             }
-            // `authorize` or `authorize cancel`.
+            // `authorize` or `authorize cancel` (LLP 1146 D4).
             "authorize" => {
                 let cancel = self.at_ident("cancel");
                 if cancel {
@@ -807,7 +808,7 @@ impl Parser {
                         w
                     }
                     // `clock held [<resource>…] [<n>s|<n>ms]`: real time passes, the
-                    // clock frozen, until each held request, or
+                    // clock frozen, until each held request (LLP 1016.000 D9), or
                     // each named, has had a reply, within the bound (the driver's
                     // `clock held`, 20 s unless given).
                     TokenKind::Ident(w) if w == "held" => {
@@ -850,7 +851,7 @@ impl Parser {
                             TokenKind::Number(n) => {
                                 self.next();
                                 // `clock +ms real`: that much real time passes
-                                // with the clock (media, the network).
+                                // with the clock (media, the network: LLP 1042 §3).
                                 match self.peek_kind() {
                                     TokenKind::Ident(w) if w == "real" => {
                                         self.next();
@@ -944,7 +945,7 @@ impl Parser {
                 tag: self.launch_str("locale", "a BCP 47 tag, as \"fr-FR\",")?,
                 span,
             },
-            // `at "/item/7#moves"`: where the app opens.
+            // @ref LLP 1153 D5 — `at "/item/7#moves"`: where the app opens.
             "at" => {
                 let location = self.launch_str("at", "a location, as \"/item/7#moves\",")?;
                 if !location.starts_with('/') {
@@ -957,7 +958,7 @@ impl Parser {
             }
             "seed" => {
                 let seed = self.step_number("the seed, a whole number")?;
-                // Below 2^32, as every host draws it.
+                // Below 2^32, as every host draws it (LLP 1116.005 D5).
                 if seed.fract() != 0.0 || !(0.0..=4_294_967_295.0).contains(&seed) {
                     return self.err(
                         "syntax-expected-step",
@@ -966,7 +967,7 @@ impl Parser {
                 }
                 Step::Seed { seed, span }
             }
-            // `fresh ["seed.json"]`: the Snapback dev
+            // @ref LLP 1086 D13 — `fresh ["seed.json"]`: the Snapback dev
             // server emptied (and seeded) before the test opens.
             "fresh" => {
                 let seed = match self.peek_kind().clone() {
@@ -986,7 +987,7 @@ impl Parser {
                 self.next();
                 Step::BeforeData { span }
             }
-            // `fail fetch "<prefix>" [times N]`, `pass fetch "<prefix>"`.
+            // @ref LLP 1103 D3 — `fail fetch "<prefix>" [times N]`, `pass fetch "<prefix>"`.
             "fail" | "pass" => {
                 if !self.at_ident("fetch") {
                     return self.err(
@@ -1015,11 +1016,11 @@ impl Parser {
                     Step::FailFetch { prefix, times, span }
                 }
             }
-            // `request POST "/items" {"title": "Bread"} as grace`.
+            // @ref LLP 1116.006 D8 — `request POST "/items" {"title": "Bread"} as grace`.
             "request" => self.request_step(span)?,
             "reload" => Step::Reload { span },
             "close" => Step::Close { span },
-            // The platform's Back from what is on top: it names no target.
+            // @ref LLP 1116.006 D4 — the platform's Back from what is on top: it names no target.
             "back" => {
                 if !matches!(self.peek_kind(), TokenKind::Newline | TokenKind::Eof) {
                     return self.err(
@@ -1061,7 +1062,7 @@ impl Parser {
                             self.next();
                             false
                         } else {
-                            // `lacks`, `contains`, `not has`: the rewrite, not only the forms.
+                            // `lacks`, `contains`, `not has` (app farm waves 1 and 2): the rewrite, not only the forms.
                             let found = match self.peek_kind() {
                                 TokenKind::Ident(w) => w.clone(),
                                 _ => String::new(),
@@ -1092,7 +1093,7 @@ impl Parser {
                             span,
                         }
                     }
-                    // A control's `disabled`, asserted rather than tapped.
+                    // LLP 1116.010 D3: a control's `disabled`, asserted rather than tapped.
                     "disabled" | "enabled" => {
                         let target = self.str_lit("a testId")?;
                         Step::ExpectDisabled {
@@ -1147,7 +1148,7 @@ impl Parser {
                     "state" => {
                         let name = self.state_path()?;
                         self.expect_punct("==")?;
-                        // `-3` is a number. Other expressions stay refused.
+                        // `-3` is a number (drums R7). Other expressions stay refused.
                         let value = match self.expr()? {
                             Expr::Unary(UnOp::Neg, inner, span) if matches!(*inner, Expr::Number(..)) => {
                                 let Expr::Number(n, _) = *inner else { unreachable!() };
@@ -1171,7 +1172,7 @@ impl Parser {
                         Step::ExpectState { name, value, span }
                     }
                     other => {
-                        // `expect value` for a field is a common guess.
+                        // r32 t1 tried `expect value` for a field.
                         let hint = if other == "value" || other == "checked" {
                             "; `expect text` reads a control's value too (a checkbox with a `checked` binding reads `true` or `false`)"
                         } else {
@@ -1214,7 +1215,7 @@ fn json_string(s: &str) -> String {
     out
 }
 
-/// A drag's `during` op is a read or the clock, not a second finger.
+/// A drag's `during` op is a read or the clock, not a second finger (drums R8).
 /// A filmed screenshot (`over … every`) loops on the clock.
 fn during_read(op: &str) -> bool {
     let mut words = op.split_whitespace();
@@ -1228,7 +1229,7 @@ fn during_read(op: &str) -> bool {
 }
 
 /// The words of a test's launch lines, which a test file may also write at
-/// its top level for every test in it.
+/// its top level for every test in it (habits F7, calendar F13).
 pub(super) const LAUNCH: [&str; 10] = [
     "size",
     "at",

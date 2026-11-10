@@ -1,5 +1,5 @@
-//! `contract rust`: a struct per shape, its fields in declaration order,
-//! converting to and from the runner's positional record.
+//! `contract rust` (LLP 1054.000 R4): a struct per shape, its fields in
+//! declaration order, converting to and from the runner's positional record.
 
 const CONTRACT: &str = r#"
 shape Author

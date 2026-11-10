@@ -1,5 +1,6 @@
 //! Which texture payload a device fetches. The world names each texture by
 //! its authored `.tex` name; the host fetches the file this surface asks for.
+//! @ref llp/1046.003-game-engine-as-built.explainer.md#compressed-textures-2026-09-23
 use exact_game::asset::TextureFamily;
 use exact_gpu::wgpu;
 

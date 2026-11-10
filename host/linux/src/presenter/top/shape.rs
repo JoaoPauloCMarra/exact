@@ -1,14 +1,14 @@
-//! What an authored subtree is to the top layer: the
+//! What an authored subtree is to the top layer (LLP 1115.001 D10): the
 //! shape rule, read from the kernel's tree.
 //!
-//! **An alert** is an `alertdialog`, a `dialog` or a popover,
+//! **An alert** (LLP 1115 D6) is an `alertdialog`, a `dialog` or a popover,
 //! whose rows are explanatory text, actions (a `button` with a `press` that
 //! also closes it) and one cancel (a closing `button` with no `press`), with
 //! at most three buttons (the cancel alone is the one-button alert): the rule the Apple hosts follow
 //! (`ConfirmationShape.swift`, `AlertsMac.swift`'s `plan`). Its title is the
 //! `aria-label`, else its first line; its message is the rest.
 //!
-//! **A menu** is a popover that is no confirmation: each
+//! **A menu** (LLP 1021 D3) is a popover that is no confirmation: each
 //! `button` row with a `press` is an item (its title, its symbol, whether it
 //! is destructive, disabled or checked), a row that opens another menu is
 //! that menu's opener, and any other row is a separator (`hr`), as
@@ -19,7 +19,7 @@
 //! hosts read too. What is here is the reading of the kernel's tree: which
 //! rows are text, actions and the cancel.
 //!
-//! **An alert's outside** is its `closedby`, read as it
+//! **An alert's outside** (LLP 1115.000 D13.4) is its `closedby`, read as it
 //! stands, written or implied: `any` lets a tap outside dismiss it, which is
 //! what a Material dialog does unless told otherwise; `closerequest`, what
 //! lowering implies for the shape, leaves Back and Escape alone to cancel

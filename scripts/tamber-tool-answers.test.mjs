@@ -1,7 +1,8 @@
 // `tamber tool --via`'s probe of a dev loop (scripts/tamber-server.mjs
 // `toolAnswers`): a token probe that times out (2 s) is tried again, so a dev
 // loop under load that answers late is still reached; nothing listening is
-// said at once, and a loop that never answers is refused after the tries.
+// said at once, and a loop that never answers is refused after the tries
+// (QUEUE "`tamber tool --via` gives a dev loop 2 s to answer").
 import { expect, test } from 'bun:test';
 import { createServer } from 'node:net';
 import { toolAnswers } from './tamber-server.mjs';

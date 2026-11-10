@@ -1,7 +1,8 @@
-//! The checker bound's sweep: every pass over a design, an import or a
-//! re-import that could be more than linear in its size is linear, charged
-//! to an import's budget, or capped. One hostile input each, which must
-//! finish in moments.
+//! The checker bound's sweep (the lead's, after round 3): every pass over a
+//! design, an import or a re-import that was more than linear in its size,
+//! each now linear, charged to an import's budget, or capped. One hostile
+//! input each, which must finish in moments (the table is in the commit
+//! that made them so).
 
 use crate::common::vocab;
 use exact_tamber::{check, parse, Op, Vocab};
@@ -224,9 +225,9 @@ fn many_shadcn_themes_are_refused_in_moments() {
     assert!(!d.is_empty());
 }
 
-/// A design has at most 32 axes and a token at most 64 `when` lines,
-/// refused before anything walks them; the importers refuse past them with
-/// the same ids.
+/// A design has at most 32 axes and a token at most 64 `when` lines
+/// (theme2's 19:26), refused before anything walks them; the importers
+/// refuse past them with the same ids.
 #[test]
 fn axes_and_when_lines_are_capped() {
     use exact_tamber::{MAX_AXES, MAX_WHENS};
@@ -268,8 +269,8 @@ fn axes_and_when_lines_are_capped() {
 }
 
 /// A transaction of 1024 value writes on a large design is parsed once
-/// (a parse per operation would make it operations x tokens), and its one
-/// restore undoes all of them.
+/// (theme2's 19:20: a parse per operation made it operations x tokens),
+/// and its one restore undoes all of them.
 #[test]
 fn a_transaction_of_value_writes_parses_the_design_once() {
     let n = 20_000;
@@ -291,9 +292,9 @@ fn a_transaction_of_value_writes_parses_the_design_once() {
     assert_eq!(undone.text, src);
 }
 
-/// New tokens (an import's, accepted) are added with one parse too (a parse
-/// per `add-token` would make a large import operations x tokens outside the
-/// import's budget).
+/// New tokens (an import's, accepted) are added with one parse too (Astra's
+/// round 1: a parse per `add-token` made a large import operations x tokens
+/// outside the import's budget).
 #[test]
 fn a_transaction_of_new_tokens_parses_the_design_once() {
     let n = 20_000;
@@ -318,7 +319,7 @@ fn a_transaction_of_new_tokens_parses_the_design_once() {
 }
 
 /// An import whose axes would pass the design's 32 keeps the cap's id
-/// through the landing check.
+/// through the landing check (Astra's round 1).
 #[test]
 fn an_import_past_the_axes_cap_is_refused_with_its_id() {
     let mut src = String::from("tamber t\n\naxes\n");
@@ -334,7 +335,8 @@ fn an_import_past_the_axes_cap_is_refused_with_its_id() {
 
 /// An axis of many values is checked for repeats by a set; an import's
 /// mixed runs (new tokens, then values) are each parsed once; a run with a
-/// bad value at its end is refused after the rest are taken in one parse.
+/// bad value at its end is refused after the rest are taken in one parse
+/// (Astra's round 2).
 #[test]
 fn mixed_runs_and_long_axes_apply_in_moments() {
     let n = 20_000;
@@ -379,8 +381,8 @@ fn mixed_runs_and_long_axes_apply_in_moments() {
 }
 
 /// An import's values and new tokens alternating (its tokens' order) are
-/// applied with a few parses (not one each), the new tokens first (one parse each
-/// would make 6,000 alternating operations 12,000 parses).
+/// applied with a few parses (not one each), the new tokens first (Astra's round 3: 6,000
+/// alternating operations were 12,000 parses).
 #[test]
 fn alternating_values_and_new_tokens_apply_in_moments() {
     let n = 20_000;
@@ -415,7 +417,7 @@ fn alternating_values_and_new_tokens_apply_in_moments() {
 }
 
 /// DTCG themes in many groups are grouped by a map, and sets ranked by
-/// precomputed places.
+/// precomputed places (Astra's round 3).
 #[test]
 fn many_dtcg_theme_groups_group_in_moments() {
     use exact_tamber::import::dtcg;
@@ -440,7 +442,7 @@ fn many_dtcg_theme_groups_group_in_moments() {
 
 /// A held import's values applied on a design that has since lost one of
 /// their tokens take the rest in one parse and refuse at that one, not a
-/// parse for each before it.
+/// parse for each before it (Astra's re-check after round 3).
 #[test]
 fn values_on_a_token_gone_are_refused_after_one_parse() {
     let n = 20_000;
@@ -469,8 +471,8 @@ fn values_on_a_token_gone_are_refused_after_one_parse() {
 }
 
 /// A themed import alternating its tokens' `when` lines and new tokens with
-/// theirs keeps its few parses (a guard, the new tokens, the values) where
-/// no value can move the `when` indent.
+/// theirs keeps its few parses (a guard, the new tokens, the values) where no value can move the `when` indent
+/// (Astra's re-check 2).
 #[test]
 fn alternating_themed_values_and_new_tokens_apply_in_moments() {
     let n = 20_000;

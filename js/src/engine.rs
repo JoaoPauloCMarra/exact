@@ -17,7 +17,7 @@ mod real {
         *mut *mut c_char,
     ) -> i32;
 
-    /// The door for byte input (`__exact_bytes`):
+    /// The door for byte input (`__exact_bytes`, LLP 1069.005 D1):
     /// `(ctx, op, a, bytes, len, out)`, with the host door's result rules.
     pub type BytesFn = unsafe extern "C" fn(
         *mut c_void,

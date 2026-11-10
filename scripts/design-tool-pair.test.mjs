@@ -1,7 +1,7 @@
-// The design tool paired with a design server on another machine: driven as
-// a person would, through the server's trusted-tunnel door, which serves the
-// tool itself, against a real `tamber serve`. Its stub-server tests are
-// apps/design-tool/*.test.contract.
+// The design tool paired with a design server on another machine (LLP 1122
+// T6, LLP 1121 stage 10): driven as a person would, through the server's
+// trusted-tunnel door, which serves the tool itself, against a real `tamber
+// serve`. Its stub-server tests are apps/design-tool/*.test.contract.
 import { expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -13,7 +13,7 @@ import { upstream } from './tamber-request.mjs';
 
 toolTurns();
 
-test('a tool on another machine pairs through the trusted-tunnel door with a code, at propose: its edit is held for review, nothing above its scope goes through, the code and token are in no URL, log, state, browser profile or server output; revoked while it runs, it says so and sends no more', async () => {
+test('T6: a tool on another machine pairs through the trusted-tunnel door with a code, at propose: its edit is held for review, nothing above its scope goes through, the code and token are in no URL, log, state, browser profile or server output; revoked while it runs, it says so and sends no more', async () => {
   const app = mkdtempSync(join(tmpdir(), 'exact-design-tool-pair-'));
   writeFileSync(join(app, 'app.tamber'), readFileSync(resolve(ROOT, 'apps/design-tool/stub/dials.tamber'), 'utf8'));
   writeFileSync(join(app, 'app.contract'), STUB_APP);
@@ -25,7 +25,7 @@ test('a tool on another machine pairs through the trusted-tunnel door with a cod
   const build = spawnOwned(process.execPath, [resolve(ROOT, 'scripts/exact.mjs'), 'tamber', 'tool', app, '--no-open'], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
   await lines(build).until(l => l.startsWith(`${TOOL_ORIGIN}/__tamber/tool/`), 600_000);
   await stop(build);
-  // The server's trusted-tunnel door (routed as a remote one, its Origin check, its paths), on a
+  // The server's trusted-tunnel door (stage 10 B2: routed as a remote one, its Origin check, its paths), on a
   // free loopback port.
   const free = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => new Response('') }), tunnel = free.port;
   free.stop(true);

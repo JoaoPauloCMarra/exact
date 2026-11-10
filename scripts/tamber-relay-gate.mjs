@@ -1,10 +1,11 @@
-// The relay gate's lines, on loopback: the relay service
-// (scripts/tamber-relay-server.mjs), two accounts' design servers dialling
-// into it with the real connector, each wildcard got by ACME through the relay's own TXT records (the ACME stand-in), and a
-// client. Each line printed MET or FAILED with its evidence. Deployed, it
-// runs the same lines against the real host.
+// LLP 1121 §5 stage 10c R4's lines, on loopback (rt1's R3 plan, theme2's 14:34
+// approval): the relay service (scripts/tamber-relay-server.mjs), two accounts'
+// design servers dialling into it with the real connector, each wildcard got
+// by ACME through the relay's own TXT records (the ACME stand-in), and a
+// client. Each line printed MET or FAILED with its evidence. The deployed R4
+// runs the same lines against the real host (deployment waits on hosting).
 // Run: bun scripts/tamber-relay-gate.mjs   (exits 1 when a line fails)
-// Deployed: the same lines against a running relay, its two accounts' tokens in ~/.exact/relay/<label>/token:
+// Deployed (R4): the same lines against a running relay, its two accounts' tokens in ~/.exact/relay/<label>/token:
 //   RELAY_GATE_DOMAIN=<domain> [RELAY_GATE_RELAY=<host[:port]>, default the domain:443]
 //   [RELAY_GATE_ACCOUNTS=<a>,<b>, default acct,other] [RELAY_GATE_CA=<PEM>, a CA beside the system's (a test relay)]
 //   [RELAY_GATE_CERTS=<dir>, <label>.cert.pem and <label>.key.pem for the sessions' names instead of ACME]
@@ -56,7 +57,7 @@ function fakeServe() {
   return child;
 }
 
-/** Every gate line on loopback: `[{gate, met, evidence}]`. `say(line)` prints as it goes. */
+/** Every R4 line on loopback: `[{gate, met, evidence}]`. `say(line)` prints as it goes. */
 export async function gate({ say = console.log, deployed = null } = {}) {
   const DOMAIN = deployed?.domain ?? LOCAL_DOMAIN, [A, B] = deployed?.labels ?? ['acct', 'other'];
   const results = [], cleanup = [];
@@ -96,7 +97,7 @@ export async function gate({ say = console.log, deployed = null } = {}) {
     const clientCa = deployed ? roots : acme.caPem;
     // (the connectors' and TXT requests' connections through the capture too: the connector token is in it, enciphered)
     const toRelay = opts => connectTLS({ ...opts, host: '127.0.0.1', port: pub, ca: deployed ? roots : relayCert.cert });
-    // The app's dev loop, for the canvas gateway to proxy.
+    // The app's dev loop, for the canvas gateway (R1b) to proxy.
     const loop = createHTTP((req, res) => res.end('<!doctype html><p>canvas</p>'));
     await new Promise(ok => loop.listen(0, '127.0.0.1', ok));
     cleanup.push(() => loop.close());
@@ -151,7 +152,7 @@ export async function gate({ say = console.log, deployed = null } = {}) {
     const a = await serve(A), b = await serve(B);
     // (one wildcard per account: its tool's and its canvas's names end on the same certificate, its server's own)
     for (const x of [a, b]) for (const n of [x.tool, x.canvas]) expected.set(n, x.doors.relay().fingerprint);
-    // Line 1: a paired propose client reads and proposes; it cannot write.
+    // Line 1 (stage 10): a paired propose client reads and proposes; it cannot write.
     const minted = (await a.local({ method: 'pair-code', scope: 'propose', name: 'laptop' })).ok;
     const paired = await call(a.tool, '/__tamber/pair', JSON.stringify({ code: minted.code, name: 'laptop' }));
     const pt = json(paired).ok?.token;
@@ -160,7 +161,7 @@ export async function gate({ say = console.log, deployed = null } = {}) {
     const own = minted.remote?.find(r => r.relay)?.fingerprint;
     verdict('a paired propose client through the relay reads, and cannot write (its scope named); its TLS ends at the design server, not the relay', status(paired) === 200 && status(hello) === 200 && status(write) === 403 && /propose/.test(JSON.stringify(json(write))) && !!own && own === expected.get(a.tool) && saw.get(a.tool) === own && intercepted.length === 0,
       [`pair-code's relay entry: ${JSON.stringify(minted.remote?.find(r => r.relay))}`, `the certificate the client's TLS ended on: ${saw.get(a.tool)} (${saw.get(a.tool) === own ? 'the design server\'s own' : 'NOT the design server\'s'})`, `pair ${status(paired)}, hello ${status(hello)}, a set-token transaction ${status(write)}: ${JSON.stringify(json(write).error ?? {}).slice(0, 140)}`]);
-    // Line 2: revocation cuts the client's pending long poll through the relay, and its next request.
+    // Line 2 (stage 10): revocation cuts the client's pending long poll through the relay, and its next request.
     const first = await call(a.tool, '/__tamber/events', '{"wait":false}', `x-exact-tamber-token: ${pt}\r\n`);
     const { seq, epoch } = json(first);
     const poll = { text: '' };
@@ -174,7 +175,7 @@ export async function gate({ say = console.log, deployed = null } = {}) {
     await until(() => poll.text.startsWith('HTTP/1.1 401'), 5000).catch(() => {});
     const after = await call(a.tool, '/__tamber', '{"method":"hello"}', `x-exact-tamber-token: ${pt}\r\n`);
     verdict('revoking the paired client cuts its pending long poll through the relay, and refuses its next request', pending && poll.text.startsWith('HTTP/1.1 401') && status(after) === 401, [`pending before: ${pending}; after revoke: ${poll.text.split('\r\n')[0]}; next hello ${status(after)}`]);
-    // Line 3: an unencrypted connection is refused: plain HTTP to the relay is closed, nothing answered.
+    // Line 3 (stage 10): an unencrypted connection is refused: plain HTTP to the relay is closed, nothing answered.
     // (closed at the relay, not by a forward that never reached it: the tap carried this very connection through)
     let mine = null;
     const plain = await new Promise(ok => { const c = connectTCP({ host: '127.0.0.1', port: pub }, () => { mine = c.localPort; c.write(`POST /__tamber/pair HTTP/1.1\r\nHost: ${a.tool}\r\nContent-Length: 2\r\n\r\n{}`); }); let got = ''; const t = setTimeout(() => { c.destroy(); ok(got || null); }, 10_000); c.on('data', d => { got += d; }); c.on('close', () => { clearTimeout(t); ok(got); }); c.on('error', () => {}); });

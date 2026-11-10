@@ -16,7 +16,7 @@ pub(super) struct PaintSource {
     pub palette: Box<[RunPaint]>,
     /// Each run's colour under the other appearance, resolved at capture: it
     /// keeps no `ColorValue`, so no wide colour id outlives the commit that
-    /// made it (the wide table's sweep).
+    /// made it (the wide table's sweep, LLP 1121 stage 4).
     other: Box<[[u8; 4]]>,
 }
 /// A run from the exact accepted source, including its original node generation.

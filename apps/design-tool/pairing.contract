@@ -1,6 +1,6 @@
 use Clients, PairCode, Pinned from "./shapes.contract"
 
-// Pairing: a code for a client on another
+// Pairing (LLP 1122 D12, T6): a code for a client on another
 // machine, at a scope, with each remote door to check it by; the
 // clients paired, each revoked here. The local tool's alone.
 component Pairing

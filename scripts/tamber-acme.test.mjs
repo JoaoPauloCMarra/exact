@@ -1,4 +1,4 @@
-// A relay session's certificate by ACME, against
+// A relay session's certificate by ACME (LLP 1121 §5 stage 10c R2), against
 // an ACME stand-in run here: a wildcard by DNS-01, the TXT record put up by
 // whoever answers for the name and taken down after, a failed challenge
 // said in the server's words, the account's certificate kept (0600) and
@@ -75,7 +75,7 @@ test('the request names every name and is signed by the certificate\'s key', () 
   expect(requestNames(csr(['*.acct.relay.test'], privateKey))).toEqual(['*.acct.relay.test']);
 });
 
-test('an authorization for a name not asked for, a URL on another origin, a certificate for one host or another key: each refused, no record put up for a stranger', async () => {
+test('round 1: an authorization for a name not asked for, a URL on another origin, a certificate for one host or another key: each refused, no record put up for a stranger', async () => {
   const run = async lie => {
     const dns = new Map(), up = [];
     const acme = fakeAcme({ dns, lie });
@@ -94,7 +94,7 @@ test('an authorization for a name not asked for, a URL on another origin, a cert
   expect((await run({ leafKey: other })).error).toBe('ACME: the certificate is not for this key');
 });
 
-test('a name more on the certificate, more authorizations than names, an account URL no CAA record can carry, a redirect, an answer over 256 KiB: each refused', async () => {
+test('round 2: a name more on the certificate, more authorizations than names, an account URL no CAA record can carry, a redirect, an answer over 256 KiB: each refused', async () => {
   const run = async lie => {
     const dns = new Map(), up = [];
     const acme = fakeAcme({ dns, lie });
@@ -110,7 +110,7 @@ test('a name more on the certificate, more authorizations than names, an account
   expect((await run({ huge: true })).error).toBe('ACME: an answer over 256 KiB');
 });
 
-test('the account hook is told the account and the CA\'s CAA name; a stop mid-order stops it there, its record still taken down', async () => {
+test('round 2: the account hook is told the account and the CA\'s CAA name; a stop mid-order stops it there, its record still taken down', async () => {
   const dns = new Map(), said = [], told = [];
   const acme = fakeAcme({ dns });
   const stop = new AbortController();
@@ -124,7 +124,7 @@ test('the account hook is told the account and the CA\'s CAA name; a stop mid-or
   expect(acme.orders[0].status).toBe('pending');
 });
 
-test('a record whose putting up failed part-way is taken down all the same', async () => {
+test('round 3: a record whose putting up failed part-way is taken down all the same', async () => {
   const dns = new Map(), down = [];
   const acme = fakeAcme({ dns });
   const got = acmeCertificate({ ...quick, directory: acme.directory, fetch: acme.fetch, names: ['*.acct.relay.test'], accountKey: keyPem(), key: keyPem(),
@@ -133,7 +133,7 @@ test('a record whose putting up failed part-way is taken down all the same', asy
   expect(down).toEqual(['_acme-challenge.acct.relay.test']);
 });
 
-test('a lock is taken over only from a holder that is gone; a live one is waited for; a holder takes away only its own', async () => {
+test('round 2: a lock is taken over only from a holder that is gone; a live one is waited for; a holder takes away only its own', async () => {
   const { spawn } = await import('node:child_process');
   const { existsSync, mkdirSync, writeFileSync } = await import('node:fs');
   const home = mkdtempSync(join(tmpdir(), 'exact-acme-lock-'));
@@ -165,7 +165,7 @@ test('a lock is taken over only from a holder that is gone; a live one is waited
   expect(readFileSync(lock, 'utf8')).toBe(`${live.pid} since`);
 });
 
-test('a kept key that is a link is refused, and two processes at once get one certificate between them', async () => {
+test('round 1: a kept key that is a link is refused, and two processes at once get one certificate between them', async () => {
   const { symlinkSync, writeFileSync } = await import('node:fs');
   const home = mkdtempSync(join(tmpdir(), 'exact-acme-link-'));
   closing.push(() => rmSync(home, { recursive: true, force: true }));

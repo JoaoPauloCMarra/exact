@@ -1,4 +1,5 @@
 //! SQLite's JS handles hold already-admitted database capabilities.
+//! @ref LLP 0059.000#315-sqlite--host-module-capability-bearing-already-built — provider and typed boundary
 use crate::boundary::{HostArg, HostError, HostValue};
 use crate::grant::GrantSet;
 use crate::host_opcodes::sqlite_async;

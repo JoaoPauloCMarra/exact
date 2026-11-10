@@ -1,4 +1,4 @@
-//! ActivityKit facts and sends never reach app data.
+//! @ref LLP 1126.001 WP9 — ActivityKit facts and sends never reach app data.
 use super::{DataError, DataSource, Runner, RunnerError};
 use crate::{Answer, Outcome, Request};
 use exact_kernel::CommitReceipt;

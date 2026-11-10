@@ -1,4 +1,4 @@
-//! The TypeScript seam's reply: what `canvasSeam(draw).draw`
+//! The TypeScript seam's reply (LLP 1056 D1): what `canvasSeam(draw).draw`
 //! in `canvas/recorder.js` returns, `{"lists":[base64…],"frame":bool,
 //! "error":null|string,"notes":[string…]}`, read without a JSON library so
 //! the web's wasm and native hosts share it.

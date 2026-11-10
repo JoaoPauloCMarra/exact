@@ -1,6 +1,6 @@
 // A navigation to a location whose last segment has a dot is the app's
-// document, not a missing file (`/profile/alice.example` is a profile, not
-// a file to 404); a request that is no navigation (an asset's fetch)
+// document, not a missing file (bsky5, b32: `/profile/jay.bsky.team` 404'd
+// on the dev server); a request that is no navigation (an asset's fetch)
 // still finds nothing, and a file that exists is still that file.
 import {afterAll, afterEach, beforeAll, describe, test, expect, spyOn} from 'bun:test';
 import {mkdirSync, mkdtempSync, rmSync, readFileSync, renameSync, writeFileSync, symlinkSync} from 'node:fs';
@@ -30,16 +30,16 @@ test('a navigation to a dotted deep link is the document; a fetch of one is not'
     mkdirSync(resolve(dist, 'assets'));
     writeFileSync(resolve(dist, 'assets/app.css'), 'body{}');
     const html = 'text/html,application/xhtml+xml,*/*;q=0.8';
-    expect(appDocumentPath('/profile/alice.example')).toBe(false);
-    expect(appDocumentPath('/profile/alice.example', true)).toBe(true);
+    expect(appDocumentPath('/profile/jay.bsky.team')).toBe(false);
+    expect(appDocumentPath('/profile/jay.bsky.team', true)).toBe(true);
     expect(appDocumentPath('/.exact/x', true)).toBe(false);
     expect(appDocumentPath('/profile/photos.zip', true)).toBe(false);
-    expect((await readWebRequest(dist, '/profile/alice.example', html)).found?.route).toBe('/index.html');
-    expect((await readWebRequest(dist, '/profile/alice.example')).found).toBe(null);
+    expect((await readWebRequest(dist, '/profile/jay.bsky.team', html)).found?.route).toBe('/index.html');
+    expect((await readWebRequest(dist, '/profile/jay.bsky.team')).found).toBe(null);
     expect((await readWebRequest(dist, '/assets/app.css', html)).found?.route).toBe('/assets/app.css');
-    expect(buildTreeFile(dist, '/profile/alice.example', html)?.route).toBe('/shell.html');
-    expect(buildTreeFile(dist, '/profile/alice.example')).toBe(null);
-    // A build tree's shell is a navigation's: a fetch of a route's path, dotted or not, is no page.
+    expect(buildTreeFile(dist, '/profile/jay.bsky.team', html)?.route).toBe('/shell.html');
+    expect(buildTreeFile(dist, '/profile/jay.bsky.team')).toBe(null);
+    // A build tree's shell is a navigation's (LLP 1153 D3.2): a fetch of a route's path, dotted or not, is no page.
     expect(buildTreeFile(dist, '/profile/alice', html)?.route).toBe('/shell.html');
     for (const accept of ['', '*/*', 'application/json']) expect(buildTreeFile(dist, '/profile/alice', accept), accept).toBe(null);
     // A missing file a page or an iframe navigates to is still missing.
@@ -127,7 +127,7 @@ test('declared routes disambiguate file extensions on both serving paths and fol
   } finally { rmSync(dist, {recursive: true, force: true}); }
 });
 
-// A JS-target build is served as any static host serves it: a file, else for an HTML navigation a declared
+// LLP 1153 D3: a JS-target build is served as any static host serves it: a file, else for an HTML navigation a declared
 // route's shell with 200, else 404.html with 404. With no 404.html a page's miss gets the shell, whose client draws
 // the notfound route; a request for anything but HTML at a route's path is a miss.
 test('a build tree answers a miss with 404 and its 404.html, or a page with the shell', async () => {

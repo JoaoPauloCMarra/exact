@@ -1,7 +1,7 @@
-// @exact/calls on Android: Core-Telecom's `CallsManager`, each call added inside the
-// host's `Call` foreground service. The runner keeps the call list and hands it here (`exact:listed`);
-// this module follows it with Telecom and reports what the person did on the system's surfaces as
-// the list's declared choices (`exact-choice:`). Under the agent nothing is registered, and the runner's
+// @exact/calls on Android (LLP 1133.033 D9, D11, D15, D19): Core-Telecom's `CallsManager`, each call added inside the
+// host's `Call` foreground service (D2). The runner keeps the call list and hands it here (`exact:listed`, Charlie's
+// 2026-10-27 ruling); this module follows it with Telecom and reports what the person did on the system's surfaces as
+// the list's declared choices (`exact-choice:`). Under the agent nothing is registered (D15), and the runner's
 // substitute is the call.
 //
 // - The app's own acts have already moved the list; each becomes Telecom's operation (`answer`, `setActive`,
@@ -9,13 +9,13 @@
 // - Telecom's callbacks no operation of ours caused (`onAnswer`, `onDisconnect`, `onSetActive`, `onSetInactive`: a
 //   car, a watch, a Bluetooth headset) are the person's, reported as `answer`, `hangup`, `unhold` and `hold`. The
 //   notification's own buttons reach [CallActionReceiver], which performs Telecom's `answer` or `disconnect` first and
-//   then reports the choice (the host enforces, then tells).
+//   then reports the choice (D9: the host enforces, then tells).
 // - The `Call` service is claimed with `phoneCall`, and `microphone` while `RECORD_AUDIO` is granted. Its notification
 //   is a `CallStyle` (API 31 and later): incoming with answer and decline while ringing, with a full-screen intent
-//   where `canUseFullScreenIntent()` allows it (else Android shows it heads-up), ongoing with hang-up after.
+//   where `canUseFullScreenIntent()` allows it (else Android shows it heads-up), ongoing with hang-up after (D11).
 // - Core-Telecom's `CallControlScope` is a `CoroutineScope`, and the library names kotlinx-coroutines-core only at
 //   runtime, so the package names it (1.8.1, the version Core-Telecom 1.0.1 asks) for the compile.
-// - Tier 3: [CallsModule.attributes] edits each `CallAttributesCompat` before `addCall`, [CallsModule.control]
+// - Tier 3 (D15): [CallsModule.attributes] edits each `CallAttributesCompat` before `addCall`, [CallsModule.control]
 //   hears each `CallControlScope` for its call's life, and [CallsModule.notification] each notification builder.
 package exact.calls
 
@@ -57,7 +57,7 @@ class CallsModule(context: ExtensionContext) : ExactExtension(context) {
         /** The live session's module, which the notification's receiver reaches. */
         @Volatile internal var live: WeakReference<CallsModule>? = null
 
-        /** The app's access hatches. */
+        /** The app's access hatches (D15). */
         /** Each call's attributes before `addCall`, replaced by what it returns: the display name, address, direction
          * and type are the module's, its capabilities the app's to add. */
         @JvmStatic var attributes: ((CallAttributesCompat, JSONObject) -> CallAttributesCompat)? = null
@@ -215,7 +215,7 @@ class CallsModule(context: ExtensionContext) : ExactExtension(context) {
         call.claim?.update { b -> style(b, call.entry.optString("id"), call) }
     }
 
-    /** The call's `CallStyle`, after the host's parts of the service's notification. */
+    /** The call's `CallStyle` (D11), after the host's parts of the service's notification. */
     private fun style(b: Notification.Builder, id: String, call: Live) {
         val e = call.entry
         val app = context.application
@@ -239,7 +239,7 @@ class CallsModule(context: ExtensionContext) : ExactExtension(context) {
         PendingIntent.getBroadcast(app, (id + what).hashCode(), Intent(app, CallActionReceiver::class.java).setAction("exact.calls.$what").putExtra("id", id),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
-    /** A button of the call's notification: Telecom's operation first, then the person's choice. */
+    /** A button of the call's notification (D11): Telecom's operation first, then the person's choice. */
     internal fun notificationAction(id: String, what: String) {
         val call = calls[id] ?: return
         val scope = call.scope ?: return

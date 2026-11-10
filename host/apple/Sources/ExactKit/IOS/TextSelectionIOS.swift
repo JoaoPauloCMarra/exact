@@ -1,4 +1,4 @@
-// `user-select="text"` on UIKit. Text its author
+// @ref LLP 1115.000 D11.6 — `user-select="text"` on UIKit. Text its author
 // made selectable is selected as a hand-built screen's is: a long press or a
 // double tap takes the word under it with UIKit's handles, loupe and
 // highlight, the handles drag, and the edit menu is UIKit's (Copy, Look Up,
@@ -233,7 +233,7 @@ final class SelectableText: UIResponder, UITextInput, UITextInteractionDelegate 
         guard selected.length > 0 else { return "" }
         let chosen = text.substring(with: selected)
         guard let document else { return node?.copiedText(chosen, from: selected.location) ?? chosen }
-        // Each paragraph's slice as it copies (an image as its label).
+        // Each paragraph's slice as it copies (an image as its label, LLP 1011.002 D4).
         var out = "", cursor = selected.location
         let end = NSMaxRange(selected)
         for part in document.parts {
@@ -341,7 +341,7 @@ final class SelectableText: UIResponder, UITextInput, UITextInteractionDelegate 
         return UIView()
     }
     func interactionShouldBegin(_ interaction: UITextInteraction, at point: CGPoint) -> Bool {
-        // Not under a touch whose `pointerdown` an action prevented: it starts no selection.
+        // Not under a touch whose `pointerdown` an action prevented: it starts no selection (LLP 1005 §3).
         guard let node, host.admits(node), !node.keepsFocus(from: node), !(document.map { node.keepsFocus(from: $0.surface) } ?? false) else { return false }
         return true
     }
@@ -353,7 +353,7 @@ final class SelectableText: UIResponder, UITextInput, UITextInteractionDelegate 
         return (paragraph, node.paragraphSpec(), node.paragraphBox())
     }
     /// A rect of line `line` of the unfragmented paragraph, where its
-    /// fragment shows it.
+    /// fragment shows it (LLP 1093 D8).
     private func shown(_ rect: CGRect, line: Int) -> CGRect {
         guard let fragment = node?.columnRecord?.fragments.first(where: { $0.lines.contains(line) }) else { return rect }
         return rect.offsetBy(dx: fragment.dx, dy: fragment.dy)

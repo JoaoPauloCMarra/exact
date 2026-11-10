@@ -1,4 +1,4 @@
-//! Android's image codec: `compressImage` and
+//! Android's image codec (LLP 1133.019 D16): `compressImage` and
 //! `transformImage` decoded by `ImageDecoder`, turned, cut and sized as
 //! `Bitmap`s, encoded by `Bitmap.compress` and given their metadata by
 //! `ExifInterface`, the reader's `ImageCodec` (Kotlin), called from the

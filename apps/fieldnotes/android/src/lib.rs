@@ -1,4 +1,4 @@
-//! Fieldnotes on Android's Canvas host: the host's JNI
+//! Fieldnotes on Android's Canvas host (LLP 1076 §3.3): the host's JNI
 //! (`exact_linux::canvas_jni!`) over the notes' TypeScript (Hermes bytecode),
 //! the Rust backup source and the baked plan, with app storage. The reader
 //! (`host/android`) loads this library as `libexactcanvas.so`.

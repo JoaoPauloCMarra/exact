@@ -1,4 +1,4 @@
-// The tool's changes on the server's GET long poll (tamber/1.17) through
+// The tool's changes on the server's GET long poll (tamber/1.17, LLP 1122 stage 14 D) through LLP 1016.000 D8's
 // `exactLongPoll`, against a real design server: idle, its poll is held, so `clock settle` doesn't wait on it and
 // each heartbeat (the server's 204 after its wait, 25 s) is a reply `clock held changes` returns on that commits
 // nothing; an agent's write then shows within one reply. The server's wait is 5 s here (tamber-timing.mjs's test
@@ -30,7 +30,7 @@ test('an idle tool holds its long poll: clock settle returns at once, heartbeats
     // waits on its signal, so no heartbeat can come between: then one reply on, it is folded.
     const written = signals('poll');
     onTestFinished(written.drop);
-    // (Named first: the tool reads nothing for no one. `N` ops before the poll's own.)
+    // (Named first: the tool reads nothing for no one, stage 15 D1.6. `N` ops before the poll's own.)
     const named = ['type name Ada', 'tap save-name'], N = named.length;
     const ops = [...named, 'clock data', 'clock +1', 'clock data', 'clock +1', 'clock data', 'state',
       'clock settle', HELD, HELD, HELD, HELD, 'state',

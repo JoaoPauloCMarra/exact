@@ -1,6 +1,6 @@
-// CSS line breaking on Apple (CSS Text 3 §5): where a line may
+// CSS line breaking on Apple (LLP 1008 §3, CSS Text 3 §5): where a line may
 // end, and min-content's unbreakable pieces, from the shared walker's
-// opportunities (UAX #14 as Chrome tailors it) rather than
+// opportunities (UAX #14 as Chrome tailors it, LLP 1043 §4 C) rather than
 // CoreText's or CFStringTokenizer's, which break after a `/` before a letter.
 import Foundation
 import CoreText
@@ -69,7 +69,7 @@ package struct LineBreakPlan {
                                         typesetter: typesetter, length: length, retry: suggest)
     }
 
-    /// CSS `text-wrap-style: balance` (as Chrome does it): the
+    /// CSS `text-wrap-style: balance` (LLP 1001 §6, as Chrome does it): the
     /// lines before the first forced break (`until`) take the narrowest room,
     /// `room`, that keeps the count they have at `limit`, when that is two to
     /// six (`TextEngine.balancedLimit`); the rest break at `limit`. `widest`

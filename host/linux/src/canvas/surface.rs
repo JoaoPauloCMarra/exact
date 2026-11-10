@@ -1,11 +1,11 @@
-//! The top layer's windows, for the reader: an alert and
+//! The top layer's windows, for the reader (LLP 1115.001 D10): an alert and
 //! a menu are windows of Android's own (`Dialog`, `PopupWindow`), made by
 //! the reader (`host/android/canvas`, `Surfaces.kt`), and what is in each is
 //! painted by the presenter (`presenter/top.rs`). This is the Canvas host's
 //! half: how a surface's picture is recorded, and the one call the reader
 //! makes about a window.
 //!
-//! The app's bars are shown the same way (`presenter/bars.rs`,
+//! The app's bars are shown the same way (D11; `presenter/bars.rs`,
 //! `Bars.kt`): Material's top app bar and its navigation bar, each a picture
 //! of its own in a view of its own over the page. Their statement is taken
 //! with each stream and not on the channel, so a bar and the page under it

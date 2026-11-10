@@ -1,4 +1,4 @@
-//! Typed props replace only the snapshot entry's root slot.
+//! Typed props replace only the snapshot entry's root slot (LLP 1126 D2).
 use exact_plan::{Plan, TypeKind, TypesId, Value};
 use exact_runner::Carried;
 

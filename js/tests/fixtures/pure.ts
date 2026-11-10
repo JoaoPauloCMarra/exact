@@ -248,8 +248,8 @@ export function exercise(source: string): string {
     return JSON.stringify({present:'__exact_ibex2_abort_hooks' in globalThis,own:typeof hook?.own,subscribe:typeof hook?.subscribe,
       headersHooks:['__exact_ibex2_headers_hooks','__ibex2_headers_hooks'].some(name=>name in globalThis)});
   }
-  // Intl.NumberFormat as the browser formats it (Hermes on macOS prints
-  // `9,274,743` for compact): compact in its displays,
+  // Intl.NumberFormat as the browser formats it (x2apps stocks #3: Hermes
+  // on macOS printed `9,274,743` for compact): compact in its displays,
   // currency and percent, each in a few locales.
   if(source==='intl') {
     const values=[0,-0,0.5,0.0123,1,12,999,999.9,1000,1234,1250,9999,12345,99999,123456,999999,1e6,1234567,9274743,99999999,543578062292.7,1e12,1.5e13,-2500,-9274743,1e15];
@@ -300,7 +300,7 @@ export function exercise(source: string): string {
       out[locale+' resolved']=[new Intl.NumberFormat(locale,{notation:'compact'}).resolvedOptions().notation as string];
     }
     // A half rounds away from zero, from the number's shortest digits
-    // (Apple's engine rounds USD 0.825 to even, `$0.82`), in each
+    // (X72: Apple's engine rounded USD 0.825 to even, `$0.82`), in each
     // style and digit option, and by the formatter's roundingMode.
     const halves=[0.825,1.005,2.675,0.125,-0.825], usd={style:'currency',currency:'USD'} as const;
     const format=(options:object,v:number)=>{try{return new Intl.NumberFormat('en-US',options).format(v);}catch(e){return (e as Error).name;}};

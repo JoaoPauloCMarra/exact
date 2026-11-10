@@ -1,4 +1,4 @@
-// Synthetic conformance plan: localized strings and the page's
+// Synthetic conformance plan: localized strings (LLP 1060) and the page's
 // facts. The agent's locale is en-US, which reads the en-US table, a
 // translation that lags the base (a missing key reads `en`'s). exactTime's
 // resolvedLocale names that table, and formatLocale is the locale (the agent

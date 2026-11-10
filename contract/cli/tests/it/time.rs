@@ -1,6 +1,6 @@
-//! The date is a host fact: unknown (0) at bake and
+//! @ref LLP 1027.000.000 — the date is a host fact: unknown (0) at bake and
 //! boot, then one commit when the host says it; refused when implausible.
-//! And tasks that wait for state, below.
+//! And tasks that wait for state (LLP 1092 D7–D11), below.
 use exact_kernel::Kernel;
 use exact_runner::{DataError, DataSource, Runner, RunnerError, Value};
 
@@ -224,7 +224,7 @@ fn the_format_locale_answers_the_locale_until_a_host_tells_one() {
 
 /// Euxy's library: a store-reading source passed the date after `with`,
 /// whose answer stamps it. The bake's date is unknown (zero), so its answer
-/// is left out of the plan: a fresh install's first
+/// is left out of the plan (LLP 1027.000.000 D2): a fresh install's first
 /// frame shows the placeholder, never patterns stamped at 1970, and the
 /// device's source is asked with the launch's date once it is ready. A
 /// resource that reads the date through a derive, or by its offset, is left
@@ -499,7 +499,7 @@ fn the_launch_seed_arrives_as_a_host_fact_and_nothing_else_is_one() {
         .set_place("en-GB", "Europe/London", Some(123_456_789.0))
         .unwrap()
         .is_none());
-    // Below 2^32: a seed past it is refused, not wrapped.
+    // Below 2^32 (LLP 1116.005 D5): a seed past it is refused, not wrapped.
     for bad in [
         -1.0,
         0.5,
@@ -523,7 +523,7 @@ fn the_launch_seed_arrives_as_a_host_fact_and_nothing_else_is_one() {
 }
 
 // ---------------------------------------------------------------- gated tasks
-// A task that exists while its gate holds, restarted
+// @ref LLP 1092 D7–D11 — a task that exists while its gate holds, restarted
 // by a new key; nothing runs when the gate changes.
 
 /// Answers `flag()` with its field, `items()` with one row, `later()` with a
@@ -706,7 +706,7 @@ fn a_boot_gate_reads_a_derive_over_a_baked_answer() {
     assert_eq!(gated(src, Gated { flag: false }).timer_due_ms(), None);
 }
 
-/// An `after` fires at its deadline exactly, so an action that
+/// D8: an `after` fires at its deadline exactly, so an action that
 /// re-tests it with a strict `>` does nothing; one that clears clears.
 #[test]
 fn an_after_fires_at_its_deadline_so_a_strict_retest_does_nothing() {
@@ -826,7 +826,7 @@ fn a_gate_armed_inside_an_advance_fires_within_it() {
     assert_eq!(num(&r, "n"), 1.0, "armed at 100, fired at 150");
 }
 
-/// The seek rule: one `advance(60_000)` equals sixty `advance(1_000)`s,
+/// D10's seek rule: one `advance(60_000)` equals sixty `advance(1_000)`s,
 /// with a gate that turns on and off and a key that re-arms on the way.
 #[test]
 fn one_long_advance_equals_sixty_short_ones() {
@@ -863,7 +863,7 @@ fn one_long_advance_equals_sixty_short_ones() {
     assert!(num(&long, "m") > 5.0, "the gate cycled");
 }
 
-/// The driver's case: a gated tick sends; the reply's `then` clears
+/// The driver's case (D10): a gated tick sends; the reply's `then` clears
 /// the gate. A jump stops at the commit that hands out the request and
 /// lands its reply first, so `clock +60000` and sixty `clock +1000` stop
 /// together.
@@ -916,7 +916,7 @@ component App
     }
 }
 
-/// The gate step is on the settlement path, inside its rollback. A
+/// D8: the gate step is on the settlement path, inside its rollback. A
 /// key that refuses a row action's commit leaves the row slot it wrote and
 /// the request it sent unapplied.
 #[test]
@@ -992,7 +992,7 @@ fn a_task_gate_parses_in_three_forms_and_lowers_to_plan_code() {
     assert_eq!(e.id, "syntax-task-start");
 }
 
-/// A gated task's refusals, each message whole.
+/// D9's refusals, each message whole.
 #[test]
 fn a_gate_takes_a_bool_a_key_a_scalar_and_neither_reads_the_clock() {
     let src = |gate: &str| {
@@ -1031,7 +1031,7 @@ fn a_gate_takes_a_bool_a_key_a_scalar_and_neither_reads_the_clock() {
     contract::compile(&src("when toast != \"\" key=n")).unwrap();
 }
 
-/// `now()` is deleted, not deprecated: wherever an
+/// @ref LLP 1109 D1 — `now()` is deleted, not deprecated: wherever an
 /// expression may call it, it is refused at its own span with both repairs
 /// in one sentence, and an app's `fn now` still shadows nothing away.
 #[test]

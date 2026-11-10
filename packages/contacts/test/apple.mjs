@@ -1,8 +1,8 @@
-// @exact/contacts' conformance suite on Apple: the fixture app built for
-// an iOS simulator or macOS and driven by the agent with the
-// implementation bound (`--bind contacts`), so the Contacts framework
-// answers and not the agent's address book. It never reads this Mac's own
-// contacts:
+// @exact/contacts' conformance suite on Apple (LLP 1133.018 §11, §14 stage
+// 2): the fixture app built for an iOS simulator or macOS and driven by the
+// agent with the implementation bound (`--bind contacts`), so the Contacts
+// framework answers and not the agent's address book. It never reads this
+// Mac's own contacts:
 //
 // - iOS: the simulator's own address book (a new simulator's six sample
 //   contacts), its access set by `xcrun simctl privacy`, the host's own
@@ -93,7 +93,7 @@ for (const host of hosts.length ? hosts : ['ios', 'macos']) {
       await s.type('search', 'ZZZ');
       const none = await until(s, 'walk', (t) => t === ' 1');
       check(where, 'no match: one empty page', none === ' 1', JSON.stringify(none));
-      // The page measurements: each read's time off the main thread.
+      // D6's page measurements: each read's time off the main thread.
       const lines = (await s.logs())?.lines ?? [];
       console.log(`NOTE ${where}: ${lines.filter((l) => /page queryContacts .* in \d+ ms/.test(l)).map((l) => l.replace(/^.*page /, '')).join('; ')}`);
     } finally {

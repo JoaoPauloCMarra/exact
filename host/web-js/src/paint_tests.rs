@@ -698,9 +698,9 @@ impl exact_runner::DataSource for ManyItems {
     }
 }
 
-/// After `lower-symbol-tint`, on this target too a symbol's own `-exact-tint-color` is no paint of
+/// theme2 2026-10-23 (after `lower-symbol-tint`): on this target too a symbol's own `-exact-tint-color` is no paint of
 /// it: its class says `currentcolor`, a state's row folded under it, which symbols.js's mask paints in its `color`; a native
-/// button's face keeps its tint, as a raster does.
+/// button's face keeps its tint (LLP 1115 D4), as a raster does.
 #[test]
 fn a_symbols_own_tint_is_its_colour_here_too_a_states_as_well() {
     let plan = contract::compile(

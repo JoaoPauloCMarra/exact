@@ -1,5 +1,5 @@
 //! Rust's side of the data seam, derived from the plan's types as
-//! `typescript` derives TypeScript's: a data crate builds
+//! `typescript` derives TypeScript's (LLP 1054.000 R4): a data crate builds
 //! its records from these structs, so a field's position is the compiler's,
 //! not a comment's. Two same-typed fields swapped in a hand-written
 //! `Value::record` pass the runner's shape check; a named field cannot swap.

@@ -76,8 +76,8 @@ shape Tags
   session: number
   items: string[]
 // What the reader pressed, by author (app.ts `follows`): every view of one
-// reads its state through this, so a press shows at once and asks only this.
-// A favourite is joined into the articles themselves (app.ts
+// reads its state through this, so a press shows at once and asks only this
+// (LLP 1058 P5). A favourite is joined into the articles themselves (app.ts
 // `joined`).
 shape Follow
   username: string
@@ -122,8 +122,8 @@ component RealWorld
   state tagInput = ""
   state commentDraft = ""
   mutation auth as shape Auth refreshes me, follows then signedIn
-  // A mutation per kind of write, each refreshing what that write changes:
-  // a favorite the list and the article, which app.ts
+  // A mutation per kind of write, each refreshing what that write changes
+  // (LLP 1058 P5): a favorite the list and the article, which app.ts
   // answers from what it has, a follow its presses, a comment the thread,
   // a publish or a delete the lists and the article.
   mutation change as shape Change refreshes feed, post then changed
@@ -192,9 +192,10 @@ component RealWorld
     send commented = deleteComment(target, id)
   action removeTag(tag: string)
     send tagEdit = removeTag(editorSession, editorTags, tag)
-  // An answer runs its mutation's `then` once it lands, which
+  // An answer runs its mutation's `then` once it lands (LLP 1016.001), which
   // redirects the way the spec asks: signed in → home; published → the
-  // article; deleted → home. Each checks the answer before it navigates.
+  // article; deleted → home. LLP 1038 §7: "an action checks … and applies
+  // replace".
   action signedIn
     match auth
       case some(a)
@@ -251,7 +252,7 @@ component RealWorld
       // tabs, not the page.
       if current.name == "home" or current.name == "tag"
         column navigationKey=`${current.id}` position="absolute" inset=0 overflow-y="auto" testId=`page-${current.name}`
-          // Native routes own their content.
+          // @ref LLP 1123 D2 — native routes own their content.
           Header(me=me, current=current, go=go)
           head title="Home — Conduit"
           HomePage(
@@ -272,7 +273,7 @@ component RealWorld
       // screens under its top: the navigation root shows the one whose key
       // is `current.id` and hides the rest and makes them inert. So each
       // entry's page, and the drafts its components hold (a child's state
-      // lives as long as its instance), survives Back.
+      // lives as long as its instance, LLP 1017 P4c), survives Back.
       for e in stack(nav) key = e.id
         if e.name != "home" and e.name != "tag"
           column navigationKey=`${e.id}` position="absolute" inset=0 overflow-y="auto" testId=`page-${e.name}`

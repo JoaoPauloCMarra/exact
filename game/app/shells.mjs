@@ -57,7 +57,7 @@ export function gameDefaults(dir) {
 }
 
 // A game without logic/Cargo.toml gets this generated member: its sources stay
-// where the author wrote them.
+// where the author wrote them. @ref llp/1046.003-game-engine-as-built.explainer.md#one-sdk-lock-2026-09-23
 function logicManifest(dir, crate) {
   const logic = resolve(dir, 'logic'), targets = [];
   // Cargo can reuse dep-info from another workspace sharing target/. Absolute
@@ -74,7 +74,8 @@ function logicManifest(dir, crate) {
   return `# Generated from ../../logic by the game bake. A game that adds dependencies\n# writes logic/Cargo.toml instead (game/README.md).\n[package]\nname = "${crate}"\nversion.workspace = true\nedition.workspace = true\nlicense.workspace = true\npublish = false\nautobins = false\nautoexamples = false\nautotests = false\nautobenches = false\n\n[lib]\npath = ${JSON.stringify(resolve(logic, 'src/lib.rs'))}\n${targets.join('')}\n[dependencies]\nexact-game.workspace = true\n${hasArt(dir) ? '\n# sim_with_art! bakes art/ in memory for the hostless tests.\n[dev-dependencies]\nexact-game-bake.workspace = true\n' : ''}`;
 }
 
-// GPU-only authored hooks: the game.render crate.
+// @ref LLP 1046.008#b-authored-presentation-crate — GPU-only authored hooks (renamed
+// game.render by the 2026-10-04 amendment).
 function renderDeclaration(dir, render) {
   if (render === undefined) return;
   const rustPath = value => typeof value === 'string' && /^[A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*$/.test(value);
@@ -131,7 +132,7 @@ export function gameShells(dir, game, workspace) {
   const {crate, type, data, render} = app.game, name = crate.slice(0, -'-logic'.length);
   // Reject authored declaration errors before touching even an old generated workspace.
   if (app.game.presentation !== undefined) {
-    throw new Error('game.presentation is now game.render: rename the key, move presentation/ to render/, name the crate <name>-render and rename its "type" to "hooks" (amendment of 2026-10-04)');
+    throw new Error('game.presentation is now game.render: rename the key, move presentation/ to render/, name the crate <name>-render and rename its "type" to "hooks" (LLP 1046.008, amendment of 2026-10-04)');
   }
   const renderDir = renderDeclaration(dir, render);
   const root = resolve(dir, '.shells');
@@ -324,7 +325,7 @@ fn main() {
         }
     };
     publish("../surfaces.json", serde_json::json!({name: arguments}));
-    // The keys \`Actions\` bind, for the Contract bake's shortcut warning.
+    // The keys \`Actions\` bind, for the Contract bake's shortcut warning (LLP 1132 D11).
     let actions = <Logic as Game>::actions();
     let mut keys = std::collections::BTreeMap::<&str, Vec<&str>>::new();
     for (code, action) in actions.keys() {
@@ -357,7 +358,7 @@ ${bakeArt ? `    exact_game_bake::bake_art(${JSON.stringify(relative(shell, appD
   return game.crate.slice(0, -'-logic'.length);
 }
 
-// One SDK lock:
+// One SDK lock (@ref llp/1046.003-game-engine-as-built.explainer.md#one-sdk-lock-2026-09-23):
 // every generated game workspace whose code adds no packages resolves against
 // game/app/shells.lock, the lock of the union of every shell's dependencies.
 // A game that adds packages captures its own Cargo.lock with --update-lock.
@@ -382,7 +383,7 @@ export function withRootPins(sdk, root = existsSync(resolve(gameRoot, '../Cargo.
     .filter(block => (/^source = "registry\+/m.test(block) || !/^source = /m.test(block)) && !held.has(seriesId(block)));
   return pins.length ? `${sdk.trimEnd()}\n\n${pins.join('\n\n')}\n` : sdk;
 }
-/** `lock`'s starting point for a game with its own lock: the
+/** `lock`'s starting point for a game with its own lock (LLP 1046.011 D2): the
  * SDK lock decides every name and series it holds, a same-series bump included,
  * and the game's lock keeps the rest (its own packages, git and path ones too),
  * so Cargo prefers exactly these versions and fetches only what they lack. */
@@ -408,7 +409,7 @@ export function outsideSdkLock(derived, sdk, members) {
 // A lock's versions by package name.
 const lockVersions = text => (text ? Bun.TOML.parse(text).package ?? [] : [])
   .reduce((map, pkg) => map.set(pkg.name, [...(map.get(pkg.name) ?? []), pkg.version].sort()), new Map());
-/** What exact2's move did to a game's captured lock, named
+/** What exact2's move did to a game's captured lock (LLP 1046.011 D2), named
  * from the SDK lock. exact2's own crates are the path packages (no source) the
  * SDK lock holds. `added`: what they now depend on that the captured lock
  * lacks, with everything that pulls in. `updated`: each registry package they
@@ -492,7 +493,7 @@ const lockCommand = dir => {
   const text = readFileSync(runner, 'utf8');
   return /^\s*lock: \[/m.test(text) || text.includes('scripts/app-cli.mjs') ? `\`bun exact.mjs lock\` in ${dir}` : `\`bun exact.mjs update\`, then \`bun exact.mjs lock\`, in ${dir}`;
 };
-/** The first line of a refused captured lock, when Cargo says
+/** The first line of a refused captured lock (LLP 1046.011 D2), when Cargo says
  * the lock needs updating (never for a crate merely missing from its cache). It
  * names what the SDK lock explains, best effort: "exact2 moved" only when
  * exact2's own crates gained dependencies the lock lacks. */
@@ -505,7 +506,7 @@ function ownDrift(dir, source, stderr) {
     : `This game's Cargo.lock no longer matches its dependencies${differs ? ` (against exact2's lock, ${differs})` : ''}`;
   return `${cause}. Refresh it with ${lockCommand(dir)}: it fetches what the graph needs (the network), resolves again and says what changed. An ordinary build never changes a captured lock.`;
 }
-/** A copied captured lock checked as the bake copies it: the
+/** A copied captured lock checked as the bake copies it (LLP 1046.011 D2): the
  * refusal's first line when the locked graph says the lock needs updating, else
  * null. Plain Cargo in .shells/ would re-resolve such a lock silently. */
 export function capturedLockDrift(dir, {source = gameRoot, env = process.env} = {}) {
@@ -545,7 +546,7 @@ export function prepareGame(dir, game, source = gameRoot, {updateLock = false, f
   const metadata = locked => (locked ? lockedMetadata : cargoMetadata)(root, ['--offline', ...(locked ? ['--locked'] : []), ...(target ? ['--filter-platform', target] : [])], env);
   const refused = result => new Error(`game Cargo graph: ${result.stderr || result.error?.message || ''}${result.status === null ? ` (cargo metadata ended by ${result.signal})` : ''}\nCrates missing from Cargo's cache, the lock unchanged: cargo fetch --manifest-path ${JSON.stringify(resolve(root, 'Cargo.toml'))}\nA dependency change (or both): ${lockCommand(dir)} fetches, resolves again and captures this game's lock`);
   if (fetch) {
-    // `lock`: the SDK lock's versions seed the resolution (a game
+    // `lock` (LLP 1046.011 D2): the SDK lock's versions seed the resolution (a game
     // with its own lock keeps its own packages; one without starts from the SDK
     // lock, as its build does), and the network brings only what they lack.
     const lockFile = sdkLockFile(source), sdk = lockFile && withRootPins(readFileSync(lockFile, 'utf8'));
@@ -567,7 +568,7 @@ export function prepareGame(dir, game, source = gameRoot, {updateLock = false, f
   if (updateLock || existsSync(own)) {
     const result = metadata(!updateLock);
     if (result.status !== 0) {
-      // Said first when exact2 moved under a captured lock.
+      // Said first when exact2 moved under a captured lock (LLP 1046.011 D2).
       const drift = updateLock ? null : ownDrift(dir, source, result.stderr);
       throw drift ? new Error(`${drift}\n${refused(result).message}`) : refused(result);
     }
@@ -595,7 +596,7 @@ A partial offline Cargo cache: cargo fetch --manifest-path ${JSON.stringify(reso
   return checked(result);
 }
 
-/** `bun exact.mjs lock`: fetch what the game's graph needs,
+/** `bun exact.mjs lock` (LLP 1046.011 D2): fetch what the game's graph needs,
  * resolve it again with the SDK lock's versions first, and say what moved. A
  * game that adds no packages keeps resolving against the SDK lock: it gains
  * no lock of its own. Never run by a build. */
@@ -616,7 +617,7 @@ export function refreshLock(dir, {source = gameRoot, env = process.env} = {}) {
 }
 
 /** The determinism lints (app/determinism/clippy.toml) on the game's logic
- * library; tests may time themselves. */
+ * library; tests may time themselves. @ref llp/1046.003-game-engine-as-built.explainer.md#determinism-lints-2026-09-23 */
 export function lintGame(dir, game, {env = process.env, render = true} = {}) {
   const result = spawnSync('cargo', ['clippy', '-p', game.crate, '--lib', '--locked', '--offline', '--quiet', '--',
     '-A', 'clippy::all', '-D', 'clippy::disallowed_methods', '-D', 'clippy::disallowed_types'], {cwd:resolve(dir, '.shells'), env, encoding:'utf8', maxBuffer:64 * 1024 * 1024});
@@ -685,7 +686,7 @@ export function sdkLock(source = gameRoot, {update = false, env = process.env} =
 
 /** Put the SDK lock's crates in Cargo's cache, as a game's offline bake reads
  * them (`exact setup`), or (`offline`) only say whether they are all there
- * (`setup --check`): an offline first build otherwise stops on a missing crate such as \`glam\`.
+ * (`setup --check`): the platformer's first build stopped on \`glam\` (its diary, R2).
  * The lock is the one a new game starts from, the root's pins included. */
 export function sdkFetch({offline = false, source = gameRoot, env = process.env} = {}) {
   const path = sdkLockFile(source);

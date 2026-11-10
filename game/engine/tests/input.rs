@@ -30,7 +30,7 @@ impl Game for Fire {
     }
 }
 
-/// A shooter's quick tap: both edges land in one tick. `held` never sees it;
+/// The Rivals case: both edges of a tap land in one tick. `held` never sees it;
 /// `pressed` does, with no trigger declared.
 #[test]
 fn a_same_tick_tap_is_pressed_but_never_held() {
@@ -472,8 +472,8 @@ impl Game for Rest {
     }
 }
 
-/// A pending hold is work `clock settle` waits for, and a world whose hold
-/// started earlier is a different world.
+/// LLP 1128 I2: a pending hold is work `clock settle` waits for, and a world
+/// whose hold started earlier is a different world (I1).
 #[test]
 fn a_pending_hold_keeps_the_world_unsettled_and_is_hashed() {
     let mut sim = started(Sim::<Rest>::new(()).unwrap());
@@ -516,7 +516,7 @@ fn a_pending_hold_keeps_the_world_unsettled_and_is_hashed() {
     assert!((1807..1900).contains(&tick), "settled at {tick}");
 }
 
-/// A rebinding applied next tick is pending world state: two worlds with
+/// A rebinding applied next tick is pending world state (I1): two worlds with
 /// the same keys, the same Bindings and empty queues, one of which rebound
 /// this tick, differ in hash, and a restore releases it as the original does.
 #[test]

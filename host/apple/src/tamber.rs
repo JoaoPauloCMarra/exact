@@ -1,4 +1,4 @@
-//! The binding core on the Apple hosts: what
+//! The binding core on the Apple hosts (LLP 1121 D12, stage 5): what
 //! `ExactTamber(view)` asks of a session, by token name, for a view.
 
 use super::Host;
@@ -47,7 +47,7 @@ impl<D: DataSource> Host<D> {
             }
         }
         out.push('}');
-        // Lengths in points, numbers, and fonts as a host draws
+        // Stage 6 G: lengths in points, numbers, and fonts as a host draws
         // them (the text size and Bold Text read).
         out.push_str(&tamber.measures_json(&request, place));
         out.push('}');

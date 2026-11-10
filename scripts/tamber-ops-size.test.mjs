@@ -1,7 +1,7 @@
 // A client's operations in one request (tamber/1.17, `tamber-ops-size`,
 // scripts/tamber-ops-limit.mjs) against a held import past the limit: its
 // accept and revert are the server's own; a client sending as many is
-// refused (no re-hold exemption, after edit-held).
+// refused (theme2's ruling: no re-hold exemption, after edit-held).
 import { afterAll, beforeAll, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';

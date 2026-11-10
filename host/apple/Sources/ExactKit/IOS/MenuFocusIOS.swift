@@ -79,7 +79,8 @@ final class MenuFocus {
     /// Navigation bars' touches set the focus aside while their items hold a
     /// menu, and the next touch on the page brings it back (`BarTouch`): one
     /// recognizer per bar, and one on the page the bar is over: the
-    /// viewport, or the presentation the bar's navigation is mounted in.
+    /// viewport, or the presentation the bar's navigation is mounted in
+    /// (LLP 1123 D2).
     func watch(_ bar: UINavigationBar) {
         if !(bar.gestureRecognizers ?? []).contains(where: { $0 is BarTouch }) { bar.addGestureRecognizer(BarTouch(focus: self, bar: true)) }
         let page = presenter?.port(of: bar)

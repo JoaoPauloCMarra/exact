@@ -7,13 +7,14 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// State parts on UIKit and AppKit: `:active` arrives as the press paint,
-/// its opacity an absolute target (`press_opacity_to`) the press eases to
-/// from what shows, with no platform dim; rows it doesn't name show the
-/// base, a base the engine moves while pressed included. On the Mac a
-/// `:hover` and a `:focus-visible` look stand in at once while they hold
-/// (the focus's over the hover's), their opacity an additive layer opacity,
-/// under the press's paint; a disabled node takes none.
+/// State parts on UIKit and AppKit (LLP 1121 D8, stage 8 B2): `:active`
+/// arrives as the press paint (LLP 1061 D7), its opacity an absolute target
+/// (`press_opacity_to`) the press eases to from what shows, with no platform
+/// dim; rows it doesn't name show the base, a base the engine moves while
+/// pressed included. On the Mac a `:hover` and a `:focus-visible` look stand
+/// in at once while they hold (the focus's over the hover's), their opacity
+/// an additive layer opacity, under the press's paint; a disabled node takes
+/// none.
 ///   bun host/apple/build.mjs --test --ios   (and --test for the Mac)
 final class StateLooksTests: XCTestCase {
     #if os(iOS)

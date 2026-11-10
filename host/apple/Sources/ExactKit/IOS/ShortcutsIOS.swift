@@ -1,4 +1,4 @@
-// App-declared aria-keyshortcuts on iPadOS: a hardware
+// App-declared aria-keyshortcuts on iPadOS (gallery F18): a hardware
 // keyboard's chord presses the button that declares it, as on the web and
 // macOS (ShortcutsMac). The session's view offers one UIKeyCommand per
 // chord, and takes the focus when nothing else holds it so the commands are
@@ -87,7 +87,7 @@ extension Presenter {
     /// One command per chord the buttons declare, those a text field's
     /// typing would take left out while one has the focus. Each carries its
     /// button's name as its title, so holding ⌘ on an iPad lists it, as a
-    /// hand-built app's commands are listed; a button
+    /// hand-built app's commands are listed (LLP 1115.000 D11.6); a button
     /// with no name has no title and is not listed.
     func shortcutCommands(_ action: Selector) -> [UIKeyCommand] {
         var seen = Set<String>(), commands: [UIKeyCommand] = []

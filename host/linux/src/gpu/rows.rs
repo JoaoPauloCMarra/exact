@@ -1,4 +1,4 @@
-//! The control arm retains Vello scene fragments.
+//! The control arm retains Vello scene fragments. @ref LLP 1149 D4, D15.
 use super::*;
 use std::{collections::HashMap, rc::Rc};
 use vello::kurbo::Shape as _;

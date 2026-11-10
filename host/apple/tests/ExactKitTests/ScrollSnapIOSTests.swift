@@ -3,7 +3,7 @@ import UIKit
 import XCTest
 @testable import ExactKit
 
-/// Horizontal snap: `scroll-snap-align: start` rests an area's
+/// LLP 1008's horizontal snap: `scroll-snap-align: start` rests an area's
 /// start at the viewport's, `end` its end, and an area wider than the
 /// viewport is free while it covers it (CSS Scroll Snap §5.2.2).
 final class ScrollSnapIOSTests: XCTestCase {

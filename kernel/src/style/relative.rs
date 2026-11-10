@@ -1,6 +1,6 @@
 //! CSS's font-relative lengths, `rem` and `em` (CSS Values 4 §6.1), a
-//! platform text style as a `font-size` (`-exact-title1`), and
-//! the hairline, one device pixel (`-exact-hairline`).
+//! platform text style as a `font-size` (`-exact-title1`, LLP 1115 D3), and
+//! the hairline, one device pixel (`-exact-hairline`, LLP 1115.000 D10.3).
 //!
 //! A row authored as `1.5rem` or `0.8em` keeps what was written here, beside
 //! the row, and the row itself always holds the pixels it resolves to — what
@@ -19,6 +19,8 @@
 //! ([`crate::Kernel::set_display_scale`]) and which is 1 until it does: a
 //! layout input, so a hairline border is one device pixel in layout and in
 //! paint on every host, where an authored `0.5` is one only at 2x.
+//! @ref LLP 1069.000 D3
+//! @ref LLP 1115.000 D10.3
 
 use crate::error::StyleValueError;
 use crate::generated::{StyleCodec, StyleId, StyleProps};
@@ -40,7 +42,7 @@ pub enum Unit {
     /// One device pixel (`-exact-hairline`): 1 px over the display's scale.
     Hairline,
     /// A length ramp's length at the root font size, by its index in
-    /// [`crate::LENGTH_RAMPS`]: a platform metric that grows with
+    /// [`crate::LENGTH_RAMPS`] (LLP 1137): a platform metric that grows with
     /// the text size as a text style does.
     Ramp(u8),
     /// `min(<text style>, <length>)` on a `font-size`: the style's size at
@@ -97,6 +99,7 @@ pub fn device_pixel(scale: f32) -> f32 {
 
 /// A named length's unit by its written name, `-exact-<name>` of the
 /// schema's `lengths`, ASCII case-insensitively, as CSS matches keywords.
+/// @ref LLP 1115.000 D10.3
 pub fn named_length(name: &str) -> Option<Unit> {
     let name = name.trim_matches(['\t', '\n', '\u{c}', '\r', ' ']);
     let exact = name
@@ -118,6 +121,7 @@ pub fn named_length(name: &str) -> Option<Unit> {
 /// A text style's id by its written name: `-exact-<name>` or its WebKit
 /// alias, ASCII case-insensitively, as CSS matches keywords. An Exact role's
 /// trailing number may follow a hyphen: `-exact-title-1` is `-exact-title1`.
+/// @ref LLP 1115 D3, LLP 1116.007 D3.2
 pub fn text_style(name: &str) -> Option<u8> {
     let name = name.trim_matches(['\t', '\n', '\u{c}', '\r', ' ']);
     let exact = name
@@ -149,8 +153,8 @@ fn same_role(written: &str, name: &str) -> bool {
 pub fn column_index(column: crate::style::metrics::Column) -> usize {
     use crate::style::metrics::Column;
     match column {
-        // Android's type is the device's reported ramp, never a table's:
-        // its look reads the web's until that lands.
+        // Android's type is the device's reported ramp, never a table's
+        // (LLP 1115.001.001 D2.5): its look reads the web's until that lands.
         Column::Web | Column::Material | Column::Terminal => 0,
         Column::Ios => 1,
         Column::Mac => 2,
@@ -158,7 +162,7 @@ pub fn column_index(column: crate::style::metrics::Column) -> usize {
     }
 }
 
-/// Text style `id`'s weight in `column`, CSS's number.
+/// Text style `id`'s weight in `column`, CSS's number (LLP 1115.000 D12.2).
 pub fn text_style_weight(id: u8, column: crate::style::metrics::Column) -> u16 {
     crate::TEXT_STYLES
         .get(usize::from(id))
@@ -166,7 +170,7 @@ pub fn text_style_weight(id: u8, column: crate::style::metrics::Column) -> u16 {
 }
 
 /// Text style `id`'s leading in `column`: a line height over its size, or
-/// `normal`, the face's own.
+/// `normal`, the face's own (LLP 1115.000 D12.2).
 pub fn text_style_leading(id: u8, column: crate::style::metrics::Column) -> crate::LineHeight {
     crate::TEXT_STYLES
         .get(usize::from(id))
@@ -175,7 +179,7 @@ pub fn text_style_leading(id: u8, column: crate::style::metrics::Column) -> crat
 }
 
 /// The size of text style `id` where the root font size is `root`: the
-/// schema's ramp read at `root`. Between two of its body
+/// schema's ramp read at `root` (LLP 1115 D3). Between two of its body
 /// sizes it interpolates; below the first or above the last, the nearest
 /// row scales with the root.
 pub fn text_style_size(id: u8, root: f32) -> f32 {
@@ -388,7 +392,7 @@ pub(crate) fn of(id: StyleId, value: &StyleValue) -> Result<Option<(Unit, f32)>,
 
 /// A `<number>px` text on a pixel row that reads a bare number as pixels
 /// (`font-size="14px"`, `letter-spacing="0.5px"`): the number, as CSS takes
-/// both spellings. A dimension or line-height row reads its
+/// both spellings (LLP 1102 §3.10). A dimension or line-height row reads its
 /// own text; any other row is left to its conversion, which refuses it. A
 /// negative length on a row CSS refuses one on is refused, as `rem` is.
 pub(crate) fn pixels_text(
@@ -444,7 +448,7 @@ type PreparedLength = (Option<(Unit, f32)>, Option<StyleValue<'static>>);
 /// value for each parser so its grammar and refusal stay unchanged.
 pub(crate) fn prepare(id: StyleId, value: &StyleValue) -> Result<PreparedLength, StyleValueError> {
     // A text style is a keyword, so no last byte tells it: every name and
-    // alias begins `-`, which only a negative length shares.
+    // alias begins `-` (LLP 1115 D3), which only a negative length shares.
     if let StyleValue::Text(text) = value {
         let dashed = text
             .trim_start_matches(['\t', '\n', '\u{c}', '\r', ' '])
@@ -551,7 +555,7 @@ mod tests {
         );
     }
 
-    /// A length ramp is its length at the root font size, read
+    /// LLP 1137: a length ramp is its length at the root font size, read
     /// along the body sizes as a text style's size is, and is no font's size.
     #[test]
     fn a_length_ramp_is_its_length_at_the_root_font_size() {
@@ -656,7 +660,7 @@ mod tests {
             "-apple-system-nothing",
         ];
         // Every text style by its name and its alias: a keyword, which no
-        // unit's last byte tells.
+        // unit's last byte tells (LLP 1115 D3).
         let styles = crate::TEXT_STYLES
             .iter()
             .flat_map(|s| [format!("-exact-{}", s.name), s.alias.to_string()])
@@ -703,7 +707,7 @@ mod tests {
             "an Exact role is written -exact-"
         );
         assert_eq!(text_style("-exact-title9"), None);
-        // Some builders hyphenate the number.
+        // LLP 1116.007 D3.2: round 9's builders hyphenated the number.
         for (written, name) in [
             ("-exact-title-1", "-exact-title1"),
             ("-exact-title-2", "-exact-title2"),

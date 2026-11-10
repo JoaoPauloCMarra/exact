@@ -1,4 +1,4 @@
-//! Edit operations: every operation on the
+//! Edit operations (LLP 1121 stage 3, commit 2): every operation on the
 //! clone's formatted design is a small diff in fmt's layout, and its inverse
 //! gives the bytes back; a refused edit says why.
 
@@ -851,7 +851,7 @@ fn plan_refolds_the_synthetic_tokens_and_a_lost_one_is_rebuild() {
     assert!(to_profile.is_err() || to_profile.unwrap().class == exact_tamber::Class::Rebuild);
 }
 
-/// A length or number value edit is live, as a colour's
+/// LLP 1121 stage 6 B: a length or number value edit is live, as a colour's
 /// is; one that changes the token's kind (written or inferred) is a rebuild,
 /// since it moves which rows may name it.
 #[test]
@@ -901,9 +901,9 @@ fn a_length_or_number_edit_is_live_and_a_kind_change_rebuilds() {
     );
 }
 
-/// A type token's style, weight, size or line height changing is
+/// Stage 6 C: a type token's style, weight, size or line height changing is
 /// live; the longhands it writes changing, or its family, or a family
-/// token's stack, rebuilds.
+/// token's stack, rebuilds (the lead's ruling, D6).
 #[test]
 fn a_type_value_edit_is_live_and_a_longhand_or_family_change_rebuilds() {
     let files = vec![(
@@ -953,9 +953,9 @@ fn a_type_value_edit_is_live_and_a_longhand_or_family_change_rebuilds() {
     assert_eq!(class("family.mono", "monospace"), Rebuild);
 }
 
-/// The plan's retention decides the class: a token the plan does not keep
-/// moves nothing, one it keeps added, gone or starting to vary moves its
-/// retained shape; `exports` bounds what an app
+/// D7's retention decides the class (theme2's ruling, LLP 1121 stage 5): a
+/// token the plan does not keep moves nothing, one it keeps added, gone or
+/// starting to vary moves its retained shape; `exports` bounds what an app
 /// with bindings keeps.
 #[test]
 fn the_class_asks_the_plans_retention() {
@@ -1016,7 +1016,7 @@ fn the_class_asks_the_plans_retention() {
         "a kept token starting to vary"
     );
     // A token a colour keyframe names is folded into the plan's keyframes:
-    // its value is structure, another's is not.
+    // its value is structure (rt1 round 2), another's is not.
     let value = |name: &str| {
         vec![(
             "app.tamber".to_string(),
@@ -1066,7 +1066,7 @@ fn the_class_asks_the_plans_retention() {
         "a role override is always kept"
     );
     // A computed length or number row may name any token of those kinds,
-    // a computed colour row any colour token.
+    // a computed colour row any colour token (stage 6 B's rule).
     let measured = exact_tamber::Retention {
         computed_measure: true,
         ..Default::default()

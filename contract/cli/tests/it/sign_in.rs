@@ -1,9 +1,10 @@
-//! `@exact/sign-in` under its declared substitute: FedCM's `identity` is a
-//! member of `@exact/passkeys`' `get`, held to the providers' grants and
-//! FedCM's rules before any ticket, and answered through the one `credential`
-//! ticket, whose `args` name what `packages/sign-in/test/idp.mjs` signs over.
-//! The tests run on this Mac, whose cells are macOS's: Google through the
-//! host's session, and Apple only with a profile, which `prefer` stands in for.
+//! `@exact/sign-in` under its declared substitute (LLP 1133.014 §9): FedCM's
+//! `identity` is a member of `@exact/passkeys`' `get` (D10 item 1), held to
+//! the providers' grants and FedCM's rules before any ticket, and answered
+//! through the one `credential` ticket, whose `args` name what
+//! `packages/sign-in/test/idp.mjs` signs over. The tests run on this Mac,
+//! whose cells are macOS's (D3): Google through the host's session, and
+//! Apple only with a profile, which `prefer` stands in for.
 
 use exact_runner::{
     Answer, CallOrigin, DataError, DataSource, Dispatch, HoldAnswer, Outcome, Reply, Request,
@@ -240,9 +241,9 @@ fn json_of(outcome: Outcome) -> Json {
     serde_json::from_slice(&body).unwrap()
 }
 
-/// An active Google request is a member of passkeys' `get`,
+/// D10 item 1, §9: an active Google request is a member of passkeys' `get`,
 /// held under the one `credential` ticket whose args name the provider, the
-/// audience this target's token carries (the iOS client on Apple) and
+/// audience this target's token carries (the iOS client on Apple, D8) and
 /// the nonce; a typed credential answers the data code, and neither the
 /// journal nor `state` holds its token or handle.
 #[cfg(target_os = "macos")]
@@ -297,7 +298,7 @@ fn an_active_sign_in_is_a_member_of_get_and_a_credential_ticket() {
     assert_eq!(ceremony["outcome"], "answered");
 }
 
-/// What admission refuses before any ticket, each with its name.
+/// D1, D8: what admission refuses before any ticket, each with its name.
 #[cfg(target_os = "macos")]
 #[test]
 fn admission_refuses_by_fedcm_s_rules_and_the_grants() {
@@ -329,7 +330,7 @@ fn admission_refuses_by_fedcm_s_rules_and_the_grants() {
         (silent, "NotSupportedError", "silent"),
         (unknown, "NotSupportedError", "is no provider here"),
         (no_ios, "NotSupportedError", "needs apple.clientId"),
-        // A Mac build without a profile offers no Apple.
+        // A Mac build without a profile offers no Apple (D7).
         (
             apple,
             "NotSupportedError",
@@ -355,7 +356,7 @@ fn admission_refuses_by_fedcm_s_rules_and_the_grants() {
     assert_eq!(host.answered(&direct)["error"], "NotSupportedError");
 }
 
-/// A passive Apple request beside a passkey is one sheet where the
+/// D3, §9: a passive Apple request beside a passkey is one sheet where the
 /// target offers it (a Mac with a profile, by `prefer`); `cancel` then fails
 /// as passkeys' does, and an identity request alone fails `NetworkError`.
 #[cfg(target_os = "macos")]
@@ -380,7 +381,7 @@ fn a_passkey_and_passive_apple_share_one_ticket() {
     let args = &tickets[0].1;
     assert_eq!(args["options"]["challenge"], "Z2V0");
     assert_eq!(args["identity"]["mode"], "passive");
-    // Apple's audience natively is the app's bundle ID.
+    // Apple's audience natively is the app's bundle ID (D8).
     assert_eq!(
         args["identity"]["providers"][0]["audience"],
         "com.exact.authfixture"
@@ -397,7 +398,7 @@ fn a_passkey_and_passive_apple_share_one_ticket() {
         .answer_hold(ticket, &HoldAnswer::Choice("none".into()))
         .unwrap();
     assert_eq!(json_of(reply.recv().unwrap())["error"], "NetworkError");
-    // Google cannot share a sheet on Apple.
+    // Google cannot share a sheet on Apple (D3).
     let mut google_beside = both.clone();
     google_beside["args"]["identity"]["providers"][0]["configURL"] = json!(GOOGLE);
     google_beside["args"]["identity"]["providers"][0]["clientId"] =
@@ -406,7 +407,7 @@ fn a_passkey_and_passive_apple_share_one_ticket() {
         json!({ "clientId": "ios.apps.googleusercontent.com" });
     let answer = host.answered(&google_beside);
     assert_eq!(answer["error"], "NotSupportedError", "{answer}");
-    // A press's active request ends a held passive one with `AbortError`.
+    // A press's active request ends a held passive one with `AbortError` (D5).
     let passive = host.call(&alone);
     let active = host.call(&google("web.apps.googleusercontent.com"));
     assert_eq!(json_of(passive.recv().unwrap())["error"], "AbortError");
@@ -418,7 +419,7 @@ fn a_passkey_and_passive_apple_share_one_ticket() {
     drop(active);
 }
 
-/// A sign-in a tool's call starts fails
+/// D9, drive 8's stand-in: a sign-in a tool's call starts fails
 /// `person-required` with no ticket.
 #[test]
 fn a_tool_s_sign_in_is_refused_person_required() {
@@ -434,7 +435,7 @@ fn a_tool_s_sign_in_is_refused_person_required() {
     );
 }
 
-/// A credential answered after its mutation was superseded never
+/// D12: a credential answered after its mutation was superseded never
 /// reaches data code; its handle is disposed of by sign-in.
 #[cfg(target_os = "macos")]
 #[test]
@@ -457,7 +458,7 @@ fn a_dropped_sign_in_is_disposed_of_by_its_member() {
     assert!(data.0.lock().unwrap().is_empty(), "no data code read it");
 }
 
-/// Contract may not name the member, and two packages may
+/// D10 item 1, D12: Contract may not name the member, and two packages may
 /// not declare the same one.
 #[test]
 fn the_member_is_data_code_s_and_declared_once() {

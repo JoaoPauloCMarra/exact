@@ -1,5 +1,5 @@
 //! Logical Tab/arrow order through virtual rows, including rows not mounted.
-//! Every control remains reachable in document order.
+//! @ref LLP 1101 D6 — every control remains reachable in document order.
 use super::*;
 use exact_kernel::NodeType;
 

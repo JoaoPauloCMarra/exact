@@ -1,4 +1,4 @@
-//! Each session's role overrides, its own.
+//! Each session's role overrides, its own (LLP 1121 stage 5).
 use super::*;
 
 thread_local! {
@@ -164,7 +164,7 @@ fn a_boxed_gradient_carries_its_sessions_accent() {
     );
 }
 
-/// The binding core through the export's path: each
+/// The binding core through the export's path (LLP 1121 D12, stage 5): each
 /// runtime answers a token from its own design, a name its plan lacks is
 /// `null`, and `inputs` is the same until something it read moves.
 #[test]

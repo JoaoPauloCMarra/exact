@@ -1,7 +1,8 @@
-//! A native module's names, imported from its package's `exact.json`, called
-//! with keyword arguments and a platform's dotted words, compile to an ordinary
-//! source of one record. The package is the real `@exact/geolocation`, linked
-//! into the app's `node_modules` as a `file:` dependency installs it.
+//! LLP 1133.002 D13: a native module's names, imported from its package's
+//! `exact.json`, called with keyword arguments and a platform's dotted
+//! words, compile to an ordinary source of one record. The package is the
+//! real `@exact/geolocation`, linked into the app's `node_modules` as a
+//! `file:` dependency installs it.
 
 #[cfg(unix)]
 use std::os::unix::fs::symlink as symlink_dir;
@@ -184,11 +185,11 @@ fn logs(r: &exact_runner::Runner<NoData>) -> String {
     exact_runner::agent::handle(r, r#"{"op":"logs"}"#)
 }
 
-/// With no implementation bound, a module's source answers its declared
-/// default, or the agent's preferred value; `clear` returns it to the default;
-/// a value outside the source's shape is refused, and so is the permission's
-/// state, which `prefer permission` sets. Every name of a used interface is in
-/// the plan, read or not.
+/// LLP 1124 D7, D9: with no implementation bound, a module's source answers
+/// its declared default, or the agent's preferred value; `clear` returns it
+/// to the default; a value outside the source's shape is refused, and so is
+/// the permission's state, which `prefer permission` sets (§6). Every name
+/// of a used interface is in the plan, read or not.
 #[test]
 fn an_unbound_module_answers_its_default_or_the_preferred_value() {
     let app = App::new("runner");
@@ -275,11 +276,11 @@ fn answer(
     exact_runner::agent::answer(r, &request).unwrap().0
 }
 
-/// Permission through the agent's tickets: a send while `prompt` waits on a
-/// permission ticket; `allow` grants it (approximate, under the app's
+/// LLP 1133.002 §6 through the agent's tickets: a send while `prompt` waits
+/// on a permission ticket; `allow` grants it (approximate, under the app's
 /// approximate grant) and, with no position preferred, the send waits on a
-/// position ticket, whose typed answer answers it and is filled; `deny` and a
-/// later send fail `PERMISSION_DENIED`.
+/// position ticket, whose typed answer answers it and is filled; `deny`
+/// and a later send fail `PERMISSION_DENIED`.
 #[test]
 fn a_module_send_waits_on_the_agent_s_permission_and_position_tickets() {
     let app = App::new("tickets");
@@ -342,9 +343,9 @@ fn a_module_send_waits_on_the_agent_s_permission_and_position_tickets() {
     let _ = state;
 }
 
-/// A request's own `timeout` runs on the agent's clock. A position ticket fails
-/// `TIMEOUT` once the clock passes it, and is retired; `timeout=0` with no
-/// position preferred fails at once.
+/// LLP 1133.002 §6: a request's own `timeout` runs on the agent's clock. A
+/// position ticket fails `TIMEOUT` once the clock passes it, and is retired;
+/// `timeout=0` with no position preferred fails at once.
 #[test]
 fn a_position_ticket_times_out_on_the_agent_clock() {
     let app = App::new("timeout");
@@ -390,7 +391,7 @@ fn a_position_ticket_times_out_on_the_agent_clock() {
     );
 }
 
-/// Through the substitute, precise location for a task.
+/// LLP 1133.002 D10 through the substitute: precise location for a task.
 /// While `granted` and `approximate` the send waits on a `precision` ticket;
 /// `allow` raises `accuracy` and the send answers the status; declined, it
 /// answers the status unchanged, never a failure; once `precise`, at once.
@@ -450,8 +451,8 @@ fn a_precision_ticket_raises_the_status_or_answers_it_unchanged() {
     );
 }
 
-/// An app that reads or sends a module's name writes one of its interface's
-/// grant lines; with none, the compile says which.
+/// LLP 1133.002 D6, D13: an app that reads or sends a module's name writes
+/// one of its interface's grant lines; with none, the compile says which.
 #[test]
 fn a_module_without_its_grant_line_is_named() {
     let app = App::new("grant");
@@ -495,7 +496,7 @@ fn a_module_without_its_grant_line_is_named() {
 }
 
 /// `contract fmt` keeps a platform's word against its `=`, as it keeps a
-/// named argument's.
+/// named argument's (LLP 1133.002 D13).
 #[test]
 fn fmt_keeps_a_dotted_keyword_tight() {
     let src = format!(
@@ -509,9 +510,9 @@ fn fmt_keeps_a_dotted_keyword_tight() {
     );
 }
 
-/// A host that binds the extension sends its names to the native slot, the
-/// substitute set aside: no ticket, the module answers, and a call's options
-/// travel as written.
+/// LLP 1133.001 D4: a host that binds the extension sends its names to the
+/// native slot, the substitute set aside: no ticket, the module answers,
+/// and a call's options travel as written.
 #[test]
 fn a_bound_module_answers_through_the_native_slot() {
     use std::sync::{Arc, Mutex};
@@ -640,7 +641,7 @@ fn the_rust_binding_is_the_plans_modules_with_their_wire_names() {
     ] {
         assert!(rust.contains(expected), "{expected}\n---\n{rust}");
     }
-    // Rust has no synchronous form.
+    // Rust has no synchronous form (LLP 1133.002 D14).
     assert!(!rust.contains("Sync"), "{rust}");
     // A plan that calls no module has no binding.
     let none = App::new("rust-none");

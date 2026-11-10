@@ -1,4 +1,4 @@
-// The existing runtime and text engine, without a presenter.
+// @ref LLP 1126 D8 — the existing runtime and text engine, without a presenter.
 import Foundation
 import CoreText
 import CExact
@@ -76,7 +76,7 @@ public final class HeadlessSession {
         public fileprivate(set) var handlers: Set<String> = []
         /// A scroller's content size (a `content` op), in points.
         public fileprivate(set) var scrollContent: CGSize?
-        /// A native control's title (`exact_press_face`), read when
+        /// A native control's title (`exact_press_face`, LLP 1069.011.000 D1), read when
         /// the node changes: a `button` the kernel made a platform control has no text child.
         public fileprivate(set) var controlTitle: String?
         /// Computed on first access for this node version, then shared by snapshots.
@@ -136,7 +136,7 @@ public final class HeadlessSession {
     }
 
     /// Boots the supplied plan, or the linked app's baked plan when nil. A `live` session
-    /// is a running app's: its runner reads `liveNow()`, so a repeating
+    /// is a running app's (LLP 1126.002 D3): its runner reads `liveNow()`, so a repeating
     /// timer that missed beats fires once; a render keeps the seek clock its caller moves.
     public convenience init(plan: Data? = nil, entry: String? = nil, props: Data? = nil, size: CGSize, facts: SessionFacts, assets: AssetResolver,
                             live: Bool = false) throws {
@@ -242,7 +242,7 @@ public final class HeadlessSession {
     }
 
     /// The margins the last layout resolved around a node's border box, and
-    /// whether its width is explicit, and its resolved minimum border-box width (`Kernel::placement_box`). A read of
+    /// whether its width is explicit, and its resolved minimum border-box width (`Kernel::placement_box`, LLP 1126.001 WP10). A read of
     /// the layout the tree holds; nothing is laid out again.
     public struct PlacementBox {
         /// The resolved margins: left, top, right, bottom.
@@ -308,7 +308,7 @@ public final class HeadlessSession {
     }
 
     /// The platform's Back from the route keyed `key` under the navigation root `root`,
-    /// by iOS's rule (`NavigationBack`): the control the root's
+    /// by iOS's rule (`NavigationBack`, LLP 1115 D5): the control the root's
     /// `navigationBack` names, in that route or in no route; else, when the route
     /// declares none, the location beneath to the root's `navigate`, else the
     /// runner's own back of the router. Nil when Back is refused.
@@ -354,7 +354,7 @@ public final class HeadlessSession {
                                   beneath: { core.runtime.locationBeneath(key) })
     }
 
-    /// A link the reader followed, as `ExactSession.follow` takes it: a
+    /// A link the reader followed, as `ExactSession.follow` takes it (LLP 1038 §7): a
     /// path naming one of the app's routes goes to the navigation root's `navigate`,
     /// else to the runner's router. Nil for anything else, which is the host's to open.
     @discardableResult
@@ -382,7 +382,7 @@ public final class HeadlessSession {
     }
 
     #if EXACT_INSPECT
-    /// An agent request answered by the runner: `tree`, `state`, `logs`, `tags`.
+    /// An agent request answered by the runner (LLP 1012): `tree`, `state`, `logs`, `tags`.
     /// A development build's only: the widget extension links this session too.
     public func agent(_ request: String) -> String {
         Owner.shared.sync { core.runtime.agent(request) }
@@ -480,7 +480,7 @@ public final class HeadlessSession {
         // The callback refuses before shaping raw Markdown. Inspect unmeasured
         // nodes too (for example display:none) so boot never returns a partial tree.
         for id in changed {
-            // A `time` is a paragraph the platform may draw live:
+            // A `time` is a paragraph the platform may draw live (LLP 1126 D6):
             // its runs carry the font the kernel measured it in.
             guard let node = nodes[id], node.kind == "text" || node.kind == "time" else { continue }
             var markdown: [ExactCore.Run]?

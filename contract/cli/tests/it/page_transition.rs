@@ -1,6 +1,6 @@
 //! The back/forward cache's `pagehide` and `pageshow` with `persisted`
 //! (HTML Standard, "Session history": PageTransitionEvent), as page facts
-//!: `exactPage().persisted` while the
+//! (LLP 1069.000 D2; LLP 1069.010 D8): `exactPage().persisted` while the
 //! page is put away, and `exactPage().restores` counting its returns. A
 //! `when` keyed on the count is the page's `pageshow` handler: it runs once
 //! for each return, never at launch, and not for a page only hidden (a

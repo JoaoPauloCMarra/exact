@@ -1,4 +1,4 @@
-// Several live copies of one dev page, on both web
+// Several live copies of one dev page (LLP 1122 T7, *1.14*), on both web
 // dev loops: each copy is an iframe of the dev loop's page that the page
 // framing it names (`name`, which never enters the app's URL). Each copy
 // keeps its own build id across reloads, though same-origin frames share
@@ -77,7 +77,7 @@ async function copies(wasm) {
   // loop's frame-ancestors names, EXACT_TOOL_PORT): another origin, three named frames; each
   // build's word kept with the frame it came from, by its source alone.
   const names = ['exact-copy-1', 'exact-copy-2', 'exact-copy-3'];
-  // (And at /hosts, six copies each at a loopback name of its own, as the design tool frames them.)
+  // (And at /hosts, six copies each at a loopback name of its own, as the design tool frames them: theme2's F1 ruling.)
   const hosts = Array.from({ length: 6 }, (_, i) => `exact-copy-${i + 1}`);
   const parent = createServer((req, res) => {
     res.writeHead(200, { 'content-type': 'text/html' });
@@ -172,7 +172,7 @@ async function copies(wasm) {
     const six = await until(async () => byName(await words()), ws => Object.keys(ws).length === 6, 'six copies at their own names say their builds');
     expect((await words()).every(w => w.origin === `http://${w.name}.localhost:${port}`)).toBe(true);
     await until(listed, bs => Object.values(six).every(id => bs.find(b => b.id === id)?.status?.location === '/'), 'six copies report');
-    // A pinned copy holds its pin over the app's own setMode, says what the app asked, and takes the app's choice when handed back.
+    // A pinned copy holds its pin over the app's own setMode (theme2's F2 ruling), says what the app asked, and takes the app's choice when handed back.
     const c1 = six['exact-copy-1'], status1 = async () => (await listed()).find(b => b.id === c1)?.status;
     // (The JS fixture also sets its scheme and root size; the theme fixture its mode alone.)
     const pinned = wasm ? { scheme: 'dark', mode: { 'dark-style': 'black' } } : { scheme: 'light', mode: { 'dark-style': 'black' }, rootFontSize: 18 };

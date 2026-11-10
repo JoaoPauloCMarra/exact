@@ -82,9 +82,9 @@ impl<const ASSETS: bool> RendererWithAssets<ASSETS> {
 
     // Order: skinning → hook compute → culling → shadows → forward (opaque, hook
     // opaque, sky, background[, translucent]) → [surface + translucent] → post →
-    // bloom → tone.
+    // bloom → tone. @ref llp/1046.006.000-render-hooks.rfc.md#d3-optional-services-the-scene-copy
     #[allow(clippy::too_many_arguments)]
-    /// Encode the frame into `encoder` (the GPU module's); the
+    /// Encode the frame into `encoder` (the GPU module's, LLP 1009 D7); the
     /// caller submits it and then calls [`Self::submitted`].
     pub(crate) fn encode_hooked<H: crate::Hooks>(
         &mut self,

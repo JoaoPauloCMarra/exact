@@ -1,8 +1,8 @@
-//! A slot read that a call makes
+//! @ref LLP 1089 D3, LLP 1035.005.002 C2 — a slot read that a call makes
 //! stale is warned of, as the same read in the action's own body is.
 //!
 //! Every statement of an action reads the state the action started with,
-//! and its assignments land when it ends. Inside one body that is on
+//! and its assignments land when it ends (D2). Inside one body that is on
 //! the page (`doubled = count * 2` after `count = …`, `rereads.rs`); behind
 //! a call, the write and the read are in different bodies and neither
 //! shows it. So a read of a state, mutation or router slot in one frame —
@@ -11,8 +11,9 @@
 //! id (`analyze-read-after-assign`) at one severity, with the body's
 //! exemptions: a read on a path exclusive with the assignment's, a
 //! condition the assignment's path decides, and a field a record copy left
-//! unchanged. This frame is far rarer than the body's; refusing it while
-//! the body's is warned of would make one mistake two rules.
+//! unchanged. In 1,029 bake-off builds the body's warning was met in 86
+//! and this one in 2 (LLP 1035.005.002 §1.2); refusing the rarer frame of
+//! the same read was the exception C2 removed.
 //!
 //! The walk is `sends.rs`'s: each arm starts from what the paths into it
 //! wrote, the branch leaves their union, and sequential `if`s testing one

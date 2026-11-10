@@ -1,4 +1,4 @@
-//! `set-param` and `unset-param`: the app's value
+//! `set-param` and `unset-param` (LLP 1121 D15, stage 7 B): the app's value
 //! of a component's param is a line of the design's `params` block, written
 //! as a token's, `when` lines under it. The inverse is the edit's preimage,
 //! restored, as every edit's is.

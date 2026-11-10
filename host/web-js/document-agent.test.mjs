@@ -15,6 +15,138 @@ test('navigation waits for unknown status capability', async () => {
   expect(response.status).toBe(404);
 });
 
+test('an answered open stream settles its page, and the browser subscribes again and asks nothing else', async () => {
+  const root = resolve(import.meta.dir, '../..'), dir = mkdtempSync(resolve(root, 'target/stream-document-test-'));
+  const streams = new Map(), encoder = new TextEncoder(), connected = Promise.withResolvers();
+  const event = value => encoder.encode(`data: ${value}\n\n`);
+  let labels = 0;
+  const peer = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch(request) {
+    const name = new URL(request.url).pathname.slice(1);
+    if (name === 'heartbeat') { return new Response(null, { status: 204 }); }
+    if (name === 'label') { labels++; return Response.json('Label', { headers: { 'access-control-allow-origin': '*' } }); }
+    const body = new ReadableStream({ start(controller) {
+      const connections = streams.get(name) ?? [];
+      connections.push(controller); streams.set(name, connections);
+      if (name === 'home' && connections.length === 2) { connected.resolve(); }
+      if (name !== 'silent') { controller.enqueue(event('first')); }
+    } });
+    return new Response(body, { headers: { 'content-type': 'text/event-stream', 'access-control-allow-origin': '*' } });
+  } });
+  let browser, site;
+  try {
+    writeFileSync(resolve(dir, 'app.json'), JSON.stringify({ name: 'Stream Document', app: { id: 'test.stream-document', name: 'Stream Document' }, host: { web: {} } }));
+    writeFileSync(resolve(dir, 'app.contract'), `routes nav
+  home "/" render=request
+  status "/status" render=request
+  silent "/silent" render=request
+  heartbeat "/heartbeat" render=request
+
+component App
+  resource live = feed(top(nav).name) as shape string else empty()
+  resource label = label() as shape string
+  view
+    main
+      if top(nav).name == "status" && live != ""
+        head status=410
+      text live testId="live"
+      text label
+`);
+    writeFileSync(resolve(dir, 'app.ts'), `export const grants = 'net.fetch ${peer.url.origin}';
+export const answer = (name: string, args: string[]): any => name === 'label' ? fetch('${peer.url.origin}/label').then(response => response.json()) : fetch('${peer.url.origin}/' + args[0], {
+  exactStream: (event: any) => event.data,
+  ...(args[0] === 'heartbeat' ? { exactLongPoll: { cursor: 'since', from: 'seq' } } : {}),
+} as RequestInit);
+`);
+    const dist = resolve(dir, 'dist');
+    const built = Bun.spawn([process.execPath, 'host/web-js/build.mjs', 'stream-document-test', '--out', dist, '--render', 'js'], {
+      cwd: root, env: { ...process.env, EXACT_APP_DIR: dir }, stdout: 'pipe', stderr: 'pipe',
+    });
+    const [status, stdout, stderr] = await Promise.all([built.exited, new Response(built.stdout).text(), new Response(built.stderr).text()]);
+    expect(status, stdout + stderr).toBe(0);
+    const { renderer } = await import('./render.mjs');
+    const render = renderer(dist); render.ahead = false;
+    const pages = new Map();
+    for (const [path, expected] of [['/', 200], ['/status', 410], ['/silent', 503], ['/heartbeat', 503]]) {
+      // Give a page that must settle a long deadline: the renderer returns as soon as nothing is in flight
+      const reply = await render(path, expected === 503 ? 500 : 10000);
+      expect([reply.status, reply.settled], path).toEqual([expected, expected !== 503]);
+      expect(reply.html).toContain('data-activate="eager"');
+      // A page at its deadline has every answer asked again; a settled one, only its open stream
+      expect(reply.html.includes('"revalidate":true'), path).toBe(expected === 503);
+      expect(reply.html).toContain(expected === 503 ? '"pending":["live"]' : '"pending":[],"open":["live"]');
+      pages.set(path, reply);
+    }
+    site = Bun.serve({ hostname: '127.0.0.1', port: 0, async fetch(request) {
+      const path = new URL(request.url).pathname, page = pages.get(path);
+      if (page) { return new Response(page.html, { status: page.status, headers: { 'content-type': 'text/html' } }); }
+      const asset = Bun.file(resolve(dist, path.slice(1)));
+      return await asset.exists() ? new Response(asset) : new Response(null, { status: 404 });
+    } });
+    browser = await suiteBrowser();
+    const page = await browser.newPage();
+    const rendered = labels;
+    await page.goto(site.url.href);
+    await page.waitForFunction(() => document.querySelector('[data-testid="live"]')?.textContent === 'first');
+    let bound;
+    try {
+      await Promise.race([connected.promise, new Promise((_, reject) => { bound = setTimeout(() => reject(new Error('the browser did not subscribe')), 5000); })]);
+    } finally { clearTimeout(bound); }
+    streams.get('home')[1].enqueue(event('second'));
+    await page.waitForFunction(() => document.querySelector('[data-testid="live"]')?.textContent === 'second');
+    // The label the page was rendered with stands: the browser asked it nothing while it subscribed again
+    expect(await page.evaluate(() => document.querySelector('main')?.textContent)).toContain('Label');
+    expect(labels).toBe(rendered);
+  } finally {
+    await browser?.close(); site?.stop(true); peer.stop(true);
+    rmSync(dir, { recursive: true, force: true });
+  }
+}, 60000);
+
+test('a refused settlement restores renderer pending state', async () => {
+  const root = resolve(import.meta.dir, '../..'), dir = mkdtempSync(resolve(root, 'target/rollback-document-test-'));
+  const peer = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch(request) {
+    return new URL(request.url).pathname === '/trigger' ? Response.json(1) : new Response(null, { status: 204 });
+  } });
+  try {
+    writeFileSync(resolve(dir, 'app.json'), JSON.stringify({ name: 'Rollback Document', app: { id: 'test.rollback-document', name: 'Rollback Document' }, host: { web: {} } }));
+    writeFileSync(resolve(dir, 'app.contract'), `routes nav
+  home "/" render=request
+
+component App
+  resource trigger = trigger() as shape number
+  resource later = later(trigger) as shape number
+  resource bad = bad(trigger) as shape number
+  view
+    main
+      head title="Retained" status=410
+      text \`\${trigger} \${later} \${bad}\`
+`);
+    writeFileSync(resolve(dir, 'app.ts'), `export const grants = 'net.fetch ${peer.url.origin}';
+export const answer = (name: string, [value]: number[]): any => {
+  if (name === 'trigger') return fetch('${peer.url.origin}/trigger').then(response => response.json());
+  if (name === 'later' && value === 0) return fetch('${peer.url.origin}/heartbeat', {
+    exactStream: (event: any) => Number(event.data), exactLongPoll: { cursor: 'since', from: 'seq' },
+  } as RequestInit);
+  if (name === 'bad' && value === 1) throw Object.assign(new Error('source refused'), { refuse: true });
+  return 0;
+};
+`);
+    const dist = resolve(dir, 'dist');
+    const built = Bun.spawn([process.execPath, 'host/web-js/build.mjs', 'rollback-document-test', '--out', dist, '--render', 'js'], {
+      cwd: root, env: { ...process.env, EXACT_APP_DIR: dir }, stdout: 'pipe', stderr: 'pipe',
+    });
+    const [status, stdout, stderr] = await Promise.all([built.exited, new Response(built.stdout).text(), new Response(built.stderr).text()]);
+    expect(status, stdout + stderr).toBe(0);
+    const { renderer } = await import('./render.mjs');
+    const render = renderer(dist); render.ahead = false;
+    // Give the render a long deadline: it returns once the refused settlement has rolled back and nothing is in flight
+    const reply = await render('/', 10000);
+    expect([reply.status, reply.settled]).toEqual([503, false]);
+    expect(reply.html).toContain('0 0 0');
+    expect(reply.html).toContain('"pending":["later"]');
+  } finally { peer.stop(true); rmSync(dir, { recursive: true, force: true }); }
+}, 30000);
+
 test.each([
   ['navigation waits for a page that can declare its status', [
     ['plain', '/', 200, false], ['inactive', '/inactive', 200, false],
@@ -530,7 +662,7 @@ test('a second navigation root keeps its split list live while its detail suppli
       await browser.clock('settle');
       const wide = width >= 900, copies = (await browser.tree()).nodes.filter(n => n.props.testId === 'list-commit');
       expect(copies).toHaveLength(2);
-      // A covered route is hidden too, and so is the split's list where the detail covers it.
+      // A covered route is hidden too (LLP 1153 D8), and so is the split's list where the detail covers it.
       const [covered, list] = copies, observed = await browser.op({ op: 'check' });
       expect({ covered: [!!covered.inactive, !!covered.hidden], list: [!!list.inactive, !!list.hidden], checked: observed.items.some(item => item.id === list.id && item.control === 'button') })
         .toEqual({ covered: [true, true], list: [!wide, !wide], checked: wide });
@@ -596,7 +728,7 @@ component SplitDocumentAgent
   }
 }, 30000);
 
-// A page rendered ahead holds every tab panel, and the boot that adopts it builds
+// @ref LLP 1075.003 §9.14 — a page rendered ahead holds every tab panel, and the boot that adopts it builds
 // every one over what was rendered, wiring each panel's presses; none waits on that page.
 test('an adopted page builds every tab over the rendered ones', async () => {
   if (webCompiler().cmd === 'cargo') throw new Error('build the compiler first: cargo build -p exact-web-js');
@@ -667,7 +799,7 @@ component TabsDocument
   }
 }, 30000);
 
-// A flowed paragraph's runs are held off the page while its fragments paint (flow.js), so the tree
+// LLP 1153 D8 — a flowed paragraph's runs are held off the page while its fragments paint (flow.js), so the tree
 // gives them their paragraph's route flags: hidden under a pushed route, inactive under a sheet.
 test('a flowed paragraph\'s runs keep their route\'s flags', async () => {
   if (webCompiler().cmd === 'cargo') throw new Error('build the compiler first: cargo build -p exact-web-js');

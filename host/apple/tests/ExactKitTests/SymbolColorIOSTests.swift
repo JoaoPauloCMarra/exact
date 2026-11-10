@@ -1,4 +1,4 @@
-// Page symbols take computed color; native faces keep their control tint.
+// LLP 1081 stage 2: page symbols take computed color; native faces keep their control tint.
 #if os(iOS)
 import UIKit
 import XCTest
@@ -151,7 +151,7 @@ final class SymbolColorIOSTests: XCTestCase {
         XCTAssertEqual(try picture(control.imageForSegment(at: 0)), before, "the palette as written, once the dimming ends")
     }
 
-    /// A symbol a native control shows as its face keeps the
+    /// LLP 1121 D9: a symbol a native control shows as its face keeps the
     /// control's tint. Under the same written green, hierarchical (which
     /// bakes its colour into the image's configuration): a tablist of two
     /// image tabs and a radio group of two image radios are segmented

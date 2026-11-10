@@ -3,7 +3,7 @@ import AppKit
 
 /// The viewport: a click that reached it, on no node that takes the focus or
 /// a press, leaves the first responder where it is, as a click on a window's
-/// background does, and ends the reader's text selection.
+/// background does (LLP 1115.000 D7.1), and ends the reader's text selection.
 package final class PageScrollView: NSScrollView {
     var visibleSizeChanged: (() -> Void)?
     private var visibleSize = NSSize.zero
@@ -36,7 +36,7 @@ package final class PageScrollView: NSScrollView {
     }
     // One viewport tracking area sees overflowing descendants and exits even
     // when no node's bounds contain the pointer. Nodes use the same hit test.
-    // It is the key window's, as AppKit's own hover is:
+    // It is the key window's, as AppKit's own hover is (LLP 1115.000 D7.9):
     // a window behind another shows no hover, and `lostKey` ends what was
     // hovered when this one stops being key.
     var pointerTracking: ((NSEvent) -> Void)?
@@ -140,9 +140,9 @@ package final class PageScrollView: NSScrollView {
 
     /// A click that reached the page, on its empty ground: the field being
     /// edited keeps its editor and its caret, as a click on a window's
-    /// background leaves them. It ends the reader's text
+    /// background leaves them (LLP 1115.000 D7.1). It ends the reader's text
     /// selection, unless a node under it took the focus on the way up (its
-    /// `mouseDown`: a `tabindex` box).
+    /// `mouseDown`: a `tabindex` box, LLP 1088 D7.3).
     var pressedGround: (() -> Void)?
     package override func mouseDown(with event: NSEvent) {
         let hit = window?.contentView?.hitTest(event.locationInWindow)

@@ -2,7 +2,7 @@
 //! one union of shapes in the element's own user space, intersected with the
 //! `clipPath`'s own `clip-path`.
 //!
-//! CSS Masking 1 §6 (`clipPath`: `clipPathUnits`,
+//! @ref LLP 1055.000 D10; CSS Masking 1 §6 (`clipPath`: `clipPathUnits`,
 //! whose initial is `userSpaceOnUse`; children contribute their geometry,
 //! each with its own `clip-rule`; a missing reference does not clip)
 

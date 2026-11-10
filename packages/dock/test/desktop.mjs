@@ -1,4 +1,4 @@
-// The drives on a Mac, on the desktop fixture (test/fixture):
+// LLP 1133.025's drives on a Mac, on the desktop fixture (test/fixture):
 // an app `exact new` made outside the repo, depending on @exact/login-item,
 // @exact/global-shortcuts and @exact/dock, built and driven under the agent.
 //
@@ -85,7 +85,7 @@ async function drives(fixture) {
         await s.clock('settle');
         check(host, '3: shown, it comes back', (await s.state()).statusItems?.length === 1, '');
       } else {
-        // Absent: ordinary buttons in the page.
+        // Absent (D14): ordinary buttons in the page.
         const tree = await s.tree(), tray = tree.nodes.find((n) => n.props?.testId === 'tray');
         check(host, 'absent: the status button is an ordinary button', tray && tray.presented === undefined, JSON.stringify(tray));
         await s.tap('at-login');

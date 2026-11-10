@@ -1,6 +1,6 @@
 //! The store as a host runs it: opened from what the bake wrote, selecting
 //! at launch, counting the boot, checking after first pixel, and answering
-//! the app.
+//! the app (LLP 1026 D9/D11/D12; LLP 1030 D7; 1030.000 §4 stage 4).
 //!
 //! Everything a host would otherwise write twice is here — the Apple and
 //! Linux hosts wrap a [`Client`] in their own lock and thread and hand it
@@ -231,7 +231,7 @@ impl Client {
         out
     }
 
-    /// The selection is booting: count it, once per process.
+    /// The selection is booting: count it (LLP 1026 D11), once per process.
     pub fn boot_started(&mut self) -> Result<(), String> {
         if self.started {
             return Ok(());
@@ -267,7 +267,7 @@ impl Client {
         self.store.refuse_prepared(generation, why)
     }
 
-    /// First pixel: the selection that booted is good, once
+    /// First pixel: the selection that booted is good (LLP 1026 D11), once
     /// per process, and only when the selection is what booted.
     pub fn boot_succeeded(&mut self, generation: &Generation) -> Result<(), String> {
         if self.succeeded || !self.booted_selection || *generation != self.store.generation() {
@@ -415,7 +415,10 @@ mod tests {
     const ORIGIN: &str = "https://o.example";
 
     #[test]
-    #[cfg_attr(windows, ignore = "Windows durable store is not qualified")]
+    #[cfg_attr(
+        windows,
+        ignore = "Windows durable store is not qualified (LLP 1026 D11a)"
+    )]
     fn a_client_opens_under_the_app_id_and_names_its_head() {
         let base = temp("open");
         let assets = temp("open-assets");
@@ -469,7 +472,10 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(windows, ignore = "Windows durable store is not qualified")]
+    #[cfg_attr(
+        windows,
+        ignore = "Windows durable store is not qualified (LLP 1026 D11a)"
+    )]
     fn a_download_cannot_overwrite_a_newer_check_or_concurrent_activation() {
         let base = temp("check-race");
         let mut client = Client::open_at(&base, &base, COMPAT, b"embedded", Some(ORIGIN)).unwrap();
@@ -525,7 +531,10 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(windows, ignore = "Windows durable store is not qualified")]
+    #[cfg_attr(
+        windows,
+        ignore = "Windows durable store is not qualified (LLP 1026 D11a)"
+    )]
     fn entry_refused_keeps_first_pixel_from_blessing_it() {
         let base = temp("refused");
         let mut c = Client::open_at(&base, &base, COMPAT, b"plan", Some(ORIGIN)).unwrap();

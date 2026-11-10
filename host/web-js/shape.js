@@ -1,4 +1,4 @@
-// A value's shape check by the plan's type codes, for rt.js.
+// A value's shape check by the plan's type codes (LLP 1005 §3), for rt.js.
 /** Whether `v` conforms to type code `t` (`n N b s u ?T [T {T…}`), from `i`;
  * numbers are finite (`N`: any number), as the runner's checks require. `o` is a value
  * that conformed: a part of `v` that is the same array as its part in `o`
@@ -11,7 +11,7 @@ export function conforms(v, t, i = [0], o) {
   if (c === "N") return typeof v === "number"; // any number: a hidden parameter's (emit.rs)
   if (c === "b") return typeof v === "boolean";
   if (c === "e") { const end = t.indexOf(":", i[0]), n = Number(t.slice(i[0], end)); i[0] = end + 1; const values = JSON.parse(t.slice(i[0], i[0] + n)); i[0] += n; return typeof v === "string" && values.includes(v); }
-  // A lone surrogate is no string a native host holds (Rust's `String`; js/src/engine.rs refuses one), so none here either.
+  // A lone surrogate is no string a native host holds (Rust's `String`; js/src/engine.rs refuses one), so none here either (LLP 1146 D6).
   if (c === "s") return typeof v === "string" && v.isWellFormed();
   if (c === "u") return v == null;
   if (c === "?") { if (v == null) { skip(t, i); return true; } return conforms(v, t, i, o); }
@@ -47,7 +47,7 @@ export function eq(a, b) {
   for (let i = 0; i < a.length; i++) if (!eq(a[i], b[i])) return false;
   return true;
 }
-/** `failure(x)`'s code for what a source let through, as js/src/prelude.js `failureCode` and
+/** `failure(x)`'s code for what a source let through (LLP 1109 D3), as js/src/prelude.js `failureCode` and
  * runner/src/failure.rs read it: a fetch's rejection by its kind, a coded storage refusal, an answer ts-data.js
  * found outside its shape (`Shaped`), else the source's own error. */
 export const Shaped = Symbol("shape");
@@ -59,17 +59,17 @@ export function failureCode(e) {
   return e.kind === "Unavailable" && typeof e.code === "string" ? "storage" : "error";
 }
 /** `failure(x).reason`: a string the thrown value carries as `reason` (the snapback4 driver's refusal code, `SLOT_FULL`),
- * else empty; as js/src/prelude.js `fail` reads it. */
+ * else empty; as js/src/prelude.js `fail` reads it (the author's ruling of 2026-10-12). */
 export const failureReason = e => e && typeof e === "object" && typeof e.reason === "string" ? e.reason : "";
 
-/** `atomFaces`' `AtomFace` records as the named JSON the runner's bridge writes, each face's colours
+/** `atomFaces`' `AtomFace` records as the named JSON the runner's bridge writes (LLP 1045.000 D2), each face's colours
  * read as a bound colour row's are on this target: through the build's colour map `cm`, which takes a theme entry's
- * name and a role and refuses a `-exact-platform-color()` none of the plan's literals is, then as the
+ * name and a role and refuses a `-exact-platform-color()` none of the plan's literals is (LLP 1095 D3, D4), then as the
  * browser takes them. A role in the web form the kernel reads as one (`var(--exact-separator, …)`, `roles`) is that
  * role, its fallback unread, unless it holds a platform colour the map refuses, as the runner's bridge refuses it.
  * Any other value is no colour when it holds, anywhere, `currentcolor` or a keyword that defers to the cascade, where
  * nothing cascades into a pill, or one of CSS Values 5's substitution functions (`var()`, `env()`, `attr()`, `if()`,
- * `inherit()`), which can find nothing when the style is computed and then unset the kind's paint; the native
+ * `inherit()`), which can find nothing when the style is computed and then unset the kind's paint (D4); the native
  * hosts read none of these. One that is none is empty, so the kind's paint stands, and the journal says so as the
  * runner does, naming the node's view (`view`, called only then). */
 const DEFERS = /(?<![-\w])(initial|inherit|unset|revert|revert-layer|currentcolor)(?![-\w])/i;
@@ -122,7 +122,7 @@ export function atomFacesRecord(v, cm = c => c, view = () => 0, roles = []) {
   return v == null ? null : JSON.stringify(v.map(([source, label, icon, title, color, backgroundColor, direction, ariaLabel]) =>
     ({ source, label, icon, title, color: paint(color), backgroundColor: paint(backgroundColor), direction, ariaLabel })));
 }
-/** The compiler's positional `TextDecorations(value, spans)` as the named JSON the web host reads. */
+/** The compiler's positional `TextDecorations(value, spans)` as the named JSON the web host reads (LLP 1114.007). */
 export function decorationRecord(v) {
   return v == null ? null : JSON.stringify({ value: v[0], spans: v[1].map(([name, start, end]) => ({ name, start, end })) });
 }

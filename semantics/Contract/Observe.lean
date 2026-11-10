@@ -12,7 +12,7 @@ state in exactly this form; the two texts are compared line by line.
   `# <reason>`             after a refused or poisoned outcome or `ran`;
                            commentary, never compared
   `slot <name> <value>`    each root slot, declaration order, mutations last
-  `store <name> <value>`   each persisted state, declaration
+  `store <name> <value>`   each persisted state (LLP 1116 D5), declaration
                            order: what the device's store keeps for it,
                            which after every commit that stands is the
                            slot's value
@@ -86,7 +86,7 @@ def outcome : Outcome → String
   | .refused e => "outcome refused\n# " ++ why e
   | .poisoned e => "outcome poisoned\n# " ++ why e
 
-/-- One attempted commit within an observed step. -/
+/-- One attempted commit within an observed step (LLP 1148 D3). -/
 structure Ran where
   kind : String
   action : String

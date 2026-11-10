@@ -1,9 +1,9 @@
-//! A length token over base names the design leaves unset
-//! (`card.pad: length = calc(space.md * 2 + 4px)`) is read in each host's
-//! column, its bases substituted and the whole folded by the kernel's
-//! `calc()`: a row and a native binding alike, a `when` arm too, the
-//! terminal's cells as px. So is a shadow token's length over one. One test,
-//! its own process: the column is the process's.
+//! LLP 1121 D11, stage 12 B2: a length token over base names the design
+//! leaves unset (`card.pad: length = calc(space.md * 2 + 4px)`) is read in
+//! each host's column, its bases substituted and the whole folded by the
+//! kernel's `calc()`: a row and a native binding alike, a `when` arm too,
+//! the terminal's cells as px. So is a shadow token's length over one
+//! (stage 12 B3). One test, its own process: the column is the process's.
 use exact_kernel::style::metrics::{set_column, Column};
 use exact_kernel::style::scale;
 use exact_kernel::{Kernel, StyleId};

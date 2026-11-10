@@ -9,7 +9,7 @@ final class MaterialTableIOSTests: XCTestCase {
     }
 
     /// Named materials reach their styles; `backdrop-filter` alone draws
-    /// `.light`.
+    /// `.light` (Charlie, 2026-09-27; LLP 1053.000 §3).
     func testNamedMaterialsAndABareBlurDrawTheirStyles() {
         XCTAssertEqual(Backdrop.material, .light)
         for (name, style) in [("thin", UIBlurEffect.Style.systemThinMaterial), ("chrome-dark", .systemChromeMaterialDark), ("prominent", .prominent)] {

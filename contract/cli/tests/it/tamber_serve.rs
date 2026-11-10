@@ -1,4 +1,4 @@
-//! `contract tamber serve --stdio` (commit 3): reads, a
+//! `contract tamber serve --stdio` (LLP 1121 stage 3, commit 3): reads, a
 //! transaction with its digests, its inverse, a conflict, `propose`, the
 //! lock, a commit killed between its renames completed on restart, and a
 //! journal that cannot be trusted refused. The server runs on macOS and
@@ -30,7 +30,7 @@ pub(crate) fn app(tag: &str, design: &str) -> std::path::PathBuf {
 }
 
 /// An import planned alone, as the wire plans one (`contract tamber
-/// import-plan`): the app's design on stdin; its reply.
+/// import-plan`, stage 10b): the app's design on stdin; its reply.
 pub(crate) fn plan_alone(dir: &std::path::Path, request: Value) -> (Value, Vec<Value>) {
     let design = dir.join("app.tamber");
     let mut child = Command::new(env!("CARGO_BIN_EXE_contract"))
@@ -185,7 +185,7 @@ fn reads_answer_on_the_clones_design() {
 #[test]
 fn a_transaction_writes_a_line_its_inverse_undoes_and_a_stale_digest_conflicts() {
     let dir = app("write", CLONE);
-    // A view naming one token, which the plan keeps.
+    // A view naming one token, which the plan keeps (D7).
     std::fs::write(
         dir.join("app.contract"),
         "component App\n  view\n    text \"a\" color=\"mute_banner\"\n",
@@ -233,9 +233,9 @@ fn a_transaction_writes_a_line_its_inverse_undoes_and_a_stale_digest_conflicts()
     assert_eq!(conflict["error"]["conflict"], true);
     assert_eq!(std::fs::read_to_string(&file).unwrap(), after);
     // A kept token renamed where a row names it breaks the row: refused at
-    // the write in the compiler's words, where the row is (the rows check),
-    // rather than a rebuild the build then refuses. The inverse gives the
-    // bytes back.
+    // the write in the compiler's words, where the row is (the rows check,
+    // theme2's 14:19 ruling), where it was a rebuild the build then
+    // refused. The inverse gives the bytes back.
     let (rename, _) = s.ask(json!({"method": "propose", "ops": [{"op": "rename-token", "from": "mute_banner", "to": "banner.mute"}]}));
     let refused = &rename["error"]["diagnostics"][0];
     assert_eq!(refused["id"], "tamber-unknown-token", "{rename}");
@@ -571,10 +571,10 @@ fn a_journal_that_leaves_the_app_or_lost_its_text_is_kept_and_refused() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The wire's own requests: `compare` reads a commit's versions as token edits,
-/// `revert-plan` inverts one on today's file (and refuses where the file moved
-/// on its edit), `import-plan` plans an import from a source's text. None
-/// writes.
+/// The wire's own requests (LLP 1122 T1): `compare` reads a commit's versions
+/// as token edits, `revert-plan` inverts one on today's file (and refuses
+/// where the file moved on its edit), `import-plan` plans an import from a
+/// source's text. None writes.
 #[test]
 fn compare_revert_plan_and_import_plan() {
     const V1: &str = "tamber t\n\ntheme\n  ink = #000000\n  edge = #101010\n";
@@ -681,7 +681,7 @@ fn compare_revert_plan_and_import_plan() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// Live or rebuild by the edit's closure: a token a
+/// Live or rebuild by the edit's closure (LLP 1121 D13, stage 4): a token a
 /// Contract row's expression reads is live, the synthetic token's new value
 /// in the answer; a role override, or a token one reads, is rebuild; so is
 /// structure.
@@ -710,8 +710,8 @@ fn propose_judges_live_or_rebuild_by_the_closure() {
         synthetic[0]["values"],
         json!([folded.tokens[1].values[0].css()])
     );
-    // A role override's value, and a token one names: live, each build
-    // re-presenting its session's overrides.
+    // A role override's value, and a token one names: live (LLP 1121
+    // stage 5), each build re-presenting its session's overrides.
     let (role, _) = s.ask(set("CanvasText", "#101010"));
     assert_eq!(role["ok"]["class"], "live", "{role}");
     let (through, _) = s.ask(set("ink", "#222222"));
@@ -723,17 +723,18 @@ fn propose_judges_live_or_rebuild_by_the_closure() {
         s.ask(json!({"method": "propose", "ops": [{"op": "remove-token", "name": "CanvasText"}]}));
     assert_eq!(lost["ok"]["class"], "rebuild", "{lost}");
     // A token no view names, in an app with no bindings, is in no plan:
-    // adding it leaves the plan as it is.
+    // adding it leaves the plan as it is (D7's retention).
     let (added, _) = s.ask(json!({"method": "propose", "ops": [{"op": "add-token", "name": "fresh", "value": "#123456"}]}));
     assert_eq!(added["ok"]["class"], "live", "{added}");
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// `propose` classes by the plan's retained shape, as the compiler keeps tokens
-/// and the dev loops compare plans: in an app that can name a token outside its
-/// views (a data crate) every token is kept, so adding one is structure; a
-/// first `when` on a kept token that did not vary is structure (the plan gains
-/// its slices); in a plain app, an unnamed token's add and first `when` are
+/// `propose` classes by the plan's retained shape, as the compiler keeps
+/// tokens (D7) and the dev loops compare plans (theme2's ruling, LLP 1121
+/// stage 5): in an app that can name a token outside its views (a data
+/// crate) every token is kept, so adding one is structure; a first `when`
+/// on a kept token that did not vary is structure (the plan gains its
+/// slices); in a plain app, an unnamed token's add and first `when` are
 /// not.
 #[test]
 fn propose_classes_by_the_plans_retained_shape() {
@@ -816,8 +817,9 @@ fn a_synthetic_token_that_comes_to_fold_is_rebuild_then_live() {
 }
 
 /// An icon naming another in the design too, with and without params:
-/// either way the write's check reads such a design and refuses the
-/// write the build would refuse.
+/// with them the write's check read nothing of such a design and let the
+/// write through, without them the design was refused (stage 9's alias
+/// fix).
 #[test]
 fn a_write_that_makes_a_role_vary_by_an_axis_is_refused_as_the_build_would() {
     let design =
@@ -854,15 +856,15 @@ fn a_write_that_makes_a_role_vary_by_an_axis_is_refused_as_the_build_would() {
 }
 
 /// A write that sets a base name to anything but a length is refused by
-/// the shared checker before it lands, as the build would, not only at
-/// lowering.
+/// the shared checker before it lands, as the build would (stage 11 B
+/// round 2, Astra 3): not only at lowering.
 #[test]
 fn a_write_that_makes_a_base_name_a_colour_is_refused() {
     let dir = app("base-kind", "tamber t\n\ntheme\n  ink = #000000\n");
     let file = dir.join("app.tamber");
     let before = std::fs::read_to_string(&file).unwrap();
     let mut s = Serve::start(&dir, &[]);
-    // `set-token` sets a base name for this app (`add-token` refuses one).
+    // `set-token` sets a base name for this app (theme2's 17:09 ruling: `add-token` refuses one).
     let op = json!({"op": "set-token", "name": "space.md", "value": "#ff0000"});
     let (proposed, _) = s.ask(json!({"method": "propose", "ops": [op]}));
     assert_eq!(
@@ -883,7 +885,7 @@ fn a_write_that_makes_a_base_name_a_colour_is_refused() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// `uses` (commit 6): every style row that reads the
+/// `uses` (LLP 1121 stage 4, commit 6): every style row that reads the
 /// token, directly, through a token naming it and through a synthetic
 /// token, each at its source span; a text that happens to hold the name
 /// is no use.
@@ -930,9 +932,10 @@ fn uses_names_every_site_through_aliases_and_synthetic_tokens() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// `uses` answers once for every plan of the same sources: the JS target
-/// compiles the plan `uses` does, and a native bake keeps its nodes and
-/// bindings, so the sites (node indices and spans) are the same on each.
+/// `uses` answers once for every plan of the same sources (theme2's
+/// condition): the JS target compiles the plan `uses` does, and a native
+/// bake keeps its nodes and bindings, so the sites (node indices and
+/// spans) are the same on each.
 #[test]
 fn uses_sites_are_the_same_on_the_js_plan_and_the_native_bake() {
     use exact_runner::{DataError, DataSource};
@@ -1068,7 +1071,7 @@ fn export_gives_the_dtcg_text_and_keeps_its_baseline_for_import() {
     assert!(!dir.join(".exact/tamber-dtcg").exists());
 }
 
-/// An icon's sources in the IR and from
+/// LLP 1121 D10 (stage 6 F): an icon's sources in the IR and from
 /// `resolve`, the same in every tuple.
 #[test]
 fn describe_and_resolve_read_an_icon() {

@@ -11,7 +11,7 @@ export const x_trim = s => s.trim();
 export const x_first = l => l.length ? l[0] : null;
 /** `Array.prototype.at`, `none` where JavaScript answers undefined (`Stdlib::At`). */
 export const x_at = (l, i) => { const v = l.at(i); return v === undefined ? null : v; };
-// As runner/src/stdlib.rs `js_round`, `parse_number` and `calendar_diff`.
+// LLP 1102 §3.1–§3.4 (runner/src/stdlib.rs `js_round`, `parse_number`, `calendar_diff`).
 export const x_ceil = Math.ceil, x_round = Math.round;
 // The native runners' `libm` and the engine's `Math` may differ in the last bits (format.json `sin`).
 export const x_sin = Math.sin, x_cos = Math.cos;

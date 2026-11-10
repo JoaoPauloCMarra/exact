@@ -103,7 +103,7 @@ impl DataSource for Echo {
 }
 
 /// A jump stops at each timer that sends and lands its reply before
-/// the next fires; a stop at the target still fires the
+/// the next fires (LLP 1016 D5); a stop at the target still fires the
 /// other timers due there.
 #[test]
 fn a_jump_lands_every_reply_and_fires_every_timer_due() {
@@ -135,7 +135,7 @@ fn a_jump_lands_every_reply_and_fires_every_timer_due() {
     assert!(!logs.contains("dropped"), "{logs}");
 }
 
-/// A targeted `tree` is the target and its descendants, and
+/// LLP 1012 §1: a targeted `tree` is the target and its descendants, and
 /// `shallow` the target alone, as the runner answers on every host.
 #[test]
 fn tree_answers_its_target() {
@@ -248,7 +248,7 @@ fn a_password_value_is_masked_in_every_reply() {
     assert!(state.contains(r#""secret":"hunter2""#), "{state}");
 }
 
-/// `prefer` sets what `exactViewport()` answers and the
+/// LLP 1061 D5: `prefer` sets what `exactViewport()` answers and the
 /// system appearance; an unknown feature is refused and nothing applies.
 #[test]
 fn prefer_sets_the_display_preferences_by_their_media_names() {
@@ -291,7 +291,7 @@ fn prefer_sets_the_display_preferences_by_their_media_names() {
     assert!(!p.dark(), "the app's own choice wins");
 }
 
-/// `prefer pointer` and `prefer hover` set the primary
+/// LLP 1132 D10: `prefer pointer` and `prefer hover` set the primary
 /// input `exactViewport()` answers; an unknown value applies nothing.
 #[test]
 fn prefer_sets_the_pointer_and_hover_facts() {
@@ -329,7 +329,7 @@ fn prefer_sets_the_pointer_and_hover_facts() {
     assert!(text(&mut p).contains("none none"), "{}", text(&mut p));
 }
 
-/// `prefer` sets contrast, the system's scheme
+/// LLP 1069.000 D1, D2, D6: `prefer` sets contrast, the system's scheme
 /// beneath an app's own, and what `exactPage()` answers; `state.device`
 /// shows them without an app declaring either source.
 #[test]
@@ -377,7 +377,7 @@ fn prefer_sets_contrast_scheme_and_the_page_facts() {
     assert_eq!(state["device"]["hasFocus"], false);
     let refused = handle(&mut p, r#"{"op":"prefer","page":{"online":"maybe"}}"#);
     assert!(refused.contains("\"error\""), "{refused}");
-    // The root font size is layout, not a resource.
+    // LLP 1069.000 D3: the root font size is layout, not a resource.
     let reply: serde_json::Value = serde_json::from_str(&handle(
         &mut p,
         r#"{"op":"prefer","page":{"root-font-size":24}}"#,
@@ -459,7 +459,8 @@ fn clock_data_lands_the_replies_without_moving_the_clock() {
     assert_eq!(state["slots"]["count"], 0, "no timer fired: {state}");
 }
 
-/// A synthetic capability stands in for a real one: a held device request, a due app timer and an
+/// LLP 1069.007 §5 item 4, with a synthetic capability standing in for
+/// the first real one: a held device request, a due app timer and an
 /// unfinished fetch together. `clock +N` fires the timer without waiting
 /// on the hold; `clock settle` waits for the fetch, never for the hold,
 /// and says `device` with the tickets; `tap @t` / `type @t` answer it
@@ -589,7 +590,7 @@ fn a_held_device_request_is_answered_by_ticket_and_never_waited_on() {
     assert!(late.contains(&format!("not pending: @{u}")), "{late}");
 }
 
-/// The offset follows the virtual date across a DST
+/// LLP 1069.007 D2: the offset follows the virtual date across a DST
 /// change — Los Angeles, an hour before 2026's spring-forward, then two
 /// hours on.
 #[test]
@@ -623,7 +624,7 @@ fn a_clock_move_across_a_dst_change_recomputes_the_offset() {
     assert_eq!(offset(&mut p), -420, "daylight time from 10:00Z");
 }
 
-/// On Linux, `showPicker` under the agent is a held
+/// LLP 1069.002 D9 on Linux: `showPicker` under the agent is a held
 /// `pick` with its input's summary; settle stops at it; `type @t` with
 /// a file copies it into `app:/tmp/picked/` and fires `change` with the
 /// record; a refused answer leaves the hold; `tap @t cancel` fires
@@ -951,8 +952,8 @@ fn a_resting_pointer_hovers_what_the_layout_moves_under_it() {
 
 #[test]
 fn a_target_out_of_view_is_revealed_and_a_control_takes_a_value() {
-    // A scroller's row and a row below the fold scroll into view; a
-    // checkbox and a select are set by label.
+    // ledger F7, shop F11: a scroller's row and a row below the fold
+    // scroll into view; kanban F17: a checkbox and a select by label.
     let plan = contract::compile("component App\n  state on = false\n  state pick = \"a\"\n  state due = \"\"\n  state noted = \"\"\n  action set(value: bool)\n    on = value\n  action choose(value: string)\n    pick = value\n  action note(value: string)\n    noted = value\n  action level(value: number)\n    noted = `${value}`\n  view\n    column width=300\n      input type=\"date\" value=due change=note testId=\"due\"\n      input type=\"range\" value=10 change=level testId=\"level\"\n      input type=\"checkbox\" checked=on change=set testId=\"agree\"\n      select value=pick change=choose testId=\"pick\"\n        option \"Alpha\" value=\"a\"\n        option \"Beta\" value=\"b\"\n      text `${on} ${pick}` testId=\"log\" height=20\n      scroll testId=\"inner\" height=100\n        box height=400\n        box testId=\"deep\" width=50 height=20\n      box testId=\"auto\" height=100 overflow-y=\"auto\"\n        box height=400\n        box testId=\"autodeep\" width=50 height=20\n      box height=900\n      box testId=\"far\" width=50 height=20\n").unwrap();
     let (mut p, boot_error) = Presenter::boot_with(
         &plan.encode(),
@@ -982,7 +983,8 @@ fn a_target_out_of_view_is_revealed_and_a_control_takes_a_value() {
         id(&p, "deep"),
         id(&p, "far"),
     );
-    // An `overflow: auto` container scrolls to reveal as a `scroll` does.
+    // An `overflow: auto` container scrolls to reveal as a `scroll` does
+    // (Astra's batch 2 review, finding 5).
     let autodeep = id(&p, "autodeep");
     let reply = handle(
         &mut p,
@@ -1008,8 +1010,8 @@ fn a_target_out_of_view_is_revealed_and_a_control_takes_a_value() {
         &format!(r#"{{"op":"type","id":{agree},"text":"yes"}}"#),
     );
     assert!(reply.contains("takes true or false"), "{reply}");
-    // A date keeps the choice while its bound value is unchanged, as the web
-    // build's input does with an action that only sent.
+    // A date keeps the choice while its bound value is unchanged, as the
+    // web build's input does (kanban2 #5: an action that only sent).
     let due = id(&p, "due");
     let reply = handle(
         &mut p,
@@ -1017,7 +1019,7 @@ fn a_target_out_of_view_is_revealed_and_a_control_takes_a_value() {
     );
     assert!(reply.contains("\"value\":\"2026-06-01\""), "{reply}");
     assert_eq!(p.chosen.get(&due), Some(&("2026-06-01".into(), "".into())));
-    // So does a range: its action
+    // So does a range (LLP 1069.001 D4, amended 2026-10-04): its action
     // wrote something else, and the thumb stays at 70, not 10.
     let level = id(&p, "level");
     let reply = handle(
@@ -1038,7 +1040,8 @@ fn a_target_out_of_view_is_revealed_and_a_control_takes_a_value() {
 }
 
 /// A `video` or `audio` here plays nothing (no decoder, no audio output):
-/// `state.media` says so per node, and the tree marks it unavailable.
+/// `state.media` says so per node, and the tree marks it unavailable
+/// (LLP 1042 §5, §8).
 #[test]
 fn media_is_reported_unavailable() {
     let plan = contract::compile(
@@ -1060,7 +1063,7 @@ fn media_is_reported_unavailable() {
     assert_eq!(media.len(), 1, "{state}");
     assert_eq!(media[0]["state"]["paused"], true);
     assert!(media[0]["state"]["unavailable"].is_string(), "{state}");
-    // No scratch store named: the drive has no app storage, and says so.
+    // No scratch store named: the drive has no app storage, and says so (trivia F7).
     assert_eq!(state["storage"]["available"], false, "{state}");
     assert_eq!(state["storage"]["code"], "agent", "{state}");
     let tree = json(handle(&mut p, r#"{"op":"tree"}"#));
@@ -1073,8 +1076,8 @@ fn media_is_reported_unavailable() {
     assert_eq!(sound["unavailable"], true, "{tree}");
 }
 
-/// An input's end lands the `then` of the answer it settled: `clock land` runs it, the clock
-/// unmoved and no timer fired.
+/// An input's end lands the `then` of the answer it settled (LLP 1012 §2;
+/// trivia F3): `clock land` runs it, the clock unmoved and no timer fired.
 #[test]
 fn land_runs_an_answers_then_and_no_timer() {
     let plan = contract::compile(
@@ -1113,10 +1116,10 @@ fn land_runs_an_answers_then_and_no_timer() {
     );
 }
 
-/// `type <id> paste|copy|cut` delivers the clipboard's
+/// Spreadsheet F6: `type <id> paste|copy|cut` delivers the clipboard's
 /// event at the target, the nearest node with a handler hearing it.
 /// Answers `save()` at once with 1 and leaves two storage operations to
-/// the background, each round 30 ms on the I/O worker.
+/// the background (LLP 1097 D5), each round 30 ms on the I/O worker.
 #[derive(Default)]
 struct Saving {
     left: u64,
@@ -1172,7 +1175,7 @@ impl DataSource for Saving {
     }
 }
 
-/// `clock +N` does not wait for background storage and says
+/// LLP 1097 D9: `clock +N` does not wait for background storage and says
 /// how much is left beside `inflight`, a number; `clock settle` waits for
 /// it, and `state.background` counts what landed.
 #[test]
@@ -1203,7 +1206,7 @@ fn clock_settle_waits_for_background_storage_and_a_jump_names_it() {
     assert_eq!(state["pending"], serde_json::json!([]), "{state}");
 }
 
-/// `prefer mode`: the app's `setMode` for each pin, the
+/// `prefer mode` (LLP 1121 D13): the app's `setMode` for each pin, the
 /// scheme left as it is; an axis or value the design lacks is refused.
 #[test]
 fn prefer_mode_sets_the_apps_modes() {
@@ -1268,7 +1271,7 @@ fn prefer_mode_sets_the_apps_modes() {
     );
 }
 
-/// A sequence's fill is a wake of the runner's own, which
+/// LLP 1125 D3: a sequence's fill is a wake of the runner's own, which
 /// `clock settle` does not wait for; a jump passes through each fill, and
 /// `state.transport` says how far the hits are issued.
 #[test]
@@ -1302,8 +1305,8 @@ fn clock_settle_does_not_wait_for_a_sequence_s_fill() {
     assert_eq!(haptics[4]["state"], serde_json::json!("played"));
 }
 
-/// A date or time control's picker is held for the agent on every host:
-/// `type @date <value>` chooses, `tap @date clear`
+/// A date or time control's picker is held for the agent on every host
+/// (LLP 1115.001.000 D1): `type @date <value>` chooses, `tap @date clear`
 /// empties it, `tap @date cancel` leaves it, and a value not of its kind
 /// is refused before the hold is spent.
 #[test]

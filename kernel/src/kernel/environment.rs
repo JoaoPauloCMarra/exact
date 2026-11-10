@@ -1,4 +1,4 @@
-//! Host environment invalidation.
+//! Host environment invalidation. @ref LLP 1104 D4.
 use super::*;
 
 impl Kernel {
@@ -7,16 +7,16 @@ impl Kernel {
         self.measurer.format_time(request)
     }
 
-    /// Say which font stacks, by id, are the system's:
+    /// Say which font stacks, by id, are the system's (LLP 1115.000 D12.3):
     /// those whose first member is a generic family. Bold Text weights
     /// them; unsaid, the eight generic stacks are.
     pub fn set_system_stacks(&mut self, system: Vec<bool>) {
         self.arena.system_stacks = system;
     }
 
-    /// Whether Bold Text weights stack `family` now:
+    /// Whether Bold Text weights stack `family` now (LLP 1115.000 D12.3):
     /// the setting on, as the last commit applied it, and the stack the
-    /// system's. A binding reading a font outside the plan
+    /// system's. A binding reading a font outside the plan (LLP 1121 D12)
     /// steps its weight by it.
     pub fn bold_text_weights(&self, family: u16) -> bool {
         self.arena.bold_text && self.arena.system_family(family)
@@ -34,7 +34,7 @@ impl Kernel {
         self.arena.system_stacks.len()
     }
 
-    /// Measure every paragraph again: the host's text engine
+    /// Measure every paragraph again (LLP 1008 §3): the host's text engine
     /// rounds line boxes to another display's device pixels now (a Mac window
     /// moved to a display of another scale). Each paragraph's metric
     /// revision moves, so no answer from before stands, and the next layout
@@ -63,7 +63,7 @@ impl Kernel {
         !owners.is_empty()
     }
 
-    /// Say whether Bold Text is on: the person's
+    /// Say whether Bold Text is on (LLP 1115.000 D12.3): the person's
     /// accessibility setting, which weights the system font, an authored
     /// weight included, and leaves a family the app ships alone. The next
     /// commit applies it. Whether it changed.
@@ -77,7 +77,8 @@ impl Kernel {
 
     /// The page's environment: what `env(safe-area-inset-*)`,
     /// `env(viewport-segment-*)`, `env(titlebar-area-*)` and the layout
-    /// regions' `env(-exact-<region>-inset-*)` lengths resolve to.
+    /// regions' `env(-exact-<region>-inset-*)` lengths resolve to (LLP 1001
+    /// §2; LLP 1078 D3; LLP 1123 D10).
     pub fn env(&self) -> Env {
         self.arena.env().clone()
     }
@@ -88,7 +89,7 @@ impl Kernel {
         self.provisional_layouts
     }
 
-    /// Set the insets, the layout regions, the title-bar area and control text
+    /// Set the insets, the layout regions (LLP 1123 D10), the title-bar area and control text
     /// styles of the environment — what the host reports with the viewport (a
     /// rotation changes them); the segment grid
     /// `env` carries is ignored, [`Kernel::set_segments`] being its twin.
@@ -117,7 +118,7 @@ impl Kernel {
         self.replace_env(next)
     }
 
-    /// Set the viewport segments: `cols × rows` rects,
+    /// Set the viewport segments (LLP 1078 D3): `cols × rows` rects,
     /// row-major, in the layout viewport's points — none for one segment,
     /// where CSS defines no segment variable. Refuses a zero count, a count
     /// that is not `cols × rows` (any rect on a 1 × 1 grid), and a
@@ -136,8 +137,8 @@ impl Kernel {
         self.replace_env(next)
     }
 
-    /// Lay borders out as a terminal does: a drawn side is one cell. The
-    /// terminal host sets it on its own kernel before
+    /// Lay borders out as a terminal does: a drawn side is one cell (LLP
+    /// 1101.001 P13). The terminal host sets it on its own kernel before
     /// the tree is built; it is this kernel's alone.
     pub fn set_cell_borders(&mut self, on: bool) {
         let next = self.arena.env().with_cell_borders(on);
@@ -166,7 +167,7 @@ impl Kernel {
     }
 
     /// Lay spaces out as a terminal does: a padding, margin or gap in points
-    /// is whole cells on its axis. The
+    /// is whole cells on its axis (LLP 1101 §4, LLP 1121 stage 11 (c)). The
     /// terminal host sets it beside [`Self::set_cell_borders`]; it is this
     /// kernel's alone.
     pub fn set_cell_spaces(&mut self, on: bool) {

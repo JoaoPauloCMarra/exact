@@ -1,6 +1,6 @@
 //! Collection-certified Arrange. No host clock, motion executor or data preview.
-//! A list with a `reorderGroup` adds a target and a hold
-//! (`reorder_group.rs`); every call here keeps the source's token.
+//! A list with a `reorderGroup` adds a target and a hold (`reorder_group.rs`,
+//! LLP 1094); every call here keeps the source's token.
 use super::reorder_group::Session;
 use super::*;
 use crate::instance::collection::{
@@ -87,7 +87,7 @@ impl<D: DataSource> Runner<D> {
     /// Admit one preview only after the host acquired the existing interaction pin.
     /// Refused identity/facts do not consume a serial or change any styles/pins.
     /// The session stays in its list, a grouped one too; a host that drags
-    /// between lists begins with `begin_group_reorder`.
+    /// between lists begins with `begin_group_reorder` (LLP 1094 D4).
     pub fn begin_reorder(
         &mut self,
         binding: ReorderBinding,
@@ -192,7 +192,7 @@ impl<D: DataSource> Runner<D> {
     /// Consume terminal eligibility once and dispatch exact private keys while the
     /// source pin remains owned. Host rebase/end MUST precede `finish_reorder`.
     /// A grouped session's `geometry` is its target's; it drops there and
-    /// may hold (`ReorderFrame::phase`).
+    /// may hold (`ReorderFrame::phase`, LLP 1094 D8).
     pub fn drop_reorder(
         &mut self,
         token: ReorderToken,
@@ -240,7 +240,7 @@ impl<D: DataSource> Runner<D> {
         result.map(Some)
     }
     /// Enter the no-action terminal phase; retain the pin until host hold cleanup.
-    /// A hold is past cancelling: its send is out.
+    /// A hold is past cancelling: its send is out (LLP 1094 D8).
     pub fn cancel_reorder(
         &mut self,
         token: ReorderToken,
@@ -267,7 +267,7 @@ impl<D: DataSource> Runner<D> {
     /// Bounded live wrapper identities/targets for host before/after C0 rebasing.
     /// Current viewport presentation and mapping remain the host's responsibility.
     /// It says where the session stands, its target, and which mounted
-    /// wrapper holds the dragged row now.
+    /// wrapper holds the dragged row now (LLP 1094 D4, D8).
     pub fn reorder_frame(&self, token: ReorderToken) -> Option<ReorderFrame> {
         let mut frame = self
             .reorder_collection(token.list)?
@@ -329,7 +329,7 @@ impl<D: DataSource> Runner<D> {
         }
         self.reorder_owner = None;
         // Every row a grouped session hid shows again, and any gap left
-        // open closes.
+        // open closes (LLP 1094 D6).
         if let Some(s) = self.reorder_session.take() {
             for list in s.touched {
                 let (_, o) = self.edit_reorder(list, |c, u, _| {

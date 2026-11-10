@@ -1,4 +1,4 @@
-//! The executor's replies into the runner, each a commit.
+//! The executor's replies into the runner, each a commit (LLP 1016 D2).
 use super::*;
 
 #[cfg(all(test, unix))]
@@ -6,7 +6,7 @@ use super::*;
 mod abort_tests;
 
 impl<D: DataSource> Presenter<D> {
-    /// The executor's replies into the runner, each a
+    /// The executor's replies into the runner (LLP 1016 D2), each a
     /// commit: the display loop calls this when the executor's fd is
     /// readable, the agent when it waits. `None` when nothing was queued.
     pub fn pump(&mut self, now_ms: f64) -> Option<String> {

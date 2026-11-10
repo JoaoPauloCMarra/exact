@@ -1,4 +1,4 @@
-// A compiled app reads the browser's display-mode, including
+// LLP 1039 D7: a compiled app reads the browser's display-mode, including
 // transitions, through the same media reporter as the wasm target.
 import { test, expect } from 'bun:test';
 import { suiteBrowser } from '../../../scripts/agent-launch.mjs';

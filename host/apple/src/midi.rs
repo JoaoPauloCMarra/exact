@@ -1,4 +1,4 @@
-//! MIDI from the arm: what the MIDI arm reports of the
+//! MIDI from the arm (LLP 1125 D6–D8): what the MIDI arm reports of the
 //! ports and the inputs, and the agent's `prefer midi.*` and `tap midi`,
 //! each in one batch.
 
@@ -28,7 +28,7 @@ impl<D: DataSource> Host<D> {
         self.commit(&timed, error)
     }
 
-    /// The agent's `prefer extension`, in one batch: a native
+    /// The agent's `prefer extension` (LLP 1124 D7), in one batch: a native
     /// module source's preferred value, its readers asked again.
     pub fn extension(&mut self, json: &str) -> String {
         let Some((receipts, reply)) = self.runner.extension_agent(json) else {
@@ -46,7 +46,7 @@ impl<D: DataSource> Host<D> {
         self.commit(&timed, error)
     }
 
-    /// A module event the platform reported: `{"extension",
+    /// A module event the platform reported (LLP 1133.004 D6): `{"extension",
     /// "event", "args", "activation"}`, raised with a person's origin only
     /// when an activation callback of the host's reported it, then heard.
     pub fn module_event(&mut self, json: &str) -> String {
@@ -90,7 +90,7 @@ impl<D: DataSource> Host<D> {
     /// the old runner's last outputs go first, every voice ended and every
     /// note it turned on given its note-off now, clock out's Stop sent, so
     /// nothing is left sounding when the new boot's `midi` op lets go of what
-    /// the output held.
+    /// the output held (LLP 1125 D4).
     pub fn ending(old: Option<Self>, batch: String) -> String {
         let Some(mut old) = old else {
             return batch;

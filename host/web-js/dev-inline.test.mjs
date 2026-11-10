@@ -1,5 +1,5 @@
 // The JS dev loop's word on a live proposal (dev-inline.mjs): a token its pages write inline that moves makes it a
-// rebuild, and so does what can't be known yet, never live.
+// rebuild, and so does what can't be known yet (theme2's ruling of 2026-10-23 10:01), never live.
 import { expect, test } from 'bun:test';
 import { inlineWhy } from './dev-inline.mjs';
 

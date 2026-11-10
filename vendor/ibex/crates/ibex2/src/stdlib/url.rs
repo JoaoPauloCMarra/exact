@@ -1,8 +1,8 @@
-//! `URL` / `URLSearchParams` — pure, ungated.
+//! `URL` / `URLSearchParams` — pure, ungated (LLP 0059.000 §3.4).
 //!
 //! Full WHATWG parsing including IDNA and percent-encoding, delegated to the
-//! `url` crate rather than hand-written, because a partial URL parser is a
-//! security bug and not a missing feature.
+//! `url` crate rather than hand-written, because §3.4 is explicit that a
+//! partial URL parser is a security bug and not a missing feature.
 
 use url::Url;
 
@@ -385,7 +385,7 @@ mod tests {
         assert!(parse("not a url", None).is_err());
     }
 
-    /// The reason for a real parser: IDNA and percent-encoding are
+    /// The reason §3.4 insists on a real parser: IDNA and percent-encoding are
     /// where a hand-rolled one becomes a security bug.
     #[test]
     fn applies_idna_and_percent_encoding() {

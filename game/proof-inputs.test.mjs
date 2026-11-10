@@ -256,7 +256,7 @@ test('an initially absent assets tree cannot appear, feed a build and disappear 
   } finally { rmSync(dir, {recursive:true, force:true}); }
 });
 
-test('receipts and proof provenance bind post-bake generated assets', async () => {
+test('E11 receipts and proof provenance bind post-bake generated assets', async () => {
   const dir=mkdtempSync(resolve(tmpdir(),'e11-generated-')), app=resolve(dir,'game/games/sample'), out=resolve(dir,'artifacts/linux');
   const write=(file,bytes)=>writeFixtureFile(dir,file,bytes);
   const generated=bytes=>{write('game/games/sample/assets/textures/crate.astc.tex',bytes);write('game/games/sample/.baked-assets.json',JSON.stringify({'textures/crate.astc.tex':createHash('sha256').update(bytes).digest('hex')}));};
@@ -285,7 +285,7 @@ test('receipts and proof provenance bind post-bake generated assets', async () =
   } finally {rmSync(dir,{recursive:true,force:true});}
 });
 
-test('clean Git blobs and stat-cached dirty inputs have stable identities', async () => {
+test('E11 clean Git blobs and stat-cached dirty inputs have stable identities', async () => {
   const {spawnSync}=await import('node:child_process');
   const dir=mkdtempSync(resolve(tmpdir(),'e11-digest-')), app=resolve(dir,'game/games/sample');
   const write=(file,text)=>writeFixtureFile(dir,file,text);

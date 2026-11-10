@@ -1,4 +1,4 @@
-//! Scrolling by a shell that owns the gesture:
+//! Scrolling by a shell that owns the gesture (LLP 1115.001 D7.1 to D7.3):
 //! Android's reader takes a finger's drag and its fling with the platform's
 //! own classes, moves the scroller's drawing itself, and tells the presenter
 //! after. The presenter never recognizes a scroll. What crosses is this:
@@ -66,7 +66,7 @@ pub struct Under {
     /// there would take.
     pub claims: (bool, bool),
     /// The text field the shell hosts that a touch there is for, when the
-    /// node hit is one: the touch is then that field's,
+    /// node hit is one (LLP 1115.001 D8): the touch is then that field's,
     /// and the presenter hears of the focus it takes, not of the touch.
     pub field: Option<ViewId>,
 }
@@ -367,7 +367,7 @@ impl<D: DataSource> Presenter<D> {
     /// The scrollers the clamp leaves alone: each a list kept while its route is hidden (a
     /// full-screen route over it), or shown again but not yet painted where it shows. The
     /// picture holds no travel for such a list, so the clamp would put it at its top and it
-    /// would show its first rows when its route came back (a picture's dismiss). Shown
+    /// would show its first rows when its route came back (Excord's picture dismiss). Shown
     /// again, its first frame is bounded by its layout's travel, staged as its own clamp
     /// (`stage_shown`) with its input offset kept until that frame is acknowledged, any rows put
     /// above it while hidden kept by its anchor; painted, it is clamped as before. Only the node
@@ -420,7 +420,7 @@ impl<D: DataSource> Presenter<D> {
 
     /// [`Presenter::scrollers_at`] for a reader, in its pixels (`scale` to a
     /// point): the claims (bit 0 sideways, bit 1 up and down), a count, the
-    /// hosted text field the touch is for (0: none), and
+    /// hosted text field the touch is for (0: none; LLP 1115.001 D8), and
     /// eleven words a scroller: id, flags (bit 0 it takes a sideways drag
     /// from here, bit 1 one up or down, bit 2 it has rows the reader can
     /// move), revision, then as float bits its offset (x, y), its farthest

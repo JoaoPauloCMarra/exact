@@ -245,7 +245,7 @@ fn keys_submit_focus_and_blur_reach_their_handlers() {
     );
 }
 
-/// `stopPropagation()`: the field's handler is the last
+/// `stopPropagation()` (files diary F8): the field's handler is the last
 /// to hear the key; an ancestor's hears every other.
 #[test]
 fn a_stopped_key_reaches_no_ancestor() {
@@ -585,7 +585,7 @@ fn a_repress_during_release_keeps_the_original_hit_box_and_cancel_never_activate
     assert!(log(&p).ends_with(" 0"));
 }
 
-/// The pointer's down, moves and up reach
+/// LLP 1005 §3, LLP 1056 §3 stage 3: the pointer's down, moves and up reach
 /// the node hearing them with its record, from its content box; a free
 /// pointer's moves too, with no button down. A native input's content box is
 /// CSS's: the platform's chrome inside its border is not part of the border.
@@ -647,7 +647,7 @@ fn the_pointer_events_carry_their_record_from_the_content_box() {
     assert!(log(&p).ends_with(" d20,10/1"), "{}", log(&p));
 }
 
-/// The agent's `tap` is what a press there delivers: the
+/// The agent's `tap` is what a press there delivers (LLP 1012 §1): the
 /// pointer's down and up, bubbled, then the press, in DOM's order, so a
 /// control that holds on `pointerdown` (a hold-to-repeat stepper) works
 /// under the agent too.
@@ -811,7 +811,7 @@ fn a_disabled_box_hears_the_wheel_and_a_disabled_button_does_not() {
     assert_eq!(log(&p), " box30 link50");
 }
 
-/// `frame()`
+/// LLP 1051.000 D1 (changed 2026-10-04; the kanban diary's F4): `frame()`
 /// reads the box where the viewer sees it, the scroller's offset applied.
 #[test]
 fn frame_reads_a_box_with_the_scroll_above_it_applied() {
@@ -846,7 +846,7 @@ fn frame_reads_a_box_with_the_scroll_above_it_applied() {
     assert_eq!(log(&p), "220", "the pane's 120 px of scrolling");
 }
 
-/// HTML's `tabindex` and Tab: an explicit value makes a plain
+/// HTML's `tabindex` and Tab (LLP 1088 D7.3): an explicit value makes a plain
 /// box focusable and, ≥ 0, a Tab stop, positive values first; a negative
 /// one takes a tap and `autofocus` but Tab skips it; absent is never `0`;
 /// a disabled button, inert and hidden boxes are skipped, and a disabled
@@ -1016,7 +1016,7 @@ fn agent_typing_commits_only_on_enter_or_blur() {
 
 #[test]
 fn an_unbound_field_holds_its_typed_text_until_its_bound_value_changes() {
-    // An unbound control holds its own state; the web
+    // LLP 1069.001 D4: an unbound control holds its own state; the web
     // build writes a field's `value` only when the bound value changes.
     let (mut p, error) = Presenter::boot_with(
         &contract::compile(
@@ -1114,7 +1114,7 @@ fn an_unbound_field_holds_its_typed_text_until_its_bound_value_changes() {
 fn a_reload_forgets_unbound_controls_own_state() {
     // A restart replaces the tree and its runner reuses view ids: an unbound
     // checkbox's own state, or a field's typed text, is not the new tree's
-    // (`Presenter::replaced`).
+    // (LLP 1069.001 D4; `Presenter::replaced`).
     let src = r#"component App
   view
     column
@@ -1218,7 +1218,7 @@ impl DataSource for Refused {
 /// held behind both: driven only by the executor's wake, as the display loop
 /// is, the send still runs. The runner kept no refusal for a background
 /// ticket, so its refusal never settled and nothing lifted the fence over the
-/// send.
+/// send (Astra, round 2).
 #[test]
 #[cfg(unix)]
 #[allow(unsafe_code)] // poll(2) on the executor's wake, as the display loop waits
@@ -1305,7 +1305,8 @@ impl DataSource for Waiting {
 
 /// Two hundred answers re-asked twice each, more than the re-ask markers'
 /// window of 128: driven only by the executor's wake, as the display loop
-/// is, every one settles and none is refused.
+/// is, every one settles and none is refused (LLP 1041 §8.4, amended
+/// 2026-10-09). Before, each re-ask was opaque work against the sixteen.
 #[test]
 #[cfg(unix)]
 #[allow(unsafe_code)] // poll(2) on the executor's wake, as the display loop waits

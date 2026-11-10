@@ -1,4 +1,4 @@
-//! Native threshold-zero observations of intersection visibility.
+//! Native threshold-zero observations. @ref LLP 1005 §Intersection visibility.
 use super::{DataSource, Runner};
 use exact_kernel::{NodeKey, ViewId};
 use exact_plan::EventKind;

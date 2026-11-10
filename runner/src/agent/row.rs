@@ -13,7 +13,7 @@ use std::fmt::Write as _;
 
 /// Row `row`'s value `v`, as JSON text, onto `out`.
 pub fn row_json(row: StyleId, v: RowValue<'_>, out: &mut String) {
-    // CSS's unbounded maximum is `none`, as the web writes it.
+    // CSS's unbounded maximum is `none`, as the web writes it (LLP 1102 §3.11).
     if matches!(row, StyleId::MaxWidth | StyleId::MaxHeight)
         && matches!(v, RowValue::Dimension(Dimension::Auto))
     {
@@ -105,7 +105,7 @@ pub fn row_json(row: StyleId, v: RowValue<'_>, out: &mut String) {
         RowValue::ColorValue(ColorValue::LightDark(l, d)) => {
             quote(&format!("light-dark({}, {})", hex(l), hex(d)), out)
         }
-        // A reference reports what it names.
+        // @ref LLP 1095 D7 — a reference reports what it names.
         RowValue::ColorValue(ColorValue::Role(id)) => quote(
             exact_kernel::style::roles::role_of(id).map_or("transparent", |r| r.name),
             out,
@@ -116,7 +116,7 @@ pub fn row_json(row: StyleId, v: RowValue<'_>, out: &mut String) {
                 None => quote("transparent", out),
             }
         }
-        // A colour in its own space reports as CSS writes it.
+        // @ref LLP 1100 D2 — a colour in its own space reports as CSS writes it.
         RowValue::ColorValue(ColorValue::Wide(id)) => match exact_kernel::style::wide::wide(id) {
             Some(w) => quote(&w.text, out),
             None => quote("transparent", out),

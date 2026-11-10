@@ -1,4 +1,4 @@
-// Exercise the native migration without a provisioned Keychain.
+// LLP 1126.001 WP16: exercise the native migration without a provisioned Keychain.
 #import <Foundation/Foundation.h>
 #import <Security/Security.h>
 #include <cassert>

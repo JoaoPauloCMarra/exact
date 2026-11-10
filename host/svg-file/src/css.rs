@@ -1,4 +1,4 @@
-//! The styling a file carries: `style=""` on an element,
+//! The styling a file carries (LLP 1011.001 D2): `style=""` on an element,
 //! and a `style` element's rules with type, class and id selectors and no
 //! combinators, which is what a designer's export writes (`.cls-1{fill:…}`).
 //! A rule with anything else in its selector is dropped, with a warning.

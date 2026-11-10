@@ -1,4 +1,4 @@
-# The camera by a person
+# The camera by a person (LLP 1133.008 §10 drive 8, §13)
 
 What no tool can do here: grant the camera on a Mac, open a phone's camera,
 and look. Each step says what to run and what you should see.
@@ -38,11 +38,11 @@ and look. Each step says what to run and what you should see.
      camera again with no dialog.
   8. Turn the camera off in Settings > Photo Editor: on return the editor
      says the camera is off, with Open Settings.
-  9. The restart time: with the viewfinder hidden and shown again,
+  9. The restart time (D11): with the viewfinder hidden and shown again,
      note how long the camera takes to return (the journal's
      `capture started` beside the view's `displayed true`).
-- Android: the photo editor is not yet ported; the fixture
-  app is the Android acceptance. Build it as
+- Android: the photo editor's port waits (`rules/DEFERRED.md`); the fixture
+  app is the Android acceptance (§14 question 5). Build it as
   `packages/camera/test/android.mjs` does (it builds and deletes it; keep its
   app directory to install the APK), install it on a phone, and with
   `--bind media-capture --bind camera`: Open, allow the dialog: the back

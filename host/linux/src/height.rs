@@ -97,7 +97,7 @@ impl<D: DataSource> Host<D> {
 
     /// The size a text field's own font starts at, `px` points, where the
     /// page's initial 16 is not it: a shell that hosts the platform's field
-    /// sets it by the device's font scale, and under the
+    /// sets it by the device's font scale (LLP 1115.001 D8), and under the
     /// Material look a button's with it, whose title is label-large in sp.
     /// Laid out again when a field read it; whether anything changed.
     pub fn set_field_font_size(&mut self, px: f32) -> Result<bool, String> {
@@ -190,7 +190,7 @@ impl<D: DataSource> Host<D> {
                 kernel.compute_layout_presented(root, Offer::definite(w, h), projection.as_slice())
             })
             .map_err(|e| format!("layout: {e:?}"))?;
-            // Flow-only changes damage the paragraph.
+            // @ref LLP 1043.000 §3 D4/D7 — flow-only changes damage the paragraph.
             self.runner.report_flow_skipped(&receipt.flow_skipped);
             self.runner
                 .report_fragment_skipped(&receipt.fragment_skipped);

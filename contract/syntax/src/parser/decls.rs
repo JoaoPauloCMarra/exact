@@ -7,7 +7,8 @@ use super::*;
 impl Parser {
     /// `mutation NAME as shape T [queue] [refreshes a, b] [then action]`.
     /// The clauses after the shape may continue on deeper-indented lines, in
-    /// the same order.
+    /// the same order (the codeedit diary: `then` on the next line was
+    /// `syntax-expected-section`).
     pub(super) fn mutation(&mut self) -> R<MutationDecl> {
         let span = self.expect_word("mutation")?;
         let name = self.named_ident(span)?;
@@ -15,7 +16,7 @@ impl Parser {
         self.expect_word("shape")?;
         let shape = self.type_expr()?;
         let mut continued = false;
-        // A keyword only here: every send of the
+        // @ref LLP 1092 D1 — a keyword only here: every send of the
         // mutation waits for the one before it.
         let queue = self.clause_ahead("queue", &mut continued);
         if queue {
@@ -46,7 +47,7 @@ impl Parser {
         } else {
             None
         };
-        // A clause out of order (`refreshes cards queue`).
+        // A clause out of order (r32 t4 wrote `refreshes cards queue`).
         if let Some(word) = ["queue", "refreshes", "then"]
             .into_iter()
             .find(|w| self.at_ident(w))
@@ -109,7 +110,7 @@ impl Parser {
     pub(super) fn task(&mut self) -> R<Task> {
         let span = self.expect_word("task")?;
         let name = self.named_ident(span)?;
-        // `mount`, or a gate: `when cond [key=expr]`, or
+        // @ref LLP 1092 D7 — `mount`, or a gate: `when cond [key=expr]`, or
         // `key=expr` alone (`when true`), spelled as `for` spells its key.
         let Some((gate, key)) = self.gate()? else {
             return self.err(
@@ -133,7 +134,7 @@ impl Parser {
                 }
             };
             p.expect_punct("(")?;
-            // `every(frame, a)`: `frame` there is a word, not an expression.
+            // `every(frame, a)`: `frame` there is a word, not an expression (LLP 1073 D1).
             let frame = p.at_ident("frame") && matches!(p.peek2(), TokenKind::Punct(","));
             let ms = if frame {
                 if kind == TaskKind::After {

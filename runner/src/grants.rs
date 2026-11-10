@@ -1,5 +1,5 @@
 //! Whole-set grant admission, sharing ibex2's pure grammar.
-//! Presenter and device grants remain
+//! @ref LLP 1016 D6 / LLP 1018 D3. Presenter and device grants remain
 //! with their owning executors, exactly as `io_grants` treats them.
 pub use exact_grants::{is_service_type, DEVELOPMENT, LOCAL_NETWORK};
 
@@ -16,7 +16,7 @@ impl<'a> Grants<'a> {
     }
 
     /// The names `secret.keep` grants, in declaration order: the store's
-    /// load list.
+    /// load list (LLP 1018 D3).
     pub fn secrets(&self) -> impl Iterator<Item = &'a str> + '_ {
         self.lines.iter().filter_map(|line| {
             let mut words = line.split_whitespace();
@@ -26,8 +26,8 @@ impl<'a> Grants<'a> {
         })
     }
 
-    /// The `secret.keep` names that carry a presence policy,
-    /// in declaration order.
+    /// The `secret.keep` names that carry a presence policy (LLP 1133.010
+    /// D4), in declaration order.
     pub fn presence(&self) -> impl Iterator<Item = (&'a str, exact_grants::Presence)> + '_ {
         self.lines
             .iter()
@@ -36,7 +36,7 @@ impl<'a> Grants<'a> {
 }
 
 /// How the runner reads an I/O grant line (`net.fetch …`, `secret.keep …`),
-/// when an archive links I/O: its own lines (devices, auth)
+/// when an archive links I/O (LLP 1047.001): its own lines (devices, auth)
 /// it reads itself. An archive without I/O names no grant grammar, and the
 /// URL parsing an origin needs with it.
 pub type GrantsLink = Option<fn(&str) -> Result<(), String>>;
@@ -98,10 +98,10 @@ pub fn parse_with(spec: &str, link: GrantsLink) -> Result<Grants<'_>, Vec<String
 /// narrowed by a source's `scope` (which may only select lines the app
 /// has): the first `net.websocket` line for a `ws:` or `wss:` URL, as every
 /// executor opens one, else the first `net.fetch` line. `state.streams`
-/// names it.
+/// names it (LLP 1016.000 D7).
 pub fn admitting<'a>(spec: &'a str, scope: Option<&'a str>, url: &str) -> Option<&'a str> {
     use exact_grants::{GrantSet, Operation};
-    // A listener's line, by its path as written.
+    // A listener's line, by its path as written (LLP 1133.005 D11).
     if let Ok(path) = crate::listen::unix_path(url) {
         return crate::listen::admitting(spec, scope, path, str::to_string);
     }
@@ -126,7 +126,7 @@ pub fn admitting<'a>(spec: &'a str, scope: Option<&'a str>, url: &str) -> Option
 
 /// The line that admits a stream `request` under its scope, as
 /// [`admitting`] for a URL; for a child process, the first `process.spawn`
-/// line that names its program (as `state.streams` shows it).
+/// line that names its program (LLP 1133.007 D2's `state.streams`).
 pub fn admitting_request<'a>(spec: &'a str, request: &'a crate::Request) -> Option<&'a str> {
     let scope = request.grants.as_deref();
     if !request.is_process() {
@@ -148,17 +148,17 @@ pub fn refusal(errors: &[String]) -> String {
 
 /// Whether a trimmed line is one of exact2's own grants: enforced by the
 /// presenter (`surface.*`), by the OS and the capability that asks
-/// (`device.*`), by the OS's hardened runtime (`runtime.*`),
-/// by the host's auth arm (`auth.*`), by the host's
-/// kept documents (`doc.keep`), by the module
-/// admission of `@exact/browser-automation`'s names (`browser.automation`),
-/// of `@exact/local-network`'s service types
-/// (`net.dns-sd <type>`) and of `@exact/payments`'s
-/// (`payment.*`), never by the I/O executor's grammar;
+/// (`device.*`, LLP 1069.008 D3), by the OS's hardened runtime (`runtime.*`,
+/// D9), by the host's auth arm (`auth.*`, LLP 1069.006), by the host's
+/// kept documents (`doc.keep`, LLP 1069.010.000 D7), by the module
+/// admission of `@exact/browser-automation`'s names (`browser.automation`,
+/// LLP 1020.002 D9), of `@exact/local-network`'s service types
+/// (`net.dns-sd <type>`, LLP 1133.036 D7) and of `@exact/payments`'s
+/// (`payment.*`, LLP 1133.034 D13), never by the I/O executor's grammar;
 /// and the desktop-process lines (`process.spawn`, `env.read login:`,
-/// `secret.hold`), which the runner and the data executor
+/// `secret.hold`, LLP 1133.007 §6), which the runner and the data executor
 /// read with `exact_grants::process`, and `net.listen`, which the listener
-/// checks.
+/// checks (LLP 1133.005 D11).
 pub(crate) fn own(line: &str) -> bool {
     line == "doc.keep"
         || exact_grants::process::is_process_line(line)
@@ -424,7 +424,7 @@ mod tests {
         assert!(json.contains("\"seal\":\""), "{json}");
     }
 
-    /// The desktop-process lines are the runner's own:
+    /// The desktop-process lines (LLP 1133.007 §6) are the runner's own:
     /// read whole here, never handed to the I/O grammar, and a name is
     /// kept or held, not both.
     #[test]
@@ -438,8 +438,8 @@ mod tests {
         assert!(super::parse("fs.read home:/").unwrap_err()[0].contains("home-grant-whole"));
     }
 
-    /// `browser.automation` is the runner's own line and names no target:
-    /// with a word after it, it is no such line, and the
+    /// `browser.automation` is the runner's own line and names no target
+    /// (LLP 1020.002 D9): with a word after it, it is no such line, and the
     /// I/O grammar refuses it.
     #[test]
     fn browser_automation_is_an_own_line_with_no_target() {

@@ -48,7 +48,7 @@ wallpapers are selected by layout. Dates range from January 1900 to December 210
 ## The person's calendars and contacts
 
 The app reads the system's calendars and picks from the system's contacts
-through `@exact/calendar` and `@exact/contacts`:
+through `@exact/calendar` and `@exact/contacts` (LLP 1133.018 §11):
 
 - **Show my calendars**, a switch in the inspector where the target has a
   calendar store (iOS and macOS). While it is on, the selected day's agenda
@@ -104,8 +104,8 @@ bun scripts/agent.mjs web --app calendar --size 1180x800 \
   "type schedule-title Shared calendar" "tap save-schedule" "clock +500" state logs
 ```
 
-`bun examples/calendar/tests/drives.mjs <macos|ios|web>` runs the calendar
-acceptance drives under the agent, over the packages' fixture calendars and
+`bun examples/calendar/tests/drives.mjs <macos|ios|web>` runs LLP 1133.018
+§11's drives under the agent, over the packages' fixture calendars and
 contacts: never the person's own.
 
 For a compact drive, use `--size 402x874` and insert `"tap add-event"` after

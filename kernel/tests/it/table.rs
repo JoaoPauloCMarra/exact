@@ -1,4 +1,4 @@
-//! A table laid out as a grid: cells placed by HTML's
+//! A table laid out as a grid (LLP 1153 D7.3): cells placed by HTML's
 //! table-forming algorithm, `auto` columns, the table as wide as its
 //! columns, and HTML's UA spacing (`border-spacing: 2px`, a cell's `padding:
 //! 1px`). Each cell here holds a sized box, so no text is measured; the
@@ -363,7 +363,7 @@ fn a_hidden_row_leaves_the_grid_and_comes_back() {
 
 /// The distance of the kernel's columns from Chrome's, which conformance
 /// measured on the fixture `table-widths` (Chrome 156, 2026-10-30), to the
-/// hundredth of a pixel: what the declared deviation is.
+/// hundredth of a pixel: what the declared deviation is (LLP 1153 D7.3).
 fn from_chrome(grid: [f32; 2], chrome: [f32; 2]) -> [f32; 2] {
     [0, 1].map(|i| ((grid[i] - chrome[i]) * 100.0).round() / 100.0)
 }

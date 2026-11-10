@@ -1,11 +1,11 @@
-// A symbol on a native control's face: an SF
+// A symbol on a native control's face (LLP 1121 D10; stage 9 A2): an SF
 // Symbol's name, or, for an icon token with no `sf` and a template path, a
 // token holding that path (`symbolPath` on its image node, or beside a face's
 // "" `symbol` in the press face's and a grouped row's JSON). The token goes
 // wherever a face carries a name — its equality, its caches and its drawn
 // source keep working — and draws as a template image (ExactCore's
 // IconPath) that the control tints as it tints an SF Symbol: on a control's
-// face a symbol keeps the platform's or the control's tint,
+// face a symbol keeps the platform's or the control's tint (D9; LLP 1115 D4),
 // not the page image's tint-else-colour. A multicolour SVG needs an `sf`.
 #if os(macOS)
 import AppKit
@@ -18,7 +18,7 @@ package enum FaceSymbol {
     /// What a path token starts with; no SF Symbol or role name holds a `:`.
     static let prefix = "icon-path:"
 
-    /// What follows the prefix in an even-odd icon's token; a
+    /// What follows the prefix in an even-odd icon's token (stage 14 C2); a
     /// nonzero icon's token is as it was. No viewBox starts with a letter.
     static let evenOdd = "evenodd|"
 

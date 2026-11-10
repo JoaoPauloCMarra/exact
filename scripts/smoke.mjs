@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
-// Drive an app through the agent API, its app.test.contract and generic host
+// Drive an app through the agent API (LLP 1012), its app.test.contract and generic host
 // fixtures; Caltrain's interactions run when its fixture root is present.
 // `bun scripts/smoke.mjs <web|macos|ios|linux> [--shot <png>]`; ios --device selects a phone.
 // Build native apps first with host/apple/build.mjs [--ios] or cargo build --profile host-dev
 // -p <app>-linux. The web builds here. --app-only skips bare-plan host fixtures and their
-// all-capabilities web build, keeping the app drive and its Contract tests.
+// all-capabilities web build (LLP 1047 D7), keeping the app drive and its Contract tests.
 import { spawnSync } from 'node:child_process';
 import { createHash, randomUUID, verify } from 'node:crypto';
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -34,13 +34,13 @@ if (app.name === 'exact-live' && ['web', 'macos', 'linux'].includes(argv[0])) {
   streamFixture = await startStreamFixture();
 }
 let selectedWebDist = null;
-let fixtureWebDist = null; // the router sweep's wasm build, linking every capability
+let fixtureWebDist = null; // the router sweep's wasm build, linking every capability (LLP 1047 D7)
 const device = argv.includes('--device');
 const phone = argv.includes('--phone') ? argv[argv.indexOf('--phone') + 1] : undefined;
 const open = (options) => openAgent({ device, phone, ...options, app: options.app ?? app.name, webDist: options.webDist ?? selectedWebDist }); // a plan: its JS build (`--plan`)
 const runTests = (options) => runAgentTests({ device, phone, ...options, app: options.app ?? app.name, webDist: options.webDist ?? selectedWebDist });
 
-// 0. The transcript form: the one text rendering of the
+// 0. The transcript form (LLP 1012 §7): the one text rendering of the
 // replies, pinned by a fixture — `scripts/fixtures/transcript.json` rendered
 // must equal `transcript.txt`. `--record` rewrites the text from the code
 // after a deliberate change to the form.
@@ -55,7 +55,7 @@ const host = argv[0] === 'macos' || argv[0] === 'mac' ? 'macos' : argv[0] === 'w
 if (!host) { console.error('usage: bun scripts/smoke.mjs <web|macos|ios|linux|host|host-ios|deploy|svg|canvas|motion|duo|shortcuts> [--app <name>] [--shot <png>] [--hosts linux,macos,ios] | --record'); process.exit(2); }
 
 // The two Apple presenters share one Canvases: children captured through the
-// surface, placements — what the canvas steps below assert.
+// surface, placements (LLP 1014 D2, D5) — what the canvas steps below assert.
 const apple = host === 'macos' || host === 'ios';
 const shot = argv.includes('--shot') ? argv[argv.indexOf('--shot') + 1] : process.env.EXACT_SHOT;
 // --record-canvas rewrites this host's reference picture of the canvas
@@ -67,7 +67,7 @@ const check = (ok, what) => { if (!ok) failures.push(what); return ok; };
 const t0 = Date.now();
 const byTestId = (t, id) => t.nodes.find((n) => n.props.testId === id);
 const box = (l, id) => l.nodes.find((n) => n.testId === id);
-if (host === 'shortcuts') { /* A world's focused canvas never hears a shown button's shortcut, each host's run of the fixture's proof (continuous, Save and FreshGame on linux and web) */ const simulator = process.platform === 'darwin' && /\((?:iPhone|iPad)|^\s+(?:iPhone|iPad)/m.test(spawnSync('xcrun', ['simctl', 'list', 'devices', 'available'], { encoding: 'utf8' }).stdout ?? ''); if (process.platform === 'darwin' && !argv.includes('--hosts') && !simulator) console.log('shortcuts smoke: ios skipped: no available iOS simulator (xcrun simctl list devices available)'); const hosts = (argv.includes('--hosts') ? argv[argv.indexOf('--hosts') + 1] : process.platform === 'darwin' ? `linux,web,macos${simulator ? ',ios' : ''}` : 'linux,web').split(','); for (const h of hosts) check(spawnSync(process.execPath, [resolve(ROOT, 'game/games/shortcut-fixture/proof.mjs'), h, ...(['linux', 'web'].includes(h) ? ['--paranoid'] : [])], { stdio: 'inherit' }).status === 0, `shortcut fixture on ${h}`); console.log(`shortcuts smoke: ${failures.length ? `${failures.length} failure(s)` : 'ok'} in ${((Date.now() - t0) / 1000).toFixed(1)} s`); for (const f of failures) console.error('  ' + f); process.exit(failures.length ? 1 : 0); }
+if (host === 'shortcuts') { /* LLP 1132 D11: a world's focused canvas never hears a shown button's shortcut, each host's run of the fixture's proof (continuous, Save and FreshGame on linux and web) */ const simulator = process.platform === 'darwin' && /\((?:iPhone|iPad)|^\s+(?:iPhone|iPad)/m.test(spawnSync('xcrun', ['simctl', 'list', 'devices', 'available'], { encoding: 'utf8' }).stdout ?? ''); if (process.platform === 'darwin' && !argv.includes('--hosts') && !simulator) console.log('shortcuts smoke: ios skipped: no available iOS simulator (xcrun simctl list devices available)'); const hosts = (argv.includes('--hosts') ? argv[argv.indexOf('--hosts') + 1] : process.platform === 'darwin' ? `linux,web,macos${simulator ? ',ios' : ''}` : 'linux,web').split(','); for (const h of hosts) check(spawnSync(process.execPath, [resolve(ROOT, 'game/games/shortcut-fixture/proof.mjs'), h, ...(['linux', 'web'].includes(h) ? ['--paranoid'] : [])], { stdio: 'inherit' }).status === 0, `shortcut fixture on ${h}`); console.log(`shortcuts smoke: ${failures.length ? `${failures.length} failure(s)` : 'ok'} in ${((Date.now() - t0) / 1000).toFixed(1)} s`); for (const f of failures) console.error('  ' + f); process.exit(failures.length ? 1 : 0); }
 if (host === 'duo') { const { duoSmoke } = await import('./smoke-duo.mjs'); const r = await duoSmoke({ open: (o) => openAgent({ device, phone, ...o }), check }); console.log(`duo smoke: ${r === 'unsupported' ? 'unsupported' : failures.length ? `${failures.length} failure(s)` : 'ok'} in ${((Date.now() - t0) / 1000).toFixed(1)} s`); for (const f of failures) console.error('  ' + f); process.exit(failures.length ? 1 : 0); }
 
 // A source-checkout invariant for destructive-looking smokes: names,
@@ -110,7 +110,7 @@ check(!browserDiagnosticNoise('console.error: exact: failed'), 'page/runtime err
 check(browserDiagnosticNoise('[1:2:0927/223530.638588:ERROR:components/page_load_metrics/browser/page_load_metrics_update_dispatcher.cc:179] Invalid first_paint 0.059 s for first_image_paint 0.057 s'), 'Chrome\'s paint-timing bookkeeping is no longer classified as browser noise');
 check(!browserDiagnosticNoise('[1:2:0927/223530.286557:ERROR:components/os_crypt/common/keychain_password_mac.mm:102] Keychain lookup failed'), 'a keychain lookup must fail the smoke: the carrier launches Chrome with a mock keychain');
 
-// SVG parity: apps/svg-gallery on each native host against
+// SVG parity (LLP 1055.000 §5): apps/svg-gallery on each native host against
 // Chrome's, fixture by fixture (scripts/svgparity.mjs).
 if (host === 'svg') {
   const { svgParity } = await import('./svgparity.mjs');
@@ -121,7 +121,7 @@ if (host === 'svg') {
   process.exit(0);
 }
 
-// Motion parity: apps/motion-gallery's animated
+// Motion parity (LLP 1011.000, LLP 1055 D7): apps/motion-gallery's animated
 // images and keyframes on each native host against Chrome's at fixed clock
 // times (scripts/motionparity.mjs).
 if (host === 'motion') {
@@ -132,7 +132,7 @@ if (host === 'motion') {
   for (const f of failures) console.error('  ' + f); process.exit(failures.length ? 1 : 0);
 }
 
-// Canvas 2D parity: apps/canvas-gallery on each native host
+// Canvas 2D parity (LLP 1056 §4): apps/canvas-gallery on each native host
 // against Chrome's, and the web's recorded path against Chrome's own context
 // (scripts/canvasparity.mjs).
 if (host === 'canvas') {
@@ -144,7 +144,7 @@ if (host === 'canvas') {
   process.exit(0);
 }
 
-// The publisher: `exact deploy` driven end to end
+// The publisher (LLP 1030.000 D3–D5, D7): `exact deploy` driven end to end
 // against a directory origin with a throwaway key. The app and the scripts
 // run from a disposable tracked checkout; manifest and asset edits never
 // touch the developer's source tree. What it holds:
@@ -229,7 +229,7 @@ if (host === 'deploy') {
     let browser;
     try {
       browser = await open({ host: 'web', browser: 'chrome', url: `http://127.0.0.1:${webServer.address().port}/` });
-      // A release admits no agent mode: read the page as a browser shows it.
+      // A release admits no agent mode (LLP 1069.007 D2): read the page as a browser shows it.
       const page = (expression) => browser.carrier.evaluate(expression);
       check(await page("document.getElementById('exact-root')?.childElementCount > 0"), 'the published web release booted in Chrome');
       if (await page(`!!document.querySelector('[data-testid="open-deck"]')`)) {
@@ -241,7 +241,7 @@ if (host === 'deploy') {
         }
         check(src?.includes('/.exact/root/web/releases/'), `the published deck loaded from its immutable release: ${src}`);
       }
-      // The program is the JS target's `app.js` when it takes the app, else `app.wasm` (delivery).
+      // The program is the JS target's `app.js` when it takes the app, else `app.wasm` (LLP 1071 §7, delivery).
       check(requests.some((p) => /^\/\.exact\/root\/web\/releases\/[0-9a-f]{64}\/app\.(?:js|wasm)$/.test(p))
         && !requests.some((p) => /^\/(assets|deck|shaders)\//.test(p)), `the browser used immutable local resources: ${requests.join(', ')}`);
       const lines = browser.carrier.hostLines;
@@ -345,7 +345,7 @@ if (host === 'deploy') {
   if (failures.length) { for (const f of failures) console.error('  ' + f); process.exit(1); }
   process.exit(0);
 }
-// The sample host: a native macOS app that is not Exact's,
+// The sample host (LLP 1031 D10): a native macOS app that is not Exact's,
 // hosting two sessions of the one plan. What the fixture holds, driven
 // through the same carrier with each request routed by session label: two
 // sessions with overlapping node ids answer apart; operations interleave;
@@ -353,7 +353,7 @@ if (host === 'deploy') {
 // (unmounted, alive) and pops it (remounted) with both intact; a bad
 // candidate plan is refused and the running apps kept; a session destroyed
 // under the other is refused by name after, and the other still answers.
-// The recorder's sample host: two sessions over one capture.
+// The recorder's sample host (LLP 1133.009 D6): two sessions over one capture.
 if ((host === 'host' || host === 'host-ios') && app.id === 'com.exact.recorder') {
   const { recorderSessions } = await import('./smoke-recorder.mjs');
   const failures = await recorderSessions({ host, open });
@@ -441,14 +441,14 @@ component App
     const laBack = await s.layout();
     hcheck(laBack.nodes.length > 0 && laBack.viewport.w > 200, `a remounted and laid out again (${laBack.nodes.length} boxes, ${laBack.viewport.w} wide)`);
     hcheck(byTestId(await s.tree(), 'change-station') != null, 'a kept its state across unmount and remount');
-    // 3b. A blur is the session's: b edits its search
+    // 3b. A blur is the session's (LLP 1035.001 D5): b edits its search
     // field with the keyboard up; a is tapped on its own ground, which ends
     // a's editing and nobody else's; b is still editing, its inset intact.
     if (host === 'host-ios') {
       s.session = 'b';
       if (byTestId(await s.tree(), 'station-search')) {
         await s.type('station-search', 'Pa');
-        // UIKit's keyboard notification lands asynchronously: poll for the inset.
+        // UIKit's keyboard notification lands asynchronously (LLP 1008 §9): poll for the inset.
         let shown = 0;
         for (let i = 0; i < 40 && !(shown > 0); i++) { await sleep(50); shown = (await s.layout()).env['keyboard-inset-height']; }
         s.session = 'a';
@@ -500,7 +500,7 @@ component App
   console.log(`${host} smoke: ok in ${((Date.now() - t0) / 1000).toFixed(1)} s — two sessions of one plan, interleaved, one pushed under a native screen and back, a bad plan refused, one destroyed under the other`);
   process.exit(0);
 }
-// Materialize the selected app once, as it ships (the JS target when it takes it;
+// Materialize the selected app once, as it ships (the JS target when it takes it, LLP 1071;
 // it stages nothing), into this smoke's private dist before its many sessions. Another
 // build cannot swap a different app under the run; agent.open proves its identity.
 if (host === 'web') {
@@ -519,7 +519,7 @@ if (host === 'web') {
 // A fresh named store admits app storage without sharing another drive's profile or port.
 const appDrive = host === 'web' ? { storage: `smoke-${randomUUID()}`, env: { EXACT_AGENT_EPHEMERAL_PORT: '1' } } : app.name === 'messages' ? { storage: `smoke-${randomUUID()}`, touch: host === 'ios' ? 'platform' : 'agent' } : app.name === 'recorder' ? { storage: `smoke-${randomUUID()}` } : {};
 const s = await open({ host, browser: 'chrome', ...appDrive });
-// A web artifact's staged capabilities: the page boots
+// A web artifact's staged capabilities (LLP 1047.000 §9): the page boots
 // without them, and the first agent call loads inspection before it asks.
 const stages = async () => host === 'web' && !jsTargetBuild(selectedWebDist) ? JSON.parse(await s.carrier.evaluate('JSON.stringify(exact.stages())')) : {};
 const staged = await stages();
@@ -560,10 +560,10 @@ try {
     check(logo && Math.round(logo.w) === 96 && Math.round(logo.h) === 36, `the logo is ${logo?.w}×${logo?.h}, not 96×36 from its 320×120 ratio`);
     await explainNode(s, { tree, layout, check }); // 2b (smoke-inspect.mjs)
   }
-  await agree(s, `${app.name}: first frame`, { host, check }); // 7a
+  await agree(s, `${app.name}: first frame`, { host, check }); // 7a (LLP 1080.001 D5)
   if (byTestId(tree, 'feed-far') && host === 'ios') await poolingDrive(s, { host, check });
   if (apple) await messageKeys(s, { host, check, app: app.name });
-  // 2a. The iframe parity oracle and Apple arm: load
+  // 2a. The iframe parity oracle and Apple arm (@ref LLP 1020 M1/M2): load
   // and message enter the runner, the guest joins tree/input, and the
   // screenshot carries its pixels. Loading is host I/O, so poll it. The
   // Caltrain requires the deck entry; apps without the fixture skip it.
@@ -581,7 +581,7 @@ try {
     check(frameNode?.loading === false, `the iframe is still loading: ${JSON.stringify(frameNode)}`);
     check(deckState?.slots.deckLoaded === true, `load did not record its flag: ${JSON.stringify(deckState?.slots)}`);
     check(deckState?.slots.deckMessage === 'deck-ready', `message recorded ${JSON.stringify(deckState?.slots.deckMessage)}, not "deck-ready"`);
-    // The same-origin guest joins `tree` as an outline.
+    // The same-origin guest joins `tree` as an outline (LLP 1020 D4).
     const guest = frameNode?.guest ?? [];
     check(guest.some((g) => g.testId === 'deck-guest') && guest.some((g) => g.id === 'deck-title'),
       `the guest outline is ${JSON.stringify(guest)}`);
@@ -606,7 +606,7 @@ try {
       rmSync(deckTmp, { recursive: true, force: true });
     }
     // Structured-clone data narrows to JSON, with no application protocol
-    // intercepted by the shared host.
+    // intercepted by the shared host (@ref LLP 1020 §9).
     await s.tap('deck-frame', { selector: '#deck-status' });
     for (let i = 0; i < 20; i++) {
       deckState = await s.state();
@@ -616,7 +616,7 @@ try {
     check(deckState.slots.deckMessage === '{"protocol":"fixture","request":"status"}',
       `structured guest data did not reach the app: ${JSON.stringify(deckState.slots.deckMessage)}`);
     // A tap addressed to the iframe enters its guest in-process. Native
-    // delivery is script-dispatched and therefore isTrusted:false.
+    // delivery is script-dispatched and therefore isTrusted:false (D4).
     await s.tap('deck-frame', { selector: '#deck-title' });
     for (let i = 0; i < 20; i++) {
       deckState = await s.state();
@@ -627,7 +627,7 @@ try {
     if (host === 'web') {
       // A WindowProxy survives cross-origin navigation. The committed src
       // origin remains the authority: the navigated document must not receive
-      // delivery of its messages into the app.
+      // delivery of its messages into the app (@ref LLP 1020 D2).
       await s.tap('deck-frame', { selector: '#deck-navigate' });
       for (let i = 0; i < 40; i++) {
         deckState = await s.state();
@@ -657,7 +657,7 @@ try {
     let state = await s.state();
     check(state.clock === 60000 && state.slots.nowMs === 1787915400000 + 60000, `state after +60 s: clock ${state.clock}, nowMs ${state.slots.nowMs}`);
     journal = await s.logs();
-    // A jump stops only after a timer that sends, and a long one
+    // A jump stops only after a timer that sends (LLP 1012 §2), and a long one
     // steps by the driver's growing split (clockSpan): sixty fire in all, the
     // last at the seek's end.
     const fired = journal.lines.map((l) => /^t=(\d+) advance → (\d+) timers? fired/.exec(l)).filter((m) => m && Number(m[1]) > 0 && Number(m[1]) <= 60000);
@@ -669,7 +669,7 @@ try {
   await s.tap('change-station');
   tree = await s.tree();
   check(byTestId(tree, 'stations-screen'), 'tapping Change station did not open the stations screen');
-  // 4a. The events beyond press and change, through the
+  // 4a. The events beyond press and change (LLP 1005 §3), through the
   // host's own paths: a hover highlights the row under the pointer and
   // leaves with it; typing focuses the field; a key reaches it by name.
   if (host !== 'linux') {
@@ -694,8 +694,8 @@ try {
   check(byTestId(tree, 'station-name')?.props.text === 'Palo Alto', `after picking Palo Alto the station is ${byTestId(tree, 'station-name')?.props.text}`);
   check(byTestId(tree, 'home-screen'), 'picking a station did not return home');
   await agree(s, 'caltrain: home again after the station change', { host, check }); // 7a
-  // 4c. Real touches on a simulator are `scripts/smoke-touch.mjs`.
-  // 4b. A held contact on the AppKit carrier: the button
+  // 4c. Real touches on a simulator are `scripts/smoke-touch.mjs` (LLP 1080.000).
+  // 4b. A held contact (LLP 1035.003 D1) on the AppKit carrier: the button
   // goes down on Change station, leaves it, and is cancelled — on a mouse a
   // release where the pointer is (de13a93f), outside the button, so nothing
   // navigates; down and up in place navigates. Any refusal here is recorded
@@ -725,14 +725,14 @@ try {
     if (byTestId(tree, 'stations-screen')) await s.tap('station-paloalto');
   }
 
-  // 5a. A command: `setScheme` reaches the host as an op and
+  // 5a. A command (LLP 1005 §3): `setScheme` reaches the host as an op and
   // sets its colour scheme; the journal records it and the host reports no
   // error (step 7 reads both). Back to light for the pictures below. Before
   // the scroll below: a platform tap needs its button on screen.
   await s.tap('scheme-dark');
   await s.tap('scheme-light');
 
-  // 5. Scrolling: a wheel over the content moves it, and exactly
+  // 5. Scrolling (LLP 1010): a wheel over the content moves it, and exactly
   // one scroll container takes it — the node when it can, else the page.
   layout = await s.layout();
   const nameBefore = box(layout, 'station-name').y;
@@ -758,7 +758,7 @@ try {
   }
 
   if (caltrainFixture) {
-    // 6a. A canvas's children: laid out by the kernel in the
+    // 6a. A canvas's children (LLP 1014 D1): laid out by the kernel in the
     // canvas's box and presented over its surface on every host — the aurora's
     // title is the station's name, and its box lies inside the aurora's.
     tree = await s.tree();
@@ -788,7 +788,7 @@ try {
   await s.close();
   if (appDrive.storage) rmSync(driveStore(app, appDrive.storage, appDrive.env).profile, { recursive: true, force: true });
 }
-// 8. The nested case (the scroll fixture): a scroll node that
+// 8. The nested case (LLP 1010, the scroll fixture): a scroll node that
 // overflows on a page that overflows. A wheel over the node scrolls it; at
 // its edge the wheel chains to the page.
 // A paired module client cannot boot unrelated bare plans. --app-only keeps
@@ -814,7 +814,7 @@ if (apple && !device) await httpFrameSmoke({ host, open, check });
       const expected = `${options.locale ?? 'en-US'}|${lang}|${options.timeZone ?? 'UTC'}|${options.seed ?? 1}|${options.formatLocale ?? options.locale ?? 'en-US'}`; // the Region's format: the drive's, else the locale
       const tree = await f.tree();
       check(byTestId(tree, 'place')?.props.text === expected, `launch facts: expected ${expected}, got ${byTestId(tree, 'place')?.props.text}`);
-      // The drive's epoch and its zone's offset; the agent clock moves the date.
+      // LLP 1027.000.000 D3: the drive's epoch and its zone's offset; the agent clock moves the date.
       // `now` is the machine's clock, read once as the drive launched (a drive against a live backend).
       const [epoch, offset] = options.epoch === 'now' ? [Number(byTestId(tree, 'date')?.props.text.split('|')[0]), 0] : options.epoch ? [1790000000000, -240] : [1767225600000, 0];
       if (options.epoch === 'now') check(epoch >= launched && epoch <= Date.now(), `--epoch now: expected the launch instant, got ${epoch} (launched ${launched})`);
@@ -852,7 +852,7 @@ else {
   try {
     let l = await f.layout();
     check(box(l, 'rows') && box(l, 'root'), 'the fixture did not boot');
-    // 8a. A held contact on the web: a finger down on a
+    // 8a. A held contact on the web (LLP 1035.003 D1): a finger down on a
     // row, dragged up while the rows are read mid-gesture, held still so
     // there is no fling, then lifted; the wheel steps below start from the
     // top again. Chrome's own touch scrolling, through CDP touch events.
@@ -891,20 +891,20 @@ else {
 }
 rmSync(tmp, { recursive: true, force: true });
 
-// 9. Children through the surface (Caltrain's GPU fixture): a button
+// 9. Children through the surface (LLP 1014, Caltrain's GPU fixture): a button
 // and an input inside a canvas whose surface samples its children. Both are
 // laid out in the canvas's box; a tap on the button reaches it — on macOS
-// through the alpha-0 overlay — and typing reaches the field; on macOS
+// through the alpha-0 overlay (D5) — and typing reaches the field; on macOS
 // the presenter captures the canvas for the batch and while the field is
-// edited, which agent mode reports in the logs.
+// edited (D4 a, d), which agent mode reports in the logs.
 if (caltrainFixture) {
   const tmp = mkdtempSync(resolve(tmpdir(), 'exact-smoke-'));
   const plan = resolve(tmp, 'canvas.plan');
   const c = spawnSync('cargo', ['run', '-q', '--profile', HOST_DEV, '-p', 'contract', '--', 'build', resolve(ROOT, 'contract/corpus/canvas.contract'), '-o', plan], { cwd: ROOT, encoding: 'utf8' });
   if (c.status !== 0) failures.push('the canvas fixture did not compile: ' + c.stderr);
   else {
-    // On Linux the picture is the oracle painter's (tiny-skia)
-    // over the pinned font the driver sets: the same bytes on every
+    // On Linux the picture is the oracle painter's (tiny-skia; LLP 1015 §2)
+    // over the pinned font the driver sets (§5): the same bytes on every
     // machine, so the reference below is exact, not a band — the GPU painter
     // is held to it by `tests/paint.rs`'s band instead.
     const f = await open({ host, browser: 'chrome', plan, env: host === 'linux' ? { EXACT_PAINTER: 'cpu' } : undefined });
@@ -925,7 +925,7 @@ if (caltrainFixture) {
         check(/captured/.test(logs), 'the canvas fixture was never captured within 10 s (did the surface want its children?)');
       }
 
-      // 10. The readback: the canvas as
+      // 10. The readback (LLP 1014 §2 step 3, LLP 1009 D1): the canvas as
       // this host composes it — the sky at clock 0 with its children through
       // it on macOS, over it on the web — cropped from the screenshot by the
       // canvas's box and held against this host's recorded reference,
@@ -942,7 +942,7 @@ if (caltrainFixture) {
       const image = decodePng(readFileSync(shotPath));
       const scale = image.width / l.viewport.w;
       // iOS's screen also has a bottom safe area; use its reported viewport
-      // origin, not all pixels outside the viewport as a title bar.
+      // origin (LLP 1035.002 D4), not all pixels outside the viewport as a title bar.
       const top = host === 'ios' ? Math.round(l.screen.y * scale) : image.height - Math.round(l.viewport.h * scale);
       const region = crop(image, Math.round(sky.x * scale), top + Math.round(sky.y * scale), Math.round(sky.w * scale), Math.round(sky.h * scale));
       // The picture depends on the screen: a 1x display (a Mac on a plain
@@ -985,9 +985,9 @@ if (caltrainFixture) {
   rmSync(tmp, { recursive: true, force: true });
 }
 
-// 11. The deck and the materials: `Deck` opens a canvas
+// 11. The deck and the materials (LLP 1014 §1a, §1b): `Deck` opens a canvas
 // whose cards are the kernel's buttons — placed by the surface on macOS, a
-// column over the surface on the web and on Linux — and a tap on a
+// column over the surface on the web and on Linux (D2) — and a tap on a
 // card focuses it. Placements settle before each reply; the canvas centre
 // initially reaches no card. The agent clock moves springs deterministically.
 if (deckFixture) {
@@ -1019,7 +1019,7 @@ if (deckFixture) {
     st = await d.state();
     check(st.slots.focus === cards[0].testId.slice(5), `a tap on ${cards[0].testId} focused ${JSON.stringify(st.slots.focus)}`);
     // One frame of the clock moves the springs, and the reply carries the
-    // new placements (`clock` settles the canvases — the
+    // new placements (LLP 1014.000 §1c: `clock` settles the canvases — the
     // nested deck is read back into the sky's capture before the reply, not
     // when a later redraw happens to ask).
     await d.clock('+100');
@@ -1041,12 +1041,12 @@ if (deckFixture) {
   }
 }
 
-// 11. Motion under the clock (the motion fixture): three boxes
+// 11. Motion under the clock (LLP 1012 §2, the motion fixture): three boxes
 // scale 1 → 2 — a 250 ms linear transition and a spring on a press, a 500 ms
 // linear transition when a timer fires at t = 1000. Nothing plays between
 // operations; a seek lands on the curve; `settle` is a fixed point that
 // crosses the timer; and one seek across the timer gives what stepping
-// across it gives — on both hosts, the same numbers.
+// across it gives (LLP 1002 D3) — on both hosts, the same numbers.
 {
   const tmp = mkdtempSync(resolve(tmpdir(), 'exact-smoke-'));
   const plan = resolve(tmp, 'motion.plan');
@@ -1099,11 +1099,13 @@ if (deckFixture) {
   rmSync(tmp, { recursive: true, force: true });
 }
 
-// 11b. Gesture precedence: one contact on a
+// 11b. Gesture precedence (LLP 1057.001 §1; the phase-0 exit evidence of LLP
+// 1057.000, apparatus approved by Charlie, 2026-09-27): one contact on a
 // swipe row inside a panning surface. A horizontal drag is the inner swipe's
 // and the pan never fires; a vertical one falls to the pan; a drag that starts
-// on the row's button is the pan's once past the slop, never the swipe's (a
-// press keeps a contact from a swipe, not from a pan); a tap presses it. The
+// on the row's button is the pan's once past the slop, never the swipe's (rule
+// 3: a press keeps a contact from a swipe, not from a pan; kanban F6); a tap
+// presses it. The
 // same numbers on every host; a contact a carrier cannot hold (iOS on the row, which
 // only UIKit could give to the swipe or the pan) answers `unsupported`, said, not faked.
 {
@@ -1146,7 +1148,7 @@ if (deckFixture) {
   rmSync(tmp, { recursive: true, force: true });
 }
 
-// 12. The page's environment (the insets fixture): a root that
+// 12. The page's environment (LLP 1008 §9, the insets fixture): a root that
 // says `viewport-fit="cover"` is laid out to the whole screen, its content
 // kept out of the safe areas by `env(safe-area-inset-*)` lengths — on a
 // phone the viewport is the app's (step 2, the safe area) plus the insets.
@@ -1155,7 +1157,7 @@ if (deckFixture) {
 // at the bottom: on iOS the software keyboard rises, the viewport insets
 // itself by the keyboard's height and reveals the field above it, the layout
 // viewport untouched — a browser's visual viewport, which the fixture asks
-// for (`resizes-visual`; iOS's default resizes); a tap on the dismiss
+// for (`resizes-visual`; iOS's default resizes, LLP 1116 D2); a tap on the dismiss
 // button takes the focus, and the keyboard goes. `layout.env` reports both,
 // by the web's `env()` names, on every host.
 {
@@ -1169,7 +1171,7 @@ if (deckFixture) {
       let l = await f.layout();
       const env = l.env ?? {};
       const names = ['safe-area-inset-top', 'safe-area-inset-right', 'safe-area-inset-bottom', 'safe-area-inset-left', 'keyboard-inset-height'];
-      check(names.every((k) => typeof env[k] === 'number'), `layout.env is ${JSON.stringify(l.env)}`); check(['continuous', 'folded'].includes(env['device-posture']) && Number.isInteger(env['horizontal-viewport-segments']) && Number.isInteger(env['vertical-viewport-segments']) && Array.isArray(env['viewport-segments']), `layout.env reports the fold by its four names: ${JSON.stringify(l.env)}`);
+      check(names.every((k) => typeof env[k] === 'number'), `layout.env is ${JSON.stringify(l.env)}`); check(['continuous', 'folded'].includes(env['device-posture']) && Number.isInteger(env['horizontal-viewport-segments']) && Number.isInteger(env['vertical-viewport-segments']) && Array.isArray(env['viewport-segments']), `layout.env reports the fold by its four names (LLP 1078 D7): ${JSON.stringify(l.env)}`);
       const [top, right, bottom, left] = names.map((k) => env[k] ?? 0);
       const viewport0 = l.viewport;
       const rootBox = box(l, 'root'), content = box(l, 'content');
@@ -1245,7 +1247,7 @@ if (deckFixture) {
   rmSync(tmp, { recursive: true, force: true });
 }
 
-// 13. `interactive-widget="resizes-content"` (the keyboard-bar
+// 13. `interactive-widget="resizes-content"` (LLP 1008 §9, the keyboard-bar
 // fixture): the layout viewport ends at the keyboard's top, so a bar pinned
 // to the bottom of the root rises with it and the bottom safe-area inset is
 // the keyboard's — zero — while it is up; the dismiss brings everything back.
@@ -1316,8 +1318,8 @@ if ((host === 'web' || apple || host === 'linux') && !argv.includes('--app-only'
     try {
       let t = await f.tree();
       check(byTestId(t, 'first')?.focused === true, 'autofocus takes focus after mount');
-      const axName = async (id) => { const ax = (await f.tree(null, {ax: true})).ax; return ax.unavailable ? (host === 'linux' ? 'unavailable' : null) : ax.elements.find(e => e.testId === id)?.name; };
-      check(await axName('first') === (host === 'linux' ? 'unavailable' : 'Increment'), 'button name is its text, as the platform exposes it'); check(host === 'linux' || await axName('labelled') === '20 coins', 'a label names a text, as the platform exposes it');
+      const axName = async (id) => { const ax = (await f.tree(null, {ax: true})).ax; return ax.unavailable ? (host === 'linux' ? 'unavailable' : null) : ax.elements.find(e => e.testId === id)?.name; }; // LLP 1080.002
+      check(await axName('first') === (host === 'linux' ? 'unavailable' : 'Increment'), 'button name is its text, as the platform exposes it'); check(host === 'linux' || await axName('labelled') === '20 sheckles', 'a label names a text, as the platform exposes it');
       check(byTestId(t, 'toggle')?.props.autofocus === false, 'autofocus=false remains false');
       check(byTestId(t, 'live-count')?.props.accessibilityLive === 'polite' && byTestId(t, 'live-container')?.props.accessibilityLive === 'assertive', 'both live region priorities are in tree');
       await f.tap('first');
@@ -1349,7 +1351,7 @@ if ((host === 'web' || apple || host === 'linux') && !argv.includes('--app-only'
   rmSync(tmp, {recursive:true, force:true});
 }
 
-// `share`: under the agent no host shows a sheet; the request is held,
+// `share` (LLP 1069.003 D6): under the agent no host shows a sheet; the request is held,
 // answered by ticket, and its outcome is a journal line. A relative URL is refused by name.
 if ((host === 'web' || apple || host === 'linux') && !argv.includes('--app-only')) {
   const tmp = mkdtempSync(resolve(tmpdir(), 'exact-share-')), plan = resolve(tmp, 'share.plan');
@@ -1373,7 +1375,7 @@ if ((host === 'web' || apple || host === 'linux') && !argv.includes('--app-only'
   rmSync(tmp, {recursive:true, force:true});
 }
 
-// The File System Access API's pickers: under the agent each
+// The File System Access API's pickers (LLP 1069.010 D2): under the agent each
 // is held; `type @N <path>` mints a `doc:` handle that arrives as `change`
 // on the named element (one per line under `multiple`); `tap @N cancel`
 // fires `cancel`; a second path for a single file is refused by name.
@@ -1416,7 +1418,7 @@ if ((host === 'web' || apple || host === 'linux') && !argv.includes('--app-only'
   rmSync(tmp, {recursive:true, force:true});
 }
 
-// 13. The resolved app's own tests (app.mjs `authoredTests`), when it declares them:
+// 13. The resolved app's own tests (LLP 1017 P7; app.mjs `authoredTests`), when it declares them:
 // its `test` blocks driven through a fresh session by the same operations.
 for (const file of authoredTests(app.dir)) {
   const t = await runTests({ host, file }).catch((e) => ({ passed: 0, failed: 1, results: [{ name: basename(file), failures: [e.message] }] }));
@@ -1424,28 +1426,28 @@ for (const file of authoredTests(app.dir)) {
   console.log(`${host} tests: ${t.passed} passed, ${t.failed} failed${t.skipped ? `, ${t.skipped} skipped` : ''} (${app.name}/${basename(file)})`);
 }
 
-// 14. Native modules: the fixture's whole seam, when the app is it.
+// 14. Native modules (LLP 1024 D8): the fixture's whole seam, when the app is it.
 if (app.modules.tags.includes('exact-fixture') && ['web', 'macos', 'ios'].includes(host)) {
   const { nativeSmoke } = await import('./smoke-native.mjs');
   await nativeSmoke({ host, open, check, webDist: selectedWebDist, device });
 }
-// A painting host loads no module; the fixture's hatches run there.
+// A painting host loads no module; the fixture's hatches run there (LLP 1075.003.000.001 §8 stage 4).
 if (app.modules.tags.includes('exact-fixture') && host === 'linux') await (await import('./smoke-native.mjs')).paintingHatchSmoke({ host, open, check });
-if (app.modules.tags.includes('exact-swatch') && ['macos', 'ios'].includes(host)) await (await import('./smoke-tamber.mjs')).tamberSmoke({ host, open, check });
-// 15. The recorder: the microphone through the standard packages.
+if (app.modules.tags.includes('exact-swatch') && ['macos', 'ios'].includes(host)) await (await import('./smoke-tamber.mjs')).tamberSmoke({ host, open, check }); // LLP 1121 D12
+// 15. The recorder (LLP 1133.009 §11): the microphone through the standard packages.
 if (app.id === 'com.exact.recorder' && ['web', 'macos', 'ios'].includes(host)) {
   const { recorderSmoke } = await import('./smoke-recorder.mjs');
   await recorderSmoke({ host, open, check });
 }
 
-// 17. Signing in: PAR, DPoP and PKCE against the fixture server, held for the agent.
+// 17. Signing in (LLP 1069.006): PAR, DPoP and PKCE against the fixture server, held for the agent.
 if (app.id === 'com.exact.authfixture' && ['web', 'macos', 'ios'].includes(host)) {
   const { authSmoke } = await import('./smoke-auth.mjs');
   await authSmoke({ host, open, check });
   if (host === 'web') await (await import('./smoke-auth.mjs')).authPopupWeb({ webDist: selectedWebDist, check });
 }
 
-// 16. Documents in windows of their own, for an app
+// 16. Documents in windows of their own (LLP 1069.010 slice 1), for an app
 // whose manifest says `navigate-new`: two documents on the command line
 // open two windows, each read through the carrier by its session's label;
 // each window's title is its `head`'s; Open Recent lists both. Without `file_handlers` there is nothing to route.
@@ -1460,7 +1462,7 @@ if (host === 'macos' && app.manifest.file_handlers?.length && [app.manifest.laun
       d.session = w.session;
       const tree = await d.tree();
       const head = tree.nodes.find((n) => n.type === 'Head')?.props.headTitle;
-      // The field holds the document path the host minted.
+      // The field holds the document path the host minted (LLP 1069.010 D1).
       const shown = byTestId(tree, 'open-file')?.props.value;
       check(w.document === docs[i] && /^doc:\/\d+\//.test(shown ?? '') && shown.endsWith('/' + docs[i].split('/').pop()), `documents: session ${w.session} shows ${shown}, not ${docs[i]}`);
       check(head && w.title === head, `documents: window ${w.session} is titled ${JSON.stringify(w.title)}, its head ${JSON.stringify(head)}`);
@@ -1475,7 +1477,7 @@ if (host === 'macos' && app.manifest.file_handlers?.length && [app.manifest.laun
     console.log(`${host} documents: ${seen?.windows?.map((w) => `${w.session} "${w.title}"`).join(', ')}; the second session's first pixel ${second?.firstPixelMs} ms, footprint ${((seen?.footprint - second?.footprintBefore) / 1048576).toFixed(1)} MB since it was asked for`);
   } catch (error) { check(false, `documents: ${error.message}`); } finally { await d.close(); }
 }
-// 17. Answers that keep coming: Exact Live's job
+// 17. Answers that keep coming (LLP 1069.004 slice 2): Exact Live's job
 // progress over server-sent events, against the fixture started above.
 if (streamFixture) {
   const { streamSmoke } = await import('./smoke-stream.mjs');

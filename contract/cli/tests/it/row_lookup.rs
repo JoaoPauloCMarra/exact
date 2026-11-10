@@ -1,4 +1,4 @@
-//! `lower-row-lookup`: a row of the app's records that
+//! `lower-row-lookup` (LLP 1116.016 D4): a row of the app's records that
 //! searches another table of them.
 
 const ROW_LOOKUP: &str = "lower-row-lookup";
@@ -39,7 +39,7 @@ fn a_row_that_searches_another_table_is_named_with_the_join() {
         "{}",
         w.message
     );
-    // A function the roster writes as a call is named as one.
+    // A function the roster writes as a call is named as one (LLP 1116.016 §5).
     let sorted =
         app("for p in posts key=p.id\n  text sortBy(users, u => u.name).length.toString()");
     let (_, warnings) = contract::compile_warned(&sorted);
@@ -91,7 +91,7 @@ fn a_router_s_tabs_are_screens_not_rows() {
     assert_eq!(lookups(src), Vec::<u32>::new());
 }
 
-/// `lower-key-position`: a key that reads the row's position.
+/// `lower-key-position` (LLP 1142 D6): a key that reads the row's position.
 #[test]
 fn a_key_that_reads_the_position_is_named_and_one_that_shadows_it_is_not() {
     let keyed = |view: &str| -> Vec<u32> {
@@ -122,7 +122,7 @@ fn a_key_that_reads_the_position_is_named_and_one_that_shadows_it_is_not() {
     );
 }
 
-/// `lower-row-own-list`: a row whose binding walks the
+/// `lower-row-own-list` (LLP 1017.003 D3): a row whose binding walks the
 /// list its own `for` iterates, directly or through a `fn`, does work that
 /// grows with the list in every row, and past the list-step bound that
 /// binding is unset.

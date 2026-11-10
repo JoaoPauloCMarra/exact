@@ -3,7 +3,7 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// Inspect mode's hit test on the Mac (InspectMac.swift):
+/// Inspect mode's hit test on the Mac (LLP 1122 D5, T2c; InspectMac.swift):
 /// a click selects the nearest view, up from the window's own hit view, that
 /// stands for a plan node; in the title bar, the walk stops: the header's
 /// heading as the window's title and its toolbar items are selected,

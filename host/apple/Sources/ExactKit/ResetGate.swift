@@ -2,7 +2,7 @@
 // new runtime, then tears the old tree's views down, then applies the new runtime's committed batch. What the
 // teardown sets off (a cover cleared, a sheet giving focus back, an edit ended, a key window moving, a due timer, a
 // list's report) once reached the new runtime first, and the stale committed batch then undid what it answered: feed
-// rows the runtime kept mounted with no view (blank rows, every dev-joined iOS launch that reloaded).
+// rows the runtime kept mounted with no view (the Apple pass's blank rows, every dev-joined iOS launch that reloaded).
 // So every batch-answering runtime call is held over the teardown at its one entry (ExactCore `Runtime.on`, `held`):
 // it reaches nothing and is named. Here, per call, what becomes of it once the committed batch is in: DROPPED, being
 // about the old tree, or REPLAYED, being work the new runtime must still see, recomputed from the live presenter (the
@@ -89,7 +89,7 @@ enum ResetGate {
         "hover(_:over:now:)": "a pointer leaving views going away",
         "key(_:_:up:capture:now:)": "a key down on the old tree",
         "scroll(_:metrics:now:)": "an old scroller's offset",
-        // Native timer calls: each recovers by itself, so a replay would fire it twice.
+        // #1144's timer calls: each recovers by itself, so a replay would fire it twice.
         "fireNativeTimer(_:now:)": "a task's native firing answered `held` stays at the front of its queue, which asks for it again a frame later (NativeTaskTimers `complete(retry:)`); a new generation's rows re-arm the task at its own deadline",
         "fireNativeTimerAsync(_:now:done:)": "a task's native firing sent to the owner, as `fireNativeTimer`'s: kept by its queue, asked for again",
         "timerWaits(kinds:cutoff:mode:)": "a timer admission check answered `held` leaves nothing pending (TimerAdmissions); the next frame or update checks again, against the new runtime's waits",

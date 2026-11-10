@@ -1,13 +1,18 @@
-//! The reader's index, search and references, over small corpora written
-//! to a temporary directory; the ignored tests read an `llp/` corpus at the
-//! repository root when one is there.
+//! The corpus this reader exists for is the private one cloned at the
+//! repository's `llp/`, so that is what these check against when it is there;
+//! without it, the tests that read it pass without checking. @ref LLP 1033
 
 use llp_data::link_references;
 use markdown_parse::{plain, Run};
 use std::collections::BTreeSet;
 
-fn llp() -> std::path::PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../llp")
+fn llp() -> Option<std::path::PathBuf> {
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../llp");
+    if dir.is_dir() {
+        return Some(dir);
+    }
+    eprintln!("no llp/ corpus at the repository root: nothing to check");
+    None
 }
 
 #[test]
@@ -71,9 +76,9 @@ fn corpus_text_keeps_document_boundaries_and_survives_its_index() {
 }
 
 #[test]
-#[ignore = "reads the LLP corpus at the repository root, which this repository does not ship"]
 fn the_index_is_this_repositorys_corpus_in_number_order() {
-    let entries = llp_data::read_index(&llp()).expect("llp/");
+    let Some(llp) = llp() else { return };
+    let entries = llp_data::read_index(&llp).expect("llp/");
     assert!(entries.len() > 30, "found {} documents", entries.len());
 
     let root = entries
@@ -102,7 +107,7 @@ fn the_index_is_this_repositorys_corpus_in_number_order() {
         .filter(|e| e.overlay == "current")
         .map(|e| e.path.file_name().unwrap().to_owned())
         .collect();
-    let declared: BTreeSet<_> = std::fs::read_dir(llp().join("current"))
+    let declared: BTreeSet<_> = std::fs::read_dir(llp.join("current"))
         .expect("llp/current/")
         .map(|e| e.expect("working-set entry").file_name())
         .collect();
@@ -115,9 +120,9 @@ fn the_index_is_this_repositorys_corpus_in_number_order() {
 }
 
 #[test]
-#[ignore = "reads the LLP corpus at the repository root, which this repository does not ship"]
 fn search_looks_through_every_documents_text() {
-    let entries = llp_data::read_index(&llp()).expect("llp/");
+    let Some(llp) = llp() else { return };
+    let entries = llp_data::read_index(&llp).expect("llp/");
     let kernel = entries.iter().find(|e| e.number == "1001").unwrap();
     assert!(
         kernel.search("taffy").is_some_and(|hits| hits > 1),
@@ -161,35 +166,35 @@ fn search_counts_body_hits_and_keeps_metadata_only_matches() {
 
 #[test]
 fn a_reference_in_prose_becomes_a_link_and_an_unknown_one_does_not() {
-    let runs = vec![Run::text("See LLP 0030 D7 and LLP 0099 for the rest.")];
+    let runs = vec![Run::text("See LLP 1030 D7 and LLP 9999 for the rest.")];
     let linked = link_references(runs, &|number| {
-        (number == "0030").then(|| "/llp/0030-delivery.rfc.md".to_string())
+        (number == "1030").then(|| "/llp/1030-delivery-unified.rfc.md".to_string())
     });
-    assert_eq!(plain(&linked), "See LLP 0030 D7 and LLP 0099 for the rest.");
+    assert_eq!(plain(&linked), "See LLP 1030 D7 and LLP 9999 for the rest.");
     let link: Vec<&Run> = linked.iter().filter(|r| !r.href.is_empty()).collect();
     assert_eq!(link.len(), 1);
-    assert_eq!(link[0].text, "LLP 0030");
-    assert_eq!(link[0].href, "/llp/0030-delivery.rfc.md");
+    assert_eq!(link[0].text, "LLP 1030");
+    assert_eq!(link[0].href, "/llp/1030-delivery-unified.rfc.md");
 }
 
 #[test]
 fn a_dotted_reference_resolves_to_the_sub_document() {
-    let linked = link_references(vec![Run::text("as LLP 0030.000 says")], &|number| {
-        (number == "0030.000").then(|| "/llp/0030.000.rfc.md".to_string())
+    let linked = link_references(vec![Run::text("as LLP 1030.000 says")], &|number| {
+        (number == "1030.000").then(|| "/llp/1030.000.rfc.md".to_string())
     });
     let link = linked.iter().find(|r| !r.href.is_empty()).unwrap();
-    assert_eq!(link.text, "LLP 0030.000");
+    assert_eq!(link.text, "LLP 1030.000");
 }
 
 #[test]
 fn code_and_existing_links_are_left_alone() {
     let code = Run {
-        text: "LLP 0030".into(),
+        text: "LLP 1030".into(),
         code: true,
         ..Run::default()
     };
     let already = Run {
-        text: "LLP 0030".into(),
+        text: "LLP 1030".into(),
         href: "https://example.com".into(),
         ..Run::default()
     };

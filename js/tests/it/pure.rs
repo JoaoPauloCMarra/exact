@@ -1,5 +1,5 @@
 //! Actual Hermes versus Chrome's standard web utilities.
-//! Unicode and URL semantics survive a language move
+//! @ref LLP 1027.001 D1 — Unicode and URL semantics survive a language move
 #![cfg(exact_js_engine)]
 use exact_js::Module;
 use exact_runner::DataSource;
@@ -19,7 +19,7 @@ fn pure_utilities_match_the_web_executor() {
         .find_map(|line| line.strip_prefix("missing chrome: "))
         .map(str::to_owned)
     {
-        // Under EXACT_REQUIRED=1 a missing prerequisite fails (scripts/coverage.mjs).
+        // EXACT_REQUIRED=1 (the async lane): a missing prerequisite fails (scripts/coverage.mjs).
         assert_ne!(
             std::env::var("EXACT_REQUIRED").as_deref(),
             Ok("1"),

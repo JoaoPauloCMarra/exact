@@ -1,4 +1,4 @@
-//! A retiring row rebound to the item the window needs, as a
+//! A retiring row rebound to the item the window needs (LLP 1078), as a
 //! recycling list rebinds a recycled cell: its views, their kernel nodes,
 //! layout and text stay, and only the bindings whose values differ for the
 //! new item are written. What a rebind cannot make fresh refuses it.

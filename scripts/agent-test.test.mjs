@@ -1,6 +1,6 @@
 // Authored expects over a tree (agent-test.mjs): a node the tree carries but the
 // shipped app does not show — a header node the iOS navigation bar leaves out,
-// which the agent's own chrome still paints — fails, and says why.
+// which the agent's own chrome still paints — fails, and says why (LLP 1116 D2).
 import { test, expect } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -152,7 +152,7 @@ test('present means shown in the app; missing is the tree\'s', () => {
   expect(treeExpectation(nodes, 'tagline', false).message).toBe('expected testId "tagline" absent, it was present');
 });
 
-// A disabled control is asserted, and pressing one fails the step.
+// LLP 1116.010 D3 (chat-rooms and password-generator, round 12): a disabled control is asserted, and pressing one fails the step.
 test('expect disabled and enabled read the prop every host\'s tree carries; a press is refused while context eligibility follows the element type', async () => {
   const tree = [{ id: 1, type: 'Pressable', props: { testId: 'send', disabled: true } }, { id: 2, props: { testId: 'arm' } }, { id: 3, props: { testId: 'native', disabled: 'true' } }, { id: 4, props: { testId: 'update', accessibilityDisabled: true } },
     { id: 5, type: 'View', props: { disabled: true } }, { id: 6, type: 'Pressable', props: { disabled: true, href: '/help' } },
@@ -184,7 +184,7 @@ test('an active screen\'s node is read before a covered one\'s', () => {
   expect(textExpectation(covered, 'count', '2 items left')).toBeNull();
 });
 
-// A test's `request` line is the driver calling the app's server, the persona's name its bearer token.
+// LLP 1116.006 D8: a test's `request` line is the driver calling the app's server, the persona's name its bearer token.
 test('a request line sends the method, the JSON body and the persona\'s token under the server URL; a refusal says its status and body', async () => {
   const seen = [];
   const server = Bun.serve({ port: 0, hostname: '127.0.0.1', async fetch(req) {
@@ -200,7 +200,7 @@ test('a request line sends the method, the JSON body and the persona\'s token un
     await expect(serverRequest(base, { method: 'PATCH', path: '/refused', body: '{}', as: 'mallory' })).rejects.toThrow(`request PATCH ${base}/refused as mallory: the server answered 401 {"error":"Sign in again."}`);
     await expect(serverRequest(base, { method: 'DELETE', path: '/gone', body: null, as: 'bob' })).rejects.toThrow(`request DELETE ${base}/gone as bob: the server answered 404`);
     await expect(serverRequest(null, { method: 'GET', path: '/items', body: null, as: null })).rejects.toThrow('app.ts calls no local server');
-    // `expect <status>` passes on that status and fails on any other, a success included.
+    // LLP 1116.010 D3 (polls, round 12): `expect <status>` passes on that status and fails on any other, a success included.
     await serverRequest(base, { method: 'DELETE', path: '/gone', body: null, as: 'bob', expect: 404 });
     await serverRequest(base, { method: 'PATCH', path: '/refused', body: '{}', as: 'mallory', expect: 401 });
     await expect(serverRequest(base, { method: 'DELETE', path: '/gone', body: null, as: 'bob', expect: 409 })).rejects.toThrow(`request DELETE ${base}/gone as bob: the server answered 404, expected 409`);
@@ -209,8 +209,8 @@ test('a request line sends the method, the JSON body and the persona\'s token un
   await expect(serverRequest(base, { method: 'GET', path: '/items', body: null, as: null })).rejects.toThrow(/nothing answered/);
 });
 
-// A `reload` relaunches at the virtual time the test had reached (the date it launched at plus every
-// `clock +N`), not at its launch date: a phone restarted at 9:05 does not wake at 9:00.
+// LLP 1116.009 D1: a `reload` relaunches at the virtual time the test had reached (the date it launched at plus every
+// `clock +N`), not at its launch date: a phone restarted at 9:05 does not wake at 9:00 (habit-tracker, rounds 10 and 11).
 test('the page address a reload loads takes the date it relaunches at, and keeps the rest', () => {
   const href = 'http://127.0.0.1:9/detail/3?agent=1&seed=1&epoch=1773489600000&timeZone=UTC&q=a';
   expect(new URL(withEpoch(href, 1773576000000)).searchParams.get('epoch')).toBe('1773576000000');
@@ -525,7 +525,7 @@ test "nothing holds after toggling off"
 }, 180_000);
 
 // docs/recipes/navigation-stack.md, "A screen open twice" (issues/closed/20261021-repeated-routes-share-root-state.md):
-// a route drawn by its own component has `state` per stack entry, so two entries of one route keep
+// a route drawn by its own component has `state` per stack entry (LLP 1017.000 P4c), so two entries of one route keep
 // separate state, and the entry a pop removed takes its state with it: the next one opens fresh. The two entries have
 // different URLs, since a push of the location already on top is no new visit (route/src/router.rs `push`).
 test('a screen open twice keeps state per entry, and a popped entry\'s is gone', async () => {
@@ -602,7 +602,7 @@ component Finder
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }, 180_000);
 
-// What failed that the test did not arrange.
+// LLP 1146 D4: what failed that the test did not arrange.
 test('a failure is unarranged unless a fetch fault fired or an expect refusal names it', () => {
   const now = { ...NO_FAILURES, failures: { gateway: 2 }, failed: { gateway: 'turn 868 ms over 100 ms' }, mutations: { vote: { code: 'refused', message: 'no' }, send: { code: 'network', message: 'down' } } };
   expect(unarranged(NO_FAILURES, now, { refusals: ['vote'] })).toEqual(['resource gateway was refused 2 times (turn 868 ms over 100 ms)', 'send send failed (network: down)']);
@@ -614,7 +614,7 @@ test('a failure is unarranged unless a fetch fault fired or an expect refusal na
   expect(unarranged(NO_FAILURES, NO_FAILURES, { churn })).toEqual(churn);
 });
 
-// An `expect perf` line against a block's counts.
+// LLP 1146 D3: an `expect perf` line against a block's counts.
 test('expect perf reads a resource\'s asks and a component\'s or a view\'s work', () => {
   const site = (component, created, evaluated, line) => ({ site: line, created, rowConstructed: 0, evaluated, source: { status: 'compatible', component, file: '/a/app.contract', line } });
   const measured = { line: 3, components: new Set(['MemberRow', 'Rail', 'Sheet']), whole: { resources: [{ name: 'channelList', asked: 1 }], sites: [site('Rail', 2, 9, 10), site('Rail', 1, 4, 12)] }, under: new Map([['member-sheet', { sites: [site('Sheet', 5, 0, 40)] }]]) };
@@ -650,7 +650,7 @@ test('always observes each mutation-clock configuration, including the sixteenth
   expect(seen).toEqual(Array.from({ length: 17 }, (_, i) => i));
 });
 
-// A native run has no web build's grants to read. The site pattern's API is a setting, so its `/planets`
+// LLP 1153 D4: a native run has no web build's grants to read. The site pattern's API is a setting, so its `/planets`
 // fault resolves against the grant app.ts names as the build evaluates it, `.env.local`'s port over `.env`'s.
 test('a native run resolves a fetch fault under the API a setting names', async () => {
   const { createApp, applyPattern } = await import('../game/new.mjs');
@@ -671,7 +671,7 @@ test('a native run resolves a fetch fault under the API a setting names', async 
   } finally { rmSync(parent, { recursive: true, force: true }); }
 });
 
-// A fault on a path is the API's. The driver arms it under the one origin the grants name, and the host
+// LLP 1103: a fault on a path is the API's. The driver arms it under the one origin the grants name, and the host
 // matches that as a prefix of the whole URL, so `fail fetch "/planets"` fails the site's absolute fetch of a planet.
 test('a fault on a path is armed under the API, and fails that API\'s absolute URL', async () => {
   const { faultOp, takeFault } = await import('../host/web/faults.js');

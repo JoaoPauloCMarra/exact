@@ -1,4 +1,4 @@
-//! Wakes: the platform runs the app for a reason a
+//! Wakes (LLP 1133.017 D5, D6): the platform runs the app for a reason a
 //! module declared, while the person may not be using it. Only the host
 //! raises a wake's events (`"raised": "wake"`), at the platform's call
 //! ([`Runner::raise_wake`]); each event is an invocation of origin
@@ -8,12 +8,12 @@
 //!
 //! - **Owned work.** An invocation owns the requests in flight, the armed
 //!   `then`s, the held module calls and the queued sends stamped with its
-//!   id (`admit.rs`). Sends waiting for the data source
+//!   id (LLP 1133.023 D7, `admit.rs`). Sends waiting for the data source
 //!   to be ready (a cold boot's) are counted too, since none can be told
 //!   apart. A wake and a tool call (`calls.rs`) run one at a time.
 //! - **Done.** An invocation completes when it owns nothing; the wake ends
-//!   when every invocation has ended and the storage queue has drained,
-//!   the whole process's.
+//!   when every invocation has ended and the storage queue has drained
+//!   (LLP 1097 D10), the whole process's.
 //! - **Superseded.** A commit not its own that lets go of a request the
 //!   running invocation owns ends it `superseded`, once that commit stands.
 //! - **Expired** at the deadline, the first delivery plus the largest
@@ -566,7 +566,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Invocation `id`'s work was let go of by a commit that stood: the
-    /// running invocation it is ends `superseded`.
+    /// running invocation it is ends `superseded` (D5).
     pub(in crate::runner) fn wake_superseded(&mut self, id: u64) {
         let running = (self.extensions.wakes.current.as_ref()).and_then(|w| {
             (w.invocations.iter()).position(|i| i.state == State::Running && i.id == id)
@@ -585,7 +585,7 @@ impl<D: DataSource> Runner<D> {
         let mut i = first;
         while i < self.commands.len() {
             // Bare `focus()` brings the window forward, which a wake never
-            // does; `focus(id)` is an element's.
+            // does (LLP 1133.025 D4); `focus(id)` is an element's.
             let command = &self.commands[i];
             let window = command.name == "focus" && command.args.is_empty();
             if REFUSED.contains(&command.name.as_str()) || window {

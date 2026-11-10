@@ -1,4 +1,4 @@
-// Real Chrome driver invoked by the web smoke.
+// @ref LLP 1038 D7/D11 — real Chrome driver invoked by the web smoke.
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -10,8 +10,8 @@ import { serveStatic, serveBuildTree, readWebRequest } from '../serve.mjs';
 import { publishRoot } from '../../../scripts/deploy.mjs';
 import { DirectoryOrigin, appDocumentPath, sha256 } from '../../../scripts/origin.mjs';
 const dir = process.env.EXACT_ROUTER_TEST, dist = resolve(dir, 'dist');
-// `EXACT_ROUTER_TARGET=js` (host/web/tests/it/navigation.rs): the JS target,
-// each plan a JS build (the Caltrain carrier; the plans read no
+// `EXACT_ROUTER_TARGET=js` (host/web/tests/it/navigation.rs): the JS target
+// (LLP 1071), each plan a JS build (the Caltrain carrier; the plans read no
 // sources), its fixture a script ahead of the runtime; else the wasm host,
 // the plan substituted at its boot.
 const js = process.env.EXACT_ROUTER_TARGET === 'js';
@@ -49,7 +49,7 @@ function fixture(plan) {
   const agentURL = new URL(location.href); agentURL.searchParams.set('agent', '1');
   history.replaceState(null, '', agentURL);
   const instantiate = WebAssembly.instantiateStreaming;
-  let wrapped = false; // the app's own instantiation; its staged capabilities load as they are
+  let wrapped = false; // the app's own instantiation; its staged capabilities (LLP 1047.000) load as they are
   WebAssembly.instantiateStreaming = async (...args) => {
     if (wrapped) return instantiate(...args);
     wrapped = true;
@@ -316,7 +316,7 @@ try {
     assert.equal((await state()).slots.blurPresses, 2, 'the retained live editor still delivers blur');
     rows.push({name:'focused route teardown',blurPresses:2,errors:consoleErrors.slice(beforeErrors),logs});
   });
-  // This plan has no strings table, so it names no language, and the running page keeps the one
+  // LLP 1115.000 D4.6: this plan has no strings table, so it names no language, and the running page keeps the one
   // its build wrote from the manifest (the wasm runtime's `language` op used to clear it).
   await run('the running page keeps the manifest\'s lang', async () => {
     await fresh();
@@ -326,7 +326,7 @@ try {
     const n = await fresh();
     await record('boot', '/', n, 1, 0);
     await tap('push-post'); await record('push post', '/post/42', n + 1, 2, 0);
-    // A push of the location shown is no new visit: no history entry.
+    // A push of the location shown is no new visit: no history entry (LLP 1038 `push`).
     await tap('push-post'); const again = await record('push of the top adds nothing', '/post/42', n + 1, 2, 0);
     assert.equal(again.calls.filter(c => c.name === 'pushState').length, 0, 'a same-URL push writes no history entry');
     await historyTap(-1); await until(`location.pathname==='/'`);
@@ -380,8 +380,8 @@ try {
     const looks = await evaluate(`[...document.querySelectorAll('[data-testid$="-${key}"]')].filter(el => el.localName === 'a')
       .map(el => { const s = getComputedStyle(el), p = getComputedStyle(el.parentElement); return [el.dataset.testid.replace('-${key}', ''), s.display, s.textDecorationLine, s.cursor, s.color === p.color]; })`);
     assert.deepEqual(looks.filter(([id]) => ['link-post', 'link-person'].includes(id)),
-      // An inline link run is LinkText; a block link of text is in the accent, not its parent's colour,
-      // and every link points.
+      // An inline link run is LinkText (LLP 1115); a block link of text is in the accent, not its parent's colour,
+      // and every link points (LLP 1116.000 D4).
       [['link-post', 'block', 'none', 'pointer', false], ['link-person', 'inline', 'none', 'pointer', false]]);
     // A same-origin path no pattern declares (a file) is the browser's: a new document.
     await tap('link-file'); await until(`location.pathname==='/manifest.json'`);
@@ -477,12 +477,12 @@ try {
     await evaluate(`exact.reload(new Uint8Array(${JSON.stringify(noNavigate)}))`);
     await record('no-control, no-handler prelude', '/notifications', n + 1, 2, 0);
     await historyTap(-1); await until(`location.pathname==='/'`);
-    const back = await record('Back without a control or a handler', '/', n + 1, 1, 0, 'host back');
+    const back = await record('Back without a control or a handler (LLP 1115 D5)', '/', n + 1, 1, 0, 'host back');
     assert.equal(back.navigatePresses, 0);
     assert.deepEqual(back.calls.filter(c => c.name === 'go').map(c => c.args[0]), [-1], 'accepted where it landed: no restoring go');
     assert.equal(back.logs.lines.filter(l => l.includes('history:')).length, 0, 'no Back refused');
   }, 'an in-document plan swap (exact.reload) is the wasm runner\'s; the JS target compiles one plan');
-  // On both targets: the handler-less plan is the JS target's own build, and the wasm page's swap.
+  // LLP 1115.000 D4.3, on both targets: the handler-less plan is the JS target's own build, and the wasm page's swap.
   await run('a link to a route and the browser\'s Forward with no navigate handler are the runner\'s own go', async () => {
     if (js) { served = dir + '/no-navigate'; jsBuild('no-navigate.plan', served); }
     try {
@@ -546,7 +546,7 @@ try {
     assert.equal(launched.calls.find(c => c.name === 'replaceState').args[2], url + '//evil.invalid/x?agent=1');
     assert.deepEqual(consoleLines, [], 'no browser exception for a double-slash notfound location');
   });
-  // On both targets: an app with no `notfound` route is given one and its screen ("Page not found", a way
+  // LLP 1116.009 D2, on both targets: an app with no `notfound` route is given one and its screen ("Page not found", a way
   // home), so a launch at a location no route matches keeps its URL and boots. The JS target builds the plan that declares
   // none; the wasm page launches the plan that does at the location, then swaps for one that does not, whose table (the
   // compiler's written `notfound`) still describes the carried stack.
@@ -725,7 +725,7 @@ try {
       assert.equal((await session.state()).slots.backPresses, 1);
     } finally { await session.close(); }
   });
-  // A fragment's scroll, in a navigation root that scrolls: at launch; again by a link to the
+  // @ref LLP 1153 D5 — a fragment's scroll, in a navigation root that scrolls: at launch; again by a link to the
   // fragment shown, though the person scrolled since; never for a navigation a refused commit made, or one only
   // computed. Back to an entry whose router is the router shown puts back the place it had; a newer destination and the
   // app's own scrollIntoView win over the hold while a picture loads.
@@ -809,7 +809,7 @@ try {
     assert.equal(await first(), 'other');
     // The JS target compiles one plan: it has no carried reload to keep focus through.
     if (js) { served = dist; skipped.push({ name: 'autofocus: a carried reload keeps focus at its place', why: 'an in-document plan swap (exact.reload) is the wasm runner\'s' }); return; }
-    // A carried reload is the same document: focus stays at
+    // A carried reload is the same document (LLP 1035.000 D9): focus stays at
     // Other's place in the tree, and First's autofocus does not take it back.
     await evaluate(`exact.reload(new Uint8Array(${JSON.stringify(plan)}))`);
     assert.equal(await first(), 'other');

@@ -1,4 +1,4 @@
-// The build channel: the dev loop's
+// The build channel (LLP 1122 D4, LLP 1121 stage 4 commit 5): the dev loop's
 // running development builds, registered, reporting up and taking commands
 // down, for the design server's clients.
 //
@@ -18,13 +18,13 @@
 //   change: the effective `scheme`, `contrast`, `mode` and `rootFontSize`,
 //   the `plan` and `design` digests, the pin `revision` applied),
 //   `unsupported` (a command or batch it cannot apply, by name), and
-//   `selected` (a node selected in inspect mode, or null when
+//   `selected` (LLP 1122 D5: a node selected in inspect mode, or null when
 //   the page left inspect mode itself).
 // - **Commands down**, each a frame whose `kind` a host dispatches before any
 //   generation handling: `pin` `{revision, pin}` here (`{scheme?, contrast?,
 //   mode?: {axis: value}, rootFontSize?}`, or null to hand them back);
-//   `inspect` `{on}` or `{refresh}`; `outline` `{sites, plan}`;
-//   `hold` `{revision, hold}` (*1.11*):
+//   `inspect` `{on}` or `{refresh}` (T2b); `outline` `{sites, plan}` (T2b);
+//   `hold` `{revision, hold}` (LLP 1122 D8, LLP 1121 stage 8 E, *1.11*):
 //   `{site, instance, state}`, a state held on one node of the build's own
 //   plan, or null to let it go. A host that cannot hold that state answers
 //   `unsupported`; one that applies or drops a hold reports `held`.
@@ -61,7 +61,7 @@ const WAIT_MS = 4_000;
 // A report's body: at most this many bytes, read within this long.
 const REPORT_BYTES = 64 * 1024, REPORT_MS = 10_000;
 const KINDS = new Set(['register', 'status', 'unsupported', 'selected', 'held']);
-// A location on the build's own origin (`navigate`; a status's
+// A location on the build's own origin (LLP 1122 T7, `navigate`; a status's
 // `location`): a path with its query and fragment, never a scheme, a host or
 // a path a browser reads as one (`//`, `/\`), at most 2 KiB, in printable
 // ASCII (percent-encoded, as a page's own location is), no backslash.
@@ -80,7 +80,7 @@ const located = v => {
 // nothing it routes to is escaped past the bound.
 const CANONICAL = /^\/(?:[A-Za-z0-9\-._~!$&()*+,;=:@/?#]|%[0-9A-Fa-f]{2})*$/;
 const routable = v => located(v) && CANONICAL.test(v);
-// The states a hold names, and why a build lets one go.
+// The states a hold names (LLP 1122 D8), and why a build lets one go.
 const HELD = ['active', 'hover', 'focus-visible'], DROPS = ['input', 'disabled', 'gone', 'replaced'];
 
 /** A hold as a client gives it: `{site, instance, state}`, or null. The
@@ -268,7 +268,7 @@ export function buildChannel({ send = () => {}, log = () => {}, selected = null,
   };
   /** Build `id`'s hold sent again (a new revision), as its plan `plan` (a
    * planDigest) is now: as it is under the same plan, at the one site that
-   * corresponds under another, else let go with a diagnostic.
+   * corresponds under another, else let go with a diagnostic (LLP 1122 D8).
    * With none, `always` (a registration) says so: a page that kept one
    * across a reconnect, its owner gone meanwhile, lets it go. */
   const replayHold = (id, plan, always = false) => {
@@ -471,8 +471,8 @@ export function buildChannel({ send = () => {}, log = () => {}, selected = null,
         if (typeof r.design === 'string') b.design = r.design;
         tellStatus(b);
       } else if (r.kind === 'held') {
-        // The build's held state is every client's to know;
-        // one it let go of itself (real input, disabled, its node
+        // The build's held state is every client's to know (theme2's 07:48
+        // (c)); one it let go of itself (real input, disabled, its node
         // gone) is not held any more, nor replayed.
         // Only a report of the last hold frame sent counts: one of an earlier
         // frame (a late echo, the `replaced` of the frame that replaced it)
@@ -497,8 +497,8 @@ export function buildChannel({ send = () => {}, log = () => {}, selected = null,
           return { status: 204, body: null };
         }
         log(`build ${b.id}: unsupported ${r.what ?? '?'}`);
-        // A hold refused is its hold frame's, an answer to its owner alone;
-        // a pin's is kept with the status.
+        // A hold refused is its hold frame's, an answer to its owner alone
+        // (theme2's 07:48 (c)); a pin's is kept with the status.
         if (r.what === 'hold') {
           const h = holds.get(b.id);
           if (r.revision !== holdSent.get(b.id) || !h) return { status: 204, body: null };
@@ -574,7 +574,7 @@ export function buildChannel({ send = () => {}, log = () => {}, selected = null,
         if (pin === null) pins.delete(t); else pins.set(t, { client, pin, revision });
         sendPin(t, { kind: 'pin', revision, pin });
       }
-      // Commands are journaled with their client.
+      // Commands are journaled with their client (LLP 1122 D4).
       log(`tamber: ${client} pinned ${JSON.stringify(pin)} on ${targets.join(', ') || 'no build'} (revision ${revision})`);
       announce();
       return { builds: targets, revision };
@@ -592,11 +592,11 @@ export function buildChannel({ send = () => {}, log = () => {}, selected = null,
       if (!listed().some(b => b.id === id)) return { error: `no registered build \`${id}\`` };
       if (inspectors.get(id) !== client) return { error: `inspect is not on for \`${client}\` on \`${id}\`: turn it on first` };
       // The selection moved since its chain was read (another node, or a rebuild): stale, as the protocol says it
-      // everywhere, so the client reads its chain again; never `unsupported`, which is a page that can't.
+      // everywhere (theme2 15:02), so the client reads its chain again; never `unsupported`, which is a page that can't.
       const pick = picks.get(id);
       if (!pick || pick.plan !== plan || pick.site !== from || pick.instance !== JSON.stringify(instance ?? [])) return { stale: true, error: 'the selection moved since its chain was read: select again' };
       // A plan past the copies limit never gets them, so no move can land there: the build is said unable to step
-      // (unsupported; the tool greys its up control until it registers again), never stale, which
+      // (unsupported, theme2's ruling; the tool greys its up control until it registers again), never stale, which
       // would have the tool ask again for good.
       const b = builds.get(id);
       if (b.capabilities?.includes('copies') && b.planDigest && copiesFor(b.planDigest) === false) {
@@ -670,8 +670,8 @@ export function buildChannel({ send = () => {}, log = () => {}, selected = null,
       return { build: id, revision };
     },
     /** `client` routes build `id` to `location`, a path with its query and
-     * fragment on the build's own origin, in place as a deep link.
-     * One-shot: nothing is held, replayed or cleared. The refusal, the
+     * fragment on the build's own origin, in place as a deep link (LLP 1122
+     * T7). One-shot: nothing is held, replayed or cleared. The refusal, the
      * build's lack of it, or the seq sent. */
     navigate(client, id, location) {
       if (!routable(location)) return { error: '`location` is a path on the build\'s own origin, with its query and fragment, at most 2 KiB and spelled as a URL writes it (RFC 3986\'s characters, each `%` a whole escape): no scheme or host' };
@@ -703,7 +703,8 @@ export function buildChannel({ send = () => {}, log = () => {}, selected = null,
   };
 }
 
-/** The design server's `navigate` `{client, build, location}` (*1.14*; write scope, the dispatcher's) on `channel`, from a client
+/** The design server's `navigate` `{client, build, location}` (LLP 1122 T7,
+ * *1.14*; write scope, the dispatcher's) on `channel`, from a client
  * `present(client)` says is: its answer, `{ok}` or `{status, error}`. */
 export function navigateRequest(channel, present, { client, build, location }) {
   if (!present(client)) return { status: 409, error: { message: `navigate: \`${client}\` is not present` } };

@@ -1,4 +1,4 @@
-// A backdrop box's outer shadows on macOS.
+// A backdrop box's outer shadows on macOS (LLP 1053.000 §3, LLP 1064 D2).
 // AppKit filters a layer's backdrop only while the layer masks to its bounds
 // (`Backdrop.swift`), and that mask clipped the outer shadows, which CSS
 // draws past the border box, together with the caster at the bottom of the

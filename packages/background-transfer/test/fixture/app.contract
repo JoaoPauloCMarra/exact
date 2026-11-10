@@ -1,4 +1,4 @@
-// The conformance fixture: @exact/background-transfer's
+// The conformance fixture (LLP 1133.001 D7): @exact/background-transfer's
 // names as an app uses them. Data code starts each transfer; the root's
 // three handlers hand the registration to data code, which tells the
 // suite's server what it carried and then retires it.

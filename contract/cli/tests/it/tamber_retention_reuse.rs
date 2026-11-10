@@ -1,9 +1,10 @@
-//! The design server's retention after a name-moving edit: built only as
-//! far as the design's retention, and on an edit the design alone moved, with the last
+//! The design server's retention after a name-moving edit (LLP 1121 stage
+//! 12 B1's follow-up, theme2's 11:32 ruling): built only as far as the
+//! design's retention, and on an edit the design alone moved, with the last
 //! build's types and expansion reused where the program loads as it did.
-//! For every edit kind that moves names, a primed server answers as a
+//! For every edit kind B1's re-checks covered, a primed server answers as a
 //! fresh one does, and the reused types and expansion are what checking
-//! again gives (`EXACT_TAMBER_RETENTION_VERIFY`).
+//! again gives (`EXACT_TAMBER_RETENTION_VERIFY`, condition (b)).
 #![cfg(unix)]
 
 use super::tamber_package_params::{package, reading};
@@ -39,7 +40,7 @@ fn bare(mut v: Value) -> Value {
 /// `probes`; then ask them of a fresh server. The two answer alike, and the
 /// primed server's builds are `built` (each line of its log). Run twice:
 /// as the server runs, reusing (what the answers come from), and verifying
-/// that what it reused is what checking again gives.
+/// that what it reused is what checking again gives (condition (b)).
 fn primed_as_fresh(setup: &dyn Fn(&str) -> PathBuf, edit: Edit, probes: &[&str], built: &[&str]) {
     for verify in [false, true] {
         let dir = setup(if verify { "verify" } else { "reuse" });
@@ -89,7 +90,7 @@ fn primed_as_fresh(setup: &dyn Fn(&str) -> PathBuf, edit: Edit, probes: &[&str],
 const PIN: &str = "tamber t\n\ntheme\n  ink = #111111\n  ink2 = #222222\n  reading.pin = reading.pin.base\n  reading.pin.base = #333333\n";
 
 /// The app `reading` makes, its design `design`, and a colour row of an
-/// expression over its token `over`: a synthetic token each answer
+/// expression over its token `over`: a synthetic token (D3) each answer
 /// lists.
 fn with(tag: &str, design: &str, over: &str) -> PathBuf {
     let dir = reading(tag);
@@ -190,7 +191,7 @@ fn a_package_alias_moved_reuses_the_program_and_answers_as_fresh() {
     );
 }
 
-/// A package design's header repaired (its header keys): a
+/// A package design's header repaired (B1's re-check: the header keys): a
 /// design that names another namespace, then its own.
 #[test]
 fn a_package_header_repaired_answers_as_fresh() {
@@ -207,7 +208,7 @@ fn a_package_header_repaired_answers_as_fresh() {
     );
 }
 
-/// A design that doesn't parse, then repaired: the broken
+/// A design that doesn't parse, then repaired (condition (c)): the broken
 /// build checks the program again, never reusing past it.
 #[test]
 fn a_design_repaired_after_a_parse_failure_answers_as_fresh() {
@@ -249,7 +250,7 @@ fn a_design_repaired_after_a_parse_failure_answers_as_fresh() {
 
 /// A motion token's alias moved: its value is written into the views at
 /// load, so the program no longer loads as it did, and the build checks it
-/// again (the fields the reuse compares).
+/// again (condition (a)'s compared fields).
 #[test]
 fn a_motion_alias_moved_checks_the_program_again() {
     let design = "tamber t\n\ntheme\n  ink = #111111\n  dur.fast = 200ms\n  dur.slow = 400ms\n";
@@ -382,7 +383,7 @@ fn a_build_stopping_before_the_design_caches_nothing() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The oracle the answers above stand for: a reused
+/// The oracle the answers above stand for (Astra's round 2): a reused
 /// retention build's retention and synthetic candidates are exactly what an
 /// ordinary whole build of the same files fixes, for six edit kinds the
 /// design alone moves (the package and motion-argument cases are compared
@@ -440,7 +441,7 @@ fn the_retention_build_says_what_the_whole_build_does() {
     }
 }
 
-/// A build that fails after the design
+/// theme2's Q2 as corrected at 11:54: a build that fails after the design
 /// still says its retention, which is cached; a kind change is not hidden. The server
 /// never compiled a write's Contract (main's too): a token made a colour
 /// where a row reads a length is classed `rebuild`, so the dev loop's whole
@@ -466,7 +467,7 @@ fn an_edit_failing_after_the_design_is_classed_rebuild_while_retention_is_kept()
     );
     let (ok, _) = s.ask(propose("ink"));
     assert!(ok.get("ok").is_some(), "{ok}");
-    // The rows check refuses that write now, in the
+    // The rows check (theme2's 14:19 ruling) refuses that write now, in the
     // compiler's words; made on disk past the server, the build refuses it.
     let (written, _) = s.ask(json!({"method": "transaction", "client": "one", "files": {"app.tamber": digest(&dir.join("app.tamber"))}, "ops": [{"op": "set-token", "name": "gap", "value": "#444444"}]}));
     assert_eq!(
@@ -513,7 +514,7 @@ fn press(tag: &str, over: bool) -> PathBuf {
     dir
 }
 
-/// A design-valid move whose whole build
+/// theme2's 12:15 ruling (option (4)): a design-valid move whose whole build
 /// fails after the design (a negative press scale) is answered from the
 /// stopped build at once, and once the background build reports the
 /// failure, every later edit is `rebuild`, as on main; moving it back
@@ -547,7 +548,7 @@ fn a_build_failing_after_the_design_is_rebuild_once_the_check_reports() {
     }
 }
 
-/// The server's close never waits on a background build.
+/// The server's close never waits on a background build (condition (c)).
 #[test]
 fn closing_the_server_mid_check_exits_at_once() {
     let dir = press("ret-close", false);
@@ -588,7 +589,7 @@ fn until(s: &mut Serve, want: &str) {
     panic!("never `{want}`");
 }
 
-/// While the build is broken, an unrelated
+/// theme2's 12:19 amendment to (b): while the build is broken, an unrelated
 /// value edit (same retention key) still answers `rebuild`, as on main; a
 /// value edit that fixes it returns the state to known once a whole build of
 /// exactly the files as they are passes.
@@ -664,7 +665,7 @@ fn a_check_raced_by_an_edit_mid_build_is_dropped() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A check lost to an edit is asked for again: checking a
+/// A check lost to an edit is asked for again (Astra's round 1): checking a
 /// broken design, an unrelated value edit (same retention key) lands while
 /// it builds; the lost check's files are built again as they are now, and
 /// the answers become `rebuild`.
@@ -719,7 +720,7 @@ fn a_lost_check_is_asked_for_again() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// An open scrub's frames follow the check: a scrub
+/// An open scrub's frames follow the check (Astra's round 1): a scrub
 /// opened while the check of a broken design runs answers `rebuild` once
 /// it reports, though the scrub cached its retention when it opened.
 #[test]
@@ -765,7 +766,7 @@ fn an_open_scrub_follows_the_check() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// Two writes and no propose between. The breaking write
+/// Grok's round 1: two writes and no propose between. The breaking write
 /// sees the files before it; the next (an unrelated value) is the first to
 /// see the new retention and starts the check of the files before it; that
 /// failure, of files since moved, still marks the key, and the answers
@@ -794,7 +795,7 @@ fn a_failure_of_files_since_moved_still_marks_the_key() {
 }
 
 /// A scrub opened under a retention the files have since left never builds
-/// them under its key: the files changed on disk to a
+/// them under its key (Astra's round 2): the files changed on disk to a
 /// passing design under another retention, the frames stay `rebuild`; the
 /// files back, the failure stands.
 #[test]

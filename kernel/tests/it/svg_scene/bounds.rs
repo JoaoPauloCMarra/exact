@@ -1,4 +1,4 @@
-//! An inline `svg` is bounded as an SVG image is. A few
+//! LLP 1011.001 D2: an inline `svg` is bounded as an SVG image is. A few
 //! elements that name each other can expand past what a host can hold;
 //! the scene then draws nothing and names the limit it passed.
 use super::*;

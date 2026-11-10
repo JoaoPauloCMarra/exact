@@ -1,6 +1,7 @@
 // The design tool's reading of the wire's scopes (apps/design-tool/wire.ts
 // NEEDS) is the server's table (scripts/tamber-pairing.mjs METHOD_SCOPE),
-// so a paired tool greys and holds back exactly what the server refuses.
+// so a paired tool greys and holds back exactly what the server refuses
+// (LLP 1122 D12, T6).
 import { expect, test } from 'bun:test';
 import { METHOD_SCOPE } from './tamber-pairing.mjs';
 import { above, doorOf, GONE, NEEDS, needOf, wire } from '../apps/design-tool/wire.ts';

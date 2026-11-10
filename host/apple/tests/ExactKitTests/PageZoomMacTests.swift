@@ -3,7 +3,7 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// View's zoom, and the app's `setPageZoom`, are a page
+/// LLP 1021 §5.3.1: View's zoom, and the app's `setPageZoom`, are a page
 /// zoom, as Chromium's: a CSS px is the factor's points, the page lays out
 /// in the view's size over it, and the page's device pixels are the
 /// window's backing scale times it (text line boxes, hairlines, rasters).

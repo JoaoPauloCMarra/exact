@@ -61,7 +61,7 @@ fn sampled_pixels_keep_natural_auto_axes_and_min_max_layout() {
         ("width=100 min-width=180 max-width=250", (180., 90.)),
     ] {
         // A non-stretching flex item tests the image's own natural axes;
-        // bare block auto-width stretching is tested separately.
+        // LLP1011 declares bare block auto-width stretching separately.
         let plan = contract::compile(&format!(
             "component App\n  view\n    column align-items=\"flex-start\"\n      image \"large.png\" {attrs} testId=\"photo\"\n"
         ))

@@ -1,4 +1,4 @@
-// The Apple share inbox drive: the Apple share extension's inbox,
+// LLP 1133.024 §20 stage 2's drive: the Apple share extension's inbox,
 // claimed by Fieldnotes cold (before its boot) and warm (on the extension's
 // Darwin notification, and at a foreground). Each share is written as the
 // extension writes it (`host/apple/share/ShareInbox.swift`): a directory of

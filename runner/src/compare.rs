@@ -153,7 +153,7 @@ pub fn equivalent_opt(a: &Option<Value>, b: &Option<Value>) -> bool {
 }
 
 /// Which fields of a frame's value differ between `a` and `b`, as the
-/// dependency table's field mask: bit `k` for field `k`,
+/// dependency table's field mask (LLP 1017.003 D6): bit `k` for field `k`,
 /// bit 63 for 63 and past; `0` when [`equivalent_opt`]; every bit unless both
 /// are records of one length.
 pub fn changed_fields(a: &Option<Value>, b: &Option<Value>) -> u64 {
@@ -291,7 +291,7 @@ mod tests {
             found,
             vec![Some(5), Some(4), Some(3), Some(2), Some(1), None]
         );
-        // Inline and shared text with the same bytes:
+        // Inline and shared text with the same bytes (Charlie, 2026-09-28):
         // equal and equivalent; the same object only in one form.
         for t in ["", "bold", "exactly14bytes", "longer than fourteen bytes"] {
             let (inline, shared_form) = (Value::str(t), Value::str_shared_for_tests(t));

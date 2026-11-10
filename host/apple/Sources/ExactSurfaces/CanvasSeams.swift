@@ -1,4 +1,4 @@
-// The GPU module's optional input, message and agent seams.
+// The GPU module's optional input, message and agent seams (LLP 1046.002 §3).
 // The runner never learns what a surface's world is; the web host is the oracle.
 import Foundation
 #if os(macOS)
@@ -39,7 +39,7 @@ struct WorldCarrier {
 }
 
 extension CanvasesHost {
-    /// A render recorded into `m`'s open frame: shown at `flushRecorded`.
+    /// A render recorded into `m`'s open frame (LLP 1009 D7): shown at `flushRecorded`.
     func recorded(_ m: GpuModule) {
         if !unflushed.contains(where: { $0 === m }) { unflushed.append(m) }
     }
@@ -175,12 +175,12 @@ extension CanvasesHost {
     /// surface name with the lowest view id, stamped now, held until one is live.
     func hasSurface(_ name: String) -> Bool { entries.values.contains { $0.name == name } }
     /// The surface name of canvas `view`, and the names of the canvases on the
-    /// page: the driver's `post` names a surface by either.
+    /// page: the driver's `post` (LLP 1139.004 D1) names a surface by either.
     func surfaceName(_ view: UInt32) -> String? { entries[view]?.name }
     func surfaceNames() -> [String] { Array(Set(entries.values.map(\.name))).sorted() }
     /// Whether posts to `name` still wait for a canvas of it.
     func waiting(_ name: String) -> Bool { pendingPosts.contains { $0.name == name } }
-    /// A sensor input's event for the live canvas of surface
+    /// A sensor input's event (LLP 1133.013 D6) for the live canvas of surface
     /// `name` with the lowest view id, stamped with its sample's time; false
     /// when none is live. Not held: a sample with no canvas to take it is gone.
     @discardableResult func sensor(_ name: String, _ event: [String: Any]) -> Bool {
@@ -513,7 +513,7 @@ extension CanvasesHost.Entry {
 }
 
 // A live surface asks for the session once per process; its category is the
-// app's, set by its one owner (`AudioSession`).
+// app's, set by its one owner (`AudioSession`, LLP 1096 D8).
 private enum CanvasAudio {
     nonisolated(unsafe) static var active = false
     nonisolated(unsafe) static var wanted = false
@@ -582,7 +582,7 @@ final class CanvasLifecycle: NSObject {
     private func send(_ code: UInt32, excluding id: UInt32? = nil) {
         precondition(Thread.isMainThread)
         guard let owner, !owner.modules.isEmpty else { return }
-        // Each canvas's own artifact.
+        // Each canvas's own artifact (LLP 1009 D6).
         for entry in Array(owner.entries.values) where entry.id != 0 && entry.id != id { entry.module?.lifecycle?(entry.id, code) }
         if code == 1 || code == 3 { owner.session?.frames.requestCanvas() }
     }

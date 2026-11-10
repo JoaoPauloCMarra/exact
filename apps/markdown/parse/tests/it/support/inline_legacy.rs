@@ -95,7 +95,7 @@ impl<'a> Parser<'a> {
                 }
                 b'!' if self.peek(1) == b'[' => {
                     // An inline image inside a paragraph is its alt text: an
-                    // image is a block in this reader, and a
+                    // image is a block in this reader (LLP 1033), and a
                     // paragraph's runs are text the kernel measures.
                     if let Some((label, target)) = self.bracketed(1) {
                         let alt = if label.is_empty() { target } else { label };

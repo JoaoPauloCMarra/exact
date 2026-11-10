@@ -1,5 +1,5 @@
 /**
- * Build products kept for the machine: the Apple host's
+ * Build products kept for the machine (LLP 1036.000 §10): the Apple host's
  * Rust modules (host/apple/modules.mjs), the web's leaf wasm modules and its
  * compiler (host/web-js/module.mjs). Each holds nothing of an app, so every
  * checkout whose sources agree builds the same bytes, and a build in a

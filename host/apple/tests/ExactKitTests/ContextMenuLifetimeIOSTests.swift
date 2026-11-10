@@ -189,7 +189,7 @@ final class ContextMenuLifetimeIOSTests: XCTestCase {
     }
 
     func testABatchWhileLiftedMovesTheRowsHomeAndItsSize() throws {
-        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover") }
+        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover (D4)") }
         let p = presenter()
         let (interaction, configuration, controller) = try opened(p)
         let row = try XCTUnwrap(p.views[3]), pop = try XCTUnwrap(p.views[2])
@@ -207,7 +207,7 @@ final class ContextMenuLifetimeIOSTests: XCTestCase {
     }
 
     func testASourceThatStopsNamingThePopoverEndsTheMenuAndReturnsTheRow() throws {
-        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover") }
+        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover (D4)") }
         let p = presenter()
         _ = try opened(p)
         let row = try XCTUnwrap(p.views[3]), pop = try XCTUnwrap(p.views[2])
@@ -218,7 +218,7 @@ final class ContextMenuLifetimeIOSTests: XCTestCase {
     }
 
     func testAConfigurationThatNeverShowsIsNoMenuAndADroppedRowStaysOut() throws {
-        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover") }
+        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover (D4)") }
         let p = presenter()
         let source = try XCTUnwrap(p.views[1])
         let interaction = try XCTUnwrap(source.interactions.compactMap { $0 as? UIContextMenuInteraction }.first)
@@ -239,7 +239,7 @@ final class ContextMenuLifetimeIOSTests: XCTestCase {
     /// focus is set aside while the menu shows, dispatching neither `blur`
     /// nor `focus` (MenuFocusIOS).
     func testTheFocusIsSetAsideQuietlyWhileTheMenuShows() throws {
-        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover") }
+        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover (D4)") }
         let p = presenter()
         let source = try XCTUnwrap(p.views[1])
         XCTAssertTrue(source.becomeFirstResponder())
@@ -255,7 +255,7 @@ final class ContextMenuLifetimeIOSTests: XCTestCase {
     }
 
     func testAPressThatClearsItsSourcesPopoverEndsTheMenuAndItsInteraction() throws {
-        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover") }
+        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover (D4)") }
         let p = presenter()
         let (interaction, configuration, _) = try opened(p)
         let row = try XCTUnwrap(p.views[3]), pop = try XCTUnwrap(p.views[2]), source = try XCTUnwrap(p.views[1])
@@ -271,7 +271,7 @@ final class ContextMenuLifetimeIOSTests: XCTestCase {
     /// A touch on a bar leaves a focused node blurred, as a touch on a page's
     /// chrome leaves an element on the web (`BarTouch`).
     func testABarsTouchBlursAFocusedNode() throws {
-        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover") }
+        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover (D4)") }
         let p = presenter()
         let source = try XCTUnwrap(p.views[1])
         XCTAssertTrue(source.becomeFirstResponder())
@@ -305,7 +305,7 @@ final class ContextMenuLifetimeIOSTests: XCTestCase {
     }
 
     func testAnInertPopoverRefusesTheCommit() throws {
-        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover") }
+        if ExactEnv.agentPaints { throw XCTSkip("the agent paints the popover (D4)") }
         let p = presenter()
         let (interaction, configuration, _) = try opened(p)
         var pressed: [UInt32] = []

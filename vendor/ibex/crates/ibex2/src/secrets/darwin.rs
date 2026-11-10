@@ -4,7 +4,9 @@
 //! password items, service = the app's identity, account = the name. On iOS
 //! the item is `AfterFirstUnlockThisDeviceOnly`. macOS normally uses the login
 //! Keychain; a provisioned widget cohort migrates to its restricted
-//! data-protection group.
+//! data-protection group (exact2 LLP 1126.001 WP16).
+//!
+//! @ref LLP 0069#3-the-backends — the Keychain, and why the login keychain on macOS
 
 use std::ffi::{c_char, c_int, c_uchar, c_void, CStr, CString};
 

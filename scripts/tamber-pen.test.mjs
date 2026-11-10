@@ -1,4 +1,4 @@
-// Pencil import on the wire: a paired client imports a Pencil
+// Stage 13 B on the wire (LLP 1121 D14): a paired client imports a Pencil
 // `.pen` file (`import {kind: "pen"}`), planned in its own process as every
 // import is, and held with its review: the axes, the tokens, the notes on
 // the kinds it chose, the unmapped report. A literal over a token that
@@ -96,7 +96,7 @@ test('a .pen of another version is refused with its reason', async () => {
   expect(JSON.stringify(got.error)).toContain('a `.pen` of version 1.0: this importer reads 2.x');
 }, 60_000);
 
-test('a .pen that multiplies (a long name over many entries) is refused by the import\'s real budget in its own process', async () => {
+test('round 1: a .pen that multiplies (a long name over many entries) is refused by the import\'s real budget in its own process', async () => {
   const token = await paired('propose');
   const entries = Array(16_384).fill({ value: '#000000' });
   const source = JSON.stringify({ version: '2.21', variables: { ['n'.repeat(64 * 1024)]: { type: 'color', value: entries } } });
@@ -105,7 +105,7 @@ test('a .pen that multiplies (a long name over many entries) is refused by the i
   expect(JSON.stringify(got.error)).toContain('expands past what one import may do');
 }, 120_000);
 
-test('accepted, then re-imported edited: the proposal is the edit alone, and a literal over a line a person made follow a dial is pinned', async () => {
+test('round 2: accepted, then re-imported edited: the proposal is the edit alone, and a literal over a line a person made follow a dial is pinned', async () => {
   const token = await paired('propose');
   const first = await post({ method: 'import', client: 'pencil', kind: 'pen', name: 'design.pen', source: PEN }, token);
   expect(first.status).toBe(200);

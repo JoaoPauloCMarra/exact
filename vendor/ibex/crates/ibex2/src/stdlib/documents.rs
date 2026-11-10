@@ -1,6 +1,6 @@
 //! Chosen documents retain capabilities, never physical pathnames; only
 //! `realpath` answers where one is, on a desktop.
-//!#3-chosen-document-provider — admission precedes trusted minting.
+//! @ref LLP 0068.001#3-chosen-document-provider — admission precedes trusted minting.
 use super::fs::{FsOp, FsResult, Stat};
 use crate::{
     boundary::{self, HostError},
@@ -280,7 +280,8 @@ pub fn run_document(
     }
 }
 
-/// Whether `realpath` answers a document's native path: on a desktop, whose apps hand
+/// Whether `realpath` answers a document's native path (exact2 LLP 1069.010
+/// D1, amended 2026-11-04; Exact patch 26): on a desktop, whose apps hand
 /// paths to other programs. iOS, Android and the rest refuse it.
 const NATIVE_PATHS: bool = cfg!(any(target_os = "macos", target_os = "linux", windows));
 
@@ -706,7 +707,7 @@ mod tests {
         .is_err());
         assert!(f.0.join("chosen").exists());
     }
-    /// An app that hands a chosen
+    /// exact2 LLP 1069.010 D1, amended 2026-11-04: an app that hands a chosen
     /// item to another program asks its native path, which follows the
     /// retained directory and is refused once that directory is removed.
     #[cfg(any(target_os = "macos", target_os = "linux"))]

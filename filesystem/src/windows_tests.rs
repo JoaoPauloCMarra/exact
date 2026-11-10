@@ -1,4 +1,4 @@
-// These run without symlink privilege or Developer Mode.
+// @ref LLP 1030.002 D4 — these run without symlink privilege or Developer Mode.
 use super::tests::{Fixture, TOKEN};
 use super::*;
 use std::fs;

@@ -122,7 +122,7 @@ fn what_is_not_drawn_is_refused_by_name() {
     }
     let many = (0..65).map(|_| "#000").collect::<Vec<_>>().join(", ");
     assert!(BackgroundImage::check(&format!("linear-gradient({many})")).is_err());
-    // What a computed value's own text already names.
+    // What a computed value's own text already names (studio diary R15).
     for (css, says) in [
         (
             "repeating-linear-gradient(0deg,  0 1px, transparent 1px)",
@@ -282,7 +282,7 @@ fn generated_patch_codec_round_trips_and_refuses_bad_wire_data() {
     );
 }
 
-/// `conic-gradient()` from an angle at a position, stops in
+/// LLP 1077 D5: `conic-gradient()` from an angle at a position, stops in
 /// percentages or angles; and up to four layers, the first on top.
 #[test]
 fn conic_gradients_and_layers_parse_and_round_trip() {
@@ -330,6 +330,7 @@ fn conic_gradients_and_layers_parse_and_round_trip() {
     assert!(BackgroundImage::check_mask("conic-gradient(#000, #fff)").is_ok());
 }
 
+/// LLP 1100 D2.
 #[test]
 fn a_gradient_interpolates_in_the_space_css_says() {
     let g = |css: &str| {

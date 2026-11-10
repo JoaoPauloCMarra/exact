@@ -1,7 +1,7 @@
 import XCTest
 import ExactCore
 
-/// A running app's headless session, as the watch drives it.
+/// A running app's headless session (LLP 1126.002 D3), as the watch drives it.
 final class HeadlessLiveTests: XCTestCase {
     private func node(_ testId: String, in snapshot: HeadlessSession.Snapshot) throws -> HeadlessSession.Node {
         try XCTUnwrap(snapshot.nodes.values.first { $0.props["testId"] == testId }, testId)

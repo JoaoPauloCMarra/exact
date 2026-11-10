@@ -1,9 +1,9 @@
-//! `crypto.subtle` on the Hermes executor: the byte work
+//! `crypto.subtle` on the Hermes executor (LLP 1069.005): the byte work
 //! behind the prelude's `SubtleCrypto`, through `__exact_bytes`. The prelude
 //! owns the WebCrypto shapes (algorithm names, errors, promises); this owns
 //! the arithmetic.
 //!
-//! Digests are pure: no read, no mark, any time.
+//! @ref LLP 1069.005 D1 — digests are pure: no read, no mark, any time.
 
 use std::ffi::{c_char, c_void, CStr};
 
@@ -13,7 +13,7 @@ use crate::{c_string, HostState};
 
 /// A SHA-2 digest of `data`, lowercase hex: the name is the prelude's,
 /// already normalized (`SHA-256`, `SHA-384`, `SHA-512`). The Rust
-/// sources' own, so both languages hash with one implementation.
+/// sources' own (D5), so both languages hash with one implementation.
 fn digest(name: &str, data: &[u8]) -> Result<String, String> {
     let sha = match name {
         "SHA-256" => Sha::Sha256,
@@ -24,7 +24,7 @@ fn digest(name: &str, data: &[u8]) -> Result<String, String> {
     Ok(hex(&exact_data::crypto::digest(sha, data)))
 }
 
-/// Host op 12: `authCallback()`, this native build's
+/// Host op 12: `authCallback()` (LLP 1069.006 D2), this native build's
 /// callback, a device fact, so bake compiles no answer that asks.
 /// (`placement` is the web worker realm's question alone.)
 pub(crate) fn auth_callback(state: &mut HostState, what: &str) -> Option<String> {
@@ -44,7 +44,7 @@ pub(crate) fn hex(bytes: &[u8]) -> String {
     text
 }
 
-/// ECDSA P-256 behind the prelude's `CryptoKey`, by
+/// ECDSA P-256 behind the prelude's `CryptoKey` (LLP 1069.005 D1b), by
 /// handle into `state.keys`: 2 generate(extractable "1"/"0") →
 /// `{"private":h,"public":h}`; 3 sign(handle, data) → `r‖s` as hex; 4
 /// import(`{"jwk":…,"extractable":…}`) → a handle; 5 export(handle) → the
@@ -105,7 +105,7 @@ fn ec(state: &mut HostState, op: u32, a: &str, data: &[u8]) -> Result<String, St
         }
         5 => Ok(key(state, a)?.to_jwk().map_err(message)?.to_json()),
         // No store here (a let-go chain, background work): refused, never
-        // read as "no key kept".
+        // read as "no key kept" (LLP 1146 D3).
         6 | 7 if store_ptr.is_none() && state.between_answers => {
             Err(super::door::no_store(if op == 6 {
                 "store.keepKey"
@@ -137,7 +137,7 @@ fn ec(state: &mut HostState, op: u32, a: &str, data: &[u8]) -> Result<String, St
 }
 
 /// The bytes door (`__exact_bytes(op, a, arrayBuffer)`). Ops: 1 digest(name);
-/// 2–7 ECDSA P-256 and kept keys ([`ec`]); 8 the video gate's stub decode,
+/// 2–7 ECDSA P-256 and kept keys ([`ec`]); 8 LLP 1133.003 §9's stub decode,
 /// under the agent only, which copies the bytes at `a`'s offset and length
 /// and drops them; 9 the
 /// binary message being mapped, written into the buffer, which the prelude

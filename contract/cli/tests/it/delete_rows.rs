@@ -1,4 +1,4 @@
-//! `delete=action` on a list row is its swipe to delete.
+//! LLP 1116.020 D1: `delete=action` on a list row is its swipe to delete.
 //! Lowering expands it to the swipe form (`contract/lower/src/swipe_rows.rs`):
 //! the row in a sideways snap scroll beside a destructive Delete button
 //! that runs the action, disabled where the row is, the row styled as its
@@ -303,7 +303,7 @@ fn a_delete_beside_another_error_is_not_refused() {
     assert_eq!(ids, ["type-unknown-field"], "{errors:?}");
 }
 
-/// A destructive button inside the row a `for` repeats,
+/// LLP 1116.021 D5: a destructive button inside the row a `for` repeats,
 /// with no `delete=` on the row, is advice to write one; a detail screen's
 /// section, a row that says `delete=`, and a dialog or menu in the row are
 /// quiet.
@@ -339,7 +339,7 @@ fn a_destructive_button_in_a_repeated_row_asks_for_delete() {
 /// A `list` holding a `section` with no `appearance` is neither form, grouped
 /// or cells, and draws its rows as written: Duo Notes' list. Each form, an
 /// opt-out, a class that says `appearance`, a windowed list of section rows
-/// and a list that is no cell list for another reason
+/// (LLP 1083 D5) and a list that is no cell list for another reason
 /// (sideways) are quiet; a component used twice is named once.
 #[test]
 fn a_sectioned_list_with_no_appearance_is_named() {

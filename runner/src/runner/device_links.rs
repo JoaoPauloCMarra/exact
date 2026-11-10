@@ -1,5 +1,5 @@
 //! The device capabilities a host links that are generic over its data
-//! source (the device requests): each capability's
+//! source (LLP 1047 D3; LLP 1069's device requests): each capability's
 //! entries, or `None` when the artifact doesn't link it, so its code is gone.
 //! Native hosts and tests boot with every one ([`DeviceLinks::ALL`], set by
 //! the plain boots); the web host passes what its entry registered
@@ -10,7 +10,7 @@
 use super::Runner;
 use crate::DataSource;
 
-/// `openAuthSession`: the entries of [`crate::auth`] that
+/// `openAuthSession` (LLP 1069.006): the entries of [`crate::auth`] that
 /// check a session, which the core reaches from an agent's answer. Settling
 /// and delivering an outcome stay in the core: an unlinked host refuses a
 /// session with them.
@@ -28,7 +28,7 @@ pub type AnswerLink<D> = fn(&mut Runner<D>, &str);
 /// An agent's files for a file input's hold, checked.
 pub type PickCheck<D> = fn(&Runner<D>, Option<exact_kernel::ViewId>, &str) -> Result<(), String>;
 
-/// `input type="file"` and `showPicker`:
+/// `input type="file"` and `showPicker` (LLP 1069.002):
 /// [`super::picker`]'s entries the core reaches, from the agent and a hold.
 pub struct PickerLinks<D: DataSource> {
     /// What `showPicker(id)` names.
@@ -61,13 +61,13 @@ impl<D: DataSource> PickerLinks<D> {
 
 /// What a runner links of the device capabilities.
 pub struct DeviceLinks<D: DataSource> {
-    /// `openAuthSession`.
+    /// `openAuthSession` (LLP 1069.006).
     pub auth: Option<AuthLinks<D>>,
-    /// `share(…)`: its ruling, and an agent's answer.
+    /// `share(…)` (LLP 1069.003): its ruling, and an agent's answer.
     pub share: Option<(CommandLink<D>, AnswerLink<D>)>,
-    /// `saveFile` and the file pickers: their rulings.
+    /// `saveFile` (LLP 1069.010 D3) and the file pickers (D2): their rulings.
     pub documents: Option<(CommandLink<D>, CommandLink<D>)>,
-    /// `input type="file"` and `showPicker`.
+    /// `input type="file"` and `showPicker` (LLP 1069.002).
     pub picker: Option<PickerLinks<D>>,
 }
 

@@ -1,4 +1,4 @@
-//! A module of devices a person plugs in: serial ports,
+//! A module of devices a person plugs in (LLP 1133.037 §11): serial ports,
 //! HID and USB devices under the declared substitute. The interface's
 //! `devices` names the agent word that lists the devices (`prefer extension
 //! serial.ports=[…]`), the handle kind, whether an open is exclusive, the
@@ -18,21 +18,22 @@
 //! - **`write`**: journaled in `state.extensions.<module>.writes` with its
 //!   options, answered at once (`written`: `{status, bytesWritten}`); a USB
 //!   claim, release or configuration is kept on the connection.
-//! - **`keyed`**: the
+//! - **`keyed`** (LLP 1133.022 D19 item 2, LLP 1133.037 D19 item 4): the
 //!   device fixture's value at `at`, a path whose `{option}` parts are the
 //!   call's; a list answers its entries one per call, then repeats its last.
-//! - **`stream`**: a byte stream from the fixture's `events`,
+//! - **`stream`** (D19 item 2): a byte stream from the fixture's `events`,
 //!   each delivered once when the agent clock passes its `at` from the open;
 //!   every answer is every byte since the last, with the errors at their
 //!   offsets, and `done` once the port is closed or unplugged.
-//! - **`reports`** (a batch): the device's input reports
+//! - **`reports`** (LLP 1133.013 D5's batch): the device's input reports
 //!   from its `events`, the first answer the latest, each later one every
 //!   report since the reader's last, at most `history`.
 //! - **`close`**, **`forget`**: end a connection; forget a device, ending
 //!   every connection on it.
 //!
 //! A reader's cursor moves when the runner answers it: a stream answer
-//! the runner then discards is not answered again.
+//! the runner then discards is not answered again (LLP 1133.022 D19 item 5
+//! is not built).
 
 use super::super::{DataSource, Runner};
 use super::{CallOrigin, Decision, Json, ModulesRow, Waits};
@@ -62,7 +63,7 @@ pub(in crate::runner) struct Devices {
 }
 
 impl Drop for Devices {
-    /// A session's end closes what it held open.
+    /// A session's end closes what it held open (D5).
     fn drop(&mut self) {
         if let Some(app) = &self.app {
             let mut state = app.lock().unwrap_or_else(|e| e.into_inner());
@@ -141,7 +142,7 @@ impl<D: DataSource> Runner<D> {
         Json::Object(record)
     }
 
-    /// Whether the extension's module is absent on this target.
+    /// Whether the extension's module is absent on this target (D21).
     fn device_absent(&self, row: &ModulesRow) -> bool {
         let target = self.host_target();
         (self.substitute(row)["devices"]["absent"]
@@ -318,7 +319,7 @@ impl<D: DataSource> Runner<D> {
             return Decision::Now(json!({ "error": "NetworkError" }));
         }
         let extension = self.plan.str(row.extension).to_owned();
-        // A port already open fails before any prompt.
+        // A port already open fails before any prompt (D17).
         if self.substitute(row)["devices"]["exclusive"] == true && self.held_open(&extension, &id) {
             return Decision::Now(
                 json!({ "error": "InvalidStateError", "message": "already open" }),
@@ -595,7 +596,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Every byte the device sent since the stream's last answer, with the
-    /// errors at their offsets.
+    /// errors at their offsets (D8, D9).
     fn device_stream(&mut self, row: &ModulesRow, device: &Json, args: &Json) -> Json {
         let handle = args["connection"].as_str().unwrap_or_default().to_owned();
         let Some(c) = self.extensions.devices.connections.get(&handle) else {
@@ -640,7 +641,7 @@ impl<D: DataSource> Runner<D> {
         json!({ "data": base64(&bytes), "errors": errors, "done": done, "position": position })
     }
 
-    /// Input reports as a batch: the latest first, then
+    /// Input reports as LLP 1133.013 D5's batch: the latest first, then
     /// every report since this reader's last, at most `history`.
     fn device_reports(&mut self, row: &ModulesRow, device: &Json, args: &Json) -> Json {
         let handle = args["connection"].as_str().unwrap_or_default().to_owned();
@@ -808,7 +809,7 @@ impl<D: DataSource> Runner<D> {
             (Some("open"), "allow") => {
                 let by = device["by"].as_str().unwrap_or("device");
                 let id = args[by].as_str().unwrap_or_default().to_owned();
-                // Granted until the device is unplugged.
+                // Granted until the device is unplugged (D17).
                 let key = format!(
                     "{extension}.{}",
                     self.substitute(row)["devices"]["word"]

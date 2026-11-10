@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // Resident wasm dev loop; the JS target uses host/web-js/dev.mjs.
-// LAN clients can read plans, errors and generations; the agent
+// LAN clients can read plans, errors and generations (LLP 1023 D8); the agent
 // carrier and installer stay loopback-only. Games serve HTTP during the first build.
 import { buildingServer } from '../../game/dev.mjs';
 import { failedPhase, phased } from './dev-phase.mjs';
@@ -29,7 +29,7 @@ import { relayChannel, serveCommands, serveReport, streamFrame } from '../../scr
 import { captureAssets, assetCards, alsoOnIPv6Loopback, freeOnIPv6Loopback, listenDelay, applyShaderTreeChange, sendStaticBody, watchLauncher, applyStaticChange, applyStaticTreeChange, builtAppMatches, developmentOpenPage, readDevGenerationAsync, readStaticFileAsync, readWebRequest, readModuleFile, reflectShaderFiles, saveTrace, retainDevGeneration, shaderInterfaceDigests, syncStaticTree, watchStaticTrees, webContentType, webEnvelope, devGenerationDigest, MODULE_FILES, moduleCards } from './serve.mjs';
 const argv = guardFlags('web', process.argv.slice(2)); // --help, or a flag it does not take, before anything starts
 const arg = (name, fallback) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : fallback; };
-// The dev wasm links every capability: a new plan that adds
+// The dev wasm links every capability (LLP 1047 D7): a new plan that adds
 // one restarts in place, never waiting on a wasm rebuild.
 const buildEnv = {...developmentBuildEnv(),EXACT_UPDATE_TRUST:'development',EXACT_WEB_LINK:'all'};
 let app = resolveApp(arg('--app', undefined));
@@ -61,7 +61,7 @@ const host = lan && servedAs == null ? '0.0.0.0' : '127.0.0.1';
 // The addresses printed at startup are the only names requests may use.
 const origins = installBrowserOrigins({ host: lan ? '0.0.0.0' : '127.0.0.1', port: servedAs ?? port });
 const allowHosts = allowHostArgs(argv);
-let doors = null; const remoteAsked = remoteArgs(argv, { exit: true }); /* the wire's remote doors, refused without a design */ if ((remoteAsked.remote || remoteAsked.tunnel != null || remoteAsked.plugin || remoteAsked.relay) && servedAs == null && !designPath(app.dir)) { const named = [remoteAsked.remote && '--remote', remoteAsked.tunnel != null && '--trust-tunnel', remoteAsked.plugin && '--allow-plugin-origin', remoteAsked.relay && '--relay'].filter(Boolean); console.error(`${named.join(' and ')} ${named.length > 1 ? 'serve' : 'serves'} the design wire: this app has no design (app.tamber)`); process.exit(2); }
+let doors = null; const remoteAsked = remoteArgs(argv, { exit: true }); /* the wire's remote doors (stage 10 B), refused without a design */ if ((remoteAsked.remote || remoteAsked.tunnel != null || remoteAsked.plugin || remoteAsked.relay) && servedAs == null && !designPath(app.dir)) { const named = [remoteAsked.remote && '--remote', remoteAsked.tunnel != null && '--trust-tunnel', remoteAsked.plugin && '--allow-plugin-origin', remoteAsked.relay && '--relay'].filter(Boolean); console.error(`${named.join(' and ')} ${named.length > 1 ? 'serve' : 'serves'} the design wire: this app has no design (app.tamber)`); process.exit(2); }
 const gate = developmentGate(origins, servedAs ?? port, allowHosts);
 const root = resolve(new URL('../..', import.meta.url).pathname);
 // An outside app's wasm loop builds apart from the JS target's `target/web-dist`,
@@ -70,9 +70,9 @@ if (argv.includes('--wasm') && servedAs == null && process.env.EXACT_APP_DIR && 
   process.env.EXACT_WEB_DIST = buildEnv.EXACT_WEB_DIST = resolve(app.target, 'web-dist-wasm');
 const dist = webDist();
 const source = resolve(app.dir, 'app.contract');
-// The JS target: the runtime the app ships, rebuilt and reloaded
+// The JS target (LLP 1071): the runtime the app ships, rebuilt and reloaded
 // on an edit (host/web-js/dev.mjs); a build it refuses shows in the page.
-// A game (its runtime is on wasm), and `--wasm` (the loop a
+// A game (LLP 1071 §8: its runtime is on wasm), and `--wasm` (the loop a
 // native client opening the dev URL reads), run the resident wasm loop below.
 if (!argv.includes('--wasm') && servedAs == null && app.manifest.game === undefined) {
   await (await import('../web-js/dev.mjs')).devJs({ app, dist, port, host, origins, gate, lan, allowHosts, remoteAsked, pairTtlMs: (await import('../../scripts/tamber-pairing.mjs')).pairTtlOf(argv), residentPort: named != null && !webPortRange() ? port + 1 : 0 });
@@ -80,7 +80,7 @@ if (!argv.includes('--wasm') && servedAs == null && app.manifest.game === undefi
 // Behind the JS loop (`--serve-as`) an app's resident loop is its producers
 // alone: nothing loads its page, so its builds are the web crate's bake
 // without the wasm (`host/web/build.mjs --bake`), and a program is named by
-// the bake's receipt rather than its wasm bytes ("Retiring the
+// the bake's receipt rather than its wasm bytes (LLP 1071 §7, "Retiring the
 // wasm target on the web"). A game's is the wasm loop.
 const producersOnly = servedAs != null && app.manifest.game === undefined;
 const hostBuild = producersOnly ? '--bake' : '--wasm';
@@ -135,7 +135,7 @@ function readGpuInputs(profile = buildEnv.EXACT_GAME_PROOF_PROFILE === 'gpu-dev'
   for (const { stem, kind } of gpuArtifacts()) if (!stems || stems.includes(stem)) gpuArtifactInputs.set(stem, inputs(kind, profile));
   gpuInputs = new Set([...gpuArtifactInputs.values()].flatMap(set => [...set]));
 }
-// Every GPU artifact the web serves: the primary `gpu`, then
+// Every GPU artifact the web serves (LLP 1009 D6): the primary `gpu`, then
 // each declared module `gpu/<name>`, with the inputs its last link named.
 const gpuArtifacts = () => [{ stem: 'gpu', kind: 'gpu' },
   ...gpuModules(app.manifest).map(({ name }) => ({ stem: `gpu/${name}`, kind: `gpu-${name}`, module: name }))];
@@ -230,7 +230,7 @@ const clients = new Set();
 let seq = 0;
 const pending = new Map(); // seq -> { saved, ready }
 const push = (data) => { if (data.error) failedPhase(data.error); for (const res of clients) res.write(`data: ${JSON.stringify(data)}\n\n`); };
-// The live table: a value-only design edit publishes no
+// The live table (LLP 1121 stage 4): a value-only design edit publishes no
 // plan; its batch goes to every build, and its snapshot is kept for a build
 // that connects (or missed a batch) until the next plan.
 let designSnapshot = null, designSource = null;
@@ -267,7 +267,8 @@ function scrubShown(live, frame) {
   const mark = (e) => (e && frame ? { ...e, scrub: frame } : e);
   if (live.batch?.tokens.length) pushDesign({ batch: mark(live.batch), snapshot: mark(live.snapshot) }); else if (live.snapshot) designSnapshot = mark(live.snapshot);
 }
-/** A scrub's batch and snapshot from design `from` to `to`: by the design's shape, since the TypeScript producer's scrub
+/** A scrub's batch and snapshot from design `from` to `to` (LLP 1121 stage
+ * 4, commit 6): by the design's shape, since the TypeScript producer's scrub
  * design is unbaked and its plan structure is not the generation's. */
 function scrubBatch(from, to) {
   if (from.shape !== to.shape || from.tokens.length !== to.tokens.length
@@ -295,7 +296,7 @@ let moduleScrubbed = null, moduleReleased = false;
 /** Preview a scrub's texts on every build: the batch from the design they
  * run; nothing written. */
 // A scrub previewing: the design the builds run is no committed one, so it
-// certifies no file.
+// certifies no file (LLP 1122 D5's served design).
 let previewing = false, releaseMark = null; // and the released scrub's mark, which its build carries (*1.11*)
 async function scrubPreview(texts, frame) {
   previewing = true;
@@ -380,7 +381,7 @@ async function scrubRestore(frame) {
 const epoch = randomBytes(16).toString('hex');
 const installer = localInstaller({ app: () => app, origins, port: servedAs ?? port, gate, listener: { host, port } });
 // The design tool uses the map for a build's plan digest, falling back to the current
-// generation. The parent JS loop owns Tamber under --serve-as.
+// generation. The parent JS loop owns Tamber under --serve-as (LLP 1122 T2).
 const plannedMaps = new Map(), mapsBySha = new Map();
 function keepMap(digest, bytes) {
   plannedMaps.delete(digest); plannedMaps.set(digest, bytes);
@@ -388,7 +389,7 @@ function keepMap(digest, bytes) {
   mapsBySha.set(createHash('sha256').update(bytes).digest('hex'), bytes);
   while (mapsBySha.size > 16) mapsBySha.delete(mapsBySha.keys().next().value);
 }
-// The parent JS loop retains maps only after checking their cards.
+// The parent JS loop retains maps only after checking their cards (LLP 1122 T2c).
 const mapFd = servedAs != null && /^\d+$/.test(process.env.EXACT_MAP_FD ?? '') ? Number(process.env.EXACT_MAP_FD) : null;
 function announcePlan(plan, bytes) {
   if (mapFd == null) return;
@@ -527,7 +528,7 @@ function startCompiler() {
   if (portableRust) return;
   const metadata = spawnSync('cargo', ['metadata',...cargoReproducibilityFlags(app),'--no-deps','--format-version','1'], {cwd:app.workspace,env:buildEnv,encoding:'utf8'});
   if (metadata.status !== 0) throw new Error(`cargo metadata failed: ${metadata.stderr || metadata.error || metadata.status}`);
-  // The app's dev bin is `<app>-dev` (`dev` before the rename); a
+  // The app's dev bin is `<app>-dev` (LLP 1007; `dev` before the rename); a
   // web crate without one bakes through the generic compiler.
   const web = JSON.parse(metadata.stdout).packages.find(p=>p.name===app.crate('web'));
   const devBin = web?.targets.find(t=>t.kind.includes('bin')&&(t.name==='dev'||t.name.endsWith('-dev')))?.name;
@@ -544,7 +545,7 @@ function startCompiler() {
     buffered = lines.pop();
     for (const line of lines) {
       const [kind, ...rest] = line.split(' ');
-      if (kind === 'source') { designSource = rest[0] === '-' ? null : rest[0]; compiledContract = rest[1]; } // the design bytes the build compiled (the patch gate)
+      if (kind === 'source') { designSource = rest[0] === '-' ? null : rest[0]; compiledContract = rest[1]; } // the design bytes the build compiled (LLP 1122 D5; the patch gate)
       else if (kind === 'scrubbed') {
         let reply;
         try { reply = JSON.parse(rest.slice(1).join(' ')); } catch { reply = { error: 'an unreadable scrub reply' }; }
@@ -613,7 +614,7 @@ function watchModuleSources(directory, ignore, changed) {
             continue;
           }
           if (stat.isDirectory()) { walk(path,name+'/',depth+1); continue; }
-          // A design (`.tamber`) is a source: a value-only edit goes as a batch.
+          // A design (`.tamber`) is a source: a value-only edit goes as a batch (LLP 1121 stage 4).
           if (!/\.(ts|contract|json|tamber)$/.test(name) && !['.exact/backend-origin', '.env.local', '.env'].includes(name)) continue;
           if (!stat.isFile()) { state.push([name,'not-regular']); continue; }
           bytes += Number(stat.size);
@@ -655,7 +656,7 @@ function watchModuleSources(directory, ignore, changed) {
   return { get error(){return refusal;}, close(){closed=true;clearInterval(poll);directoryWatch.close();for(const file of files.values())file.watch.close();files.clear();} };
 }
 let moduleWatch = null, moduleTimer = null, moduleRun = 0, moduleStage = null, moduleSaved = 0;
-/** The Contract sources the app reads from packages, and
+/** The Contract sources the app reads from packages (LLP 1091 D10), and
  * the directories to watch for them: each package's root, and the nearest
  * existing directory of a file resolution looked for and did not find. */
 function contractGraph() {
@@ -742,7 +743,7 @@ function startModuleCompiler() {
         early?.phase('typescript','ready'); contractReady(request.contract);
         const candidate = new Map(['app.plan', 'app.plan.map.json', ...Object.values(MODULE_FILES)].map(name => [name, readFileSync(resolve(request.output, name))]));
         for (const [name, body] of captureAssets(request.output)) candidate.set(name, body);
-        // A value-only design edit: the same structure and
+        // A value-only design edit (LLP 1121 stage 4): the same structure and
         // the same module, so no generation; its tokens go out as a batch.
         // The executables, not the receipt, which names the plan's digest.
         const sameEntries = currentModule && JSON.stringify(assetCards(new Map([...currentModule].filter(([name]) => isEntryFile(name))))) === JSON.stringify(assetCards(new Map([...candidate].filter(([name]) => isEntryFile(name)))));
@@ -810,7 +811,7 @@ function startModuleCompiler() {
   const contractSources = new Set(contractGraph().sources);
   // A source, or a directory on the way to one: the scan descends into it.
   const contractInput = path => contractSources.has(path) || [...contractSources].some(s => s.startsWith(path + '/') || s.startsWith(path + '\\'));
-  const dotInput = name => /^\.exact(?:[\\/]backend-origin)?$|^\.env(?:\.local)?$/.test(name); // the backend selection, and the settings' files
+  const dotInput = name => /^\.exact(?:[\\/]backend-origin)?$|^\.env(?:\.local)?$/.test(name); // the backend selection, and the settings' files (LLP 1153 D4)
   const watches = [watchModuleSources(app.dir, name => name === 'app.contract.d.ts' || (skipped.test(name) && !contractInput(resolve(app.dir, name)))
     || (/(^|\/)\./.test(name) && !contractInput(resolve(app.dir, name)) && !dotInput(name))
     || (assetTrees.some(([tree]) => resolve(app.dir,name) === tree || resolve(app.dir,name).startsWith(tree+'/')) && !contractInput(resolve(app.dir, name))), moduleChanged)];
@@ -998,7 +999,7 @@ const stop = async () => {
 };
 
 // Asset edits carry state. A shader interface change rebuilds the host and
-// wasm because Rust binds the layout.
+// wasm because Rust binds the layout (LLP 1030 D8, D10; 1030.000 stage 1).
 let assetChanges = new Map(); // dist-relative name -> { root, relative }
 let assetTimer = null;
 try {
@@ -1112,7 +1113,7 @@ function pushAssets() {
 
 // Classification follows the actual producers. Native builds remain frozen
 // until rebuilt; changed compiler inputs are reported as pending, never as
-// a guessed target or compatibility id.
+// a guessed target or compatibility id. @ref LLP 1030 D3; 1030.000 D5.
 let builtReceipts=readBuilds(app,buildEnv);
 const nativePending=new Map();
 function refreshNativePending(){nativePending.clear();for(const r of builtReceipts)if(r.compat.inputs.platform!=='web')nativePending.set(r.compat.target+'/'+r.compat.inputs.platform,pendingBuildInputs(r));}
@@ -1154,7 +1155,7 @@ function watchCompilerInputs() {
   // Poll declared file metadata: saves and replacement survive directory-event
   // coalescing. Only open-ended source discovery needs a directory watch.
   // A Contract package's files are inputs wherever they are installed,
-  // node_modules included.
+  // node_modules included (LLP 1091 D10).
   const contract=contractGraph(); for (const path of contract.sources) readinessContracts.add(path);
   const outside=p=>skipped.test(p)&&!contract.files.has(p);
   const files=new Set([...builtReceipts.flatMap(r=>r.binary.inputs.map(f=>f.path)),...rustInputFiles,...gpuInputs,...appInputs,...failedInputs,...contract.files].filter(p=>!outside(p)&&!p.includes('/.cargo/')));
@@ -1330,7 +1331,7 @@ async function produceGpuArtifact(files, { stem, kind, module }) {
 }
 
 const serve = async (req, res) => {
-  // Every HTML answer is framed by the design tool only; a sandboxed page's wire request is the wire's first.
+  // Every HTML answer is framed by the design tool only (LLP 1122 T2); a sandboxed page's wire request (stage 10b) is the wire's first.
   frameOnlyByTool(res); if (remoteAsked.plugin && tamber && await pluginOnLoopback(tamber, req, res)) return;
   const access = gate.check(req);
   if (!access.allowed) { res.writeHead(421, { 'cache-control': 'no-store' }); res.end(); return; }
@@ -1338,7 +1339,7 @@ const serve = async (req, res) => {
   if (!url) { res.writeHead(404, { 'cache-control': 'no-store' }); res.end(); return; }
   if (tamber && await tamber.handle(req, res, url, access)) return; if (url.pathname === '/__dev/gallery' || url.pathname.startsWith('/__dev/gallery/')) { res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' }); res.end('the gallery runs on the JS dev loop (host/web-js/dev.mjs), not this one\n'); return; } // the variant gallery's
   const devBeacon = url.pathname === '/__dev/reloaded' || url.pathname === '/__dev/painted' || url.pathname === '/__dev/gpu';
-  // The build channel: a build's reports up, with its stream's
+  // The build channel (LLP 1122 D4): a build's reports up, with its stream's
   // nonce; a build that holds no stream (Linux) opens a polled one.
   if (url.pathname === '/__dev/report' && req.method === 'POST') {
     if (!tamber) { res.writeHead(404, { 'cache-control': 'no-store' }); res.end(); return; }
@@ -1368,7 +1369,7 @@ const serve = async (req, res) => {
   if (await installer.handle(req, res, url, access)) return;
   if (url.pathname === '/__dev/open') {
     // The page's own address (the gate admitted its Host) and the opening
-    // links this Mac's development clients admit for it.
+    // links this Mac's development clients admit for it (LLP 1030.000 §7).
     const page = new URL('/' + url.search, `http://${req.headers.host}`).href;
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' });
     res.end(req.method === 'HEAD' ? undefined : developmentOpenPage(app, developmentLinks(app, page, access), page));
@@ -1449,8 +1450,8 @@ const serve = async (req, res) => {
     res.writeHead(204); res.end();
     return;
   }
-  // Negotiate the live envelope from current plan bytes.
-  // Resolve files and extensionless locations first.
+  // Negotiate the live envelope from current plan bytes (LLP 1023 D1–D2).
+  // Resolve files and extensionless locations first (LLP 1038 D7).
   const { found, index } = await readWebRequest(dist, url.pathname, acceptsHTML(req.headers.accept) ? 'text/html' : '', current?.files.get('app.plan'));
   const wantsEnvelope = url.pathname === '/exact.json'
     || (index && (req.headers.accept ?? '').includes('application/vnd.exact.envelope+json'));
@@ -1464,13 +1465,13 @@ const serve = async (req, res) => {
   }
   const file = url.pathname === '/' ? '/index.html' : url.pathname;
   if (file === '/dev.js') { res.writeHead(200, { 'content-type': 'text/javascript', 'cache-control': 'no-store' }); res.end(readFileSync(resolve(root, 'host/web/dev.js'))); return; }
-  // The module artifact as it is now, not as the last build copied it: a reload picks up an edit.
+  // The module artifact as it is now, not as the last build copied it: a reload picks up an edit (LLP 1067 D5).
   if (file.startsWith('/modules/') && app.modules.web) { const body = readModuleFile(app.modules.web, file); res.writeHead(body ? 200 : 404, { 'content-type': 'text/javascript', 'cache-control': 'no-store' }); res.end(body); return; }
   try {
     if (!found) { res.writeHead(404); res.end(); return; }
     let body = found.body;
     // The page's first boot is the current generation, named here for
-    // dev.js to fetch, never app.wasm's older baked plan.
+    // dev.js to fetch (LLP 1007 §6), never app.wasm's older baked plan.
     const first = current ? `<meta name="exact-dev-generation" content="${JSON.stringify(announcement()).replace(/[&"<>]/g, c => `&#${c.charCodeAt(0)};`)}">\n` : '';
     if (index) body = body.toString().replace('<script type="module" src="./glue.js"></script>', `${first}<script type="module" src="./glue.js"></script>\n<script type="module" src="./dev.js"></script>`);
     body = installer.page(found.route, body, access);
@@ -1484,7 +1485,7 @@ await readStaticFileAsync(dist, '/index.html'); if (!early) await listenDelay(pr
 if (servedAs == null) six = await alsoOnIPv6Loopback(server, port).catch(async (e) => { console.error(`cannot listen on [::1]:${port}: ${e.code} (another server there would answer a localhost URL; --port <n> picks another)`); killCompiler(); await tamber?.close(); process.exit(1); });
 early?.phase('host', 'ready'); early?.serve(serve);
 const banner = () => {
-  // Every usable IPv4 with --lan, none silently picked: a utun/VPN
+  // Every usable IPv4 with --lan, none silently picked (D8): a utun/VPN
   // address printed alone is a silent failure on the phone.
   const urls = origins.map(o => `${o.origin}/`);
   if (lan && urls.length === 1) console.log('no LAN interface found; serving loopback only in effect');

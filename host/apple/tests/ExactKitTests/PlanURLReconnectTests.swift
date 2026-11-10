@@ -5,7 +5,7 @@ import Foundation
 import XCTest
 @testable import ExactKit
 
-// The dev client across its server's restarts,
+// The dev client across its server's restarts (LLP 1023 D3, LLP 1122 D4),
 // against a loopback stand-in for host/web/dev.mjs: a dropped stream, or a
 // server restarted on the same port, is subscribed and registered again
 // under the build's id, and the pin the channel holds for it comes back on
@@ -122,9 +122,10 @@ final class PlanURLReconnectTests: XCTestCase {
     #endif
 
     /// A loop whose producers are starting answers its dev status, not a
-    /// plan: the host says it once however often it asks, keeps asking, and
-    /// takes the generation once there is one, the status gone; a start
-    /// that failed is said once too, as the failure it is.
+    /// plan (dtool2's pass 3 #8, theme2's condition c): the host says it once
+    /// however often it asks, keeps asking, and takes the generation once
+    /// there is one, the status gone; a start that failed is said once too,
+    /// as the failure it is.
     func testAStartingLoopIsSaidOnceAndThePlanThatFollowsIsTaken() throws {
         let server = try DevServerStub()
         defer { server.stop() }

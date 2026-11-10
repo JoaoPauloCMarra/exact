@@ -1,4 +1,4 @@
-// The conformance drive of @exact/notifications: the
+// The conformance drive of @exact/notifications (LLP 1133.004 stage 1): the
 // fixture app (`fixture/`), made by `exact new` outside the repo and
 // depending on this package by `file:`, driven by the agent on each target
 // named, and bound to its implementation in Chromium.

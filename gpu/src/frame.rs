@@ -1,4 +1,4 @@
-//! One submit per tick: every canvas the host renders records
+//! One submit per tick (LLP 1009 D7): every canvas the host renders records
 //! into one encoder the module owns; [`Module::flush`] submits it once and
 //! then presents each canvas's drawable.
 //!

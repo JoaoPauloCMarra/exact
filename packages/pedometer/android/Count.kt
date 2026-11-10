@@ -1,7 +1,7 @@
 package exact.pedometer
 
 /**
- * One reader group's count: a Recording total plus the step counter's increase since that read, or, on the
+ * One reader group's count (D12): a Recording total plus the step counter's increase since that read, or, on the
  * sensor path, the counter's increase from a zero that moves at every return from the background and every reboot.
  * It touches no platform API, so its sums can be checked without a device.
  */

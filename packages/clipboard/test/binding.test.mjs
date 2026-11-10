@@ -1,6 +1,7 @@
 // The generated binding of @exact/clipboard (js/bake/src/__exact_binding.mjs),
 // run as data code runs it, its calls answered here: what it refuses before a
-// call is sent, call order, and `supports` by target.
+// call is sent, call order, and `supports` by target (LLP 1133.006 D2, D7,
+// D8 item 1).
 import { afterEach, expect, test } from 'bun:test';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

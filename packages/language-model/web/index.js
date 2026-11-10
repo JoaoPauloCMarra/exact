@@ -1,21 +1,21 @@
-// @exact/language-model on the web: the browser's Prompt API
+// @exact/language-model on the web (LLP 1133.016): the browser's Prompt API
 // (`LanguageModel`, https://github.com/webmachinelearning/prompt-api), and
-// under the agent the agent model on the session clock.
+// under the agent the agent model of §9 on the session clock.
 //
-// - The transcript is this module's: each session's system message and
+// - The transcript is this module's (D6): each session's system message and
 //   turns (an input, the tool calls it caused, the reply), from which the
 //   browser's session is built and rebuilt. The context window is counted by
-//   the browser's own measure where it has one, else by the agent model's rule.
-// - A response is a value the runtime polls: its text so far, read from
+//   the browser's own measure where it has one, else by §9's rule.
+// - A response is a value the runtime polls (D7): its text so far, read from
 //   a cell the browser's stream fills; only a change of `state` is announced.
-// - A tool is the app's handler, run through `context.invoke` for the
+// - A tool is the app's handler (D9), run through `context.invoke` for the
 //   work it serves. The web's loop is open: a reply of `tool-call` items is
 //   answered with `tool-response` messages and prompted again, at most 16
 //   calls a response.
-// - A download starts only from the app's own input in the foreground:
+// - A download starts only from the app's own input in the foreground (D5):
 //   the implementation applies the declaration's `download` rule, told the
 //   call's origin, since only it knows the model is `downloadable`.
-// - Under the agent no browser API is used: replies come from the
+// - Under the agent no browser API is used (§9): replies come from the
 //   script `prefer extension language-model.responses=[…]`, a token each 25 ms
 //   of the session clock.
 
@@ -28,17 +28,17 @@ const NO_RESPONSE = { id: '', session: '', state: 'complete', text: '', toolCall
 const NO_SESSION = { id: '', contextWindow: 0, responding: false };
 
 const bytes = s => new TextEncoder().encode(s).length;
-/** The agent model's count: a message costs 4 and a token per 4 bytes; a schema a token per 4 bytes of its JSON. */
+/** §9's count: a message costs 4 and a token per 4 bytes; a schema a token per 4 bytes of its JSON. */
 const cost = text => 4 + Math.ceil(bytes(text) / 4);
 const schemaCost = schema => Math.ceil(bytes(JSON.stringify(schema)) / 4);
-/** The first `CUT` bytes of `text`, and whether it was cut. */
+/** The first `CUT` bytes of `text`, and whether it was cut (D9). */
 function cut(text) {
   if (bytes(text) <= CUT) return { text, truncated: false };
   let out = text.slice(0, CUT);
   while (bytes(out) > CUT) out = out.slice(0, -1);
   return { text: out, truncated: true };
 }
-/** Tokens as the agent model cuts them: at the end of each run of whitespace. */
+/** Tokens as §9 cuts them: at the end of each run of whitespace. */
 const tokens = text => text ? text.split(/(?<=\s)(?=\S)/) : [];
 const errorOf = (e, fallback = 'OperationError') => ({ error: typeof e?.name === 'string' && /Error$/.test(e.name) ? e.name : fallback });
 const isError = v => v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 1 && typeof v.error === 'string';
@@ -48,9 +48,9 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
   const Browser = !agent && typeof globalThis.LanguageModel === 'function' ? globalThis.LanguageModel : null;
   const sessions = new Map(), responses = new Map(), byRequest = new Map();
   let serial = 0;
-  // The agent's words and its preferred availability, laid over the agent model's.
+  // The agent's words (§9) and its preferred availability, laid over the agent model's.
   let overlay = {}, script = [], scriptSeen = '', rate = TOKEN_MS, agentWindow = WINDOW;
-  // A download a create started, and the creates waiting on it.
+  // A download a create started, and the creates waiting on it (D5).
   let downloading = null;
   const waiting = [];
   const announce = key => changed(key);
@@ -80,7 +80,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
     try { tools = (await Browser.availability({ ...options, expectedOutputs: [...(options.expectedOutputs ?? [{ type: 'text' }]), { type: 'tool-call' }] })) !== 'unavailable'; } catch {}
     return { ...out, availability: a, tools };
   };
-  // A page shown again re-reads availability: a model may have arrived or gone while it was hidden.
+  // A page shown again re-reads availability (D5): a model may have arrived or gone while it was hidden.
   if (Browser && typeof document === 'object') document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') announce(AVAILABILITY); });
 
   // ---------------------------------------------------------------- sessions and turns
@@ -89,7 +89,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
     + t.calls.reduce((n, c) => n + cost(c.arguments + (c.result ?? '')), 0);
   const counted = s => (s.system == null ? 0 : cost(s.system)) + s.toolCost + s.turns.reduce((n, t) => n + turnCost(t), 0);
   const usage = s => s.platform?.contextUsage ?? s.platform?.inputUsage ?? counted(s);
-  /** Evict the oldest whole turns until `extra` more fits; false when even then it does not. */
+  /** Evict the oldest whole turns until `extra` more fits (D6); false when even then it does not. */
   function fit(s, extra) {
     const had = s.turns.length;
     while (counted(s) + extra > windowOf(s) && s.turns.length) { s.turns.shift(); s.overflowed = true; s.stale = true; }
@@ -147,7 +147,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
       options: { expectedInputs: args.expectedInputs, expectedOutputs: tools.length ? [...(args.expectedOutputs ?? [{ type: 'text' }]), { type: 'tool-call' }] : args.expectedOutputs },
     };
     if (platformSession && (platformSession.contextWindow ?? platformSession.inputQuota)) s.window = platformSession.contextWindow ?? platformSession.inputQuota;
-    // A create trims as a prompt evicts, and fails only when the system message and the newest turn do not fit.
+    // A create trims as a prompt evicts, and fails only when the system message and the newest turn do not fit (D6).
     if (!fit(s, 0)) return { error: 'QuotaExceededError' };
     sessions.set(s.id, s);
     say(`${s.id}: created, ${s.turns.length} turns, ${counted(s)} of ${windowOf(s)} tokens${s.overflowed ? ', earlier turns evicted' : ''}${tools.length ? `, tools ${tools.map(t => t.name).join(', ')}` : ''}`);
@@ -172,7 +172,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
   }
   const advanceAll = () => { for (const r of responses.values()) advance(r); };
 
-  /** The response ends: its turn committed with its text so far, the session's next call begun at `at`. */
+  /** The response ends: its turn committed with its text so far (D6), the session's next call begun at `at`. */
   function end(r, state, failure = null, at = now()) {
     if (r.state !== 'generating' && r.state !== 'calling-tool') return;
     r.state = state;
@@ -185,7 +185,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
     r.controller?.abort();
     if (begun) s.responding = null;
     s.ended.push(r.id);
-    // An ended response is kept until its session has ended eight newer.
+    // An ended response is kept until its session has ended eight newer (D6).
     while (s.ended.length > KEPT) { const old = s.ended.shift(); responses.delete(old); say(`${old}: retired`); }
     say(`${r.id}: ${state}${failure?.error ? ` (${failure.error}${failure.reason ? `, ${failure.reason}` : ''})` : ''}, ${r.text.length} characters, ${r.calls.length} tool calls`);
     r.settle?.(r);
@@ -193,7 +193,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
     announce(SESSION);
     if (begun) nextIn(s, at);
   }
-  /** The calls waiting on `s`, begun in order until one generates (one generation a session). */
+  /** The calls waiting on `s`, begun in order until one generates (D6: one generation a session). */
   function nextIn(s, at) {
     while (!s.responding && s.queue.length) s.queue.shift().go(at);
   }
@@ -205,7 +205,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
     });
   }
 
-  /** The next script entry, in admission order. */
+  /** The next script entry, in admission order (§9). */
   function entryFor() {
     return script.length ? script.shift() : null;
   }
@@ -217,7 +217,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
       typed = typeof args.responseConstraint === 'string';
       try { schema = typed ? JSON.parse(args.responseConstraint) : args.responseConstraint; } catch { return { error: 'SyntaxError' }; }
       const why = refusal(schema);
-      if (why) { say(`a constraint outside the supported subset: ${why}`); return { error: 'NotSupportedError' }; }
+      if (why) { say(`a constraint outside D8's subset: ${why}`); return { error: 'NotSupportedError' }; }
     }
     if (typeof args.input !== 'string') return { error: 'TypeError' };
     const r = {
@@ -234,7 +234,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
     return r;
   }
 
-  /** The input fitted to the window, evicting oldest turns: false, with the response failed, when it cannot. */
+  /** The input fitted to the window, evicting oldest turns (D6): false, with the response failed, when it cannot. */
   function admitInput(r, extra = cost(r.turn.input) + (r.schema && !r.omit ? schemaCost(r.schema) : 0)) {
     const s = r.session, had = s.turns.length;
     s.responding = r;
@@ -246,7 +246,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
     return true;
   }
 
-  // ---------------------------------------------------------------- the agent model
+  // ---------------------------------------------------------------- the agent model (§9)
   function beginAgent(r, at) {
     if (r.state !== 'generating') return;
     if (!admitInput(r)) return;
@@ -270,7 +270,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
     if (r.schema) {
       let v, why;
       try { v = JSON.parse(text); why = violation(r.schema, v); } catch { why = 'the text is not JSON'; }
-      // A constrained platform could not produce it: the response fails, and the journal names why.
+      // A constrained platform could not produce it (§9): the response fails, and the journal names why.
       if (why) { say(`${r.id}: the script's reply does not satisfy the constraint: ${why}`); end(r, 'failed', { error: 'SyntaxError', message: why }, at); return; }
     }
     r.planned = tokens(text);
@@ -279,7 +279,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
     if (r.calls.length) announce(RESPONSE);
     advance(r);
   }
-  /** Each tool call through the runtime, in order: false when the response ended meanwhile. */
+  /** Each tool call through the runtime, in order (D9): false when the response ended meanwhile. */
   async function runCalls(r, calls) {
     const s = r.session;
     for (const [i, call] of calls.entries()) {
@@ -308,7 +308,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
     return answer;
   }
 
-  // ---------------------------------------------------------------- the browser
+  // ---------------------------------------------------------------- the browser (D1, D9)
   async function beginBrowser(r, at) {
     if (r.state !== 'generating') return;
     const s = r.session;
@@ -318,7 +318,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
     const options = { signal: r.controller.signal };
     if (r.schema) Object.assign(options, { responseConstraint: r.schema, omitResponseConstraintInput: r.omit });
     let input = r.turn.input;
-    // The browser's own count of the input, where it measures, evicts by the rule before the prompt.
+    // The browser's own count of the input, where it measures, evicts by D6's rule before the prompt.
     let extra;
     const measure = session.measureContextUsage ?? session.measureInputUsage;
     if (measure) try { extra = await measure.call(session, input, options); } catch {}
@@ -360,7 +360,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
       if (r.state !== 'generating' && r.state !== 'calling-tool') return;
       const failure = errorOf(e);
       if (failure.error === 'QuotaExceededError') s.overflowed = r.overflowed = true;
-      // The browser keeps no cancelled reply: the next prompt rebuilds from the transcript.
+      // The browser keeps no cancelled reply: the next prompt rebuilds from the transcript (D6).
       s.stale = true;
       end(r, failure.error === 'AbortError' ? 'aborted' : 'failed', failure.error === 'AbortError' ? null : failure);
     }
@@ -390,7 +390,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
         if (args.tools?.length && !available.tools) return { error: 'NotSupportedError' };
         if (available.availability === 'downloadable' || available.availability === 'downloading') {
           if (!downloading) {
-            // A download is a person's act: the app's own call, in the foreground.
+            // A download is a person's act (D5, D10): the app's own call, in the foreground.
             if (how.origin !== 'app') { say(`create: refused, person-required (${how.origin} origin) to start a download`); return { error: 'NotAllowedError' }; }
             if (!foreground()) { say('create: refused, a download starts in the foreground'); return { error: 'NotAllowedError' }; }
             downloading = { progress: 0 };
@@ -402,7 +402,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
         try { return createdOr(makeSession(args)); } catch (e) { return errorOf(e, 'TypeError'); }
       }
       if (!Browser) return { error: 'NotSupportedError' };
-      // The browser's create runs here, inside the press's dispatch when it came from one, so its activation holds.
+      // The browser's create runs here, inside the press's dispatch when it came from one, so its activation holds (D15 item 5).
       let made;
       try {
         const { system, turns } = turnsOf(args.initialPrompts ?? []);
@@ -507,7 +507,7 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
       if (!agent && Browser) try { await platform(s); } catch (e) { return errorOf(e); }
       return done(session);
     },
-    /** Under the agent: the preferred availability, laid over the agent model's, and the script, rate and window. */
+    /** Under the agent: the preferred availability, laid over the agent model's, and the script, rate and window (§9). */
     preferred(values = {}) {
       const a = values.languageModelAvailability;
       overlay = a && typeof a === 'object' && !isError(a) ? a : {};
@@ -526,14 +526,14 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
         for (const w of waiting.splice(0)) w.reject(Object.assign(new Error('the model became unavailable'), { name: 'NotSupportedError' }));
       }
     },
-    /** A call let go: its prompt's generation aborted. */
+    /** A call let go (D15 item 2): its prompt's generation aborted. */
     cancel(request) {
       const r = byRequest.get(request);
       if (!r) return;
       byRequest.delete(request);
       abort(r, `cancelled: its call (request ${request}) was let go`);
     },
-    /** Sessions and responses whose reply was dropped: never the app's. */
+    /** Sessions and responses whose reply was dropped: never the app's (D6). */
     dispose(ids) {
       for (const id of ids) {
         const s = sessions.get(id);
@@ -542,10 +542,10 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
         if (r) abort(r, 'its reply was dropped');
       }
     },
-    /** The end of the app's session: every response aborted, every session dropped. */
+    /** The end of the app's session: every response aborted, every session dropped (D6). */
     destroy() { for (const s of [...sessions.values()]) drop(s, 'the app\'s session ended'); },
     release() {},
-    /** `state.extensions`: the sessions, each response, the script's remaining entries. */
+    /** `state.extensions` (§9): the sessions, each response, the script's remaining entries. */
     state() {
       if (agent) advanceAll();
       return {
@@ -566,6 +566,6 @@ export function implementation({ changed, agent, now, foreground, log, invoke })
     say(`${s.id}: ${why}`);
     announce(SESSION);
   }
-  /** A handler of `s`'s own response prompting `s` would wait on itself (reentry). */
+  /** A handler of `s`'s own response prompting `s` would wait on itself (D9, reentry). */
   function inHandlerOf(s) { return s.responding?.calls.some(c => c.state === 'running'); }
 }

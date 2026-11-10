@@ -1,4 +1,4 @@
-//! The Mac's grouped form: a row keeps
+//! LLP 1084 D7 on the Mac's grouped form (LLP 1115.002 D6): a row keeps
 //! its 36 points under `border-box`, rows stand a point apart, and the
 //! separator is drawn in that gap, 10 points in from both ends of the card.
 //! One test, its own process: the column is the process's.

@@ -1,4 +1,4 @@
-//! The orientation lock's rules through a runner: the topmost sheet that holds
+//! D3's rules through a runner (LLP 1133.029): the topmost sheet that holds
 //! wins, the nearest holder wins, unrelated holders intersect, a conflict
 //! holds none, a hidden or boxed holder counts for nothing.
 
@@ -198,7 +198,7 @@ fn the_topmost_sheet_that_holds_wins() {
     let b = view(&r, "b");
     assert_eq!(held(&mut r), (vec![(b, "portrait".into())], 0b0011));
     // Two sheets that hold nothing over the page: the page beneath both
-    // is displayed, and its lock is in force.
+    // is displayed, and its lock is in force (LLP 1133.029 D3).
     press(&mut r, "b-none");
     press(&mut r, "a-none");
     let child = view(&r, "child");

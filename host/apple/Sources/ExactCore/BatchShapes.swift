@@ -18,7 +18,7 @@ public struct NativeTimerWake: Equatable, Sendable {
 
 extension BatchReader {
     /// A `canvas2d` op's lists, `[address, length]` pairs in the runtime's
-    /// memory, copied out now: the runtime keeps them alive
+    /// memory (LLP 1056 D4), copied out now: the runtime keeps them alive
     /// only until its next batch with lists.
     package static func canvasLists(_ value: Any?) -> [Data] {
         (value as? [Any] ?? []).compactMap { pair in
@@ -330,11 +330,12 @@ extension InlineStyle {
         case "outline_style": outlineNone = try BatchFields.string(value) == "none"
         case "text_decoration_line": run.decoration = try BatchFields.string(value)
         case "text_color" where value.isWideColor, "background_color" where value.isWideColor:
+            // @ref LLP 1100 D2
             guard let light = channels(value, false), let dark = channels(value, true) else { throw BatchReader.Invalid.wire }
             paired = value.isSchemeColor
             if key == "text_color" { run.color = light; darkColor = dark } else { run.background = light; darkBackground = dark }
         case "text_color" where value.isSystemColor, "background_color" where value.isSystemColor:
-            // A platform colour, kept by name and resolved
+            // @ref LLP 1095 D5 — a platform colour, kept by name and resolved
             // as the run is read, in its paragraph owner's traits (an inline
             // run has no view), so a contrast or level change reaches it.
             guard channels(value, false) != nil, channels(value, true) != nil else { throw BatchReader.Invalid.wire }

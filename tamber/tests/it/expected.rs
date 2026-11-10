@@ -1,4 +1,4 @@
-//! Hand-written expected values: each fold
+//! Hand-written expected values (theme1's review of ed747eeaa): each fold
 //! checked against a value worked out by hand from CSS Color 4/5, not a
 //! blessed golden.
 

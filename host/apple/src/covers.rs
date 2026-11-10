@@ -1,12 +1,12 @@
-//! What a native container covers of a box: the iOS
+//! What a native container covers of a box (LLP 1075.003 §3.5): the iOS
 //! navigation and tab containers report their bars over a route, and the
 //! header a bar replaces; one layout for all of a turn's reports. And the
 //! containing block a native container gives a subtree it shows in a view
-//! of its own: a split's pane, a sheet, and where it
+//! of its own (LLP 1115.002 D8.2): a split's pane, a sheet, and where it
 //! shows that subtree's root when it does not lift it to the top layer (a
-//! stack's route), which only the runner's geometry reads.
+//! stack's route, LLP 1123 D2), which only the runner's geometry reads.
 //! And the margins UIKit's own list gives a grouped list's cards and cells,
-//! and which split placeholders a pane shows. And the
+//! and which split placeholders a pane shows (LLP 1116.006 D2). And the
 //! size a person dragged a box's `resize` grip to (`Runner::resize_box`).
 
 use super::Host;
@@ -119,7 +119,7 @@ impl<D: DataSource> Host<D> {
                 error.get_or_insert(format!("grouped margins: {e:?}"));
             }
         }
-        // A cells list's rows, the platform's cell margin.
+        // @ref LLP 1138 — a cells list's rows, the platform's cell margin.
         for &(view, list) in list_margins {
             if let Err(e) = self.runner.kernel_mut().set_list_margins(view, list) {
                 error.get_or_insert(format!("list margins: {e:?}"));

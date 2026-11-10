@@ -15,16 +15,16 @@ pub(super) struct Preview {
     pub(super) pin_owned: bool,
     pub(super) handle: ViewId,
     pub(super) certified: Option<ReorderGeometry>,
-    /// The session's target is another list (`Outgoing`): the
+    /// The session's target is another list (LLP 1094 D4, `Outgoing`): the
     /// source row keeps its slot and the rows after it close the gap.
     pub(super) outgoing: bool,
-    /// Dropped, and the move has not shown yet: the offsets
+    /// Dropped, and the move has not shown yet (LLP 1094 D8): the offsets
     /// stay and the pin is kept, but the action is spent.
     pub(super) holding: bool,
-    /// A key or a custom action placed the gap: the drop
+    /// A key or a custom action placed the gap (LLP 1094 D9): the drop
     /// needs no measured sample.
     pub(super) stepped: bool,
-    /// Its list shares a `reorderGroup`.
+    /// Its list shares a `reorderGroup` (LLP 1094 D1).
     pub(super) grouped: bool,
 }
 impl Collection {
@@ -186,7 +186,7 @@ impl Collection {
     }
     // Terminal does not release the pin. Own dispatch may rebuild the row index;
     // source-key pin resolution still occurs before old mounted rows are taken.
-    // A hold is ended only by its own endings (`end_hold`).
+    // A hold is ended only by its own endings (LLP 1094 D8, `end_hold`).
     pub(crate) fn end_preview(&mut self, u: &mut Update<'_>) -> Result<(), InstanceError> {
         if let Some(p) = &mut self.preview {
             if p.holding {
@@ -222,7 +222,7 @@ impl Collection {
     }
     /// A source row whose height changes ends the preview. A remeasure of
     /// the translated row a few float32 ulps off (76 as 75.99998, measured
-    /// through its transform mid-drag) is not a change: layout
+    /// through its transform mid-drag; habits F10) is not a change: layout
     /// moves in 1/64 (Chrome, WebKit) or 1/60 (Firefox) pixels.
     pub(super) fn check_preview_height(&mut self, u: &mut Update<'_>) -> Result<(), InstanceError> {
         const HEIGHT_NOISE: f64 = 0.01;
@@ -272,7 +272,7 @@ impl Collection {
             .collect()
     }
     /// The source's own preview: today's within one list, or `Outgoing`
-    /// when the target is another; else a target's `Incoming`.
+    /// when the target is another (LLP 1094 D4); else a target's `Incoming`.
     fn offsets(&self) -> Option<Offsets> {
         if let Some(p) = self.preview.as_ref().filter(|p| !p.terminal) {
             let source = self.index.position(&p.source)?;
@@ -312,7 +312,7 @@ impl Collection {
         let offsets = self.offsets();
         let hidden = self.hidden.as_deref().and_then(|k| self.index.position(k));
         // Offsets that change with the rows' own move in one commit apply at
-        // once: the layout moved by what the offset gave.
+        // once: the layout moved by what the offset gave (LLP 1094 D8).
         let transition = if self.instant {
             "none"
         } else {

@@ -6,8 +6,8 @@ import AppKit
 import XCTest
 @testable import ExactKit
 
-/// CSS Scroll Anchoring's selection and adjustment (`ScrollAnchoring.swift`),
-/// on a tree of rects.
+/// CSS Scroll Anchoring's selection and adjustment (`ScrollAnchoring.swift`,
+/// #138 X23d), on a tree of rects.
 final class ScrollAnchoringTests: XCTestCase {
     private final class Box {
         let name: String, rect: CGRect, children: [Box], excluded: Bool

@@ -1,5 +1,5 @@
 //! Generate the seam's Rust types from `../shapes.contract` with
-//! `contract rust`, into `OUT_DIR`, as that generator's
+//! `contract rust` (LLP 1101.002 P9), into `OUT_DIR`, as that generator's
 //! documentation says: a field added to a shape is a compile error here,
 //! not a record built one position off. The declaration file needs a
 //! component to compile; a bare one is added, and every declared shape is

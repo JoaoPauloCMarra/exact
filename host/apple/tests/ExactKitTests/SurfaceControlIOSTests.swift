@@ -7,7 +7,7 @@ import XCTest
 /// The iOS agent at a world's canvas, on `SurfaceControlTests`' fixture.
 /// UIKit, so a simulator runs it: bun host/apple/build.mjs --test --ios
 final class SurfaceControlIOSTests: XCTestCase {
-    override class func setUp() { super.setUp(); ExactSurfaces.install() }
+    override class func setUp() { super.setUp(); ExactSurfaces.install() } // LLP 1047.001 D4
 
     private final class CanvasTouch: UITouch {
         let target: UIView

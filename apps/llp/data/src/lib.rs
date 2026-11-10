@@ -4,13 +4,15 @@
 //! general reader specialised, not a second one — plus the four things a
 //! corpus has that a folder of files does not: an index in number order
 //! with sub-documents under their parents, a search over every document's
-//! text, an outline of the open document, and `LLP 0042` in running prose
+//! text, an outline of the open document, and `LLP 1234` in running prose
 //! resolved to the document it names.
 //!
 //! Reading the corpus is I/O, so it happens on the host's worker through a
-//! continuation. It happens once: the index keeps every
+//! continuation (LLP 1016 D1). It happens once: the index keeps every
 //! document's text, and a search after that is a filter over memory rather
 //! than a walk over a disk.
+//!
+//! @ref LLP 1033
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
@@ -466,7 +468,7 @@ impl Llp {
         self.entries(root).iter().find(|e| e.path == path)
     }
 
-    /// Parse one document, with `LLP 0042` in its prose resolved against the
+    /// Parse one document, with `LLP 1234` in its prose resolved against the
     /// corpus — the reference that makes a corpus navigable rather than a
     /// pile of files.
     fn read(&self, path: &Path, root: &str) -> Result<Document, String> {
@@ -546,13 +548,13 @@ the declared working set.
 Point it at one:
 
 ```sh
-llpview ~/projects/my-project/llp
+llpview ~/projects/exact2/llp
 ```
 
 The index is on the left, in number order. Search runs over every
 document's text, not only its title. The outline on the right shows one
 section at a time — a 16,000-word document is easier read a section at a
-time than scrolled. `LLP 0042` in running prose is a link to that document.
+time than scrolled. `LLP 1234` in running prose is a link to that document.
 "#;
 
 /// The runs of a document, with references linked.

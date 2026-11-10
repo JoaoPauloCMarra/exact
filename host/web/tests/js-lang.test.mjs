@@ -1,4 +1,4 @@
-// A page of the JS target keeps the manifest's `lang`,
+// LLP 1115.000 D4.6: a page of the JS target keeps the manifest's `lang`,
 // which screen-reader voices, hyphenation and `:lang()` read: the shell the
 // development build writes (host/web-js/build.mjs), and a page the JavaScript
 // runtime renders over it (host/web-js/render.mjs). A real build of an app

@@ -1,9 +1,9 @@
-//! An answer that names when it goes stale:
+//! An answer that names when it goes stale (LLP 1133.015 D7, D16 item 2):
 //! an implementation's reply to a live source may carry `"exact:stale"`, a
 //! Unix time in ms, beside its fields (a list answer as `{"exact:answer":
 //! [...], "exact:stale": t}`). The runner takes it off before anything
 //! reads the answer and, when the session's wall clock (`epochAtZero` plus
-//! the session clock) reaches it, asks the source's
+//! the session clock, LLP 1027.000.000) reaches it, asks the source's
 //! readers again, once: a subscription's end, which no store reports. Each
 //! answer names its own next time; one with none, or one already past,
 //! clears it. The ask runs beside the polls (`poll.rs`), outside the timer

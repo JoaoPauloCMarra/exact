@@ -1,4 +1,4 @@
-//! Form controls by their HTML names: which widget a
+//! Form controls by their HTML names (LLP 1069.001): which widget a
 //! `Control` node is, the size a host shows before it reports its own, and a
 //! `select`'s options as every host reads them.
 //!
@@ -21,7 +21,7 @@ pub enum ControlKind {
     /// `input type="radio"` (x2apps survey #2): one of the radios of its
     /// `name` ([`Kernel::radio_group`]).
     Radio,
-    /// `input type="file"`.
+    /// `input type="file"` (LLP 1069.002).
     File,
     /// `select`, its options the node's children.
     Select,
@@ -33,14 +33,14 @@ pub enum ControlKind {
     Time,
     /// `input type="datetime-local"`: a date, `T`, a time; no zone.
     DateTimeLocal,
-    /// `button appearance="auto"`: the platform's button,
+    /// `button appearance="auto"`: the platform's button (LLP 1069.011),
     /// its title and image its children.
     Button,
     /// `progress` with no `value`: HTML's indeterminate progress, shown as
-    /// the platform's activity indicator.
+    /// the platform's activity indicator (LLP 1069.001, amended 2026-10-07).
     Progress,
     /// `progress` with a `value`: HTML's determinate progress bar, the
-    /// platform's own ([`Progress`]).
+    /// platform's own ([`Progress`]; LLP 1116 D8).
     ProgressBar,
 }
 
@@ -70,12 +70,12 @@ impl ControlKind {
         })
     }
 
-    /// The content size a host that reports none shows,
+    /// The content size a host that reports none shows (LLP 1069.001 D3),
     /// for a control whose font size is `em`.
     ///
     /// A checkbox, a radio, a switch and a range's height are the look's
-    /// this process draws, rows of the schema's `metrics`. Under the neutral
-    /// look they follow the control's font size (a
+    /// this process draws, rows of the schema's `metrics` (LLP 1115.000
+    /// D17). Under the neutral look they follow the control's font size (a
     /// mark is the line's height, 20 px at 16), as the page's sheet sizes
     /// them, so the kernel and a page lay the same box out. In every other
     /// column they are Chrome's bare control under the web reset, and the
@@ -84,7 +84,7 @@ impl ControlKind {
     ///
     /// The rest are the same in every look: an empty select, the page's
     /// 36 px tall select (its line, padding and line), and a date, time or
-    /// local date-time control in the same field look,
+    /// local date-time control in the same field look (LLP 1116.001 D1),
     /// Chrome's on macOS with an empty value. A host that knows any
     /// control's size reports it.
     pub fn default_size(self, em: f32) -> (f32, f32) {
@@ -102,11 +102,12 @@ impl ControlKind {
             ControlKind::Date => (164.0, 36.0),
             ControlKind::Time => (131.796_88, 36.0),
             ControlKind::DateTimeLocal => (247.0, 36.0),
-            // UIKit's medium button, rounded (63.33 × 34.33 for a short
-            // title): frame one until the host reports.
+            // UIKit's medium button, rounded (LLP 1069.011 §2: 63.33 × 34.33
+            // for a short title): frame one until the host reports.
             ControlKind::Button => (64.0, 34.0),
             // UIKit's medium activity indicator, 20 × 20, on every host: it
-            // is the size, not a host's report.
+            // is the size, not a host's report (LLP 1069.001, amended
+            // 2026-10-07).
             ControlKind::Progress => (20.0, 20.0),
             // `10em` by `1em` at CSS's 16 px. Layout reads the node's own
             // font size ([`progress_size`]), never this.
@@ -147,7 +148,7 @@ pub(crate) fn mark_key(arena: &crate::arena::NodeArena, slot: u32) -> Option<(Co
 
 /// The size `slot`'s host last reported for a mark of its kind and font
 /// size, which stands for it until it reports its own. The kind's default
-/// is the look's, and an Apple host's checkbox is not:
+/// (LLP 1069.001 D3) is the look's, and an Apple host's checkbox is not:
 /// every new list row with one was laid out at 13 points, reported 22 and
 /// laid out again, in a batch of its own.
 pub(crate) fn shared_size(arena: &crate::arena::NodeArena, slot: u32) -> Option<(f32, f32)> {
@@ -271,7 +272,7 @@ impl Range {
 /// A determinate progress's `value` and `max` by HTML's rules (the
 /// `progress` element's current value and maximum): `max` is 1 unless it
 /// reads as a number above 0; `value` is 0 unless it reads as one, and
-/// then held to 0 and `max`.
+/// then held to 0 and `max` (LLP 1116 D8).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Progress {
     /// The current value.
@@ -298,7 +299,7 @@ impl Progress {
     }
 }
 
-/// A determinate `progress`'s box. It is
+/// A determinate `progress`'s box (LLP 1116 D8; LLP 1115.000 D10.2). It is
 /// HTML's `<progress>` made a block: a box with no content of its own whose
 /// intrinsic size is `10em` by `1em` ([`progress_size`]; on the page,
 /// `contain-intrinsic-size`), so with `width: auto` it fills a block
@@ -340,9 +341,9 @@ pub(crate) fn progress_size(arena: &crate::arena::NodeArena, slot: u32) -> (f32,
 /// A range whose `width` is a percentage shrinks below its intrinsic width
 /// in a flex row, as Chrome's does (CSS Sizing 3 §5.2.2: a form control
 /// with a percentage width is compressible, its automatic minimum zero): a
-/// range is `width: 100%` unless its author says otherwise, and beside a row's
-/// other children it takes what they leave. An authored `min-width` is the
-/// author's.
+/// range is `width: 100%` unless its author says otherwise (LLP 1115.000
+/// D10.2), and beside a row's other children it takes what they leave.
+/// An authored `min-width` is the author's.
 pub(crate) fn range_box(arena: &crate::arena::NodeArena, slot: u32, s: &mut taffy::Style) {
     let style = arena.style(slot);
     if matches!(style.width, crate::Dimension::Percent(_))
@@ -376,7 +377,7 @@ pub struct ButtonRasterImage {
     pub size: Option<(f32, f32)>,
 }
 
-/// A button's face: what every host projection shows
+/// A button's face (LLP 1069.011.000 D1): what every host projection shows
 /// of it — a toolbar item, a tab, a menu row, a swipe action, a shortcut —
 /// read live from its direct children, a custom `button` (`Pressable`) and a
 /// native one (`ControlKind::Button`) alike.
@@ -385,7 +386,7 @@ pub struct PressFace {
     /// Its first `text` child's text, white space collapsed; a blank title is
     /// none.
     pub title: Option<String>,
-    /// The second text, the platform's semantic subtitle.
+    /// The second text, the platform's semantic subtitle (LLP 1069.011.001 D3).
     pub subtitle: Option<String>,
     /// Axis and child order resolved to the platform's image placement.
     pub placement: crate::ButtonImagePlacement,
@@ -402,7 +403,7 @@ pub struct PressFace {
     /// Its `aria-label`.
     pub label: Option<String>,
     /// Whether projections can show its direct children: at most one `text`
-    /// and one `image`, with nothing else. A native
+    /// and one `image`, with nothing else (LLP 1069.011.000 D1). A native
     /// button can additionally carry `subtitle` without fitting a projection.
     pub fits: bool,
 }
@@ -418,7 +419,7 @@ pub fn is_option_node(node_type: NodeType, props: &crate::PropList) -> bool {
 }
 
 impl Kernel {
-    /// A select's options in order, from its children;
+    /// A select's options in order, from its children (LLP 1069.001 D2);
     /// empty for any other node.
     pub fn select_choices(&self, view: ViewId) -> Vec<Choice> {
         let Some(select) = self.node(view) else {
@@ -509,7 +510,7 @@ impl Kernel {
             .unwrap_or_else(|| "on".into())
     }
 
-    /// A button's face, its children read as they now
+    /// A button's face (LLP 1069.011.000 D1), its children read as they now
     /// stand (an `if` between them included); `None` for a node that is not
     /// a custom or native button.
     pub fn press_face(&self, view: ViewId) -> Option<PressFace> {

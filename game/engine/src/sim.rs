@@ -110,7 +110,7 @@ pub trait Game: 'static {
     fn present(_present: &mut crate::Present<'_>, _args: &Self::Args) {}
     /// Fixed steps per second.
     const HZ: u32 = 60;
-    /// Draw above SDR white where the display can.
+    /// Draw above SDR white where the display can (LLP 1100 D12b).
     const HIGH_DYNAMIC_RANGE: bool = false;
 }
 /// How host elapsed time becomes simulation time.
@@ -1081,7 +1081,7 @@ impl<G: Game> Sim<G> {
     /// Pending input and unobserved mutations prevent rest unless time is paused.
     pub fn quiescent(&self) -> bool {
         self.check_epoch();
-        // A pending hold or tap window changes the world on its own.
+        // A pending hold or tap window changes the world on its own (I2).
         let settled = !self.setup_pending
             && self.queue.is_empty()
             && (G::paused(&self.args) || self.world.table_pending_tick().is_none())

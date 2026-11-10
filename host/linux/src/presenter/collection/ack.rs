@@ -1,5 +1,5 @@
 //! A painted model position acknowledged, and a list's own carried across the reader's input
-//! (an Android fling). Whose a position is decides both: an app's
+//! (theme2 2026-10-28 07:39; Excord's Android fling). Whose a position is decides both: an app's
 //! lands where asked and moves the reader's revision on, as UIKit's `setContentOffset` stops a
 //! glide; a list's own is no app scroll, so the reader is rebased by all of it, its revision
 //! stands and its fling goes on, as UIKit's does across its own content-offset adjustment.
@@ -98,7 +98,7 @@ impl<D: DataSource> Presenter<D> {
         self.scroll_end_model_moved(view, was, now);
     }
 
-    /// A wheel accepted on `view`: it retires the list's pending position
+    /// A wheel accepted on `view` (theme2 10:25, 11:06): it retires the list's pending position
     /// at once, as any input does, before a deferred collection turn would, so the next frame's
     /// acknowledgement can't write that position over the wheel.
     pub(in crate::presenter) fn retire_for_wheel(&mut self, view: ViewId) {

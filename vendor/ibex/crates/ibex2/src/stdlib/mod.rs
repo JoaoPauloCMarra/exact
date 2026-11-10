@@ -2,7 +2,7 @@
 //!
 //! Algorithms and host operations shared by Rust callers and the bindings.
 //! Platform transport and entropy stay below the Rust semantics; capabilities
-//! are admitted at the boundary.
+//! are admitted at the boundary (LLP 0059.000).
 
 pub mod base64;
 pub mod console;

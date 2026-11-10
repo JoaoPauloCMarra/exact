@@ -1,4 +1,4 @@
-// While a native container owns the screen, the
+// @ref LLP 1123 D1 — while a native container owns the screen, the
 // session's document is mounted where no scroll view holds it. A scroll view
 // above a container changes where UIKit places its bars: inside one (the
 // session's viewport), a bar's search field stays in its column behind the

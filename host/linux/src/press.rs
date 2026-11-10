@@ -1,10 +1,10 @@
-//! Host-owned press feedback: one eased progress per pressed node, which shows
-//! as its scale (multiplied into `scale` about transform-origin) and its
-//! pressed paint (an opacity share, a background and a text colour,
-//! `Host::presented` and the painter). The user's motion preference never
-//! removes a button's feedback. A node's `:active` lowers to these rows, its
-//! opacity to an absolute target the press eases to from what shows
-//! (`press_opacity_to`).
+//! Host-owned press feedback: one eased progress per pressed node, which
+//! shows as its scale (multiplied into `scale` about transform-origin) and
+//! its pressed paint (LLP 1061 D7: an opacity share, a background and a text
+//! colour, `Host::presented` and the painter). The user's motion preference
+//! never removes a button's feedback (LLP 1061). A node's `:active` (LLP 1121
+//! D8) lowers to these rows, its opacity to an absolute target the press eases
+//! to from what shows (`press_opacity_to`).
 use super::*;
 use exact_motion::Easing;
 
@@ -29,7 +29,7 @@ impl Feedback {
     }
 }
 
-/// A state held as the real one: the
+/// A state held as the real one (LLP 1122 D8, LLP 1121 stage 8 E3): the
 /// build channel's `hold` or the agent's `holdState`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum HoldState {
@@ -100,7 +100,7 @@ impl Shown {
     }
 }
 
-/// Whether a node writes any of the pressed paint.
+/// Whether a node writes any of the pressed paint (LLP 1061 D7).
 pub(crate) fn paints(style: &exact_kernel::StyleProps) -> bool {
     use exact_kernel::StyleId::{PressBackgroundColor, PressColor, PressOpacity, PressOpacityTo};
     [
@@ -225,7 +225,7 @@ impl<D: DataSource> Host<D> {
 
     pub(crate) fn press_feedback(&mut self, key: NodeKey, down: bool, now: f64) {
         // A held press is the hold's: a real press's release, or its moving
-        // off, leaves it.
+        // off, leaves it (stage 8 E3).
         let held = self.looks_shown.held;
         if !down && held.is_some_and(|h| h.key == key && h.state == HoldState::Active) {
             return;

@@ -60,7 +60,7 @@ export const earlyAnswer = async (early, ready) => {
 };
 
 /** Whether `v` nests deeper than `max` arrays or objects (iterative, so a
- * deep value can't exhaust the stack here). */
+ * deep value can't exhaust the stack here; stage 10 A2). */
 export const tooDeep = (v, max = 64) => {
   const stack = [[v, 0]];
   while (stack.length) {
@@ -78,9 +78,9 @@ export const parseRequest = text => {
 };
 
 /** Whether a request may carry a paired credential: from this machine, or
- * through one of the remote doors (its TLS listener or canvas port, or a
+ * through one of stage 10 B's doors (its TLS listener or canvas port, or a
  * tunnel the developer trusts). Plain HTTP from off this machine (a --lan
- * bind's peer) never may: the wire and the canvas both ask
+ * bind's peer) never may (LLP 1122 D12): the wire and the canvas both ask
  * this, so the rule lives here once. */
 export const viaDoor = access => access?.local === true || access?.remote === true || access?.tunnel === true;
 
@@ -88,7 +88,7 @@ export const viaDoor = access => access?.local === true || access?.remote === tr
  * their probes, the tool tests' proxy), on a connection of its own. A pooled one can be one the server has just
  * closed as idle (Bun's node:http closes a kept-alive socket after 5 s and a second's grace): sent on it, the request
  * meets a reset (ECONNRESET, "the socket connection was closed unexpectedly"). That is the likely cause of the
- * design-tool tests' occasional ECONNRESET under load, where the time before this side sees the
+ * design-tool test split's one ECONNRESET under load (QUEUE 2026-10-22), where the time before this side sees the
  * close is long enough to land in; tamber-upstream.test.mjs makes the reuse certain. A loopback connect costs next
  * to nothing. (`keepalive: false` turns pooling off in Bun's fetch, which runs these; Node's and a browser's read it
  * otherwise.) */
@@ -119,8 +119,8 @@ export async function probeTool(origin, tries = 1) {
   } catch (e) { return why(e); } // (refused or reset now: it stopped between the two, a loop restarting)
 }
 
-/** `probe()` again every `everyMs` while it says `{wait}` (`tamber tool --via` while the dev loop starts),
- * each new reason said once (`say`), for at most `capMs`: its first other answer, or
+/** `probe()` again every `everyMs` while it says `{wait}` (`tamber tool --via` while the dev loop starts, the design
+ * tool's third pass's #9), each new reason said once (`say`), for at most `capMs`: its first other answer, or
  * `{waited: ms}` past the cap. Ctrl-c meanwhile exits 130 (SIGTERM 143), before anything is listening. */
 export async function waitForAnswer(probe, { say, capMs, everyMs = TIMING.viaEvery, now = Date.now, exit = code => process.exit(code) }) {
   const start = now(), codes = { SIGINT: 130, SIGTERM: 143 }, handlers = Object.entries(codes).map(([signal, code]) => [signal, () => exit(code)]);

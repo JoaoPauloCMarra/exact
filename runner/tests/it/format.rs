@@ -1,4 +1,5 @@
-//! The `format` capability and `formatTime` against the web's `Intl`.
+//! The `format` capability and `formatTime` against the web's `Intl`
+//! (LLP 1054.000.003 D1–D3, D7).
 //!
 //! The rows are data, derived once from Bun 1.4.2 (JavaScriptCore, ICU 78.1,
 //! Unicode 17.0) with
@@ -7,10 +8,10 @@
 //! year: "numeric" }`, and
 //! `new Intl.NumberFormat("en-US", { notation: "compact", roundingMode: "trunc", signDisplay: "negative" }).format(n)`.
 //! A fixed-offset `timeZone` is `utcOffset`'s meaning: the Date constructor
-//! clips the instant (TimeClip) and the zone then shifts it — the runner's order.
+//! clips the instant (TimeClip) and the zone then shifts it — D7's order.
 //! Year 1 is `Date.parse("0001-01-01T00:00:00.000Z")`, not `Date.UTC(1, …)`
 //! (which is 1901). A row whose shifted wall time falls outside years
-//! 1–9999 says `""`, a declared difference: there Intl prints an era-less
+//! 1–9999 says `""`, D7's declared difference: there Intl prints an era-less
 //! `Dec 31, 1` for 1 BC or `Jan 1, 10000`, or throws past TimeClip's range.
 //! Bun prints U+0020 before AM/PM, so no row is normalized.
 
@@ -622,7 +623,7 @@ const NUMBERS: &[(f64, &str)] = &[
 
 /// (n, formatNumber "decimal", "percent", "currency" "USD"), from Bun 1.4.2's
 /// `new Intl.NumberFormat("en-US", options).format(n)` with `{}`, `{ style:
-/// "percent" }` and `{ style: "currency", currency: "USD" }`:
+/// "percent" }` and `{ style: "currency", currency: "USD" }` (LLP 1116 D8):
 /// halves at each style's cut, a carry into a new digit, negative zero, the
 /// ends of the doubles. `host/web/tests/js-runtime.test.mjs` sweeps the JS
 /// target's against `Intl` itself.
@@ -808,7 +809,7 @@ fn decimal_percent_and_currency_numbers_are_intl_s() {
     assert_eq!(listed, tested);
 }
 
-/// Every entry prints `""` for a non-finite argument or an offset past
+/// D7: every entry prints `""` for a non-finite argument or an offset past
 /// ±18 h, where Intl prints `NaN` or `∞`, or throws a RangeError.
 #[test]
 fn invalid_input_is_blank_from_every_entry() {
@@ -832,7 +833,7 @@ fn invalid_input_is_blank_from_every_entry() {
     assert_eq!(format_time(0.0, -1080.0), Value::str("6:00 AM"));
 }
 
-/// The one order, where it shows: TimeClip before the shift (`-0.5` at
+/// D7's one order, where it shows: TimeClip before the shift (`-0.5` at
 /// +60 is 1:00 AM, not 12:59 AM), and no zero sentinel — `0` is the epoch.
 #[test]
 fn the_instant_is_clipped_before_it_is_shifted() {
@@ -844,10 +845,10 @@ fn the_instant_is_clipped_before_it_is_shifted() {
     assert_eq!(format_time(3_599_999.9, 0.0), Value::str("12:59 AM"));
 }
 
-/// `iso` against `new Date(Math.trunc(ms) + offset * 60000)
+/// `iso` (LLP 1102 §3.4) against `new Date(Math.trunc(ms) + offset * 60000)
 /// .toISOString().slice(0, 10)` in Bun 1.4.2 at whole-minute offsets: the date
 /// at the wall time, four-digit years; `""` outside years 1–9999 as every
-/// style. A fractional offset's wall time is not clipped again, as no
+/// style (D7). A fractional offset's wall time is not clipped again, as no
 /// style's is (`-0.000001` at the epoch is Dec 31, where `Date` says Jan 1).
 #[test]
 fn iso_dates_are_to_iso_string_s_date_part() {
@@ -889,10 +890,10 @@ fn fixed(f: Stdlib, x: f64, digits: f64) -> Option<Value> {
     formatting(f, &[Value::Number(x), Value::Number(digits)])
 }
 
-/// `toFixed` against Bun 1.4.2's
+/// LLP 1102 §3.2 (decided (c)): `toFixed` against Bun 1.4.2's
 /// `x.toFixed(d)` (the binary value rounded, a tie away from zero, `1e21`
 /// and up as `String(x)` prints), but `""` where it prints `NaN` or
-/// `Infinity`; `formatDecimal` an integer count, exactly. A random
+/// `Infinity` (D7); `formatDecimal` an integer count, exactly. A random
 /// sweep of both agreed with JavaScript on 200,000 cases when they were
 /// written; `difftest arith` holds them to the Lean semantics.
 #[test]
@@ -940,8 +941,8 @@ fn to_fixed_is_javascript_s_and_format_decimal_is_exact() {
     }
 }
 
-/// (thenMs, nowMs, utcOffset, "day", "day-time", "list") of `formatDay`:
-/// the dates, times and weekdays from Bun 1.4.2's
+/// (thenMs, nowMs, utcOffset, "day", "day-time", "list") of `formatDay`
+/// (LLP 1116.020 D8): the dates, times and weekdays from Bun 1.4.2's
 /// `Intl.DateTimeFormat("en-US", { timeZone: "±HH:MM", ... })` with
 /// `dateStyle: "medium"`, `timeStyle: "short"`, `weekday: "long"` and
 /// `dateStyle: "short"`, the words chosen by the offset's calendar days
@@ -994,7 +995,7 @@ fn a_day_s_label_is_relative_to_now_at_the_offset() {
         }
     }
     assert!(wrong.is_empty(), "{wrong:#?}");
-    // Either instant invalid, as `formatDate` judges one, is ""; a mode
+    // Either instant invalid, as `formatDate` judges one, is "" (D7); a mode
     // the compiler refuses is refused.
     for (then, now, offset) in [
         (f64::NAN, 0.0, 0.0),
@@ -1019,7 +1020,7 @@ fn a_style_outside_the_table_is_refused_not_guessed() {
         ),
         None
     );
-    // A code the roster does not list, or none, is no currency.
+    // A code the roster does not list, or none, is no currency (LLP 1116 D8).
     for code in ["XYZ", "usd", ""] {
         let args = [Value::Number(1.0), Value::str("currency"), Value::str(code)];
         assert_eq!(formatting(Stdlib::FormatNumber, &args), None, "{code}");

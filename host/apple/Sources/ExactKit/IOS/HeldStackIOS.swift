@@ -1,9 +1,9 @@
-// A tab whose stack shows no navigation bar and has
+// @ref LLP 1075.003 §3.7 — a tab whose stack shows no navigation bar and has
 // pushed nothing holds its one route in a plain container, as a hand-built
 // UIKit app shows such a tab: on iOS 26 and 27 a `UINavigationController`
 // whose view is in a window lays out a full-screen SwiftUI host for its
 // bottom toolbar and search (`_UIFloatingBarContainerView`), toolbar or not,
-// about 0.9 MB. A tab the runner has not built yet has one from the
+// about 0.9 MB in euxy. A tab the runner has not built yet has one from the
 // start. The navigation controller is built (`realize`) when the stack first
 // pushes or its route first shows a bar, once no transition is running, or
 // when a hatch asks for the tab's controller (`ExactTab.controller`); the

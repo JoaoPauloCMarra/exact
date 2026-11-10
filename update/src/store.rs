@@ -1,10 +1,11 @@
 //! The store directory: what this client has, what it boots, and the check
 //! that stages the next bundle.
 //!
-//! Selection happens at launch and falls back to entry zero; signing,
-//! anti-rollback, crash recovery and assets by digest keep the check off the
-//! boot path. Each stream has its own path on the origin. Check and activate
-//! are two acts. An unknown record codec selects entry zero and is left alone.
+//! @ref LLP 1026 D9 (the store; selection at launch; entry zero) / D11
+//! (signing, anti-rollback, crash recovery, assets by digest, the check off the
+//! boot path) / LLP 1030 D3a (the stream's own path on the origin) / D5 (the
+//! sunset card; check and activate are two acts) / D9 (an unknown record codec
+//! selects entry zero and is left alone)
 //!
 //! The shape on disk:
 //!
@@ -25,14 +26,15 @@
 //!
 //! 1. **An entry is whole or absent.** Every file is written under a temporary
 //!    name and the directory is renamed into place, so a client that dies
-//!    mid-download leaves nothing selectable behind (an atomic swap, on disk).
+//!    mid-download leaves nothing selectable behind (LLP 1023 D3's atomic swap,
+//!    on disk).
 //! 2. **Entry zero is never in the store and never deleted.** `selected: null`
 //!    means the bundle the binary embeds; it is what a bad update falls back
-//!    to, and an unknown record codec selects it.
+//!    to, and it is the whole of LLP 1030 D9's promise.
 //! 3. **The counter must not share fate with what it recovers.** The failure
 //!    count is written before the boot it counts and cleared after first pixel,
 //!    so a bundle that never reaches first pixel is demoted at the launch after
-//!    next.
+//!    next (LLP 1026 D11; LLP 0421 invariant 11).
 
 mod disk;
 
@@ -48,7 +50,7 @@ use std::sync::{Arc, Mutex};
 type AssetResult = Result<Arc<[u8]>, String>;
 type AssetCache = Arc<Mutex<BTreeMap<String, AssetResult>>>;
 
-/// The trust policy explicitly baked into a host.
+/// The trust policy explicitly baked into a host (LLP 1026 D11/D12).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Trust {
     /// Every head must verify against a baked public key.
@@ -58,19 +60,19 @@ pub enum Trust {
 }
 
 /// What the binary itself carries: entry zero's identity, the cohort it
-/// belongs to, and the keys it trusts. The bake
+/// belongs to, and the keys it trusts (LLP 1026 D9/D11; LLP 1030 D3a). The bake
 /// writes every field; nothing here is hand-declared.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Embedded {
-    /// The app id. A bundle for another app is refused.
+    /// The app id (LLP 1023 D5). A bundle for another app is refused.
     pub app_id: String,
-    /// The cohort this binary is. It names the stream's path on
+    /// The cohort this binary is (LLP 1030 D3a). It names the stream's path on
     /// the origin, and a bundle that names another one is refused.
     pub compatibility_id: String,
     /// The `seq` of the bundle the binary embeds: the anti-rollback floor for a
     /// client that has taken no update.
     pub seq: u64,
-    /// The channel this binary bakes in: the stream it
+    /// The channel this binary bakes in (LLP 1030.000 D4): the stream it
     /// checks is `(channel, compatibility id)`, and a head for another
     /// channel — signed for it, replayed here — is refused.
     pub channel: String,
@@ -80,8 +82,8 @@ pub struct Embedded {
     /// Whether unsigned development heads are permitted by this artifact.
     pub trust: Trust,
     /// The SHA-256 of the plan the binary embeds — what a binary can actually
-    /// know about entry zero (the client knows, by digest, what it already
-    /// has). The published head is a document the binary never
+    /// know about entry zero (LLP 1026 D9: "the client knows, by digest, what
+    /// it already has"). The published head is a document the binary never
     /// carried, so its digest could not say "current"; the plan's can. With
     /// it, a fresh install whose origin still serves the plan it shipped with
     /// — and assets it also embeds, by digest — answers [`Check::Current`] and
@@ -107,7 +109,7 @@ impl Embedded {
     }
 }
 
-/// What to boot. `plan` is `None` for entry zero — the bundle in
+/// What to boot (LLP 1026 D9). `plan` is `None` for entry zero — the bundle in
 /// the binary — which is also what a client falls back to.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Selection {
@@ -221,8 +223,8 @@ impl std::fmt::Display for SelectionRefusal {
 
 impl std::error::Error for SelectionRefusal {}
 
-/// A bundle selected for the next launch that is not the one running (check
-/// and activate are two acts).
+/// A bundle selected for the next launch that is not the one running (LLP 1030
+/// D5: check and activate are two acts).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Staged {
     /// The entry's name: its envelope digest.
@@ -241,7 +243,7 @@ pub enum Check {
     /// The payload is already selected. The signed head is retained as a
     /// rollback witness without downloading the payload again.
     Current {
-        /// The stream's retirement notice, when it has one.
+        /// The stream's retirement notice, when it has one (LLP 1030 D5).
         sunset: Option<Card>,
     },
     /// A new bundle is on disk, whole, and selected for the next launch.
@@ -250,12 +252,12 @@ pub enum Check {
         entry: String,
         /// The stream `seq` it carries.
         seq: u64,
-        /// The stream's retirement notice, when it has one.
+        /// The stream's retirement notice, when it has one (LLP 1030 D5).
         sunset: Option<Card>,
     },
 }
 
-/// What the app and the agent are told: the `delivery` resource's
+/// What the app and the agent are told (LLP 1030 D7): the `delivery` resource's
 /// content, and what `state.delivery` mirrors.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Status {
@@ -288,9 +290,9 @@ pub struct Store {
     embedded: Embedded,
     record: Record,
     /// A record written by a binary with a newer store codec: this client
-    /// selects entry zero and **writes nothing at all**.
+    /// selects entry zero and **writes nothing at all** (LLP 1030 D9).
     frozen: bool,
-    /// `app-decides`: a checked bundle is held as
+    /// `app-decides` (LLP 1030.000 D4): a checked bundle is held as
     /// `pending` rather than selected, until [`Store::commit_activation`].
     hold: bool,
     /// The entry this process booted, remembered from the selection at open.
@@ -323,7 +325,7 @@ struct EntryView {
 struct Record {
     selected: Option<String>,
     /// An entry on disk whole that no launch boots until the app activates
-    /// it — the `app-decides` policy: `check` puts it
+    /// it — the `app-decides` policy (LLP 1030.000 D4): `check` puts it
     /// here instead of `selected`, and `activate` promotes it.
     pending: Option<String>,
     last_good: Option<String>,
@@ -344,7 +346,7 @@ struct Record {
 /// break a loop, not to keep history.
 const BAD_REMEMBERED: usize = 8;
 
-/// Two failed boots in a row demote a bundle.
+/// Two failed boots in a row demote a bundle (LLP 1026 D11).
 const FAILURES_ALLOWED: u64 = 2;
 
 impl Record {
@@ -388,7 +390,7 @@ enum RecordFile {
     /// An older codec from this pre-1.0 crate. Its selections are not read;
     /// open replaces it with this binary's clean entry-zero record.
     Obsolete,
-    /// A record written by a binary with another store codec.
+    /// A record written by a binary with another store codec (LLP 1030 D9).
     Foreign,
     /// This codec's record.
     Ours(Record),
@@ -406,7 +408,7 @@ fn read_record(path: &Path) -> RecordFile {
     let Some(object) = value.as_object() else {
         return RecordFile::Fresh;
     };
-    // Only an integer codec above ours is another binary's. A
+    // Only an integer codec above ours is another binary's (LLP 1030 D9). A
     // record with no such codec is damaged, not foreign: freezing on it would
     // stop this updater for good.
     match object.get("codec").and_then(|v| v.as_u64()) {
@@ -468,10 +470,10 @@ impl Store {
     /// cohort's is dropped; a selected entry that failed to reach first pixel
     /// twice in a row is demoted to the last good one and then to entry zero;
     /// a record from another cohort is reset to this one's;
-    /// a record from another store codec freezes the store and
+    /// a record from another store codec freezes the store (LLP 1030 D9) and
     /// nothing here writes.
     /// Windows durable storage is not qualified: opening refuses before any
-    /// filesystem access or mutation.
+    /// filesystem access or mutation (LLP 1026 D11a).
     pub fn open(dir: &Path, embedded: Embedded) -> Result<Store, String> {
         disk::require_durable_store()?;
         std::fs::create_dir_all(dir).map_err(|e| format!("cannot make {}: {e}", dir.display()))?;
@@ -540,7 +542,7 @@ impl Store {
         // The floor is the highest seq this client has admitted. A record lost
         // or damaged in a crash must not forget it: every entry on disk is a
         // head this client verified before writing it, so the highest signed
-        // one is a floor as well.
+        // one is a floor as well (LLP 1026 D11).
         if let Some((seq, digest)) = store.signed_floor() {
             if seq > store.record.seq || (seq == store.record.seq && store.record.digest.is_none())
             {
@@ -610,7 +612,7 @@ impl Store {
         Ok(store)
     }
 
-    /// What this launch boots: the record's selection when its
+    /// What this launch boots (LLP 1026 D9): the record's selection when its
     /// entry is whole and this cohort's, else entry zero. No network is
     /// touched, ever, on this path — selection is a stat and a read.
     ///
@@ -713,7 +715,7 @@ impl Store {
         self.refuse_running(entry, reason)
     }
 
-    /// Count this boot before it happens. A no-op when entry
+    /// Count this boot before it happens (LLP 1026 D11). A no-op when entry
     /// zero booted — the embedded bundle is the thing being recovered *to*, so
     /// counting its failures would have nothing to fall back on.
     pub fn boot_started(&mut self) -> Result<(), String> {
@@ -724,7 +726,7 @@ impl Store {
         self.write_boot_mark()
     }
 
-    /// First pixel: the bundle that booted is good. Clears the
+    /// First pixel: the bundle that booted is good (LLP 1026 D11). Clears the
     /// counter and makes what is **running** — not what a check has since
     /// staged — the fallback for the next bad update.
     pub fn boot_succeeded(&mut self, generation: &Generation) -> Result<(), String> {
@@ -747,8 +749,8 @@ impl Store {
 
     /// Ask the origin for this stream's head, and stage what it names.
     ///
-    /// `head_url` is the stream's own path on the origin — [`head_url`]
-    /// builds it:
+    /// `head_url` is the stream's own path on the origin (LLP 1030 D3a;
+    /// 1030.000 D4) — [`head_url`] builds it:
     /// `<origin>/.exact/<channel>/<compatibilityId>/exact.json`, so a static
     /// host serves each cohort of each channel its own manifest with no
     /// negotiation, and the head's file cards resolve against it. `fetch` is
@@ -769,7 +771,7 @@ impl Store {
     ///
     /// On success the entry is on disk whole and selected for the **next**
     /// launch; nothing about the running app changes until the host calls
-    /// [`Store::commit_activation`]: check and activate are two acts.
+    /// [`Store::commit_activation`] (LLP 1026 D11; LLP 1030 D5: two acts).
     pub fn check(
         &mut self,
         head_url: &str,
@@ -993,14 +995,14 @@ impl Store {
     }
 
     /// Hold what a check stages as pending — whole on disk, booted by no
-    /// launch — until [`Store::commit_activation`]: the `app-decides` policy.
-    /// Off, a staged bundle is selected for the next launch.
+    /// launch — until [`Store::commit_activation`]: the `app-decides` policy (LLP
+    /// 1030.000 D4). Off, a staged bundle is selected for the next launch.
     pub fn hold_staged(&mut self, hold: bool) {
         self.hold = hold;
     }
 
     /// The bundle waiting for this process: held pending, or selected for
-    /// the next launch and not the one this process booted.
+    /// the next launch and not the one this process booted (LLP 1030 D5/D7).
     pub fn staged(&self) -> Option<Staged> {
         let view = match self.validate(self.record.pending.clone()) {
             Some(pending) => pending,
@@ -1069,7 +1071,7 @@ impl Store {
         }
     }
 
-    /// What the app and the agent are told.
+    /// What the app and the agent are told (LLP 1030 D7).
     pub fn status(&self) -> Status {
         Status {
             // `view` is the durable selection for a future launch and may
@@ -1105,7 +1107,7 @@ impl Store {
         &self.embedded
     }
 
-    /// Whether an unknown store codec froze this store: the
+    /// Whether an unknown store codec froze this store (LLP 1030 D9): the
     /// client boots entry zero and writes nothing.
     pub fn frozen(&self) -> bool {
         self.frozen
@@ -1357,7 +1359,7 @@ impl Store {
 
     /// One file into the blob store: kept already under its digest, else
     /// fetched. Either way the digest and the byte count are what the head
-    /// declared, or nothing is written (assets by digest).
+    /// declared, or nothing is written (LLP 1026 D11, assets by digest).
     fn obtain(
         &self,
         card: &crate::envelope::FileCard,
@@ -1440,7 +1442,7 @@ impl Store {
     }
 }
 
-/// The head's URL for a stream: the channel's
+/// The head's URL for a stream (LLP 1030 D3a; 1030.000 D4): the channel's
 /// directory under the origin's `.exact/`, then the cohort's, then the
 /// manifest — `<origin>/.exact/<channel>/<compatibilityId>/exact.json`.
 pub fn head_url(origin: &str, channel: &str, compatibility_id: &str) -> String {

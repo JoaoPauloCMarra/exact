@@ -1,4 +1,4 @@
-//! The layout regions: `env(-exact-<region>-inset-<edge>)`
+//! The layout regions (LLP 1123 D10): `env(-exact-<region>-inset-<edge>)`
 //! resolves against the insets the host reports for each region, and against
 //! the safe area on a host that reports none; a change lays out again only
 //! the nodes that read the environment.
@@ -103,11 +103,11 @@ fn every_region_and_edge_is_a_length_by_its_name() {
             );
         }
     }
-    // Every family is a spelling Exact owns
+    // Every family is a spelling Exact owns (LLP 1081 D8)
     for region in Region::ALL {
         assert!(ENV_NAMES
             .iter()
-            .any(|(n, kind)| *n == region.prefix() && *kind == "exact"));
+            .any(|(n, kind)| *n == region.prefix() && kind.starts_with("exact ")));
     }
 }
 

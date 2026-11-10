@@ -1,4 +1,4 @@
-// A layout transition's size is the box's surface alone, as a
+// A layout transition's size (LLP 1063) is the box's surface alone, as a
 // UIKit or SwiftUI frame animation shows it: the background, border, corner
 // radius, shadow and the clip it puts on its children take the size the
 // engine shows, from the box's top-left corner, while the view keeps its

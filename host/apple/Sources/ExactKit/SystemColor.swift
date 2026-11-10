@@ -1,4 +1,4 @@
-// A colour row that names a platform colour: a role's
+// @ref LLP 1095 D3, D5 — a colour row that names a platform colour: a role's
 // class colour property (`secondaryLabelColor`), a `-exact-platform-color()`'s, an
 // asset catalogue colour (`named:Brand`), or the view's inherited tint
 // (`@tint`, `@tint/0.2` with an alpha). A class colour is one of the
@@ -12,8 +12,8 @@ import AppKit
 #endif
 
 package enum SystemColor {
-    /// CSS's `CanvasText`, the initial `color`: the platform's own dynamic
-    /// text colour, so a row the
+    /// CSS's `CanvasText`, the initial `color` (LLP 1095
+    /// stage 2): the platform's own dynamic text colour, so a row the
     /// presenter has no value for still follows appearance and contrast.
     #if os(iOS) || os(tvOS)
     package static let canvasText: UIColor = .label
@@ -40,7 +40,7 @@ package enum SystemColor {
     nonisolated(unsafe) private static var resolutions = 0
 
     #if os(macOS)
-    /// Set, on the main thread,
+    /// @ref LLP 1115.002 D5, LLP 1115.000 D3.7 — set, on the main thread,
     /// while a view in a table's selected row that AppKit draws emphasized
     /// resolves its ink (`NodeView.paragraphSpec`, TableInkMac.swift): a
     /// role that is ink resolves to the selected item's text.
@@ -57,7 +57,7 @@ package enum SystemColor {
     #endif
 
     /// Whether Increased Contrast is on, as `prefers-contrast` reads it (an
-    /// agent's `prefer contrast more` pins it).
+    /// agent's `prefer contrast more` pins it, LLP 1095 D7).
     static var highContrast: Bool { DisplayPreferences.contrast == "more" }
 
     /// A system colour changed (macOS's accent, say): every resolution is
@@ -78,7 +78,7 @@ package enum SystemColor {
     /// when nil); `elevated` is iOS's user-interface level: a sheet's or a
     /// popover's content, whose dark backgrounds are lighter. `tint` is the
     /// opaque tint in `dark`, read on main for a resolution made off it;
-    /// `tintColor` is the requesting view's own (its window's tint).
+    /// `tintColor` is the requesting view's own (its window's tint, D8).
     static func channels(_ name: String, dark: Bool, contrast: Bool? = nil, elevated: Bool = false,
                          tint resolvedTint: [Double]? = nil, tintColor: PlatformColor? = nil, fallback: [Double]?) -> [Double]? {
         let contrast = contrast ?? highContrast
@@ -101,7 +101,7 @@ package enum SystemColor {
         lock.unlock()
         guard known, let color = lookup(name) else {
             lock.lock()
-            if refused.insert(name).inserted { NSLog("Exact: no platform colour %@; its fallback is shown", name) }
+            if refused.insert(name).inserted { NSLog("Exact: no platform colour %@; its fallback is shown (LLP 1095 D3)", name) }
             lock.unlock()
             return fallback
         }
@@ -167,7 +167,7 @@ package enum SystemColor {
     }
 
     /// `AccentColor`: the app's tint (iOS) or the system accent (macOS),
-    /// times an alpha (`Highlight` is the tint at 0.2 on iOS).
+    /// times an alpha (`Highlight` is the tint at 0.2 on iOS, LLP 1095 §6.1).
     private static func tint(alpha: Double, dark: Bool, contrast: Bool, fallback: [Double]?) -> [Double]? {
         var color: Native?
         if Thread.isMainThread {
@@ -193,7 +193,7 @@ package enum SystemColor {
     static let defaultTint: UIColor = UIView().tintColor
     #endif
 
-    /// The app's tint, one for every session: its key
+    /// The app's tint, one for every session (LLP 1095 D9): its key
     /// window's, else its first window's, among the app's own windows at
     /// the normal level (never the keyboard's, often key), the foreground
     /// scene's first; nil with no window. What the
@@ -212,7 +212,7 @@ package enum SystemColor {
     }
 
     /// A tint's opaque channels, light then dark under the system's
-    /// contrast, for `channels(tint:)`: read here, on main
+    /// contrast, for `channels(tint:)` (LLP 1095 D9): read here, on main
     /// (`appTint` for the report), since the owner thread that reports
     /// colours can read no window.
     static func tintPair(_ color: PlatformColor?) -> [[Double]]? {
@@ -271,7 +271,7 @@ extension BatchValue {
 }
 
 extension UIView.TintAdjustmentMode {
-    /// A node's `-exact-tint-adjustment` as UIKit's mode for its views, or a list row's
+    /// A node's `-exact-tint-adjustment` (LLP 1077 D19) as UIKit's mode for its views, or a list row's
     /// cell: `normal` keeps the tint as it is behind a sheet or an alert; `auto`, or none, is
     /// `.automatic`, the superview's, as UIKit carries a mode down
     package init(_ row: BatchValue?) {
@@ -301,9 +301,9 @@ extension SystemColor {
 
 extension NodeView {
     /// The tint `row` resolves `@tint` by: this view's inherited
-    /// `tintColor` on iOS, so a second window's is its own;
-    /// on macOS the nearest authored `accent-color` at or above it, nil
-    /// where there is none: the system's accent.
+    /// `tintColor` on iOS, so a second window's is its own (LLP 1095 D8);
+    /// on macOS the nearest authored `accent-color` at or above it (LLP
+    /// 1115.000 D3.4), nil where there is none: the system's accent.
     func ownTint(for row: BatchValue?) -> PlatformColor? {
         row?.namesTint == true ? viewTint : nil
     }
@@ -333,13 +333,13 @@ extension NodeView {
     }
 
     /// The node's tint rows, applied where they changed from `old`: its accent (`applyAccentTint`) and
-    /// its `-exact-tint-adjustment`, UIKit's `tintAdjustmentMode`, which UIKit carries down
+    /// its `-exact-tint-adjustment`, UIKit's `tintAdjustmentMode` (LLP 1077 D19), which UIKit carries down
     func applyTint(from old: NodeStyle) {
         if old["accent_color"] != style["accent_color"] { applyAccentTint() }
         if old["tint_adjustment"] != style["tint_adjustment"] { tintAdjustmentMode = .init(style["tint_adjustment"]) }
     }
 
-    /// An authored `accent-color` is its subtree's tint,
+    /// An authored `accent-color` is its subtree's tint (LLP 1116.001 D2),
     /// as a hand-built UIKit app sets a view's `tintColor`: UIKit carries it
     /// down, and every row beneath that names the tint (`AccentColor`,
     /// `LinkText`, a symbol's default) resolves by it (`ownTint`). `auto`, or
@@ -449,7 +449,7 @@ extension NodeView {
     }
     #endif
 
-    /// The Increased Contrast this view draws in: its own
+    /// The Increased Contrast this view draws in (LLP 1095 D5): its own
     /// trait, so a subtree's override counts; nil before it has one, and
     /// on macOS, where contrast is the system's alone (AppKit's named
     /// high-contrast appearances resolve as plain Aqua).

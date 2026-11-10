@@ -1,4 +1,4 @@
-//! On Linux, with no shell to cover it (headless, a framebuffer)
+//! Stage 14 B on Linux: with no shell to cover it (headless, a framebuffer)
 //! a popover is laid out in the viewport's block, a space of its own, which
 //! is no part of its scroller's extent.
 use exact_kernel::*;

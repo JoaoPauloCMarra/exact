@@ -1,4 +1,4 @@
-//! Pictures by a package's `img` scheme. An
+//! Pictures by a package's `img` scheme (LLP 1133.019 D2, D11 item 1). An
 //! interface that declares `"images": {"scheme", "grants", "permission"?,
 //! "owned"?}` serves `img` sources that begin `<scheme>:`. A host's raster
 //! loader, given one, asks [`Runner::admit_picture`] before it asks the
@@ -10,7 +10,7 @@
 //! `permission` is `granted`, as the runner holds it. On a target that
 //! `owned` names, a picture is let through under that grant line alone,
 //! with `owned: true`, and the implementation draws it only where the
-//! platform says it is the app's own (Android's own photos). Refused: a
+//! platform says it is the app's own (D6: Android's own photos). Refused: a
 //! scheme no package serves, an app that declares none of `grants`, a
 //! scheme with no implementation bound, a permission not granted.
 
@@ -164,7 +164,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Whether a call of `row` is let through as a read of the app's own
-    /// item: on a target its `owned` names, the
+    /// item (LLP 1133.019 D11 item 4): on a target its `owned` names, the
     /// app declares that line, and its permission is not granted.
     pub(in crate::runner) fn owned_call(&self, row: &exact_plan::ModulesRow) -> bool {
         let Some(target) = self.extensions.pictures.target.as_deref() else {

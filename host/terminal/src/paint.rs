@@ -1,8 +1,8 @@
 //! The painter: one walk of the kernel tree into cells.
 //!
-//! The kernel is the display list: frames, styles and props are read where
-//! they live, snapped to the grid (each edge to the nearest cell boundary, so
-//! siblings tile), and drawn as cell styles.
+//! @ref LLP 1101 D7 — the kernel is the display list: frames, styles and
+//! props are read where they live, snapped to the grid (D3: each edge to the
+//! nearest cell boundary, so siblings tile), and drawn per §4's mapping.
 //! Open dialogs and popovers paint last, over a faint backdrop.
 
 use crate::grid::{CellRect, Grid, Rgb, Style};
@@ -106,7 +106,7 @@ pub fn paint(scene: &Scene<'_>, roots: &[ViewId], cols: usize, rows: usize, top:
 
 /// Where an open layer paints: where it was laid out, or centred in the
 /// grid when it names no inset (as the Mac host centres a dialog). A
-/// popover laid out in the viewport's block is placed by its
+/// popover laid out in the viewport's block (stage 14 B) is placed by its
 /// insets in the grid, which stays put as the document scrolls.
 pub(crate) fn placement(
     scene: &Scene<'_>,
@@ -283,7 +283,7 @@ fn node(
             .clamp(0.0, reach);
         child_dy += offset;
         out.scrollers.push((id, inner.intersect(clip), reach));
-        // A one-column indicator at the inner right edge.
+        // A one-column indicator at the inner right edge (LLP 1101 §4).
         if reach > 0.0 && n.style.scrollbar_width != exact_kernel::ScrollbarWidth::None {
             let track = inner.h.max(1);
             let thumb = ((track as f32) * (f.height / (f.height + reach)))
@@ -318,14 +318,14 @@ fn node(
     }
 }
 
-/// A determinate `progress`.
+/// A determinate `progress` (LLP 1116 D8).
 fn bar(n: &NodeRef<'_>) -> bool {
     exact_kernel::ControlKind::of(n.node_type, n.props)
         == Some(exact_kernel::ControlKind::ProgressBar)
 }
 
 /// A determinate `progress` as text: its middle row of content cells, `█`
-/// to its value and `░` after it, in its colour.
+/// to its value and `░` after it, in its colour (LLP 1116 D8).
 fn progress_bar(
     scene: &Scene<'_>,
     out: &mut Painted,
@@ -343,7 +343,7 @@ fn progress_bar(
     }
 }
 
-/// A native face is host paint, never its unlaid-out children.
+/// LLP 1104 D7: a native face is host paint, never its unlaid-out children.
 fn button(scene: &Scene<'_>, out: &mut Painted, n: &NodeRef<'_>, rect: CellRect, clip: CellRect) {
     let face = scene.kernel.press_face(n.id).unwrap_or_default();
     let rows = scene.kernel.button_face_style(n.id).expect("button");
@@ -508,7 +508,7 @@ fn base_style(scene: &Scene<'_>, n: &NodeRef<'_>, current: ColorValue) -> Style 
 }
 
 /// A cell has no alpha: a see-through box's text, or a native disabled
-/// field, is faint instead.
+/// field, is faint instead (LLP 1104 D7).
 fn faded(kernel: &Kernel, id: ViewId) -> bool {
     let mut at = kernel.node(id);
     while let Some(n) = at {

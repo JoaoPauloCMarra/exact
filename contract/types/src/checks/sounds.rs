@@ -1,8 +1,8 @@
 //! `playSound(src, at=, gain=, group=, playbackRate=, pan=)`,
-//! `playSounds(hits)` and `stopSounds(group=)` (the rate and
-//! pan). Each is checked here, before the
+//! `playSounds(hits)` and `stopSounds(group=)` (LLP 1096 D2; the rate and
+//! pan, LLP 1125 D10). Each is checked here, before the
 //! generic loop, whose `infer` would refuse a named argument as a canvas
-//! binding (`type-named-argument`). `haptic(kind)` too.
+//! binding (`type-named-argument`). `haptic(kind)` too (LLP 1077 D14).
 
 use super::{err, infer, Scope, Shapes, Ty, TypeError};
 use contract_syntax::{Expr, Span, UnOp};
@@ -100,7 +100,7 @@ fn play(args: &[Expr], scope: &Scope, shapes: &Shapes, span: Span) -> Result<(),
         );
     }
     // A literal names a declared sound here; a computed one is the runner's
-    // to drop, since drums chooses a track's sound from data.
+    // to drop (D5), since drums chooses a track's sound from data.
     if let Expr::Str(path, at) = src {
         if !shapes.sounds.contains(path) {
             return err(
@@ -146,7 +146,8 @@ fn play(args: &[Expr], scope: &Scope, shapes: &Shapes, span: Span) -> Result<(),
             );
         }
         // A literal gain, playback rate or pan is refused outside its range,
-        // as a literal `volume` is; a computed one is clamped by the runner.
+        // as a literal `volume` is; a computed one is clamped by the runner
+        // (D2; LLP 1125 D10).
         let range = match option.as_str() {
             "gain" => Some((
                 0.0,
@@ -207,7 +208,7 @@ fn hits(args: &[Expr], scope: &Scope, shapes: &Shapes, span: Span) -> Result<(),
     };
     // The runner reads a hit's fields by position, so the shape is checked
     // whole, in order: the record carries no names at runtime. The first
-    // four are required; the rate and then the pan may follow.
+    // four are required; the rate and then the pan may follow (LLP 1125 D10).
     let want = [
         ("src", Ty::String),
         ("at", Ty::Number),

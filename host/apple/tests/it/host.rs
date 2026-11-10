@@ -156,7 +156,7 @@ fn inherited_text_color_reaches_untouched_descendants_as_an_unresolved_pair() {
             .to_owned()
     };
     // No platform font environment here: the reference host inherits the
-    // page's ink, as the web does.
+    // page's ink, as the web does. The r4 field sheet is retired.
     for id in [inherited, field] {
         assert!(op(&first, id).contains("\"text_color\":[[0,0,0,255],[255,255,255,255]]"));
     }
@@ -203,9 +203,9 @@ fn the_first_batch_creates_places_and_sizes_the_whole_tree() {
     );
     // The glass cards' `light-dark()` pair: both schemes' colours travel.
     assert!(batch.contains("\"background_color\":[[255,255,255,217],[28,28,30,217]]"));
-    // The root is a block as wide as the viewport and, since the app lives
-    // inside a sky canvas that fills the window, as tall as it: its `scroll`
-    // child holds the page.
+    // The root is a block as wide as the viewport (LLP 1008 §1) and, since
+    // the app lives inside a sky canvas that fills the window (LLP 1014
+    // §1a), as tall as it: its `scroll` child holds the page.
     let root = frame_of(&batch, 1);
     assert_eq!(
         (root.0, root.1, root.2, root.3),
@@ -434,7 +434,7 @@ fn text_is_measured_through_the_registered_callback() {
     let f = frame_of(&batch, id);
     assert!(
         (f.3 - 16.25).abs() < 1e-3,
-        "16.25 exactly: the kernel keeps fractional frames: {f:?}"
+        "16.25 exactly: the kernel keeps fractional frames (LLP 1001 §5): {f:?}"
     );
     assert!(f.2 >= 104.0, "{f:?}");
     // The bridge's other calls answer too.
@@ -536,7 +536,7 @@ fn a_runner_refusal_never_installs_the_candidate_font_catalog() {
 
 #[test]
 fn an_invalid_viewport_plan_boot_keeps_the_running_host() {
-    // Refuse the size before layout; keep the old host.
+    // @ref LLP 1039 D2 — refuse the size before layout; keep the old host.
     let plan = contract::compile("component Running\n  view\n    text \"running\"\n")
         .unwrap()
         .encode();
@@ -900,7 +900,7 @@ fn the_insets_re_send_the_styles_that_read_them_and_move_what_they_pad() {
     assert_eq!(count(&none, "style") + count(&none, "frame"), 0, "{none}");
 }
 
-// ---------------------------------------------------------------- the handle
+// ---------------------------------------------------------------- the handle (LLP 1031 D2)
 
 /// The exports for a fixture app: two runtimes in one thread, each with its
 /// own plan and clock; a destroyed or invented handle refused by name.
@@ -974,7 +974,7 @@ pub(crate) mod handles {
         })
     }
 
-    /// The archive's `compat.json` as this fixture's binary
+    /// The archive's `compat.json` (LLP 1030 D3a) as this fixture's binary
     /// would carry it: the exports hand it to the runner at every boot.
     pub const COMPAT: &str =
         r#"{"id":"fixture00000000","inputs":{"executors":["native"],"store":{"L":"0"}}}"#;
@@ -1451,7 +1451,7 @@ fn resolved_language_is_published_at_boot_and_after_switching() {
     assert!(batch.contains(r#"{"op":"language","lang":"en","dir":"ltr"}"#));
 }
 
-// A presented frame fires the frame task once, at
+// @ref LLP 1073 D2, D4, D5 — a presented frame fires the frame task once, at
 // the frame's time; once frames are presented the timeout fires none; a stall
 // is not caught up; the agent's clock takes them back as virtual frames.
 #[test]

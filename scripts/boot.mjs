@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * boot — the fifth check (rules/RULES.md, "The six checks"): parse and count
+ * boot — the fifth check (rules/RULES.md §The six checks): parse and count
  * the module graph reachable before first pixel. A count cannot flake like a
  * timer, and parsing keeps valid HTML/ESM spellings from bypassing the count.
  */
@@ -12,7 +12,8 @@ import { fileURLToPath } from 'node:url';
 
 const ALLOWED = new Set(['host/web/glue.js', 'host/web/navigation.js']);
 // A served document may run exactly one inline script before its glue: the
-// host's capture script, which records taps, once the page has painted starts an idle page's wasm
+// host's capture script (LLP 1048.000 D6, 1048.001 D5; Charlie, 2026-09-23),
+// which records taps, once the page has painted starts an idle page's wasm
 // download, and stops that download when a link leaves the page; it holds no
 // app logic. Pinned by hash and byte-capped; changing it means changing this
 // hash, in review.

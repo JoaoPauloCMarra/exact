@@ -1,4 +1,4 @@
-//! Canvas 2D text on Linux: one Parley font context for the
+//! Canvas 2D text on Linux (LLP 1056 D8): one Parley font context for the
 //! canvases, loaded as the host's catalog is (system fonts, `EXACT_FONTS`,
 //! the plan's declared faces), behind a mutex so the runner measures on its
 //! thread and the replayer draws with the same engine — what was measured
@@ -7,9 +7,9 @@
 //! A run is shaped once and drawn as glyph outlines: a tiny-skia path in
 //! run space (origin at the run's left end on its alphabetic baseline, y
 //! down), so text takes every paint, shadow, compositing operator and clip a
-//! path takes. Colour glyphs draw as their outlines (a declared limit). A
-//! right-to-left run is laid out with a right-to-left base direction, as
-//! `direction = "rtl"` asks.
+//! path takes. Colour glyphs draw as their outlines (declared, LLP 1056
+//! §8.2). A right-to-left run is laid out with a right-to-left base
+//! direction, as `direction = "rtl"` asks.
 
 use exact_canvas::{RawMetrics, TextEngine, TextRun};
 use fontique::{Attributes, FontStyle, FontWeight, FontWidth, QueryStatus};

@@ -2,7 +2,7 @@ import Foundation
 import QuartzCore
 import CExact
 
-/// The card's reader. It samples on the collector's own publications,
+/// The card's reader (LLP 1079.000 §5.3, §7.2). It samples on the collector's own publications,
 /// at most twice a second, keeps at most 60 samples over 30 seconds and takes the per-read maxima,
 /// which no other reader does. It reads nothing while the card is hidden.
 final class FrameHealthCardReader {
@@ -65,7 +65,7 @@ final class FrameHealthCardReader {
     }
 
     /// Counts a window adds from its samples. Thirty seconds of them fit 32 bits, which keeps the
-    /// card within its memory budget; only the time observed needs 64.
+    /// card within its memory budget (LLP 1079.000 §5.2); only the time observed needs 64.
     struct Counts {
         var activeNs: UInt64 = 0
         var frames: UInt32 = 0, callbacks: UInt32 = 0, held: UInt32 = 0, changes: UInt32 = 0, epochs: UInt32 = 0
@@ -177,12 +177,12 @@ final class FrameHealthCardReader {
     }
 }
 
-/// The card's figures, words and the text Share sends, common to iOS and macOS. In numbers:
-/// no space before a unit, no "<", "average" or middots, and "—" where there is no value.
+/// The card's figures, words and the text Share sends, common to iOS and macOS. Numbers follow LLP 1079.000
+/// §7.2: no space before a unit, no "<", "average" or middots, and "—" where there is no value.
 enum FrameHealthCardText {
     struct Display { var name: String, detail: String, maximumHz: Double, adaptiveSync: Bool }
 
-    /// What the face measures.
+    /// What the face measures (LLP 1079.000 §7.2, §7.4).
     enum Source: Equatable {
         /// Exact's frame callbacks, under the rate Exact requested and the schedule the system gave them
         case exact

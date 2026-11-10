@@ -1,5 +1,7 @@
-//! A development display's presented frames on Linux: segments, the period,
-//! the record, the reply and the journal line, and `SIGUSR1`'s trace.
+//! A development display's presented frames on Linux (LLP 1079 D3–D5).
+//!
+//! @ref LLP 1079 D3 (segments, the period, the record), D4 (the reply and
+//! the journal line), D5 (`SIGUSR1`'s trace)
 //!
 //! The display loop's own page flips are the samples: there is no compositor
 //! to observe beside it. Each frame remembers when it was first wanted (the
@@ -167,7 +169,7 @@ impl Frames {
         ))
     }
 
-    /// `{"op":"perf","frames":true}`'s shape; `all` adds every
+    /// `{"op":"perf","frames":true}`'s shape (D4); `all` adds every
     /// retained record (a trace).
     pub fn reply(&self, late: usize, all: bool) -> Value {
         let mut xs: Vec<f64> = self.ring.iter().map(|r| r.interval).collect();
@@ -203,7 +205,7 @@ pub fn app_name() -> String {
     stem.trim_end_matches("-linux").to_string()
 }
 
-/// `SIGUSR1`'s trace: the journal, the frames, `perf` over every root,
+/// `SIGUSR1`'s trace (D5): the journal, the frames, `perf` over every root,
 /// who made them and each timing's proxy, as `trace-<unix ms>.json` in the
 /// temporary directory; `agent.mjs trace <file>` reads it back. The path.
 pub fn save_trace<D: DataSource>(
@@ -248,7 +250,7 @@ pub fn save_trace<D: DataSource>(
         "journal": read(r#"{"op":"logs","since":0}"#),
         "frames": frames.reply(LATE, true),
         "perf": perf,
-        // Read in this same turn, so the sections agree.
+        // Read in this same turn, so the sections agree (LLP 1075.003.000.001 §3.3).
         "hatches": p.hatch_state().map(|state| json!({ "state": state, "perf": p.hatch_perf() })),
     });
     let path = std::env::temp_dir().join(format!("trace-{wall}.json"));

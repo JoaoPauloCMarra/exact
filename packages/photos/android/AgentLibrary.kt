@@ -1,4 +1,4 @@
-// The agent's photo library on Android, as Apple's `AgentLibrary.swift` is: what @exact/photos
+// The agent's photo library on Android (LLP 1133.019 §10), as Apple's `AgentLibrary.swift` is: what @exact/photos
 // reads and adds to under the agent, where it asks MediaStore for nothing. Its photos are `fixture/agent-1.jpg` to
 // `agent-6.jpg`, which an APK carries as the app's assets under `photos-fixture/` (the fixture app's `assets/`; the
 // reader puts an app's assets at `app/assets/` in the APK), with fixed creation dates, agent-1 the newest; agent-3
@@ -6,7 +6,7 @@
 // session's `app:/tmp/photos-library/`.
 // What the app may see of it is the access the runner's status gives (`full`, `limited`, `none`) and, under
 // `limited`, the selection (the agent's `selection`, else `agent-1` to `agent-3`), with the app's own adds, which
-// Android lets an app read whatever its read permission.
+// Android lets an app read whatever its read permission (D6).
 package exact.photos
 
 import android.content.res.AssetManager

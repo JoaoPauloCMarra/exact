@@ -10,7 +10,7 @@ fn embedded_data() -> ExactEmbeddedData {
 include!(concat!(env!("OUT_DIR"), "/logic.rs"));
 type HostData =
     update_lab_data::Lab<exact_js::Placed<exact_js::Module>, update_lab_data::Placed<AppData>>;
-/// The Rust half, placed: built on its owner from a fresh
+/// The Rust half, placed (LLP 1027.002 D1): built on its owner from a fresh
 /// `app_data()` when placed on a worker, the instance itself on `main`.
 fn placed_rust() -> update_lab_data::Placed<AppData> {
     update_lab_data::Placed::built(app_data(), RUST_PLACEMENT, |_| Box::new(|| Ok(app_data())))

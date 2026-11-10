@@ -1,4 +1,4 @@
-// `check`: what is wrong with the presented screen, in text (scripts/agent-check.mjs judging
+// @ref LLP 1116.003 D8 — `check`: what is wrong with the presented screen, in text (scripts/agent-check.mjs judging
 // host/web-js/check.js's observations and a capture's pixels): one fixture view per finding class, found on the page in
 // each scheme and absent from a page that has none; and a screenshot shows a transition where it ends, unless filmed.
 import { test, expect } from 'bun:test';
@@ -86,7 +86,7 @@ const CLEAN = `component CleanFixture
         button testId="two" press=bump
           text "Two"
 `;
-// A written percentage width and the padding it does not include,
+// LLP 1116.009 D5 (focus-timer, recipe-finder, round 11): a written percentage width and the padding it does not include,
 // past what the parent gives it, inside the `scroll` that holds the overflow so nothing else sees it. `card` is the finding;
 // each other box is what must not be one: border-box, a width that leaves room, a row's shrinking item, a pager that scrolls on
 // purpose, a nowrap readout, a bar and a sheet the platform draws.
@@ -121,9 +121,9 @@ component PaddedFixture
                   text "Scrolls on purpose"
               text testId="readout" white-space="nowrap" font-size="-exact-title2" "00:25:00"
 `;
-// A vertical scroller holds no sideways overflow, though CSS computes
+// LLP 1116.020 D4 (focus-timer and trivia-quiz, round 18): a vertical scroller holds no sideways overflow, though CSS computes
 // its x `auto` (a native host's vertical scroll view cuts it at the screen's edge). `count` runs past the screen; a strip that
-// scrolls sideways on purpose and a swipe row's snap scroll hold what lies past their sides.
+// scrolls sideways on purpose and a swipe row's snap scroll (LLP 1116.020 D1) hold what lies past their sides.
 const SIDEWAYS = `component SidewaysFixture
   view
     column testId="app" height="100vh" display="flex" flex-direction="column"
@@ -186,7 +186,7 @@ const SWIPE_BESIDE = `component SwipeBesideFixture
       column width=190 flex-shrink=0
         text testId="pane" "A pane"
 `;
-// A text judged on the fill under it — its own box's (a rounded bubble, whose corners show the page), a
+// LLP 1116.006 D5: a text judged on the fill under it — its own box's (a rounded bubble, whose corners show the page), a
 // bubble column's, the page's — in each scheme; and rows a scroller cuts, overlapping nothing past its edge.
 const BUBBLES = `component BubbleFixture
   state n = 0
@@ -234,7 +234,7 @@ const built = (() => {
   };
 })();
 
-// A row is covered only if nothing scrolls it clear. Four stages, each 300 px: (a) a list
+// LLP 1116.012 D3 (contacts, round 14): a row is covered only if nothing scrolls it clear. Four stages, each 300 px: (a) a list
 // above an in-flow bar, a row past the list's end whose middle is in the bar's lower half (the fold row, which scrolls up clear);
 // (b) the same list under a bar laid over it, with the range to scroll up clear; (c) the bar over a list that scrolls only 6 px, its
 // last row under the bar for good; (d) a header over the list's first row at the start, which scrolling can only move further under.
@@ -313,7 +313,7 @@ test('judging: WCAG ratios, the floors, a clamp asked for, a reachable cover, th
   // A white card whose box crosses into the grey (a rotated card over a band): the side in the grey shows its edge, and
   // the white-on-white sides do not outweigh it.
   expect(found([{ ...card, x: 10, w: 12 }])).toEqual([]);
-  // A card the host says none of is presented (below the viewport, past its scroller's edge) is
+  // LLP 1116.010 D2 (trivia, round 12): a card the host says none of is presented (below the viewport, past its scroller's edge) is
   // not judged on the page's pixels there.
   expect(found([{ ...card, vis: { x: 4, y: 20, w: 0, h: 0 } }])).toEqual([]);
   // Two 16 px targets: under 24 px and closer than 24 px apart, both; far apart, neither (WCAG 2.5.8's spacing); the platform's own, never.
@@ -324,7 +324,7 @@ test('judging: WCAG ratios, the floors, a clamp asked for, a reachable cover, th
   expect(found([{ ...small(3, 0), sized: 'platform' }, { ...small(4, 18), sized: 'platform' }])).toEqual([]);
   // Covered at rest is a finding; the host leaves out what a scroller could move clear.
   expect(found([{ ...small(5, 0), w: 30, h: 30, cover: { by: 9, kind: 'node' } }])).toEqual(['covered:5']);
-  // A text on a fill the host found is judged on it, not on the pixels (here white): white on indigo reads,
+  // LLP 1116.006 D5: a text on a fill the host found is judged on it, not on the pixels (here white): white on indigo reads,
   // white on a pale indigo does not, and the finding names the fill's owner.
   const white = { ...text, fg: [255, 255, 255, 1] };
   expect(found([white])).toEqual(['contrast:1']);
@@ -332,7 +332,7 @@ test('judging: WCAG ratios, the floors, a clamp asked for, a reachable cover, th
   const pale = judge(obs([{ ...white, bg: [142, 140, 240], on: 7 }]), png);
   expect(pale.map((f) => [f.kind, f.detail.bg, f.detail.on])).toEqual([['contrast', '#8e8cf0', 7]]);
   expect(judge(obs([{ ...white, bg: [142, 140, 240], on: 'own' }]), null).length).toBe(1); // no capture needed
-  // UIKit's white on a filled button's teal (2.1:1) is still found, and its hint names the accent, not a label colour.
+  // LLP 1116.019 D3: UIKit's white on a filled button's teal (2.1:1) is still found, and its hint names the accent, not a label colour.
   const teal = judge(obs([{ ...white, bg: [0, 195, 208], on: 'own', label: true, onAccent: true }]), null);
   expect(teal.map((f) => f.kind)).toEqual(['contrast']);
   expect(teal[0].hint).toContain('leave the accent unsaid');
@@ -341,7 +341,7 @@ test('judging: WCAG ratios, the floors, a clamp asked for, a reachable cover, th
   const green = { ...text, fg: [52, 199, 89, 1], bg: [225, 247, 231], on: 'own', label: true };
   expect(found([{ ...green, tinted: true }])).toEqual([]);
   expect(found([green])).toEqual(['contrast:1']);
-  // White on an accent fill that is no button (a sent bubble) is held to a filled button's 3:1: UIKit's blue
+  // LLP 1116.020 D7: white on an accent fill that is no button (a sent bubble) is held to a filled button's 3:1: UIKit's blue
   // (3.4:1) reads, a pale accent (the web's dark one, 2.6:1) is found with the accent's hint; on another fill it stays 4.5:1.
   expect(found([{ ...white, bg: [0, 136, 255], on: 'own', onAccentFill: true }])).toEqual([]);
   expect(found([{ ...white, bg: [0, 136, 255], on: 'own' }])).toEqual(['contrast:1']);
@@ -352,14 +352,14 @@ test('judging: WCAG ratios, the floors, a clamp asked for, a reachable cover, th
   const row = { id: 6, x: 0, y: 0, w: 40, h: 20, control: 'press', sized: 'platform' }, tab = { id: 7, x: 0, y: 10, w: 40, h: 20, control: 'press', sized: 'platform' };
   expect(found([row, tab])).toEqual(['overlap:6']);
   expect(found([{ ...row, vis: { x: 0, y: 0, w: 40, h: 10 } }, tab])).toEqual([]);
-  // What a bar is drawn over is covered, not presented (`vis` empty): a text wholly under it is not judged for
+  // LLP 1116.007 D3.8: what a bar is drawn over is covered, not presented (`vis` empty): a text wholly under it is not judged for
   // contrast, nor a control for size; one partly under it is judged on the fill under the part that shows (here the grey).
   const under = { ...text, fg: [130, 130, 130, 1] };
   expect(found([{ ...under, vis: { x: 2, y: 2, w: 16, h: 0 } }])).toEqual([]);
   expect(found([{ id: 8, x: 0, y: 2, w: 16, h: 16, control: 'press', sized: 'author', vis: { x: 0, y: 2, w: 16, h: 0 } }])).toEqual([]);
   const part = judge(obs([{ ...under, w: 36, vis: { x: 22, y: 2, w: 16, h: 16 } }]), png);
   expect(part.map((f) => [f.kind, f.detail.bg])).toEqual([['contrast', '#808080']]);
-  // The keyboard covers like a bar. A card under it shows the keyboard in the capture, not its
+  // LLP 1116.007 D3 (unit-converter): the keyboard covers like a bar. A card under it shows the keyboard in the capture, not its
   // edge, so it is not "invisible"; one partly under it is judged on the edges that show.
   expect(found([card], { keyboard: 4 })).toEqual([]); // wholly under the keyboard
   expect(found([card], { keyboard: 10 })).toEqual(['card:2']); // its top half shows, and is white on white
@@ -370,7 +370,7 @@ test('judging: WCAG ratios, the floors, a clamp asked for, a reachable cover, th
   expect(spill.map((f) => [f.kind, f.id, f.detail.past, f.detail.of])).toEqual([['overflow', 9, 6, 8]]);
 });
 
-// A role known only by its drawn value is read in what its host draws, as the page says it (`palette`).
+// LLP 1115.000 D4: a role known only by its drawn value is read in what its host draws, as the page says it (`palette`).
 test('an ink and a page\'s ground are known by what the page draws each role in', () => {
   const png = { width: 40, height: 20, data: new Uint8Array(40 * 20 * 4).fill(255) };
   const obs = (items, extra = {}) => ({ viewport: { w: 40, h: 20 }, scheme: 'light', target: 24, items, ...extra });
@@ -401,7 +401,7 @@ test('an ink and a page\'s ground are known by what the page draws each role in'
   expect(hint({})).not.toContain('on a plain page a card is');
 });
 
-// The judge names the cause: the written width, the padding, and the parent it runs past.
+// LLP 1116.009 D5: the judge names the cause: the written width, the padding, and the parent it runs past.
 test('a padded percentage width past its parent is an overflow that names its cause and its repair', () => {
   const png = { width: 40, height: 20, data: new Uint8Array(40 * 20 * 4).fill(255) };
   const padded = { id: 4, x: 0, y: 2, w: 54, h: 16, padded: { by: 3, dx: 14, pad: 14, width: '100%' } };
@@ -426,7 +426,7 @@ test('two texts drawn over each other run together, unless one stands on the opa
   expect(kindsOf([{ ...row, beneath: { ...bar, by: 9 } }, { ...tab, solid: true }])).toEqual(['3 overlap']); // under something else
   // The tab's label running past its bar's edge meets the row outside the fill: they run together there.
   expect(kindsOf([{ ...row, beneath: { ...bar, x: 20, w: 15 } }, { ...tab, solid: true }])).toEqual(['3 overlap']);
-  // A list's section header pinned over its rows as they pass under it (contacts at the largest text size).
+  // A list's section header pinned over its rows as they pass under it (contacts at the largest text size, bake-off r28).
   expect(kindsOf([row, { ...tab, pinned: true }])).toEqual([]);
   expect(judge({ ...vp, items: [{ ...row, control: 'press' }, { ...tab, pinned: true }] }, null)).toEqual([]);
 });
@@ -442,13 +442,13 @@ test('a page with every finding class has each found, by testId, in the scheme i
     expect(l.hidden).toEqual(['covered']); // its label "Under" is the button's finding, not a second one
     expect(l.a).toEqual(['overlap']);
     expect(l.wide).toEqual(['overflow']);
-    expect(l['share-b']).toEqual(['overflow']); // a flex item wider than its row, within the viewport
+    expect(l['share-b']).toEqual(['overflow']); // a flex item wider than its row, within the viewport (LLP 1116.007 D3)
     expect(l['share-a']).toBeUndefined();
     // The same row of platform buttons (tip-splitter's radios): in the neutral look a button keeps to its share of the
-    // row, so the longer title is cut at its button's edge rather than spill past the row.
+    // row, so the longer title is cut at its button's edge (LLP 1116 D1's look let the button spill past the row).
     expect(l['opt-b']).toEqual(['clipped']);
     expect(l['opt-a']).toBeUndefined();
-    // The page says what it draws each of Exact's roles in, light and dark (Apple's colours): an ink is
+    // The page says what it draws each of Exact's roles in, light and dark (Apple's colours, LLP 1115.000 D4): an ink is
     // judged by that palette.
     const { palette } = await session.op({ op: 'check' });
     expect([palette?.light?.['secondary-label'], palette?.dark?.background]).toEqual([[60, 60, 67, 0.6], [0, 0, 0, 1]]);
@@ -468,7 +468,7 @@ test('a page with every finding class has each found, by testId, in the scheme i
     expect(l.ellipsis).toBeUndefined(); // an ellipsis the author asked for
     expect(l.go).toBeUndefined(); // white on the light accent reads
     // In dark the card shows and the faint text reads on it; the author's white label on the pale
-    // dark accent does not (unsaid, the web picks black there).
+    // dark accent does not (unsaid, the web picks black there: LLP 1116.003 D3.1).
     expect(d.card).toBeUndefined();
     expect(d.grouped).toBeUndefined(); // its ground is the plain page's colour in dark, under its section's card
     expect(d.faint).toBeUndefined();
@@ -512,7 +512,7 @@ test('a page with every finding class has each found, by testId, in the scheme i
   try {
     expect(kinds((await checkOp(scrolled, [])).check[0])).toEqual({});
   } finally { await scrolled.close(); }
-  // A row under a bar is covered only when no scroller moves it clear: the fold row of a list above an in-flow bar, or
+  // A row under a bar is covered only when no scroller moves it clear (LLP 1116.012 D3): the fold row of a list above an in-flow bar, or
   // under a bar laid over it with the range to scroll by, is not; the last row of a list that scrolls too little, and the first row
   // under a header at the start of its list, are.
   const folds = await open({ host: 'web', url: await built('folds', FOLDS), size: [390, 1300] });
@@ -543,7 +543,7 @@ test('a text is judged on the fill under it in each scheme, and a row its scroll
     const obs = await session.op({ op: 'check' }), ids = new Map(((await session.op({ op: 'tree' })).nodes ?? []).map((n) => [n.props?.testId, n.id]));
     const item = (testId, pick = (it) => it.id === ids.get(testId)) => obs.items.find(pick);
     expect(item('in').on).toBe(ids.get('bubble'));
-    // Its box's corners alone (a chat bubble's) judged white on the white page.
+    // Its box's corners alone (round 8's chat bubbles) judged white on the white page.
     const pixels = judge({ ...obs, items: obs.items.map(({ bg, ...it }) => it) }, decodePng(readFileSync(join(dir, 'light.png'))));
     expect(pixels.filter((f) => f.kind === 'contrast').map((f) => f.id)).toEqual([ids.get('own')]);
     expect([item('page').bg, item('page').on]).toEqual([[255, 255, 255], 'page']); // the canvas, which nothing above paints
@@ -573,7 +573,7 @@ test('a screenshot shows a transition where it ends, the clock unmoved; a film\'
     expect(frame(0)[0]).toBeGreaterThan(240); // still red at the clock it starts on
     expect(frame(1)[0]).toBeLessThan(200); // half way
     expect(frame(2)[2]).toBeGreaterThan(240); // blue where it ends
-    // After `resize` a screenshot is the new viewport, in its reply as in its pixels.
+    // LLP 1116.007 D3.6: after `resize` a screenshot is the new viewport, in its reply as in its pixels.
     await session.resize(390, 844);
     const small = await session.screenshot(join(dir, 'small.png')), png = decodePng(readFileSync(join(dir, 'small.png')));
     expect([small.w, small.h, png.width, png.height]).toEqual([390, 844, 390, 844]);

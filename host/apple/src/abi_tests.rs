@@ -693,7 +693,7 @@ fn module_replacement_keeps_pending_requests_unless_the_dev_loop_lets_them_go() 
     assert_eq!(bridge.host.as_ref().unwrap().runner().pending(), pending);
     assert!(String::from_utf8_lossy(bridge.output_bytes(count as usize))
         .starts_with("{\"requests\":true,"));
-    // The dev loop's generation past its settle window lets the POST go.
+    // The dev loop's generation past its settle window lets the POST go (LLP 1007 §6).
     bridge.input_write(&plan);
     let count = bridge.prepare_module_with_delivery(
         [plan.len(), 0, 0],
@@ -1124,7 +1124,7 @@ fn dispatch_names_every_kind_and_refuses_unknown_ones() {
     let n = bridge.dispatch(view, 18, len, 0.);
     let out = std::str::from_utf8(bridge.output_bytes(n as usize)).unwrap();
     assert!(out.contains("invalid reorder event"), "{out}");
-    // focusin and focusout carry a length-prefixed target and an
+    // focusin and focusout (#283) carry a length-prefixed target and an
     // optional related id; a payload that does not parse is refused.
     for kind in [46, 47] {
         let len = bridge.input_write(b"5:field0");
@@ -1301,7 +1301,7 @@ fn surface_record_abi_distinguishes_an_invalid_empty_record_from_disposal() {
 }
 
 /// A source whose module loads after first pixel and whose answer reads the
-/// store: the runner keeps that answer for the next launch.
+/// store: the runner keeps that answer for the next launch (LLP 1027 D4).
 #[derive(Clone, Default)]
 struct Keeping(Arc<std::sync::atomic::AtomicBool>);
 

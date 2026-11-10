@@ -7,7 +7,7 @@ enum FrameHealthMetrics {
     static let format = "exact.frame-health.metrics/2"
     static let histogramVersion = "frame-health-bins/2"
 
-    /// A histogram layout: 0.5 ms bins below `linear`, doubling tails above,
+    /// A histogram layout (LLP 1079.000 §5.3): 0.5 ms bins below `linear`, doubling tails above,
     /// and an open last bin.
     enum Layout {
         case duration(linearNs: UInt64, count: Int), refreshes
@@ -169,7 +169,7 @@ enum FrameHealthMetrics {
 }
 
 /// Readers that keep history in the process: the cards. At most four keep it at once, which holds
-/// them, with the collectors, within the readers' storage budget.
+/// them, with the collectors, within LLP 1079.000 §5.2's storage budget.
 enum FrameHealthReaders {
     private static var open = 0
     static let full = "Four other frame health readers are open; close one to read here"

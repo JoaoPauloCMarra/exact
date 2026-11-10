@@ -1,4 +1,4 @@
-# Importer fixtures (commits 6–9)
+# Importer fixtures (LLP 1121 stage 3, commits 6–9)
 
 Pinned copies of other systems' themes, as the importers' gates read them.
 

@@ -1,8 +1,8 @@
-//! Which corrections a collection asks the host to
+//! LLP 1070.000 §6.2: which corrections a collection asks the host to
 //! animate.
 use super::*;
 
-/// A `scroll-behavior: smooth` list following its end
+/// LLP 1070.000 §6.2: a `scroll-behavior: smooth` list following its end
 /// asks the host to animate the follow; one that is not smooth, or an
 /// anchor kept in place, does not.
 #[test]

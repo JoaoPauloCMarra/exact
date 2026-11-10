@@ -1,8 +1,9 @@
-//! Through `@fixture/pinboard`, a package written beside the app as an
-//! installed one: a view's record and list props reach the implementation as
-//! JSON under their names; a prop's type is held to the declaration
-//! (`contract-view-prop`); and an event the view declares beyond the nine runs
-//! its handler with the typed record the implementation sent.
+//! LLP 1133.021 §9 items 1 and 2, through `@fixture/pinboard`, a package
+//! written beside the app as an installed one: a view's record and list
+//! props reach the implementation as JSON under their names; a prop's type
+//! is held to the declaration (`contract-view-prop`); and an event the view
+//! declares beyond the nine runs its handler with the typed record the
+//! implementation sent.
 
 use exact_kernel::PropId;
 use exact_runner::{Event, Runner, Value};

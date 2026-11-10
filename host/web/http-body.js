@@ -1,6 +1,6 @@
 // Native ordered HTTP defaults to 64 MiB; independent requests may lower it.
 // A body over it is the host refusing the response (kind `Refused`, `failure(x)`'s
-// `refused`), on every host and executor, as a stream's event over its ceiling is.
+// `refused`, LLP 1109 D3), on every host and executor, as a stream's event over its ceiling is.
 export async function boundedHttpBody(response, limit) {
   if (limit == null) limit = 64 * 1024 * 1024;
   if (!Number.isInteger(limit) || limit < 1 || limit > 64 * 1024 * 1024) throw Error("invalid HTTP response limit");
@@ -14,7 +14,7 @@ export async function boundedHttpBody(response, limit) {
 // A `text/event-stream` parser (HTML's "Parsing an event stream"), the same
 // rules as the native executor's: lines end at CR, LF or CRLF even across
 // chunks; `data` lines join with LF; `id` persists as the cursor; comments
-// and `retry` are dropped (the host never reconnects). One
+// and `retry` are dropped (the host never reconnects, LLP 1069.004). One
 // event or line over `limit` bytes is refused, never truncated.
 export function eventStream(limit) {
   const decoder = new TextDecoder();
@@ -52,9 +52,9 @@ export function eventStream(limit) {
   };
 }
 
-// Read an event stream to its end: each read's events are
+// Read an event stream to its end (LLP 1016.000): each read's events are
 // delivered as one message, the newest, carrying how many it replaced — the
-// runner has taken nothing in between, so display data coalesces and
+// runner has taken nothing in between, so display data coalesces (D4) and
 // a log sees the gap. What ends the body is the stream's last outcome.
 async function readEvents(response, limit, message, controller) {
   const parse = eventStream(limit), reader = response.body.getReader(), encoder = new TextEncoder();
@@ -73,7 +73,7 @@ async function readEvents(response, limit, message, controller) {
   } finally { reader.releaseLock?.(); }
 }
 
-// Read a byte stream to its end (the amendment of
+// Read a byte stream to its end (LLP 1016.000, the amendment of
 // 2026-10-23): a 2xx body that is not `text/event-stream`, for a TypeScript
 // stream. Reads join until the page's next task delivers them as one
 // message, an ArrayBuffer, so the mapper's turns follow its pace and no byte
@@ -128,7 +128,7 @@ async function readBytes(response, limit, message, controller) {
   } finally { reader.releaseLock?.(); }
 }
 
-// An upload by XMLHttpRequest:
+// An upload by XMLHttpRequest (LLP 1016.000 D10):
 // each `upload` progress event is a message of the bytes sent, and the reply,
 // any status, read whole within `limit`, is the outcome, as `request` gives
 // one. A reply whose last hop the grants do not admit is refused.
@@ -153,13 +153,13 @@ function upload(url, method, headers, body, limit, message, signal, admits) {
     xhr.onabort = () => end(failed(4, 'request aborted'));
     if (signal.aborted) return end(failed(4, 'request aborted'));
     signal.addEventListener('abort', abort, { once: true });
-    // It goes out now: a failure before this never reached the network (`exact:sending`).
+    // It goes out now: a failure before this never reached the network (`exact:sending`, LLP 1016.000 D10).
     message({ event: 'exact:sending', id: '\0', data: '', coalesced: 0, received: performance.now() });
     xhr.send(body);
   });
 }
 
-// A long poll, as the native executor's executor_longpoll.rs:
+// A long poll (LLP 1016.000 D8), as the native executor's executor_longpoll.rs:
 // ask, deliver each 2xx JSON reply as one message whose `id` is the cursor at
 // `from`, and ask again with it in the `cursor` query parameter, one request
 // at a time. A 204, a 304, an empty body or (unless `sameCursorEvent`) the
@@ -169,7 +169,7 @@ function upload(url, method, headers, body, limit, message, signal, admits) {
 // as `retrying` for `state.streams`; anything else ends the stream. A reply
 // asks again no sooner than `heartbeatMs` after it was asked (a test's
 // shorter), so a server that answers at once is not hammered. Each reply of
-// any kind calls `controller.replied` (the page's held count); one that is
+// any kind calls `controller.replied` (the page's held count, D9); one that is
 // no event is also a message of event `exact:reply`, which the runner counts
 // and no mapper sees (`LONG_POLL_REPLY`).
 export const longPollTiming = { heartbeatMs: 1000 };
@@ -277,8 +277,8 @@ export async function readLongPoll(op, init, limit, message, controller, admits)
   }
 }
 
-// The transport belongs to the resource's abort controller.
-// `protocol` opts the JS TypeScript adapter into ordered frames and a
+// The transport belongs to the resource's abort controller (LLP 1016.000).
+// `protocol` opts the JS TypeScript adapter into D7: ordered frames and a
 // private transport handle; the other adapters still take snapshot delivery.
 export function readSocket(url, limit, message, controller, protocol) {
   const encoder = new TextEncoder(), MAX_BYTES = 1048576, MAX_FRAMES = 256;
@@ -392,10 +392,10 @@ export async function request(op, { grantSet, loadPageNative, moduleLoader, loca
   // `bodyBytes`: a stream's inline body as its bytes (`streamed`); `body`, base64, as the wasm host's batch gives it.
   const { method, url, headers, body, cache } = op, bytes = op.bodyBytes?.length ? op.bodyBytes : null;
   if (!active()) return failed(4, 'request source unloaded');
-  // A long poll no host may run is refused before anything else is tried: a native call, a socket.
+  // A long poll no host may run (LLP 1016.000 D8) is refused before anything else is tried: a native call, a socket.
   const pollRefusal = op.longPoll && longPollRefusal(op, method, body || bytes);
   if (pollRefusal) return failed(2, pollRefusal);
-  // An upload is an http: or https: request, whatever the scheme otherwise means here.
+  // An upload is an http: or https: request (LLP 1016.000 D10), whatever the scheme otherwise means here.
   if (op.upload && /^[a-z][a-z0-9+.-]*:/i.test(url) && !/^https?:/i.test(url)) return failed(2, /^wss?:/i.test(url) ? 'exactUploadProgress: a WebSocket sends no body' : 'exactUploadProgress: an upload is an http: or https: request');
   const native = url === 'exact-native:';
   const effective = scopedGrantSet(grantSet, op.scope), invalid = grantError(effective);
@@ -405,7 +405,7 @@ export async function request(op, { grantSet, loadPageNative, moduleLoader, loca
   if (!native && !asset) try { new URL(url); } catch (error) { return failed(1, error); }
   const grant = native || asset ? null : admittingGrant(effective, url, socket ? 'websocket' : 'fetch');
   if (!native && !asset && !grant) return failed(2, `outside the app's grants (${capability})`);
-  // A tool's, a wake's or the device's reach to a less public address space waits for the person.
+  // LLP 1133.036 D6: a tool's, a wake's or the device's reach to a less public address space waits for the person.
   const unreached = native || asset ? null : reachRefusal(url, op.origin, op.reachState);
   if (unreached) return failed(2, `NotAllowedError: ${unreached}`);
   // The line that admitted a stream, for `state.streams`.
@@ -423,7 +423,7 @@ export async function request(op, { grantSet, loadPageNative, moduleLoader, loca
     try { return { kind: 0, status: response.status, headers: '', body: await boundedHttpBody(response, op.maxResponseBytes) }; }
     catch (error) { return failed(2, error); }
   }
-  // A long poll asks again and again on its own: an HTTP GET, no body, JSON replies; checked before a socket opens.
+  // A long poll asks again and again on its own (D8): an HTTP GET, no body, JSON replies; checked before a socket opens.
   if (op.longPoll) {
     const accept = headers.some(([k]) => k.toLowerCase() === 'accept') ? headers : [...headers, ['accept', 'application/json']];
     controllers.add(controller);
@@ -450,7 +450,7 @@ export async function request(op, { grantSet, loadPageNative, moduleLoader, loca
   const expired = () => deadline && !controller.signal.aborted && (deadline.aborted || performance.now() >= expires);
   controllers.add(controller);
   const signal = deadline ? AbortSignal.any([controller.signal, deadline]) : controller.signal;
-  // `exactBodyFrom`: the app file, read now under the
+  // `exactBodyFrom` (LLP 1108 D6 R2): the app file, read now under the
   // request's `fs.read` grant into a Blob body (a picked file is its own
   // File, never copied into a string), or refused before anything is sent.
   let fileBody;
@@ -475,7 +475,7 @@ export async function request(op, { grantSet, loadPageNative, moduleLoader, loca
     if (signal.aborted) return failed(4, 'request aborted');
     if (!active()) return failed(4, 'request source unloaded');
   }
-  // `exactBodyTo` (2026-10-26): a 2xx body goes to the app
+  // `exactBodyTo` (LLP 1108 D6 R2, 2026-10-26): a 2xx body goes to the app
   // file (storage-fs.js `bodyTarget`), admitted under `fs.write` with its
   // parent checked now, or refused before anything is sent.
   let target;
@@ -494,8 +494,8 @@ export async function request(op, { grantSet, loadPageNative, moduleLoader, loca
     const ended = expired() ? failed(10, `the request timed out after ${op.timeoutMs} ms`) : signal.aborted ? failed(4, 'request aborted') : !active() ? failed(4, 'request source unloaded') : null;
     if (ended) { target?.close(); return ended; }
   }
-  // An upload's progress: Fetch tells no bytes sent, so it goes by
-  // XMLHttpRequest, which follows every redirect; where a hop might ask the person it is not sent.
+  // An upload's progress (LLP 1016.000 D10): Fetch tells no bytes sent, so it goes by
+  // XMLHttpRequest, which follows every redirect; where a hop might ask the person (D6) it is not sent.
   if (op.stream && op.upload) {
     try {
       if (redirectFor(op.origin, 'follow', op.reachState) !== 'follow') return failed(2, 'NotAllowedError: an upload follows its redirects, and one could reach a less public address space before the person answers');
@@ -511,12 +511,12 @@ export async function request(op, { grantSet, loadPageNative, moduleLoader, loca
   if (op.stream && !headers.some(([k]) => k.toLowerCase() === 'accept')) init.headers = [...headers, ['accept', 'text/event-stream']];
   try {
     const early = !asset && moduleLoader?.claim?.(url, init);
-    // A driver fault is a refused connection, never sent; a GET
+    // @ref LLP 1103 D1, D2 — a driver fault is a refused connection, never sent; a GET
     // `fetchEarly` already sent (before the fault was armed) is not one it decides.
     if (!early && !asset && !op.stream && takeFault(url)) return failed(1, faultMessage(url));
     if (!early && expired()) return failed(10, `the request timed out after ${op.timeoutMs} ms`);
     const response = await (early || fetch(asset ? localAssetURL(url) : url, init));
-    // A redirect that left the grants names where it led: the
+    // A redirect that left the grants names where it led (podcast F5): the
     // browser followed it, and the response's URL is the last hop's.
     if (response.url && (asset
       ? new URL(response.url).origin !== location.origin
@@ -542,7 +542,7 @@ export async function request(op, { grantSet, loadPageNative, moduleLoader, loca
 
 // A stream on the JS target (host/web-js: rust-data.js, ts-data.js): `request`
 // over a source's request with the wasm host's admission and ownership.
-// Only the TypeScript adapter opts into ordered protocol frames and
+// Only the TypeScript adapter opts into ordered protocol frames (D7) and
 // byte streams. An inline body goes as its bytes, copied once.
 export function streamed(req, grantSet, message, controller, bodyFile, protocol) {
   return request({ method: req.method ?? 'GET', url: req.url, headers: req.headers ?? [], body: '', bodyBytes: req.raw?.length ? Uint8Array.from(req.raw) : undefined, bodyFrom: req.bodyFrom, redirect: req.redirect, longPoll: req.longPoll, upload: req.upload, timeoutMs: req.timeoutMs, stream: true, maxResponseBytes: req.maxResponseBytes, scope: req.scope },

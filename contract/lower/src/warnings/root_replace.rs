@@ -3,8 +3,9 @@
 //! visit of its stack, and while `T` is alone the router keeps the stack's
 //! root route: a location matching any other route is refused ("replace
 //! cannot change the tab's root route", `exact_route::replace`), the value is
-//! returned unchanged and only the log says so: a welcome at `/` whose
-//! Continue replaces it with the main list is a button that does nothing.
+//! returned unchanged and only the log says so. Codex Sol's habit app did
+//! this (guard-rail evaluation, 2026-10-16): a welcome at `/` whose Continue
+//! replaced it with the main list, a button that did nothing.
 //!
 //! The claim: if the app boots and draws its launch screen, the button,
 //! pressed there before anything else changes the router, runs a `replace`
@@ -117,7 +118,7 @@ fn root_replace(checked: &Checked<'_>) -> Vec<LowerError> {
 }
 
 /// `lower-select-after-push`: `select` of a router a `go` or `push` of the
-/// same action made, directly or through a `let`. By the router's verb
+/// same action made, directly or through a `let`. By LLP 1038 §3's verb
 /// table, `push` adds the visit to the selected tab's stack, whatever tab
 /// declares its route, and so does `go` unless the location is on the
 /// selected stack (it pops to it) or another tab's top (it selects that tab).

@@ -1,4 +1,4 @@
-//! On the Apple host, SVG elements become one `svg` scene op,
+//! LLP 1055 D4/D7 on the Apple host: SVG elements become one `svg` scene op,
 //! never views; animations lower to CA specs; the engine keeps no frames busy.
 use super::*;
 use exact_kernel::MonospaceMeasurer;
@@ -99,7 +99,7 @@ fn an_svg_is_one_scene_with_lowered_animations() {
     drop(host);
 }
 
-/// A gradient paint crosses as its stops, spread and
+/// LLP 1055.000 D7: a gradient paint crosses as its stops, spread and
 /// transform; a radial one as both circles.
 #[test]
 fn gradients_cross_resolved() {
@@ -174,7 +174,7 @@ fn a_fixed_svg_reemits_window_geometry_after_resize() {
     assert_eq!(unscreened["els"][0]["vp"][3], 250);
 }
 
-/// A path whose `d` moves between two paths of the same
+/// LLP 1115.003 D4: a path whose `d` moves between two paths of the same
 /// commands, flat and as a gradient fill.
 const MORPH: &str = "component A\n  state up = false\n  action flip\n    up = not up\n  view\n    column\n      button testId=\"go\" press=flip\n        text \"go\"\n      svg width=100 height=100 viewBox=\"0 0 100 100\"\n        path testId=\"flat\" d=(up ? \"M0 0 Q50 100 100 0 Z\" : \"M0 50 Q50 0 100 50 Z\") fill=\"#16a34a\" transition=\"d 500ms cubic-bezier(0.77, 0, 0.175, 1) 900ms\"\n      svg width=100 height=100 viewBox=\"0 0 100 100\"\n        defs\n          linearGradient id=\"g\"\n            stop offset=0 stop-color=\"#000\"\n            stop offset=1 stop-color=\"#fff\"\n        path testId=\"served\" d=(up ? \"M0 0 L100 0\" : \"M0 50 L100 50\") stroke=\"url(#g)\" transition=\"d 400ms ease-in-out\"\n        path testId=\"solid\" d=(up ? \"M0 10 L100 10\" : \"M0 60 L100 60\") stroke=\"#000\" transition=\"d 400ms ease-in-out\"\n";
 

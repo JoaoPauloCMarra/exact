@@ -11,7 +11,7 @@ and no core crate depends on an `exact-game*` crate or Rapier. An app opts in by
 linking `exact-game` and `exact-game-render` into its **GPU module**, never its
 host or data module. The host loads that artifact after first paint when a canvas
 needs it. An app whose other screens draw too can give the world a module of its own
-(`gpu.modules` in `app.json`), loaded only when the world's canvas mounts.
+(`gpu.modules` in `app.json`, LLP 1009 D6), loaded only when the world's canvas mounts.
 Removing the app's game module removes the engine from its bundle.
 The root build, test and boot checks stay independent of the engine workspace.
 
@@ -88,8 +88,8 @@ then runs wasm-bindgen and swaps it into the page without `wasm-opt`. The first
 such edit compiles that profile's dependencies; later edits reuse them.
 To explore the existing sample instead, run `bun game/dev.mjs beacons`.
 `game/dev.mjs` passes the dev server's flags through (`--port`, `--lan`, and
-`--allow-host <name>`, repeatable, to serve the game through a tunnel;
-without it a request under any name but the printed ones gets 421).
+`--allow-host <name>`, repeatable, to serve the game through a tunnel such as
+`tuft host`; without it a request under any name but the printed ones gets 421).
 
 Once the game plays and its `proof.mjs` describes it, establish its proof baseline:
 
@@ -120,7 +120,7 @@ A game outside this checkout — `bun scripts/exact.mjs new ../my-game --game` m
 one, as `exact new` makes an app — also gets an app's `exact.mjs` and `AGENTS.md`:
 `bun exact.mjs test-rust` (the hostless tests), `web`, `web-build`, `test web`
 (each `*.test.contract`; also `macos`, `ios`), `agent`, `mac`, `ios`, `windows`, `contract`,
-`prove` and `feedback`, with the exact2 checkout named once.
+`prove` and `feedback`, with the exact2 checkout named once (LLP 1086).
 Generation resolves the generated workspace offline against the current SDK lock, so
 the first locked test and proof need no lock refresh. Generation writes only inside that game. A game is the files its author writes; bakes
 generate its hosts, Cargo workspace and lock, ignored, under `.shells/`.
@@ -169,7 +169,7 @@ implicitly. The registry has type `&'static [(&'static str, u64)]`, holding shad
 names and reflected interface hashes. The generated GPU shell combines these hooks
 with `game.audio` and `game.assets`. Never edit `.shells/` to install hooks. The
 older `game.presentation`/`presentation/`/`type` spelling is refused with this
-rename; "presentation" now names only derived appearance
+rename (LLP 1046.008 amendment); "presentation" now names only derived appearance
 state (`#[derive(Presentation)]`, `Game::present`).
 Render games also expose `exact-gpu.workspace = true` and
 `exact-gpu-reflect.workspace = true` (the latter as a build dependency). The bake
@@ -352,7 +352,7 @@ web leg reports as its result. The page waits at most a second for the install
 data, and goes, with the HUD's inertness, when its surface does. Any other GPU
 surface, a game's or an app's (a decorative backdrop, such as Caltrain's sky), shows
 no page: its content stays live over the empty canvas. No WebGL renderer
-exists.
+exists (LLP 1128 I6).
 
 After the first GPU build, the compiler and dev loop check surface names and
 arguments against the emitted `.shells/surfaces.json`, including hidden branches
@@ -383,10 +383,10 @@ device mid-hold neither presses again nor drops.
 | Task | Declare and read |
 |---|---|
 | A fire button, one shot per press | `.button("fire", &["KeyF", "MouseLeft", "GamepadR2"])` read with `input.pressed("fire")` |
-| Fire while held, and on a quick tap | `input.held("fire") \|\| input.pressed("fire")`: `held` alone misses a tap whose press and release share a tick |
+| Fire while held, and on a quick tap | `input.held("fire") \|\| input.pressed("fire")` (Rivals): `held` alone misses a tap whose press and release share a tick |
 | Move with keys, a stick or touch | `Stick::wasd().or_arrows().or_pad(Pad::Left).or_touch(Region::Left)`; `.dead_zone(0.15)` (radial, the default) and `.curve(Curve::Power(1.5))` shape the pad's reading (Beacons) |
 | Throttle and brake | `Stick::pad(Pad::Triggers)`: forward is `GamepadR2`'s travel less `GamepadL2`'s |
-| Move by tilting the device | `Stick::wasd().or_tilt(Tilt { max_degrees: 20.0, dead_zone: 2.0 })`, fed by the app's `startSensorInput(surface="world", sensor="gravity")`: full deflection at `max_degrees` from level, nothing within `dead_zone` degrees, nothing before the first sample or after the input ends (`exact_game::tilt_stick` is the map). Level is the first sample, or what the tick sets with `w.set_tilt_neutral("move", gravity)` from a posted reading, from the next tick (Beacons' `tilt x y z`) |
+| Move by tilting the device | `Stick::wasd().or_tilt(Tilt { max_degrees: 20.0, dead_zone: 2.0 })`, fed by the app's `startSensorInput(surface="world", sensor="gravity")` (LLP 1133.013 D6): full deflection at `max_degrees` from level, nothing within `dead_zone` degrees, nothing before the first sample or after the input ends (`exact_game::tilt_stick` is the map). Level is the first sample, or what the tick sets with `w.set_tilt_neutral("move", gravity)` from a posted reading, from the next tick (Beacons' `tilt x y z`) |
 | Read a sensor every frame | `input.sensor(SensorKind::Gyroscope)`, the latest sample, which holds through ticks that receive none and is gone after the input ends; `input.sensor_samples(kind)`, this tick's own samples, every one the host delivered |
 | Sprint after holding a key | `.hold("sprint", &["ShiftLeft", "GamepadL1"], 0.2)`: `pressed` when held 200 ms, `held` until release; a shorter press fires nothing (Beacons) |
 | A double tap | `.double("roll", &["Space"], 0.25)`: `pressed` on a second press within 250 ms |
@@ -525,7 +525,7 @@ acknowledgement, and a delivered message is not part of a later save. Use live
 arguments for settings, messages for things that happen once. A paused world holds
 a message for its first tick after the pause.
 
-A message carries who posted it. One from a tool's commit, or
+A message carries who posted it (LLP 1133.022 D6). One from a tool's commit, or
 a wake's, arrives marked with that origin; the world keeps the least privileged
 origin it has heard until a fresh start (and saves it), and marks each string it
 `emit`s with it, so the `message=` handler runs as that origin and a tool cannot
@@ -553,7 +553,7 @@ See the [tick admission contract](engine/README.md#tick-admission).
 
 ## Proof pins
 
-`bun game/app/shells.mjs --test` checks each game's
+The async lane runs `bun game/app/shells.mjs --test`. It gates each game's
 hostless current-tick assertions: `Sim::assert_pin` compares only the tick the
 simulation has reached, not every checkpoint or any continuation-save digest.
 Later checkpoints not asserted by those tests and continuation saves remain the
@@ -846,9 +846,9 @@ The same driver reaches web, macOS, Linux and iOS. iOS agent input is
 labelled `recognized`; it is not physical-touch evidence. Pointer-completed HUD
 buttons return focus to the input canvas, while keyboard activation retains button
 focus and consumes its activation keys. Native hover/focus-visible parity remains
-open work.
+[open work](../QUEUE.md).
 
-## Determinism — the contract
+## Determinism — the contract (LLP 1046.001 D5)
 
 Same seed, tick-stamped inputs and completed tick must produce the same world hash
 on every host. Pixels have a tolerance; simulation state is exact.
@@ -877,7 +877,7 @@ their save rules. Settle does not pause time or force physics bodies asleep.
 See the [engine reference](engine/README.md) for those declarations and their limits.
 
 Parity evidence applies to exercised operations and hosts. [Bench receipts](bench/README.md)
-record measurements and remaining targets.
+and [authoring diaries](diaries/001-scores.md) record measurements and remaining targets.
 
 ## Exact2 integration
 
@@ -961,7 +961,7 @@ Linux proofs use `gpu-dev` with separate completed host and GPU receipts;
 a logic-only edit can rebuild the GPU alone. Completed development receipts bind
 the whole file. `bun proof.mjs linux --build-only` builds this host/module pair.
 The generic `bun exact.mjs linux` verb builds only the host, under `host-dev`.
-The registry cache in `game/app/crates.mjs` is built but not enabled. Enabling it requires
+The registry cache in `game/app/crates.mjs` is built but not enabled. D2 requires
 three cold `gpu-dev` runs under load 5 with an eligible registry dependency
 chain over a quarter of the total before wiring it into `buildBake` or setup.
 See `game/bench/cold-build/README.md` for the measurement commands.
@@ -1066,7 +1066,8 @@ Layout, accessibility and ordinary controls stay with the app host. See
 | Rendering and effects | [render](render/README.md) |
 | Collision and sound | [physics](physics/README.md), [audio](audio/README.md) |
 | App adapters | [shell generation](app/shells.mjs) |
-| Measurements | [bench](bench/README.md) |
+| Measurements and history | [bench](bench/README.md), [diaries](diaries/README.md) |
+| Architecture | [as built](../llp/1046.003-game-engine-as-built.explainer.md), [agent contract](../llp/1046.001-agent-interface-to-a-game.rfc.md) |
 
 From `game/` (an unset `EXACT_UPDATE_TRUST` bakes development trust):
 

@@ -391,7 +391,7 @@ fn excluded_boxes_are_not_selected_and_removing_the_anchor_does_not_scroll() {
 
 mod review_tests;
 
-/// With no shell to cover it, a popover is laid out in the
+/// Stage 14 B: with no shell to cover it, a popover is laid out in the
 /// viewport's block, whose space the document doesn't scroll. Its box is
 /// no anchor: the row the page was showing keeps its place.
 #[test]

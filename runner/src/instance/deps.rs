@@ -1,7 +1,7 @@
 //! The dependency table: what every binding, site, derive and resource
 //! argument reads, scanned once from the plan when a runner boots.
 //!
-//! The Deps table drives a dirty-set sweep.
+//! @ref LLP 1005 §8 (the Deps table and dirty-set sweep)
 //!
 //! An input is a root slot, a derive, a resource, a status flag or the
 //! clock: one bit each in [`Bits`]. What a code body reads of its enclosing
@@ -122,12 +122,12 @@ pub struct Reads {
     pub(crate) frames: u64,
     /// The fields of the innermost frame's value read (bit `k` for field
     /// `k`, bit 63 for 63 and past; every bit when read other than one
-    /// field at a time). Meaningful with bit 0 of `frames`.
+    /// field at a time): LLP 1017.003 D6. Meaningful with bit 0 of `frames`.
     pub(crate) fields: u64,
     /// Enclosing frames whose POSITION is read (`each item, i in list`,
     /// LoadIndex), by relative depth as `frames`: bit 0 says a row's body
     /// reads its own position, at any depth, so a row that moved must
-    /// re-evaluate; one that reads none keeps its bindings.
+    /// re-evaluate (LLP 1062 D8); one that reads none keeps its bindings.
     pub(crate) positions: u64,
     /// Whether any row slot is among `bits`.
     pub(crate) row_slots: bool,
@@ -486,7 +486,7 @@ impl Deps {
             }
         }
         for (i, old) in seen.failed_resources.iter().enumerate() {
-            // Its message too: `failure(x)` reads it.
+            // Its message too: `failure(x)` reads it (LLP 1109 D3).
             if *old != crate::failure::state(env.failed_resources, env.failed_why, i) {
                 bits.set(layout.failed_resource(i));
             }
@@ -536,8 +536,8 @@ fn scan(plan: &Plan, layout: Layout, code: Code) -> Reads {
             Opcode::Call if Stdlib::from_wire(index as u8) == Some(Stdlib::PerformanceNow) => {
                 reads.bits.set(layout.clock())
             }
-            // A share's files arrive by `set_shared`, after the location:
-            // no input the scan sees changes with them.
+            // A share's files arrive by `set_shared`, after the location (LLP
+            // 1133.024 D3): no input the scan sees changes with them.
             Opcode::Call if Stdlib::from_wire(index as u8) == Some(Stdlib::SharedFiles) => {
                 reads.opaque = true
             }
@@ -548,7 +548,7 @@ fn scan(plan: &Plan, layout: Layout, code: Code) -> Reads {
                 }
                 if index == 0 {
                     // One field of the innermost frame's value, or all of it
-                    // (its position counts as all of it).
+                    // (its position, LLP 1062 D8, counts as all of it).
                     reads.fields |= match code.peek() {
                         Some(Ok(next)) if i.op != Opcode::LoadIndex && next.op == Opcode::Field => {
                             1 << next.args[0].min(63)

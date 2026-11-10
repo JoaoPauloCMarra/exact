@@ -652,7 +652,7 @@ test('ordinary bake metadata follows intermediate directory A, B and the unset d
   }
 },180000);
 
-test('partial bakes select only their graph and production retains GPU binding',async()=>{
+test('E11 partial bakes select only their graph and production retains GPU binding',async()=>{
   const {bakeSelection,bindGpuProduct}=await import('./app.mjs');
   const graph={root:{id:'host'},surface:{id:'gpu'}};
   assert.deepEqual(bakeSelection(graph,'gpu'),[graph.surface]);
@@ -671,7 +671,7 @@ test('production native bakes for Apple and Android link with fat LTO; developer
     assert.deepEqual(wholeProgram(kind, profile), [], `${kind} at ${profile}`);
 });
 
-test('GPU modules bake beside the primary and each surface has one owner', async () => {
+test('D6 GPU modules bake beside the primary and each surface has one owner', async () => {
   const {bakeSelection, gpuModules, readManifest} = await import('./app.mjs');
   const {mkdtempSync, writeFileSync, rmSync} = await import('node:fs');
   const {resolve} = await import('node:path');
@@ -771,9 +771,9 @@ test('setup accepts both official Binaryen release tags and package-manager vers
   assert.notEqual(binaryenVersion('missing'), 'version 132');
 });
 
-// A `git checkout` that rewrites unchanged files must not make the next drive
-// refuse (`web build is stale`) while the proof's receipt (by content) is
-// fresh: the staleness check compares content digests.
+// Grow a Garden: a `git checkout` that rewrote unchanged files made the next
+// drive refuse (`web build is stale`) though the proof's receipt (by content)
+// was fresh. The staleness check now compares content digests.
 test('rewriting an input with its own bytes does not make a web build stale', async () => {
   const { webChanges, webInputDigests } = await import('./agent-launch.mjs');
   const { mkdtempSync, mkdirSync, writeFileSync, rmSync, utimesSync } = await import('node:fs');
@@ -798,7 +798,7 @@ test('rewriting an input with its own bytes does not make a web build stale', as
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }, 60000);
 
-// A drive's check compares every receipt input's bytes with its digest, so a file replaced with
+// LLP 1012.001.000 D1: a drive's check compares every receipt input's bytes with its digest, so a file replaced with
 // other bytes of the same length, its mtime put back (`cp -p`, `rsync -a`), is still found.
 test('a receipt input is found changed by its bytes, whatever its size and mtime', () => {
   const dir = mkdtempSync(resolve(tmpdir(), 'exact-pending-'));
@@ -884,7 +884,7 @@ test('build output claims exclude contenders and recover after an owner is kille
 }, 15000);
 
 // A claim's holder (the Apple build's, the touch runner's device lock) is live unless shown dead: gone, or a pid
-// started after the claim; a claim that does not parse, or whose holder `ps` cannot date, is live.
+// started after the claim; a claim that does not parse, or whose holder `ps` cannot date, is live (round-2 review).
 test('a claim is live unless its holder is shown gone or reused', async () => {
   const { claimLive } = await import('./app.mjs');
   const claim = (pid, started) => JSON.stringify({ pid, started });
@@ -965,7 +965,7 @@ test('game web, release and unwired gpu-dev bakes never open registry generation
   } finally {rmSync(dir,{recursive:true,force:true});}
 });
 
-// A setting's source is a bake input: the same value from the environment once and from Bun's loading
+// A setting's source is a bake input (LLP 1153 D4): the same value from the environment once and from Bun's loading
 // of `.env.development`, which is no source, the next time is another bake.
 test('a linked bake follows a setting whose value stays but whose source moved', async () => {
   const { bakeOutside, linkedBakeDir } = await import('./linked-plan.mjs');

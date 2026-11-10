@@ -1,4 +1,4 @@
-// The acceptance drives on the Calendar's Show my activity,
+// LLP 1133.026 §12's acceptance drives on the Calendar's Show my activity,
 // under the agent over packages/health/fixture: admission and tickets by the
 // runner, the answers by the Apple implementation's fixture store. Drives 1-4,
 // 6 and 7 need a Health store, so they run on iOS; drive 8 (no switch) on

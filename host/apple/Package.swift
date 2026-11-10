@@ -15,7 +15,7 @@ let launchParts = ProcessInfo.processInfo.environment["EXACT_LAUNCH_PARTS"] ?? "
 let composition = ProcessInfo.processInfo.environment["EXACT_APP_COMPOSITION"] ?? "embedded"
 precondition(["embedded", "updating"].contains(composition), "EXACT_APP_COMPOSITION must be embedded or updating")
 
-// The linked capabilities with a Swift half: each is its
+// The linked capabilities with a Swift half (LLP 1047.001 D4): each is its
 // own target, which the composition depends on, and installs, only when the
 // app links it. `build.mjs` names the app's (`EXACT_APPLE_LINK`, the
 // capabilities' names, comma-separated, or `all`); a build it doesn't drive
@@ -40,9 +40,9 @@ let capabilities: [(name: String, target: String, define: String)] = [
 // above already uses — so a normal build is unchanged and a test build is
 // quick. `bun host/apple/build.mjs --test` sets it.
 let testing = ProcessInfo.processInfo.environment["EXACT_TESTS"] == "1"
-// Inspect mode (Inspect.swift) is a development build's: a
+// Inspect mode (LLP 1122 T2c, Inspect.swift) is a development build's: a
 // production one (`EXACT_UPDATE_TRUST=production`) compiles none of it, nor
-// the agent's private API: UIKit's alert views
+// the agent's private API (LLP 1035.003 §3): UIKit's alert views
 // (`Agent.shownButton`), AppKit's events made in a window (`AgentMouseMac`),
 // Core Animation's filter keys (`backdropRects`).
 let devTools: [SwiftSetting] = ProcessInfo.processInfo.environment["EXACT_UPDATE_TRUST"] == "production" ? [] : [.define("EXACT_INSPECT")]
@@ -67,7 +67,7 @@ let core: [Target] = [
         swiftSettings: [.unsafeFlags(["-application-extension"])] + devTools,
         linkerSettings: (widgetCore ? [.unsafeFlags(["-Xlinker", "-force_load", "-Xlinker", libDir + "/lib" + libName + ".a"])] : [.unsafeFlags(["-L", libDir]), .linkedLibrary(libName)]) + [.linkedLibrary("c++"), .linkedFramework("ImageIO")]
     ),
-    // The snapshot driver: SwiftUI over a headless
+    // The snapshot driver (LLP 1126 D4, D5): SwiftUI over a headless
     // session's node model, for WidgetKit's archive. Linked by an app with
     // entries and its extension, never by a presenter.
     .target(name: "ExactSnapshot", dependencies: ["ExactCore", "CExact"], path: "Sources/ExactSnapshot", swiftSettings: [.unsafeFlags(["-application-extension"])]),
@@ -97,17 +97,17 @@ let executables: [Target] = [
 
 // Host behaviour no other check can see: a wheel event's routing, asserted
 // as a decision rather than a drawn frame, so it needs no window, no run
-// loop, and no clock.
+// loop, and no clock (LLP 1033 D4a).
 let tests: [Target] = [
     .target(name: "ExactWidgetTimeline", dependencies: ["ExactCore"], path: "widget", exclude: ["Timeline.swift"], sources: ["WidgetTimelineWaiters.swift"]),
-    // The sound arm's C mixer, rendered offline by the tests,
+    // The sound arm's C mixer (LLP 1096 D8), rendered offline by the tests,
     // and its AVAudioEngine calls (ARC, cleaning up on a caught exception, as
     // the arm's build); the arm itself is a dylib build.mjs makes, never a product.
     .target(name: "ExactSoundRender", path: "soundarm", exclude: ["SoundArm.swift"], sources: ["sound_render.c", "sound_engine.m"], publicHeadersPath: ".", cSettings: [.unsafeFlags(["-fobjc-arc", "-fobjc-arc-exceptions"])]),
-    // The video arm's media session coordinator, driven by the
+    // The video arm's media session coordinator (LLP 1098 D7), driven by the
     // tests over stand-in players; the arm itself is build.mjs's dylib.
     .target(name: "ExactNowPlaying", path: "videoarm", exclude: ["VideoArm.swift", "PictureInPicture.swift"], sources: ["NowPlaying.swift"]),
-    // The share extension's Swift, which links no Exact runtime; build.mjs compiles the appex itself.
+    // The share extension's Swift (LLP 1133.024 D4), which links no Exact runtime; build.mjs compiles the appex itself.
     .target(name: "ExactShare", path: "share"),
     .testTarget(name: "ExactKitTests", dependencies: ["ExactWidgetTimeline", "ExactCore", "ExactSnapshot", "ExactKit", "ExactUpdates", "ExactGroupedLists", "ExactMarkdown", "ExactSurfaces", "ExactDrag", "ExactMediaPicker", "ExactAuthSession", "ExactSoundRender", "ExactNowPlaying", "ExactShare"], path: "Tests/ExactKitTests",
                 resources: [.copy("ColorFixtures"), .copy("SnapshotFixtures")], swiftSettings: devTools + gallerySettings + caltrainSettings),

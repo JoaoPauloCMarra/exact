@@ -1,4 +1,4 @@
-//! The machine's one timer: a heap of deadlines, earliest
+//! The machine's one timer (LLP 1120 D3): a heap of deadlines, earliest
 //! first, on a thread of its own that only claims, posts and aborts.
 use super::Run;
 use ibex2::stdlib::abort::AbortController;
@@ -34,7 +34,7 @@ impl Ord for Entry {
     }
 }
 
-/// The executor's one timer thread's heap: it only claims, posts and
+/// The executor's one timer thread's heap (D3): it only claims, posts and
 /// aborts.
 #[derive(Default)]
 pub(super) struct Timer {

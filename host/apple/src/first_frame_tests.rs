@@ -1,4 +1,4 @@
-//! The first-frame rule on Apple: with the rule on, motion a commit begins waits for
+//! LLP 1003.001 on Apple: with the rule on, motion a commit begins waits for
 //! the display's next frame; a lowered play is held at its start in Core
 //! Animation until then, and a frame task never moves the engine's input
 //! clock past the wall.
@@ -104,7 +104,7 @@ fn a_transition_shows_its_start_at_the_first_frame_then_one_interval() {
     assert!((opacity(&host) - 0.984).abs() < 1e-9, "then one interval");
 }
 
-/// iOS hands a box's opacity transition to Core Animation
+/// LLP 1055.001 §3: iOS hands a box's opacity transition to Core Animation
 /// at the frame that starts it, and takes it back when it is retargeted.
 #[test]
 fn core_animation_plays_a_started_transition_until_it_is_retargeted() {
@@ -174,10 +174,10 @@ const PLAYED: &str = r##"component A
       box testId="plain" width=24 height=24 background-color=(on ? "#ff0000" : "#0000ff") transition="background-color 1s linear"
 "##;
 
-/// A background colour goes to Core Animation only where the layer paints
-/// it as UIKit shows it, and a played fade an ancestor's new filter would
-/// capture at its end comes back to the engine where its curve is, its
-/// spec withdrawn in the same batch.
+/// Review round 1 (Astra 2, 3): a background colour goes to Core Animation
+/// only where the layer paints it as UIKit shows it, and a played fade an
+/// ancestor's new filter would capture at its end comes back to the engine
+/// where its curve is, its spec withdrawn in the same batch.
 #[test]
 fn what_core_animation_cannot_play_as_uikit_draws_it_stays_sampled() {
     let plan = contract::compile(PLAYED).unwrap().encode();
@@ -243,9 +243,9 @@ fn what_core_animation_cannot_play_as_uikit_draws_it_stays_sampled() {
     assert!(motion(&fogged), "the display drives it again");
 }
 
-/// When the agent takes the clock, what Core Animation played comes back
-/// to the engine where its curve is, and its spec goes in the takeover's
-/// batch; nothing new is handed over after.
+/// Review round 2 (Astra 3): when the agent takes the clock, what Core
+/// Animation played comes back to the engine where its curve is, and its
+/// spec goes in the takeover's batch; nothing new is handed over after.
 #[test]
 fn the_agents_takeover_reclaims_what_core_animation_plays() {
     let mut host = boot();
@@ -278,7 +278,7 @@ fn the_agents_takeover_reclaims_what_core_animation_plays() {
     );
 }
 
-/// A played spring's track is made once and kept
+/// Review round 2 (Astra 2): a played spring's track is made once and kept
 /// while the transition stands, and dropped with it.
 #[test]
 fn a_played_springs_spec_is_made_once() {
@@ -327,7 +327,7 @@ fn a_played_springs_spec_is_made_once() {
     );
 }
 
-/// A display frame's batch starts what waits, as its tick would, so
+/// D5: a display frame's batch starts what waits, as its tick would, so
 /// a transition reaches Core Animation in the frame's own batch.
 #[test]
 fn a_display_frame_starts_what_waits_in_its_own_batch() {
@@ -817,7 +817,7 @@ fn a_jump_stepping_for_a_layout_transition_still_stops_at_each_send() {
     let go = id_of(&host, "go");
     host.dispatch_at(go, Event::Press, 0.0);
     // `clock +1800` as the agent runs it: each stop's request is answered
-    // before the jump goes on.
+    // before the jump goes on (LLP 1016 D5).
     let mut stops = Vec::new();
     while host.runner.timer_due_ms().is_some_and(|d| d <= 1800.0) {
         host.advance_until_request(1800.0);

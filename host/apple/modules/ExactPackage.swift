@@ -1,11 +1,12 @@
-// What a package's Swift implementation of a module sees of exact2: the
+// What a package's Swift implementation of a module sees of exact2 (LLP
+// 1133.001 D5; LLP 1133.009 D10 items 1-3; LLP 1133.008 D8 item 9): the
 // `ExactPackage` module, compiled on its own before the packages, which
 // import it, and linked into the app's one module, whose adapter for each
 // package (`exactExtensions`, written by host/apple/build.mjs) holds one
 // instance per session. Nothing of ExactKit or of the app's own module is
 // reachable from here.
 //
-// Every entry is on the main thread.
+// Every entry is on the main thread (LLP 1067.000 D4).
 import AVFoundation
 import Foundation
 import Security
@@ -40,7 +41,7 @@ public final class ExactPackageEvents {
     public func submit() { send(6, "") }
     public func load() { send(7, "") }
     public func message(_ text: String) { send(8, text) }
-    /// An event the view declares beyond the nine,
+    /// An event the view declares beyond the nine (LLP 1133.021 §9 item 2),
     /// `args` in the declared types' JSON: the handler named for it runs
     /// with them decoded. Sent as a message the runner recognises.
     public func emit(_ name: String, _ args: [Any]) {
@@ -52,7 +53,7 @@ public final class ExactPackageEvents {
     public func intrinsicSize(_ s: CGSize?) { size(s) }
 }
 
-/// One instance of a view a package serves, made by the
+/// One instance of a view a package serves (LLP 1133.001 D1), made by the
 /// session's implementation (`ExactPackage.view`).
 public protocol ExactPackageView: AnyObject {
     /// The view the host puts in the node's box; it fills the box.
@@ -69,34 +70,36 @@ public extension ExactPackageView {
 
 /// The session an implementation instance belongs to.
 public final class ExactPackageContext {
-    /// The session's track table, shared by its implementations.
+    /// The session's track table, shared by its implementations (LLP
+    /// 1133.009 D10 item 6).
     public let tracks: ExactTracks
-    /// The process's audio session, which the host owns.
+    /// The process's audio session, which the host owns (D7, D10 item 5).
     public let audioSession: ExactAudioSession
     private let fileFn: (String) -> URL?
     /// Under the agent, unless the drive bound the implementation as in
     /// production (`--bind`): an implementation that is its own substitute
-    /// then opens no device and asks the OS for nothing.
+    /// then opens no device and asks the OS for nothing (LLP 1133.006 D8).
     public let agent: Bool
     /// The session's id, unique in the process: what a process object
     /// shared by sessions (a capture, a photo output) keys its consumers by.
     public let session: String
     /// The host's own id for the session, which what the host keeps for it
     /// is named by: under the agent, the private pasteboard its `copyText`
-    /// and @exact/clipboard write.
+    /// and @exact/clipboard write (LLP 1133.006 §7).
     public let hostSession: String
     /// Who made the call being answered now (`app`, `tool`, `wake`): set by
     /// the host before each `later`, read by an implementation at its entry,
-    /// as a capture's first lease is refused to a tool's read.
+    /// as a capture's first lease is refused to a tool's read (LLP 1133.009 D6).
     public var origin = "app"
     /// The runner's number for the send being answered now, set beside
-    /// `origin`: the one `cancel(_:)` names when the call is let go.
-    /// Nil for a read.
+    /// `origin`: the one `cancel(_:)` names when the call is let go (LLP
+    /// 1133.016 D15 item 2). Nil for a read.
     public var request: Int?
     /// Whether the app is in the foreground, as the runner's admission reads
     /// it; the host sets it before `foreground(_:)` is told each change.
     public var foreground = true
-    /// The session's canvases, whose input an implementation may feed.
+    /// The session's canvases, whose input an implementation may feed (LLP
+    /// 1133.013 D6).
     public let surfaces: ExactSurfaces
     private let changedFn: (String) -> Void
     private let logFn: (String) -> Void
@@ -110,19 +113,19 @@ public final class ExactPackageContext {
     private let activationFn: (String, [Any], String?) -> [AnyHashable: Any]
     private let wakeFn: (String, [Any], String, @escaping (String) -> Void) -> Void
     private let expireWakeFn: (String) -> Void
-    /// The host's wake requests.
+    /// The host's wake requests (LLP 1133.017 D8).
     public let wakes: ExactWakes
-    /// The host's transfer carrier.
+    /// The host's transfer carrier (LLP 1133.017 D8, D10).
     public let transfers: ExactTransfers
-    /// The host's list of the app icon's shortcuts.
+    /// The host's list of the app icon's shortcuts (LLP 1133.023 D15 item 2).
     public let shortcuts = ExactShortcutStore()
-    /// The host's content index mirror.
+    /// The host's content index mirror (LLP 1133.023 D4, D15 item 2).
     public let contentIndex = ExactContentIndexStore()
-    /// The process's pad slots; nil on a host older than them,
-    /// where a pad module reads no pads (item 4).
+    /// The process's pad slots (LLP 1133.022 D10 item 1); nil on a host
+    /// older than them, where a pad module reads no pads (item 4).
     public let pads: ExactPads?
     private let afterFn: (Double, @escaping () -> Void) -> () -> Void
-    /// The host's region carrier.
+    /// The host's region carrier (LLP 1133.021 D14).
     public let regions: ExactRegions
 
     public init(agent: Bool, session: String, hostSession: String = "", changed: @escaping (String) -> Void,
@@ -162,7 +165,7 @@ public final class ExactPackageContext {
     public func after(_ ms: Double, _ body: @escaping () -> Void) -> () -> Void { afterFn(ms, body) }
 
     /// Raise the interface's wake event `name` with `args` for the platform
-    /// object `id`: the events of one id are one wake, run
+    /// object `id` (LLP 1133.017 D8): the events of one id are one wake, run
     /// with the wake's origin, and `ended` hears its outcome once:
     /// `completed`, `expired`, `superseded`, `refused`, or `unheard` when no
     /// handler hears the event. `ExactWake.raise` names the id itself.
@@ -177,30 +180,30 @@ public final class ExactPackageContext {
     /// host's task expires. Main thread.
     public func expireWake(id: String) { expireWakeFn(id) }
 
-    /// Raise the interface's event `name` with `args`:
+    /// Raise the interface's event `name` with `args` (LLP 1133.004 D6):
     /// delivered in order, once, with the device's origin. Any thread.
     public func emit(_ name: String, _ args: [Any]) { emitFn(name, args) }
 
     /// The `userInfo` entry for a notification the implementation posts
-    /// whose opening raises event `name` with `args`, or opens `navigate`:
-    /// the host's notification delegate reads it and
+    /// whose opening raises event `name` with `args`, or opens `navigate`
+    /// (LLP 1133.004 D6, D7): the host's notification delegate reads it and
     /// raises the event, a person's activation, on the session that posted it.
     public func activation(_ name: String, _ args: [Any], navigate: String? = nil) -> [AnyHashable: Any] {
         activationFn(name, args, navigate)
     }
 
-    /// The app's handler `handler` run for the work `handle` names:
-    /// one a call that made the handle listed, run by
+    /// The app's handler `handler` run for the work `handle` names (LLP
+    /// 1133.016 D15 item 1): one a call that made the handle listed, run by
     /// the runner as a fresh answer whose origin is at most `tool`. `reply`
     /// gets `{"text": JSON}` or `{"error", "message"}`, on the main thread.
     public func invoke(_ handle: String, _ handler: String, _ args: [String: Any], reply: @escaping ([String: Any]) -> Void) {
         invokeFn(handle, handler, args, reply)
     }
 
-    /// A picture of the interface's `img` scheme changed:
-    /// the host loads `source` again wherever it is shown.
+    /// A picture of the interface's `img` scheme changed (LLP 1133.019 D11
+    /// item 1): the host loads `source` again wherever it is shown.
     public func pictureChanged(_ source: String) { pictureFn(0, source) }
-    /// A picture the app may no longer read: the host clears it from
+    /// A picture the app may no longer read (D2): the host clears it from
     /// every `img` that shows it and from its cache, cancels its loads and
     /// drops a later reply to them; each such `img` fires `error`. A load
     /// after `pictureChanged(source)` asks again.
@@ -208,44 +211,44 @@ public final class ExactPackageContext {
 
 
     /// The angle of the session's window, as the web's `screen.orientation.angle`
-    /// (0, 90, 180, 270): the window scene's interface
+    /// (0, 90, 180, 270; LLP 1133.013 D12 item 4): the window scene's interface
     /// orientation on iOS, 0 on the Mac. `orientation(_:)` is told each change.
     public var orientation: Double { orientationFn() }
 
-    /// The session's own root view, which a package's hosted views go
-    /// under: in the sample host, its pane. Nil while the session's view
-    /// is in no window. Main thread.
+    /// The session's own root view (LLP 1133.027 D17 item 3), which a
+    /// package's hosted views go under: in the sample host, its pane. Nil
+    /// while the session's view is in no window. Main thread.
     public var view: ExactPackagePlatformView? {
         guard let view = viewFn(), view.window != nil else { return nil }
         return view
     }
 
-    /// Where the session presents: its window, key
+    /// Where the session presents (LLP 1133.027 D17 item 3): its window, key
     /// or not, since a sheet for a window behind another belongs in that
     /// window; nil while the session's view is in no window. A package
     /// presents in its own session rather than the key window's.
     public var presentation: ExactPresentation? { view.flatMap(ExactPresentation.init) }
 
-    /// The file an admitted `app:/` path names:
+    /// The file an admitted `app:/` path names (LLP 1133.009 D10 item 4):
     /// the session's own directories, a scratch tree under the agent.
     /// Admission has checked the path against the calling source's grants.
     public func file(_ path: String) -> URL? { fileFn(path) }
 
     /// Under the agent, what the implementation discloses of its own objects
-    /// for `state.extensions`: listed as its `implementation`, each field
-    /// replacing the one of its name said before. Nothing outside the agent.
-    /// Main thread.
+    /// for `state.extensions` (LLP 1133.008 D8 item 9): listed as its
+    /// `implementation`, each field replacing the one of its name said
+    /// before. Nothing outside the agent. Main thread.
     public func state(_ fields: [String: Any]) { stateFn(fields) }
 
-    /// The readers of `topic` are asked again.
+    /// The readers of `topic` are asked again (LLP 1016.002).
     public func changed(_ topic: String) { changedFn(topic) }
     /// A journal line in a development build; nothing in a production one.
     public func log(_ line: String) { logFn(line) }
     /// The session's clock, ms: the agent's under the agent.
     public func now() -> Double { nowFn() }
 
-    /// Whether the embedder lets the app leave for `url`,
-    /// `how` one of `browser` (a page shown over the app) and
+    /// Whether the embedder lets the app leave for `url` (LLP 1133.024 D22
+    /// item 7), `how` one of `browser` (a page shown over the app) and
     /// `external` (another app): asked before a page or a hand-off by URL
     /// opens, as `ExactSession.follow` hands a link to the delegate. The
     /// session's delegate decides (`ExactLeaveDelegate`); one that does not
@@ -287,63 +290,64 @@ public protocol ExactPackage: AnyObject {
     init(context: ExactPackageContext)
     /// A source's read or a send, by its declared name, with the keyword
     /// arguments the call wrote; `reply` once. Under the agent, `preferred`
-    /// is the agent's value for the name, which the runner also lays over the
-    /// answer. An answer that is not an object (a list, a `bool`, or
-    /// `NSNull()` for an absent `option`) is replied as `["exact:answer":
-    /// value]`, a key no shape's field can take.
+    /// is the agent's value for the name, which the runner also lays over
+    /// the answer (LLP 1133.009 D10 item 11). An answer that is not an
+    /// object (a list, a `bool`, or `NSNull()` for an absent `option`) is
+    /// replied as `["exact:answer": value]`, a key no shape's field can take.
     func later(_ name: String, _ args: [String: Any], preferred: Any?, reply: @escaping ([String: Any]) -> Void)
-    /// A synchronous form, answered now.
+    /// A synchronous form, answered now (LLP 1133.002 D14).
     func call(_ name: String, _ args: [String: Any]) throws -> [String: Any]
-    /// Live source `name` has no reader left: stop what it started.
+    /// Live source `name` has no reader left: stop what it started (LLP 1133.002 D5).
     func release(_ name: String)
-    /// No reader of live source `name` reads it with `args` any longer;
-    /// a reader asked again has its new arguments
+    /// No reader of live source `name` reads it with `args` any longer (LLP
+    /// 1133.009 D10 item 12); a reader asked again has its new arguments
     /// first.
     func release(_ name: String, args: [String: Any])
     /// The agent's preferred values for this interface's names, by name,
     /// when bound under the agent and whenever one changes.
     func preferred(_ values: [String: Any])
-    /// Handles a reply carried that the runner dropped: never the app's.
+    /// Handles a reply carried that the runner dropped: never the app's (LLP
+    /// 1133.009 D10 item 10).
     func dispose(_ ids: [String])
     /// The send numbered `request` (`context.request` when it was asked) was
-    /// let go: stop its work, whose reply no one reads.
+    /// let go: stop its work, whose reply no one reads (LLP 1133.016 D15 item 2).
     func cancel(_ request: Int)
     /// The app went to the foreground or left it.
     func foreground(_ shown: Bool)
     /// The session ends: finish what must be finished, then `done`; the
-    /// host waits a second at most.
+    /// host waits a second at most (LLP 1133.009 D10 item 1).
     func destroy(_ done: @escaping () -> Void)
     /// Make view `tag`, one of the package's `views`, for node `id` of this
-    /// session: the id its `displayed` and `bound` reports name.
-    /// A report can come before the view is made, since the
+    /// session: the id its `displayed` and `bound` reports name (LLP 1133.008
+    /// D8 item 1). A report can come before the view is made, since the
     /// host attaches views after first pixel.
     func view(_ tag: String, id: String, props: [String: String], events: ExactPackageEvents) throws -> ExactPackageView
     /// View `id`'s displayed state changed, by the origin of the commit that
-    /// changed it (`app`, `tool` or `wake`).
+    /// changed it (`app`, `tool` or `wake`; LLP 1133.008 D8 item 2).
     func displayed(_ id: String, _ shown: Bool, origin: String)
     /// Prop `prop`, which the declaration marks as binding a device, changed
     /// on view `id`, by the origin of the commit that changed it; the value
     /// reaches the view as its props do.
     func bound(_ id: String, _ prop: String, origin: String)
-    /// A picture of the interface's `img` scheme,
-    /// admitted by the runner: `source` drawn for a box of `width` by
+    /// A picture of the interface's `img` scheme (LLP 1133.019 D2, D11 item
+    /// 1), admitted by the runner: `source` drawn for a box of `width` by
     /// `height` device pixels at `fit` (`object-fit`'s word), upright.
-    /// `owned`: let through as the app's own item only. `reply` once,
+    /// `owned`: let through as the app's own item only (D6). `reply` once,
     /// on any thread, with the image or an error's code.
     func image(_ source: String, width: Int, height: Int, fit: String, owned: Bool, reply: @escaping (CGImage?, String?) -> Void)
     /// The runner's permission states for this interface, by name, when
     /// bound under the agent and whenever one changes.
     func permissions(_ states: [String: String])
     /// The canvases of `surface`, which this implementation's input feeds,
-    /// were displayed or hidden, by the origin of the commit that did it.
-    /// The lease: hidden, the input pauses; shown
+    /// were displayed or hidden, by the origin of the commit that did it (LLP
+    /// 1133.013 D6, D12 item 3). The lease: hidden, the input pauses; shown
     /// by an `app` commit, it resumes; shown by a `tool`'s or a `wake`'s, it
     /// stays paused. A start on a hidden canvas is told this before the start.
     func displayed(surface: String, _ shown: Bool, origin: String)
     /// The session window's angle changed (`ExactPackageContext.orientation`).
     func orientation(_ angle: Double)
     /// The host ran the app for this implementation's due wake requests
-    /// (`context.wakes`): raise their events, then `done`.
+    /// (`context.wakes`, LLP 1133.017 D8): raise their events, then `done`.
     func woke(_ wake: ExactWake)
 }
 
@@ -370,7 +374,7 @@ public extension ExactPackage {
     func woke(_ wake: ExactWake) { wake.done(success: true) }
 }
 
-// MARK: wakes
+// MARK: wakes (LLP 1133.017 D8)
 
 /// The host's wake requests, kept in its defaults across launches. The
 /// host keeps the platform's entry points, which must exist before any
@@ -392,8 +396,8 @@ public final class ExactWakes {
     public func cancel(key: String) { requestFn(key, nil) }
 }
 
-/// The app's own shortcuts on its icon's menu, after the manifest's,
-/// which the host keeps and shows: iOS's quick actions, the
+/// The app's own shortcuts on its icon's menu, after the manifest's (LLP
+/// 1133.023 D3), which the host keeps and shows: iOS's quick actions, the
 /// Mac's Dock menu. It survives a launch with no package loaded.
 public final class ExactShortcutStore {
     /// The list replaced by `items`, each as the interface's `ShortcutItem`.
@@ -403,7 +407,7 @@ public final class ExactShortcutStore {
 }
 
 /// The content index's mirror, which the host keeps in the app's container
-/// and tells Spotlight the difference of. Each entry is the
+/// and tells Spotlight the difference of (LLP 1133.023 D4). Each entry is the
 /// interface's `ContentDescription`. A change answers nil, or the web's
 /// name for its refusal (`QuotaExceededError`, `TypeError`).
 public final class ExactContentIndexStore {
@@ -422,8 +426,8 @@ public final class ExactContentIndexStore {
     public var entries: [[String: Any]] { post("entries", [:])["entries"] as? [[String: Any]] ?? [] }
 }
 
-/// The host's background `URLSession`s and their durable records,
-/// which outlive the process: a registration's requests run
+/// The host's background `URLSession`s and their durable records (LLP
+/// 1133.017 D10), which outlive the process: a registration's requests run
 /// while the app is suspended or terminated, and when they have all ended
 /// the host offers the registration to the implementation that started it
 /// as `woke(_:)` of kind `transfer`, its key the registration's id, until
@@ -454,7 +458,7 @@ public final class ExactTransfers {
     public var ids: [String] { callFn("ids", [:]) as? [String] ?? [] }
 }
 
-/// The host's region carrier: one `CLMonitor` the host
+/// The host's region carrier (LLP 1133.021 D14): one `CLMonitor` the host
 /// makes again at launch, before a package loads, whenever its store holds
 /// a region, and the store, which is the truth. A crossing is written to
 /// the store as the region's undelivered transition, then offered to the
@@ -528,7 +532,7 @@ public final class ExactWake {
     }
 }
 
-// MARK: canvas inputs
+// MARK: canvas inputs (LLP 1133.013 D6, D12 item 3)
 
 /// The session's canvases, as an implementation feeds them.
 public final class ExactSurfaces {
@@ -565,7 +569,7 @@ public final class ExactSurfaceInput {
     public func end(_ sensor: String, at: Double) { write(sensor, [], 0, at, true) }
 }
 
-// MARK: the authenticator entry
+// MARK: the authenticator entry (LLP 1133.010 D13)
 
 /// What an implementation serves when its interface declares an
 /// `authenticator`: the host's presence backend asks it for the person's
@@ -584,7 +588,7 @@ public protocol ExactAuthenticator: AnyObject {
                   reply: @escaping (AnyObject?, [String: Any]?) -> Void)
 }
 
-// MARK: tracks
+// MARK: tracks (LLP 1133.009 D3, D6, D10 item 6)
 
 /// Why a track call failed: a `DOMException` name, as answered.
 public struct ExactTrackError: Error {
@@ -607,12 +611,12 @@ public final class ExactTrackEntry {
     /// A track's state as `mediaStreamTrack` answers it (`muted`,
     /// `readyState`, `settings`, …), for a package that consumes it.
     public var state: (() -> [String: Any])?
-    /// A video track's running capture, while its lease is held;
-    /// nil otherwise and under the agent.
+    /// A video track's running capture, while its lease is held (LLP
+    /// 1133.008 D3, D8 item 3); nil otherwise and under the agent.
     public var video: (() -> ExactVideoSource?)?
     /// Under the agent, where no capture exists: the picture a viewfinder of
     /// the track draws, upright and unmirrored, which an observer analyses as
-    /// each frame. The camera package sets it.
+    /// each frame (LLP 1133.027 D17 item 2). The camera package sets it.
     public var picture: CGImage?
     public init(id: String, kind: String, tracks: [String] = [], owner: ExactTrackOwner? = nil) {
         self.id = id; self.kind = kind; self.tracks = tracks; self.owner = owner
@@ -620,13 +624,13 @@ public final class ExactTrackEntry {
 }
 
 /// The implementation that opened a track: it decides whether a consumer
-/// joining takes the track's lease, and tells it the track's changes.
+/// joining takes the track's lease (D6), and tells it the track's changes.
 public protocol ExactTrackOwner: AnyObject {
     /// `consumer` joins track `id`; `start` is an explicit start, which
     /// reopens an idle track; `origin` is `app`, `tool` or `wake`.
     func subscribe(_ id: String, _ consumer: ExactTrackConsumer, start: Bool, origin: String) throws -> ExactSubscription
-    /// `observer` joins track `id` as an output that is not a consumer:
-    /// told what a consumer is told, attaching its
+    /// `observer` joins track `id` as an output that is not a consumer (LLP
+    /// 1133.027 D17 item 1): told what a consumer is told, attaching its
     /// outputs through the same `configure`, but it never takes, holds or
     /// reopens the lease and never counts as a consumer.
     func observe(_ id: String, _ observer: ExactTrackConsumer) throws -> ExactSubscription
@@ -654,10 +658,10 @@ public extension ExactTrackConsumer {
     func live(video source: ExactVideoSource?) {}
 }
 
-/// A running camera capture: the platform's capture graph, which a
-/// consumer attaches outputs to rather than reading frames. A video
-/// track's consumer is told `live(video:)` instead of `live(_:)`, with nil
-/// under the agent.
+/// A running camera capture (LLP 1133.008 D3, D8 item 3): the platform's
+/// capture graph, which a consumer attaches outputs to rather than reading
+/// frames. A video track's consumer is told `live(video:)` instead of
+/// `live(_:)`, with nil under the agent.
 public protocol ExactVideoSource: AnyObject {
     /// The capture session. A preview layer is attached to it on the main
     /// thread; inputs and outputs only inside `configure`.
@@ -709,7 +713,7 @@ public final class ExactTracks {
     }
 }
 
-// MARK: pads
+// MARK: pads (LLP 1133.022 D4, D10 item 1)
 
 /// The process's one pad slot table: by index, the pad's controller object
 /// (`GCController`) or `NSNull`. A canvas's pads (ExactSurfaces'
@@ -724,7 +728,7 @@ public final class ExactPads {
     public let driven: Bool
     /// The drive's pads (`EXACT_AGENT_PADS`, a JSON list), each `{index, id,
     /// category, vendor, pressed}`: empty outside the agent. Their motors
-    /// and light are a recorder.
+    /// and light are a recorder (LLP 1133.022 §10).
     public let injected: [[String: Any]]
     /// The slot table's key in `Thread.main.threadDictionary`.
     public static let key = "exact.pads"
@@ -766,7 +770,7 @@ public final class ExactPads {
     }
 }
 
-// MARK: the audio session
+// MARK: the audio session (LLP 1133.009 D7, D10 item 5)
 
 /// The process's audio session, which the host owns: a capture claims it
 /// and the host composes every claim with the app's own sound.
@@ -781,14 +785,14 @@ public final class ExactAudioSession {
     /// not activate). Release it with `cancel()`.
     ///
     /// `mode` `speech-transient`, `speech-transient-solo` or
-    /// `speech-playback` is a queue's speech claim instead:
+    /// `speech-playback` is a queue's speech claim instead (LLP 1133.012 D4):
     /// the owner takes the strongest spoken type held whenever no other I/O
     /// runs, and gives the session up when the last speech claim goes. It
     /// hears the same events; `options` are not read.
     public func claim(mode: String?, options: [String], background: Bool, events: @escaping (String) -> Void) -> ExactSubscription? {
         claimFn(mode, options, background, events).map(ExactSubscription.init)
     }
-    /// A call's claim: the session takes the call's
+    /// A call's claim (LLP 1133.033 D10): the session takes the call's
     /// configuration and is never activated by the app while any is held;
     /// the system activates it. Captures and the app's sound join it. Held
     /// for as long as any call lasts. Nil where the host has no audio

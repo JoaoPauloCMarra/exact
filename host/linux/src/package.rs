@@ -1,5 +1,6 @@
-//! What a package's Rust implementation of a module sees of exact2 on the Linux
-//! and Windows hosts (`rust-static`). It is the Rust counterpart of Apple's
+//! What a package's Rust implementation of a module sees of exact2 on the
+//! Linux and Windows hosts (LLP 1133.001 D5's `rust-static`, built by LLP
+//! 1133.022 D10 item 5). It is the Rust counterpart of Apple's
 //! `ExactPackage.swift` and Android's `ExtensionContext`.
 //!
 //! A package declares its implementation in `linux/exact.json` or
@@ -32,22 +33,22 @@ pub trait Package: 'static {
         Self: Sized;
     /// A source's read or a send, by its declared name, with the keyword
     /// arguments the call wrote; `reply` once. Under the agent, `preferred`
-    /// is the agent's value for the name. The
+    /// is the agent's value for the name (LLP 1133.009 D10 item 11). The
     /// call's origin and a send's number are on the context.
     fn later(&mut self, name: &str, args: &Json, preferred: Option<&Json>, reply: Reply);
-    /// Data code's synchronous form. These hosts answer
+    /// Data code's synchronous form (LLP 1133.002 D14). These hosts answer
     /// none yet: a synchronous form needs a call on the caller's thread.
     fn call(&mut self, _name: &str, _args: &Json) -> Json {
         json!({ "error": "NotSupportedError" })
     }
     /// Live source `name` has no reader left (`args` `None`), or no reader
-    /// reads it with `args` any longer.
+    /// reads it with `args` any longer (LLP 1133.009 D10 item 12).
     fn release(&mut self, _name: &str, _args: Option<&Json>) {}
     /// The agent's preferred values for this interface's names and the
     /// runner's permission states, when bound under the agent and whenever
     /// one changes.
     fn preferred(&mut self, _values: &Json, _permissions: &Json) {}
-    /// Handles a dropped reply carried.
+    /// Handles a dropped reply carried (LLP 1133.009 D10 item 10).
     fn dispose(&mut self, _ids: &[String]) {}
     /// The send numbered `request` was let go: its reply has no reader.
     fn cancel(&mut self, _request: u64) {}
@@ -123,13 +124,13 @@ pub struct Notifier {
 }
 
 impl Notifier {
-    /// The readers of `topic` (`extension.name`) are asked again.
+    /// The readers of `topic` (`extension.name`) are asked again (LLP 1016.002).
     pub fn changed(&self, topic: &str) {
         self.native.changed(topic);
     }
 
-    /// Raise the interface's event `name` with `args`, a JSON array: delivered
-    /// in order, once, with the device's origin.
+    /// Raise the interface's event `name` with `args`, a JSON array (LLP
+    /// 1133.004 D6): delivered in order, once, with the device's origin.
     pub fn emit(&self, name: &str, args: Json) {
         let seq = (self.seq).fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let body = json!({ "extension": self.extension, "event": name, "args": args, "seq": seq });
@@ -195,7 +196,7 @@ impl Context {
 
     /// Under the agent, unless the drive bound the implementation as in
     /// production (`--bind`): an implementation that is its own substitute
-    /// then opens no device.
+    /// then opens no device (LLP 1133.006 D8).
     pub fn agent(&self) -> bool {
         self.0.agent
     }
@@ -250,13 +251,13 @@ impl Context {
         self.0.notifier.emit(name, args);
     }
 
-    /// The host's services for the desktop's modules, or `None` on a host that
-    /// keeps none.
+    /// The host's services for the desktop's modules (LLP 1133.025 D11
+    /// item 2), or `None` on a host that keeps none.
     pub fn desktop(&self) -> Option<std::rc::Rc<dyn crate::desktop::Services>> {
         crate::desktop::services()
     }
 
-    /// The host's pads: the process's one registry, which
+    /// The host's pads (LLP 1133.022 D4): the process's one registry, which
     /// a canvas reads too, with this instance's claims, which end with it.
     pub fn pads(&self) -> crate::pads::Pads {
         let pads = self.0.pads.get().unwrap_or_else(crate::pads::Pads::new);

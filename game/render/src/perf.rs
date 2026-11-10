@@ -69,7 +69,7 @@ pub(crate) struct Perf {
     pub culled_triangles: Option<u64>,
     /// Local lights drawn and dropped beyond `MAX_LIGHTS` in the last frame.
     lights: (usize, usize),
-    /// Look frames drawn and the bytes they read back.
+    /// Look frames drawn (LLP 1127.000) and the bytes they read back.
     pub look: (u64, u64),
     warned: bool,
 }

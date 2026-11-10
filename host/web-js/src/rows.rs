@@ -68,7 +68,7 @@ impl Em<'_> {
 
     /// Whether image `i` needs symbols.js — it draws a symbol, its source is
     /// bound, or its source is an `app:/` file, which symbols.js resolves
-    /// (`data-app-src`) — and whether its source is bound.
+    /// (`data-app-src`, LLP 1069.002 D7) — and whether its source is bound.
     pub(super) fn image_piece(&self, i: u32, parts: &Parts) -> Option<bool> {
         let plan = self.plan;
         let bound = plan
@@ -88,7 +88,7 @@ impl Em<'_> {
         (bound || app || parts.props.contains_key("data-symbol-path")).then_some(bound)
     }
 
-    /// A synced animation: the web host's clocks
+    /// @ref LLP 1055.002 — a synced animation: the web host's clocks
     /// (navigation.js `animationClocks`, through rt.js), made once, set a
     /// joined animation's start after each commit; under the agent its
     /// register does (agent.js).
@@ -139,8 +139,8 @@ impl Em<'_> {
         }
     }
 
-    /// A development build's binding `k` of node `i`, counted (perf.js):
-    /// declared once, as `p{i}_{k}`, which every write it feeds
+    /// A development build's binding `k` of node `i`, counted (LLP 1079 D1,
+    /// perf.js): declared once, as `p{i}_{k}`, which every write it feeds
     /// reads, so a mapped write does not make a counter per evaluation.
     pub(super) fn counted(&mut self, i: u32, k: usize, f: String) -> String {
         if !self.site_attrs {
@@ -170,19 +170,19 @@ impl Em<'_> {
                 .map(|b| plan.binding(b))
                 .find(|b| b.kind == BindingKind::Style && b.id == id as u16)
         };
-        // A clock plays on the page's timeline: only a drag
+        // A clock (LLP 1055.002) plays on the page's timeline: only a drag
         // timeline's consumer is paused for the drag to seek.
         let clock = |s: &str| s.trim_start().starts_with("-exact-clock(");
         let timeline = binding(StyleId::AnimationTimeline)
             .is_some_and(|t| style::can_be(plan, plan.code(t.expr), &|s| !clock(s)));
         let id = StyleId::from_bit(b.id as u32).ok_or("unknown style row")?;
         let kind = NodeType::from_wire(row.node_type).ok_or("unknown node type")?;
-        // A metric the binding may name is its value
+        // @ref LLP 1115.002 D6 — a metric the binding may name is its value
         // in the web's column before the row's own map sees it.
         let metric = style::metric_map(plan, plan.code(b.expr))
             .map(|m| format!("()=>{}(({f})())", self.uses.share('m', m)));
         let f = metric.as_deref().unwrap_or(f);
-        // A length or number token a bound value names is
+        // @ref LLP 1121 D7 — a length or number token a bound value names is
         // its CSS, or its property's `var()` where the page declares one.
         let attribute = exact_web::host::template::attribute_rows(kind)
             .iter()
@@ -240,14 +240,14 @@ impl Em<'_> {
         if id == StyleId::AnimationTimeline && style::can_be(plan, plan.code(b.expr), &clock) {
             self.clocks();
         }
-        // A bound pin: modes.js gives the boundary its tuple.
+        // A bound pin: modes.js gives the boundary its tuple (LLP 1121 D7).
         if id == StyleId::Mode {
             let p = self.uses.rt("P");
             let _ = write!(self.out, "{p}({e},\"data-x-pin\",{f});");
             return Ok(());
         }
         // Mark bound rows while they hold a value: grouped separators yield to
-        // authored edges and images, and a native button's floor
+        // authored edges and images (LLP 1084 D7), and a native button's floor
         // yields to authored size and padding. Literal rows use data-exact-said.
         let button = kind == NodeType::Control && parts.props.contains_key("data-button-style");
         let mark = match id {
@@ -283,7 +283,7 @@ impl Em<'_> {
             );
         }
         let refuse = |why: &str| Err(format!("node {i}: {why} is not in the JS target"));
-        // A bound colour may name a system colour, which
+        // @ref LLP 1077 D13 — a bound colour may name a system colour, which
         // the literal path resolved in the kernel. And a CSS-text row that
         // may name one inside it. The plan's colour map: one module constant
         // every such site shares.
@@ -313,7 +313,7 @@ impl Em<'_> {
                     ("user-select".into(), String::new(), unsaid()),
                 ]
             }
-            // The `rotate` and `translate` attributes bind
+            // @ref LLP 1077 D8 — the `rotate` and `translate` attributes bind
             // these with the same value: the angle's and xy's declaration
             // writes the author's whole text.
             StyleId::RotateAxis | StyleId::TranslateZ | StyleId::TranslatePercent => {
@@ -323,7 +323,7 @@ impl Em<'_> {
                 }
                 return refuse("a dynamic 3D part without its `rotate` or `translate`");
             }
-            // The shorthand binds both rows with the
+            // @ref LLP 1077 D7 — the shorthand binds both rows with the
             // author's whole text: one declaration of the shorthand.
             StyleId::TextStrokeWidth | StyleId::TextStrokeColor
                 if binding(if id == StyleId::TextStrokeWidth { StyleId::TextStrokeColor } else { StyleId::TextStrokeWidth })
@@ -334,7 +334,7 @@ impl Em<'_> {
                 }
                 one("-webkit-text-stroke", Some(self.uses.constant("$cm", || style::color_map(plan))))
             }
-            // 0 is `none`, as css.rs writes it.
+            // @ref LLP 1077 D8 — 0 is `none`, as css.rs writes it.
             StyleId::Perspective => one(
                 "perspective",
                 Some("v=>v==null?v:/^\\s*[+-]?(0+\\.?0*|\\.0+)(px)?\\s*$/i.test(v)?\"none\":typeof v===\"number\"?`${v}px`:v".into()),
@@ -343,7 +343,7 @@ impl Em<'_> {
                 let check = self.uses.rt("backdropValue");
                 one("backdrop-filter", Some(format!("v=>{check}(v)")))
             }
-            // The row's 0 is CSS `auto`, as css.rs writes
+            // @ref LLP 1093 §1 — the row's 0 is CSS `auto`, as css.rs writes
             // it. `setProperty("column-count", "0")` does not stick, so the
             // unit sample would journal the refusal and leave a class rule.
             StyleId::ColumnCount => one(
@@ -386,14 +386,14 @@ impl Em<'_> {
                     ("--exact-button-title-display".into(), String::new(), Some("v=>v==null?null:v>0?\"-webkit-box\":\"block\"".into())),
                 ]
             }
-            // host-owned, as `-exact-press-scale`: the custom
+            // @ref LLP 1077 D14 — host-owned, as `-exact-press-scale`: the custom
             // property input-glue.js plays at the press (css.rs).
             StyleId::PressHaptic => {
                 let press = self.uses.rt("pressFeedback");
                 let _ = write!(self.out, "{press}();");
                 one("--exact-press-haptic", Some("v=>v==null||v===\"none\"?null:v".into()))
             }
-            // The pressed paint: the custom properties
+            // @ref LLP 1061 D7 — the pressed paint: the custom properties
             // input-glue.js reads from the element's own style (css.rs).
             StyleId::PressOpacity
             | StyleId::PressOpacityTo
@@ -413,7 +413,7 @@ impl Em<'_> {
                     None => format!("v=>{none}v"),
                 }))
             }
-            // What navigation.js `fitText` reads, inline.
+            // @ref LLP 1116.001 D1.4 — what navigation.js `fitText` reads, inline.
             StyleId::Fit => {
                 let fit = self.uses.rt("fitTexts");
                 let _ = write!(self.out, "{fit}();");
@@ -480,13 +480,15 @@ impl Em<'_> {
                 "transition",
                 Some(pressed_transition_map()),
             ),
-            // GitHub #809: what the kernel writes for each value the code
-            // can push (style.rs `layout_transitions`); presence follows it
-            // (rt.js `lt`, below). Another value is unset.
-            StyleId::LayoutTransition => {
-                let values = style::layout_transitions(plan, plan.code(b.expr));
+            // Presence maps source literals through the kernel; other values clear the row.
+            StyleId::LayoutTransition | StyleId::ExitAnimation => {
+                let (property, name, values) = if id == StyleId::LayoutTransition {
+                    ("--exact-layout-transition", "layout-transition", crate::presence::layout_transitions(plan, plan.code(b.expr)))
+                } else {
+                    ("--exact-exit-animation", "exit-animation", crate::presence::exit_animations(plan, plan.code(b.expr), press))
+                };
                 let (say, view) = (self.uses.rt("say"), self.uses.rt("viewId"));
-                one("--exact-layout-transition", Some(style::layout_transition_map(&values, &format!("{view}({e})"), &say)))
+                one(property, Some(crate::presence::declaration_map(&values, &format!("{view}({e})"), &say, name)))
             }
             // A side is the author's when they wrote it or the other of its
             // pair (css.rs `unsaid_side`): only a side the sheet alone sets mirrors.
@@ -502,7 +504,7 @@ impl Em<'_> {
                     };
                     // A computed image the native hosts refuse is dropped
                     // here too, and journaled as they journal it, so the web
-                    // never paints what a Mac drops.
+                    // never paints what a Mac drops (studio diary R15).
                     let map = if matches!(id, StyleId::BackgroundImage | StyleId::MaskImage) {
                         let names = exact_kernel::gradient::REFUSED
                             .iter()
@@ -548,7 +550,7 @@ impl Em<'_> {
             };
             text_style::longhand(plan, row, parts, id, &normal, start.as_deref(), &mut writes);
         }
-        // A grouped row's separator stands below its
+        // @ref LLP 1084 D7 — a grouped row's separator stands below its
         // bottom padding (the page's sheet, as `element::host_css_of` says).
         if id == StyleId::PaddingBottom && parts.props.contains_key("data-groupedrowseparator") {
             if let Some((_, unit, map)) = writes.first().cloned() {
@@ -577,7 +579,7 @@ impl Em<'_> {
             &mut writes,
         )?;
         // A reference (`url(#…)`) names an element by its authored id, which
-        // the kernel scopes to the instance: resolved at
+        // the kernel scopes to the instance (LLP 1055.000 D3): resolved at
         // run time from the node (`Sr`).
         let refs = style::can_be(plan, plan.code(b.expr), &|v| v.contains("url("));
         let s = self.uses.rt(if refs {
@@ -587,7 +589,7 @@ impl Em<'_> {
         } else {
             "S"
         });
-        // An inherited colour row says whether it read
+        // @ref LLP 1121 D7 — an inherited colour row says whether it read
         // a token (modes.js `Sx`), which a boundary below writes again (a
         // stroke's shorthand by its colour). A boundary declares the tokens,
         // so its `--exact-accent` naming one that names the accent would name
@@ -634,10 +636,9 @@ impl Em<'_> {
                 }
             }
         }
-        // The values that declare it, which presence asks of the binding
-        // before each commit's tree update (rt.js `lt`).
+        // Presence asks which values declare the row before each tree update (rt.js `lt`).
         if id == StyleId::LayoutTransition {
-            let values = style::layout_transitions(plan, plan.code(b.expr));
+            let values = crate::presence::layout_transitions(plan, plan.code(b.expr));
             let declaring: Vec<&String> = values
                 .held
                 .iter()
@@ -654,8 +655,8 @@ impl Em<'_> {
         Ok(())
     }
 
-    /// A Markdown text field is the web host's own editor (markup-editor.js
-    /// over its wasm), which replaces it once loaded; a
+    /// A Markdown text field is the web host's own editor (LLP 1045 D5:
+    /// markup-editor.js over its wasm), which replaces it once loaded; a
     /// plain one with `decorations` keeps its textarea and is painted.
     pub(super) fn editor(&mut self, i: u32, element: &str, e: &str) -> Result<(), String> {
         let plan = self.plan;
@@ -672,7 +673,7 @@ impl Em<'_> {
                 .map(|b| plan.binding(b))
                 .any(|b| b.kind == BindingKind::Prop && b.id == PropId::Decorations as u16)
             {
-                // Paint only: decorations.js, no editor wasm.
+                // Paint only (LLP 1114.007): decorations.js, no editor wasm.
                 let decorate = self.uses.rt("decorate");
                 let _ = write!(self.out, "{decorate}({e});");
             }
@@ -693,7 +694,7 @@ impl Em<'_> {
         Ok(())
     }
 
-    /// A node's `wrap-flow`, for the text flow piece
+    /// A node's `wrap-flow` (LLP 1043.000), for the text flow piece
     /// (rt.js `wf`): an absolutely positioned `both` is an exclusion.
     pub(super) fn wrap_flow(
         &mut self,
@@ -795,33 +796,33 @@ pub(super) fn can_refer(plan: &exact_plan::Plan) -> bool {
     })
 }
 
-/// Take the presence rows' declarations out of a node's static
+/// Take the presence rows' declarations (LLP 1063) out of a node's static
 /// CSS, returned in the order they were written.
 pub(super) fn presence_decls(css: &mut String) -> String {
     let mut kept = String::new();
     let mut taken = String::new();
     for decl in css.split_inclusive(';') {
-        // The drag timelines' too: motion-glue.js
+        // The drag timelines' too (LLP 1057.003 D2, D4): motion-glue.js
         // reads each from the element's own declaration.
         if [
             "--exact-layout-transition:",
             "--exact-exit-animation:",
             "--exact-drag-timeline:",
             "--exact-animation-timeline:",
-            // A synced animation's clock, read the same way.
+            // A synced animation's clock (LLP 1055.002), read the same way.
             "--exact-animation-clock:",
             "--exact-animation-range:",
             "--exact-timeline-scope:",
-            // The press feedback's factor and haptic,
-            // which input-glue.js reads from the element's own style.
+            // The press feedback's factor (LLP 1061) and haptic (LLP 1077
+            // D14), which input-glue.js reads from the element's own style.
             "--exact-press:",
             "--exact-press-haptic:",
-            // The pressed paint, read the same way.
+            // The pressed paint (LLP 1061 D7), read the same way.
             "--exact-press-opacity:",
             "--exact-press-opacity-to:",
             "--exact-press-background-color:",
             "--exact-press-color:",
-            // A fitted text's, which navigation.js finds by it.
+            // A fitted text's (LLP 1116.001 D1.4), which navigation.js finds by it.
             "--exact-fit:",
         ]
         .iter()
@@ -838,11 +839,11 @@ pub(super) fn presence_decls(css: &mut String) -> String {
 
 impl Em<'_> {
     /// What an element needs once made: a canvas's surface, a native
-    /// module's mount, a hatched node's page-module hatch (`data-hatch`
-    /// among its static attributes), and the
+    /// module's mount (LLP 1024 D3), a hatched node's page-module hatch (LLP
+    /// 1075.003.000, `data-hatch` among its static attributes), and the
     /// constant values settled once its tree is in place, as bound ones are
-    /// (rt.js `drain`): a select's, which its options carry, and a
-    /// scroller's offsets.
+    /// (rt.js `drain`): a select's, which its options carry (calendar diary
+    /// F6), and a scroller's offsets (F8).
     pub(crate) fn element_extras(
         &mut self,
         tag: &str,
@@ -875,13 +876,13 @@ impl Em<'_> {
         if attrs.iter().any(|(k, _)| k == "data-hatch") {
             let _ = write!(self.out, "{}({e});", self.uses.rt("ht"));
         }
-        // A context menu's popover, named by a literal.
+        // A context menu's popover (LLP 1021 §5.1), named by a literal.
         if attrs.iter().any(|(k, _)| k == "contextpopover") {
             let _ = write!(self.out, "{}({e});", self.uses.rt("cp"));
         }
     }
 
-    /// A node's `data-*` words: one attribute per word,
+    /// A node's `data-*` words (LLP 1075.003 §3.3): one attribute per word,
     /// re-derived when the bound object changes (`dataset.js`).
     pub(crate) fn dataset(&mut self, e: &str, f: &str) {
         let (effect, ds) = (self.uses.rt("effect"), self.uses.rt("ds"));
@@ -910,9 +911,9 @@ pub(super) fn attributes(
                     attrs.push(("data-autofocus".into(), "false".into()));
                 }
             }
-            // The app's own file, or a frame's page given
-            // one: symbols.js shows it through an object
-            // URL, media.js plays it; the browser has no `app:`.
+            // The app's own file (LLP 1069.002 D7), or a frame's page given
+            // one (LLP 1020.001 D7): symbols.js shows it through an object
+            // URL, media.js plays it (podcast F19); the browser has no `app:`.
             "src"
                 if matches!(element, "img" | "video" | "audio") && value.starts_with("app:/")
                     || element == "iframe"
@@ -923,7 +924,7 @@ pub(super) fn attributes(
             "poster" if element == "video" && value.starts_with("app:/") => {
                 attrs.push(("data-app-poster".into(), value.clone()));
             }
-            // A package's scheme: pictures.js
+            // A package's scheme (LLP 1133.019 D11 item 1): pictures.js
             // asks its implementation; the browser never fetches it.
             "src" if element == "img" && package_scheme(value) => {
                 attrs.push(("data-exact-picture".into(), value.clone()));
@@ -945,7 +946,7 @@ pub(super) fn attributes(
             }
             // A select's value is its options' (`element_extras`); a
             // `<progress>`'s is its attribute, without which it is
-            // indeterminate.
+            // indeterminate (LLP 1116 D8).
             "value" => match element {
                 "input" | "button" | "option" | "progress" => {
                     attrs.push((name.clone(), value.clone()))
@@ -985,7 +986,7 @@ pub(super) fn attributes(
             _ => attrs.push((name.clone(), value.clone())),
         }
     }
-    // Off the page's thread, so an arrival does not hold a frame.
+    // Off the page's thread, so an arrival does not hold a frame (LLP 1145 D3).
     attrs.extend((element == "img").then(|| ("decoding".into(), "async".into())));
     // A role the element has natively is not restated, as the live host leaves it off.
     let implicit = exact_web::host::implicit_role(element, |name| {
@@ -1001,8 +1002,8 @@ pub(super) fn attributes(
 }
 
 /// Whether `src` begins with a scheme a package may serve: a lowercase word
-/// that is neither a web scheme nor a host's own (the bake's
-/// `HOST_SCHEMES`).
+/// that is neither a web scheme nor a host's own (LLP 1133.019 D11 item 1;
+/// the bake's `HOST_SCHEMES`).
 fn package_scheme(src: &str) -> bool {
     let Some((scheme, _)) = src.split_once(':') else {
         return false;
@@ -1150,13 +1151,13 @@ mod tests {
         assert!(js.contains(",\"src\",()=>\"data:text/html,a\")"), "{js}");
         assert!(!js.contains("()=>\"data:text/html,b\""), "{js}");
         assert!(!js.contains("()=>\"https://e.dev/c\""), "{js}");
-        // Each frame grants its guest fullscreen.
+        // Each frame grants its guest fullscreen (LLP 1020.002 D5).
         assert_eq!(js.matches(r#""allow":"fullscreen *""#).count(), 3, "{js}");
     }
 
     #[test]
     fn a_pressed_nodes_computed_transition_is_checked_as_an_authors() {
-        // As `style`'s map, then `scale` moved to the press's
+        // LLP 1081 D5, as `style`'s map, then `scale` moved to the press's
         // `--exact-scale`.
         assert_eq!(
             crate::style::tests::run(
@@ -1187,7 +1188,7 @@ mod tests {
         tests::{role, run},
     };
 
-    /// A bound `filter` is written through the colour map:
+    /// A bound `filter` (LLP 1095 D1) is written through the colour map:
     /// the emitted binding wraps its value in `color_map(plan)`, a module
     /// constant every colour site shares (`$cm`), which turns
     /// a role into its CSS, an admitted `-exact-platform-color()` literal into its
@@ -1249,7 +1250,7 @@ mod tests {
     }
 
     /// A grouped row whose flag is bound chooses between two metrics as it
-    /// runs: the page, which keeps no kernel, reads each
+    /// runs (LLP 1115.002 D6): the page, which keeps no kernel, reads each
     /// name as its value in the web's column, as the kernel reads a literal
     /// one. A number takes the row's `px`, a role goes on through the colour
     /// map, and a metric with no row on the web unsets the row.
@@ -1289,7 +1290,8 @@ mod tests {
                 .unwrap_or_else(|| panic!("no bound {row} names a metric"));
             crate::style::metric_map(&plan, plan.code(binding.expr)).unwrap()
         };
-        // The row's content starts at its inset, the row spanning its card.
+        // The row's content starts at its inset, the row spanning its card
+        // (LLP 1084 D7).
         assert_eq!(
             run(
                 &named("padding_left"),
@@ -1319,7 +1321,7 @@ mod tests {
         );
     }
 
-    /// A bound `column-count` of 0 is CSS `auto`, as css.rs
+    /// A bound `column-count` of 0 is CSS `auto` (LLP 1093 §1), as css.rs
     /// writes the row. The JS target must write that string: `setProperty`
     /// rejects `"0"`, the inline declaration drops, a class rule stays, and
     /// the journal records the refusal. Toggling 2 then 0 computes `auto`.

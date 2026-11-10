@@ -1,4 +1,4 @@
-// Which rows of a grouped list are selected: a
+// @ref LLP 1115.000 D11.3 — which rows of a grouped list are selected: a
 // tapped row while its press runs and under the screen it pushed.
 #if os(iOS) || os(tvOS)
 import ExactKit
@@ -11,7 +11,7 @@ extension GroupedListView {
     /// A tapped row stays selected while its press runs and, when the press
     /// pushed a screen over the list's, under that screen: it fades as the
     /// reader comes back (`deselect`), as a table view's row does
-    /// (`clearsSelectionOnViewWillAppear`). A row that
+    /// (`clearsSelectionOnViewWillAppear`; LLP 1115.000 D11.3). A row that
     /// pushed nothing, or opened a sheet, lets go once its press has run.
     func collectionView(_ view: UICollectionView, didSelectItemAt path: IndexPath) {
         let letGo = { for selected in view.indexPathsForSelectedItems ?? [] { view.deselectItem(at: selected, animated: !ExactEnv.agentFreezes) } }
@@ -21,7 +21,7 @@ extension GroupedListView {
         let screen = sequence(first: owner as UIResponder, next: { $0.next }).lazy.compactMap { $0 as? UIViewController }.first
         // A radio's row checks its radio, as a click on the radio does:
         // `input` and `change` carry its value, and the checkmark follows
-        // the bound `checked`.
+        // the bound `checked` (LLP 1115.000 D13.2).
         if let row = rows[id], let target = radio(row) { host.presenter.checkRadio(target) }
         guard rows[id]?.pressable == true else { return letGo() }
         host.presenter.press(id)

@@ -5,7 +5,7 @@ import UIKit.UIGestureRecognizerSubclass
 import XCTest
 @testable import ExactKit
 
-/// `user-select="text"` on UIKit. Text its author made
+/// LLP 1115.000 D11.6: `user-select="text"` on UIKit. Text its author made
 /// selectable takes UIKit's own text interaction when a finger first lands
 /// on it and answers it from the paragraphs' own lines; text nobody made
 /// selectable takes nothing. UIKit synthesizes no touch for a unit test, so
@@ -378,7 +378,7 @@ final class TextSelectionIOSTests: XCTestCase {
     }
 
     func testARowsNativeContextPopoverAdmitsSelectableTextAndFiresOnce() throws {
-        if ExactEnv.agentMode { throw XCTSkip("under the agent the popover is painted") }
+        if ExactEnv.agentMode { throw XCTSkip("under the agent the popover is painted (D4)") }
         let p = page(), row = try node(p, 6), paragraph = try node(p, 7)
         p.apply(wireBatch([
             box(20, props: ["id": "row-menu", "popover": "auto"]),
@@ -481,10 +481,10 @@ final class TextSelectionIOSTests: XCTestCase {
         XCTAssertEqual(plain.accessibilityTraits, traits, "selectable or not, the same text to VoiceOver")
     }
 
-    /// What it costs: a page of 400 paragraphs holds no interaction,
-    /// recognizer or view for selection, whether or not its author made it
-    /// selectable, until a finger lands; then the paragraphs touched hold
-    /// UIKit's, at most `kept` of them.
+    /// What it costs (LLP 1115.000 D11.6's as-built row): a page of 400
+    /// paragraphs holds no interaction, recognizer or view for selection,
+    /// whether or not its author made it selectable, until a finger lands;
+    /// then the paragraphs touched hold UIKit's, at most `kept` of them.
     func testAPageOfFourHundredParagraphsPaysOnlyForWhatAFingerTouches() throws {
         func build(selectable: Bool) -> Presenter {
             var ops: [[String: Any]] = [box(1), box(2, style: selectable ? ["user_select": "text"] : [:])]

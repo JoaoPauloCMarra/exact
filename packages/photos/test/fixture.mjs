@@ -1,8 +1,8 @@
-// The conformance fixture, as every platform's suite makes
+// The conformance fixture (LLP 1133.001 D7), as every platform's suite makes
 // it: an app `exact new` made outside the repo, its files replaced by
 // `fixture/`'s, depending on this package and installed. `packed` installs
 // the package as a registry would carry it (`bun pm pack`) instead of by
-// `file:`.
+// `file:` (LLP 1133.019 stage 4).
 import { cpSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';

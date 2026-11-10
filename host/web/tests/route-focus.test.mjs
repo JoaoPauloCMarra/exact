@@ -1,4 +1,4 @@
-// In a real browser, a route is a page, so the focus
+// LLP 1115.000 D4 part A in a real browser: a route is a page, so the focus
 // follows it. The shell's stylesheet, the navigation glue's projection
 // (navigation.js) and the input piece (input-glue.js), which both web targets
 // run, over nodes as the hosts write them and a stand-in runner: each visit a
@@ -144,7 +144,7 @@ async function inChrome(test, width = 600, motion = false) {
 const enter = (key) => key('Enter', 'Enter', 13, '\r');
 
 check('a route the app pushes before any press takes the focus with no ring', () => inChrome(async (evaluate, press, key) => {
-  // A channel an app reopens as it starts (a chat app's resume): the heading has the focus, as after any push, and the
+  // A channel an app reopens as it starts (Excord's resume): the heading has the focus, as after any push, and the
   // browser draws no ring, which a script's focus on a page no one has touched would otherwise get.
   expect(await evaluate(`push('t', '/timer'); focus().slice(0, 2)`)).toEqual(['title-t', false]);
   // Once a key has gone down, Tab alone included, a route that arrives with no press shows its ring.
@@ -222,7 +222,7 @@ check('a focus the commit set is left alone, and another tab is no arrival', () 
 }), 60000);
 
 check('a modal route is a dialog to assistive technology: the focus moves in, and returns on close', () => inChrome(async (evaluate, press, key) => {
-  // The sheet is `role="dialog"` and `aria-modal`, named by its header's heading; the focus is on
+  // LLP 1115.000 D4.5. The sheet is `role="dialog"` and `aria-modal`, named by its header's heading; the focus is on
   // that heading, inside it, and the route it covers is inert.
   const sheet = id => `(r => [r.getAttribute('role'), r.getAttribute('aria-modal'), r.getAttribute('aria-labelledby'), r.getAttribute('data-exact-dialog')])(document.getElementById('route-${id}'))`;
   await press('add');
@@ -354,7 +354,7 @@ check('a root tab bar drawn as a sidebar moves by Up and Down', () => inChrome(a
 }, 1200), 60000);
 
 check('in a wide window\'s split the focus follows the detail and comes back to its row', () => inChrome(async (evaluate, press) => {
-  // The list stays live beside its detail, so the pressed row still has the focus when the detail
+  // The list stays live beside its detail (LLP 1116.004 D1), so the pressed row still has the focus when the detail
   // arrives; it moves to the detail's heading all the same, and Back returns it.
   await press('row-1');
   expect(await evaluate(`[document.getElementById('list').getAttribute('data-exact-split'), document.getElementById('list').inert, ...focus()]`)).toEqual(['list', false, 'title-1', false, 0, 0]);

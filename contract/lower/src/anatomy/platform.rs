@@ -1,4 +1,4 @@
-//! `lower-library-platform`: nothing in a library package
+//! `lower-library-platform` (LLP 1139 D6): nothing in a library package
 //! reads the host it runs on. A resource of `exactDelivery` or
 //! `exactSurface`; and `exactViewport`'s `displayMode`, read from the
 //! viewport wherever the package carries it: an alias (a derive, a state
@@ -6,12 +6,12 @@
 //! `fn`'s parameter (a `fn` that returns its argument, or passes it on, as
 //! well), and an inject whose nearest provider in the package provides it.
 //! A prop's `displayMode` is the app's data, never the host's; an inject
-//! the package doesn't provide is a known limit.
+//! the package doesn't provide is the deferred limit (QUEUE).
 
 use crate::LowerError;
 use contract_syntax::{Component, Expr, File, Node, Span, Stmt, TemplatePart};
 
-/// The host sources a library may not read.
+/// The host sources a library may not read (D6).
 const HOST: [&str; 2] = ["exactDelivery", "exactSurface"];
 
 /// Each host read in the components of `file` that are a library
@@ -47,7 +47,7 @@ pub(crate) fn check(file: &File, components: &[(&Component, &str)]) -> Vec<Lower
         let refuse = |what: String, span: Span| {
             LowerError {
             id: "lower-library-platform",
-            message: format!("{what} in `{comp}` reads the host a library runs on: a library never forks per OS; read dimensions, media preferences, page facts or capabilities instead"),
+            message: format!("{what} in `{comp}` reads the host a library runs on: a library never forks per OS; read dimensions, media preferences, page facts or capabilities instead (LLP 1139 D6)"),
             span,
         }
         };

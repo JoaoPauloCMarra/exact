@@ -1,4 +1,4 @@
-// The web Rust adapter against a stand-in for its wasm module.
+// The web Rust adapter against a stand-in for its wasm module (LLP 1146 §2.3).
 import { expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -22,7 +22,7 @@ function normalized(spec) {
   return JSON.parse(run.stdout);
 }
 
-// The web Rust adapter carries a store read its call made to rt.js: on the answer when the call
+// The web Rust adapter carries a store read its call made to rt.js (LLP 1146 §2.3): on the answer when the call
 // answers, and through `data.threwRead` when it fails, an answer's or a parse's, so the resource is a store reader
 // either way, as natively.
 test("a Rust source's store read reaches rt.js whether its call answers or fails", async () => {

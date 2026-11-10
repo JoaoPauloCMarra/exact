@@ -1,4 +1,4 @@
-// The absent-implementation drive for @exact/attestation's fixture app
+// LLP 1133.028 §8.4 drive 11 for @exact/attestation's fixture app
 // (test/fixture), on a target with no implementation: the status reads its
 // declared default and data code's `attest` refuses NotSupportedError.
 //

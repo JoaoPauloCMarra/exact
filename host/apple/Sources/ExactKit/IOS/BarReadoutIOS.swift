@@ -1,4 +1,4 @@
-// A header's readout (`role="status"`: a "● Clock"
+// @ref LLP 1075.003 §9.15 — a header's readout (`role="status"`: a "● Clock"
 // beside the title, which nothing presses) as a bar item, as a hand-built
 // UIKit bar has one: `UIBarButtonItem(customView:)` holding labels and a dot,
 // which on iOS 26 and later sits in the bar's glass like any item. Its parts

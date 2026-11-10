@@ -1,5 +1,5 @@
-// The core's side of a GPU surface's input and of the agent's world seams,
-// over the `Canvases` protocol: a
+// The core's side of a GPU surface's input and of the agent's world seams
+// (LLP 1046.002 §3), over the `Canvases` protocol (LLP 1047.001 D4): a
 // view's surface controls, its focus, the agent's taps and keys. Without
 // the Surfaces module every question here answers as an app with no canvas.
 import Foundation
@@ -62,11 +62,11 @@ extension NodeView {
     package func focusSurfacePointer() -> Bool {
         #if os(macOS)
         if (window?.firstResponder as? NSTextView)?.isEditable == true { return true }
-        if presenter?.mouseChain.keepingFocus == true { return true } // the down's `pointerdown` was prevented: the focus stays
+        if presenter?.mouseChain.keepingFocus == true { return true } // the down's `pointerdown` was prevented: the focus stays (LLP 1005 §3)
         return isSurfaceControl ? window?.makeFirstResponder(self) == true : focusCanvas()
         #else
         if presenter?.editing != nil { return true }
-        if keepsFocus(from: self) { return true } // its touch's `pointerdown` was prevented
+        if keepsFocus(from: self) { return true } // its touch's `pointerdown` was prevented (LLP 1005 §3)
         if isSurfaceControl { return isFirstResponder || takeSurfaceTouchFocus() }
         return focusCanvas()
         #endif

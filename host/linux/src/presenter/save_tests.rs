@@ -1,4 +1,4 @@
-//! `saveFile` on Linux: no panel, so only the agent's
+//! `saveFile` on Linux (LLP 1069.010 D3): no panel, so only the agent's
 //! substitute answers. A held `export` names its `from`; `type @t <path>`
 //! copies the `app:/` file there and fires `change` with the name; `tap @t
 //! cancel` fires `cancel`; an ungranted `from` is refused with `cancel`.
@@ -90,7 +90,7 @@ fn an_export_is_held_answered_with_a_path_and_refused_outside_its_grant() {
         !logs.contains("chosen.json\""),
         "the path is never journalled"
     );
-    // `text=`: the text itself, no app file and no grant.
+    // `text=` (x2apps notes #4): the text itself, no app file and no grant.
     let note = id(&p, "note");
     handle(&mut p, &format!(r#"{{"op":"tap","id":{note}}}"#));
     let state = json(handle(&mut p, r#"{"op":"state"}"#));

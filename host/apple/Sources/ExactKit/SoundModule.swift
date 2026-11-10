@@ -1,10 +1,10 @@
-// The runner's voice table, played: a session's `sound`
+// @ref LLP 1096 D6, D8. The runner's voice table, played: a session's `sound`
 // batch op names the plan's files at a boot and carries `play` (with its
-// `playbackRate` and `pan` when not 1 and 0) and `end` ops
+// `playbackRate` and `pan` when not 1 and 0, LLP 1125 D10) and `end` ops
 // in runner milliseconds, which become host seconds — runner time is
 // `(CACurrentMediaTime() - t0) × 1000` — for the sound arm's mixer. The arm
 // (soundarm/, AVFAudio) is a dylib loaded on demand, never ExactKit's link
-// graph; nothing loads or plays under the agent, whose clock is virtual.
+// graph; nothing loads or plays under the agent, whose clock is virtual (D10).
 import Foundation
 import QuartzCore
 #if os(iOS) || os(tvOS)
@@ -55,7 +55,7 @@ final class SoundLibrary {
 /// AURemoteIO, whose RPC timeout aborts the process. As a hand-built app
 /// calls `engine.start()` on first use, the open runs on the main thread in
 /// that voice's commit, so the voice starts as late as the open took (from
-/// its first frame). A failure is journaled and reported in `state`, its
+/// its first frame, D6). A failure is journaled and reported in `state`, its
 /// voices are skipped, and the first voice `retryAfter` or more later tries
 /// again.
 final class SoundOutput {
@@ -84,7 +84,7 @@ final class SoundOutput {
     private var opened: Double?
     /// Voices skipped because the output was not open.
     private var skipped: UInt64 = 0
-    /// A sequence's timed haptics not yet played, by id, and
+    /// A sequence's timed haptics not yet played, by id (LLP 1125 D3), and
     /// how many played more than 10 ms late: UIKit's feedback generators
     /// cannot be scheduled ahead, so a blocked main thread delays them.
     private var haptics: [UInt64: DispatchWorkItem] = [:]
@@ -129,8 +129,8 @@ final class SoundOutput {
         #endif
     }
 
-    /// The owner is about to change the session for speech: an output with
-    /// no voice submitted and not ended stops and gives
+    /// The owner is about to change the session for speech (LLP 1133.012
+    /// D4): an output with no voice submitted and not ended stops and gives
     /// its hold back, and the next voice opens it again, as after a route
     /// change. Whether it let the hold go.
     func stopIfIdle() -> Bool {
@@ -157,7 +157,7 @@ final class SoundOutput {
         }
         for op in payload["ops"] as? [[String: Any]] ?? [] {
             let id = UInt64((op["id"] as? NSNumber)?.int64Value ?? 0), at = (op["at"] as? NSNumber)?.doubleValue ?? 0
-            // Runner time to host seconds on CACurrentMediaTime's timebase.
+            // Runner time to host seconds on CACurrentMediaTime's timebase (D6).
             let host = ExactEnv.t0 + at / 1000
             switch op["op"] as? String {
             case "play":
@@ -261,7 +261,7 @@ final class SoundOutput {
         reactivate = false
         failure = nil
         opened = now()
-        // The device check, when a development run asks for it.
+        // The device check (LLP 1096 §5), when a development run asks for it.
         if ExactEnv.environment["EXACT_SOUND_CHECK"] == "1" { _ = library.engine(handle, 2, nil, 0) }
         return arm
     }
@@ -329,14 +329,14 @@ final class SoundOutput {
     }
 
     #if os(iOS) || os(tvOS)
-    /// The session's events, which the owner observes. An
+    /// The session's events, which the owner observes (LLP 1133.009 D7). An
     /// interruption pauses the engine. When it ends with `shouldResume`
     /// the session is activated and the engine started again, and a failure
     /// fails the output as a first open's does. Without it (the person
     /// started other audio), the next voice does that. An end that never
     /// came (the app was suspended) is taken as over when the app is active
     /// again and no other app's primary audio plays.
-    /// Voices due between are not played. A media services reset
+    /// Voices due between are not played (D8). A media services reset
     /// invalidates the engine: it is disposed of, and the next voice opens a
     /// new one (Apple QA1749).
     private func observe() {

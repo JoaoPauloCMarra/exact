@@ -880,9 +880,9 @@ fn content_sized_textarea_keeps_the_caret_line_after_return() {
 #[test]
 fn a_text_field_keeps_its_own_width_in_a_block_as_the_web_does() {
     // An `<input>` or `<textarea>` at `display: block` keeps its intrinsic
-    // width where a `<div>` stretches: Chrome 175 px, the native hosts 352 px,
-    // for Caltrain's search field. Flex and insets still stretch it, as Chrome
-    // does.
+    // width where a `<div>` stretches (issues/20260930-native-input-stretches.md):
+    // Chrome 175 px, the native hosts 352 px, for Caltrain's search field.
+    // Flex and insets still stretch it, as Chrome does.
     struct Measurer;
     impl TextMeasurer for Measurer {
         fn measure(&mut self, _: &TextMeasureRequest<'_>) -> TextMetrics {

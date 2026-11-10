@@ -1,4 +1,4 @@
-//! The recorder: the context an author calls. It owns the
+//! The recorder (LLP 1056 D3): the context an author calls. It owns the
 //! authoritative drawing state, applies the spec's argument rules at the
 //! call — ignore, no-op or throw — so getters answer exactly, and appends
 //! each effective call to the list the host replays.
@@ -88,9 +88,9 @@ pub(crate) enum Paint {
     Pattern(u32),
 }
 
-/// What the runner tells a context about where it draws: the host's text
-/// engine, the image handles it can draw, and the canvas node's `color` and
-/// `direction`.
+/// What the runner tells a context about where it draws (LLP 1056 D4, D8,
+/// D9): the host's text engine, the image handles it can draw, and the
+/// canvas node's `color` and `direction`.
 #[derive(Clone, Default)]
 pub struct Env {
     /// The canvas's lifetime id, which an image a draw asked for names.
@@ -104,7 +104,7 @@ pub struct Env {
     /// The canvas node's CSS `direction` is `rtl`: what `direction =
     /// "inherit"` resolves to.
     pub rtl: bool,
-    /// The canvas is `display-p3`: its lists carry Display P3 bytes.
+    /// The canvas is `display-p3` (LLP 1100 D12a): its lists carry Display P3 bytes.
     pub p3: bool,
 }
 
@@ -131,7 +131,7 @@ impl Env {
 /// `DOMMatrix`'s 2D members, detached: what `get_transform` returns.
 pub type DomMatrix = Matrix;
 
-/// The text attributes: what shapes a run, and where it goes.
+/// The text attributes (LLP 1056 D8): what shapes a run, and where it goes.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct TextState {
     pub(crate) font: Font,

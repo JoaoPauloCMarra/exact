@@ -3,7 +3,7 @@ import { copyFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 
-// A plan that reads only `exactViewport()` shares the
+// LLP 1139.003 D2: a plan that reads only `exactViewport()` shares the
 // session's one page reporter, so the agent's `prefer gpu-tier` reaches its
 // `gpuTier`; with no prefer it is the agent's launch value, `high`.
 test('a viewport-only plan reads the tier the agent prefers', async () => {

@@ -1,4 +1,4 @@
-//! The binary bake's compatibility and embedded receipt.
+//! The binary bake's compatibility and embedded receipt (LLP 1030 D3/D3a).
 //! The Cargo build script knows its actual target and data-source grants;
 //! Consumers read these bytes instead of reconstructing those facts.
 
@@ -10,8 +10,8 @@ use std::path::{Path, PathBuf};
 
 mod watch;
 
-/// A development bake's map from plan node to Contract source,
-/// `OUT_DIR/app.plan.map.json`: beside the plan,
+/// A development bake's map from plan node to Contract source (LLP 1035.002
+/// D6; LLP 1012.001.000 D6), `OUT_DIR/app.plan.map.json`: beside the plan,
 /// never in the product, and only when compiling the app's contract again
 /// gives the baked plan's own nodes. The digest inside names the plan it
 /// describes, so the driver never joins it to another. A map that cannot be
@@ -121,7 +121,7 @@ pub(crate) fn emit(
         if let Some(card) = gpu_card(&manifest.id, &compat.id, trust, development, product) {
             compat.embedded["gpu"] = card;
         }
-        // One card per module, the same shape as the primary's
+        // One card per module (LLP 1009 D6), the same shape as the primary's
         // product card: a module always binds its signed digest.
         if let Ok(modules) = std::env::var("EXACT_GPU_MODULES") {
             let products: serde_json::Map<String, Value> =
@@ -526,7 +526,7 @@ fn artifact_graph(
     }
     // The plan's source table covers resource calls and sends, including
     // branches not mounted during bake. Installed cohorts retain their own
-    // implementations of matching names/shapes (a known caveat).
+    // implementations of matching names/shapes (1030 D3's stated caveat).
     requires.insert("sources".into(), Value::Object(sources.clone()));
     if sources.keys().any(|name| {
         name != exact_runner::delivery::SOURCE
@@ -536,7 +536,7 @@ fn artifact_graph(
         requires.insert("executors".into(), inputs["executors"].clone());
         requires.insert("grantCeiling".into(), inputs["grantCeiling"].clone());
     }
-    // The hatch words the plan marks that
+    // @ref LLP 1075.003.000.001 §4.3 — the hatch words the plan marks that
     // this platform's module handles: the installed module must handle each.
     // A word this platform does not handle is no requirement here: its nodes
     // are shown and never called.
@@ -557,7 +557,7 @@ fn artifact_graph(
         requires.insert("hatches".into(), json!(marked));
     }
     // A purpose's text is in the installed binary's Info.plist: a bundle
-    // whose purposes differ is a binary release.
+    // whose purposes differ is a binary release (LLP 1069.008 D5).
     // What a TypeScript module may ask of the binary's prelude (compat.rs
     // `TYPESCRIPT_RUNTIME`): an older cohort's prelude would ignore it
     // silently (`exactBodyFrom` sent as an empty body), so it takes no bundle.
@@ -615,13 +615,15 @@ fn artifact_graph(
         }
         artifacts.push(json!({"name":asset["name"],"kind":"bundle","sha256":asset["sha256"],"bytes":asset["bytes"],"requires":requires}));
     }
-    // The host's loaded modules the plan can reach (the loaded tier), deferred
-    // templates and branches included, each by the rule its host loads it by:
-    // the Canvas 2D GPU module for a `Canvas`, the SVG island module where
-    // `svg_islands` holds or a bundled SVG image can show an island, the video
-    // arm for a `Video` or an image's picture in picture, the web arm for a
-    // `WebView`, and the sound arm for a declared sound (a `sound` declaration
-    // is not a node). A build whose plan is fixed leaves out the rest.
+    // The host's loaded modules the plan can reach (LLP 1047 D1's loaded
+    // tier), deferred templates and branches included, each by the rule its
+    // host loads it by: the Canvas 2D GPU module for a `Canvas`, the SVG
+    // island module where `svg_islands` holds or a bundled SVG image can
+    // show an island, the video arm for a `Video` or an image's picture in
+    // picture (LLP 1042 §9), the web arm for a
+    // `WebView`, and the sound arm for a declared sound (LLP 1096 D8: a
+    // `sound` declaration is not a node). A build whose plan is fixed
+    // leaves out the rest.
     let makes = |wanted: exact_kernel::NodeType| {
         plan.nodes
             .iter()
@@ -637,15 +639,15 @@ fn artifact_graph(
         ),
         ("web", makes(exact_kernel::NodeType::WebView)),
         ("sound", !plan.sounds.is_empty()),
-        // The MIDI arm for a plan that asks for ports or hears an input.
+        // LLP 1125 D6: the MIDI arm for a plan that asks for ports or hears an input.
         ("midi", exact_runner::uses::uses_midi(plan)),
-        // The listener for an app whose grants can listen.
+        // LLP 1133.005 D13: the listener for an app whose grants can listen.
         ("listen", listens(inputs)),
     ]
     .into_iter()
     .filter_map(|(module, reached)| reached.then_some(module))
     .collect();
-    // A node that binds `mediaTitle` (`metadata=`) claims the
+    // LLP 1098 D8: a node that binds `mediaTitle` (`metadata=`) claims the
     // media session, which iOS shows only for a playback session.
     let media_session = plan.nodes.iter().any(|node| {
         node.bindings.iter().any(|b| {
@@ -654,8 +656,8 @@ fn artifact_graph(
                 && b.id == exact_kernel::PropId::MediaTitle as u16
         })
     });
-    // The linked tier the plan uses, by name: a native build
-    // whose plan is fixed links these and no other.
+    // The linked tier the plan uses (LLP 1047 D2), by name: a native build
+    // whose plan is fixed links these and no other (LLP 1047.001 D2).
     let uses: Vec<&str> = exact_runner::uses(plan).iter().map(|c| c.name()).collect();
     Ok(
         json!({"version":1,"sources":sources,"surfaceCalls":calls,"loads":loads,"uses":uses,"mediaSession":media_session,"launchBackground":launch_background(plan),"artifacts":artifacts}),
@@ -663,7 +665,7 @@ fn artifact_graph(
 }
 
 /// Whether the app's grant ceiling has a `net.listen` line or a loopback
-/// `auth.callback` (whose receiver is the listener's): without either,
+/// `auth.callback` (D9's receiver is the listener's): without either,
 /// everything the listener would do is refused, so the build carries none.
 fn listens(inputs: &Value) -> bool {
     (inputs["grantCeiling"].as_str().unwrap_or("").lines()).any(|line| {
@@ -681,10 +683,10 @@ fn listens(inputs: &Value) -> bool {
     })
 }
 
-/// The ground the app's first route stands on, which the
+/// LLP 1116.011 D2.3: the ground the app's first route stands on, which the
 /// iOS launch screen shows until its first frame: `"grouped"` where the first
 /// route's `background-color` is the metric the compiler gives a route that
-/// scrolls a grouped list (`-exact-grouped-page-ground`),
+/// scrolls a grouped list (`-exact-grouped-page-ground`, LLP 1116.007 D5),
 /// iOS's grouped grey, or that role written (`-exact-grouped-background`),
 /// `"system"` for any other (the platform's page, `systemBackground`). A route
 /// is a node with a `navigationKey` and no `navigationBack` (the navigation
@@ -848,7 +850,7 @@ mod tests {
         ));
     }
 
-    /// A development bake leaves its plan's map beside
+    /// LLP 1012.001.000 D6: a development bake leaves its plan's map beside
     /// it, keyed by that plan's digest; a production bake leaves none, and a
     /// plan whose nodes the contract no longer compiles to gets none.
     #[test]
@@ -877,7 +879,7 @@ mod tests {
         std::fs::remove_dir_all(&root).unwrap();
     }
 
-    /// A declared sound is not a node, so the plan's `sounds`
+    /// LLP 1096 D8: a declared sound is not a node, so the plan's `sounds`
     /// table is what says a fixed build carries the sound arm.
     #[test]
     fn a_plan_with_a_sound_loads_the_sound_arm() {
@@ -894,7 +896,7 @@ mod tests {
         }
     }
 
-    /// An image's picture in picture is the video arm's, so a
+    /// LLP 1042 §9: an image's picture in picture is the video arm's, so a
     /// plan that asks for it loads the arm with no `video` node.
     #[test]
     fn a_plan_that_floats_an_image_loads_the_video_arm() {
@@ -906,7 +908,7 @@ mod tests {
         assert_eq!(graph["loads"], json!(["video"]));
     }
 
-    /// The plan requires the hatch words it marks
+    /// LLP 1075.003.000.001 §4.3: the plan requires the hatch words it marks
     /// that this platform's module handles, and no others.
     #[test]
     fn a_plan_requires_the_hatch_words_its_platform_handles() {
@@ -944,7 +946,7 @@ mod tests {
         assert_eq!(requires(json!({})), Value::Null);
     }
 
-    /// A TypeScript app's plan requires the prelude runtime
+    /// LLP 1108 D6 R2: a TypeScript app's plan requires the prelude runtime
     /// its compatibility inputs carry (`exactBodyFrom`), so an older cohort
     /// takes no bundle; an app without one requires none.
     #[test]
@@ -963,7 +965,7 @@ mod tests {
         assert_eq!(requires(json!({})), Value::Null);
     }
 
-    /// The receipt says whether a node claims the media session.
+    /// LLP 1098 D8: the receipt says whether a node claims the media session.
     #[test]
     fn a_plan_with_metadata_claims_the_media_session() {
         for (prop, claims) in [
@@ -1002,9 +1004,9 @@ mod tests {
         }
     }
 
-    /// The receipt says what the first route stands on, for
+    /// LLP 1116.011 D2.3: the receipt says what the first route stands on, for
     /// the iOS launch screen: the grouped grey where the route scrolls a
-    /// grouped list, the page's own otherwise.
+    /// grouped list (stopwatch, round 13), the page's own otherwise.
     #[test]
     fn a_plan_says_the_ground_its_first_route_stands_on() {
         const SCREEN: &str = "routes nav
@@ -1349,7 +1351,7 @@ component App
         std::fs::remove_dir_all(root).unwrap();
     }
 
-    /// A bundled SVG image whose art is under a `mask`
+    /// LLP 1141.001 D1: a bundled SVG image whose art is under a `mask`
     /// loads the island module, though the plan has no `mask`; the same
     /// logo without one, an SVG under another name and a PNG load nothing.
     #[test]

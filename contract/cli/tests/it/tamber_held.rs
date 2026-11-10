@@ -1,12 +1,13 @@
-//! Facts a development host holds over the app's own: the runner's `hold_facts`.
+//! Facts a development host holds over the app's own (LLP 1122 T7): the runner's `hold_facts`.
 use super::tamber::{app, booted, parsed, press, row, MODES};
 use exact_kernel::StyleId;
 use exact_plan::Value;
 
-/// In a copy the design tool pins, the host holds the scheme, a pinned axis and
-/// the root size over the app's own: the app's `setMode`, `setScheme` and
-/// `setRootFontSize` are kept as asked and not applied (no command reaches the
-/// host), and handed back each is the app's latest choice, in one commit.
+/// In a copy the design tool pins (LLP 1122 T7, theme2's F2 ruling) the
+/// host holds the scheme, a pinned axis and the root size over the app's
+/// own: the app's `setMode`, `setScheme` and `setRootFontSize` are kept as
+/// asked and not applied (no command reaches the host), and handed back
+/// each is the app's latest choice, in one commit.
 #[test]
 fn held_facts_keep_the_apps_own_choices_until_handed_back() {
     let path = app(

@@ -1,6 +1,6 @@
-//! The affordances Apple's platforms have and CSS has no name
-//! for, as declared rows: an SF Symbol's palette. The system colours are
-//! roles (`roles.rs`).
+//! LLP 1077 §5: the affordances Apple's platforms have and CSS has no name
+//! for, as declared rows: an SF Symbol's palette (D10). The system colours
+//! D13 named are roles now (LLP 1095 D2, `roles.rs`).
 
 use super::{Color, ColorValue};
 use crate::gradient::ColorText;
@@ -51,7 +51,7 @@ impl SymbolPalette {
         self.text(ColorText::Css)
     }
 
-    /// The wire form: [`Self::css`], with every reference kept.
+    /// The wire form: [`Self::css`], with every reference kept (LLP 1095 D1).
     pub fn wire(&self) -> String {
         self.text(ColorText::Wire)
     }
@@ -83,7 +83,7 @@ mod tests {
         assert_eq!(SymbolPalette::parse("none").unwrap().0, vec![]);
         assert!(SymbolPalette::parse("#000 #111 #222 #333").is_none());
         assert!(SymbolPalette::parse("bogus").is_none());
-        // WebKit's names are roles now, not copied pairs.
+        // WebKit's names are roles now (LLP 1095 D2), not copied pairs.
         let label = ColorValue::parse_light_dark("-apple-system-label").unwrap();
         assert_eq!(label, ColorValue::parse_light_dark("-exact-label").unwrap());
         assert_eq!(label.resolve(true), Color(0xffff_ffff));

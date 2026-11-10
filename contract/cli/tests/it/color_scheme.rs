@@ -1,4 +1,4 @@
-//! `color-scheme` on a subtree.
+//! LLP 1034 §8: `color-scheme` on a subtree.
 
 use exact_kernel::Kernel;
 use exact_plan::Value;
@@ -56,14 +56,14 @@ fn only_light_and_dark_are_written() {
     for value in ["normal", "light dark", "only dark", "dim"] {
         let src = format!("component App\n  view\n    column color-scheme=\"{value}\"\n");
         let error = contract::compile(&src).unwrap_err().to_string();
-        assert!(error.contains("`dark` on a subtree"), "{value}: {error}");
+        assert!(error.contains("LLP 1034 §8"), "{value}: {error}");
     }
     for value in ["light", "dark"] {
         let src = format!("component App\n  view\n    column color-scheme=\"{value}\"\n");
         contract::compile(&src).unwrap();
     }
-    // A Theme row's Auto as a branch: the refusal names the app's own
-    // scheme, `setScheme`.
+    // A Theme row's Auto as a branch (the euxy port, 2026-10-20): the
+    // refusal names the app's own scheme, `setScheme`.
     for auto in ["light dark", "normal", "unset", ""] {
         let src = format!("component App\n  state t = \"auto\"\n  view\n    column color-scheme=(t == \"auto\" ? \"{auto}\" : t)\n");
         let error = contract::compile(&src).unwrap_err().to_string();

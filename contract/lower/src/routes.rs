@@ -1,4 +1,4 @@
-//! The table and launch slot; paths use ordinary templates.
+//! @ref LLP 1038 D2/D3 — the table and launch slot; paths use ordinary templates.
 
 use super::*;
 
@@ -19,7 +19,7 @@ impl Lowerer<'_> {
                 }
                 Err(e) => self.errors.push(e),
             }
-            // The source listing its pages, and its
+            // @ref LLP 1048.000 D2 — the source listing its pages, and its
             // arguments (values, as types checked).
             let pages = row.fields.iter().find(|f| f.name == "pages");
             if let Some(Expr::Call(source, args, _)) = pages.map(|f| &f.value) {
@@ -35,7 +35,7 @@ impl Lowerer<'_> {
                 self.b.set_route_pages(id, source, &args);
             }
         }
-        // The `notfound` the compiler writes: the
+        // @ref LLP 1116.009 D2 — the `notfound` the compiler writes: the
         // table `contract_types::routes` checked, in the plan.
         if contract_syntax::implicit_notfound(file) {
             self.b.route("notfound", "", None, false, true);
@@ -60,9 +60,9 @@ impl Lowerer<'_> {
     }
 }
 
-/// A route's policy fields: `render=client|build|cached|
+/// A route's policy fields (LLP 1048.003 D5): `render=client|build|cached|
 /// request`, undeclared `client`; `activate=idle|never|interaction`, inferred when
-/// undeclared; `paint=settled|boot`, undeclared `settled`. Each
+/// undeclared; `paint=settled|boot` (LLP 1048.005), undeclared `settled`. Each
 /// value is a word, read by its spelling.
 fn route_policy(
     row: &contract_syntax::RouteDecl,
@@ -135,8 +135,8 @@ fn route_policy(
             field.span,
         );
     }
-    // A parameterized route renders at build only the pages `pages=` lists;
-    // `pages=` names pages a build or a server renders.
+    // A parameterized route renders at build only the pages `pages=` lists
+    // (LLP 1048.000 D2); `pages=` names pages a build or a server renders.
     let listed = row.fields.iter().any(|f| f.name == "pages");
     if render == RenderPolicy::Build
         && !listed
@@ -177,11 +177,11 @@ fn route_policy(
     Ok((render, activate, paint))
 }
 
-/// Where an element sits relative to a navigation root.
-/// Every host finds a root's routes among its own children
+/// Where an element sits relative to a navigation root (LLP 1038 D6, LLP
+/// 1075.003 §3.7). Every host finds a root's routes among its own children
 /// and among its tabpanels' children, and nowhere else: a route behind a
-/// wrapper would be ignored, with only a runtime log naming its key, so the
-/// compiler refuses it.
+/// wrapper was ignored, with only a runtime log naming its key (hn-reader
+/// F5, shop F9), so the compiler refuses it.
 #[derive(Clone, Debug, Default)]
 pub(crate) enum NavPlace {
     /// No navigation root encloses it.
@@ -190,7 +190,7 @@ pub(crate) enum NavPlace {
     /// A root's child: the tags from the root down.
     RootChild(Vec<String>),
     /// A child of a root that holds tabs, whose routes are its tabpanels'
-    /// children only.
+    /// children only (LLP 1075.003 §3.7).
     TabbedRootChild(Vec<String>),
     /// A tabpanel's child, the panel in a root.
     PanelChild(Vec<String>),
@@ -200,7 +200,7 @@ pub(crate) enum NavPlace {
     InRoute,
 }
 
-/// The attribute marking a box as the split's own placeholder, written as
+/// @ref LLP 1116.006 D2 — the attribute marking a box as the split's own placeholder, written as
 /// a literal: a wide window's split shows it in the detail pane while nothing is selected, and
 /// it is no box anywhere else (its `display` is `none`, which the web shell overrides there).
 pub(crate) fn split_placeholder(attrs: &[Attr]) -> Option<&Attr> {
@@ -210,7 +210,7 @@ pub(crate) fn split_placeholder(attrs: &[Attr]) -> Option<&Attr> {
 }
 
 impl NavPlace {
-    /// The first root carrying a
+    /// @ref LLP 1116 D6, LLP 1115 D5 — the first root carrying a
     /// `navigationKey` is the navigation root with or without
     /// `navigationBack`. One that names no Back control is given the empty
     /// name, which no element's `id` carries: every host and the runner
@@ -239,14 +239,14 @@ impl NavPlace {
         })
     }
 
-    /// A route whose scroll is a grouped list is on
+    /// @ref LLP 1116.007 D5 — a route whose scroll is a grouped list is on
     /// the grouped page's ground (the metric `grouped-page-ground`), bar to
     /// bottom edge: on iOS the role `-exact-grouped-background`, as a
     /// hand-built `UITableViewController`'s screen is, so what sits between
     /// the `header` and the list (a segmented switcher, a summary) is on the
     /// list's grey, not the page's white; on the web the page's own ground,
     /// on which the list's cards stand. The row is the compiler's, set and
-    /// not written, and pushed before the author's, so a
+    /// not written (LLP 1115.000 D2), and pushed before the author's, so a
     /// `background-color` on the route (or its class) wins; a box between
     /// the header and the list paints its own, over it. Each host resolves
     /// the role its own way (`systemGroupedBackground` on iOS). `None` where
@@ -275,16 +275,16 @@ impl NavPlace {
         Some([&[role][..], attrs].concat())
     }
 
-    /// A sheet is never transparent: a route that
+    /// @ref LLP 1116.009 D3 — a sheet is never transparent: a route that
     /// `navigationPresentation="modal"` presents is on the page's own ground,
     /// `-exact-background`, unless its author said otherwise. A hand-built
     /// UIKit sheet is never see-through: it has the system background, or
     /// below its large detent UIKit's glass, to which the iOS host leaves
-    /// this ground; a web or Mac host
+    /// this ground (LLP 1141.001 D3); a web or Mac host
     /// keeps the covered route in view, so a form whose author wrote no
-    /// background would be see-through there. The row is the compiler's,
-    /// set and not written
-    /// and pushed before the author's, as `grouped_page`'s is,
+    /// background was see-through there (the bake-off's habit-tracker, rounds
+    /// 10 and 11). The row is the compiler's, set and not written (LLP
+    /// 1115.000 D2) and pushed before the author's, as `grouped_page`'s is,
     /// so a `background-color` on the route (or its class) wins; and it runs
     /// after it, so a sheet that scrolls a grouped list is on that grey. A
     /// presentation that is computed is not told, and `None` is a route that
@@ -331,7 +331,7 @@ impl NavPlace {
     ) -> Result<NavPlace, LowerError> {
         let has = |name: &str| attrs.iter().any(|a| a.name == name);
         let path = |p: &[String]| [p, &[tag.to_string()]].concat();
-        // The bar is each route's, so `navigationBar`
+        // @ref LLP 1115.000 D5.2 — the bar is each route's, so `navigationBar`
         // is a route's word: on the root or on a box inside a screen no host
         // reads it, and the screen would keep the bar it meant to drop.
         if has("navigationBar") && (!has("navigationKey") || has("navigationBack")) {
@@ -349,11 +349,11 @@ impl NavPlace {
                     .map_or(span, |a| a.span),
             );
         }
-        // Only a route is presented. A `navigationPresentation="modal"` on
-        // the root of a form component its stack draws with no
-        // `navigationKey` is drawn in place by every host, and on iOS its
-        // header sits under the status bar, where Save and Cancel get no
-        // touches.
+        // Only a route is presented. gradebook (bake-off round 34) wrote
+        // `navigationPresentation="modal"` on the root of a form component
+        // its stack drew with no `navigationKey`: every host drew the form
+        // in place, and on iOS its header sat under the status bar, where
+        // Save and Cancel got no touches.
         if let Some(a) = attrs
             .iter()
             .rev()
@@ -414,7 +414,7 @@ impl NavPlace {
                 }
             }
         }
-        // The split's placeholder is a box in the root route; a route
+        // @ref LLP 1116.006 D2 — the split's placeholder is a box in the root route; a route
         // marked so would never show.
         if let Some(a) = split_placeholder(attrs).filter(|_| has("navigationKey")) {
             return err(
@@ -434,9 +434,9 @@ impl NavPlace {
         if has("navigationKey") {
             let shown = match self {
                 NavPlace::InRoot(p) => p.join(" > "),
-                // A sheet taken out of the tab's stack and drawn beside the tabs is
-                // presented by no host, and its header sits under the status bar with
-                // Save and Cancel dead.
+                // @ref LLP 1116.020 D2 — round 18's contacts took its add sheet out of the tab's
+                // stack and drew it beside the tabs: no host presented it, and its header sat
+                // under the status bar with Save and Cancel dead.
                 NavPlace::TabbedRootChild(_) => {
                     let modal = attrs.iter().rev().find(|a| a.name == "navigationPresentation");
                     let sheet = if modal.is_some() {
@@ -533,7 +533,7 @@ fn holds_tabs(children: &[Node]) -> bool {
 }
 
 /// A route's literal `navigationScroll` names its content scroller by HTML
-/// id, resolved inside the route as `navigationBack` is.
+/// id (LLP 1075.003 §3.5), resolved inside the route as `navigationBack` is.
 /// Refused only where that provably fails: no element of the route can carry
 /// the id, or every one that does is a plain box that never scrolls on y.
 /// Anything the compiler cannot see through — a computed id or overflow, a
@@ -630,8 +630,8 @@ fn still_on_y(tag: &str, attrs: &[Attr]) -> bool {
 
 /// Whether a route's content scroller is a grouped list (`list
 /// appearance="auto"`, `listStyle` `inset-grouped` or `grouped`: the two that
-/// draw the grouped grey), resolved as the hosts resolve it: the element a
-/// literal `navigationScroll` names by `id`, else the
+/// draw the grouped grey), resolved as the hosts resolve it (LLP 1115.000
+/// D11.1): the element a literal `navigationScroll` names by `id`, else the
 /// shallowest one that scrolls on y, eight levels down at most, in tree
 /// order at each depth. False where the compiler cannot tell (a computed
 /// name or id, a class or a computed row on a box that may scroll): the

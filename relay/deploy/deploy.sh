@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Deploys the tamber relay (scripts/tamber-relay-server.mjs, docs/tamber-relay-service.md) to one Ubuntu or
-# Debian host over SSH, from a checkout on the developer's machine. Idempotent; docs/tamber-relay-service.md
-# describes the service.
+# Debian host over SSH, from a checkout on the developer's machine. Idempotent; the runbook is
+# ~/x2theme/r4-deploy-runbook.md (LLP 1121 §5 10c R4).
 #
-# OUTWARD-FACING: the relay takes connections from the internet on 443. Run this only against a host the operator
-# provides for it; never against a machine of anyone else's, and never a second relay.
+# OUTWARD-FACING: the relay takes connections from the internet on 443. Run this only against a host Charlie
+# provides for it (theme2, 2026-10-24); never against a machine of anyone else's, and never a second relay.
 #
 #   relay/deploy/deploy.sh <host> trust <SHA256:fingerprint>   the host's SSH key pinned, once, before anything else:
 #                                                     the fingerprint from the provider's console, never from the

@@ -1,4 +1,4 @@
-// Every consumer uses fragment origins and band bounds.
+// @ref LLP 1043.000 §3 D7 — every consumer uses fragment origins and band bounds.
 import Foundation
 import CoreText
 
@@ -10,7 +10,8 @@ extension TextEngine {
     /// `text-align: justify` at that width) every line but the paragraph's
     /// last and one ending in a forced break fills the width
     /// (`text-align-last: auto`). Indices stay the source's, so hit testing,
-    /// selection and later layouts read the same ranges.
+    /// selection and later layouts read the same ranges. The reader diary
+    /// found both missing only on Apple.
     package static func finishedLine(_ line: CTLine, source: NSAttributedString, range: CFRange, justify width: Double?) -> CTLine {
         let line = inkedSoftHyphen(line, source: source, range: range)
         return width.map { justified(line, source: source, range: range, width: $0) } ?? line
@@ -19,9 +20,9 @@ extension TextEngine {
     /// What a line's trailing white space adds to its width that CSS does
     /// not count. Collapsible spaces at a line's end are removed (CSS Text 3
     /// §4.1.2, Phase II rule 3). `pre-wrap`'s (`whiteSpace` 1) hang at a soft
-    /// wrap and, before a forced break, which the end of the block also is,
-    /// conditionally hang: only as far as they would not fit in `room`
-    /// (rule 4). CSS Text 3 §8.2 counts conditionally hanging spaces in a max-content
+    /// wrap and, before a forced break, which the end of the block also is
+    /// (§5), conditionally hang: only as far as they would not fit in `room`
+    /// (rule 4). §8.2 counts conditionally hanging spaces in a max-content
     /// size, so a `pre-wrap` "Say " is as wide as "Say" and its space, as
     /// Chrome measures it. `pre`'s (4) count.
     package static func uncountedTrailingWidth(_ line: CTLine, whiteSpace: Int, source: NSAttributedString, room: CGFloat) -> CGFloat {
@@ -80,11 +81,11 @@ extension TextEngine {
     /// not its "y", at the right edge, as in Chrome. CoreText draws a
     /// right-to-left line's trailing spaces left of its pen, so there the
     /// pen moves right by them. A line wider than its box is start-aligned
-    /// and overflows its end edge, as CSS Text 3 §6.1 has it ("the contents are
+    /// and overflows its end edge, as §6.1 has it ("the contents are
     /// start-aligned") and Chrome draws it. CoreText flushes the overlong
     /// line the other way, so a right-aligned column at an accessibility
-    /// text size spilled left over its neighbour (a weather table's "High"
-    /// header ran into "Low") where the web spills right.
+    /// text size spilled left over its neighbour (round 13's weather: the
+    /// "High" header ran into "Low") where the web spills right.
     package static func penOffset(_ line: CTLine, flush: CGFloat, room: Double, rtl: Bool, whiteSpace: Int = 0, source: NSAttributedString? = nil) -> CGFloat {
         // A left-aligned left-to-right line starts at its box's start edge
         if flush == 0 && !rtl { return 0 }
@@ -100,7 +101,7 @@ extension TextEngine {
 /// puts on the right): CSS `text-indent` on the first line, and a Markdown
 /// list item's head indent on each of its lines, the first one's less the
 /// marker hung before it — the `padding-left` and outside marker the web
-/// lays the same item out with. Measure, layout, paint, hits
+/// lays the same item out with (LLP 1045 D4). Measure, layout, paint, hits
 /// and raster workers all start lines here.
 package struct LineInsets {
     package var textIndent: CGFloat = 0

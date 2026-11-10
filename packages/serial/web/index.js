@@ -1,13 +1,13 @@
-// @exact/serial on the web: Web Serial (https://serial.spec.whatwg.org/), the browser's chooser
+// @exact/serial on the web (LLP 1133.037 D7–D9): Web Serial (https://serial.spec.whatwg.org/), the browser's chooser
 // and its remembered ports, in the interface's shapes. The page runtime (host/web-js/modules.js) calls it outside the
 // agent.
 //
 // - A port is a record with an id this page gives its `SerialPort` object; `getPorts()` is the browser's list.
 // - One reader per connection drains `port.readable` into the bytes not yet delivered, and stops reading while they
-//   reach the retained bound (the larger of `bufferSize` and two seconds of the line, at most 16 MiB), so the
-//   stream's backpressure holds the rest. Each `serialInput` answer is every byte since the last, with the non-fatal
+//   reach the retained bound (D8: the larger of `bufferSize` and two seconds of the line, at most 16 MiB), so the
+//   stream's backpressure holds the rest. Each `serialInput` answer is every byte since the last, with D9's non-fatal
 //   errors at their offsets; the reader takes the port's next `readable` after each, as Web Serial says.
-// - The web has no attached list: `attachedPorts` is refused before it reaches here.
+// - The web has no attached list (D3): `attachedPorts` is refused before it reaches here.
 
 const MOST = 16 * 1024 * 1024;
 

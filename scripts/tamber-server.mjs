@@ -1,4 +1,4 @@
-// The design server's wire: HTTP to clients, JSON
+// The design server's wire (LLP 1121 D13, stage 3): HTTP to clients, JSON
 // lines to `contract tamber serve --stdio`, which owns the files (digests,
 // the lock, the journal, every write). This writes no design file.
 //
@@ -25,7 +25,7 @@
 //     1.12), and the proposals unless the request named it (`"held": r` with this run's epoch). `GET
 //     /__tamber/events?after=<cursor>&epoch=&client=` (1.17, tamber-events-get.mjs) is the same read for a client
 //     re-asking by cursor (`exactLongPoll`; first `open=`, any answer's opaque `cursor`), a 204 after 25 s.
-// - The wire's own requests, beside the server's:
+// - The wire's own requests (LLP 1122 D9, D10), beside the server's:
 //   - `commit` `{client, message?}`: the files this session wrote, committed
 //     to git as scripts/tamber-commit.mjs guards it; never pushed.
 //   - `propose` with `hold: true` and a `client`: kept 15 min for review
@@ -38,7 +38,7 @@
 //     (an import's offers by item, its unmapped report and count).
 //   - A conflict names who last changed each file that moved (`by`: a
 //     client, or "changed on disk").
-//   - `history` `{limit?, skip?}` (`tamber/1.1`): the git log of
+//   - `history` `{limit?, skip?}` (`tamber/1.1`, LLP 1122 D9): the git log of
 //     the design's files, newest first (20, at most 100; at most 10,000
 //     skipped), each commit's
 //     files with their diff and their token-level edits (`what`, `name`,
@@ -48,18 +48,18 @@
 //     says which files moved since). Refused, with each edit that cannot
 //     apply (`refused`), when the files have moved there. Accepted after
 //     the files move, it is planned again from the commit.
-//   - `import` `{kind, source, name?, prefix?, client}`: a
+//   - `import` `{kind, source, name?, prefix?, client}` (LLP 1122 T1a): a
 //     shadcn or Tailwind stylesheet or a DTCG file's text (several DTCG
 //     files as `sources: [{name, text}]`), imported as `bun exact.mjs tamber
 //     import` does and held with its `review`. Astryx keeps
 //     its CLI: resolving its package needs a Bun install.
-// - The build channel (scripts/tamber-builds.mjs): `hello`
+// - The build channel (LLP 1122 D4, scripts/tamber-builds.mjs): `hello`
 //   lists the dev loop's registered builds; `pin` `{client, build?, pin}`
 //   and `preview` `{client, build, axis, value}` send one a command, the
 //   client's while a subscription names it (`subscribe` `{client}`); the
 //   builds' reports are events (`builds`, `build-status`, `unsupported`,
 //   `selected`).
-// - Scrub sessions (scripts/tamber-scrub.mjs):
+// - Scrub sessions (LLP 1121 D13, LLP 1122 D6; scripts/tamber-scrub.mjs):
 //   `scrub` `{client, ops, files, scrub?}` previews a live edit on every
 //   build through the dev loop (`scrub`: `{preview, restore}`), written
 //   nowhere; `scrub-release` writes it once, `scrub-cancel` drops it. One
@@ -71,15 +71,15 @@
 // - Every POST carries the token as `x-exact-tamber-token`, never in a URL,
 //   and no cookie is read. Each request's scope is checked in one place
 //   (scripts/tamber-pairing.mjs, tamber/1.13).
-// - `POST /__tamber/pair {code}`: a code a local client minted
+// - `POST /__tamber/pair {code}` (stage 10 A2): a code a local client minted
 //   (`pair-code`) for a paired client's own token, at the code's scope; the
 //   local token lists (`clients`) and revokes (`revoke`) them.
 //
 // Mounted by both dev loops (host/web/dev.mjs, host/web-js/dev.mjs) when the
 // app has a design; `bun exact.mjs tamber serve <app>` runs it alone and
 // `bun exact.mjs tamber op <url> <request>` is its scripted client. Never in a
-// release build or a bake. The dev loops serve server-sent events and no
-// WebSocket, so a POST's response is streamed.
+// release build or a bake. D13 names WebSocket; the dev loops serve
+// server-sent events and no WebSocket, so stage 3 streams a POST's response.
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { existsSync, readFileSync, realpathSync, statSync, watch } from 'node:fs';
@@ -108,7 +108,7 @@ import { opsRefusal, overOps } from './tamber-ops-limit.mjs';
 import { earlyAnswer, probeTool, readBody, parseRequest as parse, tooDeep, upstream, viaDoor, waitForAnswer } from './tamber-request.mjs'; import { cursorOf, eventsQuery, LONG_POLL_PRESENT_MS } from './tamber-events-get.mjs'; import { REAL, TIMING } from './tamber-timing.mjs';
 
 const ROOT = resolve(new URL('..', import.meta.url).pathname);
-// The server's own line limit, less room for the id this adds and an import's `recognised` digests (64).
+// The server's own line limit, less room for the id this adds and an import's `recognised` digests (64, stage 10b).
 const LINE_LIMIT = 1 << 20;
 const BODY_LIMIT = LINE_LIMIT - 64 - 64 * 72;
 const body = (req, res) => readBody(req, BODY_LIMIT, res); // over it, answered before the connection closes
@@ -138,18 +138,18 @@ function spawnContract(appDir) {
  * `/__tamber` paths (true when it did); `close()` stops the server and
  * resolves once it has let go of the design's lock. `scrub`, from a dev
  * loop, previews a scrub on its builds; `scopeOf(req)` is a request's scope
- * (the scope ladder): the one token is the local tool's, which writes,
+ * (LLP 1122 D6's ladder): the one token is the local tool's, which writes,
  * and paired clients' scoped tokens name theirs. `sourceMap(digest)` is the
  * source map of the plan with that digest (`app.plan.map.json` bytes, or
  * null), or with none the running generation's, which an inspected
- * selection is joined to and outlines are drawn from;
+ * selection is joined to and outlines are drawn from (LLP 1122 D5, T2c);
  * `designServed()` the
  * design it serves now (a live edit's) as `{digest, source}`, `source` the
  * SHA-256 of the design file it was made from, or null for the plan's own.
  * `pairTtlMs` is a paired token's lifetime (`--pair-ttl`), `clock` the
- * pairing's time (tests), `watchDir` fs.watch (tests), `remote()` the run's open remote doors (the
- * remote listener's `list()`), shown with each pairing code. The returned `pairing` is the
- * run's paired clients, for the canvas gateway (`lookup`, `onEnd`); `canvas(pairing)`
+ * pairing's time (tests), `watchDir` fs.watch (tests), `remote()` the run's open remote doors (stage 10
+ * B's `list()`), shown with each pairing code. The returned `pairing` is the
+ * run's paired clients, for stage 10 C's gateway (`lookup`, `onEnd`); `canvas(pairing)`
  * makes that gateway (scripts/tamber-canvas.mjs; null for none), which
  * `canvas` answers once its port is open (`openCanvas`). */
 export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = watch, log = console.log, settle = 50, toolDir = TOOL_DIST, live = false, answerMs = ANSWER_MS, scrub = null, scrubIdleMs, scopeOf = () => 'write', page = null, sourceMap = () => null, designServed = () => null, pairTtlMs = PAIR_TTL_MS, clock = Date.now, remote = () => [], canvas = pairing => canvasGateway({ pairing }), importLimits }) {
@@ -163,7 +163,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
   const outbound = new Set(), fits = bytes => [...outbound].reduce((n, r) => n + (r.writableLength || 0), 0) + bytes <= 128 << 20;
   const track = res => { for (const w of [res, res.socket]) if (w?.on && !outbound.has(w)) { outbound.add(w); w.on('close', () => outbound.delete(w)); } };
   // The digests of the exports this run gave out, newest last (at most 64): a
-  // client's `import` may name one as the baseline it pulled.
+  // client's `import` may name one as the baseline it pulled (stage 10b).
   const exported = [];
   // Each file's digest as last announced: what a later change is told from.
   const known = new Map();
@@ -174,7 +174,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
   // What a client reads of this machine's files (tamber/1.15):
   // every `file` named by one rule (`tamber-paths.mjs`, the design server's
   // too), for every client; and a client that is not local (paired, through
-  // the remote doors or a tunnel) gets machine-written messages with this machine's
+  // B's doors or a tunnel) gets machine-written messages with this machine's
   // directories taken out. Authored values and file contents go as they are.
   const scrubText = messageScrubber(appDir);
   const forRemote = body => scrubbedMessages(body, scrubText);
@@ -189,14 +189,14 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     // The last 256 kept, at most 64 MiB of them (each event's size beside it).
     const bytes = Buffer.byteLength(line); events.push(Object.defineProperty(event, 'bytes', { value: bytes })); kept += bytes;
     while (events.length > KEPT || kept > 64 << 20) kept -= events.shift().bytes;
-    // One `only` a client (a hold's refusal, sent to its owner) is that client's alone.
+    // One `only` a client (a hold's refusal, its owner's: theme2's 07:48 (c)) is that client's alone.
     // A paired subscriber past its deadline gets nothing more (`live` ends it now).
     // A subscriber 8 MiB behind is cut (it reconnects and catches up from `events`), never buffered without end.
     const remoteLine = `data: ${JSON.stringify(forRemote(event))}\n\n`;
     for (const res of subscribers) if (!res.writableEnded && (!res.paired || pairs.live(res.paired)) && (!event.only || res.client === event.only)) { if (queuedOn(res) > 8 << 20) { subscribers.delete(res); res.destroy(); } else res.write(res.paired ? remoteLine : line); }
     for (const poll of polls) poll();
   };
-  // The dev loop's running builds: registered on its streams,
+  // The dev loop's running builds (LLP 1122 D4): registered on its streams,
   // their reports told to every client, their pins each client's own.
   // Each build's status a stale selection was last asked again under.
   const refreshed = new Map();
@@ -209,9 +209,9 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     pruneSelections();
     while (lastSelection.size > 256) lastSelection.delete(lastSelection.keys().next().value);
   };
-  // A selection joined to source: refused and asked again when it is from before the build's latest
-  // status; else published as a `selection`, and every copy of its node outlined. Source maps by plan digest:
-  // each build's own plan's, as the dev loop gives it now (`sourceMap(digest)`; with none, the running
+  // A selection (LLP 1122 D5) joined to source: refused and asked again when it is from before the build's latest
+  // status; else published as a `selection`, and every copy of its node outlined. Source maps by plan digest (LLP
+  // 1122 T2c): each build's own plan's, as the dev loop gives it now (`sourceMap(digest)`; with none, the running
   // generation's). A map can change under one plan digest (an edit that moves only source locations), so the dev loop
   // is asked each time; its bytes are parsed once.
   const parsed = new WeakMap(), copied = new WeakMap(); // (copied: each map's copies, 1.17)
@@ -226,7 +226,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
   const channel = buildChannel({ copiesFor: digest => { const m = mapOf(digest); if (!m) return null; if (!copied.has(m)) copied.set(m, copiesOf(m) ?? false); return copied.get(m); },
     // A build that reports no selection (inspect mode left) has none to read.
     send: e => { if (e.event === 'selected' && e.selected == null) lastSelection.delete(e.build); send({ ...e, seq: ++seq, epoch }); }, log,
-    // A held site in a build's new plan: the one site at the
+    // A held site in a build's new plan (LLP 1122 D8): the one site at the
     // old site's source location and call-site chain, by the two plans'
     // maps (a component called twice is two sites there); none otherwise.
     correspond: (from, to, site) => {
@@ -254,7 +254,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
       remember(build.id, namedPaths(selection, appDir));
       // Outlined as the client that owns inspect mode on that build, naming
       // the click it answers (its page does not scroll for it).
-      // Every copy on every build: the selection's source span, from its
+      // Every copy on every build (D5): the selection's source span, from its
       // own plan's map, resolved through each build's own plan's map (the
       // running generation's for a build that says no plan); a build whose
       // map is missing or stale is sent none.
@@ -288,7 +288,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     ended: e => send({ event: 'scrub', seq: ++seq, epoch, ...e }),
     idleMs: scrubIdleMs,
   });
-  // Which clients are present (for ownership): a client holding a
+  // Which clients are present (LLP 1122 D4's ownership): a client holding a
   // subscription that names it, or a long poll open or answered within the
   // last 35 s (the poll's 25 s and some; 90 s after a GET long poll's, which
   // re-asks after a backoff), as a client whose fetch reads a body whole holds
@@ -397,7 +397,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     packaged(reply.ok.packages, baseline, reply.ok.watch); watchAll(Object.keys(reply.ok.files));
     learnParams(reply.ok.files);
   };
-  // The app's component params, read again when its files move: the join names a row's param by them,
+  // The app's component params (LLP 1122 T3), read again when its files move: the join names a row's param by them,
   // never by its IR token. A file change empties the map until the read answers (a row reading a param is read-only
   // meanwhile, said so); a read that fails is tried again at the next change. A new plan (`plan`) reads them again
   // too. While a new plan's read is out, the names stand but no alias is offered (one may have moved with a package's
@@ -450,7 +450,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
           // A design file, or one that may be: `.tamber`, the design's own
           // name (app.json may name any), a directory a design is in, or a
           // name the platform did not give; and the app's own Contract
-          // sources, whose state parts the server writes.
+          // sources, whose state parts the server writes (LLP 1121 stage 8 D).
           const n = name && basename(String(name));
           if (n && !n.endsWith('.tamber') && !n.endsWith('.contract') && n !== design && !holders.has(n)) return;
           clearTimeout(timer); timer = setTimeout(rescan, settle);
@@ -472,12 +472,12 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
   };
   watchAll([], false);
   const ready = refresh();
-  // Paired clients (scripts/tamber-pairing.mjs). A burn or a
+  // Paired clients (stage 10 A2, scripts/tamber-pairing.mjs). A burn or a
   // rate-limit hit is logged with its peer and told to the clients without
   // it, never with a code.
   const pairs = pairing({ ttlMs: pairTtlMs, clock, say: w => { log(w.relay ? `tamber: relayed pairing limited (10 a minute): try again in ${w.retry} s` : `tamber: pairing: ${w.what}${w.peer ? ` (from ${w.peer})` : ''}${w.why ? `: ${w.why}` : ''}`); send({ event: 'pairing', seq: ++seq, epoch, what: w.what }); } });
   const gateway = canvas ? canvas(pairs) : null;
-  let relayGateway = null; // the relay's canvas, its own origin pair
+  let relayGateway = null; // (stage 10c R1b: the relay's canvas, its own origin pair)
   // A build's report (a registration replays pins, inspect and holds) comes
   // after every paired client past its deadline has ended, as a request does.
   const reportFrom = channel.report;
@@ -493,13 +493,13 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
   };
   /** Who a request is: the local token (`local`, its scope `scopeOf`'s), a
    * paired client by its token, or null. The token is read from its header
-   * only, never a cookie (canvas page code can set cookies this port
-   * receives). Through the remote listener or a trusted tunnel the local
-   * token is no one. */
+   * only, never a cookie (the lead's rule: canvas page code can set cookies
+   * this port receives). Through B's remote listener or a trusted tunnel
+   * the local token is no one (ruling 3). */
   const principalOf = (req, access) => {
     // The local token is the local tool's only where the request is local
     // (the development gate's whole loopback test): a LAN peer holding it is
-    // no one, as is any request through the remote listener or a tunnel.
+    // no one, as is any request through B's listener or a tunnel.
     if (access?.local === true && tokenOf(req)) return { scope: scopeOf(req), local: true, client: null };
     const paired = pairs.lookup(String(req.headers['x-exact-tamber-token'] ?? ''));
     return paired ? { scope: paired.scope, local: false, client: paired.client, token: String(req.headers['x-exact-tamber-token']) } : null;
@@ -509,7 +509,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     if (Math.max(req.socket?.writableLength || 0, res.writableLength || 0) > 8 << 20) { req.socket?.destroy(); return true; } // (a connection 8 MiB behind on what it was sent is cut: answers queue only while read)
     // Every paired client past its deadline ends before a request is read.
     pairs.expire();
-    // Through the remote listener or a trusted tunnel nothing is local,
+    // Through B's remote listener or a trusted tunnel nothing is local,
     // whatever else `access` says: no token page, no tool, no local token.
     if (access?.remote || access?.tunnel) access = { ...access, local: false };
     if (url.pathname === '/__tamber/tool' || url.pathname.startsWith('/__tamber/tool/')) { serveTool(req, res, url, access, toolDir); return true; }
@@ -520,10 +520,10 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     }
     const wire = ['/__tamber', '/__tamber/subscribe', '/__tamber/events'].includes(url.pathname);
     // Plain HTTP from off this machine (a --lan bind's peer) reaches nothing
-    // of the wire, pairing and paired tokens included: remote use is the remote TLS
-    // door or a tunnel the developer trusts, never plaintext.
+    // of the wire, pairing and paired tokens included: remote use is B's TLS
+    // door or a tunnel the developer trusts, never plaintext (LLP 1122 D12).
     if ((wire || url.pathname === '/__tamber/pair') && !viaDoor(access)) { notFound(res); return true; }
-    // The one path that needs no token: a pairing code for a
+    // The one path that needs no token (stage 10 A2): a pairing code for a
     // token, once.
     if (url.pathname === '/__tamber/pair') { await pairEndpoint(req, res, access); return true; }
     if (!wire) return false;
@@ -568,7 +568,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
       track(res);
       res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' });
       res.write(hello);
-      // `{client}`: its commands live while it is present.
+      // `{client}`: its commands live while it is present (LLP 1122 D4).
       const client = typeof request?.client === 'string' && request.client ? request.client : null;
       res.client = client;
       res.paired = who.client;
@@ -656,11 +656,12 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     return true;
   }
 
-  /** `POST /__tamber/pair {code, name?}`: the one request
+  /** `POST /__tamber/pair {code, name?}` (stage 10 A2): the one request
    * that carries no token. The token is answered in the body, once; the
-   * peer is the remote listener's (`access.peer`), else the socket's. A paired client's end
+   * peer is B's (`access.peer`), else the socket's. A paired client's end
    * (revoke, expiry) takes its presence, pins, scrub and long polls with it,
-   * keeps its held proposals marked as a revoked client's, and is told to the others. */
+   * keeps its held proposals marked as a revoked client's (theme2's ruling
+   * (b)), and is told to the others. */
   async function pairEndpoint(req, res, access) {
     if (req.method !== 'POST') { notFound(res); return; }
     const peer = String(access?.peer ?? req.socket?.remoteAddress ?? 'unknown');
@@ -709,7 +710,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     if (!allows(scope, need, local)) return refusal(request.method, scope, need);
     // Presence is also checked as requests come, not only every 5 s.
     absent(); delete request.restore; // `restore` (a revert's or an import's override line, *1.14*) is the server's
-    // A paired client's canvas grant, for the token it came with.
+    // A paired client's canvas grant (stage 10 C), for the token it came with.
     // (Plain HTTP from off this machine never reaches here: `viaDoor`, above.)
     // (minted by the gateway of the door the request came through: the relay's own pair, or the TLS door's; never across)
     const gw = door === 'relay' ? relayGateway : gateway;
@@ -754,7 +755,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     // Which app this server is, and which run of it, so `tamber tool` can
     // tell its own from another's and a client can tell a restart.
     // `live`: a dev loop serves it, whose running builds take a value-only
-    // edit in place, no reload (the live table); `design`:
+    // edit in place, no reload (LLP 1121 stage 4's live table); `design`:
     // the file an operation with no `file` edits; `page`: the dev loop's own
     // origin, which the design tool frames, null with no dev loop (1.3).
     if (request.method === 'hello') return ask({ ...request, paths: false }).then(r => (r.ok ? { ok: { ...r.ok, scope, local, ...(local ? {} : { client: request.client }), app: local ? appDir : basename(appDir), epoch, live: typeof live === 'function' ? live() : live, builds: channel.list(), page: typeof page === 'function' ? page() : page, design: relative(appDir, designPath(appDir) ?? resolve(appDir, design)) } } : r));
@@ -783,7 +784,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
   }
 
   /** `propose` through a dev loop whose pages write some tokens inline (the
-   * JS target): its class is the serving loop's, so the
+   * JS target, LLP 1121 stage 6): its class is the serving loop's (D13), so the
    * tool says so before the gesture rather than failing a scrub. */
   async function proposeHere(request) {
     const reply = await ask({ ...request, texts: true });
@@ -798,9 +799,9 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     return ok;
   }
 
-  /** `inspect` `{client, build?, on?, refresh?}`: inspect
+  /** `inspect` `{client, build?, on?, refresh?}` (LLP 1122 D4, D5): inspect
    * mode on one build or every build that can, its client's while present.
-   * Below `write` it is read-only (`on` is refused by
+   * Below `write` it is read-only (the lead's ruling 5; `on` is refused by
    * the table): `refresh` answers the selection each build last reported
    * (`selections`), asking no build again, since a build's answer outlines
    * on the developer's screens. */
@@ -821,7 +822,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     return done.error ? { status: 400, error: { message: done.error } } : { ok: done };
   }
 
-  /** `outline` `{client, at: [{file, line, col}]}`: every
+  /** `outline` `{client, at: [{file, line, col}]}` (LLP 1122 D5): every
    * build that can inspect outlines its views at those source locations (a
    * token's `uses`, a changeset entry's), by the dev loop's current map. */
   function outline(request) {
@@ -844,7 +845,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     return { ok: { sites, builds } };
   }
 
-  /** A state held on one node of one build (*1.11*):
+  /** A state held on one node of one build (LLP 1122 D4, D8; *1.11*):
    * `{build, site, instance, state}`, `state` null to let it go; its
    * client's while present, one a build. */
   function holdState(request) {
@@ -857,7 +858,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     return { ok: { held: true, ...done } };
   }
 
-  /** A pin on one build or every build, its client's while
+  /** A pin on one build or every build (LLP 1122 D4), its client's while
    * the client holds a subscription naming it. `preview` `{build, axis,
    * value}` pins that build's mode for that axis. */
   function pin(request) {
@@ -1006,8 +1007,8 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     const size = Buffer.byteLength(JSON.stringify({ diff: planned.ok.diff, changed: planned.ok.changed, ops, review }));
     if (size > 4 << 20 || size + [...proposals].reduce((n, [k, q]) => n + (k === replaces ? 0 : q.size ?? 0), 0) > 32 << 20) return /* a proposal at most 4 MiB, all held at most 32 MiB */ { status: 413, error: { message: 'the proposal is over 4 MiB, or the held ones together over 32 MiB: accept or drop some, or propose it in parts' } };
     const shown = { proposal: id, client, diff: planned.ok.diff, changed: planned.ok.changed, class: planned.ok.class, expires: new Date(expires).toISOString(), ops: ops.map((op, index) => ({ index, op })), ...(replaces ? { replaces } : {}), ...(editedBy ? { editedBy } : {}), ...(choice ?? {}), ...(review ? { review } : {}), ...(gone(client) ? { revoked: true } : {}) };
-    // At most 64 held. A client below `write` may not drop another's:
-    // at the cap its own oldest goes, and with none
+    // At most 64 held. A client below `write` may not drop another's
+    // (theme2's ruling (a)): at the cap its own oldest goes, and with none
     // of its own its hold is refused, decided here, in the same turn as the
     // insert. A `write` client's makes room by the oldest, as before.
     const full = proposals.size - +proposals.has(replaces) >= HELD; if (full && ![...proposals].some(([k, q]) => k !== replaces && !q.busy)) return { status: 409, error: { message: `${HELD} proposals are held and each is being edited: try again shortly` } }; // (the one it replaces, held while an edit plans it, counts as gone)
@@ -1059,7 +1060,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
         offers: (old.offers ?? []).map(o => ({ ...o, items: (o.items ?? []).map(i => kept.indexOf(i)).filter(i => i >= 0) })),
         ...(old.tokens === undefined ? {} : { tokens: kept.filter(i => i < old.tokens).length }),
       };
-      let fresh; // A re-import (the server's own mark, never its review's fields) is marked again on the design as it is, and held on that same text, else marked again.
+      let fresh; // A re-import (the server's own mark, never its review's fields) is marked again on the design as it is, and held on that same text, else marked again (stage 10b).
       const remark = async () => { const m = await ask({ method: 'import-plan', marks: ops }); if (!m.ok) return m; delete review.dials; delete review.pins; Object.assign(review, marked(ops, m.ok.dials.map(d => ({ ...d, from: old.dials?.find(o => o.dial === d.dial)?.from ?? [] })), m.ok.pins)); return hold(p.client, ops, m.ok.digest ? { [relative(appDir, designPath(appDir) ?? resolve(appDir, design))]: m.ok.digest } : undefined, id, review, own, 'write', undefined, p.restoring); };
       // Some of a revert's items: on the files it was planned on, or that
       // selection planned again.
@@ -1091,7 +1092,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     return done;
   }
 
-  // The app's own Contract sources the server has now, whose
+  // The app's own Contract sources the server has now (stage 8 D), whose
   // state parts history reads and revert writes.
   const ownContracts = () => [...known.keys()].filter(path => path.endsWith('.contract'));
   // The design as app.json names it, whether or not it is there now.
@@ -1166,7 +1167,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
     if (typeof request.kind !== 'string') return { status: 400, error: { message: '`kind` is a string' } };
     for (const k of ['source', 'name', 'prefix', 'baseline']) if (request[k] !== undefined && typeof request[k] !== 'string') return { status: 400, error: { message: `\`${k}\` is a string` } };
     // One file (`source`, `name`), or several (`sources`). A `baseline` (the export the client pulled) is taken when this run gave it
-    // out, is kept, or is the design's own. Planned in a process of its own, watched (scripts/tamber-isolate.mjs); held on the design text it was planned and marked on, else planned again.
+    // out, is kept, or is the design's own (stage 10b). Planned in a process of its own, watched (scripts/tamber-isolate.mjs); held on the design text it was planned and marked on, else planned again.
     for (let tries = 0, target = designPath(appDir) ?? resolve(appDir, design); ; tries++) {
       const planned = await planAlone({ kind: request.kind, source: request.source, name: request.name, sources: request.sources, prefix: request.prefix, ...(request.baseline !== undefined ? { baseline: request.baseline, recognised: exported } : {}) }, target, { ...importLimits, signal }, appDir, request.client);
       if (!planned.ok) return planned.error?.stale ? { status: 409, error: planned.error } : planned;
@@ -1212,7 +1213,7 @@ export function tamberServer({ appDir, spawnServe = spawnContract, watchDir = wa
 
   // `compete()`: the dev loop's build of an edit the watcher does not see
   // (a Contract source's), which ends a scrub as a hand edit does.
-  // `pairing`: the run's paired clients, for the canvas gateway (`lookup`, `onEnd`; scripts/tamber-pairing.mjs).
+  // `pairing`: the run's paired clients, for stage 10 C's gateway (`lookup`, `onEnd`; scripts/tamber-pairing.mjs).
   return { handle, close, ready, channel, pairing: pairs, canvas: gateway, relayCanvas: g => { relayGateway = g; }, compete: () => scrubs.compete(), get token() { return token; }, get down() { return down; } };
 }
 
@@ -1228,7 +1229,7 @@ async function listen({ host, port, handle, stop, first = null }) {
   const origins = installBrowserOrigins({ host, port: server.address().port });
   const gate = developmentGate(origins, server.address().port);
   server.on('request', async (req, res) => {
-    // A request `first` answers is no other's (a sandboxed page's wire request).
+    // A request `first` answers is no other's (a sandboxed page's wire request, stage 10b).
     if (first && await first(req, res)) return;
     const access = gate.check(req);
     if (!access.allowed) { res.writeHead(421, { 'cache-control': 'no-store' }); res.end(); return; }
@@ -1265,7 +1266,7 @@ export async function serveAlone(argv) {
   await new Promise(() => {});
 }
 
-// The header a dev loop's HTML carries: framed by the design
+// The header a dev loop's HTML carries (LLP 1122 T2): framed by the design
 // tool's origin and the page's own ('self': a page the canvas shows may frame
 // its own pages), never another's.
 export const FRAME_ANCESTORS = `frame-ancestors 'self' ${TOOL_ORIGIN}`;
@@ -1324,7 +1325,7 @@ async function buildTool() {
 export async function toolAnswers(origin = TOOL_ORIGIN, tries = 1) { return (await probeTool(origin, tries)).answer ?? null; } // (scripts/tamber-request.mjs probeTool: no answer yet, refused or timed out, is null here)
 
 /** `bun exact.mjs tamber tool [<app>] [--via <dev loop url>] [--no-open]`
- * The design tool, built if stale, at its own local URL,
+ * (LLP 1122 D2): the design tool, built if stale, at its own local URL,
  * TOOL_ORIGIN, served by the app's design server there: one started here,
  * or, when the app's dev loop already holds the design (one writer per
  * project), that loop's, reached through `--via`. A server already there
@@ -1353,7 +1354,7 @@ export async function toolCommand(argv) {
   const url = `${TOOL_ORIGIN}/__tamber/tool/`;
   const open = () => { if (!argv.includes('--no-open') && process.platform === 'darwin') spawnSync('open', [url]); };
   const there = await toolAnswers();
-  // `--via`'s dev loop, waited for while it starts (its first build, then its design server), saying why.
+  // `--via`'s dev loop, waited for while it starts (its first build, then its design server), saying why (third pass #9).
   const WAITS = { listening: 'not listening yet (its first build can take minutes)', starting: 'its design server is starting' };
   // Say each ask under the test switch, for tamber-tool-via.test.mjs to count
   const ask = () => { if (TIMING !== REAL) console.error(`tamber tool: TEST asking the dev loop at ${target} (EXACT_TAMBER_TEST_TIMING=1)`); return probeTool(target, 5); };
@@ -1464,16 +1465,16 @@ export async function forward(req, res, url, access, target) {
 }
 
 /** Whether an operation writes the app's own Contract, with no `file`
- * when one file declares its style or component (the state ops, `set-row`,
- * `add-param` and `remove-param`). */
+ * when one file declares its style or component (stage 8 D's state ops,
+ * stage 9 D's `set-row`, `add-param` and `remove-param`). */
 const contractOp = o => /^((un)?set-state|set-row|add-param|remove-param)$/.test(o?.op ?? '');
 
 /** What a revert's operation or edit is to: its file, the token, dial or
  * axis, and the `when` (conditions in any order), so a selection of a
  * revert's items is the same edits when it is planned again. */
 const whenKey = when => JSON.stringify([...(when ?? [])].map(c => `${c.axis}=${c.value}`).sort());
-// A state part's row is its style's, by state and row; a
-// style's own row by row.
+// A state part's row is its style's, by state and row (stage 8 D); a
+// style's own row by row (stage 9 D2).
 const editKey = (file, e) => `${file}\0${e.what}\0${e.name}${e.what === 'state' ? `\0${e.state}\0${e.row}` : e.what === 'row' ? `\0${e.row}` : ''}\0${whenKey(e.when)}`;
 const revertKey = o => /^(un)?set-state$/.test(o.op) ? editKey(o.file, { what: 'state', name: o.style, state: o.state, row: o.row, when: [] })
   : o.op === 'set-row' ? editKey(o.file, { what: 'row', name: o.style, row: o.row, when: [] }) : editKey(o.file, {

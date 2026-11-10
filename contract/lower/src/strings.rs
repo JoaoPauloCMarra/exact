@@ -1,4 +1,4 @@
-//! `t(…)` reads the locale slot; the tables it names
+//! @ref LLP 1060 D2–D4 — `t(…)` reads the locale slot; the tables it names
 //! are baked after every body.
 
 use super::*;

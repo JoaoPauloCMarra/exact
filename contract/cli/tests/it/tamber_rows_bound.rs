@@ -1,9 +1,9 @@
-//! The write check judges a computed row under a `for` or `match` in the arm's
-//! scope, the names pushed as lowering pushes them (`Scope::push_each_of`,
-//! `push_some_of`, `push_none`), and through a `let` with its binding typed
-//! (`Scope::push_let`); a record's field is typed as `expr::compile` types it,
-//! at the root too. A subject, a `let`'s value or a field whose type isn't
-//! known by its form leaves the row to the build.
+//! Stage 14 E: the write check judges a computed row under a `for` or
+//! `match` in the arm's scope, the names pushed as lowering pushes them
+//! (`Scope::push_each_of`, `push_some_of`, `push_none`), and through a `let`
+//! with its binding typed (`Scope::push_let`); a record's field is typed as
+//! `expr::compile` types it, at the root too. A subject, a `let`'s value or a
+//! field whose type isn't known by its form leaves the row to the build.
 #![cfg(unix)]
 
 use super::tamber_package_params::reading;
@@ -130,9 +130,9 @@ fn a_let_over_a_call_is_the_builds() {
     accepted("rows-bound-let-call", &contract, zero(), &zeroed(), true);
 }
 
-/// A record's field is typed as `expr::compile` types it, at the root too:
-/// judged; a field of a value whose type isn't a record by its form (a call's)
-/// is the build's.
+/// A record's field is typed as `expr::compile` types it, at the root too
+/// (theme2's Q1): judged; a field of a value whose type isn't a record by its
+/// form (a call's) is the build's.
 #[test]
 fn a_records_field_is_typed_at_the_root() {
     let shape = "shape Pick\n  scale: string\n";
@@ -150,16 +150,17 @@ fn a_records_field_is_typed_at_the_root() {
 
 /// A `match` whose subject isn't typed by its form (a call) leaves both arms
 /// to the build, the `none` arm too: the build lowers the `some` arm first,
-/// and a refusal judged only in the `none` arm would not be its first.
+/// and a refusal judged only in the `none` arm would not be its first
+/// (Grok's round 1).
 #[test]
 fn a_match_over_an_untyped_subject_is_the_builds() {
     let contract = format!("{HEAD}component App\n  state picks = [\"2\"]\n  state other = \"2\"\n  view\n    column\n      for s in picks key=s\n        match first(picks)\n          case some(p)\n            button \"A\" -exact-press-scale=p\n          case none\n            button \"B\" -exact-press-scale=other\n      Card()\n");
     accepted("rows-bound-match-call", &contract, zero(), &zeroed(), true);
 }
 
-/// A record's field through a `for`'s item, typed by the field's own type: its
-/// string field in a number row is judged, its number field names no token and
-/// the write is accepted as the build accepts it.
+/// A record's field through a `for`'s item, typed by the field's own type
+/// (Astra's round 1): its string field in a number row is judged, its number
+/// field names no token and the write is accepted as the build accepts it.
 #[test]
 fn a_bound_records_field_has_its_own_type() {
     let shape = "shape Pick\n  n: number\n  scale: string\n";
@@ -205,10 +206,10 @@ fn an_if_in_a_region_and_a_region_in_an_instance_are_judged() {
     );
 }
 
-/// The stated limit: a row the check can't type (a call) that the build refuses
-/// first leaves the check's first refusal at a later row, which the build
-/// refuses too, in the same words. Never a false refusal: the build of the
-/// written design fails.
+/// The stated limit (round 2, both reviewers): a row the check can't type (a
+/// call) that the build refuses first leaves the check's first refusal at a
+/// later row, which the build refuses too, in the same words. Never a false
+/// refusal: the build of the written design fails.
 #[test]
 fn a_row_left_to_the_build_before_a_judged_one_is_the_stated_limit() {
     let contract = format!("{HEAD}fn same(x: string): string = x\ncomponent App\n  state pick = \"2\"\n  view\n    column\n      button \"A\" -exact-press-scale=same(pick)\n      button \"B\" -exact-press-scale=pick\n      Card()\n");
@@ -230,7 +231,7 @@ fn a_row_left_to_the_build_before_a_judged_one_is_the_stated_limit() {
         "{w}"
     );
     // And B's refusal is the build's own there: its id, words and place
-    // among every refusal the build says.
+    // among every refusal the build says (Astra's round 3).
     let Err(all) = contract::compile_path_all(&dir.join("app.contract"), false) else {
         panic!("the written design builds")
     };

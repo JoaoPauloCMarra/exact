@@ -1,4 +1,4 @@
-//! The `.tamber` grammar into a [`Design`]: blocks, their
+//! The `.tamber` grammar (LLP 1121 §3) into a [`Design`]: blocks, their
 //! lines, and each value as its CSS text, read later by `css.rs`.
 
 use crate::lex::{self, Line};
@@ -9,20 +9,20 @@ use crate::Diagnostic;
 pub struct Design {
     /// The name after `tamber`.
     pub name: String,
-    /// App axes, as declared.
+    /// App axes, as declared (D5).
     pub axes: Vec<Axis>,
-    /// Dials, as declared.
+    /// Dials, as declared (D4).
     pub dials: Vec<Dial>,
-    /// Tokens, as declared.
+    /// Tokens, as declared (D3).
     pub tokens: Vec<Token>,
-    /// The `exports` block, when there is one (the plan's retention).
+    /// The `exports` block, when there is one (D7's retention).
     pub exports: Option<Vec<At<String>>>,
-    /// Icon tokens, the `icons` block's.
+    /// Icon tokens, the `icons` block's (D10).
     pub icons: Vec<Token>,
-    /// Components that aren't Contract, each with its params.
+    /// Components that aren't Contract, each with its params (D15).
     pub components: Vec<crate::component::Component>,
-    /// The app's values of its components' params, the `params` block's:
-    /// each named by a param's full name
+    /// The app's values of its components' params, the `params` block's
+    /// (D15): each named by a param's full name
     /// (`post.contract#PostButton.radius`) or its short one
     /// (`PostButton.radius`), with a token's value and `when` lines.
     pub params: Vec<Token>,

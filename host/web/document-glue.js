@@ -1,5 +1,5 @@
-// A page the build rendered (1a), and the head's fields at
-// runtime. Loaded after paint, only by a page that carries
+// A page the build rendered (LLP 1048.000 D6, 1a), and the head's fields at
+// runtime (LLP 1048.003 D1). Loaded after paint, only by a page that carries
 // a checkpoint or a runtime that sends a `head` op.
 //
 // The document remains visible while its runtime loads and adopts it. Idle
@@ -8,7 +8,7 @@
 // when a device has kept sign-in state. Real links work immediately.
 // Discrete edits and actions replay once, in order, on matching controls. An
 // active IME composition keeps the document in place through compositionend.
-const AGENT_ADMITTED = true; // false in a production bake: host/web/build.mjs rewrites this line
+const AGENT_ADMITTED = true; // false in a production bake: host/web/build.mjs rewrites this line (LLP 1069.007 D2)
 
 const IDLE_FALLBACK_MS = 200;
 // A keydown or keyup as kind 6's or 43's payload, as glue.js's `keyChord` writes it (#140).
@@ -94,7 +94,7 @@ function documentBoot(options) {
       const el = els.find(el => hears(el, "press"));
       if (el) enqueue(el, "press");
     } else if (event.type === "input" || event.type === "change") {
-      // HTML's two: `input` as the value moves, `change`
+      // HTML's two (LLP 1069.001 D4): `input` as the value moves, `change`
       // when it is committed; a checkbox's value is whether it is checked.
       const el = els.find(el => hears(el, event.type));
       if (el) enqueue(el, event.type, el.type === "checkbox" ? String(el.checked) : el.value);
@@ -206,7 +206,7 @@ function documentBoot(options) {
       onAdopted();
       // Once the caller's input is ready: until then the host holds every
       // control disabled (input waits for the handlers of the pieces the tree
-      // uses), and a replay into one would be dropped. The caller
+      // uses, LLP 1047 D5), and a replay into one would be dropped. The caller
       // resolves it synchronously at readiness; a task would wait behind the
       // next frame.
       inputReady.then(() => {

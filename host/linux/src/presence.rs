@@ -1,4 +1,4 @@
-//! Layout transition on Linux, and its refusal of exit animation.
+//! Layout transition on Linux, and its refusal of exit animation (LLP 1063).
 //!
 //! A node with a `-exact-layout-transition` has its laid-out box in its parent
 //! (`Kernel::layout_box`) observed as `Property::Layout` after every layout;
@@ -14,8 +14,8 @@
 //! every frame, and a destroyed node is not in it, so there is nothing to
 //! keep painting. A removed node leaves at once and the journal says so.
 //!
-//! Shared-element flights are refused for a like reason: an arriver appears in place, and the
-//! journal says so once.
+//! Shared-element flights (LLP 1013.000) are refused for a like reason in
+//! stage 1: an arriver appears in place, and the journal says so once.
 
 use super::*;
 use exact_kernel::motion::LayoutMotion;
@@ -45,13 +45,11 @@ impl<D: DataSource> Host<D> {
         for t in receipts {
             if !t.receipt.exits.is_empty() && !self.presence.refused {
                 self.presence.refused = true;
-                self.log("-exact-exit-animation: refused on Linux: the painter reads the live tree, so a removed node leaves at once");
+                self.log("-exact-exit-animation: refused on Linux (LLP 1063): the painter reads the live tree, so a removed node leaves at once");
             }
             if !t.receipt.handoffs.is_empty() && !self.presence.refused_flights {
                 self.presence.refused_flights = true;
-                self.log(
-                    "shared element: flights are not drawn on Linux; an arriver appears in place",
-                );
+                self.log("shared element: flights are not drawn on Linux (LLP 1013.000); an arriver appears in place");
             }
             let retired =
                 self.presence
@@ -63,7 +61,7 @@ impl<D: DataSource> Host<D> {
 
     /// An agent's jump to `to`, stopping after a timer that sends
     /// ([`exact_runner::Runner::advance_until_request`]). The engine hears
-    /// each commit of a jump at its timer's due time, but the
+    /// each commit of a jump at its timer's due time (LLP 1002 D3), but the
     /// kernel holds only the jump's last tree, laid out at its end: a box a
     /// timer moved inside the jump would start its layout transition there.
     /// While a node declares a layout transition, the jump lays out at each
@@ -80,7 +78,7 @@ impl<D: DataSource> Host<D> {
             let step = due.max(self.runner.now_ms()).min(to);
             let a = self.runner.advance_until_request(step);
             // A commit that sent stops the jump: the next send would drop
-            // its reply.
+            // its reply (LLP 1016 D5).
             let stopped = a.error.is_some() || a.stopped_on_request || step >= to;
             error = error.or(self.advanced(a).0);
             if stopped || self.presence.layout.is_empty() {

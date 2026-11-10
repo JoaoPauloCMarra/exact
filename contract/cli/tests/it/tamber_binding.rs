@@ -1,4 +1,4 @@
-//! The binding core (commit 3): a token by its name,
+//! The binding core (LLP 1121 D12, stage 5, commit 3): a token by its name,
 //! resolved in one session for a place, and what tells its observers.
 
 use exact_kernel::{ColorValue, Kernel};
@@ -269,10 +269,10 @@ fn names(plan: &Plan) -> Vec<String> {
 const KEPT: &str =
     "tamber t\n\ntheme\n  brand = #c8102e\n  badge.ink = #123456\n  CanvasText = #101010\n";
 
-/// Retention for an app with generated bindings: one that reads a data module,
-/// or shows a native module, keeps every token (a binding may name one no view
-/// does), and the binding core resolves it; a plain app keeps what its views
-/// name.
+/// LLP 1121 D7's retention for an app with generated bindings: one that
+/// reads a data module, or shows a native module, keeps every token (a
+/// binding may name one no view does), and the binding core resolves it; a
+/// plain app keeps what its views name.
 #[test]
 fn an_app_that_can_name_tokens_outside_its_views_keeps_them_all() {
     let view = "component App\n  view\n    column\n      text \"a\" color=\"brand\"\n";
@@ -317,9 +317,9 @@ fn exports_bound_what_the_bindings_may_name() {
     assert_eq!(names(&native), ["brand", "badge.ink", "CanvasText"]);
 }
 
-/// What counts as code that can name a token outside the views (retention's one
-/// test): an `app.ts` or hatches beside the app do; a source the runner answers
-/// (`exactViewport()`) does not.
+/// What counts as code that can name a token outside the views (D7's one
+/// test): an `app.ts` or hatches beside the app do; a source the runner
+/// answers (`exactViewport()`) does not.
 #[test]
 fn the_retention_test_reads_what_is_beside_the_app() {
     let view = "component App\n  view\n    column\n      text \"a\" color=\"brand\"\n";

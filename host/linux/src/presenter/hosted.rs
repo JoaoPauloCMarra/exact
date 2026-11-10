@@ -1,4 +1,4 @@
-//! Text fields the shell hosts. On Android each `input`
+//! Text fields the shell hosts (LLP 1115.001 D8). On Android each `input`
 //! of a text type and each `textarea` is the framework's own `EditText`,
 //! over the container this host paints (`paint/field.rs`). The text, the
 //! caret, the selection, the keyboard and the composition are the
@@ -10,7 +10,7 @@
 //!   which clip, which scroller's rows it moves with, what it shows, and
 //!   how it looks and what keyboard it asks for. A field a statement leaves
 //!   out is gone. A field's **generation** moves on when its node is
-//!   renewed for another row's item: the reader's view then
+//!   renewed for another row's item (LLP 1078): the reader's view then
 //!   starts over, with no selection and no undo of the last item's.
 //! - **A touch** in a field's box is the field's, not the presenter's:
 //!   [`Presenter::reader_under`] says which hosted field is under a point,
@@ -30,7 +30,8 @@
 //! field already has changes nothing in it (its composition and its
 //! selection stand), and one that sets another replaces the text.
 //!
-//! **The app's value never ends a composition**: Contract gives an action no way to know
+//! **The app's value never ends a composition** (LLP 1115.000 §5, ruling 6;
+//! LLP 1115.001 D8 as corrected): Contract gives an action no way to know
 //! text is composing, so one that rewrites what it hears would end a
 //! Japanese or Chinese composition at its first keystroke, and on Android,
 //! where the keyboard composes ordinary words, every word. The reader says
@@ -221,7 +222,7 @@ impl<D: DataSource> Presenter<D> {
     ///
     /// A field the reader knew that a statement leaves out is gone.
     pub fn reader_fields(&mut self, scale: f32) -> Option<Vec<i32>> {
-        // The fields' colours resolve its session's roles.
+        // The fields' colours resolve its session's roles (LLP 1121 stage 5).
         let _roles = self.host.runner().bind_roles();
         let ids = self.hosted_ids();
         if ids.is_empty() {
@@ -384,7 +385,7 @@ impl<D: DataSource> Presenter<D> {
         let _accent = crate::paint::accent_scope(&node);
         let role = |name: &str| roles::role(name).map(|r| rgba(ColorValue::Role(r).resolve(dark)));
         // Material's field's text is `onSurface`, at 38 % disabled: an
-        // inherited `color` does not tint it, the node's own does.
+        // inherited `color` does not tint it (LLP 1115.001 D9), the node's own does.
         let own = node.style.mask.has(StyleId::TextColor);
         let native = node.style.appearance != exact_kernel::Appearance::None;
         let ink = match (own, native, disabled) {
@@ -460,10 +461,11 @@ impl<D: DataSource> Presenter<D> {
             self.hold_input(Some(id)); // a finger on the field lets a hold of it go (presenter/held.rs)
             self.touched();
         }
-        // Under an open surface of the top layer the page is inert: a field there is not given the
-        // focus, whatever made its view take it (a hardware key ends touch mode, and the platform
-        // then focuses the window's first focusable view). The shell is told again that no field
-        // holds it, which blurs the view.
+        // Under an open surface of the top layer the page is inert (LLP
+        // 1115.001 D10): a field there is not given the focus, whatever
+        // made its view take it (a hardware key ends touch mode, and the
+        // platform then focuses the window's first focusable view). The
+        // shell is told again that no field holds it, which blurs the view.
         if focused && self.page_inert() {
             self.keyboard_changed();
             return;
@@ -670,7 +672,7 @@ impl<D: DataSource> Presenter<D> {
         }
     }
 
-    /// Views were renewed (a list's row rebound to another
+    /// Views were renewed (LLP 1078: a list's row rebound to another
     /// item). A hosted field among them is another field from here on: its
     /// generation moves on, and nothing kept for the last item's text
     /// (typed text, its selection, a `change` owed) stands. A picker the
@@ -705,7 +707,7 @@ impl<D: DataSource> Presenter<D> {
     }
 
     /// A text field's own starting font follows the device's font scale
-    /// where the shell hosts it: the platform's field is
+    /// where the shell hosts it (LLP 1115.001 D8): the platform's field is
     /// set at 16 scaled pixels, as its body text is, where desktop Linux
     /// keeps the page's initial 16.
     pub(super) fn scale_field_font(&mut self, font_scale: f32) -> Option<String> {

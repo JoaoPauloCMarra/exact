@@ -1,6 +1,6 @@
 //! Remote image sources (`http:` and `https:` URLs): downloaded on threads
 //! of their own, never a raster worker, into a spool file a worker reads as
-//! it reads a bundled one ("The remote fetch").
+//! it reads a bundled one (LLP 1011 §2, "The remote fetch").
 //!
 //! The transport is the executor's (ibex2's rustls client, whose idle agents
 //! keep their connections), asked directly: an image is not the data

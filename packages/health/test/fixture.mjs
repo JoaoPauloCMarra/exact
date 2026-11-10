@@ -1,9 +1,9 @@
-// The conformance fixture, as every platform's suite makes
+// The conformance fixture (LLP 1133.001 D7), as every platform's suite makes
 // it: an app `exact new` made outside the repo, its files replaced by
 // `fixture/`'s, depending on @exact/health, @exact/pedometer and
 // @exact/altimeter packed as a registry would carry them (`bun pm pack`) and
-// installed, so each build is an out-of-tree one. It names a privacy policy, which
-// Health on Android requires, and carries the agent's Health stores as
+// installed, so each build is LLP 1133.001 D8's out-of-tree one. It names a privacy policy, which
+// Health on Android requires (D4), and carries the agent's Health stores as
 // its assets under `health-fixture/`, where the Android implementation reads
 // them.
 import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';

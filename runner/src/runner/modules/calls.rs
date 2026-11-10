@@ -1,4 +1,4 @@
-//! Tool calls: a door hands the runner
+//! Tool calls (LLP 1133.023 D7, LLP 1111 D4): a door hands the runner
 //! `{tool, args, door}`, and the runner runs it as an invocation of origin
 //! `tool`, as a wake's event is: one at a time with the wakes, as its own
 //! commit, done when it owns nothing.
@@ -14,12 +14,12 @@
 //! - **Dispatch:** the action runs as one commit of origin `tool`, stamped
 //!   with the call's invocation id (`admit.rs`), which every request,
 //!   `then` and queued send it makes carries, and every commit that answers
-//!   one of those. The commands a call skips are not run and are listed.
+//!   one of those. The commands D4a skips are not run and are listed.
 //! - **Complete** when no work stamped with its id is in flight: `fails
 //!   when` and `returns` are read once. Background storage out then is
 //!   `failed`, `uncertain` (`background`). Background storage is the
-//!   module's ticket for storage no answer awaits (`background.rs`), which
-//!   no invocation can own; an answer's own storage is in
+//!   module's ticket for storage no answer awaits (`background.rs`, LLP
+//!   1097 D5), which no invocation can own; an answer's own storage is in
 //!   its answer, which the call owns or does not.
 //! - **Superseded** when a commit not its own lets go of work it owns,
 //!   taken when that commit stands: `uncertain` for a send, `applied` for a
@@ -31,14 +31,14 @@ use super::{CallOrigin, Json};
 use serde_json::json;
 use std::collections::VecDeque;
 
-/// How long a call waits for the invocation before it.
+/// How long a call waits for the invocation before it (D7).
 pub(in crate::runner) const WAIT: f64 = 5_000.0;
-/// A call's bound from its dispatch.
+/// A call's bound from its dispatch (LLP 1111 D4).
 const BOUND: f64 = 10_000.0;
 /// The calls `state.intents` keeps, newest last.
 const KEPT: usize = 20;
 
-/// The commands a call's commit does not run: each moves
+/// The commands a call's commit does not run (LLP 1111 D4a): each moves
 /// the person's view.
 const SKIPPED: &[&str] = &[
     "focus",
@@ -222,8 +222,8 @@ impl<D: DataSource> Runner<D> {
         }
     }
 
-    /// Why the face refuses the current call at `door`, if it does:
-    /// a door it does not name, or a digest not the plan's.
+    /// Why the face refuses the current call at `door`, if it does (LLP
+    /// 1133.023 D8): a door it does not name, or a digest not the plan's.
     /// The agent's door takes every tool.
     fn face_refused(&self, row: usize, door: &str, digest: Option<&str>) -> Option<String> {
         if door == "agent" {
@@ -359,7 +359,7 @@ impl<D: DataSource> Runner<D> {
     }
 
     /// Take off this commit's commands from `first` that a call does not
-    /// run, when the commit is the running call's.
+    /// run, when the commit is the running call's (LLP 1111 D4a).
     pub(in crate::runner) fn skip_in_call(&mut self, first: usize) {
         let id = self.invocation_id();
         if id == 0 || !(self.extensions.calls.current.as_ref()).is_some_and(|c| c.id == id) {
@@ -405,7 +405,7 @@ impl<D: DataSource> Runner<D> {
         })
     }
 
-    /// Call `id` as its door polls it: the call's envelope once it has
+    /// Call `id` as its door polls it: LLP 1111 D4's envelope once it has
     /// ended, else `{call, state}` with `waiting` or `running`.
     fn call_answer(&self, id: u64) -> Result<String, String> {
         let calls = &self.extensions.calls;
@@ -481,7 +481,7 @@ impl<D: DataSource> Runner<D> {
 
     /// `state.intents`: each tool with its word, modifiers, availability
     /// and face, and the calls running, waiting and ended, never their
-    /// arguments.
+    /// arguments (LLP 1133.023 §10).
     pub fn intents_state(&self) -> Option<Json> {
         if self.plan.tools.is_empty() {
             return None;

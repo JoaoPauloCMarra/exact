@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { implementation, wordMs } from '../web/index.js';
 
-// The web implementation's agent path on a session clock it is handed: 170
-// words a minute at rate 1, the queue its own.
+// The web implementation's agent path on a session clock it is handed (LLP
+// 1133.012 §9): 170 words a minute at rate 1, the queue its own.
 function context() {
   const clock = { now: 0 }, claims = [];
   const ctx = {

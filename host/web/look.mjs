@@ -1,4 +1,5 @@
 // The web's neutral presentation, composed after the shared browser resets.
+// @ref LLP 1115.000 D4 part B
 import { readFileSync } from 'node:fs';
 
 /** The shell inputs recorded by a web build's freshness receipt. */
@@ -11,9 +12,9 @@ export function withLook(shell) {
   return shell.slice(0, at) + readFileSync(new URL('./neutral.css', import.meta.url), 'utf8') + appleColors() + shell.slice(at);
 }
 
-/** Exact's colour roles in Apple's palette, in every browser: the schema's pairs, measured from
+/** Exact's colour roles in Apple's palette, in every browser (LLP 1115.000 D4): the schema's pairs, measured from
  * UIKit, and in Safari the system's own where WebKit names one (`-apple-system-*`). Each is held as
- * `--exact-apple-<role>`, which an app's theme leaves alone, for the glue to report to the kernel;
+ * `--exact-apple-<role>`, which an app's theme (LLP 1095 D4) leaves alone, for the glue to report to the kernel;
  * `--exact-apple-roles` names them. */
 export function appleColors() {
   const { colors } = JSON.parse(readFileSync(new URL('../../kernel/tables/schema.json', import.meta.url), 'utf8'));

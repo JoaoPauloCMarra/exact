@@ -18,7 +18,7 @@ pub(super) fn text<'a>(v: &'a Value, k: &str) -> Result<&'a str, String> {
     v[k].as_str()
         .ok_or_else(|| format!("storage: {k} must be a string"))
 }
-/// A whole-number argument, as the text operations take it.
+/// A whole-number argument, as the text D6a's operations take.
 fn number(v: &Value, k: &str) -> Result<Vec<u8>, String> {
     let n = v[k]
         .as_u64()
@@ -184,7 +184,7 @@ fn operation<'a>(op: &str, args: &'a Value) -> Result<Operation<'a>, String> {
         "fs.realpath" => (FsOp::Realpath, None, None),
         "fs.rename" => (FsOp::Rename, Some(text(args, "destination")?), None),
         "fs.copyFile" => (FsOp::CopyFile, Some(text(args, "destination")?), None),
-        // Each takes its one argument as text.
+        // LLP 1133.007 D6a: each takes its one argument as text.
         "fs.lstat" => (FsOp::Lstat, None, None),
         "fs.readlink" => (FsOp::Readlink, None, None),
         "fs.access" => (FsOp::Access, None, Some(number(args, "mode")?)),
@@ -199,7 +199,7 @@ fn operation<'a>(op: &str, args: &'a Value) -> Result<Operation<'a>, String> {
             None,
             Some(text(args, "algorithm")?.as_bytes().to_vec()),
         ),
-        // A lock belongs to the runtime that took it,
+        // A lock belongs to the runtime that took it (LLP 1133.007 D6a),
         // which a Rust source's storage has none of yet.
         "fs.flock" | "fs.unlock" => {
             return Err(format!("{op}: a TypeScript source's storage only, for now"))
@@ -207,12 +207,12 @@ fn operation<'a>(op: &str, args: &'a Value) -> Result<Operation<'a>, String> {
         _ => return Err(format!("unsupported storage operation {op}")),
     })
 }
-/// `fs.compressImage` and `fs.transformImage`:
-/// the operations a TypeScript source's calls run, through
+/// `fs.compressImage` (LLP 1069.002 A1) and `fs.transformImage` (LLP
+/// 1133.019 D14): the operations a TypeScript source's calls run, through
 /// ibex2's one executor and the same codec, so a grant and a failure mean the
 /// same in either language. The record is the TypeScript options beside
-/// `path` and `destination`; what the codec reads travels as one JSON value,
-/// as the prelude sends it.
+/// `path` and `destination`; what the codec reads travels as one JSON value
+/// (D17), as the prelude sends it.
 fn image(
     transform: bool,
     grants: &GrantSet,
@@ -267,7 +267,7 @@ fn image(
     };
     let (max_dimension, max_bytes) =
         exact_data::image::check_limits(number("maxDimension")?, number("maxBytes")?)?;
-    // `type`: absent is a JPEG.
+    // `type` (A1.11): absent is a JPEG.
     let format = match &args["type"] {
         Value::Null => exact_data::image::Format::Jpeg,
         Value::String(t) => exact_data::image::Format::parse(t).ok_or_else(|| {
@@ -402,7 +402,7 @@ fn fs_value(result: FsResult) -> Value {
         }),
     }
 }
-/// A `doc:` path: the file or folder the person chose,
+/// A `doc:` path (LLP 1069.010 D1): the file or folder the person chose,
 /// through ibex2's one executor for documents, the one a TypeScript
 /// source's `storage.fs` runs, so a grant means the same in either language.
 /// `directories` are the app's, given only to a copy into them.
@@ -431,7 +431,7 @@ fn document_request(
         )
         .map_err(error)
     };
-    // A write that expects what it read: the
+    // A write that expects what it read (@ref LLP 1069.010.000 D2a): the
     // stat just before the write, as a TypeScript source's prelude does.
     let expect = &args["expect"];
     if !expect.is_null()
@@ -453,7 +453,7 @@ fn document_request(
             ));
         }
     }
-    // A kept file the app replaces with its own atomic write stays kept.
+    // A kept file the app replaces with its own atomic write stays kept (D4).
     let kept = (operation == FsOp::AtomicWriteFile)
         .then(|| exact_data::documents::kept::before_write(owner, path))
         .flatten();
@@ -463,8 +463,8 @@ fn document_request(
     }
     Ok(fs_value(written))
 }
-/// `storage.fs.recentDocuments()` and `forgetDocument(path)`: what the app
-/// keeps across launches, under `doc.keep`,
+/// `storage.fs.recentDocuments()` and `forgetDocument(path)` (@ref LLP
+/// 1069.010.000 D5): what the app keeps across launches, under `doc.keep`,
 /// which `io_grants` leaves out of `grants`. `None` for any other request.
 fn kept_request(spec: &str, op: &str, args: &Value, owner: u64) -> Option<Result<Value, String>> {
     use exact_data::documents::kept;
@@ -506,7 +506,7 @@ fn documents(path: &str, owner: u64) -> Result<fs::DocumentLease, fs::DocumentEr
 }
 /// A scripted drive's answer when it names no scratch store: the web's
 /// refusal, word for word (`storage-environment.js`, `storage-request.js`),
-/// as a TypeScript module's `agent` refusal says it.
+/// as a TypeScript module's `agent` refusal says it (trivia F7).
 pub(super) fn agent_refusal() -> Outcome {
     Outcome::Storage(serde_json::to_vec(&json!({ "error": AGENT_REFUSAL })).unwrap())
 }
@@ -522,8 +522,8 @@ fn native_filesystem(op: &str, args: &Value) -> bool {
             !path.starts_with("app:/") && !exact_data::documents::is_document(path)
         })
 }
-/// `copyFile` from a chosen document into an app file, the one document
-/// request that needs the app's directories.
+/// `copyFile` from a chosen document into an app file (LLP 1069.010 D1,
+/// 2026-10-26), the one document request that needs the app's directories.
 fn copies_into_app(op: &str, args: &Value) -> bool {
     op == "fs.copyFile"
         && args["destination"]
@@ -566,7 +566,7 @@ pub(super) fn run(
             return kept;
         }
         let grants = GrantSet::parse(&exact_runner::io_grants(grants)).map_err(error)?;
-        // Two app files, never a document or a disk path.
+        // Two app files, never a document or a disk path (LLP 1069.002 A1.1).
         if (op == "fs.compressImage" || op == "fs.transformImage")
             && ![&args["path"], &args["destination"]]
                 .iter()

@@ -108,7 +108,7 @@ impl<'a> NodeRef<'a> {
         }
     }
 
-    /// The node's host-known state looks, each a state
+    /// The node's host-known state looks (LLP 1121 D8), each a state
     /// ([`crate::LOOK_HOVER`],
     /// [`crate::LOOK_FOCUS_VISIBLE`]) and its patch, resolved, ascending by
     /// state: a host composes them over [`Self::style`] on its own tracking.
@@ -124,13 +124,13 @@ impl<'a> NodeRef<'a> {
         crate::style::top_layer::layout_position(self.arena, self.slot)
     }
 
-    /// The editor content box in this native field's local frame.
+    /// The editor content box in this native field's local frame (LLP 1104 D5).
     pub fn field_content_rect(&self) -> Option<Frame> {
         self.arena.field_content_rect(self.slot)
     }
 
     /// Resolved exclusions in leaf border-box coordinates, in document order.
-    /// Derived geometry, never paragraph inputs.
+    /// @ref LLP 1043.000 §3 D4 — derived geometry, never paragraph inputs.
     pub fn flow_shapes(&self) -> &'a [exact_textflow::FlowShape] {
         self.arena.flow_shapes(self.slot)
     }
@@ -149,7 +149,7 @@ impl<'a> NodeRef<'a> {
 
     /// The node whose own row supplies `id` here: this node when it sets the
     /// row; for a row the schema marks inherited, the nearest logical ancestor
-    /// that does; `None` when the initial value applies.
+    /// that does; `None` when the initial value applies (LLP 1035.000 D1).
     /// Which rows have own values stays in `style.mask`, and which declarations the
     /// author wrote in `style.written`; this is where a computed value came
     /// from.
@@ -160,7 +160,7 @@ impl<'a> NodeRef<'a> {
     }
 
     /// Whether a platform control's start stops the inherited row `id` at
-    /// this node: an ancestor's value, and its motion, do not
+    /// this node (LLP 1104 D4): an ancestor's value, and its motion, do not
     /// reach it. An authored clear (`color="inherit"`) takes it through, as
     /// [`Self::source_of`] does.
     pub fn starts(&self, id: StyleId) -> bool {
@@ -172,7 +172,7 @@ impl<'a> NodeRef<'a> {
     }
 
     /// Whether an author declaration chooses this row, including an explicit
-    /// CSS clear that inherits or uses the initial value.
+    /// CSS clear that inherits or uses the initial value (LLP 1115.000 D2).
     /// `style.written` is this node's declarations alone; an inherited row
     /// can also be chosen by an ancestor. A platform start stops that walk.
     pub fn says(&self, id: StyleId) -> bool {
@@ -239,7 +239,7 @@ impl<'a> NodeRef<'a> {
         }
     }
 
-    /// The colour scheme this node's subtree asks for: its
+    /// The colour scheme this node's subtree asks for (LLP 1034 §8): its
     /// computed `color-scheme`, `None` for `normal`, the surrounding one.
     pub fn color_scheme_dark(&self) -> Option<bool> {
         match self.computed_row(StyleId::ColorScheme, |s| s.color_scheme) {
@@ -263,22 +263,22 @@ impl<'a> NodeRef<'a> {
         runs
     }
 
-    /// Whether this is an image in a paragraph's text: its
+    /// Whether this is an image in a paragraph's text (LLP 1011.002): its
     /// paragraph measures and places it.
     pub fn is_inline_image(&self) -> bool {
         self.arena.is_inline_image(self.slot)
     }
 
     /// The box an image in a paragraph's text reserves there, as its run
-    /// carries it; `None` for any other node.
+    /// carries it (LLP 1011.002); `None` for any other node.
     pub fn inline_box(&self) -> Option<crate::InlineBox> {
         self.arena
             .is_run_image(self.slot)
             .then(|| crate::text::inline_box::inline_image(self.arena, self.slot).reserved)
     }
 
-    /// [`Self::text_runs`]' text as it is read and copied: an image's
-    /// `aria-label` in its run's place, nothing without one.
+    /// [`Self::text_runs`]' text as it is read and copied (LLP 1011.002
+    /// D4): an image's `aria-label` in its run's place, nothing without one.
     pub fn read_runs(&self) -> Vec<std::borrow::Cow<'a, str>> {
         let mut leaves = Vec::new();
         self.arena.text_leaves(self.slot, &mut leaves);
@@ -304,7 +304,7 @@ impl<'a> NodeRef<'a> {
     }
 
     /// The scale this paragraph is drawn at, as its last layout chose it
-    /// (`-exact-fit: shrink`): 1 unless it was shrunk to
+    /// (`-exact-fit: shrink`, LLP 1116.001 D1.4): 1 unless it was shrunk to
     /// fit its box. [`Self::text_runs`] are at it already; a host that draws
     /// from the style rows multiplies their sizes by it.
     pub fn fit_scale(&self) -> f32 {
@@ -334,7 +334,7 @@ impl<'a> NodeRef<'a> {
 /// The kernel.
 pub struct Kernel {
     arena: NodeArena,
-    /// The layout engine, when it mirrors the arena. Boxed only
+    /// The layout engine, when it mirrors the arena (LLP 1047 D4). Boxed only
     /// on the layout path, so a kernel that never lays out links no engine.
     layout: Option<Box<dyn LayoutMirror>>,
     measurer: Box<dyn TextMeasurer>,
@@ -352,7 +352,7 @@ pub struct Kernel {
     /// Keeps nothing ([`Kernel::detached`]).
     detached: bool,
     /// List rows mounted out of their port that hold an animation waiting
-    /// for the row to show (`-exact-animation-trigger: view`).
+    /// for the row to show (`-exact-animation-trigger: view`, LLP 1055 D13).
     pub(crate) awaiting: crate::id::IdSet<ViewId>,
     /// The measurer's revision its symbols were last measured under, `None`
     /// before this kernel's measurer measured any: a new one asks about
@@ -681,7 +681,7 @@ impl Kernel {
         self.replace_env(self.arena.env().with_viewport(offer))?;
         self.imply_blocks();
         engine(&mut self.layout).present_heights(&self.arena, presented);
-        // The root, then each subtree a host gave a block.
+        // The root, then each subtree a host gave a block (LLP 1115.002 D8.2).
         let result = match self.lay_out_roots(slot, offer) {
             ok @ Ok(_) => ok,
             Err(LayoutError::Engine(_)) => {
@@ -880,6 +880,7 @@ impl Kernel {
     /// the next commit applies, re-resolving every `rem`/`em` row and
     /// invalidating what inherits it, so an empty batch is enough. `px`
     /// never scales. `false` when it is the size already set.
+    /// @ref LLP 1069.000 D3
     pub fn set_root_font_size(&mut self, px: f32) -> Result<bool, KernelError> {
         if !px.is_finite() || px <= 0.0 {
             return Err(LayoutError::InvalidRootFontSize.into());
@@ -891,7 +892,7 @@ impl Kernel {
         Ok(true)
     }
 
-    /// The root font size, as last set.
+    /// The root font size, as last set (LLP 1069.000 D3).
     pub fn root_font_size(&self) -> f32 {
         self.arena.root_font_size()
     }
@@ -903,6 +904,7 @@ impl Kernel {
     /// point a shell draws at. The next commit applies it, re-resolving
     /// every hairline row and, on a pixel-snapping host, every border width.
     /// An empty batch is enough. `false` when it is the scale already set.
+    /// @ref LLP 1115.000 D10.3
     pub fn set_display_scale(&mut self, scale: f32) -> Result<bool, KernelError> {
         if !scale.is_finite() || scale <= 0.0 {
             return Err(LayoutError::InvalidDisplayScale.into());
@@ -924,7 +926,7 @@ impl Kernel {
         })
     }
 
-    /// The display's scale, as last set.
+    /// The display's scale, as last set (LLP 1115.000 D10.3).
     pub fn display_scale(&self) -> f32 {
         let arena = &self.arena;
         arena
@@ -1290,7 +1292,7 @@ mod locality_tests {
         assert_eq!(calls.get(), 0);
     }
 
-    /// The host's line boxes round to another scale; every
+    /// LLP 1008 §3: the host's line boxes round to another scale; every
     /// paragraph is measured again, each with a new metric revision.
     #[test]
     fn remeasured_text_asks_the_measurer_for_every_paragraph_again() {

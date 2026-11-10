@@ -1,4 +1,4 @@
-// Scrub sessions: a scrub
+// Scrub sessions (LLP 1121 D13, LLP 1122 D6; stage 4, commit 6): a scrub
 // previews on the builds and writes once; each way it ends restores the
 // committed design; a rebuild-class edit, a second client and a
 // `propose`-scope client open none. Through the real design server too.
@@ -540,7 +540,7 @@ test('propose through a loop that writes a token inline is rebuild there, else a
   await close();
 }, 30_000);
 
-test("propose on the JS loop before its design reader is built is rebuild, said why, and its true class once it is", async () => {
+test("propose on the JS loop before its design reader is built is rebuild, said why, and its true class once it is (theme2 10:01)", async () => {
   // The JS loop's own check (host/web-js/dev.mjs), its reader held until the test lets it go.
   let built = false;
   const read = async text => ({ tokens: [{ name: 'ink', value: text.slice('ink = '.length), slices: [], inline: false }] });

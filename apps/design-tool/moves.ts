@@ -1,4 +1,4 @@
-// Moving a row between rungs: promote a row its author
+// Moving a row between D6's rungs (LLP 1122 T5): promote a row its author
 // wrote to a new param or token, or detach a param's row to its template,
 // each one transaction the server checks and undoes in one step.
 import type { ParamInfo } from './rescope';
@@ -24,7 +24,7 @@ const literalOf = (param: string, params: Map<string, ParamInfo>, depth = 0): st
   return FULL.test(p.default) || /(^|[^\w.])param\.[A-Za-z_]/.test(p.default) ? null : p.default;
 };
 
-/** A row moved between rungs, one transaction: promoted to a
+/** A row moved between rungs (LLP 1122 D6's enumerated set, T5), one transaction: promoted to a
  * new param (`add-param` in the template's file, its kind the row's, and the row reading
  * `param.<name>`) or a new token (`add-token` and the row naming it), each with the value as written
  * as its default; or a param's row detached to its template (the param's value written at the row,
@@ -58,7 +58,7 @@ export const unread = (error: string, target: string, ops: Record<string, unknow
   };
 };
 
-/** A new param's or token's kind: the row's; for a row the names don't say, a
+/** A new param's or token's kind: the row's (LLP 1121 D15's kinds); for a row the names don't say, a
  * token value's own, or a colour's where its text is one. */
 const kindOf = (row: string, text: string, kinds: Map<string, string>) =>
   /(^|-)color$|^(background|fill|stroke)$/.test(row) ? 'color'

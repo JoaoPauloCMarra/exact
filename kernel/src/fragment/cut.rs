@@ -1,4 +1,4 @@
-//! The cut: a walk over the flow thread in document
+//! @ref LLP 1093 D3–D5 — the cut: a walk over the flow thread in document
 //! order, as Chrome 154 breaks, and Chrome's column balancer over it.
 //!
 //! Each candidate break gets an *appeal* (Chrome's term), best first:
@@ -26,7 +26,7 @@ pub(crate) struct Cut {
     pub placements: Vec<(u32, Placement)>,
     pub fragments: Vec<(u32, Vec<super::Fragment>)>,
     pub refusals: Vec<(u32, FragmentRefusal)>,
-    /// Walks the cut took (for the multicol probe).
+    /// Walks the cut took (LLP 1093 §3's probe).
     #[cfg(test)]
     pub walks: usize,
     /// The container's border box once its used height applies.
@@ -71,7 +71,7 @@ pub(super) struct Cutter<'a> {
     measurer: &'a mut dyn TextMeasurer,
     /// The first column's top: the container's content top.
     pub top: f32,
-    /// Walks run, for the probe.
+    /// Walks run, for the probe (LLP 1093 §3).
     #[cfg(test)]
     pub walks: usize,
 }
@@ -93,7 +93,7 @@ impl<'a> Cutter<'a> {
         }
     }
 
-    // A paragraph's line boxes, asked of the host once: the walk asks
+    // A paragraph's line boxes, asked of the host once (D6): the walk asks
     // only when the paragraph would cross a column's end.
     fn expand(&mut self, para: usize) {
         let p = &self.flow.paras[para];
@@ -169,7 +169,7 @@ impl<'a> Cutter<'a> {
     }
 
     // The break before `pos`, in a column that began at `first`: its appeal,
-    // whether it is forced, and where the next column would start.
+    // whether it is forced, and where the next column would start (D3).
     fn candidate(&self, pos: Pos, first: Pos) -> (u8, bool, f32) {
         let atom = &self.flow.atoms[pos.atom];
         if pos.line == 0 {
@@ -188,7 +188,7 @@ impl<'a> Cutter<'a> {
             before
         };
         // Chrome 154 scores `widows` only when the paragraph has room for
-        // both rules (L >= orphans + widows); `orphans` always.
+        // both rules (L >= orphans + widows); `orphans` always (D4).
         let short =
             here < p.orphans || (total - before < p.widows && total >= p.orphans + p.widows);
         let mut appeal = if short { ORPHANS_WIDOWS } else { PERFECT };
@@ -198,7 +198,7 @@ impl<'a> Cutter<'a> {
         (appeal, false, self.unit(pos).0)
     }
 
-    /// Cut the flow thread into columns of height `h`.
+    /// Cut the flow thread into columns of height `h` (D4).
     pub(super) fn walk(&mut self, h: f32) -> Walk {
         #[cfg(test)]
         {
@@ -290,7 +290,7 @@ impl<'a> Cutter<'a> {
             .map_or(0.0, |a| (a.bottom - self.top).max(0.0))
     }
 
-    /// Chrome's balancer: start at the content's height over `n` (each
+    /// Chrome's balancer (D5): start at the content's height over `n` (each
     /// run between forced breaks shares the columns its height asks for),
     /// clamped to `cap` and kept no lower than the tallest unbreakable piece,
     /// then stretch by the walk's shortage while it needs more than `n`
@@ -346,7 +346,7 @@ impl<'a> Cutter<'a> {
 }
 
 /// A paragraph's metrics and line-box bottoms at a content width, from the
-/// host's engine; no bottoms when it answers none.
+/// host's engine (D6); no bottoms when it answers none.
 pub(super) fn lines(
     arena: &NodeArena,
     measurer: &mut dyn TextMeasurer,
@@ -381,7 +381,7 @@ pub(super) fn lines(
     (height, bottoms)
 }
 
-/// Cut `slot`, a laid-out multi-column container.
+/// Cut `slot`, a laid-out multi-column container (D3–D7).
 pub(crate) fn container(
     arena: &NodeArena,
     tree: &LayoutTree,
@@ -689,7 +689,7 @@ fn publish(
         ));
         cut.fragments.push((b.slot, frags));
     }
-    // An absolutely positioned box takes the column holding its own
+    // D10.4: an absolutely positioned box takes the column holding its own
     // flow-thread top, past the content's last column too.
     for a in &flow.absolutes {
         let (dx, dy) = if a.in_flow && cols > 0 {
@@ -720,11 +720,11 @@ fn publish(
             cut.refusals.push((s, why));
         }
     }
-    // The scrollable overflow: the columns and every translated box,
+    // The scrollable overflow (D7): the columns and every translated box,
     // a scroll container's end padding (as Taffy and Chrome count it), and
     // at least the client box, measured from the
     // padding box's corner as Taffy measures it. Its left edge is kept but
-    // only the right and bottom are published.
+    // only the right and bottom are published (D10.8).
     let (b, p) = (outer.border, outer.padding);
     let (pr, pb) = if outer.scrolls {
         (p.right, p.bottom)
