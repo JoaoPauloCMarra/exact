@@ -1390,9 +1390,10 @@ package final class Presenter {
 package enum Capture {
     /// A capture is drawing: its draws are not repaints (D4 b).
     nonisolated(unsafe) static var capturing = false
-    /// Guest pictures for this turn; the remote platform views are hidden
-    /// while their owning nodes draw these (@ref LLP 1020 D4/D6).
-    nonisolated(unsafe) static var web: [UInt32: ExactWebImage] = [:]
+    /// Guest pictures for this turn, by the node that draws each (two
+    /// sessions' ids can be the same); the remote platform views are hidden
+    /// while their owning nodes draw these (@ref LLP 1020 D4/D6, `withGuests`).
+    nonisolated(unsafe) static var web: [ObjectIdentifier: ExactWebImage] = [:]
 
     /// The subtree painted at `scale`: premultiplied RGBA, rows top-down,
     /// `pixelsWide * 4` bytes per row, transparent where nothing painted.

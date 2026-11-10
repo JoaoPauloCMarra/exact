@@ -800,7 +800,42 @@ extension Agent {
             completed(["malformed": true, "error": "perf frames live: milliseconds must be an integer in 1...120000"])
             return
         }
-        guard FrameSampler.measured, let sampler = session.sampler else { completed(["unavailable": true]); return }
+        guard FrameSampler.measured, session.sampler != nil else { completed(["unavailable": true]); return }
+        #if os(macOS)
+        // A driven window behind the other apps' (`NSWindow.Level.agentBehind`) may be
+        // covered, and AppKit presents no frames to a covered window: it comes forward
+        // for the recording, once AppKit reports it visible, and goes back after.
+        if let window = session.presenter.viewport.window, window.level == .agentBehind, window.isVisible,
+           !window.occlusionState.contains(.visible) {
+            var seen: NSObjectProtocol?
+            var started = false
+            let start = { [self] in
+                guard !started else { return }
+                started = true
+                // The token holds this closure, which holds `seen`: let it go.
+                seen.map(NotificationCenter.default.removeObserver)
+                seen = nil
+                observeLiveFrames(request, ms: ms) { reply in
+                    window.level = .agentBehind
+                    window.orderFront(nil)
+                    completed(reply)
+                }
+            }
+            seen = NotificationCenter.default.addObserver(forName: NSWindow.didChangeOcclusionStateNotification, object: window, queue: .main) { _ in
+                if window.occlusionState.contains(.visible) { start() }
+            }
+            window.level = .normal
+            window.orderFrontRegardless()
+            // Never reported visible: the recording answers that it found no display link.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { start() }
+            return
+        }
+        #endif
+        observeLiveFrames(request, ms: ms, completed: completed)
+    }
+
+    private func observeLiveFrames(_ request: [String: Any], ms: Int, completed: @escaping ([String: Any]) -> Void) {
+        guard let sampler = session.sampler else { completed(["unavailable": true]); return }
         guard sampler.beginObservation() else {
             completed(["unavailable": true, "reason": "capture already active or no visible window display link", "clockMode": session.clock == nil ? "real" : "virtual"])
             return

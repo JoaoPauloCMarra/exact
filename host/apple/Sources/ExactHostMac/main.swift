@@ -256,8 +256,13 @@ func finishLaunching() {
     }
     window.initialFirstResponder = viewA
     launched = true
+    if Agent.windowsBehind {
+        // Below the normal level, which alone would make it float across Spaces, out of ⌘`'s cycle.
+        window.level = .agentBehind
+        window.collectionBehavior.formUnion([.managed, .participatesInCycle])
+    }
     window.makeKeyAndOrderFront(nil)
-    if ExactEnv.agentMode { window.orderFrontRegardless() } else { app.activate(ignoringOtherApps: true) }
+    if Agent.windowsBehind {} else if ExactEnv.agentMode { window.orderFrontRegardless() } else { app.activate(ignoringOtherApps: true) }
     agentReady()
 }
 

@@ -252,6 +252,8 @@ final class DocumentWindow: NSObject, NSWindowDelegate {
         view = ExactView(session: session)
         if first { ExactEnv.stamp("Presenter (NSScrollView)") }
         window = ExactWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+        // Below the normal level, which alone would make it float across Spaces, out of ⌘`'s cycle.
+        if Agent.windowsBehind { window.level = .agentBehind; window.collectionBehavior.formUnion([.managed, .participatesInCycle]) }
         super.init()
         // AppKit's own opening animation, and window tabs only where documents
         // have windows of their own (LLP 1115.000 D7.9).
@@ -431,11 +433,13 @@ final class DocumentWindow: NSObject, NSWindowDelegate {
     }
 
     /// In front — never activated under a script (LLP 1012), so a running
-    /// smoke never takes the focus from whoever is typing.
+    /// smoke never takes the focus from whoever is typing, and shown behind
+    /// the other apps' windows on the agent's clock (`Agent.windowsBehind`).
     /// Bare `focus()` (LLP 1133.005 D10): the app unhidden, the window
     /// deminiaturized and ordered front, and activation asked for, which
     /// macOS 14's cooperative activation may refuse; nothing more then.
     func front() {
+        if Agent.windowsBehind { window.orderFront(nil); return } // in front of its own windows, in its level
         if agentMode && !agentActivates { window.orderFrontRegardless(); return }
         if app.isHidden { app.unhide(nil) }
         if window.isMiniaturized { window.deminiaturize(nil) }
@@ -885,9 +889,9 @@ func finishLaunching() {
         DispatchQueue.main.async { ExactDevelopmentLink.open(url) }
     }
     ExactEnv.stamp("makeKeyAndOrderFront")
-    // Under a script: in front regardless, so the window is seen (a covered
-    // window's canvases render nothing, LLP 1009 D4) — but never activated.
-    if withoutWindow {} else if agentMode && !agentActivates { window.orderFrontRegardless() } else { app.activate(ignoringOtherApps: true) }
+    // Under a script on the platform's timing: in front regardless, so the window is
+    // seen (a covered window's canvases render nothing, LLP 1009 D4) — but never activated.
+    if withoutWindow || Agent.windowsBehind {} else if agentMode && !agentActivates { window.orderFrontRegardless() } else { app.activate(ignoringOtherApps: true) }
     ExactEnv.stamp("activate")
 
     /// Agent mode: the driver owns the process from here — one JSON line in,

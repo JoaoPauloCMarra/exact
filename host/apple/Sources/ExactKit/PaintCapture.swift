@@ -158,7 +158,7 @@ extension Capture {
                 if node.kind == "canvas", let image = node.canvases?.readback(view: node)?.cgImage {
                     layer.addSublayer(picture(image, in: node.bounds))
                 }
-                if let image = web[node.id]?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                if let image = web[ObjectIdentifier(node)]?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
                     layer.addSublayer(picture(image, in: node.bounds))
                 }
             }

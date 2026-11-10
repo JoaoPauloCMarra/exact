@@ -58,4 +58,87 @@ extension Capture {
         return ctx.makeImage()
     }
 }
+
+extension Capture {
+    /// `body` with each session's guest pictures (its iframes' and native views'
+    /// snapshots) in `web` for their nodes to draw, and those live views hidden,
+    /// which a capture cannot draw; put back after.
+    static func withGuests<T>(of sessions: [ExactSession], _ body: () -> T) -> T {
+        var hidden: [(NSView, Bool)] = []
+        for session in sessions {
+            let views = session.presenter.views
+            for (id, image) in session.webviews.snapshots().merging(session.natives.snapshots(), uniquingKeysWith: { web, _ in web }) {
+                if let node = views[id] { web[ObjectIdentifier(node)] = image }
+            }
+            hidden += (views.values.compactMap(\.web) + session.natives.snapshotViews).map { ($0, $0.isHidden) }
+        }
+        hidden.forEach { $0.0.isHidden = true }
+        defer { hidden.forEach { $0.0.isHidden = $0.1 }; web = [:] }
+        return body()
+    }
+}
+
+extension Agent {
+    /// Whether `window` is covered and holds a canvas a GPU module draws: a covered
+    /// window's Metal layers present no frames (`GpuMac.visible`), so the window
+    /// server's picture of it holds none of what they draw.
+    /// The sessions whose nodes are in `view`: a host's window holds several.
+    static func sessions(in view: NSView) -> [ExactSession] {
+        var found: [ObjectIdentifier: ExactSession] = [:], order: [ExactSession] = []
+        func walk(_ v: NSView) {
+            if let session = (v as? NodeView)?.presenter?.session, found.updateValue(session, forKey: ObjectIdentifier(session)) == nil { order.append(session) }
+            v.subviews.forEach(walk)
+        }
+        walk(view)
+        return order
+    }
+
+    static func coveredCanvases(_ window: NSWindow) -> Bool {
+        guard !window.occlusionState.contains(.visible), let content = window.contentView else { return false }
+        func canvas(_ view: NSView) -> Bool {
+            if let node = view as? NodeView, node.kind == "canvas", !node.isHiddenOrHasHiddenAncestor, node.canvases?.readback(view: node) != nil { return true }
+            return view.subviews.contains(where: canvas)
+        }
+        return canvas(content)
+    }
+
+    /// `image`, the window server's picture of `window`, with its content as the
+    /// capture paints it (`Capture.picture`: views in their z order, each canvas
+    /// from its readback, every session's) in place of what a covered window's
+    /// Metal layers left. The frame stays the window server's, its shape kept
+    /// (source-atop), and so is its title bar.
+    static func paintedContent(_ image: CGImage, of window: NSWindow) -> CGImage {
+        guard let content = window.contentView, window.frame.width > 0,
+              let picture = Capture.withGuests(of: sessions(in: content), { Capture.picture(of: content) })?.cgImage,
+              let ctx = CGContext(data: nil, width: image.width, height: image.height, bitsPerComponent: 8, bytesPerRow: 0,
+                                  space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return image }
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        // Window coordinates run up from the frame's bottom left, as the context's do.
+        let scale = CGFloat(image.width) / window.frame.width
+        ctx.scaleBy(x: scale, y: scale)
+        ctx.setBlendMode(.sourceAtop)
+        ctx.draw(picture, in: content.convert(content.bounds, to: nil))
+        ctx.setBlendMode(.normal)
+        // The title bar is the window server's: a capture draws it as an active
+        // window's, without its hairline. Through a transparent one the content
+        // shows, so there only its buttons are drawn over the content.
+        if let bar = window.standardWindowButton(.closeButton)?.superview, !bar.isHiddenOrHasHiddenAncestor {
+            if window.titlebarAppearsTransparent {
+                for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
+                    guard let button = window.standardWindowButton(kind), !button.isHiddenOrHasHiddenAncestor,
+                          let drawn = Capture.picture(of: button)?.cgImage else { continue }
+                    ctx.draw(drawn, in: button.convert(button.bounds, to: nil))
+                }
+            } else {
+                ctx.saveGState()
+                ctx.clip(to: bar.convert(bar.bounds, to: nil))
+                ctx.setBlendMode(.copy)
+                ctx.draw(image, in: CGRect(origin: .zero, size: window.frame.size))
+                ctx.restoreGState()
+            }
+        }
+        return ctx.makeImage() ?? image
+    }
+}
 #endif

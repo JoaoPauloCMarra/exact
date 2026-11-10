@@ -864,7 +864,8 @@ first data load, `fail fetch <prefix> [times <n>]` and `pass fetch <prefix>` arm
 `armed`. Native carriers pass the launch table as `EXACT_AGENT_FAIL_FETCH`, web pages as `?failFetch=`, one
 `<prefix>[\t<times>]` line a fault, read only in agent mode; a production build ignores both. `--fail-fetch` with `--test` arms every test.
 A Mac agent drive never takes the focus: the app is an accessory, never activated (a `type` makes its window key
-without activating it), so AppKit draws its controls as in an inactive app. `EXACT_AGENT_ACTIVATE=1`, which only
+without activating it), so AppKit draws its controls as in an inactive app. On the agent's clock its window, and a picture-in-picture
+panel it opens, sit one level below every other app's windows, so they never show over them; `--timing platform` orders them in front. `EXACT_AGENT_ACTIVATE=1`, which only
 `scripts/measure-controls.mjs` sets (never a default), activates that one run, and the app that was in front is put
 back when it exits, however it exits (LLP 1121 stage 9 F2).
 Seeds are whole numbers from 0 through 2^32 − 1, the range every host draws (LLP 1116.005 D5); an epoch is an ISO date, Unix milliseconds, or `now`: the machine's clock,

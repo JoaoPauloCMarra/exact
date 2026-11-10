@@ -1448,7 +1448,7 @@ package final class NodeView: NSView, NSTextViewDelegate, NSTextFieldDelegate {
                 drawParagraphFragments(ctx, paragraph: paragraph, spec: spec, dirty: textDirty)
             }
         }
-        if !cssVisibilityHidden, Capture.capturing, let picture = Capture.web[id] {
+        if !cssVisibilityHidden, Capture.capturing, let picture = Capture.web[ObjectIdentifier(self)] {
             // Remote WebKit layers supply their own picture for this capture
             // turn, at the node's normal hierarchy position (@ref LLP 1020 D4).
             picture.draw(in: bounds, from: .zero, operation: .sourceOver, fraction: 1, respectFlipped: true, hints: nil)

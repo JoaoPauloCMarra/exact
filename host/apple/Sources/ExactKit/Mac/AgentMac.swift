@@ -623,6 +623,11 @@ extension Agent {
         if !ExactEnv.agentFreezes, req["wheel"] != nil, req["gesture"] as? Bool == true {
             return ["code": "platform-trackpad-replay-unqualified", "error": "Trackpad gesture replay under platform timing has no reliable completion acknowledgement. Use a plain wheel event for an agent drive, or reproduce the gesture in the normally running app."]
         }
+        // Where the tap lands is read from the views: laid out first. A glass
+        // material's content (`NSGlassEffectView.contentView`) is sized only in
+        // AppKit's layout pass, and a tap right after a commit can come before it,
+        // so the point and the hit test would read its children a box-height off.
+        view(req)?.window?.layoutIfNeeded()
         if req["holdState"] != nil { return holdTap(req) } // a held state (LLP 1122 D8, HeldState.swift)
         // An alert's buttons are AppKit's (LLP 1115.000 D7.6): a tap on an
         // authored button of it presses the alert's, and nothing behind its
@@ -1186,9 +1191,17 @@ extension Agent {
     /// sheet on that sheet, a popover (LLP 1115.002 D7). Each is a window
     /// of its own, which the picture of one window leaves out; what stands
     /// outside the window's frame (a popover may) is outside the picture.
-    /// The window server composes them; where it gives no such picture each
-    /// window's own is drawn over the last.
-    private static func withSheet(_ image: CGImage, of window: NSWindow, shown: inout [String]) -> CGImage {
+    /// The window server composes them; where it gives no such picture, or
+    /// one of them is painted, each window's own is drawn over the last.
+    /// Each window, this one and each attached, that is covered and holds a GPU
+    /// canvas has its content painted as the capture paints it (`paintedContent`);
+    /// `painted` says whether any did.
+    private static func withSheet(_ image: CGImage, of window: NSWindow, shown: inout [String], painted: inout Bool) -> CGImage {
+        func own(_ image: CGImage, of window: NSWindow) -> CGImage {
+            guard coveredCanvases(window) else { return image }
+            painted = true
+            return paintedContent(image, of: window)
+        }
         var attached: [NSWindow] = []
         func collect(_ parent: NSWindow) {
             for child in ([parent.attachedSheet].compactMap { $0 } + (parent.childWindows ?? [])) where child.isVisible && !attached.contains(where: { $0 === child }) {
@@ -1198,7 +1211,8 @@ extension Agent {
         }
         collect(window)
         if attached.isEmpty, let sheet = window.attachedSheet { shown.append("\(Swift.type(of: sheet)): not visible") }
-        if !attached.isEmpty, let composed = ownWindowsImage(window, with: attached), composed.width == image.width, composed.height == image.height {
+        let image = own(image, of: window)
+        if !attached.isEmpty, !painted, !attached.contains(where: coveredCanvases), let composed = ownWindowsImage(window, with: attached), composed.width == image.width, composed.height == image.height {
             shown += attached.map { String(describing: Swift.type(of: $0)) }
             return composed
         }
@@ -1209,7 +1223,7 @@ extension Agent {
         let scale = CGFloat(image.width) / window.frame.width
         context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
         for child in attached {
-            guard let picture = ownWindowImage(child.windowNumber) else { shown.append("\(Swift.type(of: child)): no picture"); continue }
+            guard let picture = ownWindowImage(child.windowNumber).map({ own($0, of: child) }) else { shown.append("\(Swift.type(of: child)): no picture"); continue }
             shown.append(String(describing: Swift.type(of: child)))
             context.draw(picture, in: CGRect(x: (child.frame.minX - window.frame.minX) * scale, y: (child.frame.minY - window.frame.minY) * scale,
                                              width: CGFloat(picture.width), height: CGFloat(picture.height)))
@@ -1259,25 +1273,22 @@ extension Agent {
             let refresh = 1 / Double(max(30, window.screen?.maximumFramesPerSecond ?? 60))
             RunLoop.main.run(until: Date(timeIntervalSinceNow: 2 * refresh + 0.004))
             guard let alone = Self.ownWindowImage(window.windowNumber) else { return ["error": "the window server gave no picture of window \(window.windowNumber); a display that is asleep or a locked screen gives an empty one"] }
-            var attached: [String] = []
-            let image = Self.withSheet(alone, of: window, shown: &attached)
+            var attached: [String] = [], painted = false
+            let image = Self.withSheet(alone, of: window, shown: &attached, painted: &painted)
             guard let png = NSBitmapImageRep(cgImage: image).converting(to: .sRGB, renderingIntent: .default)?.representation(using: .png, properties: [:]) else { return ["error": "no PNG"] }
             do { try png.write(to: URL(fileURLWithPath: path)) } catch { return ["error": "write \(path): \(error)"] }
             var r: [String: Any] = ["screenshot": path, "window": true, "w": Agent.r2(v.bounds.width), "h": Agent.r2(v.bounds.height), "scale": Agent.r2(window.backingScaleFactor)]
             if Self.activated { r["active"] = NSApp.isActive && window.isKeyWindow }
             // The windows drawn over it where they sit: a sheet, a sheet on it, a popover.
             if !attached.isEmpty { r["attached"] = attached }
+            // Covered, with a GPU canvas: the content is the capture's painting, not the window server's.
+            if painted { r["content"] = "painted" }
             if loading > 0 { r["imagesPending"] = loading }
             return r
         }
-        Capture.web = session.webviews.snapshots().merging(session.natives.snapshots()) { web, _ in web }
-        let hidden = (presenter.views.values.compactMap(\.web) + session.natives.snapshotViews).map { ($0, $0.isHidden) }
-        hidden.forEach { $0.0.isHidden = true }
         // As a capture: every canvas paints its picture, read back from the
         // module, and every iframe paints its arm snapshot at its node.
-        var picture = Capture.picture(of: v)
-        hidden.forEach { $0.0.isHidden = $0.1 }
-        Capture.web = [:]
+        var picture = Capture.withGuests(of: [session]) { Capture.picture(of: v) }
         let area = presenter.navigation.split.agentCaptureArea
         if presenter.navigation.split.active, let full = picture, let image = full.cgImage {
             let scale = CGFloat(full.pixelsWide) / v.bounds.width
@@ -1430,5 +1441,25 @@ extension Capture {
             CATransaction.commit()
         }
     }
+}
+
+extension NSWindow.Level {
+    /// A driven window's level, one below every other app's ordinary windows:
+    /// AppKit orders a window forward for a drive's click or sheet as for a
+    /// person's, and within this level that never shows it over what the person
+    /// is working on. A drive on the agent's clock needs nothing from being seen:
+    /// its pictures are of this window alone (`CGWindowListCreateImage`), a
+    /// covered one's content painted as the capture paints it (`paintedContent`),
+    /// and page visibility is the driver's (`PageFacts.hidden`). A live frame
+    /// observation (`liveFrames`) lifts it while it records.
+    public static let agentBehind = NSWindow.Level(rawValue: NSWindow.Level.normal.rawValue - 1)
+}
+
+extension Agent {
+    /// Whether this process's windows sit at `NSWindow.Level.agentBehind`: a drive
+    /// on the agent's clock, not activated. Under `--timing platform` the clock and
+    /// presentation are the platform's, which a covered window does not get, so its
+    /// window is ordered in front.
+    public static let windowsBehind = ExactEnv.agentFreezes && !activated
 }
 #endif
