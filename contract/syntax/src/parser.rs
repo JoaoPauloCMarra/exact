@@ -100,7 +100,7 @@ pub struct Partial {
     pub errors: Vec<SyntaxError>,
     /// The names the refused declarations and members declared: what a later
     /// pass says about one of them may be only that it is missing.
-    pub hidden: Vec<String>,
+    pub hidden: Vec<Hidden>,
 }
 
 /// [`parse_source_all`], keeping what parsed beside the refusals.
@@ -143,7 +143,7 @@ struct Parser {
     /// The refusals recorded inside a declaration that was kept.
     recovered: Vec<SyntaxError>,
     /// What the refused declarations and members named ([`Partial::hidden`]).
-    hidden: Vec<String>,
+    hidden: Vec<Hidden>,
     /// Whether a component was refused before any component parsed.
     first_refused: bool,
 }
@@ -376,7 +376,7 @@ impl Parser {
                     // be a call of it, as of one that parsed.
                     let free = std::mem::take(&mut self.free);
                     for (name, error, edits, in_block) in free {
-                        if declared(&name) || self.hidden.contains(&name) {
+                        if declared(&name) || self.hidden.iter().any(|h| h.name == name) {
                             continue;
                         }
                         if in_block || host {
@@ -472,7 +472,10 @@ impl Parser {
             .take_while(|k| !matches!(k, TokenKind::Newline | TokenKind::Indent | TokenKind::Eof))
             .collect();
         let word = |k: &TokenKind| match k {
-            TokenKind::Ident(w) => Some(w.clone()),
+            TokenKind::Ident(w) => Some(Hidden {
+                name: w.clone(),
+                component: None,
+            }),
             _ => None,
         };
         match line.as_slice() {
@@ -480,7 +483,7 @@ impl Parser {
                 rest.iter()
                     .take_while(|t| !matches!(t, TokenKind::Ident(w) if w == "from"))
                     .filter_map(|t| word(t))
-                    .filter(|w| w != "as"),
+                    .filter(|w| w.name != "as"),
             ),
             [TokenKind::Ident(k), name, ..] => {
                 if k == "component" && file.components.is_empty() {

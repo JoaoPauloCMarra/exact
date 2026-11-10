@@ -9,7 +9,8 @@ use crate::CompileError;
 #[derive(Debug, Default)]
 pub(crate) struct Refused {
     pub(crate) errors: Vec<CompileError>,
-    pub(crate) hidden: Vec<String>,
+    /// With the source each was refused in.
+    pub(crate) hidden: Vec<(u32, contract_syntax::Hidden)>,
     /// A source whose declarations could not all be told apart: nothing after
     /// the syntax is checked.
     pub(crate) whole: bool,
@@ -42,7 +43,9 @@ impl Refused {
 
     /// Whether `e` names something refused.
     pub(crate) fn hides(&self, e: &CompileError) -> bool {
-        self.hidden.iter().any(|name| mentions(&e.message, name))
+        self.hidden
+            .iter()
+            .any(|(_, h)| mentions(&e.message, &h.name))
     }
 }
 

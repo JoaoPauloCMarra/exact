@@ -9,7 +9,7 @@
 //! said: a name two files declare (which one is meant), a generated name
 //! (`Card__ui` is `Card`, named), a file no specifier reaches.
 
-use super::{digest, Loader, Origin, Refused, Sources};
+use super::{digest, Loader, Origin, Sources};
 use crate::CompileError;
 use crate::RelatedLocation;
 use contract_syntax::scope::{Elsewhere, Kind, Missing};
@@ -425,31 +425,7 @@ pub(crate) fn apply(src: &str, lines: &[UseLine]) -> String {
 
 /// A loader holding the root at `root_key` alone, `src` its text.
 fn root_loader<'a>(app_root: &'a Path, root: &Path, root_key: &Path, src: &str) -> Loader<'a> {
-    Loader {
-        app_root,
-        root_given: root.to_path_buf(),
-        sources: Sources {
-            paths: vec![root_key.to_path_buf()],
-            origins: vec![Origin::App],
-            digests: vec![digest(src)],
-            homes: Vec::new(),
-            texts: vec![src.into()],
-            imports: Vec::new(),
-            packages: Vec::new(),
-            consulted: Vec::new(),
-            motion: Vec::new(),
-            var_fallbacks: Vec::new(),
-        },
-        active: vec![root_key.to_path_buf()],
-        units: Vec::new(),
-        cache: HashMap::new(),
-        fixes: Vec::new(),
-        proposed: Vec::new(),
-        declared: Vec::new(),
-        motion: Vec::new(),
-        vars: None,
-        refused: Refused::default(),
-    }
+    Loader::new(app_root, root, root_key.to_path_buf(), src, root_key)
 }
 
 /// The `use` lines each file of the program rooted at `path` lacks (LLP

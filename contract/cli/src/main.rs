@@ -175,8 +175,13 @@ fn symbols(args: &[String]) -> ExitCode {
             println!("{json}");
             ExitCode::SUCCESS
         }
-        Err(error) => {
-            eprintln!("{error}");
+        // What it found still prints, as `sources` prints a graph whose
+        // loading stopped (LLP 1091 D10); `errors` and the exit say why.
+        Err(partial) => {
+            println!("{}", partial.json);
+            for error in &partial.errors {
+                eprintln!("{error}");
+            }
             ExitCode::from(1)
         }
     }

@@ -178,7 +178,10 @@ impl Parser {
                                 if let Some(TokenKind::Ident(name)) =
                                     self.tokens.get(start + 1).map(|t| &t.kind)
                                 {
-                                    self.hidden.push(name.clone());
+                                    self.hidden.push(Hidden {
+                                        name: name.clone(),
+                                        component: Some(c.name.clone()),
+                                    });
                                 }
                                 self.recovered.push(e);
                                 self.skip_member(start);

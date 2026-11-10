@@ -212,6 +212,22 @@ An action's definition carries `writes`: the states and mutations its body
 assigns or sends, inferred (an action declares none), in slot order: router
 state, states, then mutations, each as declared.
 
+When the program is refused, `symbols` still prints what it found, adds an
+`errors` array of the refusals in `build --json`'s form, writes them to stderr
+and exits 1. A declaration or member the syntax refused is absent, and so is
+every reference in its scope spelled as its name; a reference to a name
+declared twice in one namespace (a component's members, or the program's
+shapes and functions) has no edge. When the type check refused, a
+reference that needs an inferred type (a field read through a value, an
+action value called) has no edge, nor does one to a shape or function the
+check refused. When loading stops (a `use` or `members` line that names no
+file, a cycle, a missing name), every file it can still reach and parse is
+read on its own, with no edge from one file to another. A file whose
+declarations cannot be told apart (a line that does not lex, or a first
+component whose view is refused) has no symbols; when that file is the root,
+`definitions` and `references` are empty. A refused program's actions carry
+no `writes`.
+
 `--name <exact-name>` returns all matching definitions across scopes and their
 references, with `to` indices into that response's smaller `definitions` array.
 Names are exact and case-sensitive, not patterns; no match returns empty arrays.

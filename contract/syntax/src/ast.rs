@@ -19,6 +19,15 @@ impl NameSpans {
         self.names.get(&span).copied().unwrap_or(span)
     }
 }
+/// A name a refused declaration or member declared.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Hidden {
+    /// The name, as written.
+    pub name: String,
+    /// The component whose member it named; `None` for a declaration.
+    pub component: Option<String>,
+}
+
 /// One source file.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct File {

@@ -383,8 +383,8 @@ fn navigation_uses_build_import_refusals_including_cached_name_checks_and_cycles
         let root=f.write("app.contract",source);
         let build=contract::compile_path(&root).unwrap_err();
         let query=contract::symbols_json(&root, None).unwrap_err();
-        assert_eq!(build,query);
-        assert_eq!(query, contract::symbols_json(&root, Some("absent")).unwrap_err());
+        assert_eq!(build,query.errors[0]);
+        assert_eq!(query.errors, contract::symbols_json(&root, Some("absent")).unwrap_err().errors);
     }
 }
 
@@ -422,8 +422,10 @@ fn exact_name_queries_preserve_ambiguous_definitions_and_reference_targets() {
         "component App\n  derive broken = missing\n  view\n    text \"ok\"\n",
     );
     assert_eq!(
-        contract::symbols_json(&bad, None).unwrap_err(),
-        contract::symbols_json(&bad, Some("App")).unwrap_err()
+        contract::symbols_json(&bad, None).unwrap_err().errors,
+        contract::symbols_json(&bad, Some("App"))
+            .unwrap_err()
+            .errors
     );
 }
 
@@ -640,7 +642,7 @@ fn an_ambiguous_call_in_an_imported_component_is_refused_alike_with_its_declarat
     );
     let build = contract::compile_path(&root).unwrap_err();
     let query = contract::symbols_json(&root, None).unwrap_err();
-    assert_eq!(build, query);
+    assert_eq!(build, query.errors[0]);
     assert_eq!(build.id, "syntax-call-ambiguous", "{build}");
     let viewer = viewer.canonicalize().unwrap();
     assert_eq!(build.file.as_deref(), Some(viewer.as_path()));
@@ -650,4 +652,367 @@ fn an_ambiguous_call_in_an_imported_component_is_refused_alike_with_its_declarat
         (related.file.as_deref(), related.span.line),
         (Some(viewer.as_path()), 3)
     );
+}
+
+/// `contract symbols` run as an editor runs it: its exit code, its stdout as
+/// JSON, and its stderr.
+fn cli(root: &std::path::Path) -> (Option<i32>, Value, String) {
+    let out = Command::new(env!("CARGO_BIN_EXE_contract"))
+        .arg("symbols")
+        .arg(root)
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8(out.stderr).unwrap();
+    let graph = serde_json::from_slice(&out.stdout)
+        .unwrap_or_else(|e| panic!("stdout is not JSON ({e}); stderr: {stderr}"));
+    (out.status.code(), graph, stderr)
+}
+
+/// A refused program's output: exit 1, the build's first refusal first in
+/// `errors` and on stderr, and none of what was refused named.
+fn refused(root: &std::path::Path, hidden: &[&str]) -> Value {
+    let (code, graph, stderr) = cli(root);
+    assert_eq!(code, Some(1), "{graph}");
+    let build = contract::compile_path(root).unwrap_err();
+    let first: Value = serde_json::from_str(&build.to_json()).unwrap();
+    assert_eq!(graph["errors"][0], first, "{graph}");
+    assert!(stderr.contains(&build.to_string()), "{stderr}");
+    for name in hidden {
+        assert!(
+            defs(&graph)
+                .iter()
+                .chain(refs(&graph))
+                .all(|s| s["name"] != *name),
+            "{name}: {graph}"
+        );
+    }
+    // A program some of which was refused writes no inferred effects.
+    assert!(defs(&graph).iter().all(|d| d.get("writes").is_none()));
+    graph
+}
+
+#[test]
+fn a_syntax_refusal_in_one_file_keeps_the_symbols_of_what_parsed() {
+    let f = Fixture::new("partial-syntax");
+    let app = "use Row from \"./row.contract\"\ncomponent App\n  state count = 0\n  view\n    column\n      text `${count}`\n      Row(label=\"x\")\n";
+    let row = "component Row\n  props\n    label: string\n  state taps = 0\n  action tap\n    taps = = 1\n  action reset\n    taps = 0\n  view\n    button press=reset\n      text label\n";
+    f.write("row.contract", row);
+    let root = f.write("app.contract", app);
+    let graph = refused(&root, &["tap"]);
+    assert!(graph["errors"][0]["file"]
+        .as_str()
+        .unwrap()
+        .ends_with("row.contract"));
+    for (kind, name) in [
+        ("component", "App"),
+        ("state", "count"),
+        ("component", "Row"),
+        ("prop", "label"),
+        ("state", "taps"),
+        ("action", "reset"),
+    ] {
+        definition(&graph, kind, name, None);
+    }
+    let edges = |name: &str, line: usize| -> Vec<&str> {
+        at_line(&graph, name, line)
+            .iter()
+            .map(|r| target(&graph, r)["kind"].as_str().unwrap())
+            .collect()
+    };
+    assert_eq!(edges("count", 6), ["state"]);
+    assert_eq!(edges("Row", 7), ["component"]);
+    assert_eq!(edges("label", 7), ["prop"]);
+    assert_eq!(edges("taps", 8), ["state"]);
+    assert_eq!(edges("reset", 10), ["action"]);
+    assert_eq!(edges("label", 11), ["prop"]);
+}
+
+/// The kinds of the definitions each reference to `name` on `line` has an
+/// edge to.
+fn edges<'a>(graph: &'a Value, name: &str, line: usize) -> Vec<&'a str> {
+    at_line(graph, name, line)
+        .iter()
+        .map(|r| target(graph, r)["kind"].as_str().unwrap())
+        .collect()
+}
+
+#[test]
+fn a_program_that_does_not_load_keeps_each_file_that_parsed() {
+    let f = Fixture::new("partial-load");
+    // A `use` that names no file: the root and its members file still read.
+    let more = f.write(
+        "more.contract",
+        "members App\n  derive doubled = 2\n  derive twice = doubled * 2\n",
+    );
+    let root = f.write(
+        "app.contract",
+        "use Row from \"./missing.contract\"\ncomponent App\n  state count = 0\n  members \"./more.contract\"\n  view\n    text `${count} ${doubled}`\n    Row()\n",
+    );
+    let graph = refused(&root, &[]);
+    assert_eq!(
+        graph["errors"][0]["id"], "contract-use-unreadable",
+        "{graph}"
+    );
+    definition(&graph, "component", "App", None);
+    assert_eq!(edges(&graph, "count", 6), ["state"]);
+    assert!(at_line(&graph, "Row", 7).is_empty());
+    // No edge leaves a file when the program does not load.
+    assert!(at_line(&graph, "doubled", 6).is_empty());
+    let more = more.canonicalize().unwrap();
+    let more = more.to_string_lossy();
+    let doubled = definition(&graph, "derive", "doubled", None);
+    assert_eq!(
+        (doubled["file"].as_str(), doubled["component"].as_str()),
+        (Some(more.as_ref()), Some("App"))
+    );
+    assert_eq!(edges(&graph, "doubled", 3), ["derive"]);
+    let components = defs(&graph).iter().filter(|d| d["kind"] == "component");
+    assert_eq!(components.count(), 1, "{graph}");
+
+    // An imported file whose first component's view is refused: it has no
+    // symbols, and the root and the files after it keep theirs.
+    let broken = f.write(
+        "row.contract",
+        "component Row\n  props\n    label: string\n  view\n    text = =\n",
+    );
+    let label = f.write("label.contract", "fn label(n: number): string = `${n}`\n");
+    let root = f.write(
+        "app.contract",
+        "use Row from \"./row.contract\"\nuse label from \"./label.contract\"\ncomponent App\n  state count = 0\n  view\n    text label(count)\n    Row(label=\"x\")\n",
+    );
+    let graph = refused(&root, &[]);
+    let broken = broken.canonicalize().unwrap();
+    assert!(defs(&graph)
+        .iter()
+        .chain(refs(&graph))
+        .all(|s| s["file"] != broken.to_string_lossy().as_ref()));
+    assert_eq!(edges(&graph, "count", 6), ["state"]);
+    assert!(at_line(&graph, "label", 6).is_empty());
+    assert!(at_line(&graph, "Row", 7).is_empty());
+    let function = definition(&graph, "fn", "label", None);
+    assert_eq!(
+        function["file"],
+        label.canonicalize().unwrap().to_string_lossy().as_ref()
+    );
+}
+
+#[test]
+fn a_name_declared_twice_in_one_scope_has_no_edge() {
+    let f = Fixture::new("partial-twice");
+    let source = "component App\n  state count = 0\n  state count = 1\n  state other = 0\n  derive shown = 1\n  action shown\n    other = 2\n  view\n    text `${count} ${shown} ${other}`\n";
+    let root = f.write("app.contract", source);
+    let graph = refused(&root, &[]);
+    let twice = defs(&graph).iter().filter(|d| d["name"] == "count").count();
+    assert_eq!(twice, 2, "{graph}");
+    definition(&graph, "derive", "shown", None);
+    definition(&graph, "action", "shown", None);
+    assert!(at_line(&graph, "count", 9).is_empty(), "{graph}");
+    assert!(at_line(&graph, "shown", 9).is_empty(), "{graph}");
+    assert_eq!(edges(&graph, "other", 9), ["state"]);
+    assert_eq!(edges(&graph, "other", 7), ["state"]);
+}
+
+#[test]
+fn a_refused_member_hides_its_name_in_its_own_component_only() {
+    let f = Fixture::new("partial-scope");
+    let source = "component App\n  state count = 0\n  view\n    text `${count}`\n    Row()\n\ncomponent Row\n  state count = 0\n  state taps = 0\n  action count\n    taps = = 1\n  action go\n    let count = 5\n    taps = count\n  view\n    button press=go\n      text `${count}`\n";
+    let root = f.write("app.contract", source);
+    let graph = refused(&root, &[]);
+    // Another component's member and a local keep their edges.
+    assert_eq!(edges(&graph, "count", 4), ["state"]);
+    assert_eq!(edges(&graph, "count", 14), ["local"]);
+    assert_eq!(edges(&graph, "go", 16), ["action"]);
+    // In Row, `count` may be the refused action.
+    assert!(at_line(&graph, "count", 17).is_empty(), "{graph}");
+}
+
+#[test]
+fn a_refused_shape_or_function_leaves_the_others_their_edges() {
+    let f = Fixture::new("partial-declarations");
+    let source = "shape Good\n  x: number\nshape Bad\n  y: Missing\nfn add(a: number, b: number): number = a + b\nfn bad(a: number): string = a\ncomponent App\n  derive sum = add(1, 2)\n  derive good = Good(x=1)\n  derive odd = bad(1)\n  view\n    text `${sum}`\n";
+    let root = f.write("app.contract", source);
+    let graph = refused(&root, &[]);
+    assert_eq!(edges(&graph, "add", 8), ["fn"]);
+    assert_eq!(edges(&graph, "Good", 9), ["shape"]);
+    assert_eq!(edges(&graph, "x", 9), ["field"]);
+    assert!(at_line(&graph, "bad", 10).is_empty(), "{graph}");
+    definition(&graph, "fn", "bad", None);
+    definition(&graph, "shape", "Bad", None);
+}
+
+#[test]
+fn a_type_refusal_keeps_what_names_alone_resolve() {
+    let f = Fixture::new("partial-types");
+    let source = "shape Item\n  label: string\ncomponent App\n  state count = 0\n  state item = Item(label=\"a\")\n  action bump\n    count = \"many\"\n  view\n    button press=bump\n      text item.label\n";
+    let root = f.write("app.contract", source);
+    let graph = refused(&root, &[]);
+    assert!(graph["errors"][0]["id"]
+        .as_str()
+        .unwrap()
+        .starts_with("type-"));
+    let edges = |name: &str, line: usize| -> Vec<&str> {
+        at_line(&graph, name, line)
+            .iter()
+            .map(|r| target(&graph, r)["kind"].as_str().unwrap())
+            .collect()
+    };
+    definition(&graph, "action", "bump", None);
+    definition(&graph, "field", "label", Some("Item"));
+    assert_eq!(edges("Item", 5), ["shape"]);
+    assert_eq!(edges("label", 5), ["field"]);
+    assert_eq!(edges("count", 7), ["state"]);
+    assert_eq!(edges("bump", 9), ["action"]);
+    assert_eq!(edges("item", 10), ["state"]);
+    // A field read is resolved through the type the check inferred, which
+    // a refused check may have inferred wrongly: it has no edge.
+    assert_eq!(edges("label", 10), Vec::<&str>::new());
+}
+
+#[test]
+fn an_unresolved_name_has_no_reference_and_the_rest_resolve() {
+    let f = Fixture::new("partial-unknown");
+    let source = "component App\n  state label = \"a\"\n  derive broken = missing\n  view\n    text `${label} ${broken}`\n";
+    let root = f.write("app.contract", source);
+    let graph = refused(&root, &["missing"]);
+    assert!(graph["errors"][0]["message"]
+        .as_str()
+        .unwrap()
+        .contains("missing"));
+    assert_eq!(at_line(&graph, "label", 5).len(), 1);
+    assert_eq!(
+        target(&graph, at_line(&graph, "broken", 5)[0])["kind"],
+        "derive"
+    );
+}
+
+#[test]
+fn a_refusal_in_a_members_file_keeps_its_other_members() {
+    let f = Fixture::new("partial-members");
+    let more = f.write(
+        "more.contract",
+        "members App\n  derive doubled = count * 2\n  action broken\n    count = = 2\n",
+    );
+    let root = f.write(
+        "app.contract",
+        "component App\n  state count = 1\n  members \"./more.contract\"\n  view\n    text `${count} ${doubled}`\n",
+    );
+    let graph = refused(&root, &["broken"]);
+    let more = more.canonicalize().unwrap();
+    let more = more.to_string_lossy();
+    assert_eq!(graph["errors"][0]["file"], more.as_ref());
+    let doubled = definition(&graph, "derive", "doubled", None);
+    assert_eq!(doubled["file"], more.as_ref());
+    let read = refs(&graph)
+        .iter()
+        .find(|r| r["name"] == "count" && r["file"] == more.as_ref())
+        .unwrap_or_else(|| panic!("{graph}"));
+    assert_eq!(target(&graph, read)["line"], 2);
+    assert_eq!(target(&graph, at_line(&graph, "doubled", 5)[0]), doubled);
+}
+
+#[test]
+fn a_program_with_no_refusal_prints_exactly_its_definitions_and_references() {
+    let f = Fixture::new("whole");
+    let root = f.write("app.contract", SOURCE);
+    let (code, graph, stderr) = cli(&root);
+    assert_eq!((code, stderr.as_str()), (Some(0), ""));
+    let keys: Vec<_> = graph.as_object().unwrap().keys().collect();
+    assert_eq!(keys, ["definitions", "references"]);
+    assert_eq!(
+        serde_json::to_string(&graph).unwrap(),
+        contract::symbols_json(&root, None).unwrap()
+    );
+}
+
+#[test]
+fn a_file_of_routes_alone_is_read_without_a_component() {
+    let f = Fixture::new("partial-routes");
+    let root = f.write("app.contract", "routes nav\n  home \"/\"\n");
+    let graph = refused(&root, &[]);
+    definition(&graph, "route", "home", None);
+    f.write(
+        "nav.contract",
+        "routes nav\n  home \"/\"\nshape Item\n  label: string\n",
+    );
+    let root = f.write(
+        "app.contract",
+        "use Item from \"./nav.contract\"\ncomponent App\n  state count = 0\n  view\n    text `${count}`\n",
+    );
+    let graph = refused(&root, &[]);
+    definition(&graph, "route", "home", None);
+    definition(&graph, "shape", "Item", None);
+    assert_eq!(edges(&graph, "count", 5), ["state"]);
+}
+
+#[test]
+fn a_refused_route_table_leaves_shapes_and_functions_their_edges() {
+    let f = Fixture::new("partial-route-table");
+    let table = "routes nav\n  home \"/posts\"\n";
+    let declarations =
+        "shape Item\n  label: string\nfn add(a: number, b: number): number = a + b\n";
+    let app = "component App\n  derive item = Item(label=\"a\")\n  derive sum = add(1, 2)\n  view\n    text `${sum}`\n";
+    for source in [
+        format!("{table}{declarations}{app}"),
+        format!("{declarations}{table}{app}"),
+    ] {
+        let root = f.write("app.contract", &source);
+        let graph = refused(&root, &[]);
+        let at = |text| line(&source, text);
+        assert_eq!(
+            edges(&graph, "Item", at("derive item")),
+            ["shape"],
+            "{source}"
+        );
+        assert_eq!(
+            edges(&graph, "label", at("derive item")),
+            ["field"],
+            "{source}"
+        );
+        assert_eq!(edges(&graph, "add", at("derive sum")), ["fn"], "{source}");
+    }
+}
+
+#[test]
+fn a_name_declared_twice_has_no_edge_whatever_reads_it() {
+    let f = Fixture::new("partial-twice-target");
+    let source = "component App\n  state count = 0\n  derive count = 1\n  action reset\n    count = 0\n  view\n    button press=reset\n      text \"x\"\n";
+    let graph = refused(&f.write("app.contract", source), &[]);
+    assert!(at_line(&graph, "count", 5).is_empty(), "{graph}");
+    assert_eq!(edges(&graph, "reset", 7), ["action"]);
+    let source = "shape Pair\n  a: number\nfn Pair(a: number): number = a\ncomponent App\n  derive p = Pair(a=1)\n  view\n    text \"x\"\n";
+    let graph = refused(&f.write("app.contract", source), &[]);
+    assert!(at_line(&graph, "Pair", 5).is_empty(), "{graph}");
+    assert!(at_line(&graph, "a", 5).is_empty(), "{graph}");
+}
+
+#[test]
+fn a_refused_name_is_hidden_in_its_own_file_and_component() {
+    let f = Fixture::new("partial-identity");
+    let good = f.write("good.contract", "fn label(n: number): string = `${n}`\n");
+    f.write(
+        "row.contract",
+        "fn label(n: number): string = = 1\ncomponent Row\n  state count = 0\n  action count\n    count = = 1\n  view\n    text `${count}`\n",
+    );
+    f.write(
+        "card.contract",
+        "use Row from \"./row.contract\"\ncomponent Card\n  view\n    Row()\n",
+    );
+    let source = "use label from \"./good.contract\"\nuse Card from \"./card.contract\"\ncomponent App\n  state count = 0\n  view\n    text label(count)\n    Card()\n    Row()\n\ncomponent Row\n  state count = 0\n  view\n    text `${count}`\n";
+    let root = f.write("app.contract", source);
+    let graph = refused(&root, &[]);
+    // Another file's `label` keeps its edge.
+    let call = at_line(&graph, "label", 6);
+    assert_eq!(call.len(), 1, "{graph}");
+    let good = good.canonicalize().unwrap();
+    assert_eq!(
+        target(&graph, call[0])["file"],
+        good.to_string_lossy().as_ref()
+    );
+    // The root's own `Row` keeps its edge; row.contract's, renamed, has none.
+    assert_eq!(edges(&graph, "count", 13), ["state"]);
+    let row = f.0.join("row.contract").canonicalize().unwrap();
+    let in_row = refs(&graph)
+        .iter()
+        .filter(|r| r["name"] == "count" && r["file"] == row.to_string_lossy().as_ref());
+    assert_eq!(in_row.count(), 0, "{graph}");
 }

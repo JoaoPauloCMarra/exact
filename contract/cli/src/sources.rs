@@ -159,34 +159,21 @@ pub(crate) fn load_partial(
             .map(|name| app_root.join(name))
             .unwrap_or_else(|| app_root.to_path_buf())
     });
-    let mut loader = Loader {
-        app_root,
-        root_given: path.to_path_buf(),
-        sources: Sources {
-            paths: vec![path.to_path_buf()],
-            origins: vec![Origin::App],
-            digests: vec![digest(src)],
-            homes: Vec::new(),
-            texts: vec![src.into()],
-            imports: Vec::new(),
-            packages: Vec::new(),
-            consulted: Vec::new(),
-            motion: Vec::new(),
-            var_fallbacks: Vec::new(),
-        },
-        active: vec![root_key.clone()],
-        units: Vec::new(),
-        cache: HashMap::new(),
-        fixes: Vec::new(),
-        proposed: Vec::new(),
-        declared: Vec::new(),
-        motion: Vec::new(),
-        vars: None,
-        refused: Refused::default(),
-    };
+    let mut loader = Loader::new(app_root, path, path.to_path_buf(), src, &root_key);
     let loaded = loader.load_all(path, src, root_key);
     *refused = std::mem::take(&mut loader.refused);
     loaded.map(|file| (file, loader.sources))
+}
+
+/// Every source [`load_partial`] would read, read on past a `use` or
+/// `members` line that refuses, and none of them scoped: what navigation
+/// reads file by file when the program does not load.
+pub(crate) fn read_all(path: &Path, src: &str, app_root: &Path) -> Sources {
+    let root_key = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
+    let mut loader = Loader::new(app_root, path, path.to_path_buf(), src, &root_key);
+    loader.keep_going = true;
+    let _ = loader.load_source(&root_key, src, 0);
+    loader.sources
 }
 
 impl Loader<'_> {
@@ -499,31 +486,7 @@ pub struct SourceGraph {
 /// it across a design-only edit and re-runs [`GraphBase::tail`] alone: the third hands-on pass's latency).
 pub(crate) fn graph_base(path: &Path, src: &str, app_root: &Path) -> GraphBase {
     let root_key = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
-    let mut loader = Loader {
-        app_root,
-        root_given: path.to_path_buf(),
-        sources: Sources {
-            paths: vec![root_key.clone()],
-            origins: vec![Origin::App],
-            digests: vec![digest(src)],
-            homes: Vec::new(),
-            texts: vec![src.into()],
-            imports: Vec::new(),
-            packages: Vec::new(),
-            consulted: Vec::new(),
-            motion: Vec::new(),
-            var_fallbacks: Vec::new(),
-        },
-        active: vec![root_key.clone()],
-        units: Vec::new(),
-        cache: HashMap::new(),
-        fixes: Vec::new(),
-        proposed: Vec::new(),
-        declared: Vec::new(),
-        motion: Vec::new(),
-        vars: None,
-        refused: Refused::default(),
-    };
+    let mut loader = Loader::new(app_root, path, root_key.clone(), src, &root_key);
     let loaded = loader.load_source(&root_key, src, 0);
     // The components' params (LLP 1121 D15), named as the build names them
     // (an icon param naming another): an icon param's SVG is read too.
@@ -615,6 +578,63 @@ struct Loader<'a> {
     vars: Option<contract_lower::var_tokens::Tokens>,
     /// The syntax refusals of the files read so far, resolved.
     refused: Refused,
+    /// Whether a file's `use` or `members` line that refuses is passed over,
+    /// to read every file the others name ([`read_all`]).
+    keep_going: bool,
+}
+impl<'a> Loader<'a> {
+    /// A loader of the root `src`, the file `first` names, canonically `root_key`.
+    fn new(app_root: &'a Path, path: &Path, first: PathBuf, src: &str, root_key: &Path) -> Self {
+        Loader {
+            app_root,
+            root_given: path.to_path_buf(),
+            sources: Sources {
+                paths: vec![first],
+                origins: vec![Origin::App],
+                digests: vec![digest(src)],
+                homes: Vec::new(),
+                texts: vec![src.into()],
+                imports: Vec::new(),
+                packages: Vec::new(),
+                consulted: Vec::new(),
+                motion: Vec::new(),
+                var_fallbacks: Vec::new(),
+            },
+            active: vec![root_key.to_path_buf()],
+            units: Vec::new(),
+            cache: HashMap::new(),
+            fixes: Vec::new(),
+            proposed: Vec::new(),
+            declared: Vec::new(),
+            motion: Vec::new(),
+            vars: None,
+            refused: Refused::default(),
+            keep_going: false,
+        }
+    }
+
+    /// `link`'s result for one line: refused, unless the loader keeps going,
+    /// when the active stack is put back as it was before the line, and a
+    /// source read with no unit gets an empty one, so a unit's index stays
+    /// its source id.
+    fn kept(
+        &mut self,
+        depth: usize,
+        linked: Result<(), Vec<CompileError>>,
+    ) -> Result<(), Vec<CompileError>> {
+        if linked.is_err() && self.keep_going {
+            self.active.truncate(depth);
+            while self.units.len() < self.sources.paths.len() {
+                self.units.push(Unit {
+                    file: File::default(),
+                    targets: Vec::new(),
+                    parts: Vec::new(),
+                });
+            }
+            return Ok(());
+        }
+        linked
+    }
 }
 impl Loader<'_> {
     /// Parse `src` as unit `source_id`, then every file its uses name, depth
@@ -634,7 +654,8 @@ impl Loader<'_> {
                 let sources = &self.sources;
                 let errors = partial.errors.into_iter();
                 (self.refused.errors).extend(errors.map(|e| sources.resolve(e.into())));
-                self.refused.hidden.extend(partial.hidden);
+                let hidden = partial.hidden.into_iter();
+                self.refused.hidden.extend(hidden.map(|h| (source_id, h)));
                 match partial.file {
                     Some(file) => *file,
                     None => {
@@ -681,8 +702,10 @@ impl Loader<'_> {
             homes.resize(source_id as usize + 1, None);
         }
         homes[source_id as usize] = Some(home);
-        contract_analyze::check_routes_root(&file, self.active.len() == 1)
-            .map_err(|e| vec![CompileError::from(e)])?;
+        let routes = contract_analyze::check_routes_root(&file, self.active.len() == 1);
+        if !self.keep_going {
+            routes.map_err(|e| vec![CompileError::from(e)])?;
+        }
         self.units.push(Unit {
             file,
             targets: Vec::new(),
@@ -697,43 +720,55 @@ impl Loader<'_> {
         let dir = path.parent().map(Path::to_path_buf).unwrap_or_default();
         let from = self.sources.origins[index].clone();
         for u in &uses {
-            let resolved = resolve(
-                &u.path,
-                &dir,
-                &from,
-                self.app_root,
-                &mut self.sources.consulted,
-            )
-            .map_err(|(id, message)| {
-                vec![use_error(id, format!("{}: {message}", described(u)), u)]
-            })?;
-            if let Origin::Package { name, .. } = &resolved.origin {
-                if home(&resolved.key, &resolved.origin, self.app_root).is_none() {
-                    let message = format!("{}: {}", described(u), unnamed(name));
-                    return Err(vec![use_error(UNNAMED, message, u)]);
-                }
-            }
-            if let Origin::Package {
-                name,
-                version,
-                root,
-                manifest,
-            } = &resolved.origin
-            {
-                let package = Package {
-                    name: name.clone(),
-                    version: version.clone(),
-                    root: root.clone(),
-                    manifest: manifest.clone(),
-                };
-                if !self.sources.packages.contains(&package) {
-                    self.sources.packages.push(package);
-                }
-            }
-            let used = self.load_resolved(resolved, &described(u), u.span)?;
-            self.units[index].targets.push(used);
+            let depth = self.active.len();
+            let linked = self.link_use(u, &dir, &from, index);
+            self.kept(depth, linked)?;
         }
         self.link_members(path, index)
+    }
+
+    /// Load the file unit `index`'s `use` line `u` names.
+    fn link_use(
+        &mut self,
+        u: &UseDecl,
+        dir: &Path,
+        from: &Origin,
+        index: usize,
+    ) -> Result<(), Vec<CompileError>> {
+        let resolved = resolve(
+            &u.path,
+            dir,
+            from,
+            self.app_root,
+            &mut self.sources.consulted,
+        )
+        .map_err(|(id, message)| vec![use_error(id, format!("{}: {message}", described(u)), u)])?;
+        if let Origin::Package { name, .. } = &resolved.origin {
+            if home(&resolved.key, &resolved.origin, self.app_root).is_none() {
+                let message = format!("{}: {}", described(u), unnamed(name));
+                return Err(vec![use_error(UNNAMED, message, u)]);
+            }
+        }
+        if let Origin::Package {
+            name,
+            version,
+            root,
+            manifest,
+        } = &resolved.origin
+        {
+            let package = Package {
+                name: name.clone(),
+                version: version.clone(),
+                root: root.clone(),
+                manifest: manifest.clone(),
+            };
+            if !self.sources.packages.contains(&package) {
+                self.sources.packages.push(package);
+            }
+        }
+        let used = self.load_resolved(resolved, &described(u), u.span)?;
+        self.units[index].targets.push(used);
+        Ok(())
     }
 
     /// @ref LLP 1153 D6 — `file`'s style rows with each `var()` that names a
