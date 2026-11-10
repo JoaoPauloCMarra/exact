@@ -122,6 +122,15 @@ export function checkHermesBundles(env = process.env, execute = spawnSync, os = 
   return { ok: result.status === 0, message: message || `cargo exited ${result.status ?? 'without a status'}`, fix: install };
 }
 
+/** What to do when the `cargo` first on PATH is not rustup's (Homebrew's `rust` puts its own first), which refuses the
+ * `+toolchain` every build passes; null when `cargo +<pin>` runs, or when rustup's own cargo is the one failing. */
+export function cargoProxyFault(pin, env = process.env, execute = spawnSync) {
+  if (execute('cargo', [`+${pin}`, '--version'], { env, encoding: 'utf8' }).status === 0) return null;
+  const cargo = Bun.which('cargo', { PATH: env.PATH ?? '' }), rustup = Bun.which('rustup', { PATH: env.PATH ?? '' });
+  if (!cargo || !rustup || dirname(cargo) === dirname(rustup)) return null;
+  return `${cargo} is not rustup's cargo and refuses +${pin}: put ${dirname(rustup)} before ${dirname(cargo)} on PATH`;
+}
+
 /** Where a shim goes: `EXACT_BIN_DIR`, else the first of these already on PATH, else `~/.local/bin` (made, and named in the advice). */
 export function binDirectory() {
   if (process.env.EXACT_BIN_DIR) return resolve(process.env.EXACT_BIN_DIR);
@@ -393,6 +402,8 @@ export function setup({check = false} = {}) {
   if (!check) {
     run('rustup', ['toolchain', 'install', pin.channel, '--profile', pin.profile,
       ...pin.components.flatMap(c => ['--component', c]), ...pin.targets.flatMap(t => ['--target', t])]);
+    const proxy = cargoProxyFault(pin.channel);
+    if (proxy) throw new Error(`${proxy}, then rerun exact setup`);
     // The nightly builds the web's wasm: with -Zbuild-std from rust-src for size, and without it (a --wasm dev build) from its own wasm32 std.
     // A game's web bake lints its logic on the same nightly, so it takes clippy too.
     run('rustup', ['toolchain', 'install', WEB_TOOLCHAIN, '--profile', 'minimal', '--component', 'rust-src', '--component', 'clippy', '--target', 'wasm32-unknown-unknown']);
@@ -504,7 +515,9 @@ export function sdkReport(env = process.env, { only = null, device = false } = {
   const rustup = output('rustup', ['--version']);
   rows.push(row('rustup', rustup.split(' ')[1], 'any', !!rustup, 'install rustup from https://rustup.rs'));
   const rust = output('rustc', [`+${pin.channel}`, '--version']).split(' ')[1];
-  rows.push(row('Rust', rust, pin.channel, rust === pin.channel, 'exact setup'));
+  // Cargo apart from rustc: a PATH can put another cargo first and leave rustup's rustc.
+  const proxy = cargoProxyFault(pin.channel, env);
+  rows.push(row('Rust', proxy ? "another cargo first on PATH" : rust, pin.channel, rust === pin.channel && !proxy, proxy || 'exact setup'));
   const nightlyRoot = want('web nightly', 'web nightly wasm32', 'web nightly clippy') ? output('rustc', [`+${WEB_TOOLCHAIN}`, '--print', 'sysroot']) : '';
   const nightly = !!nightlyRoot && existsSync(resolve(nightlyRoot, 'lib/rustlib/src/rust/library/Cargo.toml'));
   if (want('web nightly')) rows.push(row('web nightly', nightlyRoot ? (nightly ? WEB_TOOLCHAIN : 'no rust-src') : '', `${WEB_TOOLCHAIN} + rust-src`, nightly, 'exact setup'));

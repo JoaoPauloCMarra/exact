@@ -1046,3 +1046,28 @@ test('setup refuses the removed game warmup flag before provisioning', () => {
   assert.match(result.stderr,/Usage: exact setup \[--check\]/);
   assert.doesNotMatch(result.stdout,/warming|cargo fetch|rustup toolchain install/);
 });
+
+test.skipIf(process.platform === 'win32')("setup names rustup's directory when another cargo, which refuses +toolchain, is first on PATH", async () => {
+  const { cargoProxyFault } = await import('./exact.mjs');
+  inDir((dir) => {
+    const bin = (name, body) => { mkdirSync(resolve(dir, name), { recursive: true }); for (const tool of ['cargo', 'rustup']) if (body[tool]) writeFileSync(resolve(dir, name, tool), `#!/bin/sh\n${body[tool]}\n`, { mode: 0o755 }); return resolve(dir, name); };
+    const rustup = bin('rustup', { cargo: 'exit 0', rustup: 'exit 0' }), brew = bin('brew', { cargo: 'exit 101' });
+    assert.equal(cargoProxyFault('1.97.0', { PATH: `${rustup}:${brew}` }), null);
+    assert.equal(cargoProxyFault('1.97.0', { PATH: `${brew}:${rustup}` }), `${brew}/cargo is not rustup's cargo and refuses +1.97.0: put ${rustup} before ${brew} on PATH`);
+    // rustup's own cargo failing (a toolchain not installed) is not this fault.
+    writeFileSync(resolve(rustup, 'cargo'), '#!/bin/sh\nexit 1\n');
+    assert.equal(cargoProxyFault('1.97.0', { PATH: rustup }), null);
+  });
+});
+
+test.skipIf(process.platform === 'win32' || !Bun.which('rustup'))("the setup report's Rust row fails when only cargo is another's, rustup's rustc working", async () => {
+  const { sdkReport } = await import('./exact.mjs');
+  const pin = Bun.TOML.parse(readFileSync(resolve(import.meta.dir, '../rust-toolchain.toml'), 'utf8')).toolchain.channel;
+  inDir((brew) => {
+    writeFileSync(resolve(brew, 'cargo'), '#!/bin/sh\nexit 101\n', { mode: 0o755 });
+    const rust = sdkReport({ ...process.env, PATH: `${brew}:${process.env.PATH}` }, { only: 'web' }).find(row => row.name === 'Rust');
+    assert.equal(rust.ok, false);
+    assert.equal(rust.fix, `${brew}/cargo is not rustup's cargo and refuses +${pin}: put ${dirname(Bun.which('rustup'))} before ${brew} on PATH`);
+  });
+}, 60_000);
+
