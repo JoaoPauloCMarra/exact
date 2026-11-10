@@ -16,7 +16,7 @@
  * are those of a run that passed (scripts/async-inputs.mjs), then
  * `metrics.mjs --long` (every RULES budget;
  * a VIOLATION or FAILED row or a failed run counts, an OVER time does not — it
- * moves with the load). The build, clippy, fmt, caps, boot, metrics and the semantics checks
+ * moves with the load). The build, clippy, fmt, caps, boot, web-bytes, metrics and the semantics checks
  * (gated by their own inputs) run on every commit; the other steps run the suites that the files
  * changed since the last commit checked can affect (scripts/affected.mjs: a Cargo package's tests,
  * built as the full run builds them, a glue file, an app's conformance, the Apple builds), and a
@@ -210,6 +210,9 @@ export function checks(sha, since, selection = {}) {
     ['fmt', 'cargo', ['fmt', '--all', '--', '--check']],
     ['caps', 'bun', ['scripts/caps.mjs']],
     ['boot', 'bun', ['scripts/boot.mjs']],
+    // The bytes each web app ships against its budget (LLP 1047.002 D5), in seconds here rather
+    // than after `metrics --long`'s macOS build, so a VIOLATION is filed in the commit's first minute.
+    ['web-bytes', 'bun', ['scripts/metrics.mjs', '--web-bytes']],
     // Every web host unit test (LLP 1012.001.000 D9; Charlie, 2026-09-30)
     // and the source capture fixtures, in the existing async glue step.
     // Modules' JS tests (`modules/*/tests`) run here too.
@@ -386,7 +389,7 @@ export function failures(name, log, status) {
     if (rerun) for (const t of failed.splice(0)) found.add(`${name}: ${rerun[1]} ${t}`);
   }
   // metrics rows: a VIOLATION, or a measurement whose build FAILED.
-  if (name === 'metrics') for (const m of log.matchAll(/^[ \t]+(\S[^\n]*?)[ \t]{2,}(?:FAILED\b|[^\n]*\bVIOLATION\b)/gm)) found.add(`${name}: ${m[1]} ${/\bVIOLATION\b/.test(m[0]) ? 'VIOLATION' : 'FAILED'}`);
+  if (name === 'metrics' || name === 'web-bytes') for (const m of log.matchAll(/^[ \t]+(\S[^\n]*?)[ \t]{2,}(?:FAILED\b|[^\n]*\bVIOLATION\b)/gm)) found.add(`${name}: ${m[1]} ${/\bVIOLATION\b/.test(m[0]) ? 'VIOLATION' : 'FAILED'}`);
   for (const m of log.matchAll(/Test Case '-\[(\S+) (\S+)\]' failed/g)) found.add(`${name}: ${m[1]} ${m[2]} failed`);
   // xcodebuild's parallel testing names a failure by class and method only.
   for (const m of log.matchAll(/^Test case '(\w+)\.(\w+)\(\)' failed on /gm)) found.add(`${name}: ExactKitTests.${m[1]} ${m[2]} failed`);

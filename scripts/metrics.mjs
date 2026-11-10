@@ -27,6 +27,11 @@
  *                                       core's code by capability (LLP 1047 D9; reported);
  *                                       and the hello app's iOS binary, for speed and for size
  *                                       (LLP 1047.001 D8; reported)
+ *   bun scripts/metrics.mjs --web-bytes  only the bytes each web app ships (LLP 1047.002 D5): the
+ *                                       production app.js of the hello app, the `exact new` starter
+ *                                       and the gated apps against JS_TARGET_KIB, the eager closure
+ *                                       the page preloads with it, and the entry by source module;
+ *                                       seconds, in the working tree, no capture
  *
  * Budgets are read from rules/RULES.md so they cannot drift from the prose.
  */
@@ -35,7 +40,7 @@ import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { arch, cpus, platform, release, tmpdir, totalmem } from 'node:os';
-import { gzipSync } from 'node:zlib';
+import { brotliCompressSync, constants, gzipSync } from 'node:zlib';
 import { dirname, resolve } from 'node:path';
 import { closeFilesystemReader } from './filesystem.mjs';
 import { buildFileCards, buildTreeFile, jsTargetBuild, publicFileCards, readStaticFile, webContentType } from '../host/web/serve.mjs';
@@ -95,6 +100,103 @@ if (process.argv.includes('--stress-url')) {
   const { runStressMetrics } = await import('./stress-metrics.mjs');
   await runStressMetrics(process.argv.slice(2));
   process.exit(process.exitCode ?? 0);
+}
+
+// The web's gate since 2026-10-02: KiB of brotli-11 app.js, the runtime and the
+// app as one ES module, which is what each app's web build ships (LLP 1071); since
+// 2026-10-06 the production build's (Charlie: gate what ships, not the development
+// build's tools).
+// Over one is a VIOLATION the async lane files against the commit. Each is the
+// size that day (d09bfd087: Caltrain 17,159 B, RealWorld 28,721 B, the video
+// player 7,226 B) plus ~2 KiB. Raise one only on purpose, with the reason here;
+// lower it when a cut lands. Pieces loaded on demand (the GPU glue, Canvas 2D,
+// the markup editor) are not in it.
+// Caltrain raised 19 → 28 (Charlie, 2026-10-06): 26.8 KiB shipped on 2026-10-06, grown
+// by real features (browser-side grant checks, media, commands, pointer events, the
+// router, paint order, its TV screens); a cut lane follows. RealWorld (38.5 KiB) and the
+// video player (18.7 KiB) are over and stay over until Charlie rules or a cut lands.
+// Caltrain lowered 28 → 25 the same day (lane/web-size: the grant admission, media and the event families link by use;
+// 22.7 KiB shipped). RealWorld raised 30 → 38 and the video player 9 → 17 (Charlie,
+// 2026-10-06): 36.0 and 15.6 KiB shipped after that cut. RealWorld's bulk is its own
+// generated module (~8 KB), the runtime core (~11.6 KB) and the TypeScript data layer
+// (~2.9 KB); the video player grew with its media session, controls and full screen.
+// RealWorld raised 38 → 45 (Charlie, 2026-10-12): 43.45 KiB shipped at fe5b26798, grown by real
+// features since 2026-10-08 (optimistic writes, +2.4 KB, the largest; the LLP 1115.000 web rows);
+// the file-body path already links by use (-0.4 KB). A link-by-use cut hunt is in QUEUE.md.
+// 2026-11-03 (LLP 1047.002): at 574720f370 Caltrain ships 45.5 KiB, RealWorld 65.1 and the video player
+// 36.1, all over, with no issue filed since 2026-10-12; hello (the core, LLP 1047 D9's carrier) and the
+// `exact new` starter join at that day's size plus ~2 KiB: 21.3 and 49.1 KiB shipped. The cuts of 1047.002 lower them:
+// the starter 52 → 48 the same day (D3, the empty-set grant admission; 46.1 KiB shipped); hello 24 → 18 the same day
+// (D1's first cut: `navigation` links only where a plan has routes or a back control; 15.5 KiB shipped, and the
+// video player 36.3 → 30.7, still over); hello 18 → 14 and the starter 48 → 45 the same day (D1's second cut: the
+// host commands an action names, and the dialog, alert and menu glue, link by use; 11.9 and 42.7 KiB shipped,
+// Caltrain 42.6, RealWorld 61.7 and the video player 27.2, all three still over); the starter 45 → 44 the same day
+// (D3's second cut: sources with no network grant bind a `fetch` of the asset path and the refusal; 41.7 KiB shipped).
+const JS_TARGET_KIB = { hello: 14, starter: 44, realworld: 45, 'video-player': 17, caltrain: 25 };
+
+const brotli = (b) => brotliCompressSync(b, { params: { [constants.BROTLI_PARAM_QUALITY]: 11, [constants.BROTLI_PARAM_SIZE_HINT]: b.length } }).length;
+const sizesOf = (file) => { const b = readFileSync(file); return { raw: b.length, gzip: gzipSync(b, { level: 9 }).length, brotli: brotli(b) }; };
+/** What `name` ships on the JS target (LLP 1071): its production `app.js`, built as delivery builds it
+ * (scripts/deploy.mjs: `host/web-js/build.mjs --production` over a plan) over the development build's plan,
+ * which is the gated number; the development build's `app.js`, which also links its tools, beside it and not
+ * gated (Charlie, 2026-10-06: gate what ships); the eager closure, `app.js` and the chunks the page's head
+ * preloads with it, each compressed alone as a server sends it; and the entry's bytes by source module, as
+ * Rolldown rendered them before minification (`.gen/modules.json`): shares, not a ledger. */
+const jsTargetBytes = (name, target) => {
+  const dist = resolve(ROOT, 'target/metrics-bytes', `${name}-js`), shipped = `${dist}-production`;
+  const env = { ...process.env, EXACT_APP_DIR: target.dir, EXACT_WEB_DIST: dist };
+  const b = spawnSync(process.execPath, [resolve(ROOT, 'host/web/build.mjs'), target.crate('web')], { cwd: ROOT, env, stdio: ['ignore', 'ignore', 'pipe'], encoding: 'utf8' });
+  if (b.status !== 0 || !existsSync(resolve(dist, 'app.js'))) return { js: { failed: b.status !== 0 ? failure(b) : 'no app.js: not a JS target build' } };
+  const measured = { js_dev: sizesOf(resolve(dist, 'app.js')) };
+  const p = spawnSync(process.execPath, [resolve(ROOT, 'host/web-js/build.mjs'), name, '--plan', resolve(dist, 'app.plan'), '--out', shipped, '--production'], { cwd: ROOT, env, stdio: ['ignore', 'ignore', 'pipe'], encoding: 'utf8' });
+  if (p.status !== 0 || !existsSync(resolve(shipped, 'app.js'))) return { ...measured, js: { failed: p.status !== 0 ? failure(p) : 'no production app.js' } };
+  measured.js = sizesOf(resolve(shipped, 'app.js'));
+  const preloads = [...readFileSync(resolve(shipped, 'index.html'), 'utf8').matchAll(/<link rel="modulepreload" href="\.\/([^"]+)">/g)].map((m) => m[1]);
+  measured.closure = preloads.map((f) => sizesOf(resolve(shipped, f))).reduce((sum, s) => ({ files: sum.files + 1, raw: sum.raw + s.raw, gzip: sum.gzip + s.gzip, brotli: sum.brotli + s.brotli }), { files: 0, raw: 0, gzip: 0, brotli: 0 });
+  const modules = resolve(shipped, '.gen/modules.json');
+  if (existsSync(modules)) measured.modules = JSON.parse(readFileSync(modules, 'utf8'));
+  return measured;
+};
+/** The report row for an app's JS target bytes: its label, raw size, and the note the async lane reads a VIOLATION from. */
+const jsTargetRow = (name, m) => {
+  const shipped = m.js, limit = JS_TARGET_KIB[name], k1 = (n) => `${(n / 1024).toFixed(1)} KiB`;
+  if (shipped.failed) return [`web app.js: ${name}`, 'FAILED', shipped.failed];
+  const total = m.modules ? Object.values(m.modules).reduce((a, b) => a + b, 0) : 0;
+  const top = m.modules ? `; entry by module: ${Object.entries(m.modules).slice(0, 6).map(([f, n]) => `${f} ${Math.round(100 * n / total)}%`).join(' · ')}` : '';
+  const closure = m.closure && m.closure.files > 1 ? `; eager closure ${k1(m.closure.brotli)} over ${m.closure.files} files` : '';
+  return [`web app.js: ${name}`, `${(shipped.raw / 1024).toFixed(0)} KiB`, `${k1(shipped.brotli)} brotli-11 production${limit === undefined ? '' : `; budget ${limit} KiB, ${shipped.brotli <= limit * 1024 ? 'within' : 'VIOLATION'}`}, ${k1(shipped.gzip)} gzip${closure}${m.js_dev ? `; development build ${k1(m.js_dev.brotli)} (not gated)` : ''}${top}`];
+};
+// The apps the size work tracks: hello is the core (one text node, nothing a plan adds: LLP 1047 D9's carrier,
+// LLP 1047.001 D8's on iOS), the starter is what `exact new` writes today (made here from this checkout's
+// template, so the row moves when the template does), and the three gated apps. Each resolves from its own
+// directory: a captured run selects its original app through EXACT_APP_DIR, which resolveApp returns for any name.
+const sizedApps = () => {
+  // Outside the checkout: an app's Cargo workspace inside this one's `target/` would read this one's manifest as its root.
+  const starter = resolve(tmpdir(), 'exact-metrics-bytes', 'starter');
+  rmSync(starter, { recursive: true, force: true });
+  const made = spawnSync(process.execPath, [resolve(ROOT, 'scripts/exact.mjs'), 'new', starter], { cwd: ROOT, stdio: ['ignore', 'ignore', 'pipe'], encoding: 'utf8' });
+  if (made.status !== 0) throw new Error(`exact new ${starter}: ${failure(made)}`);
+  const selectedDir = process.env.EXACT_APP_DIR, apps = [];
+  try {
+    for (const name of Object.keys(JS_TARGET_KIB)) {
+      process.env.EXACT_APP_DIR = name === 'starter' ? starter : resolve(ROOT, 'apps', name);
+      apps.push([name, resolveApp(name)]);
+    }
+  } finally {
+    if (selectedDir === undefined) delete process.env.EXACT_APP_DIR;
+    else process.env.EXACT_APP_DIR = selectedDir;
+  }
+  return apps;
+};
+// Only the web bytes, in the working tree (LLP 1047.002 D5): seconds once the compiler is built, so the async
+// lane files a VIOLATION in the minute after the commit, and a person measures a cut before landing it.
+if (process.argv.includes('--web-bytes')) {
+  mkdirSync(resolve(ROOT, 'target/metrics-bytes'), { recursive: true });
+  const t = Date.now(), rows = sizedApps().map(([name, target]) => jsTargetRow(name, jsTargetBytes(name, target)));
+  console.log(`web bytes (the JS target's production app.js, gated by JS_TARGET_KIB; LLP 1047.002 D5) — ${new Date().toISOString().slice(0, 19)}Z, commit ${spawnSync('git', ['rev-parse', '--short=10', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).stdout.trim()}, working tree`);
+  for (const [k, v, note] of rows) console.log(`  ${k.padEnd(34)} ${v.padStart(11)}   ${note}`);
+  console.log(`  ${'total'.padEnd(34)} ${`${((Date.now() - t) / 1000).toFixed(1)} s`.padStart(11)}`);
+  process.exit(0);
 }
 const appName = process.argv.includes('--app') ? process.argv[process.argv.indexOf('--app') + 1] : undefined;
 const app = resolveApp(appName);
@@ -889,38 +991,15 @@ const WEB_CORE_KIB = { realworld: 304, 'video-player': 249, caltrain: 310 };
 // something moves): 8,495,088 B and 5,949,632 B at e6caf40bf, plus ~100 KB.
 const IOS_HELLO_BYTES = { speed: 8_600_000, size: 6_050_000 };
 
-// The web's gate since 2026-10-02: KiB of brotli-11 app.js, the runtime and the
-// app as one ES module, which is what each app's web build ships (LLP 1071); since
-// 2026-10-06 the production build's (Charlie: gate what ships, not the development
-// build's tools).
-// Over one is a VIOLATION the async lane files against the commit. Each is the
-// size that day (d09bfd087: Caltrain 17,159 B, RealWorld 28,721 B, the video
-// player 7,226 B) plus ~2 KiB. Raise one only on purpose, with the reason here;
-// lower it when a cut lands. Pieces loaded on demand (the GPU glue, Canvas 2D,
-// the markup editor) are not in it.
-// Caltrain raised 19 → 28 (Charlie, 2026-10-06): 26.8 KiB shipped on 2026-10-06, grown
-// by real features (browser-side grant checks, media, commands, pointer events, the
-// router, paint order, its TV screens); a cut lane follows. RealWorld (38.5 KiB) and the
-// video player (18.7 KiB) are over and stay over until Charlie rules or a cut lands.
-// Caltrain lowered 28 → 25 the same day (lane/web-size: the grant admission, media and the event families link by use;
-// 22.7 KiB shipped). RealWorld raised 30 → 38 and the video player 9 → 17 (Charlie,
-// 2026-10-06): 36.0 and 15.6 KiB shipped after that cut. RealWorld's bulk is its own
-// generated module (~8 KB), the runtime core (~11.6 KB) and the TypeScript data layer
-// (~2.9 KB); the video player grew with its media session, controls and full screen.
-// RealWorld raised 38 → 45 (Charlie, 2026-10-12): 43.45 KiB shipped at fe5b26798, grown by real
-// features since 2026-10-08 (optimistic writes, +2.4 KB, the largest; the LLP 1115.000 web rows);
-// the file-body path already links by use (-0.4 KB). A link-by-use cut hunt is in QUEUE.md.
-const JS_TARGET_KIB = { realworld: 45, 'video-player': 17, caltrain: 25 };
-
 // 8. Long: web bytes by capability (LLP 1047 D9), for the three apps the
 // size work tracks. Each app's app.wasm as shipped (raw, gzip, brotli-11),
 // then the same build with names kept (EXACT_WEB_NAMES: rustc keeps its name
 // section, wasm-opt runs with -g) and its code attributed: a function goes to
 // the first exact2 module its demangled name mentions, then to a capability.
 // Reported, never blocking; the names build has its own target directory.
+// The JS target's bytes for every sized app follow (`jsTargetBytes`, the gated rows).
 if (long) {
   await step('bytes', async () => {
-    const { brotliCompressSync, constants } = await import('node:zlib');
     const CAPS = [
       ['markdown', /^exact_markdown::|^exact_web_capabilities::markdown/],
       ['motion', /^(exact_motion::|exact_web::motion$)/],
@@ -990,31 +1069,16 @@ if (long) {
         const wasm = readFileSync(resolve(dist, 'app.wasm'));
         if (names) measured.code = attribute(wasm);
         else {
-          const br = (b) => brotliCompressSync(b, { params: { [constants.BROTLI_PARAM_QUALITY]: 11, [constants.BROTLI_PARAM_SIZE_HINT]: b.length } }).length;
-          Object.assign(measured, { raw: wasm.length, gzip: gzipSync(wasm, { level: 9 }).length, brotli: br(wasm) });
+          Object.assign(measured, { raw: wasm.length, gzip: gzipSync(wasm, { level: 9 }).length, brotli: brotli(wasm) });
           // app.wasm is the core; its staged capabilities load later (LLP 1047.000 §9).
           const staged = existsSync(resolve(dist, 'stages')) ? readdirSync(resolve(dist, 'stages')) : [];
-          if (staged.length) measured.stages = Object.fromEntries(staged.map((name) => [name.split('.')[0], br(readFileSync(resolve(dist, 'stages', name)))]));
-        }
-      }
-      // What the app ships: its JS target's production app.js (LLP 1071), the gated number, built as
-      // delivery builds it (scripts/deploy.mjs: `host/web-js/build.mjs --production` over a plan) over the
-      // development build's plan. The development build's app.js, which also links its tools (perf, the
-      // seams, the meters), is reported beside it, not gated (Charlie, 2026-10-06: gate what ships).
-      {
-        const sizes = (file) => { const js = readFileSync(file); return { raw: js.length, gzip: gzipSync(js, { level: 9 }).length, brotli: brotliCompressSync(js, { params: { [constants.BROTLI_PARAM_QUALITY]: 11, [constants.BROTLI_PARAM_SIZE_HINT]: js.length } }).length }; };
-        const dist = resolve(ROOT, 'target/metrics-bytes', `${name}-js`), shipped = `${dist}-production`;
-        const env = { ...process.env, EXACT_APP_DIR: target.dir, EXACT_WEB_DIST: dist };
-        const b = spawnSync(process.execPath, [resolve(ROOT, 'host/web/build.mjs'), target.crate('web')], { cwd: ROOT, env, stdio: ['ignore', 'ignore', 'pipe'], encoding: 'utf8' });
-        if (b.status !== 0 || !existsSync(resolve(dist, 'app.js'))) measured.js = { failed: b.status !== 0 ? failure(b) : 'no app.js: not a JS target build' };
-        else {
-          measured.js_dev = sizes(resolve(dist, 'app.js'));
-          const p = spawnSync(process.execPath, [resolve(ROOT, 'host/web-js/build.mjs'), name, '--plan', resolve(dist, 'app.plan'), '--out', shipped, '--production'], { cwd: ROOT, env, stdio: ['ignore', 'ignore', 'pipe'], encoding: 'utf8' });
-          measured.js = p.status !== 0 || !existsSync(resolve(shipped, 'app.js')) ? { failed: p.status !== 0 ? failure(p) : 'no production app.js' } : sizes(resolve(shipped, 'app.js'));
+          if (staged.length) measured.stages = Object.fromEntries(staged.map((name) => [name.split('.')[0], brotli(readFileSync(resolve(dist, 'stages', name)))]));
         }
       }
       out.web_bytes[name] = measured;
     }
+    // The gated rows, for every sized app (hello and the starter have no wasm row).
+    out.web_js_bytes = Object.fromEntries(sizedApps().map(([name, target]) => [name, jsTargetBytes(name, target)]));
   });
 }
 
@@ -1092,11 +1156,10 @@ if (long) {
     rows.push([`iOS: hello app, optimized for ${optimize}`, out[`ios_${optimize}_failed`] ? 'FAILED' : mib(bytes), out[`ios_${optimize}_failed`] ?? `production, simulator, stripped, over an empty UIKit app (${mib(out.ios_floor_bytes)}); one text node: the core and nothing a plan adds; ${optimize === 'size' ? 'what an embed builds' : 'what an app builds'} unless its manifest says otherwise${budget}`]);
   }
   rows.push(['macOS: touch one line, rebuild', out.macos_touch_failed ? 'FAILED' : s(out.macos_touch_s), out.macos_touch_failed ?? `host/apple/src/host.rs; budget ${budget('Touch one line')}`]);
-  // LLP 1047 D9: each app's wasm, and its code by capability (KiB of code).
+  // The JS target's bytes, gated (LLP 1047.002 D5), then LLP 1047 D9: each app's wasm, and its code by capability (KiB of code).
+  for (const [name, m] of Object.entries(out.web_js_bytes ?? {})) rows.push(jsTargetRow(name, m));
   for (const [name, m] of Object.entries(out.web_bytes ?? {})) {
     const parts = m.code ? Object.entries(m.code).filter(([, b]) => b >= 1024).sort((a, b) => b[1] - a[1]).map(([k, b]) => `${k} ${kib(b)}`).join(' · ') : 'names unavailable';
-    const shipped = m.js, limit = JS_TARGET_KIB[name];
-    if (shipped) rows.push([`web app.js: ${name}`, shipped.failed ? 'FAILED' : kib(shipped.raw), shipped.failed ?? `${(shipped.brotli / 1024).toFixed(1)} KiB brotli-11 production${limit === undefined ? '' : `; budget ${limit} KiB, ${shipped.brotli <= limit * 1024 ? 'within' : 'VIOLATION'}`}, ${(shipped.gzip / 1024).toFixed(1)} KiB gzip${m.js_dev ? `; development build ${(m.js_dev.brotli / 1024).toFixed(1)} KiB (not gated)` : ''}`]);
     const ceiling = WEB_CORE_KIB[name];
     const noted = ceiling === undefined ? '' : `; reference ${ceiling} KiB, ${m.brotli <= ceiling * 1024 ? 'within' : 'over'} (not gated)`;
     rows.push([`wasm core: ${name}`, m.failed ? 'FAILED' : kib(m.raw), m.failed ?? `${kib(m.brotli)} brotli-11${noted}, ${kib(m.gzip)} gzip; ${parts}`]);

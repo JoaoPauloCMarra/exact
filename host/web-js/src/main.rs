@@ -578,6 +578,12 @@ fn main() -> ExitCode {
             if out_files.editor {
                 let _ = std::fs::write(dir.join("editor.flag"), "");
             }
+            // A dialog, an alert or a popover (prompt-glue.js, alert-message.js,
+            // menu-rows.js): glue the page adds for them (LLP 1047.002 D1).
+            let _ = std::fs::remove_file(dir.join("dialogs.flag"));
+            if out_files.dialogs {
+                let _ = std::fs::write(dir.join("dialogs.flag"), "");
+            }
             if out_files.flow {
                 let _ = std::fs::write(dir.join("flow.flag"), "");
             }

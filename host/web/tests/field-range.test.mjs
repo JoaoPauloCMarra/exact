@@ -15,7 +15,7 @@ const check = need('chrome', unavailable);
 
 const page = `<button id="outside">Outside</button><div id="exact-root"></div>
 <script type="module">
-  import { commands } from './commands.js';
+  import * as commands from './commands.js';
   import { runFocusCommands, controlEvent, onSelection } from './navigation.js';
   import { onValue, OnHooks, onSelectionChange } from './rt.js';
   import * as rt from './rt.js';
@@ -29,10 +29,10 @@ const page = `<button id="outside">Outside</button><div id="exact-root"></div>
     : controlEvent(field, 'input', (name, f) => field.addEventListener(name, f), (kind, payload) => seen.push([field.value, kind === 48 ? 'insertReplacementText' : kind === 54 ? payload.split(',')[0] : '']));
   window.hatch = ht;
   window.logs = [];
-  window.replace = (target, args) => target === 'js' ? commands(s => logs.push(s)).setRangeText(...args)
+  window.replace = (target, args) => target === 'js' ? commands.setRangeText(s => logs.push(s))(...args)
     : runFocusCommands([{ name: 'setRangeText', args }], { root: document.getElementById('exact-root'), ready: true, inertAncestor: () => false, log: s => logs.push(s) });
   window.onSelection = onSelection;
-  window.selectionCommand = (target, name, args = []) => target === 'js' ? commands(s => logs.push(s))[name](...args)
+  window.selectionCommand = (target, name, args = []) => target === 'js' ? commands[name](s => logs.push(s))(...args)
     : runFocusCommands([{ name, args }], { root: document.getElementById('exact-root'), ready: true, inertAncestor: () => false, log: s => logs.push(s) });
   window.ready = true;
 </script>`;

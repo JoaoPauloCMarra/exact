@@ -18,6 +18,8 @@ use std::fmt::Write as _;
 
 #[path = "answers.rs"]
 mod answers;
+#[path = "commands.rs"]
+mod commands;
 #[path = "each.rs"]
 mod each;
 #[path = "list_options.rs"]
@@ -30,6 +32,8 @@ mod markdown;
 mod motion;
 #[path = "named_records.rs"]
 mod named_records;
+#[path = "pages.rs"]
+mod pages;
 #[path = "regions.rs"]
 mod regions;
 #[path = "rows.rs"]
@@ -114,6 +118,9 @@ impl Sites {
 
 pub struct Output {
     pub js: String,
+    /// Whether a node is a dialog, an alertdialog, a menu or a popover (the
+    /// page adds prompt-glue.js, alert-message.js and menu-rows.js).
+    pub dialogs: bool,
     pub paint: String,
     pub names: String,
     /// The locations rendered at build (`render=build` routes without
@@ -175,6 +182,7 @@ struct Em<'a> {
     warnings: Vec<String>,
     row_actions: std::collections::BTreeSet<usize>,
     markdown: bool,
+    dialogs: bool,
     canvas2d: bool,
     motion: bool,
     editor: bool,
@@ -257,6 +265,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
         warnings,
         row_actions: Default::default(),
         markdown: false,
+        dialogs: false,
         canvas2d: false,
         motion: false,
         editor: false,
@@ -420,7 +429,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
                 value_js(&Value::from_bytes(b).map_err(|e| e.to_string())?)
             }
             _ if is_placeholder => "void 0".into(),
-            _ => zero(plan, r.ty),
+            _ => pages::zero(plan, r.ty),
         };
         // A host fact is the page's; a store reader's value a placeholder (LLP 1027 D4).
         let fact = HOST_FACTS.contains(&plan.str(r.source));
@@ -576,6 +585,13 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
     if em.media {
         let media = em.uses.rt("useMedia");
         let _ = write!(body, "{media}($media());");
+    }
+    // The host commands the actions name, each commands.js's export imported
+    // by that name (commands.rs).
+    let commands = commands::linked(&em.uses);
+    if !commands.is_empty() {
+        let use_commands = em.uses.rt("useCommands");
+        body.push_str(&commands::install(&use_commands, &commands));
     }
     let mount = em.uses.rt("mount");
     let _ = write!(body, "{mount}($R=>{{{view}}});");
@@ -748,6 +764,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
         serde_json::to_string(&em.uses.markdown_paths).unwrap()
     );
     let imports: Vec<String> = em.uses.names.iter().cloned().collect();
+    let commands_import = commands::import(&commands);
     let budget: Vec<String> = em.uses.budget.iter().cloned().collect();
     // What many sites share, built once (LLP 1071 §7, generated code at
     // scale): after `sources`, which build.mjs reads as the first match.
@@ -769,6 +786,7 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
         if dev_reload { "import{devResource as $devRes,devSignal as $devSig}from\"./checkpoint.js\";" } else { "" },
         // Loaded pieces, imported only where the plan uses them.
         [
+            (!commands.is_empty(), commands_import.as_str()),
             (paint, "import{paintUse as $paint}from\"./paint.js\";"),
             (em.list, "import{vl as $vl}from\"./list.js\";"),
             (em.media, "import{mediaUse as $media}from\"./media.js\";"),
@@ -845,8 +863,9 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
         paint: crate::paint::runtime(plan),
         css,
         names: names_js,
-        pages: build_pages(plan),
+        pages: pages::build_pages(plan),
         markdown: em.markdown,
+        dialogs: em.dialogs,
         canvas2d: em.canvas2d,
         motion: em.motion,
         editor: em.editor,
@@ -855,55 +874,6 @@ pub fn emit(plan: &Plan, site_attrs: bool, dev_reload: bool) -> Result<Output, S
         viewport,
         warnings: em.warnings,
     })
-}
-
-fn build_pages(plan: &Plan) -> String {
-    let rows: Vec<String> = plan
-        .routes
-        .iter()
-        .filter(|r| {
-            r.render == exact_plan::RenderPolicy::Build && !plan.str(r.pattern).contains(':')
-        })
-        .map(|r| {
-            let location = if r.notfound {
-                "/404"
-            } else {
-                plan.str(r.pattern)
-            };
-            format!(
-                "{{\"location\":{},\"notfound\":{}}}",
-                serde_json::to_string(location).unwrap(),
-                r.notfound
-            )
-        })
-        .collect();
-    format!("[{}]", rows.join(","))
-}
-
-/// The type's zero, as the runner's `zero` makes it.
-fn zero(plan: &Plan, ty: exact_plan::TypesId) -> String {
-    let t = &plan.types[ty.0 as usize];
-    match t.kind {
-        exact_plan::TypeKind::Number => "0".into(),
-        exact_plan::TypeKind::Bool => "!1".into(),
-        exact_plan::TypeKind::String => serde_json::to_string(
-            t.fields
-                .iter()
-                .next()
-                .map_or("", |f| plan.str(plan.field(f).name)),
-        )
-        .unwrap(),
-        exact_plan::TypeKind::Unit | exact_plan::TypeKind::Option => "null".into(),
-        exact_plan::TypeKind::List => "[]".into(),
-        exact_plan::TypeKind::Record => format!(
-            "[{}]",
-            t.fields
-                .iter()
-                .map(|f| zero(plan, plan.fields[f.0 as usize].ty))
-                .collect::<Vec<_>>()
-                .join(",")
-        ),
-    }
 }
 
 impl Em<'_> {
@@ -998,6 +968,9 @@ impl Em<'_> {
         // Press feedback, a press haptic, or a native button's highlight: the input piece shows it,
         // and gives a radio group its arrow keys and one Tab stop (LLP 1116.004 D5.2), and a
         // tablist and a menu theirs (LLP 1115.000 D4.5).
+        if commands::dialog_glue(plan, &parts.tag, &attrs, NodesId(i)) {
+            self.dialogs = true;
+        }
         if presence.contains("--exact-press:")
             || presence.contains("--exact-press-haptic:")
             || presence.contains("--exact-press-opacity:")

@@ -126,7 +126,7 @@ test('async names the suites of each failure its log attributes', () => {
 
 test('async runs a check only for the suites selected, its Rust tests built as a full run builds them', () => {
   const none = asyncLane.nothing();
-  expect(asyncLane.checks('new', 'old', none).map(([name]) => name)).toEqual(['build', 'clippy', 'fmt', 'caps', 'boot', 'lean', 'vm-extract', 'difftest', 'difftest-js', 'metrics']);
+  expect(asyncLane.checks('new', 'old', none).map(([name]) => name)).toEqual(['build', 'clippy', 'fmt', 'caps', 'boot', 'web-bytes', 'lean', 'vm-extract', 'difftest', 'difftest-js', 'metrics']);
   const selection = {...none, cargo:['exact-linux'], conform:['caltrain'], ios:true, glue:['./host/web/a.test.mjs'], lane:['a_lane_test']};
   const some = asyncLane.checks('new', 'old', selection);
   const step = name => some.find(([n]) => n === name);

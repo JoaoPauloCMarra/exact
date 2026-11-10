@@ -8,7 +8,9 @@
 // written inside the menu stays nested by where it is (HTML), whatever its
 // source. It also closes a popover whose control left the screen, and marks
 // the button that opened a popover while the popover is open (below). Loaded
-// after the first paint (glue.js), the JS target at boot.
+// after the first paint (glue.js); the JS target's page imports it at boot
+// when its plan has a dialog, a menu or a popover (host/web-js/build.mjs
+// `dialogs.flag`).
 import { popoverSource } from "./navigation.js";
 
 /** HTML's popover commands, and what each does. */

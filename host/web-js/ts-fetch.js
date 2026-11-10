@@ -394,6 +394,10 @@ export const absent = undefined;
 // non-configurable properties (`window`, `document`, `top`) a proxy over it
 // could not report absent.
 const page = globalThis;
+// The `fetch` a source's `globalThis.fetch` is: this module's, or, for sources with no network grant, the asset path and the
+// refusal alone (ts-fetch-refused.js); the data glue sets it (ts-data.js), so the request paths link only where they can be
+// reached (LLP 1047.002 D3).
+let Fetch = null; export const useFetch = f => { Fetch = f; };
 export const appGlobal = new Proxy(Object.create(null), {
   has(_, name) { return !ABSENT.has(name) && Reflect.has(page, name); },
   getOwnPropertyDescriptor(_, name) {
@@ -406,7 +410,7 @@ export const appGlobal = new Proxy(Object.create(null), {
   defineProperty(_, name, descriptor) { return Reflect.defineProperty(page, name, descriptor); },
   deleteProperty(_, name) { return Reflect.deleteProperty(page, name); },
   get(_, name) {
-    if (name === 'fetch') return fetch;
+    if (name === 'fetch') return Fetch;
     if (Object.hasOwn(guarded, name)) return guarded[name];
     if (ABSENT.has(name)) return undefined;
     if (name === 'globalThis') return appGlobal;

@@ -1,0 +1,87 @@
+//! What a compiled plan links only because it uses it (LLP 1047.002 D1): the
+//! host commands its actions name, imported from commands.js by name, and the
+//! dialog glue its dialogs, alerts, menus and popovers need on the page.
+use crate::code::Uses;
+use crate::style;
+use exact_kernel::PropId;
+use exact_plan::{BindingKind, NodesId, Plan};
+use std::collections::BTreeSet;
+
+/// The names host/web-js/commands.js exports: the host commands a compiled
+/// plan imports from it by name. Read from the file as the compiler is built,
+/// so the list and the module cannot drift; a command the file does not export
+/// is rt.js's own or a loaded piece's.
+fn commands_js_exports() -> &'static BTreeSet<&'static str> {
+    static EXPORTS: std::sync::OnceLock<BTreeSet<&'static str>> = std::sync::OnceLock::new();
+    EXPORTS.get_or_init(|| {
+        include_str!("../commands.js")
+            .lines()
+            .filter_map(|line| line.strip_prefix("export const "))
+            .map(|rest| {
+                rest.split(|c: char| !(c.is_ascii_alphanumeric() || c == '_' || c == '$'))
+                    .next()
+                    .unwrap_or("")
+            })
+            .filter(|name| !name.is_empty())
+            .collect()
+    })
+}
+
+/// The commands the plan's actions name that commands.js exports, in name
+/// order. A command rt.js carries itself, or a loaded piece adds, is not among
+/// them and is dispatched as before.
+pub(super) fn linked(uses: &Uses) -> Vec<String> {
+    (uses.commands.iter())
+        .filter(|name| commands_js_exports().contains(name.as_str()))
+        .cloned()
+        .collect()
+}
+
+/// The import of each, as `$c_<name>`.
+pub(super) fn import(commands: &[String]) -> String {
+    format!(
+        "import{{{}}}from\"./commands.js\";",
+        commands
+            .iter()
+            .map(|c| format!("{c} as $c_{c}"))
+            .collect::<Vec<_>>()
+            .join(",")
+    )
+}
+
+/// The call that hands them to the runtime (rt.js `useCommands`); `slot` is
+/// that function as the module imported it.
+pub(super) fn install(slot: &str, commands: &[String]) -> String {
+    let table: Vec<String> = commands.iter().map(|c| format!("{c}:$c_{c}")).collect();
+    format!("{slot}({{{}}});", table.join(","))
+}
+
+/// Whether the node is a dialog, an alertdialog, a menu or a popover, literal
+/// or bound (a bound role or popover counts as any): the page then adds
+/// prompt-glue.js, alert-message.js and menu-rows.js (main.rs `dialogs.flag`,
+/// build.mjs).
+pub(super) fn dialog_glue(
+    plan: &Plan,
+    tag: &str,
+    attrs: &[(String, String)],
+    node: NodesId,
+) -> bool {
+    tag == "dialog"
+        || attrs.iter().any(|a| {
+            a.0 == "popover" || (a.0 == "role" && ["alertdialog", "menu"].contains(&a.1.as_str()))
+        })
+        || plan
+            .node(node)
+            .bindings
+            .iter()
+            .map(|b| plan.binding(b))
+            .any(|b| {
+                b.kind == BindingKind::Prop
+                    && (b.id == PropId::Popover as u16
+                        || b.id == PropId::AccessibilityRole as u16
+                            && match style::literal(plan, plan.code(b.expr)) {
+                                Some(v) => matches!(v.as_str(), Some("alertdialog" | "menu")),
+                                None => true,
+                            })
+            })
+}

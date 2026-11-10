@@ -1223,20 +1223,7 @@ export function grantOrigins(memory) {
     } catch { return -1; }
   } };
 }
-// grant admission: begin — self-contained; the JS target's build (host/web-js/build.mjs) moves these lines into a module of
-// their own, so a page that admits nothing before a lazy chunk does not carry them; the wasm host keeps them here (boot.mjs).
-// Match only the sealed, typed output of exact-runner's Rust grant parser.
-// App code is the page, so this is parity admission rather than a sandbox.
-const INVALID_GRANTS = 'the grant set was not validated';
-const grantFNV = text => new TextEncoder().encode(text).reduce((hash, byte) => BigInt.asUintN(64, (hash ^ BigInt(byte)) * 0x100000001b3n), 0xcbf29ce484222325n).toString(16).padStart(16, '0');
-// Rust's JSON writer and JavaScript's serializer use this one spelling for the
-// two ECMAScript line separators before the seal is calculated.
-const grantBody = set => JSON.stringify({ version: 1, entries: set.entries, error: set.error })
-  .replaceAll('\u2028', '\\u2028').replaceAll('\u2029', '\\u2029');
-const networkGrants = new Set(['fetch', 'fetch-subdomains', 'websocket', 'websocket-subdomains']);
-const schemeGrants = { 'fetch-scheme': ['http', 'https'], 'websocket-scheme': ['ws', 'wss'] };
-// `local-network` (LLP 1133.036 D5): a host on the local network as the URL writes it; with `development`, loopback too.
-const localGrants = new Set(['fetch-local-network', 'websocket-local-network']);
+// local network: begin — a host on the local network as a URL writes it (LLP 1133.036 D5); with `loopback`, loopback too.
 const localV4 = (a, b, loopback) => a === 10 || a === 172 && b >= 16 && b <= 31 || a === 192 && b === 168 || a === 169 && b === 254 || loopback && a === 127;
 const hextets = text => { const [head, tail] = text.split('::'), h = head?.match(/[^:]+/g) ?? [], t = tail?.match(/[^:]+/g) ?? []; return [...h, ...Array(tail === undefined ? 0 : 8 - h.length - t.length).fill('0'), ...t].map(x => parseInt(x, 16)); };
 export const isLocalNetwork = (host, loopback) => {
@@ -1249,6 +1236,20 @@ export const isLocalNetwork = (host, loopback) => {
   const v4 = host.match(/^(\d+)\.(\d+)\.\d+\.\d+$/), name = host.replace(/\.$/, '');
   return v4 ? localV4(+v4[1], +v4[2], loopback) : /.\.local$/.test(name) || loopback && name === 'localhost';
 };
+// local network: end
+// grant admission: begin — the JS target's build lifts this section and the classifier above into a module of their own
+// (host/web-js/build.mjs, LLP 1047.002 D3); the wasm host keeps them here. It matches only the sealed, typed output of
+// exact-runner's Rust grant parser: app code is the page, so this is parity admission rather than a sandbox.
+const INVALID_GRANTS = 'the grant set was not validated';
+const grantFNV = text => new TextEncoder().encode(text).reduce((hash, byte) => BigInt.asUintN(64, (hash ^ BigInt(byte)) * 0x100000001b3n), 0xcbf29ce484222325n).toString(16).padStart(16, '0');
+// Rust's JSON writer and JavaScript's serializer use this one spelling for the
+// two ECMAScript line separators before the seal is calculated.
+const grantBody = set => JSON.stringify({ version: 1, entries: set.entries, error: set.error })
+  .replaceAll('\u2028', '\\u2028').replaceAll('\u2029', '\\u2029');
+const networkGrants = new Set(['fetch', 'fetch-subdomains', 'websocket', 'websocket-subdomains']);
+const schemeGrants = { 'fetch-scheme': ['http', 'https'], 'websocket-scheme': ['ws', 'wss'] };
+// `local-network` (LLP 1133.036 D5): a host on the local network as the URL writes it; with `development`, loopback too.
+const localGrants = new Set(['fetch-local-network', 'websocket-local-network']);
 const pathGrants = new Set(['fs-read', 'fs-write', 'sqlite-open']);
 const nameGrants = new Set(['env-read', 'secret-keep', 'storage-kv']);
 const validGrantName = name => typeof name === 'string' && name.length >= 1 && name.length <= 64
@@ -1447,8 +1448,8 @@ export function coversPath(set, capability, path) {
 }
 // grant admission: end
 const selectedTexts = new Map(); // Text selections use source UTF-16 offsets; a Markdown <br> represents one newline.
-function textSource(e) { return e.nodeType === Node.TEXT_NODE ? e.data : e.nodeName === 'BR' ? "\n" : [...e.childNodes].map(textSource).join(''); }
-function textPosition(e, offset) {
+export function textSource(e) { return e.nodeType === Node.TEXT_NODE ? e.data : e.nodeName === 'BR' ? "\n" : [...e.childNodes].map(textSource).join(''); }
+export function textPosition(e, offset) {
   const walker = document.createTreeWalker(e, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
   for (let n = walker.nextNode(); n; n = walker.nextNode()) {
     if (n.nodeType === Node.TEXT_NODE) { if (offset <= n.length) return [n, offset]; offset -= n.length; }

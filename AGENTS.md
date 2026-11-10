@@ -161,7 +161,8 @@ section binds (`rules/RULES.md`, "Agents").
   crate, the page rebuilds and reloads (`--wasm`: the resident loop restarts the plan in
   place in ~20 ms). `bun scripts/metrics.mjs` prints every number
   (`--long` adds the macOS build and boot, and the loop's own budgets: the
-  warm gate, touch one line, test what you changed). macOS: `bun host/apple/build.mjs --run`;
+  warm gate, touch one line, test what you changed; `--web-bytes` prints only the bytes each
+  web app ships against its budget, in seconds, before and after a cut). macOS: `bun host/apple/build.mjs --run`;
   iOS: `bun host/apple/build.mjs --ios --run` (a simulator; `--sim` or `EXACT_SIM` picks one);
   tvOS: `bun host/apple/build.mjs --tvos --run` (an Apple TV simulator; LLP 1008 §9;
   `--tvos --no-install` compiles it with none, which is what to run after a change to Swift it shares with iOS);

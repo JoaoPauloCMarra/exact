@@ -2,7 +2,8 @@
 //! resource for each element, keyed (`each.js`), whose arguments read the
 //! element as `p0`; each shows its type's zero until it answers.
 
-use super::{type_code, zero};
+use super::pages::zero;
+use super::type_code;
 use crate::code::{self, Scope, Uses};
 use exact_plan::Plan;
 

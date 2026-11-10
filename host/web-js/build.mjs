@@ -241,6 +241,8 @@ const soundTable = existsSync(resolve(gen, 'sounds.flag')) ? readFileSync(resolv
 const wakelock = existsSync(resolve(gen, 'wakelock.flag'));
 // `orientationlock` on any element (orientationlock.js, LLP 1133.029 D7).
 const orientationlock = existsSync(resolve(gen, 'orientationlock.flag'));
+// A dialog, an alertdialog, a menu or a popover (prompt-glue.js, alert-message.js, menu-rows.js; LLP 1047.002 D1).
+const dialogs = existsSync(resolve(gen, 'dialogs.flag'));
 // App generation may create files imported by app.ts. Run it before reading
 // the declaration, as the wasm build does.
 const webScript = resolve(appDir, 'web/build.rs');
@@ -427,8 +429,15 @@ writeFileSync(resolve(gen, 'main.js'), [
   ...(soundTable ? [`import { install as sounds } from './sounds.js'; sounds(${soundTable});`] : []),
   ...(wakelock ? ["import { install as wakelock } from './wakelock.js'; wakelock();"] : []),
   ...(orientationlock ? ["import { install as orientationlock } from './orientationlock.js'; orientationlock();"] : []),
-  "import { data, journal, clock, advance, commit, inflight, heldAsks, heldReplies, Views, viewId, After, Clocked, R, resolvedLocale, Resources, Mutations, writeRecords, agentMode } from './rt.js';",
-  ...(production ? [] : ["import { develop } from './perf.js';", "import { goTo } from './rt.js';"]),
+  // A prompt's Return, a grouped alert's message box and a menu row's popover (host/web): glue a plan with a dialog, an
+  // alert, a menu or a popover needs on the page; until LLP 1047.002 commands.js carried them for every page.
+  ...(dialogs ? ["import './prompt-glue.js'; import './alert-message.js'; import './menu-rows.js'; globalThis.exact?.menuRows?.();"] : []),
+  // What this entry names from the runtime is what the bundle keeps (LLP 1047.002 D4). A production page names what
+  // its own lines below use and what production glue reads from `globalThis.exact` (`journal`, `clock`: arrange.js;
+  // `views`: media-glue.js; `viewId`: navigation.js; `After`: motion.js); the agent adapter, inspect and the dev
+  // loop read the rest, so a development page names them too.
+  `import { data, journal, clock, commit, inflight, Views, viewId, After, Clocked, R, resolvedLocale, Resources, agentMode${production ? '' : ', advance, heldAsks, heldReplies, Mutations, writeRecords, goTo'} } from './rt.js';`,
+  ...(production ? [] : ["import { develop } from './perf.js';"]),
   // A data module's answers, watched from before the app asks (seam.js).
   ...(production || !asks ? [] : ["import { seam } from './perf.js';", 'seam();']),
   ...(time ? [
@@ -459,7 +468,7 @@ writeFileSync(resolve(gen, 'main.js'), [
   "  const state = app();",
   ...(launchWeb.length ? ["  marks.mounted();"] : []),
   ...(devReload ? ["  finishDev();"] : []),
-  "  globalThis.exact = Object.assign(globalThis.exact ?? {}, { ready: true, journal, clock, advance, commit, data, state, inflight, heldAsks, heldReplies, views: Views, viewId, After, resources: Resources, mutations: Mutations, writes: writeRecords });",
+  `  globalThis.exact = Object.assign(globalThis.exact ?? {}, { ready: true, journal, clock, views: Views, viewId, After${production ? '' : ', advance, commit, data, state, inflight, heldAsks, heldReplies, resources: Resources, mutations: Mutations, writes: writeRecords'} });`,
   // A development page counts its work and samples its frames (LLP 1079); the agent adapter, only when the agent drives it.
   // The served plan's digest, which a development page's `perf` names (LLP 1079 D2).
   ...(production ? [] : [`  globalThis.exact.plan = ${JSON.stringify(createHash('sha256').update(readFileSync(opt('--plan') ? resolve(opt('--plan')) : resolve(gen, 'app.plan'))).digest('hex'))};`, "  globalThis.exact.goTo = goTo;", "  develop(globalThis.exact).catch(console.error);", "  if (clock.agent) globalThis.exact.ready = import('./agent.js').then(m => m.install(globalThis.exact));"]),
@@ -513,14 +522,45 @@ stageHostGlue(root, gen);
 // here, which navigation.js re-exports: one module is one chunk, and the lazy admission (admission.js, the TypeScript
 // and Rust data chunks) is the only reader, so a page that admits nothing before a lazy chunk carries none of it. The
 // wasm host serves navigation.js whole (its boot graph is glue.js and navigation.js; scripts/boot.mjs).
-const grantSection = (() => {
+// The local-network classifier just before it (`local network: begin` … `end`), which the section and address-space.js read,
+// moves with it, so the lifted module imports nothing back from navigation.js (a cycle Rolldown would keep whole).
+const { grantSection, grantNames, localNetwork } = (() => {
   const lines = readFileSync(resolve(root, 'host/web/navigation.js'), 'utf8').split('\n');
-  const begin = lines.findIndex(l => l.startsWith('// grant admission: begin')), end = lines.findIndex(l => l === '// grant admission: end');
-  if (begin < 0 || end < begin) throw new Error("host/web/navigation.js: no `// grant admission: begin` … `end` section");
-  const names = [...lines.slice(begin, end).join('\n').matchAll(/^export (?:function|const) (\w+)/gm)].map(m => m[1]);
-  writeFileSync(resolve(gen, 'navigation.js'), [...lines.slice(0, begin), `export { ${names.join(', ')} } from './grant-admission.js';`, ...lines.slice(end + 1)].join('\n'));
-  return lines.slice(begin, end + 1).join('\n') + '\n';
+  const section = (name) => {
+    const begin = lines.findIndex(l => l.startsWith(`// ${name}: begin`)), end = lines.findIndex(l => l === `// ${name}: end`);
+    if (begin < 0 || end < begin) throw new Error(`host/web/navigation.js: no \`// ${name}: begin\` … \`end\` section`);
+    return { begin, end, text: lines.slice(begin, end + 1).join('\n') + '\n' };
+  };
+  const local = section('local network'), grant = section('grant admission');
+  if (local.end + 1 !== grant.begin) throw new Error('host/web/navigation.js: the local network section must end where the grant admission begins');
+  const exported = (text) => [...text.matchAll(/^export (?:function|const) (\w+)/gm)].map(m => m[1]);
+  const names = exported(grant.text), classifier = exported(local.text);
+  writeFileSync(resolve(gen, 'navigation.js'), [...lines.slice(0, local.begin), `export { ${[...classifier, ...names].join(', ')} } from './grant-admission.js';`, ...lines.slice(grant.end + 1)].join('\n'));
+  return { grantSection: local.text + grant.text, grantNames: names, localNetwork: local.text };
 })();
+// A production page whose every grant set is empty (no TypeScript grant, no Rust module, no native module, no page
+// module) admits nothing, and says so without the parser (LLP 1047.002 D3): each export of the section answers as it
+// does for the empty set the compiler normalized (`admission-data.js` holds the same one), and the parser is not
+// linked. A name the section exports that this table lacks fails the build, so a new check is answered here before a
+// page ships without it. Development pages keep the section (LLP 1047 D7).
+const admitsNothing = production && !tsGrantSet.error && tsGrantSet.entries.length === 0 && !rust && !moduleFlag.extensions.length && !pageModules;
+// Whether any source holds a network grant (the kinds navigation.js's `networkGrants`, `schemeGrants` and `localGrants` name).
+const netGranted = [tsGrantSet, rustGrantSet].some(set => (set.entries ?? []).some(([, , grant]) => /^(fetch|websocket)(-|$)/.test(grant?.[0] ?? '')));
+const fetchRefused = production && ts && !netGranted;
+const emptyGrantAdmission = () => {
+  const answers = {
+    createGrantSet: '() => EMPTY', scopedGrantSet: '() => EMPTY', unionGrantSets: '() => EMPTY',
+    grantError: '() => null', rawGrantText: "() => ''", hasGrant: '() => false',
+    admittingGrant: '() => null', admitsNetwork: '() => false', admitsSecret: '() => false', coversPath: '() => false',
+    // Scoped to any source name, the empty set declares what it declares whole: nothing.
+    sameGrantDeclaration: "(set, source) => typeof source === 'string'",
+  };
+  const missing = grantNames.filter(name => !(name in answers));
+  if (missing.length) throw new Error(`host/web/navigation.js: the grant admission exports ${missing.join(', ')}, which build.mjs's empty-set admission does not answer`);
+  return ['// Generated: the grant admission of a page that admits nothing (LLP 1047.002 D3). Every set is the empty set the compiler normalized.',
+    `const EMPTY = Object.freeze({ ...${JSON.stringify(tsGrantSet)}, entries: Object.freeze([]) });`,
+    ...grantNames.map(name => `export const ${name} = ${answers[name]};`), localNetwork].join('\n');
+};
 // The agent adapter reads its own copies of the modules it shares with the
 // entry: a module lives in one chunk, so what only the agent reads from
 // navigation.js (the environment and page observations) or names.js
@@ -534,9 +574,30 @@ const auth = /^\s*auth\.(session|apple|google)\s/m.test(grants);
 if (ts) writeFileSync(resolve(gen, 'ts-data.js'), readFileSync(resolve(here, 'ts-data.js'), 'utf8').replace("'__APP_TS__'", JSON.stringify(pageAppTs))
   .replace('const appId = source.appId;', `const appId = ${JSON.stringify((await import('../../scripts/app.mjs')).readManifest(appDir, app).app.id)};`)
   .replace('__AUTH_IMPORT__', auth ? "import { install as signIn } from './auth.js';" : '')
-  .replace('__AUTH_INSTALL__', auth ? `signIn(${JSON.stringify(grants)}, () => asking);` : ''));
-writeFileSync(resolve(gen, 'grant-admission.js'), grantSection); // the section navigation.js re-exports (above)
-writeFileSync(resolve(gen, 'admission.js'), localImports(readFileSync(resolve(here, 'admission.js'), 'utf8')));
+  .replace('__AUTH_INSTALL__', auth ? `signIn(${JSON.stringify(grants)}, () => asking);` : '')
+  .replace("'__FETCH_MODULE__'", JSON.stringify(fetchRefused ? './ts-fetch-refused.js' : './ts-fetch.js')));
+writeFileSync(resolve(gen, 'grant-admission.js'), admitsNothing ? emptyGrantAdmission() : grantSection); // the section navigation.js re-exports (above)
+// With nothing admitted no request leaves the page's origin, so the driver's faults (LLP 1103), which fail a request
+// that would have gone out, have nothing to fail: `fetchWith` keeps its asset path and loses faults.js.
+// Likewise the local network's reach and redirect gates (address-space.js, LLP 1133.036 D6), which check a tool's, a
+// wake's or the device's request and pass the app's: with no module there is no origin but the app.
+const admission = readFileSync(resolve(here, 'admission.js'), 'utf8');
+const stubbed = [
+  ["import { faultMessage, takeFault } from '../web/faults.js';", "const takeFault = () => false, faultMessage = () => '';"],
+  ["import { redirectFor, reachRefusal } from '../web/address-space.js';", 'const redirectFor = (origin, redirect) => redirect, reachRefusal = () => null;'],
+].reduce((text, [line, stub]) => {
+  if (!admission.includes(line)) throw new Error(`host/web-js/admission.js: build.mjs replaces a line it no longer has: ${line}`);
+  return admitsNothing ? text.replace(line, stub) : text;
+}, admission);
+writeFileSync(resolve(gen, 'admission.js'), localImports(stubbed));
+// A production page whose sources hold no network grant binds their `fetch` to the app's own assets and the refusal by
+// name (LLP 1047.002 D3): `fetchWith` admits an asset GET and refuses the rest for the empty network set, counted on its
+// answer as any fetch is (`ordinary`), so ts-fetch.js's request paths (options, streams, uploads, bodies from files) are
+// never linked. The realm it binds (the clock, the timers, the refused globals) stays with the module.
+if (fetchRefused) writeFileSync(resolve(gen, 'ts-fetch-refused.js'), [
+  '// Generated: `fetch` for sources with no network grant (LLP 1047.002 D3): the app\'s own assets, else the refusal by name.',
+  "import { fetchWith } from './admission.js'; import { ordinary } from './ts-fetch.js'; import { tsGrantSet } from './admission-data.js';",
+  'export const fetch = (input, init) => ordinary(() => fetchWith(tsGrantSet, input, init));', ''].join('\n'));
 cpSync(resolve(here, 'ts-fetch.js'), resolve(gen, 'ts-fetch.js'));
 cpSync(resolve(here, 'ts-body-from.js'), resolve(gen, 'ts-body-from.js'));
 cpSync(resolve(here, 'ts-stream.js'), resolve(gen, 'ts-stream.js'));
@@ -644,7 +705,7 @@ const scopedModule = (code, id, lower = false) => {
   // The DOM and Node's globals are absent, as on Hermes (js/bake/src/typescript.mjs `packageRefusals`).
   const absent = ['window', 'self', 'frames', 'parent', 'top', 'opener', 'document', 'navigator', 'location', 'history', 'localStorage', 'sessionStorage',
     'indexedDB', 'HTMLElement', 'Element', 'getComputedStyle', 'customElements', 'alert', 'process', 'Buffer', 'global'];
-  const result = transformSync(id, code, { ...(lower ? { ...lowered, helpers: { mode: 'Runtime' } } : {}), inject: { ...Object.fromEntries(bound.map(name => [name, [resolve(gen, 'ts-fetch.js'), name]])),
+  const result = transformSync(id, code, { ...(lower ? { ...lowered, helpers: { mode: 'Runtime' } } : {}), inject: { ...Object.fromEntries(bound.map(name => [name, [resolve(gen, name === 'fetch' && fetchRefused ? 'ts-fetch-refused.js' : 'ts-fetch.js'), name]])),
     ...Object.fromEntries(absent.map(name => [name, [resolve(gen, 'ts-fetch.js'), 'absent']])),
     globalThis: [resolve(gen, 'ts-fetch.js'), 'appGlobal'] } });
   if (result.errors.length) throw new Error(result.errors.map(e => e.message).join('\n'));
@@ -702,6 +763,11 @@ if (how !== 'none' || markdownReaders) await bundle({ entrypoints: [resolve(gen,
   if (devReload && ts) for (const chunk of built.output.filter(file => file.type === 'chunk' && Object.keys(file.modules).includes(pageAppTs))) {
     devLogic.push(['typescript', createHash('sha256').update(readFileSync(resolve(out, chunk.fileName))).digest('hex')]);
   }
+  // The entry's bytes by source module, as Rolldown rendered them before minification (shares, not a ledger), for
+  // `scripts/metrics.mjs --web-bytes` (LLP 1047.002 D5): what of the runtime an app's plan reached.
+  const entry = built.output.find(file => file.type === 'chunk' && file.isEntry);
+  const moduleName = (id) => { const name = relative(gen, id); return name.startsWith('..') ? basename(id) : name; };
+  writeFileSync(resolve(gen, 'modules.json'), JSON.stringify(Object.fromEntries(Object.entries(entry.modules).map(([id, m]) => [moduleName(id), m.renderedLength]).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]))));
   await b.close();
 }
 

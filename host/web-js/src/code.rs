@@ -53,6 +53,10 @@ pub struct Uses {
     /// Resource fields read as Markdown, also prepared before an unopened view mounts.
     pub markdown_paths: BTreeSet<Vec<usize>>,
     pub names: BTreeSet<String>,
+    /// The host commands the plan's actions name (LLP 1047.002 D1): the ones
+    /// commands.js exports are imported from it by name and handed to the
+    /// runtime, so a command no action names is never linked.
+    pub commands: BTreeSet<String>,
     /// budget.js's (LLP 1090 D3).
     pub budget: BTreeSet<String>,
     /// How many times generated code named one of budget.js's: a body
@@ -624,6 +628,7 @@ impl Translator<'_> {
                         .str(exact_plan::StrId(x.args[0] as u32))
                         .to_string();
                     let args = self.popn(x.args[1] as usize)?;
+                    self.uses.commands.insert(name.clone());
                     self.flush();
                     let c = self.uses.rt("C");
                     self.out.push_str(&format!(

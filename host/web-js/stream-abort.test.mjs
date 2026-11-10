@@ -77,7 +77,7 @@ test("a stream that has ended no longer hears its caller's signal", async () => 
 test("the runtime composes with the page's AbortSignal.any when the app's first import replaces it", async () => {
   const app = runtime('exact-ts-stream-order-');
   writeFileSync(resolve(app, 'ts-data.js'), readFileSync(resolve(root, 'host/web-js/ts-data.js'), 'utf8')
-    .replace("'__APP_TS__'", "'./app.js'").replace('__AUTH_IMPORT__', '').replace('__AUTH_INSTALL__', ''));
+    .replace("'__APP_TS__'", "'./app.js'").replace('__AUTH_IMPORT__', '').replace('__AUTH_INSTALL__', '').replace("'__FETCH_MODULE__'", "'./ts-fetch.js'"));
   // The app's first import reaches the page's AbortSignal through a signal, which no binding of the runtime's stands
   // in for, and replaces `any` with one whose signals stop their own abort event
   writeFileSync(resolve(app, 'replace-any.js'), `const Signal = new AbortController().signal.constructor, any = Signal.any;
@@ -191,7 +191,7 @@ test('frozen proxies cannot bypass serialization or revocation checks', async ()
 async function withRows(check) {
   const directory = runtime('exact-ts-rows-');
   writeFileSync(resolve(directory, 'ts-data.js'), readFileSync(resolve(root, 'host/web-js/ts-data.js'), 'utf8')
-    .replace("'__APP_TS__'", "'./app.js'").replace('__AUTH_IMPORT__', '').replace('__AUTH_INSTALL__', ''));
+    .replace("'__APP_TS__'", "'./app.js'").replace('__AUTH_IMPORT__', '').replace('__AUTH_INSTALL__', '').replace("'__FETCH_MODULE__'", "'./ts-fetch.js'"));
   writeFileSync(resolve(directory, 'names.js'), "const row = {id:'s', parts:['[', {text:'s'}]}; export const sourceTypes = {rows:[[], ['[', row]], optionalRows:[[], ['[', ['?', row]]]}\n");
   writeFileSync(resolve(directory, 'app.js'), "export const appId='test.rows'; let rows=[]; export const setRows=value=>{rows=value;}; export const answer=()=>rows;\n");
   try {

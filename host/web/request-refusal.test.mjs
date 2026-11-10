@@ -878,7 +878,7 @@ test('ts-data installs the native Store facade and a later gpu-glue shader uses 
   const app = resolve(dir, 'source.js');
   writeFileSync(app, `export const appId='test.ts';export const grants='secret.keep token';export function answer(name,args,store){return name==='kept'?String(store.get('exact.kept.answer')):store.get('token')}\n`);
   writeFileSync(resolve(dir, 'ts-data.js'), readFileSync(resolve(ROOT, 'host/web-js/ts-data.js'), 'utf8')
-    .replace('__APP_TS__', pathToFileURL(app).href).replace('__AUTH_IMPORT__', '').replace('__AUTH_INSTALL__', '')
+    .replace('__APP_TS__', pathToFileURL(app).href).replace('__AUTH_IMPORT__', '').replace('__AUTH_INSTALL__', '').replace("'__FETCH_MODULE__'", "'./ts-fetch.js'")
     .replace("from './rt.js'", "from './rt-stub.js'"));
   writeFileSync(resolve(dir, 'rt-stub.js'), `export const clock={agent:false,now:0},journal=[],Resources=[],inflight={n:0};export const drive=()=>{},Origin={now:()=>"app"};export const checkpoint=()=>({kept:null});export const commit=f=>f();export const R=()=>{};export const painted=()=>Promise.resolve();\n`);
   writeFileSync(resolve(dir, 'names.js'), `export const sourceTypes={read:[[],'s'],kept:[[],'s']};\n`);
@@ -943,7 +943,7 @@ export function answer(name, args, store, storage) {
 }
 `);
   writeFileSync(resolve(dir, 'ts-data.js'), readFileSync(resolve(ROOT, 'host/web-js/ts-data.js'), 'utf8')
-    .replace('__APP_TS__', pathToFileURL(app).href).replace('__AUTH_IMPORT__', '').replace('__AUTH_INSTALL__', ''));
+    .replace('__APP_TS__', pathToFileURL(app).href).replace('__AUTH_IMPORT__', '').replace('__AUTH_INSTALL__', '').replace("'__FETCH_MODULE__'", "'./ts-fetch.js'"));
   writeFileSync(resolve(dir, 'rt.js'), `export const clock={agent:false,now:0},journal=[],Resources=[],inflight={n:0};export const drive=()=>{},Origin={now:()=>"app"};export const checkpoint=()=>({kept:null});export const commit=f=>f();export const R=()=>{};export const painted=()=>Promise.resolve();\n`); writeFileSync(resolve(dir, 'rt-link.js'), "import * as rt from './rt.js'; export { rt };\n"); // (and rt-link.js, ts-stream.js's way to them)
   const ledger = '{"days":["[",{"id":"s","transactions":["[",{"id":"s","amount":"n"}]}],"note":["?","s"]}';
   writeFileSync(resolve(dir, 'names.js'), `export const sourceTypes={ledger:[["s"],${ledger}],later:[[],${ledger}],read:[[],"s"],stream:[[],"s"]};\n`);
@@ -1145,7 +1145,7 @@ export function answer(name, args, store, storage) {
     .then(() => 'unexpected success', error => error.kind + ':' + error.code);
 }`);
     writeFileSync(resolve(dir, 'ts-data.js'), readFileSync(resolve(ROOT, 'host/web-js/ts-data.js'), 'utf8')
-      .replace('__APP_TS__', './source.js').replace('__AUTH_IMPORT__', '').replace('__AUTH_INSTALL__', ''));
+      .replace('__APP_TS__', './source.js').replace('__AUTH_IMPORT__', '').replace('__AUTH_INSTALL__', '').replace("'__FETCH_MODULE__'", "'./ts-fetch.js'"));
     writeFileSync(resolve(dir, 'rt.js'), 'export const clock={now:0},journal=[],Resources=[],inflight={n:0};export const drive=()=>{},Origin={now:()=>"app"};export const checkpoint=()=>({kept:null});export const commit=f=>f();export const R=()=>{};export const painted=()=>Promise.resolve();');
     writeFileSync(resolve(dir, 'names.js'), `export const sourceTypes=${JSON.stringify(Object.fromEntries([...methods, 'open', 'work', 'directories', 'document'].map(n => [n, [[], 's']])))};`);
     writeFileSync(resolve(dir, 'admission.js'), readFileSync(resolve(ROOT, 'host/web-js/admission.js'), 'utf8').replaceAll("'../web/grant-admission.js'", "'./grant-admission.js'").replaceAll("'../web/faults.js'", "'./faults.js'").replaceAll("'../web/address-space.js'", "'./address-space.js'"));

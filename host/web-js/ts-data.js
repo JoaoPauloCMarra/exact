@@ -7,7 +7,9 @@
 // use); `openAuthSession` is auth.js.
 // The runtime's bindings load before the app's module and what it imports, so ts-fetch.js takes the page's own
 // functions before any app code runs.
-import { activeCall, answering, dropTimers, files as bodyFiles, SOCKET_AND_FETCH } from './ts-fetch.js';
+import { activeCall, answering, dropTimers, files as bodyFiles, SOCKET_AND_FETCH, useFetch } from './ts-fetch.js';
+// The sources' `fetch`: ts-fetch.js's, or ts-fetch-refused.js's where no source holds a network grant (the build names it).
+import { fetch as sourceFetch } from '__FETCH_MODULE__';
 import * as source from '__APP_TS__';
 import { createSecretFacade, hasGrant, inOverlay, overlaying, setAppGrantSet } from './admission.js';
 import { tsGrantSet } from './admission-data.js';
@@ -15,6 +17,7 @@ import { sourceTypes } from './names.js';
 import { checkpoint, clock, commit, drive, inflight, journal, Origin, painted, R, Resources } from './rt.js';
 import { Shaped } from './shape.js';
 import { ledger, requestKey } from './uploads.js';
+useFetch(sourceFetch);
 // The app's id is app.json's, which the build writes here; app.ts need not export one.
 const appId = source.appId;
 // Work an answer awaits that is no held fetch, counted on its answer (ts-fetch.js `answering.ordinary`, LLP 1016.000 D9).
