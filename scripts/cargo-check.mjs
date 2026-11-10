@@ -180,3 +180,26 @@ export function appleCargo(command, arguments_, options = {}) {
   const separator = arguments_.indexOf('--'), at = separator < 0 ? arguments_.length : separator;
   return [command, [...arguments_.slice(0, at), ...configurationArgs, ...arguments_.slice(at)], { ...options, env: environment }];
 }
+
+/** The link argument that aligns an Android library's LOAD segments to 16 KB, which a device with 16 KB pages needs
+ * to run it outside page-size compatibility mode (https://developer.android.com/guide/practices/page-sizes); NDKs
+ * before r28 align to 4 KB. */
+export const ANDROID_PAGE_SIZE = '-Clink-arg=-Wl,-z,max-page-size=16384';
+
+/** A Cargo run for `aarch64-linux-android` with ANDROID_PAGE_SIZE added to every rustflags source it may use, and none
+ * made: CARGO_ENCODED_RUSTFLAGS or RUSTFLAGS when set, the target's own variable when set, and `build.rustflags`
+ * through `--config`, which Cargo joins with the configuration's array and CARGO_BUILD_RUSTFLAGS. A new target source
+ * would displace `build.rustflags` (a game's `-fp-contract=off`), and a variable would reach the host Cargo runs that
+ * build scripts start, whose linker refuses the argument. Other runs pass through. */
+export function androidCargo(command, arguments_, options = {}) {
+  const android = command === 'cargo' && arguments_.some((value, index) => value === '--target=aarch64-linux-android' || value === 'aarch64-linux-android' && arguments_[index - 1] === '--target');
+  if (!android) return [command, arguments_, options];
+  const environment = { ...(options.env ?? process.env) };
+  const add = (value, separator) => value.split(separator).includes(ANDROID_PAGE_SIZE) ? value : [value, ANDROID_PAGE_SIZE].filter(Boolean).join(separator);
+  if (environment.CARGO_ENCODED_RUSTFLAGS !== undefined) environment.CARGO_ENCODED_RUSTFLAGS = add(environment.CARGO_ENCODED_RUSTFLAGS, '\x1f');
+  else if (environment.RUSTFLAGS !== undefined) environment.RUSTFLAGS = add(environment.RUSTFLAGS.trim(), ' ');
+  const own = 'CARGO_TARGET_AARCH64_LINUX_ANDROID_RUSTFLAGS';
+  if (environment[own] !== undefined) environment[own] = add(environment[own].trim(), ' ');
+  const separator = arguments_.indexOf('--'), at = separator < 0 ? arguments_.length : separator;
+  return [command, [...arguments_.slice(0, at), '--config', `build.rustflags=${JSON.stringify([ANDROID_PAGE_SIZE])}`, ...arguments_.slice(at)], { ...options, env: environment }];
+}

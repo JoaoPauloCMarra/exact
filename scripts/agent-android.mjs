@@ -38,6 +38,7 @@ import { homedir } from 'node:os';
 import { basename, dirname, resolve } from 'node:path';
 import { HOST_DEV, PINNED_RUST, bakeWatchEnv, buildBake, cargoEnvironment, copyShaders, injectedProfiles, linuxBuild, resolveApp, wholeProgram } from './app.mjs';
 import { hermesAndroidBundle } from './hermes-android.mjs';
+import { ANDROID_PAGE_SIZE, androidCargo } from './cargo-check.mjs';
 import { guardFlags } from './help.mjs';
 import { androidImplementations, packageConfig } from '../js/bake/src/typescript.mjs';
 import { recordBuiltSettings } from '../js/bake/src/__exact_env.mjs';
@@ -308,6 +309,16 @@ function planOut(messages, crate) {
   return null;
 }
 
+/** The smallest alignment of an ELF64 file's PT_LOAD segments (its program headers' p_align). */
+export function loadAlignment(path) {
+  const elf = readFileSync(path), headers = Number(elf.readBigUInt64LE(0x20)), size = elf.readUInt16LE(0x36);
+  let least = Infinity;
+  for (let i = 0, count = elf.readUInt16LE(0x38); i < count; i++) {
+    if (elf.readUInt32LE(headers + i * size) === 1) least = Math.min(least, Number(elf.readBigUInt64LE(headers + i * size + 0x30)));
+  }
+  return least;
+}
+
 /** The capabilities the plan uses (LLP 1047 D2), one a line in `uses.txt`; none when the crate writes none. */
 const planUses = (out) => out && existsSync(resolve(out, 'uses.txt')) ? readFileSync(resolve(out, 'uses.txt'), 'utf8').split('\n').filter(Boolean) : [];
 
@@ -346,11 +357,20 @@ function buildApk(app, env, profile, writeLocks = false) {
     out = bakedOut(resolve(app.target, ANDROID_TARGET, profile, 'build'), crate);
   } else {
     // JSON on stdout, for the crate's build-script output directory; the compiler's own messages still on stderr.
-    const cargo = spawnSync('cargo', ['build', ...injectedProfiles(app), ...wholeProgram('android', profile), '--profile', profile, '-p', crate, '--target', ANDROID_TARGET, '--message-format=json-render-diagnostics'], { cwd: app.workspace ?? app.dir, env, stdio: ['inherit', 'pipe', 'inherit'], maxBuffer: 1 << 28 });
+    const cargo = spawnSync(...androidCargo('cargo', ['build', ...injectedProfiles(app), ...wholeProgram('android', profile), '--profile', profile, '-p', crate, '--target', ANDROID_TARGET, '--message-format=json-render-diagnostics'], { cwd: app.workspace ?? app.dir, env, stdio: ['inherit', 'pipe', 'inherit'], maxBuffer: 1 << 28 }));
     if (cargo.status !== 0) return null;
     out = planOut(cargo.stdout.toString(), crate);
   }
   const uses = planUses(out);
+  // The page-size argument is in every rustflags source the build makes or Cargo was handed (`androidCargo`), but a
+  // table in the app's Cargo configuration takes precedence over the build's own and can leave it out.
+  for (const library of [built(crate), gpu].filter(Boolean)) {
+    const alignment = loadAlignment(library);
+    if (alignment < 16384) {
+      console.error(`${basename(library)} is ${alignment / 1024} KB aligned, so a device with 16 KB pages runs it in page-size compatibility mode: a rustflags table in the app's Cargo configuration ([target.aarch64-linux-android] or [target.'cfg(…)']) replaced the build's flags; add "${ANDROID_PAGE_SIZE}" to its rustflags`);
+      return null;
+    }
+  }
   const dirs = apkDirs(app), started = new Date().toISOString(), staged = resolve(dirs.app, 'rust');
   rmSync(staged, { recursive: true, force: true });
   mkdirSync(resolve(staged, 'jniLibs/arm64-v8a'), { recursive: true });
@@ -548,7 +568,7 @@ if (import.meta.main && process.argv[2] === 'relay') {
     process.exit(0);
   }
   const [cmd, ...rest] = androidBuild(app);
-  const built = spawnSync(cmd, rest, { cwd: app.workspace ?? app.dir, env, stdio: 'inherit' });
+  const built = spawnSync(...androidCargo(cmd, rest, { cwd: app.workspace ?? app.dir, env, stdio: 'inherit' }));
   if (built.status === 0) { recordBuiltSettings(androidBinary(app), app); console.log(androidBinary(app)); }
   process.exit(built.status ?? 1);
 }

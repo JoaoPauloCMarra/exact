@@ -130,6 +130,48 @@ test('--reader names the Canvas reader to the Android carrier', () => {
   }
 });
 
+// A library the APK ships runs on a device with 16 KB pages outside page-size compatibility mode only with its LOAD
+// segments 16 KB aligned, which NDK r27 does not do by default. Cargo uses one rustflags source for a target: the
+// argument joins each one it may use, a `--config` for `build.rustflags`, and makes no new one (a game's
+// `-fp-contract=off` is in `build.rustflags`). A run for another target, or for the host, is left alone.
+test('the Android build links its libraries with 16 KB pages, beside the flags Cargo would use', async () => {
+  const { ANDROID_PAGE_SIZE: page, androidCargo } = await import('./cargo-check.mjs');
+  const config = ['--config', `build.rustflags=["${page}"]`];
+  const run = (env, args = ['build', '-p', 'app', '--target', 'aarch64-linux-android']) => {
+    const [, argv, { env: out }] = androidCargo('cargo', args, { env });
+    return { argv, flags: Object.fromEntries(['CARGO_ENCODED_RUSTFLAGS', 'RUSTFLAGS', 'CARGO_TARGET_AARCH64_LINUX_ANDROID_RUSTFLAGS', 'CARGO_BUILD_RUSTFLAGS'].filter((k) => out[k] !== undefined).map((k) => [k, out[k]])) };
+  };
+  expect(run({})).toEqual({ argv: ['build', '-p', 'app', '--target', 'aarch64-linux-android', ...config], flags: {} });
+  expect(run({}, ['rustc', '--target=aarch64-linux-android', '--', '-Cfoo']).argv).toEqual(['rustc', '--target=aarch64-linux-android', ...config, '--', '-Cfoo']);
+  expect(run({ CARGO_BUILD_RUSTFLAGS: '--cfg b' }).flags).toEqual({ CARGO_BUILD_RUSTFLAGS: '--cfg b' });
+  expect(run({ RUSTFLAGS: '-Cdebuginfo=1' }).flags).toEqual({ RUSTFLAGS: `-Cdebuginfo=1 ${page}` });
+  expect(run({ RUSTFLAGS: '' }).flags).toEqual({ RUSTFLAGS: page });
+  expect(run({ RUSTFLAGS: '-Cdebuginfo=1', CARGO_ENCODED_RUSTFLAGS: '--cfg\x1fa b' }).flags).toEqual({ RUSTFLAGS: '-Cdebuginfo=1', CARGO_ENCODED_RUSTFLAGS: `--cfg\x1fa b\x1f${page}` });
+  expect(run({ CARGO_TARGET_AARCH64_LINUX_ANDROID_RUSTFLAGS: '-llog' }).flags).toEqual({ CARGO_TARGET_AARCH64_LINUX_ANDROID_RUSTFLAGS: `-llog ${page}` });
+  expect(run({ RUSTFLAGS: page, CARGO_TARGET_AARCH64_LINUX_ANDROID_RUSTFLAGS: page }).flags).toEqual({ RUSTFLAGS: page, CARGO_TARGET_AARCH64_LINUX_ANDROID_RUSTFLAGS: page });
+  // The host's own runs (a game's lints) and other targets'.
+  for (const args of [['clippy', '-p', 'game', '--lib'], ['build', '--target', 'aarch64-apple-ios']]) {
+    const env = { RUSTFLAGS: '-Cdebuginfo=1' };
+    expect(androidCargo('cargo', args, { env })).toEqual(['cargo', args, { env }]);
+  }
+});
+
+// What the APK build reads before packaging a library: its smallest LOAD segment alignment.
+test('an ELF file\'s LOAD alignment is its smallest PT_LOAD p_align', async () => {
+  const { loadAlignment } = await import('./agent-android.mjs');
+  const dir = mkdtempSync(resolve(tmpdir(), 'exact-elf-'));
+  try {
+    const elf = (aligns) => {
+      const bytes = Buffer.alloc(64 + 56 * aligns.length);
+      bytes.writeBigUInt64LE(64n, 0x20); bytes.writeUInt16LE(56, 0x36); bytes.writeUInt16LE(aligns.length, 0x38);
+      aligns.forEach(([type, align], i) => { bytes.writeUInt32LE(type, 64 + 56 * i); bytes.writeBigUInt64LE(BigInt(align), 64 + 56 * i + 0x30); });
+      const path = resolve(dir, `${aligns.length}.so`); writeFileSync(path, bytes); return path;
+    };
+    expect(loadAlignment(elf([[1, 0x4000], [1, 0x4000], [6, 8]]))).toBe(16384); // PT_PHDR's alignment is not a LOAD's
+    expect(loadAlignment(elf([[1, 0x4000], [1, 0x1000], [2, 8], [1, 0x4000]]))).toBe(4096);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 // An app's directory pins no toolchain, so the Android build asks rustup about the pinned one by name.
 test.skipIf(process.platform === 'win32')('the Android build checks the pinned toolchain for its Rust target', () => {
   const bin = mkdtempSync(resolve(tmpdir(), 'exact-rustup-'));
