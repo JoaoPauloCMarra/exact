@@ -497,11 +497,11 @@ export async function platformReport(platform, rows, { device = false } = {}) {
   const targets = () => spawnSync('rustup', [`+${pin}`, 'target', 'list', '--installed'], { encoding: 'utf8' }).stdout ?? '';
   if (platform === 'windows') {
     const msvc = /-pc-windows-msvc$/m.test(targets());
-    own.push(row('Rust target (MSVC)', msvc, msvc ? 'installed' : 'missing', 'a *-pc-windows-msvc target', 'rustup target add x86_64-pc-windows-msvc (or aarch64-pc-windows-msvc)'));
+    own.push(row('Rust target (MSVC)', msvc, msvc ? 'installed' : 'missing', 'a *-pc-windows-msvc target', `rustup target add x86_64-pc-windows-msvc --toolchain ${pin} (or aarch64-pc-windows-msvc)`));
   }
   if (platform !== 'android') return own;
   const android = /^aarch64-linux-android$/m.test(targets());
-  own.push(row('Rust target aarch64-linux-android', android, android ? 'installed' : 'missing', 'aarch64-linux-android', 'rustup target add aarch64-linux-android'));
+  own.push(row('Rust target aarch64-linux-android', android, android ? 'installed' : 'missing', 'aarch64-linux-android', `rustup target add aarch64-linux-android --toolchain ${pin}`));
   try { (await import('./agent-android.mjs')).androidToolchainEnv(); own.push(row('Android NDK', true, 'found', 'an NDK', '')); }
   catch (error) { own.push(row('Android NDK', false, 'missing', 'an NDK with the aarch64-linux-android toolchain', String(error.message ?? error))); }
   const bundle = hermesAndroidBundle();

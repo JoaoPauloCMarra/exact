@@ -1,9 +1,11 @@
 // The drive's launch facts (agent-launch.mjs `launchFacts`, LLP 1027.000.000 D3), and the browser it finds; the fixed
 // defaults and overrides are host/web/agent.test.mjs's "launch setup" test.
 import { test, expect } from 'bun:test';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, resolve } from 'node:path';
+import { delimiter, dirname, resolve } from 'node:path';
+import { PINNED_RUST } from './app.mjs';
 import { Cdp, agentPage, chromium, chromiumBuilds, launchFacts, launchEnvironment, parseFlags, launchLog, launchFailure, webPort, pollUntil } from './agent-launch.mjs';
 import { PassThrough } from 'node:stream';
 import { placeReporter } from '../host/web/navigation.js';
@@ -126,6 +128,22 @@ test('--reader names the Canvas reader to the Android carrier', () => {
   } finally {
     if (before === undefined) delete process.env.EXACT_ANDROID_READER; else process.env.EXACT_ANDROID_READER = before;
   }
+});
+
+// An app's directory pins no toolchain, so the Android build asks rustup about the pinned one by name.
+test.skipIf(process.platform === 'win32')('the Android build checks the pinned toolchain for its Rust target', () => {
+  const bin = mkdtempSync(resolve(tmpdir(), 'exact-rustup-'));
+  try {
+    // A rustup whose default toolchain lacks the target and whose pinned one has it.
+    writeFileSync(resolve(bin, 'rustup'), `#!/bin/sh\necho "$*" >> '${bin}/calls'\ncase "$*" in *"--toolchain ${PINNED_RUST}"*) echo aarch64-linux-android ;; *) echo aarch64-apple-darwin ;; esac\n`, { mode: 0o755 });
+    const build = () => spawnSync(process.execPath, ['scripts/agent-android.mjs', 'build', 'no-such-app', '--apk'], { encoding: 'utf8', env: { ...process.env, PATH: bin + delimiter + process.env.PATH } });
+    expect(build().stderr).not.toContain('has no aarch64-linux-android target');
+    expect(readFileSync(resolve(bin, 'calls'), 'utf8')).toContain(`target list --installed --toolchain ${PINNED_RUST}`);
+    writeFileSync(resolve(bin, 'rustup'), '#!/bin/sh\necho aarch64-apple-darwin\n', { mode: 0o755 });
+    const missing = build();
+    expect(missing.status).toBe(1);
+    expect(missing.stderr).toContain(`the pinned toolchain ${PINNED_RUST} has no aarch64-linux-android target: rustup target add aarch64-linux-android --toolchain ${PINNED_RUST}`);
+  } finally { rmSync(bin, { recursive: true, force: true }); }
 });
 
 // App farm round 2: a drive against a live backend opts into the machine's clock, read once at launch; the host is

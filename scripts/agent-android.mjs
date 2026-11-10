@@ -36,7 +36,7 @@ import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync,
 import { createConnection } from 'node:net';
 import { homedir } from 'node:os';
 import { basename, dirname, resolve } from 'node:path';
-import { HOST_DEV, bakeWatchEnv, buildBake, cargoEnvironment, copyShaders, injectedProfiles, linuxBuild, resolveApp, wholeProgram } from './app.mjs';
+import { HOST_DEV, PINNED_RUST, bakeWatchEnv, buildBake, cargoEnvironment, copyShaders, injectedProfiles, linuxBuild, resolveApp, wholeProgram } from './app.mjs';
 import { hermesAndroidBundle } from './hermes-android.mjs';
 import { guardFlags } from './help.mjs';
 import { androidImplementations, packageConfig } from '../js/bake/src/typescript.mjs';
@@ -523,10 +523,12 @@ if (import.meta.main && process.argv[2] === 'relay') {
   }
   // `--headless` wins: an app's `bun exact.mjs android --headless` asks for the Linux host its verb's `--apk` would replace.
   const apkWanted = args.includes('--apk') && !args.includes('--headless');
+  // The pinned toolchain's targets: the app's workspace builds with it, and rustup in the app's own directory, which
+  // pins none, would answer for its default.
   // Without rustup (a toolchain installed by hand) Cargo names a missing target itself.
-  const rustup = spawnSync('rustup', ['target', 'list', '--installed'], { cwd: resolveApp(name).dir, encoding: 'utf8' });
+  const rustup = spawnSync('rustup', ['target', 'list', '--installed', '--toolchain', PINNED_RUST], { encoding: 'utf8' });
   if (rustup.status === 0 && !rustup.stdout.split('\n').includes(ANDROID_TARGET)) {
-    console.error(`the toolchain has no ${ANDROID_TARGET} target: rustup target add ${ANDROID_TARGET} (once, in the app's directory so its pinned toolchain gets it)`);
+    console.error(`the pinned toolchain ${PINNED_RUST} has no ${ANDROID_TARGET} target: rustup target add ${ANDROID_TARGET} --toolchain ${PINNED_RUST}`);
     process.exit(1);
   }
   // With what the bake watches named (`bakeWatchEnv`), as every baking build.
