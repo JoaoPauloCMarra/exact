@@ -30,17 +30,17 @@ fn a_struct_per_shape_in_declaration_order() {
     assert_eq!(
         fields,
         [
-            "pub text: String,",
-            "pub r#type: String,",
-            "pub like_count: f64,",
-            "pub liked: bool,",
+            "pub text: ::std::string::String,",
+            "pub r#type: ::std::string::String,",
+            "pub like_count: ::core::primitive::f64,",
+            "pub liked: ::core::primitive::bool,",
             "pub author: Author,",
-            "pub tags: Vec<String>,",
-            "pub reply: Option<Author>,",
+            "pub tags: ::std::vec::Vec<::std::string::String>,",
+            "pub reply: ::core::option::Option<Author>,",
         ]
     );
     assert!(rust.contains(
-        "pub struct Author {\n    pub handle: String,\n    pub display_name: String,\n}"
+        "pub struct Author {\n    pub handle: ::std::string::String,\n    pub display_name: ::std::string::String,\n}"
     ));
     // The record is written in that order, and read back field by field.
     let to = &rust[rust.find("impl ContractValue for Post").unwrap()..];
@@ -58,6 +58,45 @@ fn a_struct_per_shape_in_declaration_order() {
     .collect();
     assert!(order.windows(2).all(|w| w[0] < w[1]), "{order:?}");
     assert!(to.contains("like_count: ContractValue::from_value(&fields[2])?,"));
+}
+
+#[test]
+fn a_shape_may_take_a_name_rust_predefines() {
+    // Each struct shadows the prelude's name in the module it is included
+    // into, so the generated code spells Rust's own by its path.
+    let source = "shape Option\n  values: string[]\n  result: option<Result>\nshape Result\n  all: Vec[]\nshape Vec\n  first: option<String>\nshape String\n  count: number\nshape From\n  flag: bool\nshape str\n  x: number\ncomponent App\n  state row = Option(values=[], result=none)\n  view\n    text \"x\"\n";
+    let rust = contract::rust(&contract::compile(source).unwrap()).unwrap();
+    for name in ["Option", "Result", "Vec", "String", "From", "str"] {
+        assert!(rust.contains(&format!("pub struct {name} {{")), "{name}");
+    }
+    assert!(rust.contains(
+        "pub struct Option {\n    pub values: ::std::vec::Vec<::std::string::String>,\n    pub result: ::core::option::Option<Result>,\n}"
+    ));
+    assert!(rust.contains("pub all: ::std::vec::Vec<Vec>,"));
+    assert!(rust.contains("pub first: ::core::option::Option<String>,"));
+    // No struct here is generic and none is a trait: a bare generic or
+    // trait use of these names would mean the shape, and not compile.
+    for bare in [
+        "Option<",
+        "Result<",
+        "Vec<",
+        "From<",
+        "TryFrom<",
+        "Sized",
+        "&'static str",
+    ] {
+        let unqualified = rust
+            .match_indices(bare)
+            .filter(|(at, _)| !rust[..*at].ends_with(|c: char| c == ':' || c.is_alphanumeric()))
+            .count();
+        assert_eq!(unqualified, 0, "bare `{bare}` in:\n{rust}");
+    }
+    let source = "shape ContractValue\n  x: number\ncomponent App\n  state row = ContractValue(x=1)\n  view\n    text \"x\"\n";
+    let error = contract::rust(&contract::compile(source).unwrap()).unwrap_err();
+    assert!(
+        error.contains("ContractValue") && error.contains("rename"),
+        "{error}"
+    );
 }
 
 #[test]
