@@ -938,13 +938,13 @@ export function hermesBundle(target = hermesTarget(), env = process.env) {
   const missing = required.filter(path => !existsSync(path));
   return { target, tag, digest, root, lean, hermesc, installed: missing.length === 0, missing, fix: `cargo run --manifest-path ${HERMES_INSTALLER} -- --target ${target}` };
 }
-/** Classification roots for Ibex's verified install-once Hermes bundles.
- * The digest directory remains part of the receipt name, so a bundle update
- * necessarily changes the bake identity. */
+/** Classification roots for Ibex's verified install-once Hermes bundles, whose digest directory is part of the
+ * receipt name so a bundle update changes the bake identity, and for each target's own install
+ * (`HERMES_LEAN_SYS_DIR_<target>`: the Android build names one), whose files' digests change it. */
 export function hermesLeanSysRoots(env = process.env) {
   const requested = resolve(env.HERMES_LEAN_SYS_DIR
     ?? resolve(env.CARGO_HOME ?? resolve(env.HOME ?? homedir(), '.cargo'), 'hermes-lean-sys'));
-  const roots = [requested, ...(existsSync(requested) ? [realpathSync.native(requested)] : [])];
+  const roots = [requested, ...Object.entries(env).filter(([key, value]) => key.startsWith('HERMES_LEAN_SYS_DIR_') && value).map(([, value]) => resolve(value))].flatMap(path => [path, ...(existsSync(path) ? [realpathSync.native(path)] : [])]);
   return [...new Set(roots.flatMap(path => process.platform === 'win32' ? [path,toNamespacedPath(path)] : [path]))];
 }
 /** The profile a development native build compiles with (Cargo.toml): an

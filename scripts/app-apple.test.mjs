@@ -3,7 +3,7 @@
 import { test } from 'bun:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, utimesSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { delimiter, resolve, toNamespacedPath } from 'node:path';
 import { HERMES_INSTALLER, PINNED_RUST, hermesBundle, hermesLeanSysRoots } from './app.mjs';
@@ -138,6 +138,14 @@ test('bake receipts recognize the install-once Hermes cache and explicit install
   assert.deepEqual(hermesLeanSysRoots({ HOME: home }), receiptRoots(resolve(home, '.cargo/hermes-lean-sys')));
   const selected = resolve(home, 'selected engine');
   assert.deepEqual(hermesLeanSysRoots({ HERMES_LEAN_SYS_DIR: selected }), receiptRoots(selected));
+  // A target's own install is a root beside the one the host's bundle comes from, under its real path too.
+  const scratch = mkdtempSync(resolve(tmpdir(), 'exact-hermes-target-')), android = resolve(scratch, 'android');
+  try {
+    mkdirSync(resolve(scratch, 'bundle'));
+    symlinkSync('bundle', android);
+    assert.deepEqual(hermesLeanSysRoots({ HOME: home, HERMES_LEAN_SYS_DIR_aarch64_linux_android: android, HERMES_LEAN_SYS_DIR_x86_64_apple_ios: '' }),
+      [...receiptRoots(resolve(home, '.cargo/hermes-lean-sys')), ...receiptRoots(android), ...receiptRoots(realpathSync.native(resolve(scratch, 'bundle')))]);
+  } finally { rmSync(scratch, { recursive: true, force: true }); }
 });
 
 // Real actool: separate compiles into the same bundle silently replace Assets.car.
