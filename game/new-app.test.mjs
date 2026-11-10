@@ -97,6 +97,39 @@ test('a new outside app passes the checks every run makes, and a drifted one is 
     withCli(sdk);
     const missing = spawnSync(process.execPath, [resolve(dir, 'exact.mjs'), 'web'], { cwd: parent, env: { ...process.env, EXACT2: resolve(parent, 'nowhere') }, encoding: 'utf8' });
     assert.deepEqual([missing.status, /^no exact2 at .*nowhere \(no scripts\/app-cli\.mjs\): EXACT2 names the checkout$/m.test(missing.stderr)], [1, true], missing.stderr);
+    // A git worktree of the app at another depth finds the checkout by the path from the app's folder in the main
+    // working tree, whatever GIT_DIR names, and `update` there writes what it writes in the main checkout.
+    {
+      const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => key !== 'EXACT2' && !key.startsWith('GIT_')));
+      const git = (cwd, ...args) => { const r = spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', '-c', 'commit.gpgsign=false', ...args], { cwd, env, encoding: 'utf8' }); assert.equal(r.status, 0, `git ${args.join(' ')}: ${r.stderr}`); return r.stdout; };
+      const launch = (app, extra = {}) => spawnSync(process.execPath, [resolve(app, 'exact.mjs'), 'web-build'], { cwd: parent, env: { ...env, ...extra }, encoding: 'utf8' });
+      const repoOf = (at, ...init) => {
+        cpSync(dir, at, { recursive: true });
+        writeFileSync(resolve(at, 'exact.mjs'), readFileSync(resolve(at, 'exact.mjs'), 'utf8').replace(/^const path = process\.env\.EXACT2 \?\? .*;$/m, 'const path = process.env.EXACT2 ?? "../sdk";'));
+        git(at, 'init', '-q', ...init); git(at, 'add', '-A'); git(at, 'commit', '-qm', 'app'); git(at, 'worktree', 'add', '-q', resolve(at, '.worktrees/agent-1'));
+        return [at, resolve(at, '.worktrees/agent-1')];
+      };
+      const [repo, worktree] = repoOf(resolve(parent, 'repo')), other = resolve(parent, 'elsewhere/other');
+      mkdirSync(other, { recursive: true }); git(other, 'init', '-q');
+      for (const [app, extra] of [[repo], [worktree], [worktree, { GIT_DIR: resolve(other, '.git') }]]) {
+        const built = launch(app, extra);
+        assert.equal(built.status, 0, built.stderr);
+        assert.deepEqual(JSON.parse(built.stdout), { args: ['field-log'], app: realpathSync(app), offline: '1' });
+      }
+      // A --separate-git-dir repository's common dir names no working tree, so its worktree is refused rather than
+      // resolved from the git directory's parent, from which ../sdk is the checkout beside the app.
+      mkdirSync(resolve(parent, 'meta'));
+      const [, separate] = repoOf(resolve(parent, 'separate'), '--separate-git-dir', resolve(parent, 'meta/separate.git'));
+      const refused = launch(separate);
+      assert.deepEqual([refused.status, refused.stderr.trim()], [1, `no exact2 at ${resolve(realpathSync(separate), '../sdk')} (no scripts/app-cli.mjs): EXACT2 names the checkout`]);
+      createApp(repo, { update: true });
+      git(repo, 'commit', '-qam', 'update');
+      git(worktree, 'merge', '-q', '--ff-only', git(repo, 'branch', '--show-current').trim());
+      createApp(worktree, { update: true });
+      assert.equal(git(worktree, 'status', '--porcelain'), '', 'update in the worktree writes what it wrote in the main checkout');
+      const helped = spawnSync(process.execPath, [resolve(repo, 'exact.mjs'), 'help'], { cwd: repo, env, encoding: 'utf8' });
+      assert.equal(helped.status, 0, helped.stderr);
+    }
     const testArgs = host => [host, '--app', 'field-log', '--test', resolve(realpathSync(dir), 'app.test.contract')];
     // A drive builds first (LLP 1116.002 D4): web-build, or agent-build for ios and macos, its output on
     // stderr so stdout stays the drive's; a phone's build stays explicit.

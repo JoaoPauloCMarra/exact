@@ -145,7 +145,7 @@ const ROOT = resolve(import.meta.dir, '..');
  * `update` rewrites their patches, toolchain and paths as before. */
 export function createApp(destination, options = {}) {
   const dir = resolve(destination ?? '');
-  const name = basename(dir);
+  const name = basename(options.update ? appHome(dir) : dir);
   if (!destination || !/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(name) || /-(web|apple|linux|gpu)$/.test(name)) {
     throw new Error('Usage: exact new <path> [--update | --snapback [--port <n>]] (the last part names the app: lowercase-hyphenated, no host suffix)');
   }
@@ -802,7 +802,7 @@ function writeApp(dir, name, { title = titleOf(name), id = newAppId(name) } = {}
     'AGENTS.md': agentNotes(dir, name),
     // The web alone; a native platform's keys come with its first verb or `--with` (scripts/app-shells.mjs).
     'app.json': JSON.stringify({
-      $schema: pathFrom(dir, resolve(ROOT, 'scripts/app.schema.json')),
+      $schema: pathFrom(appHome(dir), resolve(ROOT, 'scripts/app.schema.json')),
       name: title, short_name: title, id, start_url: '/', display: 'standalone',
       app: { id, name: title },
       host: { web: {} },
@@ -836,8 +836,8 @@ function writeApp(dir, name, { title = titleOf(name), id = newAppId(name) } = {}
 const BEGIN = '<!-- exact:begin (exact new writes this block; bun exact.mjs update rewrites it) -->', END = '<!-- exact:end -->';
 
 /** The notes' backend paragraph: an app `bun exact.mjs snapback` wired (app.json mounts `snapback4`), or how to wire one. */
-function snapbackNotes(dir) {
-  const readme = pathFrom(dir, resolve(ROOT, 'snapback4/README.md'));
+function snapbackNotes(dir, from) {
+  const readme = pathFrom(from, resolve(ROOT, 'snapback4/README.md'));
   let wired = false, online = false;
   try { const mount = JSON.parse(readFileSync(resolve(dir, 'app.json'), 'utf8')).typescript?.sources?.snapback4; wired = Boolean(mount); online = onlineMount(mount); } catch {}
   if (online) return `A backend: this app uses the server-only Snapback adapter; read ${readme} before changing data code.
@@ -859,20 +859,21 @@ Install \`snapback4@${snapbackVersion()}\` above; ${readme} has setup and server
 /** What an agent in the app's directory can't discover (LLP 1086 D1): what
  * its files are, where to start and the one guide, at most 1.5 KB because every step
  * carries it (LLP 1116.007 D2). It orders no step: builders load this file as
- * instructions, and each instruction they follow re-sends their context (LLP 1116.012 D1). Paths are from the app to
- * this checkout, so \`update\` follows a checkout that moved. The authoring
+ * instructions, and each instruction they follow re-sends their context (LLP 1116.012 D1). Paths are from the app
+ * (\`appHome\`) to this checkout, so \`update\` follows a checkout that moved. The authoring
  * diary's instructions are \`feedback status\`'s to print, for a project that
  * keeps one (LLP 1116 D3), so a project that doesn't never carries them. */
 function agentNotes(dir, name, {game = false} = {}) {
-  const doc = file => pathFrom(dir, resolve(ROOT, 'docs', file));
-  const sdk = file => pathFrom(dir, resolve(ROOT, file));
-  if (game) return gameNotes(dir, name, doc);
+  const from = appHome(dir);
+  const doc = file => pathFrom(from, resolve(ROOT, 'docs', file));
+  const sdk = file => pathFrom(from, resolve(ROOT, file));
+  if (game) return gameNotes(name, doc, sdk, from);
   return `${BEGIN}
 # ${name}: an Exact app
 
 \`app.contract\` is the view, \`app.ts\` its data module, \`app.test.contract\` its tests, \`app.json\`
 the manifest: set its \`app.name\` and \`app.id\` before the first build. The app uses the exact2
-checkout at \`${pathFrom(dir, ROOT)}\` by path (\`EXACT2\` overrides it).
+checkout at \`${pathFrom(from, ROOT)}\` by path (\`EXACT2\` overrides it).
 
 This file is already in your instructions. Start from the nearest pattern: \`bun exact.mjs
 pattern\` lists them and \`pattern <name>\` writes one, tested. ${doc('start-here-site.md')} (a site) or
@@ -886,7 +887,7 @@ them the link it prints; run it again after each change they should see. \`bun e
 \`windows\`) names its platform in app.json the first time it runs and builds it in a generated
 workspace; \`update --without <platform>\` stops it.`}
 \`bun ${sdk('scripts/exact.mjs')} setup --check\` names what a native build lacks.
-${snapbackNotes(dir)}
+${snapbackNotes(dir, from)}
 
 Generated, so don't edit: \`exact.mjs\`${authoredApp(dir) ? `, \`rust-toolchain.toml\`, \`.cargo/config.toml\`,
 \`Cargo.toml\`'s \`[patch.crates-io]\`` : ''} and this block.
@@ -911,8 +912,7 @@ exact2's commit and the last exit code, never output or code. \`bun exact.mjs fe
 whether notes are sent and whether to keep a diary; under \`never\`, skip all of this.`;
 
 /** A game's notes: the app's, for a world in Rust under Contract's menus. */
-function gameNotes(dir, name, doc) {
-  const sdk = file => pathFrom(dir, resolve(ROOT, file));
+function gameNotes(name, doc, sdk, from) {
   return `${BEGIN}
 # ${name}: an Exact game
 
@@ -922,7 +922,7 @@ controls are \`app.contract\` (Contract). \`app.json\` is optional and holds onl
 you author (a title, \`game.audio\`, \`game.assets\`, a data crate). The bake generates
 the hosts under \`.shells/\` (ignored; never edit it), and so does \`bun exact.mjs test-rust\`:
 run that once before \`cargo\` in \`render/\` or a render example, whose workspace it is. The game uses the exact2 checkout
-at \`${pathFrom(dir, ROOT)}\` by path (\`EXACT2\` overrides it).
+at \`${pathFrom(from, ROOT)}\` by path (\`EXACT2\` overrides it).
 
 Look things up in this order before reading engine source:
 
@@ -1030,28 +1030,46 @@ function updateNotes(dir, name, options = {}) {
   return changed;
 }
 
+/** The app's folder in the main working tree when `dir` is in a linked git worktree whose common dir is that tree's
+ * `.git` (exact.mjs's rule), else `dir`. The tracked files `update` writes take the app's name and their paths into the
+ * checkout from it (exact.mjs, AGENTS.md, app.json's `$schema`), so an update in any checkout writes what the main one
+ * would; the paths a build reads (Cargo's, the Snapback mount) stay this checkout's. */
+function appHome(dir) {
+  if (!existsSync(dir)) return dir;
+  const git = spawnSync('git', ['rev-parse', '--path-format=absolute', '--show-toplevel', '--git-common-dir'], { cwd: dir, encoding: 'utf8', env: Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_'))) });
+  const [top, common] = git.status === 0 ? git.stdout.trim().split('\n').map(line => realpathSync(line.trim())) : [];
+  const home = basename(common ?? '') === '.git' ? resolve(dirname(common), relative(top, realpathSync(dir))) : dir;
+  return existsSync(home) ? home : dir;
+}
+
 /** The app's command runner: a launcher that finds the checkout (EXACT2 names it once, D3; the default
  * is the one that created the app, so a sibling checkout needs nothing) and hands the verb to its
  * scripts/app-cli.mjs, which holds the verbs (LLP 1116.006 D7), so a builder reading it reads a few lines. */
 function commandsFor(dir, name, {game = false} = {}) {
+  const from = appHome(dir);
   const pinned = `.bun-${JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8')).packageManager.replace('bun@', '')}/bin/bun`;
   const home = resolve(process.env.HOME ?? '/', pinned);
   const creator = existsSync(home) && realpathSync(home) === realpathSync(process.execPath) ? 'bun' : `'${process.execPath.replaceAll("'", "'\\''")}'`;
   return `#!/bin/sh
 ':' //; if [ -n "$BUN" ]; then exec "$BUN" "$0" "$@"; elif [ -x "$HOME/${pinned}" ]; then exec "$HOME/${pinned}" "$0" "$@"; else exec ${creator} "$0" "$@"; fi
 // ${name}'s commands: \`bun exact.mjs --help\` lists the verbs, \`bun exact.mjs <verb> --help\` a verb's flags.
-// They live in the exact2 checkout named by EXACT2 (default ${pathFrom(dir, ROOT)}), in its
+// They live in the exact2 checkout named by EXACT2 (default ${pathFrom(from, ROOT)}), in its
 // scripts/app-cli.mjs. Generated by \`exact new\`; \`bun exact.mjs update\` rewrites this file, the crates.io
 // patches, the toolchain and the exact2 dependency paths. The app's own verbs are app.json's \`commands\`.
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { existsSync, realpathSync } from 'node:fs';
+import { basename, dirname, relative, resolve } from 'node:path';
 
-const EXACT2 = resolve(import.meta.dir, process.env.EXACT2 ?? ${JSON.stringify(pathFrom(dir, ROOT))});
+const path = process.env.EXACT2 ?? ${JSON.stringify(pathFrom(from, ROOT))};
+const found = (base) => existsSync(resolve(base, path, 'scripts/app-cli.mjs'));
+// In a linked git worktree the path is from the app's folder in the main working tree, as \`update\` writes it there. Only
+// a common dir that is <main>/.git names that tree; a bare repository's, a submodule's or a --separate-git-dir one does not.
+const git = process.env.EXACT2 || found(import.meta.dir) ? null : spawnSync('git', ['rev-parse', '--path-format=absolute', '--show-toplevel', '--git-common-dir'], { cwd: import.meta.dir, encoding: 'utf8', env: Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_'))) });
+const [top, common] = git?.status === 0 ? git.stdout.trim().split('\\n').map((line) => realpathSync(line.trim())) : [];
+const main = basename(common ?? '') === '.git' ? resolve(dirname(common), relative(top, realpathSync(import.meta.dir))) : null;
+const EXACT2 = resolve(main && found(main) ? main : import.meta.dir, path);
 const cli = resolve(EXACT2, 'scripts/app-cli.mjs');
-if (!existsSync(cli)) {
-  console.error(\`no exact2 at \${EXACT2} (no scripts/app-cli.mjs): EXACT2 names the checkout\`);
-  process.exit(1);
-}
+if (!existsSync(cli)) { console.error(\`no exact2 at \${EXACT2} (no scripts/app-cli.mjs): EXACT2 names the checkout\`); process.exit(1); }
 const { ensureBun } = await import(resolve(EXACT2, 'scripts/bun.mjs'));
 ensureBun(${JSON.stringify(JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8')).packageManager.replace('bun@', ''))});
 const { run } = await import(cli);
@@ -1195,7 +1213,7 @@ function refreshManifestPaths(dir) {
   const manifestPath = resolve(dir, 'app.json');
   if (!existsSync(manifestPath)) return;
   const text = readFileSync(manifestPath, 'utf8');
-  let next = text.replace(/("\$schema"\s*:\s*)"[^"]*"/, (_, head) => head + JSON.stringify(pathFrom(dir, resolve(ROOT, 'scripts/app.schema.json'))));
+  let next = text.replace(/("\$schema"\s*:\s*)"[^"]*"/, (_, head) => head + JSON.stringify(pathFrom(appHome(dir), resolve(ROOT, 'scripts/app.schema.json'))));
   next = next.replace(/("snapback4"\s*:\s*)"[^"]*"/, (line, head) => JSON.parse(next).typescript?.sources?.snapback4 ? head + JSON.stringify(driverMount(dir, onlineMount(JSON.parse(next).typescript.sources.snapback4))) : line);
   if (next !== text) writeFileSync(manifestPath, next);
 }
