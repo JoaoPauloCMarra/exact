@@ -332,7 +332,7 @@ members, props and injects; a name declared in two of its files is refused
 naming both (`contract-members-duplicate`). Any other name a members file
 calls (a shape, a `fn`, a component) comes from its own `use` lines or is
 declared in it, beside the block; another file, the root among them, names
-such a declaration on a `use` line (`apps/excord/viewer.contract`). The
+such a declaration on a `use` line. The
 component's rules hold for its members wherever they are written: a child's
 members file declares no resource.
 

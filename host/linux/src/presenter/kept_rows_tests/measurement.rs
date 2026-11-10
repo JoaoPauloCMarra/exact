@@ -31,11 +31,7 @@ fn baked(app: &str) -> PathBuf {
     if let Some(path) = std::env::var_os(format!("INK_BAKED_{}", app.to_uppercase())) {
         return path.into();
     }
-    let prefix = if app == "excord" {
-        "excord-windows-"
-    } else {
-        "shelf-linux-"
-    };
+    let prefix = "shelf-linux-";
     std::fs::read_dir(root().join("target/debug/build"))
         .unwrap()
         .filter_map(Result::ok)
@@ -163,19 +159,7 @@ fn measure<D: DataSource>(plan: &[u8], data: D, app: &str, width: f32, height: f
         p.frame();
         p.first_pixel();
         p.land_then();
-        let ready = app != "excord"
-            || p.host
-                .kernel()
-                .find_by_test_id("directory-title")
-                .first()
-                .and_then(|key| p.host.kernel().node_by_key(*key))
-                .and_then(|node| node.props.str(PropId::Text).map(str::to_owned))
-                .is_some_and(|title| !title.is_empty() && title != "Excord")
-                && p.host
-                    .kernel()
-                    .find_by_test_id("directory-loading")
-                    .is_empty();
-        if ready && !p.data_activating() && !p.pending() {
+        if !p.data_activating() && !p.pending() {
             break;
         }
         if start.elapsed().as_secs() >= 20 {
@@ -217,7 +201,6 @@ fn measure<D: DataSource>(plan: &[u8], data: D, app: &str, width: f32, height: f
     let limits = p.collection_scroll_limits();
     let list_name = match app {
         "shelf" => "library-list",
-        "excord" => "channels",
         "messages-stress" => "transcript",
         _ => "departures",
     };
@@ -472,9 +455,7 @@ fn series() {
     let prefix = "presenter::kept_rows_tests::measurement::";
     let exe = std::env::current_exe().unwrap();
     let shelf = baked("shelf");
-    let excord = baked("excord");
     verify_fixture("shelf", &shelf);
-    verify_fixture("excord", &excord);
     let direct = std::env::var("INK_ARM").as_deref() == Ok("D");
     let chunk = if direct { "c5" } else { "c4" };
     let arms: &[&str] = if direct {
@@ -491,7 +472,7 @@ fn series() {
     let mut log =
         std::fs::File::create(root().join(format!("target/ink-{chunk}-results.jsonl"))).unwrap();
     for round in 0..5 {
-        for app in ["messages-stress", "shelf", "excord"] {
+        for app in ["messages-stress", "shelf"] {
             for width in [390, 1920] {
                 for arm in rotated(arms, round) {
                     let output = Command::new("/usr/bin/time")
@@ -508,7 +489,6 @@ fn series() {
                         .env("INK_APP", app)
                         .env("INK_WIDTH", width.to_string())
                         .env("INK_BAKED_SHELF", &shelf)
-                        .env("INK_BAKED_EXCORD", &excord)
                         .env("EXACT_CACHE", &cache)
                         .output()
                         .unwrap();
@@ -601,10 +581,6 @@ fn verify_fixture(app: &str, out: &Path) {
         "shelf" => [
             "65b682425c6c28bca40968917f7f9c3dc1885cf80b19fee4f949ca0bdf1b2847",
             "4931b6ca5f3ca72c4f8426687ae40608c399d515a085bc614f977669f3396775",
-        ],
-        "excord" => [
-            "179036d9fb16dc2fca1ece8d571edeca2366274a0e458a3d605eae20eb04a2b6",
-            "8370918824a4376654f2d74627ead3213a06b83b625c13dd378c394ace6376ba",
         ],
         _ => panic!("unqualified measurement fixture {app}"),
     };

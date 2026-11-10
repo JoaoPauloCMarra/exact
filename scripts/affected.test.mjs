@@ -320,12 +320,11 @@ test("the lane runs the iOS classes a commit's test files reach, and every class
 // The checkout itself: a change to one app runs that app's suites, not another's, nor the hosts' own.
 test("this checkout's selection keeps an app's change to that app's suites", () => {
   const repo = new Repo(), graph = new Graph(repo);
-  const watched = ['app:excord:web', 'app:excord:ios', 'app:caltrain:web', 'xctest:ios', 'xctest:macos', 'touch:ios', 'conform:caltrain', 'cargo:exact-kernel'];
+  const watched = ['app:caltrain:web', 'xctest:ios', 'xctest:macos', 'touch:ios', 'conform:caltrain', 'cargo:exact-kernel'];
   const catalogue = suites(repo).filter(s => watched.includes(s.id));
   expect(catalogue.map(s => s.id).sort()).toEqual([...watched].sort());
   const picked = changed => select(graph, changed, catalogue).map(s => s.suite.id).sort();
-  expect(picked(['apps/excord/render.ts'])).toEqual(['app:excord:ios', 'app:excord:web']);
-  expect(picked(['host/apple/Sources/ExactKit/Mac/CaptureMac.swift'])).toEqual(['app:excord:ios', 'touch:ios', 'xctest:ios', 'xctest:macos']);
+  expect(picked(['host/apple/Sources/ExactKit/Mac/CaptureMac.swift'])).toEqual(['touch:ios', 'xctest:ios', 'xctest:macos']);
   // A change to an XCTest file runs the classes it reaches, each on its platform, and no Apple build
   // that does not run them
   const only = changed => Object.fromEntries(select(graph, changed, catalogue).map(s => [s.suite.id, s.only ?? 'every class']));

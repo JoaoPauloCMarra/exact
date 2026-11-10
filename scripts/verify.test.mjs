@@ -641,29 +641,6 @@ test('an agent drive passes server arguments without DB or a scratch database', 
   `);
 });
 
-test('Excord declares its transcript fixture without a database', async () => {
-  const { readManifest, validate } = await import('./app.mjs');
-  const schema = JSON.parse(readFileSync(resolve(import.meta.dir, 'app.schema.json'), 'utf8'));
-  for (const server of [{}, { database: false }, { database: true }]) assert.deepEqual(validate(server, schema.properties.server, 'server', schema), []);
-  assert.notEqual(validate({ database: 'false' }, schema.properties.server, 'server', schema).length, 0);
-  const dir = resolve(import.meta.dir, '../apps/excord');
-  assert.deepEqual(readManifest(dir, 'excord').server, { database: false });
-  const { backendOriginSelection } = await import('../js/bake/src/typescript.mjs');
-  const selected = backendOriginSelection(dir, {});
-  assert.deepEqual(backendOriginSelection(toNamespacedPath(dir), {}), selected);
-  assert.deepEqual(appServer(toNamespacedPath(dir), {}), appServer(dir, {}));
-  assert.deepEqual(appServer(dir, {}), {
-    entry: 'fixture/server.ts', args: ['--world', 'transcript', '--reset-on-identify'], database: false,
-    url: selected.origin, port: Number(new URL(selected.origin).port), why: null, refusal: null, settings: {}, fixture: true,
-  });
-  assert.equal(selected.source, 'checkout fixture port');
-  assert.ok(appServer(dir, {}).port >= 4790 && appServer(dir, {}).port <= 5789);
-  assert.equal(appServer(dir, {PORT:'5123'}).port, 5123);
-  assert.equal(appServer(dir, {PORT:'5123', EXACT_BACKEND_ORIGIN:'http://127.0.0.1:5124'}).port, 5124);
-  assert.equal(appServer(dir, {EXACT_BACKEND_ORIGIN:'https://discord.com'}).url, null);
-  assert.throws(() => appServer(dir, {PORT:'0'}), /fixture port must be an integer/);
-});
-
 test('recorded server addresses preserve accepted default ports and paths, refusing credentials and queries', () => {
   const dir = mkdtempSync(resolve(tmpdir(), 'exact-server-address-'));
   try {

@@ -2321,7 +2321,7 @@ A declared server under `fixture/` or `fixtures/`, with a top-level literal loop
 `const origin`, gets one stable development port in 4790–5789 per real app directory.
 The bake and driver select it together. `--backend`/`EXACT_BACKEND_ORIGIN`, then
 `.exact/backend-origin`, the server command's `--port`, and `PORT` override the default.
-`bun scripts/agent-launch.mjs --fixture-port --app excord` prints the selected port.
+`bun scripts/agent-launch.mjs --fixture-port --app <app>` prints the selected port.
 An agent drive refuses an occupied fixture port unless its launch record and listening
 process belong to this app directory and origin. Choose a free port with `--backend`
 or `PORT` when another checkout holds it. Ordinary app servers keep their authored ports.

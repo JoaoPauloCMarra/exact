@@ -1359,7 +1359,7 @@ component TypingRow
     text who
 ```
 
-More: docs/contract-grammar.md (members files); apps/excord/viewer.contract
+More: docs/contract-grammar.md (members files)
 
 ## svg: a vector drawing (an icon, a chart, a QR code)
 names: Svg, vector, react-native-svg, expo-svg, SvgXml, Path, Circle, Rect, drawing
